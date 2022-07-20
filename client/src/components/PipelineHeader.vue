@@ -216,7 +216,7 @@
             label="referenceDisplayLabel"
             openDirection="below"
             track-by="id"
-            :options="objectFields.list"
+            :options="fieldOpts"
             :multiple="true"
           >
             <template slot="noResult">
@@ -266,19 +266,7 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
-  async created() {
-    await this.objectFields.refresh()
-  },
-  computed: {
-    extraPipelineFields() {
-      let extras = []
-      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
-      return extras
-    },
-    hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
-    },
-  },
+
   methods: {
     async removeField(id) {
       try {
@@ -348,6 +336,8 @@ export default {
     oppFields: {},
     allSelected: {},
     dataType: {},
+    extraPipelineFields: {},
+    fieldOpts: {},
   },
 }
 </script>

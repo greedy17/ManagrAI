@@ -110,15 +110,7 @@
                 v-model="selectedAccount"
                 :options="allAccounts"
                 @search-change="getAccounts($event)"
-                @select="
-                  setUpdateValues(
-                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                      ? $event.value
-                      : $event.id,
-                    field.dataType === 'MultiPicklist' ? true : false,
-                  )
-                "
+                @select="setUpdateValues(field.apiName, $event.value, false)"
                 openDirection="below"
                 style="width: 16.5vw"
                 selectLabel="Enter"
@@ -151,7 +143,7 @@
                 v-model="currentVals[field.apiName]"
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? createQueryOpts[field.apiName]
+                    ? allPicklistOptions[field.id]
                     : createReferenceOpts[field.apiName]
                 "
                 @select="
@@ -220,7 +212,7 @@
                       <Multiselect
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                            ? stagePicklistQueryOpts[field.apiName]
+                            ? allPicklistOptions[field.id]
                             : createReferenceOpts[field.apiName]
                         "
                         @select="
@@ -254,7 +246,7 @@
                         <template slot="placeholder">
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
-                            {{ `${field.apiName}'s` }}
+                            {{ field.apiName }}
                           </p>
                         </template>
                       </Multiselect>
@@ -466,14 +458,14 @@
                   v-if="
                     field.dataType === 'Picklist' ||
                     field.dataType === 'MultiPicklist' ||
-                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                    field.dataType === 'Reference'
                   "
                 >
                   <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                        ? productQueryOpts[field.apiName]
+                        ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
                     "
                     @select="
@@ -697,7 +689,6 @@
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
               <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
-
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
@@ -763,7 +754,7 @@
                 v-model="dropdownVal[field.apiName]"
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? picklistQueryOpts[field.apiName]
+                    ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
                 "
                 @select="
@@ -841,7 +832,7 @@
                       <Multiselect
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                            ? stagePicklistQueryOpts[field.apiName]
+                            ? allPicklistOptions[field.id]
                             : referenceOpts[field.apiName]
                         "
                         @select="
@@ -1074,7 +1065,7 @@
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                        ? productQueryOpts[field.apiName]
+                        ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
                     "
                     @select="
@@ -1392,8 +1383,7 @@
             <div class="flex-row-pad" v-if="advanceStageSelected">
               <p style="font-size: 14px">Select Stage:</p>
               <Multiselect
-                v-if="picklistQueryOpts['StageName']"
-                :options="picklistQueryOpts['StageName']"
+                :options="apiPicklistOptions['StageName']"
                 @select="setStage($event.value)"
                 v-model="dropdownVal['StageName']"
                 openDirection="below"
@@ -1414,20 +1404,13 @@
                   </p>
                 </template>
               </Multiselect>
-              <p v-else>Add Stage to your update form</p>
-              <button
-                v-if="picklistQueryOpts['StageName']"
-                @click="advanceStage()"
-                class="add-button"
-              >
-                Advance Stage
-              </button>
+              <!-- <p v-else>Add Stage to your update form</p> -->
+              <button @click="advanceStage()" class="add-button">Advance Stage</button>
             </div>
             <div class="flex-row-pad" v-if="forecastSelected">
               <p style="font-size: 14px">Select Forecast:</p>
               <Multiselect
-                v-if="picklistQueryOpts['ForecastCategoryName']"
-                :options="picklistQueryOpts['ForecastCategoryName']"
+                :options="apiPicklistOptions['ForecastCategoryName']"
                 @select="setForecast($event.value)"
                 v-model="dropdownVal['ForecastCategoryName']"
                 openDirection="below"
@@ -1448,12 +1431,8 @@
                   </p>
                 </template>
               </Multiselect>
-              <p v-else>Add Forecast Category to your update form</p>
-              <button
-                v-if="picklistQueryOpts['ForecastCategoryName']"
-                @click="changeForecast(currentCheckList)"
-                class="add-button"
-              >
+
+              <button @click="changeForecast(currentCheckList)" class="add-button">
                 Change Forecast
               </button>
             </div>
@@ -1486,7 +1465,7 @@
             Create Opportunity
           </button>
           <button @click="manualSync" class="select-btn">
-            <img src="@/assets/images/cloud.svg" style="height: 1rem" alt="" />
+            <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
           </button>
         </div>
       </section>
@@ -1519,7 +1498,7 @@
               <Multiselect
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? stagePicklistQueryOpts[field.apiName]
+                    ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
                 "
                 @select="
@@ -1709,6 +1688,8 @@
             @set-opps="setOpps"
             @sort-opps-reverse="sortOppsReverse"
             :allSelected="allSelected"
+            :extraPipelineFields="extraPipelineFields"
+            :fieldOpts="objectFields.list"
           />
           <PipelineTableRow
             ref="pipelineTableChild"
@@ -1723,7 +1704,7 @@
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
-            :picklistOpts="picklistQueryOpts"
+            :picklistOpts="allPicklistOptions"
             :opp="opp"
             :index="i"
             :oppFields="oppFields"
@@ -1733,6 +1714,7 @@
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
             :currentInlineRow="currentInlineRow"
+            :extraPipelineFields="extraPipelineFields"
           />
         </div>
       </section>
@@ -1746,6 +1728,7 @@
             :oppFields="oppFields"
             @check-all="onCheckAllWorkflows"
             :allWorkflowsSelected="allWorkflowsSelected"
+            :extraPipelineFields="extraPipelineFields"
             @sort-opps-workflows="sortWorkflows"
             @sort-opps-reverse-workflows="sortWorkflowsReverse"
           />
@@ -1762,7 +1745,7 @@
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
-            :picklistOpts="picklistQueryOpts"
+            :picklistOpts="allPicklistOptions"
             :workflow="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
@@ -1772,6 +1755,7 @@
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
             :currentInlineRow="currentInlineRow"
+            :extraPipelineFields="extraPipelineFields"
           />
         </div>
       </section>
@@ -1814,7 +1798,7 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectPicklist } from '@/services/salesforce'
+import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -1842,7 +1826,15 @@ export default {
       createData: {},
       savingCreateForm: false,
       allPicklistOptions: {},
+      apiPicklistOptions: {},
       productQueryOpts: {},
+      objectFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 300 },
+        filters: {
+          salesforceObject: 'Opportunity',
+        },
+      }),
       createProductForm: null,
       addingProduct: false,
       originalOppTotal: null,
@@ -1978,6 +1970,14 @@ export default {
     }
   },
   computed: {
+    extraPipelineFields() {
+      let extras = []
+      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
+      return extras
+    },
+    hasExtraFields() {
+      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+    },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
@@ -2040,11 +2040,12 @@ export default {
     },
   },
   async created() {
-    this.templates.refresh()
     this.getObjects()
     this.getObjectsForWorkflows()
     this.getAllForms()
-    // this.testPicklist()
+    this.getAllPicklist()
+    await this.objectFields.refresh()
+    await this.templates.refresh()
   },
   beforeMount() {
     this.getUsers()
@@ -2057,22 +2058,22 @@ export default {
     primaryCheckList: 'closeAll',
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
-    updateOppForm: 'setForms',
+    updateOppForm: ['setForms', 'filtersAndOppFields'],
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    // async testPicklist() {
-    //   try {
-    //     const res = await SObjectPicklist.api.listPicklists()
-    //     for (let i = 0; i < res.length; i++) {
-    //       this.allPicklistOptions[res[i].id] = res[i].values
-    //     }
-    //     console.log(res, this.allPicklistOptions)
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
+    async getAllPicklist() {
+      try {
+        const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+        for (let i = 0; i < res.length; i++) {
+          this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
+          this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    },
     addProduct() {
       this.addingProduct = !this.addingProduct
       setTimeout(() => {
@@ -2174,6 +2175,14 @@ export default {
       this.resource_id = null
       this.stageId = null
       this.stageIntegrationId = null
+    },
+    async getAllReferencePicklists() {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues()
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
     },
     async getReferenceFieldList(key, val, type, eventVal) {
       try {
@@ -3245,72 +3254,29 @@ export default {
       }
     },
     setForms() {
-      for (let i in this.picklistQueryOptsContacts) {
-        this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
+      for (let i = 0; i < this.oppFormCopy.length; i++) {
+        if (this.oppFormCopy[i].dataType === 'Reference') {
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+        }
       }
 
-      for (let i = 0; i < this.oppFormCopy.length; i++) {
-        if (
-          this.oppFormCopy[i].dataType === 'Picklist' ||
-          this.oppFormCopy[i].dataType === 'MultiPicklist'
-        ) {
-          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-        } else if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+      for (let i = 0; i < this.createOppForm.length; i++) {
+        if (this.createOppForm[i].dataType === 'Reference') {
+          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
         }
       }
 
       if (this.hasProducts) {
         for (let i = 0; i < this.createProductForm.length; i++) {
-          if (
-            this.createProductForm[i].dataType === 'Picklist' ||
-            this.createProductForm[i].dataType === 'MultiPicklist'
-          ) {
-            this.productQueryOpts[this.createProductForm[i].apiName] =
-              this.createProductForm[i].apiName
-          } else if (this.createProductForm[i].dataType === 'Reference') {
+          if (this.createProductForm[i].dataType === 'Reference') {
             this.productReferenceOpts[this.createProductForm[i].apiName] =
               this.createProductForm[i].id
           }
         }
       }
 
-      for (let i in this.picklistQueryOpts) {
-        this.picklistQueryOpts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
       for (let i in this.referenceOpts) {
         this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
-      }
-
-      for (let i = 0; i < this.createOppForm.length; i++) {
-        if (
-          this.createOppForm[i].dataType === 'Picklist' ||
-          this.createOppForm[i].dataType === 'MultiPicklist'
-        ) {
-          this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
-        } else if (this.createOppForm[i].dataType === 'Reference') {
-          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
-        }
-      }
-
-      for (let i in this.createQueryOpts) {
-        this.createQueryOpts[i] = this.listCreatePicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-      for (let i in this.createProductOpts) {
-        this.createProductOpts[i] = this.listCreatePicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'OpportunityLineItem',
-        })
       }
 
       for (let i in this.createReferenceOpts) {
@@ -3330,7 +3296,8 @@ export default {
           )
         }
       }
-
+    },
+    filtersAndOppFields() {
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -3357,15 +3324,6 @@ export default {
           field.apiName !== 'AccountId' &&
           field.apiName !== 'OwnerId',
       )
-
-      for (let i in this.stagePicklistQueryOpts) {
-        this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
-      this.createProductForm
     },
     async getAllForms() {
       try {
@@ -3397,32 +3355,26 @@ export default {
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
         }
-        let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
-        let allStageFields = [].concat.apply([], stageArrayOfArrays)
-        let dupeStagesRemoved = [
-          ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
-        ]
 
-        for (let i = 0; i < dupeStagesRemoved.length; i++) {
-          if (
-            dupeStagesRemoved[i].dataType === 'Picklist' ||
-            dupeStagesRemoved[i].dataType === 'MultiPicklist'
-          ) {
-            this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
-          } else if (dupeStagesRemoved[i].dataType === 'Reference') {
-            this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
-              dupeStagesRemoved[i].referenceDisplayLabel
-          }
-        }
+        // let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
+        // let allStageFields = [].concat.apply([], stageArrayOfArrays)
+        // let dupeStagesRemoved = [
+        //   ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
+        // ]
+
+        // for (let i = 0; i < dupeStagesRemoved.length; i++) {
+        //   if (
+        //     dupeStagesRemoved[i].dataType === 'Picklist' ||
+        //     dupeStagesRemoved[i].dataType === 'MultiPicklist'
+        //   ) {
+        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
+        //   } else if (dupeStagesRemoved[i].dataType === 'Reference') {
+        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
+        //       dupeStagesRemoved[i].referenceDisplayLabel
+        //   }
+        // }
       } catch (e) {
         console.log(e)
-        // this.$toast('Error setting form fields!', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
       }
     },
     async getUsers() {
@@ -3488,37 +3440,31 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        setTimeout(() => {
-          this.loading = false
-        }, 100)
+        this.loading = false
       }
     },
     async getObjects(page = 1) {
-      if (!this.id) {
-        this.currentPage = page
-        this.loading = true
-        try {
-          const res = await SObjects.api.getObjects('Opportunity', page)
-          this.allOpps = res.results
-          this.originalList = res.results
-          res.next ? (this.hasNext = true) : (this.hasNext = false)
-          this.hasNextOriginal = this.hasNext
-          res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-          this.oppTotal = res.count
-          this.originalOppTotal = res.count
-        } catch (e) {
-          this.$toast('Error gathering Opportunities!', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } finally {
-          setTimeout(() => {
-            this.loading = false
-          }, 100)
-        }
+      this.currentPage = page
+      this.loading = true
+      try {
+        const res = await SObjects.api.getObjects('Opportunity', page)
+        this.allOpps = res.results
+        this.originalList = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+        this.hasNextOriginal = this.hasNext
+        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+        this.oppTotal = res.count
+        this.originalOppTotal = res.count
+      } catch (e) {
+        this.$toast('Error gathering Opportunities!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loading = false
       }
     },
     async addMore(page) {

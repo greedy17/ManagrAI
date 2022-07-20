@@ -170,7 +170,7 @@
             </div>
             <Multiselect
               v-else-if="field.apiName !== 'StageName'"
-              :options="picklistOpts[field.apiName]"
+              :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
               style="width: 14vw; padding-bottom: 8rem"
@@ -204,7 +204,7 @@
             </Multiselect>
             <Multiselect
               v-else-if="field.apiName === 'StageName'"
-              :options="picklistOpts[field.apiName]"
+              :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
               style="width: 14vw; padding-bottom: 8rem"
@@ -329,8 +329,7 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjects, SObjectField } from '@/services/salesforce'
+import { SObjects } from '@/services/salesforce'
 import debounce from 'lodash.debounce'
 
 export default {
@@ -356,13 +355,6 @@ export default {
       updatedWorkflowList: [],
       newCloseDate: null,
       booleans: ['true', 'false'],
-      objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 300 },
-        filters: {
-          salesforceObject: 'Opportunity',
-        },
-      }),
     }
   },
   props: {
@@ -379,6 +371,7 @@ export default {
     closeEdit: {},
     stages: {},
     currentInlineRow: {},
+    extraPipelineFields: {},
   },
   watch: {
     closeDateData: 'futureDate',
@@ -392,19 +385,6 @@ export default {
           this.setUpdateValues('StageName', val)
         }
       },
-    },
-  },
-  async created() {
-    await this.objectFields.refresh()
-  },
-  computed: {
-    extraPipelineFields() {
-      let extras = []
-      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
-      return extras
-    },
-    hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
     },
   },
   methods: {
