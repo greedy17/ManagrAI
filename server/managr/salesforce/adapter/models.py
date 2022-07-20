@@ -595,7 +595,7 @@ class SalesforceAuthAccountAdapter:
         filter_query_string = [f"AND ({filter_query})"] if len(filter_query) else []
         # always retreive id
         fields.insert(0, "Id")
-        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )}"
+        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )[0]}"
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
