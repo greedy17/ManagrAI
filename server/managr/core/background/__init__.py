@@ -613,8 +613,12 @@ def _process_calendar_meetings(user_id):
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
+            workflows = MeetingWorkflow.objects.for_user(user)
             for event in processed_data:
-                meeting_prep(event, user_id)
+                title = event.get("title", None)
+                workflow_check = workflows.filter(meeting__topic=title).first()
+                if workflow_check is None:
+                    meeting_prep(event, user_id)
     return
 
 
