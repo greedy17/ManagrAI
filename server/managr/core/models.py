@@ -457,7 +457,6 @@ class NylasAuthAccount(TimeStampModel):
                 f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}",
                 headers=headers,
             )
-            print(events.json())
             return self._handle_response(events)
         except Exception as e:
             logger.info(f"Nylas api exception: {e}")

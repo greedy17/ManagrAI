@@ -6,7 +6,7 @@ from requests.exceptions import HTTPError
 from django.utils import timezone
 
 from managr.utils.client import HttpClient
-
+from managr.core.models import User
 from . import constants as zoom_model_consts
 from .exceptions import ZoomAPIException
 
@@ -15,29 +15,6 @@ logger = logging.getLogger("managr")
 
 
 class ZoomMtg:
-    # def __init__(self, **kwargs):
-    #     self.id = kwargs.get("meeting_managr_id", None)
-    #     self.zoom_account = kwargs.get("zoom_account", None)
-    #     self.account_id = kwargs.get("account_id", None)
-    #     self.operator = kwargs.get("operator", None)
-    #     self.meeting_id = kwargs.get("meeting_id", None)
-    #     self.meeting_uuid = kwargs.get("meeting_uuid", None)
-    #     self.host_id = kwargs.get("host_id", None)
-    #     self.topic = kwargs.get("topic", None)
-    #     self.type = kwargs.get("type", None)
-    #     self.start_time = kwargs.get("start_time", None)
-    #     self.end_time = kwargs.get("end_time", None)
-    #     self.timezone = kwargs.get("timezone", None)
-    #     self.duration = kwargs.get("duration", None)
-    #     self.occurences = kwargs.get("occurences", None)
-    #     self.operator_id = kwargs.get("operator_id", None)
-    #     self.operation = kwargs.get("operation", None)
-    #     self.participants = kwargs.get("participants", None)
-    #     self.review = kwargs.get("review", None)
-    #     self.participants_count = kwargs.get("participants_count", None)
-    #     self.total_minutes = kwargs.get("total_minutes", None)
-    #     self.original_duration = kwargs.get("original_duration", None)
-    # MEETING CODE
     def __init__(self, **kwargs):
         self.meeting_id = kwargs.get("meeting_id", None)
         self.meeting_uuid = kwargs.get("meeting_uuid", None)
@@ -65,15 +42,6 @@ class ZoomMtg:
         return cls(**payload)
 
     def get_past_meeting_participants(self, access_token):
-        # meeting_id_double_encoded = quote_plus(quote_plus(self.meeting_uuid))
-        # url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}/participants"
-        # # TODO check if access_token is expired and refresh PB 11/20/20
-        # headers = dict(Authorization=(f"Bearer {access_token}"))
-        # r = client.get(url, headers=headers)
-        # data = ZoomAcct._handle_response(r)
-        # self.participants = data.get("participants", None)
-        # return self
-        # MEETING CODE
         meeting_id_double_encoded = quote_plus(quote_plus(self.meeting_uuid))
         url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}/participants"
         # TODO check if access_token is expired and refresh PB 11/20/20
@@ -118,20 +86,6 @@ class ZoomAcct:
         self.token_scope = kwargs.get("scope", None)
 
     def get_past_meeting(self, meeting_id):
-        # meeting_id_double_encoded = quote_plus(quote_plus(meeting_id))
-        # url = f"{zoom_model_consts.ZOOM_API_ENDPOINT}/past_meetings/{meeting_id_double_encoded}"
-        # # TODO check if access_token is expired and refresh PB 11/20/20
-        # headers = dict(Authorization=(f"Bearer {self.access_token}"))
-        # r = client.get(url, headers=headers)
-        # data = ZoomAcct._handle_response(r)
-        # meeting_uuid = data.pop("uuid", None)
-        # meeting_id = data.pop("id", None)
-        # # Rename uuid and uid so that they fit the django model and are not confused with django id's
-        # data["meeting_uuid"] = meeting_uuid
-        # data["meeting_id"] = meeting_id
-        # data["zoom_account"] = str(self.id)
-        # return ZoomMtg(**data)
-        # MEETING CODE
         from managr.meetings.serializers import MeetingZoomSerializer
         from managr.meetings.models import Meeting
 
