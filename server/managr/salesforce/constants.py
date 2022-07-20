@@ -73,6 +73,44 @@ def SEPARATE_FIELDS(fields):
     return field_list
 
 
+# def SALESFORCE_RESOURCE_QUERY_URI(
+#     owner_id,
+#     resource,
+#     fields,
+#     childRelationshipFields=[],
+#     additional_filters=[],
+#     limit=SALESFORCE_QUERY_LIMIT,
+#     SobjectType=None,
+# ):
+#     # make a set to remove duplicates
+#     fields = set(fields)
+#     if resource in ADD_RESOURCE_TYPE_FIELDS:
+#         if len(additional_filters):
+#             additional_filters.append(f"AND SobjectType = '{SobjectType}'")
+#         else:
+#             additional_filters.append(f"SobjectType = '{SobjectType}'")
+#     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+#     if len(childRelationshipFields):
+#         for rel, v in childRelationshipFields.items():
+#             url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+#     url = f"{url} FROM {resource}"
+#     if resource not in REMOVE_OWNER_ID:
+#         additional_filters.insert(0, f"OwnerId = '{owner_id}'")
+#     for i, f in enumerate(additional_filters):
+#         if i == 0:
+#             # check to see if additional query is AND/OR and remove from the start
+#             #  it since it is the first option
+#             # note it must remove from the start only so it does not remove from LIKE searches
+#             # all additional queries should be added to the classes if available with AND/OR
+#             # or on the fly with AND/OR
+
+#             f = re.sub(r"^(AND|OR)", "", f)
+#             f = f"WHERE {f}"
+
+#         url = f"{url} {f}"
+#     # TODO: [MGR-917] make ordering dynamic
+#     return f"{url} order by LastModifiedDate DESC limit {limit}"
+
 # SF CUSTOM URI QUERIES
 def SALESFORCE_RESOURCE_QUERY_URI(
     owner_id,
