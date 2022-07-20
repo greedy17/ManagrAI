@@ -39,12 +39,19 @@
           <SkeletonBox width="15px" height="14px" />
         </div>
         <div v-else class="flex-row">
-          <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
-          </button>
-          <button @click="emitGetNotes" class="name-cell-note-button-1">
-            <img class="gray" src="@/assets/images/white-note.svg" />
-          </button>
+          <div class="tooltip">
+            <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
+              <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
+            </button>
+            <span class="tooltiptext">Update</span>
+          </div>
+
+          <div class="tooltip">
+            <button @click="emitGetNotes" class="name-cell-note-button-1">
+              <img class="gray" src="@/assets/images/white-note.svg" />
+            </button>
+            <span class="tooltiptext">View Notes</span>
+          </div>
         </div>
       </div>
     </div>
@@ -536,6 +543,47 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
 #user-input {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;

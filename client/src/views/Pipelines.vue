@@ -1464,9 +1464,12 @@
             />
             Create Opportunity
           </button>
-          <button @click="manualSync" class="select-btn">
-            <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
-          </button>
+          <div class="tooltip">
+            <button @click="manualSync" class="select-btn">
+              <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
+            </button>
+            <span class="tooltiptext">Sync Fields</span>
+          </div>
         </div>
       </section>
 
@@ -3626,6 +3629,48 @@ export default {
   }
 }
 
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
+
 .input-container {
   position: relative;
   display: inline-block;
@@ -4090,7 +4135,7 @@ select {
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1rem !important;
+    height: 1.05rem !important;
   }
 }
 .work-btn {
