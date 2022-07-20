@@ -84,7 +84,7 @@
             class="inline-row"
           >
             <textarea
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               id="user-input-wide"
               :value="
                 field.apiName.includes('__c')
@@ -108,7 +108,7 @@
             class="inline-row"
           >
             <input
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               id="user-input"
               type="text"
               :value="
@@ -188,7 +188,7 @@
             </div>
             <input
               v-else
-              @input="setUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               type="date"
               id="user-input"
               :value="
@@ -206,7 +206,7 @@
               v-else
               type="datetime-local"
               id="user-input"
-              @input="setUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               :value="
                 field.apiName.includes('__c')
                   ? opp['secondary_data'][field.apiName]
@@ -223,7 +223,7 @@
             class="inline-row"
           >
             <input
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               id="user-input"
               type="number"
               :value="

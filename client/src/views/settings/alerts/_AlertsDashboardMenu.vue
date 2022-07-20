@@ -11,7 +11,7 @@
           <img
             src="@/assets/images/org.svg"
             class="invert"
-            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
+            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
           <span class="tooltiptext">Popular Workflows</span>
@@ -35,7 +35,7 @@
           <img
             class="invert"
             src="@/assets/images/build.svg"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <span class="tooltiptext">Custom Workflows</span>
@@ -57,7 +57,7 @@
           <img
             src="@/assets/images/org.svg"
             class="invert"
-            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
+            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
           <span class="tooltiptext">Popular Workflows</span>
@@ -82,7 +82,7 @@
           <img
             class="invert"
             src="@/assets/images/build.svg"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <span class="tooltiptext">Custom Workflows</span>
@@ -114,7 +114,7 @@
           <img
             src="@/assets/images/org.svg"
             class="invert"
-            style="height: 0.8rem; margin-right: 1rem; margin-left: 1rem"
+            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
             alt=""
           />
           <span class="tooltiptext">Popular Workflows</span>
@@ -141,7 +141,7 @@
           <img
             class="invert"
             src="@/assets/images/build.svg"
-            style="height: 0.8rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
             alt=""
           />
           <span class="tooltiptext">Custom Workflows</span>
@@ -312,7 +312,7 @@ a:hover div {
 }
 .invert {
   filter: invert(40%);
-  height: 14px !important;
+  height: 20px !important;
 }
 a:hover span {
   border-color: $dark-green;
