@@ -22,7 +22,7 @@ class Command(BaseCommand):
                 user = User.objects.filter(email=t).first()
                 if options["meetings"]:
                     emit_process_calendar_meetings(
-                        str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                        str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
                     )
                 else:
                     # emit_check_reminders(
@@ -42,7 +42,7 @@ class Command(BaseCommand):
                 for user in users:
                     if options["meetings"]:
                         emit_process_calendar_meetings(
-                            str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                            str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
                         )
                     else:
                         # emit_check_reminders(
