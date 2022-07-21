@@ -354,31 +354,14 @@ a:hover span {
   border-radius: 6px;
   font-size: 12px;
   font-weight: bold !important;
-
-  /* Position the tooltip text */
   position: absolute;
   z-index: 1;
   top: 8px;
   left: 215%;
   margin-left: -60px;
-
-  /* Fade in tooltip */
   opacity: 70%;
   transition: opacity 0.3s;
 }
-
-/* Tooltip arrow */
-
-// .tooltip .tooltiptext::after {
-//   content: ' ';
-//   position: absolute;
-//   top: 50%;
-//   right: 100%;
-//   margin-top: -6px;
-//   border-width: 2px;
-//   border-style: solid;
-//   border-color: transparent $base-gray transparent transparent;
-// }
 
 .tooltip:hover .tooltiptext {
   visibility: visible;
