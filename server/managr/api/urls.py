@@ -175,6 +175,7 @@ router.register("salesforce/picklists", sf_views.SObjectPicklistViewSet, "salesf
 
 router.register("slack", slack_views.SlackViewSet, "slack")
 router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")
+router.register("slack/instances", slack_views.SlackFormInstanceViewSet, "slack-form-instances"),
 router.register("alerts/templates", alert_views.AlertTemplateViewSet, "alert-templates")
 router.register(
     "alerts/message-templates", alert_views.AlertMessageTemplateViewSet, "alert-message-templates"

@@ -153,6 +153,8 @@ class UserSlackIntegration(TimeStampModel):
 
 class OrgCustomSlackFormQuerySet(models.QuerySet):
     def for_user(self, user):
+        if user.is_staff:
+            return self
         if user.organization and user.is_active:
             return self.filter(organization=user.organization_id)
         else:

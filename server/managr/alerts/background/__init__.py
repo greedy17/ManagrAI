@@ -204,7 +204,7 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
                             "config_id": str(config.id),
                         },
                     ]
-    if not len(instances):
+    if not len(instances) and user.has_slack_integration:
         emit_send_no_alert_message(str(config.id), str(user.id))
         return
 

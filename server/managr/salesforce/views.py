@@ -405,7 +405,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-
+                    break
                 else:
                     user.salesforce_account.regenerate_token()
                     attempts += 1
@@ -455,7 +455,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-
+                    break
                 else:
                     user.salesforce_account.regenerate_token()
                     attempts += 1
@@ -501,7 +501,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-
+                    break
                 else:
                     if model_object.owner == user:
                         user.salesforce_account.regenerate_token()
@@ -619,20 +619,24 @@ class SalesforceSObjectViewSet(
                         attempts += 1
                 except Exception as e:
                     logger.info(f"UPDATE ERROR {e}")
+                    data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
-            if all_form_data.get("meeting_comments") is not None:
-                emit_add_update_to_sf(str(main_form.id))
-            if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
-                _send_instant_alert(form_ids)
-            forms.update(
-                is_submitted=True, update_source="pipeline", submission_date=timezone.now()
-            )
-            value_update = main_form.resource_object.update_database_values(all_form_data)
-            from_workflow = data.get("from_workflow")
-            title = data.get("workflow_title", None)
-            if from_workflow:
-                user.activity.increment_untouched_count("workflows")
-                user.activity.add_workflow_activity(str(main_form.id), title)
+            if data["success"]:
+                if all_form_data.get("meeting_comments") is not None:
+                    emit_add_update_to_sf(str(main_form.id))
+                if user.has_slack_integration and len(
+                    user.slack_integration.realtime_alert_configs
+                ):
+                    _send_instant_alert(form_ids)
+                forms.update(
+                    is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+                )
+                value_update = main_form.resource_object.update_database_values(all_form_data)
+                from_workflow = data.get("from_workflow")
+                title = data.get("workflow_title", None)
+                if from_workflow:
+                    user.activity.increment_untouched_count("workflows")
+                    user.activity.add_workflow_activity(str(main_form.id), title)
         return Response(data=data)
 
     @action(
@@ -642,12 +646,28 @@ class SalesforceSObjectViewSet(
         url_path="create",
     )
     def create_resource(self, request, *args, **kwargs):
-        request_data = self.request.data
-        logger.info(f"CREATE START ---- {request_data}")
+        data = self.request.data
+        logger.info(f"CREATE START ---- {data}")
         user = User.objects.get(id=self.request.user.id)
-        form_id = request_data.get("form_id")
-        form_data = request_data.get("form_data")
-        main_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        integration_ids = data.get("integration_ids")
+        form_data = data.get("form_data")
+        form_type = data.get("form_type")
+        resource_type = data.get("resource_type")
+        resource_id = data.get("resource_id", None)
+        stage_name = data.get("stage_name", None)
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "resource_id": resource_id,
+            "stage_name": stage_name,
+        }
+        form_ids = create_form_instance(**instance_data)
+
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+        main_form = forms.filter(template__form_type="CREATE").first()
+        if main_form.template.resource == "OpportunityLineItem":
+            opp_ref = integration_ids[0]
         stage_forms = []
         stage_form_data_collector = {}
         for form in stage_forms:
@@ -663,12 +683,12 @@ class SalesforceSObjectViewSet(
         while True:
             sf = user.salesforce_account
             try:
+                if main_form.template.resource == "OpportunityLineItem":
+                    all_form_data["OpportunityId"] = opp_ref
                 resource = model_routes[main_form.resource_type]["model"].create_in_salesforce(
                     all_form_data, user.id
                 )
-                data = {
-                    "success": True,
-                }
+                data = {"success": True, "integration_id": resource.integration_id}
                 break
             except FieldValidationError as e:
                 data = {"success": False, "error": str(e)}
@@ -703,7 +723,6 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-            logger.info(f"RETURN DATA ----- {data}")
         return Response(data=data)
 
     @action(
@@ -849,7 +868,15 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        return MeetingWorkflow.objects.for_user(self.request.user)
+        from_admin = (
+            json.loads(self.request.GET.get("fromAdmin", None))
+            if self.request.GET.get("fromAdmin", None) is not None
+            else None
+        )
+        user = self.request.user
+        if from_admin and user.is_staff:
+            return MeetingWorkflow.objects.all()[:100]
+        return MeetingWorkflow.objects.for_user(user)
 
     @action(
         methods=["post"],
@@ -866,7 +893,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         print(workflow.forms.all())

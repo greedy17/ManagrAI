@@ -53,7 +53,11 @@ from .models import (
     OrgCustomSlackForm,
     OrgCustomSlackFormInstance,
 )
-from .serializers import OrgCustomSlackFormSerializer, OrgSlackIntegrationWriteSerializer
+from .serializers import (
+    OrgCustomSlackFormSerializer,
+    OrgSlackIntegrationWriteSerializer,
+    OrgCustomSlackFormInstanceSerializer,
+)
 
 
 from managr.salesforce.routes import routes as model_routes
@@ -586,15 +590,9 @@ class SlackFormsViewSet(
                 form_type="UPDATE",
             ).first()
             org.update_has_settings("products")
-            update_data = data
-            update_data["form_type"] = "UPDATE"
-            update_serializer = self.get_serializer(data=update_data, instance=form)
-            update_serializer.is_valid(raise_exception=True)
-            update_serializer.save()
-            instance = update_serializer.instance
-            instance.fields.clear()
+            form.fields.clear()
             for i, field in enumerate(fields):
-                instance.fields.add(field, through_defaults={"order": i})
+                form.fields.add(field, through_defaults={"order": i})
         return Response(serializer.data)
 
 
@@ -1211,3 +1209,22 @@ def launch_digest(request):
         generate_reminder_message(user.id)
 
     return Response()
+
+
+class SlackFormInstanceViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = OrgCustomSlackFormInstanceSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return OrgCustomSlackFormInstance.objects.all()[:50]
+        return OrgCustomSlackFormInstance.objects.filter(
+            user__organization=self.request.user.organization
+        )
+

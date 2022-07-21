@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
-
 from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.meetings.serializers import MeetingFrontendSerializer
@@ -11,6 +10,7 @@ from .models import (
     SObjectField,
     SObjectValidation,
 )
+from managr.core.models import User
 
 
 class SalesforceAuthSerializer(serializers.ModelSerializer):
@@ -93,12 +93,15 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
 
 
 class SObjectPicklistSerializer(serializers.ModelSerializer):
+    field_ref = SObjectFieldSerializer(source="field")
+
     class Meta:
         model = SObjectPicklist
         fields = (
             "id",
             "values",
             "field",
+            "field_ref",
             "salesforce_account",
             "picklist_for",
             "imported_by",
@@ -120,10 +123,18 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
 
+class MeetingUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "first_name", "last_name", "email")
+
+
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
+    org_ref = serializers.SerializerMethodField("get_org_ref")
     meeting_ref = MeetingFrontendSerializer(many=False, source="meeting", read_only=True)
     resource_ref = serializers.SerializerMethodField("get_resource_ref")
     is_completed = serializers.SerializerMethodField("get_completed_status")
+    user_ref = MeetingUserSerializer(source="user")
 
     class Meta:
         model = MeetingWorkflow
@@ -134,8 +145,16 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
             "resource_ref",
+            "user",
+            "user_ref",
+            "org_ref",
             "is_completed",
         )
+
+    def get_org_ref(self, instance):
+        from managr.core.serializers import OrganizationSerializer
+
+        return OrganizationSerializer(instance=instance.user.organization).data
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()

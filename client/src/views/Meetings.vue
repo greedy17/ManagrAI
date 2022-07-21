@@ -61,7 +61,7 @@
               style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
               alt=""
             />
-            <h2>Update Opportunity</h2>
+            <h3>Update Opportunity</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -73,7 +73,16 @@
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
             <div v-if="field.apiName === 'meeting_type'">
-              <p>Note Title:</p>
+              <span class="input-container">
+                <input
+                  class="basic-slide"
+                  id="Title"
+                  type="text"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  placeholder="Title"
+                /><label for="Title">Title</label>
+              </span>
+              <!-- <p>Note Title:</p>
               <textarea
                 id="user-input"
                 cols="30"
@@ -81,10 +90,22 @@
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
-              </textarea>
+              </textarea> -->
             </div>
             <div v-else-if="field.apiName === 'meeting_comments'">
-              <p>Notes:</p>
+              <span class="input-container">
+                <textarea
+                  class="basic-slide"
+                  id="notes"
+                  type="text"
+                  cols="30"
+                  rows="4"
+                  placeholder="Note"
+                  style="line-height: 2rem"
+                  @input=";(value = $event.target.value), setUpdateValues(value, field.apiName)"
+                /><label for="Note">Note</label>
+              </span>
+              <!-- <p>Notes:</p>
               <textarea
                 id="user-input"
                 ccols="30"
@@ -92,7 +113,7 @@
                 style="width: 36.5vw; border-radius: 0.2rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
-              </textarea>
+              </textarea> -->
             </div>
             <div
               v-else-if="
@@ -235,6 +256,7 @@
                 v-if="field.apiName === 'StageName'"
               >
                 <div class="adding-stage-gate__header">
+                  <img src="@/assets/images/warning.svg" alt="" />
                   <p>This Stage has validation rules</p>
                 </div>
 
@@ -422,9 +444,7 @@
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                type="text"
-                onfocus="(this.type='date')"
-                onblur="(this.type='text')"
+                type="date"
                 :placeholder="currentVals[field.apiName]"
                 v-model="currentVals[field.apiName]"
                 id="user-input"
@@ -503,10 +523,10 @@
         }
       "
     >
-      <div class="modal-container">
-        <header class="modal-container__header">
+      <div class="create-modal">
+        <header class="create-modal__header">
           <div class="flex-row">
-            <img src="@/assets/images/logo.png" height="24px" alt="" />
+            <img src="@/assets/images/logo.png" height="28px" alt="" />
             <h3>Create Zoom Meeting</h3>
           </div>
 
@@ -517,32 +537,40 @@
             alt=""
           />
         </header>
-        <section class="modal-container__body">
+        <section class="create-modal__body">
           <span>
-            <label class="label">Meeting Title</label>
-            <input v-model="meetingTitle" class="zoom-input" type="text" />
+            <input
+              v-model="meetingTitle"
+              class="zoom-input"
+              type="text"
+              placeholder="Meeting Title"
+            />
           </span>
 
           <span>
-            <label class="label">Description</label>
-            <input v-model="description" class="zoom-input" type="text" />
+            <textarea
+              v-model="description"
+              class="zoom-input-ta"
+              type="text"
+              placeholder="Meeting Description"
+            />
           </span>
 
           <span>
-            <label class="label">Start Date</label>
-            <input v-model="startDate" class="zoom-input" type="date" />
+            <label for="startDate">Date</label>
+            <input id="startDate" v-model="startDate" class="zoom-input" type="date" />
           </span>
 
           <span>
-            <label class="label">Start Time</label>
-            <input v-model="startTime" class="zoom-input" type="time" />
+            <label for="startTime">Time</label>
+            <input id="startTime" v-model="startTime" class="zoom-input" type="time" />
           </span>
 
-          <span class="multiselect-span">
-            <label class="">Duration</label>
+          <span>
+            <label>Duration</label>
             <Multiselect
               placeholder="Duration"
-              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              style="width: 32vw"
               v-model="meetingDuration"
               :options="fiveMinuteIntervals"
               openDirection="below"
@@ -554,14 +582,15 @@
             </Multiselect>
           </span>
 
-          <h3 style="margin-bottom: 0; margin-top: 0.5rem">Select participants</h3>
-          <span class="multiselect-span">
-            <label class="short">Internal Users</label>
-            <!-- <input v-model="internalParticipantsSelected" type="text" /> -->
+          <!-- <div style="text-align: center">
+            <h3>Add Participants</h3>
+          </div> -->
+
+          <span>
+            <label>Internal Participants</label>
             <Multiselect
               placeholder="Internal Users"
-              class="multiselect-width"
-              style="margin-bottom: 1rem; margin-top: 1rem"
+              style="width: 32vw"
               v-model="internalParticipantsSelected"
               :options="internalParticipants"
               openDirection="below"
@@ -576,13 +605,11 @@
             </Multiselect>
           </span>
 
-          <span class="multiselect-span">
-            <label class="short">External Users</label>
-            <!-- <input v-model="externalParticipantsSelected" type="text" /> -->
+          <span>
+            <label>External Participants</label>
             <Multiselect
               placeholder="External Users"
-              class="multiselect-width"
-              style="margin-bottom: 1rem; margin-top: 1rem"
+              style="width: 32vw; margin-bottom: 1rem"
               v-model="externalParticipantsSelected"
               :options="externalParticipants"
               openDirection="below"
@@ -598,7 +625,7 @@
           </span>
 
           <span>
-            <label class="label">Extra Users</label>
+            <label class="label">Additional Users</label>
             <input
               :class="
                 extraParticipantsSelected.length
@@ -611,8 +638,8 @@
             />
           </span>
 
-          <div>
-            <button class="green_button sized" @click="submitZoomMeeting">Submit</button>
+          <div class="create-modal__footer">
+            <button class="green_button" @click="submitZoomMeeting">Submit</button>
           </div>
         </section>
       </div>
@@ -874,8 +901,8 @@ export default {
         return
       }
       const hourMinute = this.startTime.split(':')
-      const contacts = this.externalParticipantsSelected.map(contact => contact.id)
-      const internal = this.internalParticipantsSelected.map(internal => internal.id)
+      const contacts = this.externalParticipantsSelected.map((contact) => contact.id)
+      const internal = this.internalParticipantsSelected.map((internal) => internal.id)
       const data = {
         meeting_topic: this.meetingTitle,
         meeting_description: this.description,
@@ -902,12 +929,12 @@ export default {
           this.resetMeeting()
         } else {
           this.$toast('Error Scheduling Meeting', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         }
       } catch (e) {
         console.log(e)
@@ -1587,36 +1614,86 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.modal-container {
-  background-color: $white;
-  overflow: auto;
-  width: 36vw;
-  max-height: 90vh;
-  align-items: center;
-  border-radius: 0.3rem;
-  padding: 0.25rem;
-  border: 1px solid #e8e8e8;
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.25rem 0.5rem;
-    color: $base-gray;
-    letter-spacing: 0.5px;
-    font-size: 18px;
-    border-bottom: 1px solid #e8e8e8;
-    height: 4rem;
-    img {
-      margin-right: 0.25rem;
-    }
+@mixin epic-sides() {
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    position: absolute;
+    content: '';
+    display: block;
+    top: 0;
+    left: -5000px;
+    height: 100%;
+    width: 15000px;
+    z-index: -1;
+    @content;
   }
-  &__body {
-    padding: 2rem 1.5rem;
-    display: flex;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.5rem;
-    letter-spacing: 0.5px;
+}
+
+.input-container {
+  position: relative;
+  display: inline-block;
+  margin: 30px 10px;
+  @include epic-sides() {
+    background: inherit;
+  }
+}
+
+.basic-slide {
+  display: inline-block;
+  width: 36vw;
+  margin-left: -8px;
+  padding: 9px 0 10px 16px;
+  font-family: $base-font-family !important;
+  font-weight: 400;
+  color: $base-gray;
+  background: $white;
+  border: 1px solid $soft-gray !important;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  text-indent: 70px; // Arbitrary.
+  transition: all 0.3s ease-in-out;
+
+  &::-webkit-input-placeholder {
+    color: #efefef;
+    text-indent: 0;
+    font-weight: 300;
+  }
+
+  + label {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 9px 8px;
+    font-size: 15px;
+    text-align: center;
+    margin-left: -8px;
+    width: 80px;
+    // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
+    background: $white-green;
+    color: $dark-green;
+    transition: all 0.3s ease-in-out;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 2px;
+  }
+}
+.basic-slide:focus,
+.basic-slide:active {
+  color: $base-gray;
+  text-indent: 0;
+  background: #fff;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+
+  &::-webkit-input-placeholder {
+    color: #aaa;
+  }
+  + label {
+    transform: translateX(-100%);
   }
 }
 
@@ -1647,17 +1724,25 @@ export default {
   position: relative;
 }
 .adding-stage-gate {
-  border: 2px solid #e8e8e8;
+  border: 2px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
   width: 36vw;
   min-height: 30vh;
   &__header {
     font-size: 11px;
-    color: $coral;
+    color: white;
     padding: 0.5rem;
     width: 100%;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid $coral;
+    background-color: $coral;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    img {
+      height: 16px;
+      filter: invert(90%);
+    }
   }
   &__body {
     padding: 0.25rem;
@@ -1685,7 +1770,7 @@ export default {
     height: 0px; /* Mostly for horizontal scrollbars */
   }
   &__body::-webkit-scrollbar-thumb {
-    background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
+    background-color: $coral;
     box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
     border-radius: 0.3rem;
   }
@@ -1779,14 +1864,16 @@ select {
     }
   }
 }
-input[type='search'] {
-  border: none;
-  background-color: $off-white;
-  padding: 4px;
-  margin: 0;
-}
-input[type='search']:focus {
+input:focus {
   outline: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+input[type='date']:focus {
+  outline: none;
+  color: $dark-green;
 }
 input[type='date']::-webkit-datetime-edit-text,
 input[type='date']::-webkit-datetime-edit-month-field,
@@ -1794,7 +1881,8 @@ input[type='date']::-webkit-datetime-edit-day-field,
 input[type='date']::-webkit-datetime-edit-year-field {
   color: #888;
   cursor: pointer;
-  padding-left: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
 }
 input {
   padding: 7px;
@@ -1819,6 +1907,17 @@ input {
   border-spacing: 4px;
   width: 100vw;
 }
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  min-width: 32vw;
+  max-width: 34vw;
+  min-height: 44vh;
+  max-height: 80vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+}
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
@@ -1829,7 +1928,7 @@ input {
   border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  width: 40vw;
+  width: 39vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -1842,9 +1941,6 @@ input {
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
-  div {
-    margin-right: 0.25rem;
-  }
 }
 .centered {
   display: flex;
@@ -1913,10 +2009,9 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  min-height: 4.5vh;
-  padding: 0.75rem 1rem;
-  font-size: 16px;
-  border-radius: 0.2rem;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -1968,8 +2063,17 @@ section {
   border: 1px solid $soft-gray;
   border-radius: 0.3rem;
   padding: 0.25rem;
-  height: 2rem;
-  width: 18vw;
+  height: 3rem;
+  width: 32vw;
+  font-family: inherit;
+}
+.zoom-input-ta {
+  border: 1px solid $soft-gray;
+  border-radius: 0.3rem;
+  height: 100px;
+  padding: 0.25rem;
+  width: 32vw;
+  font-family: inherit;
 }
 #user-input:focus {
   outline: 1px solid $dark-green;
@@ -2075,8 +2179,9 @@ a {
 .green_button {
   color: white;
   background-color: $dark-green;
+  max-height: 2rem;
   border-radius: 0.25rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.25rem;
   font-weight: bold;
   font-size: 12px;
   border: none;
@@ -2164,5 +2269,69 @@ a {
     // height: 1rem !important;
     margin-left: 0.25rem;
   }
+}
+.create-modal {
+  position: relative;
+  width: 36vw;
+  max-height: 80vh;
+  background-color: white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: scroll;
+
+  span {
+    margin-bottom: 8px;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    position: fixed;
+    background-color: white;
+    width: 36vw;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    h3 {
+      font-size: 21px;
+      letter-spacing: 1px;
+      margin-left: 4px;
+    }
+  }
+  &__body {
+    padding: 20px;
+    margin-top: 84px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    background-color: white;
+    position: sticky;
+    bottom: 0;
+    width: 36vw;
+    height: 70px;
+    padding: 8px 16px 0px 0px;
+  }
+}
+label {
+  display: inline-block;
+  padding: 6px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 80px;
+  background-color: $white-green;
+  color: $dark-green;
+  font-weight: bold;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
 </style>

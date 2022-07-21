@@ -28,6 +28,9 @@ class Meeting(TimeStampModel):
         default=dict, blank=True, null=True, help_text="Json object of extra meeting data"
     )
 
+    def __str__(self):
+        return f"{self.topic}, owner: {self.is_owner}"
+
     class Meta:
         ordering = ["-datetime_created"]
 

@@ -13,18 +13,6 @@
         </span>
       </div>
     </div>
-
-    <!-- <div v-else>
-        <div>
-          <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
-            {{ meeting.event_data.title }}
-          </p>
-          <span style="color: #9b9b9b; font-size: 11px">
-            Time: {{ formatUnix(meeting.event_data.times.start_time) }}
-          </span>
-        </div>
-      </div>
-    </div> -->
     <div class="table-cell">
       {{ meeting.participants.length }}
     </div>

@@ -565,10 +565,12 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 *new_contacts,
                 *meeting_contacts,
             ]
+            logger.info(f"PARTICIPANT EMAILS {participant_emails}")
             meeting_resource_data = dict(resource_id="", resource_type="")
             opportunity = Opportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__id=user.id
             ).first()
+            logger.info(f"ZOOM OPP {opportunity}")
             if opportunity:
                 meeting_resource_data["resource_id"] = str(opportunity.id)
                 meeting_resource_data["resource_type"] = "Opportunity"
@@ -577,6 +579,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 account = Account.objects.filter(
                     contacts__email__in=participant_emails, owner__id=user.id,
                 ).first()
+                logger.info(f"ZOOM Account {account}")
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
                     meeting_resource_data["resource_type"] = "Account"
@@ -617,13 +620,13 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
             meeting.save()
+            logger.info(f"MEETING RESOURCE DATA {meeting_resource_data}")
             workflow = MeetingWorkflow.objects.create(
                 user=user,
                 meeting=meeting,
                 operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
                 **meeting_resource_data,
             )
-
             workflow.forms.set(contact_forms)
             if send_slack:
                 # sends false only for Mike testing

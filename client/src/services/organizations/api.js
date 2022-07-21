@@ -1,6 +1,7 @@
-import { apiClient, apiErrorHandler, ApiFilter } from '@/services/api'
+import { apiClient, apiErrorHandler, ApiFilter, ModelAPI } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
+const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
 
 export default class OrganizationAPI {
   constructor(cls) {
@@ -24,13 +25,18 @@ export default class OrganizationAPI {
     }
     try {
       const res = await this.client.get(url, options)
-
       return {
         ...res.data,
-        results: res.data.results.map(this.cls.fromAPI),
+        results: res.data.results.map(this.cls.fromAPI)
       }
     } catch {
       apiErrorHandler({ apiName: 'Organization.list' })
     }
+  }
+  async orgUpdate(data) {
+    return this.client
+      .post(ORGANIZATIONS_UPDATE, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.orgUpdate' }))
   }
 }

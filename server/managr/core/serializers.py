@@ -14,7 +14,7 @@ from managr.slack.serializers import (
     UserSlackIntegrationSerializer,
     UserFrontEndSlackIntegrationSerializer,
 )
-
+from managr.zoom.serializers import ZoomAuthSerializer
 
 from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast
 
@@ -53,6 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
+    zoom_ref = ZoomAuthSerializer(source="zoom_account", read_only=True)
     activated_template_ref = serializers.SerializerMethodField("get_alert_template_refs")
     forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
@@ -87,6 +88,7 @@ class UserSerializer(serializers.ModelSerializer):
             "slack_ref",
             "slack_account",
             "zoom_account",
+            "zoom_ref",
             "salesloft_account",
             "has_salesloft_integration",
             "gong_account",
