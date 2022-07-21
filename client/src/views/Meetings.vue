@@ -651,9 +651,17 @@
           <span>{{ meetings ? meetings.length : 0 }}</span>
         </h6>
         <div class="flex-row">
-          <button @click="resetMeeting()" class="select-btn">
-            Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
-          </button>
+          <div v-if="!hasZoomIntegration" class="tooltip">
+            <button class="select-btn" :disabled="!hasZoomIntegration">
+              Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            </button>
+            <span class="tooltiptext">Connect Zoom</span>
+          </div>
+          <div v-else>
+            <button @click="resetMeeting()" class="select-btn" :disabled="!hasZoomIntegration">
+              Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            </button>
+          </div>
 
           <div class="tooltip">
             <button @click="refreshCalEvents" class="select-btn cloud">
@@ -821,6 +829,9 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    hasZoomIntegration() {
+      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
   },
   created() {
@@ -2316,6 +2327,17 @@ a {
     // height: 1rem !important;
     margin-left: 0.25rem;
   }
+}
+.select-btn:disabled {
+  border: none;
+  box-shadow: none;
+  background-color: $soft-gray;
+  cursor: text;
+  color: $base-gray;
+  opacity: .6;
+}
+.select-btn:disabled:hover {
+  transform: none;
 }
 .create-modal {
   position: relative;
