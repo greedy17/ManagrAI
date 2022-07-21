@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from urllib.parse import urlencode
 from managr.core.background import emit_create_calendar_event
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -428,15 +429,16 @@ def schedule_zoom_meeting(request):
         "meeting_time": data["meeting_time"],
         "meeting_duration": data["meeting_duration"],
     }
+    # print("\n\nMeeting Duration\n\n", zoom_data["meeting_duration"], "\n\n")
     participant_data = []
-    contacts = Contact.objectsd.filter(id__in=data.get("contacts"))
+    contacts = Contact.objects.filter(id__in=data.get("contacts"))
     internal = User.objects.filter(id__in=data.get("internal"))
     extra_participants = data.get("extra_participants")
     for contact in contacts:
         participant_data.append(
             {
                 "email": contact.email,
-                "name": contact["secondary_data"]["Name"],
+                "name": contact.secondary_data["Name"],
                 "status": "noreply",
             }
         )
@@ -456,6 +458,7 @@ def schedule_zoom_meeting(request):
             zoom_res["join_url"],
             description,
         )
+        print("\n\ncal_res\n\n", cal_res, "\n\n")
     except Exception as e:
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)

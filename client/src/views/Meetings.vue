@@ -444,9 +444,7 @@
             <div v-else-if="field.dataType === 'Date'">
               <p>{{ field.referenceDisplayLabel }}:</p>
               <input
-                type="text"
-                onfocus="(this.type='date')"
-                onblur="(this.type='text')"
+                type="date"
                 :placeholder="currentVals[field.apiName]"
                 v-model="currentVals[field.apiName]"
                 id="user-input"
@@ -516,7 +514,136 @@
         </div>
       </div>
     </Modal>
+    <Modal
+      v-if="meetingOpen"
+      dimmed
+      @close-modal="
+        () => {
+          //$emit('cancel'), resetMeeting()
+        }
+      "
+    >
+      <div class="create-modal">
+        <header class="create-modal__header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" height="28px" alt="" />
+            <h3>Create Zoom Meeting</h3>
+          </div>
 
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
+            @click="resetMeeting()"
+            alt=""
+          />
+        </header>
+        <section class="create-modal__body">
+          <span>
+            <input
+              v-model="meetingTitle"
+              class="zoom-input"
+              type="text"
+              placeholder="Meeting Title"
+            />
+          </span>
+
+          <span>
+            <textarea
+              v-model="description"
+              class="zoom-input-ta"
+              type="text"
+              placeholder="Meeting Description"
+            />
+          </span>
+
+          <span>
+            <label for="startDate">Date</label>
+            <input id="startDate" v-model="startDate" class="zoom-input" type="date" />
+          </span>
+
+          <span>
+            <label for="startTime">Time</label>
+            <input id="startTime" v-model="startTime" class="zoom-input" type="time" />
+          </span>
+
+          <span>
+            <label>Duration</label>
+            <Multiselect
+              placeholder="Duration"
+              style="width: 32vw"
+              v-model="meetingDuration"
+              :options="fiveMinuteIntervals"
+              openDirection="below"
+              :multiple="false"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </span>
+
+          <!-- <div style="text-align: center">
+            <h3>Add Participants</h3>
+          </div> -->
+
+          <span>
+            <label>Internal Participants</label>
+            <Multiselect
+              placeholder="Internal Users"
+              style="width: 32vw"
+              v-model="internalParticipantsSelected"
+              :options="internalParticipants"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              :custom-label="internalCustomLabel"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </span>
+
+          <span>
+            <label>External Participants</label>
+            <Multiselect
+              placeholder="External Users"
+              style="width: 32vw; margin-bottom: 1rem"
+              v-model="externalParticipantsSelected"
+              :options="externalParticipants"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              :custom-label="externalCustomLabel"
+              :multiple="true"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </span>
+
+          <span>
+            <label class="label">Additional Users</label>
+            <input
+              :class="
+                extraParticipantsSelected.length
+                  ? 'zoom-input'
+                  : 'light-gray-placeholder zoom-input'
+              "
+              v-model="extraParticipantsSelected"
+              type="text"
+              placeholder="Separate emails by commas"
+            />
+          </span>
+
+          <div class="create-modal__footer">
+            <button class="green_button" @click="submitZoomMeeting">Submit</button>
+          </div>
+        </section>
+      </div>
+    </Modal>
     <div ref="pipelines" v-if="!loading">
       <div class="results">
         <h6 style="color: #9b9b9b">
@@ -526,6 +653,10 @@
         <div>
           <button @click="refreshCalEvents" class="select-btn">
             <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
+          </button>
+
+          <button @click="resetMeeting()" class="select-btn">
+            Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
           </button>
         </div>
       </div>
@@ -570,6 +701,7 @@ import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesfor
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
+import Zoom from '@/services/zoom/account'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
 import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import User from '@/services/users'
@@ -587,6 +719,7 @@ export default {
   },
   data() {
     return {
+      meetingOpen: false,
       integrationId: null,
       stageGateField: null,
       stageValidationFields: {},
@@ -655,6 +788,17 @@ export default {
       selectedMeeting: false,
       meetings: null,
       referenceOpts: {},
+      fiveMinuteIntervals: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+      meetingTitle: '',
+      description: '',
+      startDate: null,
+      startTime: null,
+      meetingDuration: 30,
+      internalParticipants: null,
+      externalParticipants: null,
+      internalParticipantsSelected: [],
+      externalParticipantsSelected: [],
+      extraParticipantsSelected: '',
       stageGateId: null,
       booleans: ['true', 'false'],
       notes: [],
@@ -683,6 +827,7 @@ export default {
   },
   beforeMount() {
     this.getUsers()
+    this.getExternalParticipants()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
@@ -704,6 +849,102 @@ export default {
     // },
   },
   methods: {
+    resetMeeting() {
+      this.clearData()
+      this.meetingOpen = !this.meetingOpen
+    },
+    async submitZoomMeeting() {
+      if (
+        !this.meetingTitle ||
+        !this.startDate ||
+        !this.startTime ||
+        !this.meetingDuration ||
+        !this.externalParticipantsSelected
+      ) {
+        console.log('Please input all information')
+        this.$toast('Please input all information', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      let noSpacesExtra = ''
+      for (let i = 0; i < this.extraParticipantsSelected.length; i++) {
+        this.extraParticipantsSelected[i] !== ' '
+          ? (noSpacesExtra += this.extraParticipantsSelected[i])
+          : null
+      }
+      let extraParticipants = []
+      if (noSpacesExtra) {
+        extraParticipants = noSpacesExtra.split(',')
+      }
+      let extra_participants = []
+      for (let i = 0; i < extraParticipants.length; i++) {
+        const participant = extraParticipants[i]
+        if (participant.length) {
+          extra_participants.push(participant)
+        }
+      }
+      if (
+        !(
+          this.internalParticipantsSelected.length ||
+          this.externalParticipantsSelected.length ||
+          extra_participants.length
+        )
+      ) {
+        console.log('Please add participants to the meeting')
+        this.$toast('Please add participants to the meeting', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      const hourMinute = this.startTime.split(':')
+      const contacts = this.externalParticipantsSelected.map((contact) => contact.id)
+      const internal = this.internalParticipantsSelected.map((internal) => internal.id)
+      const data = {
+        meeting_topic: this.meetingTitle,
+        meeting_description: this.description,
+        meeting_date: this.startDate,
+        meeting_hour: hourMinute[0],
+        meeting_minute: hourMinute[1],
+        meeting_time: this.startTime,
+        meeting_duration: this.meetingDuration,
+        contacts,
+        internal,
+        extra_participants,
+      }
+
+      try {
+        const res = await Zoom.api.createZoomMeeting(data)
+        if (res.status === 200) {
+          this.$toast('Meeting Scheduled', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.resetMeeting()
+        } else {
+          this.$toast('Error Scheduling Meeting', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    },
     resetNotes() {
       this.modalOpen = !this.modalOpen
       this.notes = []
@@ -730,6 +971,16 @@ export default {
           bodyClassName: ['custom'],
         })
       }
+    },
+    clearData() {
+      this.meetingTitle = ''
+      this.description = ''
+      this.startDate = null
+      this.startTime = null
+      this.meetingDuration = 30
+      this.internalParticipantsSelected = []
+      this.externalParticipantsSelected = []
+      this.extraParticipantsSelected = ''
     },
     async stageGateInstance(field) {
       this.stageGateId = null
@@ -788,7 +1039,7 @@ export default {
             bodyClassName: ['custom'],
           })
         }
-      } catch(e) {
+      } catch (e) {
         console.log('Error in refreshCalEvents: ', e)
       }
     },
@@ -1291,6 +1542,21 @@ export default {
       try {
         const res = await SObjects.api.getObjects('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
+        this.internalParticipants = this.allUsers
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    internalCustomLabel({ full_name, email }) {
+      return `${full_name} (${email})`
+    },
+    externalCustomLabel({ secondary_data, email }) {
+      return `${secondary_data.Name ? secondary_data.Name : 'N/A'} (${email ? email : 'N/A'})`
+    },
+    async getExternalParticipants() {
+      try {
+        const res = await SObjects.api.getObjects('Contact')
+        this.externalParticipants = res.results //.filter((user) => user.has_salesforce_integration)
       } catch (e) {
         this.$toast('Error gathering users', {
           timeout: 2000,
@@ -1406,7 +1672,8 @@ export default {
 
 .basic-slide {
   display: inline-block;
-  width: 34vw;
+  width: 36vw;
+  margin-left: -8px;
   padding: 9px 0 10px 16px;
   font-family: $base-font-family !important;
   font-weight: 400;
@@ -1433,10 +1700,11 @@ export default {
     padding: 9px 8px;
     font-size: 15px;
     text-align: center;
+    margin-left: -8px;
     width: 80px;
     // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
-    background: $dark-green;
-    color: $white;
+    background: $white-green;
+    color: $dark-green;
     transition: all 0.3s ease-in-out;
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
@@ -1566,9 +1834,10 @@ export default {
   width: 100%;
   display: flex;
   padding-left: 1rem;
-  margin-bottom: -1.25rem;
+  margin-bottom: -0.25rem;
   margin-top: -0.75rem;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: space-between;
 }
 
 select {
@@ -1584,27 +1853,6 @@ select {
   border: 1px solid #ccc;
   padding-left: 0.75rem;
   border-radius: 0;
-}
-.select-btn {
-  border: none;
-  min-height: 4.5vh;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  // box-shadow: 1px 1px 2px $very-light-gray;
-  border-radius: 0.25rem;
-  background-color: white;
-  border: 1px solid #e8e8e8;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
 }
 .select-btn:hover {
   transform: scale(1.02);
@@ -1646,14 +1894,16 @@ select {
     }
   }
 }
-input[type='search'] {
-  border: none;
-  background-color: $off-white;
-  padding: 4px;
-  margin: 0;
-}
-input[type='search']:focus {
+input:focus {
   outline: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+input[type='date']:focus {
+  outline: none;
+  color: $dark-green;
 }
 input[type='date']::-webkit-datetime-edit-text,
 input[type='date']::-webkit-datetime-edit-month-field,
@@ -1661,7 +1911,8 @@ input[type='date']::-webkit-datetime-edit-day-field,
 input[type='date']::-webkit-datetime-edit-year-field {
   color: #888;
   cursor: pointer;
-  padding-left: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
 }
 input {
   padding: 7px;
@@ -1686,6 +1937,17 @@ input {
   border-spacing: 4px;
   width: 100vw;
 }
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  min-width: 32vw;
+  max-width: 34vw;
+  min-height: 44vh;
+  max-height: 80vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+}
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
@@ -1696,7 +1958,7 @@ input {
   border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  width: 40vw;
+  width: 39vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -1709,9 +1971,6 @@ input {
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
-  div {
-    margin-right: 0.25rem;
-  }
 }
 .centered {
   display: flex;
@@ -1772,6 +2031,9 @@ section {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  img {
+    margin-left: 0.5rem;
+  }
 }
 .add-button__ {
   display: flex;
@@ -1826,6 +2088,22 @@ section {
   background-color: white;
   min-height: 2.5rem;
   width: 18vw;
+}
+.zoom-input {
+  border: 1px solid $soft-gray;
+  border-radius: 0.3rem;
+  padding: 0.25rem;
+  height: 3rem;
+  width: 32vw;
+  font-family: inherit;
+}
+.zoom-input-ta {
+  border: 1px solid $soft-gray;
+  border-radius: 0.3rem;
+  height: 100px;
+  padding: 0.25rem;
+  width: 32vw;
+  font-family: inherit;
 }
 #user-input:focus {
   outline: 1px solid $dark-green;
@@ -1928,17 +2206,21 @@ textarea {
 a {
   text-decoration: none;
 }
-.modal-container {
-  background-color: $white;
-  overflow: auto;
-  min-width: 32vw;
-  max-width: 34vw;
-  min-height: 44vh;
-  max-height: 80vh;
-  align-items: center;
-  border-radius: 0.3rem;
+.green_button {
+  color: white;
+  background-color: $dark-green;
+  max-height: 2rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1.25rem;
+  font-weight: bold;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+}
 
-  border: 1px solid #e8e8e8;
+.sized {
+  height: 3em;
+  align-self: center;
 }
 .logo {
   height: 1.75rem;
@@ -1979,5 +2261,107 @@ a {
 }
 .logged {
   border-left: 1px solid $dark-green;
+}
+.light-gray-placeholder::placeholder {
+  color: #adadad;
+}
+.multiselect-span {
+  display: flex;
+  align-items: center;
+
+  label {
+    margin-right: 0.5rem;
+  }
+}
+.multiselect-width {
+  // max-width: 23vw;
+  width: 23vw;
+}
+.label {
+  margin-right: 0.5rem;
+}
+.select-btn {
+  border: 0.5px solid $dark-green;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    // filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    // height: 1rem !important;
+    margin-left: 0.25rem;
+  }
+}
+.create-modal {
+  position: relative;
+  width: 36vw;
+  max-height: 80vh;
+  background-color: white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: scroll;
+
+  span {
+    margin-bottom: 8px;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    position: fixed;
+    background-color: white;
+    width: 36vw;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    h3 {
+      font-size: 21px;
+      letter-spacing: 1px;
+      margin-left: 4px;
+    }
+  }
+  &__body {
+    padding: 20px;
+    margin-top: 84px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    background-color: white;
+    position: sticky;
+    bottom: 0;
+    width: 36vw;
+    height: 70px;
+    padding: 8px 16px 0px 0px;
+  }
+}
+label {
+  display: inline-block;
+  padding: 6px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 80px;
+  background-color: $white-green;
+  color: $dark-green;
+  font-weight: bold;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
 </style>
