@@ -935,8 +935,8 @@ export default {
         internal,
         extra_participants,
       }
-
       try {
+        this.resetMeeting()
         const res = await Zoom.api.createZoomMeeting(data)
         if (res.status === 200) {
           this.$toast('Meeting Scheduled', {
@@ -946,7 +946,6 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          this.resetMeeting()
         } else {
           this.$toast('Error Scheduling Meeting', {
             timeout: 2000,
