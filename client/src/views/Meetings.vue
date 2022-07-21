@@ -695,7 +695,7 @@
       </section>
     </div>
     <div v-if="loading">
-      <Loader loaderText="Pulling in your meetings" />
+      <Loader :loaderText="loaderText" />
     </div>
   </div>
 </template>
@@ -815,7 +815,7 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
-      time1: 0,
+      loaderText: "Pulling in your meetings",
     }
   },
   computed: {
@@ -1023,33 +1023,41 @@ export default {
       }
     },
     async refreshCalEvents() {
+      let response
       try {
-        this.time1 = Date.now()
-        const res = await User.api.refreshCalendarEvents()
-
-        if (res.status === 200) {
-          this.$toast('Calendar Successfully Synced', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } else {
-          this.$toast('Error Syncing Calendar', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        }
+        response = await User.api.refreshCalendarEvents()        
       } catch (e) {
         console.log('Error in refreshCalEvents: ', e)
       } finally {
+        this.loading = true
+        this.loaderText = "Pulling your calendar events..."
         setTimeout(() => {
+          this.loaderText = "Mapping to Salesforce..."
           this.getMeetingList()
-        }, 2000);
+          setTimeout(() => {
+            this.loading = false
+            this.loaderText = "Pulling in your meetings"
+            this.getMeetingList()
+            if (response.status === 200) {
+              this.$toast('Calendar Successfully Synced', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+            } else {
+              this.$toast('Error Syncing Calendar', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'error',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+            }
+          }, 1500);
+        }, 1500);
+        
       }
     },
     async getMeetingList() {
@@ -1065,8 +1073,6 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        const time2 = Date.now()
-        console.log(`This took ${(time2 - this.time1)/1000} seconds`)
       }
     },
     async mapOpp(workflow, resource, resourceType) {
