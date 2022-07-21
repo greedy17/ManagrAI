@@ -22,7 +22,6 @@ class Command(BaseCommand):
                 )
 
             operations = user.salesforce_account.resource_sync_opts
-
             scheduled_time = timezone.now()
             formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
             emit_gen_next_sync(str(user.id), operations, formatted_time)
