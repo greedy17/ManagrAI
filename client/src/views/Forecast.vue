@@ -276,7 +276,12 @@
                     currentValues[index].account_ref ? currentValues[index].account_ref.name : ''
                   }}
                 </p>
-                <p class="gray-text">Owned by: {{ currentValues[index].owner_ref.full_name }}</p>
+                <p class="gray-text">
+                  Owned by:
+                  {{
+                    currentValues[index].owner_ref ? currentValues[index].owner_ref.full_name : ''
+                  }}
+                </p>
               </div>
 
               <div class="row">
@@ -528,7 +533,6 @@ export default {
 
   mounted() {
     this.setPicklist()
-    console.log(this.forecastOpps)
   },
   methods: {
     resetNotes() {
@@ -555,7 +559,6 @@ export default {
     setDeleteId(id) {
       this.deleteIds = []
       this.deleteIds.push(id)
-      console.log(this.deleteIds)
     },
     async removeForecast() {
       try {
@@ -724,7 +727,6 @@ export default {
         )
       }
       this.closeFilterSelection()
-      console.log(this.activeFilters)
     },
     valueSelected(value) {
       this.currentVal = value
@@ -733,7 +735,6 @@ export default {
       this.currentOperator = val
     },
     removeFilter(name, index) {
-      console.log(index)
       this.activeFilters.splice(index, 1)
       this.filterValues.splice(index, 1)
       this.activeOperators.splice(index, 1)

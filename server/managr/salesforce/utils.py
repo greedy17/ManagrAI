@@ -134,3 +134,12 @@ def process_text_field_format(user_id, resource, saved_data):
                     saved_data[field] = salesforce_formatted
         return saved_data
     return False
+
+
+def map_records(arr1, arr2):
+    merged_list = []
+    for obj in arr1:
+        found_obj = list(filter(lambda x: x["Id"] == obj["Id"], arr2))[0]
+        obj.update(found_obj)
+        merged_list.append(obj)
+    return merged_list

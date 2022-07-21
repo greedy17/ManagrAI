@@ -687,12 +687,16 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
     def create_in_salesforce(data=None, user_id=None):
         user = User.objects.get(id=user_id)
         if user and hasattr(user, "salesforce_account"):
+            if "UnitPrice" not in data.keys():
+                entry = PricebookEntry.objects.get(integration_id=data["PricebookEntryId"])
+                data["UnitPrice"] = str(entry.unit_price)
             token = user.salesforce_account.access_token
             base_url = user.salesforce_account.instance_url
             object_fields = user.salesforce_account.object_fields.filter(
                 salesforce_object="OpportunityLineItem"
             ).values_list("api_name", flat=True)
             res = OpportunityLineItemAdapter.create(data, token, base_url, object_fields, user_id)
+            print(res)
             from managr.salesforce.routes import routes
 
             serializer = routes["OpportunityLineItem"]["serializer"](data=res.as_dict)

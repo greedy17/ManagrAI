@@ -458,7 +458,6 @@ export default {
   },
   mounted() {
     if (this.resourceId) {
-      console.log(this.meeting)
       this.getCurrentVals()
     }
   },
