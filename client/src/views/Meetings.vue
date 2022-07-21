@@ -667,7 +667,7 @@
             <button @click="refreshCalEvents" class="select-btn cloud">
               <img src="@/assets/images/eventRepeat.svg" style="height: 26px" alt="" />
             </button>
-            <span class="tooltiptext">Sync Fields</span>
+            <span class="tooltiptext">Sync Calendar</span>
           </div>
         </div>
       </div>
