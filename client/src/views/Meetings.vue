@@ -650,14 +650,25 @@
           Today's Meetings:
           <span>{{ meetings ? meetings.length : 0 }}</span>
         </h6>
-        <div>
-          <button @click="refreshCalEvents" class="select-btn">
-            <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
-          </button>
+        <div class="flex-row">
+          <div v-if="!hasZoomIntegration" class="tooltip">
+            <button class="select-btn" :disabled="!hasZoomIntegration">
+              Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            </button>
+            <span class="tooltiptext">Connect Zoom</span>
+          </div>
+          <div v-else>
+            <button @click="resetMeeting()" class="select-btn" :disabled="!hasZoomIntegration">
+              Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            </button>
+          </div>
 
-          <button @click="resetMeeting()" class="select-btn">
-            Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
-          </button>
+          <div class="tooltip">
+            <button @click="refreshCalEvents" class="select-btn cloud">
+              <img src="@/assets/images/eventRepeat.svg" style="height: 26px" alt="" />
+            </button>
+            <span class="tooltiptext">Sync Fields</span>
+          </div>
         </div>
       </div>
 
@@ -692,7 +703,7 @@
       </section>
     </div>
     <div v-if="loading">
-      <Loader loaderText="Pulling in your meetings" />
+      <Loader :loaderText="loaderText" />
     </div>
   </div>
 </template>
@@ -812,11 +823,15 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
+      loaderText: "Pulling in your meetings",
     }
   },
   computed: {
     user() {
       return this.$store.state.user
+    },
+    hasZoomIntegration() {
+      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
   },
   created() {
@@ -1019,28 +1034,41 @@ export default {
       }
     },
     async refreshCalEvents() {
+      let response
       try {
-        const res = await User.api.refreshCalendarEvents()
-        console.log('refresh res', res)
-        if (res.status === 200) {
-          this.$toast('Calendar Successfully Synced', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } else {
-          this.$toast('Error Syncing Calendar', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        }
+        response = await User.api.refreshCalendarEvents()        
       } catch (e) {
         console.log('Error in refreshCalEvents: ', e)
+      } finally {
+        this.loading = true
+        this.loaderText = "Pulling your calendar events..."
+        setTimeout(() => {
+          this.loaderText = "Mapping to Salesforce..."
+          this.getMeetingList()
+          setTimeout(() => {
+            this.loading = false
+            this.loaderText = "Pulling in your meetings"
+            this.getMeetingList()
+            if (response.status === 200) {
+              this.$toast('Calendar Successfully Synced', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+            } else {
+              this.$toast('Error Syncing Calendar', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'error',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+            }
+          }, 1500);
+        }, 1500);
+        
       }
     },
     async getMeetingList() {
@@ -2300,6 +2328,17 @@ a {
     margin-left: 0.25rem;
   }
 }
+.select-btn:disabled {
+  border: none;
+  box-shadow: none;
+  background-color: $soft-gray;
+  cursor: text;
+  color: $base-gray;
+  opacity: .6;
+}
+.select-btn:disabled:hover {
+  transform: none;
+}
 .create-modal {
   position: relative;
   width: 36vw;
@@ -2363,5 +2402,58 @@ label {
   font-weight: bold;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+}
+.cloud {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // color: #41b883;
+  background-color: white;
+  transition: all 0.25s;
+  img {
+    height: 1.05rem !important;
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
+}
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+  z-index: 5;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
 }
 </style>

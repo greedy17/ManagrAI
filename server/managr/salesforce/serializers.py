@@ -93,7 +93,7 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
 
 
 class SObjectPicklistSerializer(serializers.ModelSerializer):
-    field_ref = SObjectFieldSerializer(source="field")
+    field_ref = SObjectFieldSerializer(source="field", required=False)
 
     class Meta:
         model = SObjectPicklist
