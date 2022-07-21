@@ -2082,6 +2082,8 @@ export default {
           this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
           this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
         }
+        console.log(res)
+        console.log(this.allPicklistOptions)
       } catch (e) {
         console.log(e)
       }
