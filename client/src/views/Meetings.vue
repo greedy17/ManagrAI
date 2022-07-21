@@ -656,6 +656,7 @@ export default {
   },
   beforeMount() {
     this.getUsers()
+    this.refreshCalEvents()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
@@ -738,6 +739,31 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      }
+    },
+    async refreshCalEvents() {
+      try {
+        const res = await User.api.refreshCalendarEvents()
+        console.log('refresh res', res)
+        if (res.status === 200) {
+          this.$toast('Calendar Successfully Synced', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Error Syncing Calendar', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } catch(e) {
+        console.log('Error in refreshCalEvents: ', e)
       }
     },
     async getMeetingList() {
