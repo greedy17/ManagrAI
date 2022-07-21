@@ -388,9 +388,11 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                     )
                 else:
                     picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
-
-                picklist_serializer.is_valid(raise_exception=True)
-                picklist_serializer.save()
+                try:
+                    picklist_serializer.is_valid(raise_exception=True)
+                    picklist_serializer.save()
+                except Exception as e:
+                    logger.exception(f"Picklist sync exception for {field.api_name}: {e}")
                 if for_dev:
                     logger.info(
                         f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer.data}>"
