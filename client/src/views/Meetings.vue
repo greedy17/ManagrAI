@@ -1066,8 +1066,8 @@ export default {
                 bodyClassName: ['custom'],
               })
             }
-          }, 1500);
-        }, 1500);
+          }, 3000);
+        }, 2000);
         
       }
     },
