@@ -2082,8 +2082,6 @@ export default {
           this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
           this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
         }
-        console.log(res)
-        console.log(this.allPicklistOptions)
       } catch (e) {
         console.log(e)
       }
@@ -3740,8 +3738,8 @@ export default {
     text-align: center;
     width: 80px;
     // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
-    background: $dark-green;
-    color: $white;
+    background: $white-green;
+    color: $dark-green;
     transition: all 0.3s ease-in-out;
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;

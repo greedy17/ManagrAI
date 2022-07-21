@@ -326,7 +326,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
         params: this.cls.toAPI(params),
 
       })
-      console.log(res)
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)

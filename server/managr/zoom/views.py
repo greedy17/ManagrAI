@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from urllib.parse import urlencode
 from managr.core.background import emit_create_calendar_event
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -175,7 +176,6 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
-    logger.info({f"--ZOOM_MEETING_FROM_ZOOM event {event} payload{obj}"})
     if event == zoom_consts.MEETING_EVENT_ENDED:
         extra_obj = obj.pop("object", {})
         obj = {**obj, **extra_obj}
@@ -187,9 +187,20 @@ def zoom_meetings_webhook(request):
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
         if zoom_account and not zoom_account.is_revoked:
             # emit the process
-            _get_past_zoom_meeting_details(
-                str(zoom_account.user.id), meeting_uuid, original_duration
+            workflow_check = (
+                MeetingWorkflow.objects.for_user(zoom_account.user)
+                .filter(meeting__topic=obj.get("topic", None))
+                .first()
             )
+            logger.info(f"WORKFLOW CHECK FOR {zoom_account.user} --- {workflow_check}")
+            if workflow_check:
+                workflow_check.meeting.meeting_id = meeting_uuid
+                workflow_check.meeting.save()
+                workflow_check.begin_communication()
+            else:
+                _get_past_zoom_meeting_details(
+                    str(zoom_account.user.id), meeting_uuid, original_duration
+                )
 
     return Response()
 
@@ -217,10 +228,7 @@ def init_fake_meeting(request):
     user = slack.user
     if not user.has_zoom_integration:
         return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Sorry I cant find your zoom account",
-            }
+            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
         )
     text = request.data.get("text", "")
     if len(text):
@@ -248,10 +256,7 @@ def init_fake_meeting(request):
     )
     if not meeting_uuid:
         return Response(
-            data={
-                "response_type": "ephemeral",
-                "text": "Sorry I cant find your zoom meeting",
-            }
+            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
         )
     meeting = Meeting.objects.filter(meeting_id=meeting_uuid).first()
     if meeting:
@@ -269,12 +274,7 @@ def init_fake_meeting(request):
             str(zoom_account.user.id), meeting_uuid, original_duration, send_slack=False
         )
         if not workflow:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "An error occured",
-                }
-            )
+            return Response(data={"response_type": "ephemeral", "text": "An error occured",})
         # get meeting
         workflow.begin_communication(now=True)
         workflow = MeetingWorkflow.objects.filter(meeting__meeting_id=meeting_uuid).first()
@@ -316,7 +316,7 @@ def init_fake_meeting(request):
                     block_builders.context_block(f"Owned by {user.full_name}"),
                 ],
             )
-            print(res)
+
         except InvalidBlocksException as e:
             return logger.exception(
                 f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -405,8 +405,7 @@ def fake_recording(request):
             user.organization.slack_integration.access_token,
             text="Your meeting recording is ready!",
             block_set=get_block_set(
-                "zoom_recording_blockset",
-                {"u": str(user.id), "url": download_url, "topic": topic},
+                "zoom_recording_blockset", {"u": str(user.id), "url": download_url, "topic": topic},
             ),
         )
     except Exception as e:
@@ -430,25 +429,22 @@ def schedule_zoom_meeting(request):
         "meeting_time": data["meeting_time"],
         "meeting_duration": data["meeting_duration"],
     }
+    # print("\n\nMeeting Duration\n\n", zoom_data["meeting_duration"], "\n\n")
     participant_data = []
-    contacts = Contact.objectsd.filter(id__in=data.get("contacts"))
+    contacts = Contact.objects.filter(id__in=data.get("contacts"))
     internal = User.objects.filter(id__in=data.get("internal"))
     extra_participants = data.get("extra_participants")
     for contact in contacts:
         participant_data.append(
             {
                 "email": contact.email,
-                "name": contact["secondary_data"]["Name"],
+                "name": contact.secondary_data["Name"],
                 "status": "noreply",
             }
         )
     for u in internal:
         participant_data.append(
-            {
-                "email": u.email,
-                "name": f"{u.first_name} {u.last_name}",
-                "status": "noreply",
-            }
+            {"email": u.email, "name": f"{u.first_name} {u.last_name}", "status": "noreply",}
         )
     for participant in extra_participants:
         participant_data.append({"email": participant})
@@ -462,6 +458,7 @@ def schedule_zoom_meeting(request):
             zoom_res["join_url"],
             description,
         )
+        print("\n\ncal_res\n\n", cal_res, "\n\n")
     except Exception as e:
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)

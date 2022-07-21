@@ -150,6 +150,19 @@ export default class UserAPI {
     return promise
   }
 
+  refreshCalendarEvents() {
+    const promise = apiClient()
+      .get(USERS_ENDPOINT + 'refresh-calendar-events/')
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
   checkStatus(email) {
     const data = { email }
     const promise = apiClient()

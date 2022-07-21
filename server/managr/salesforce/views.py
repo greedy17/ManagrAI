@@ -876,7 +876,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         user = self.request.user
         if from_admin and user.is_staff:
             return MeetingWorkflow.objects.all()[:100]
-        return MeetingWorkflow.objects.for_user(user)
+        return MeetingWorkflow.objects.for_user(user).order_by("meeting__start_time")
 
     @action(
         methods=["post"],
@@ -893,8 +893,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         print(workflow.forms.all())

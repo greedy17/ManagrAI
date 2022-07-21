@@ -3,7 +3,17 @@
   font-family: "Roboto Medium";
   src: url('https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap');
 }
-// Lato
+// Mont
+@font-face {
+  font-family: "Montserrat" ;
+  src: url('~@/assets/fonts/Montserrat.ttf') format("truetype");
+}
+
+@font-face {
+  font-family: "Quicksand" ;
+  src: url('~@/assets/fonts/Quicksand-Regular.ttf') format("truetype");
+}
+
 @font-face {
   font-family: "Lato-Regular";
   src: url("~@/assets/fonts/Lato-Regular.ttf") format("truetype");
