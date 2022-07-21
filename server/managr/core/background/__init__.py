@@ -627,7 +627,7 @@ def _process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end
     end_time_timestamp = datetime.strptime(meeting_end_time, "%m/%d/%Y, %H:%M:%S")
     current_time = datetime.now()
     if current_time > end_time_timestamp:
-        seconds = current_time.timetuple()
+        seconds = int(current_time.timestamp())
         time_difference = "Meeting passed current time"
     else:
         time_difference = end_time_timestamp - current_time
