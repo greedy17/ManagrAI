@@ -1534,7 +1534,9 @@
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
-                      `${currentVals[field.apiName]}` !== 'null'
+                      field.apiName === 'OwnerId'
+                        ? currentOwner
+                        : `${currentVals[field.apiName]}` !== 'null'
                         ? `${currentVals[field.apiName]}`
                         : `${field.referenceDisplayLabel}`
                     }}
@@ -1807,22 +1809,29 @@ import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
+import WorkflowHeader from '@/components/WorkflowHeader'
+import WorkflowRow from '@/components/WorkflowRow'
+import Modal from '@/components/InviteModal'
+import Loader from '@/components/Loader'
+import PipelineLoader from '@/components/PipelineLoader'
+import Filters from '@/components/Filters'
+import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
 
 export default {
   name: 'Pipelines',
   components: {
-    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Modal,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineTableRow,
     PipelineHeader,
-    WorkflowHeader: () => import(/* webpackPrefetch: true */ '@/components/WorkflowHeader'),
-    WorkflowRow: () => import(/* webpackPrefetch: true */ '@/components/WorkflowRow'),
-    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
-    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
-    Filters: () => import(/* webpackPrefetch: true */ '@/components/Filters'),
-    FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
+    WorkflowHeader,
+    WorkflowRow,
+    PipelineLoader,
+    Loader,
+    Filters,
+    FilterSelection,
   },
   data() {
     return {
@@ -2047,14 +2056,14 @@ export default {
     this.getObjectsForWorkflows()
     this.getAllForms()
     this.getAllPicklist()
-    await this.objectFields.refresh()
-    await this.templates.refresh()
+    this.getUsers()
+    this.objectFields.refresh()
+    this.templates.refresh()
   },
   beforeMount() {
-    this.getUsers()
+    this.selectList()
   },
   mounted() {
-    this.selectList()
     this.resourceSync()
   },
   watch: {
@@ -2165,12 +2174,30 @@ export default {
         this.primaryCheckList = []
       }
     },
-    openStageForm(field, id, integrationId) {
+    async openStageForm(field, id, integrationId) {
       this.setUpdateValues('StageName', field)
       this.stageGateField = field
       this.stageFormOpen = true
       this.stageId = id
       this.stageIntegrationId = integrationId
+      this.dropdownLoading = true
+      try {
+        const res = await SObjects.api.getCurrentValues({
+          resourceType: 'Opportunity',
+          resourceId: id,
+        })
+        this.currentVals = res.current_values
+        this.currentOwner = this.allUsers.filter(
+          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+        )[0].full_name
+        this.allOppsForWorkflows.filter((opp) => opp.id === id)[0].account_ref
+          ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
+          : (this.currentAccount = 'Account')
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.dropdownLoading = false
+      }
     },
     closeStageForm() {
       this.stageFormOpen = false
@@ -3205,6 +3232,7 @@ export default {
     async selectList(id) {
       if (this.id) {
         this.loadingWorkflows = true
+        this.selectedWorkflow = true
         this.refreshId = id ? id : this.id
         try {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
@@ -3225,7 +3253,6 @@ export default {
             bodyClassName: ['custom'],
           })
         } finally {
-          this.selectedWorkflow = true
           this.loadingWorkflows = false
           this.hasNext = false
         }
