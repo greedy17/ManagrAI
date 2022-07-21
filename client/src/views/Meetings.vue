@@ -523,6 +523,11 @@
           Today's Meetings:
           <span>{{ meetings ? meetings.length : 0 }}</span>
         </h6>
+        <div>
+          <button @click="refreshCalEvents" class="select-btn">
+            <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
+          </button>
+        </div>
       </div>
 
       <section class="table-section">
@@ -678,7 +683,6 @@ export default {
   },
   beforeMount() {
     this.getUsers()
-    this.refreshCalEvents()
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
