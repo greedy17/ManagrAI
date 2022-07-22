@@ -639,7 +639,12 @@
           </span>
 
           <div class="create-modal__footer">
-            <button class="green_button" @click="submitZoomMeeting">Submit</button>
+            <button v-if="!submitting" class="green_button" @click="submitZoomMeeting">
+              Submit
+            </button>
+            <div v-else>
+              <PipelineLoader />
+            </div>
           </div>
         </section>
       </div>
@@ -730,6 +735,7 @@ export default {
   },
   data() {
     return {
+      submitting: false,
       meetingOpen: false,
       integrationId: null,
       stageGateField: null,
@@ -823,7 +829,7 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
-      loaderText: "Pulling in your meetings",
+      loaderText: 'Pulling in your meetings',
     }
   },
   computed: {
@@ -869,6 +875,7 @@ export default {
       this.meetingOpen = !this.meetingOpen
     },
     async submitZoomMeeting() {
+      this.submitting = true
       if (
         !this.meetingTitle ||
         !this.startDate ||
@@ -910,7 +917,6 @@ export default {
           extra_participants.length
         )
       ) {
-        console.log('Please add participants to the meeting')
         this.$toast('Please add participants to the meeting', {
           timeout: 2000,
           position: 'top-left',
@@ -946,7 +952,6 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          this.resetMeeting()
         } else {
           this.$toast('Error Scheduling Meeting', {
             timeout: 2000,
@@ -958,6 +963,9 @@ export default {
         }
       } catch (e) {
         console.log(e)
+      } finally {
+        this.submitting = false
+        this.resetMeeting()
       }
     },
     resetNotes() {
@@ -1036,18 +1044,18 @@ export default {
     async refreshCalEvents() {
       let response
       try {
-        response = await User.api.refreshCalendarEvents()        
+        response = await User.api.refreshCalendarEvents()
       } catch (e) {
         console.log('Error in refreshCalEvents: ', e)
       } finally {
         this.loading = true
-        this.loaderText = "Pulling your calendar events..."
+        this.loaderText = 'Pulling your calendar events...'
         setTimeout(() => {
-          this.loaderText = "Mapping to Salesforce..."
+          this.loaderText = 'Mapping to Salesforce...'
           this.getMeetingList()
           setTimeout(() => {
             this.loading = false
-            this.loaderText = "Pulling in your meetings"
+            this.loaderText = 'Pulling in your meetings'
             this.getMeetingList()
             if (response.status === 200) {
               this.$toast('Calendar Successfully Synced', {
@@ -1066,9 +1074,8 @@ export default {
                 bodyClassName: ['custom'],
               })
             }
-          }, 3000);
-        }, 2000);
-        
+          }, 3000)
+        }, 2000)
       }
     },
     async getMeetingList() {
@@ -2334,7 +2341,7 @@ a {
   background-color: $soft-gray;
   cursor: text;
   color: $base-gray;
-  opacity: .6;
+  opacity: 0.6;
 }
 .select-btn:disabled:hover {
   transform: none;
