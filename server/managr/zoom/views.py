@@ -188,14 +188,11 @@ def zoom_meetings_webhook(request):
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
         if zoom_account and not zoom_account.is_revoked:
             # emit the process
-            topic = obj.get("topic", None)
-            workflow_check = (
-                MeetingWorkflow.objects.for_user(zoom_account.user)
-                .filter(meeting__topic=topic)
-                .first()
-            )
+            topic = obj["topic"]
+            workflows = MeetingWorkflow.objects.for_user(zoom_account.user)
+            workflow_check = workflows.filter(meeting__topic=topic).first()
             logger.info(
-                f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check}"
+                f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
             )
             if workflow_check:
                 workflow_check.meeting.meeting_id = meeting_uuid
