@@ -16,7 +16,7 @@ from managr.slack.serializers import (
 )
 from managr.zoom.serializers import ZoomAuthSerializer
 
-from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast
+from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast, NoteTemplate
 
 
 class UserForecastSerializer(serializers.ModelSerializer):
@@ -228,3 +228,10 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
         )
+
+
+class NoteTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NoteTemplate
+        fields = ("subject", "body", "user", "is_shared")
+

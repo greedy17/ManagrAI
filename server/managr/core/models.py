@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
+from django.db.models import Q
 from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField, ArrayField
 
@@ -710,3 +711,25 @@ class UserForecast(models.Model):
             "Opportunity", list(self.state.keys())
         )
         return res
+
+
+class NoteTemplateQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(
+                Q(user=user.id) | Q(is_shared=True, user__organization=user.organization)
+            )
+
+
+class NoteTemplate(TimeStampModel):
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE)
+    is_shared = models.BooleanField(default=False)
+
+    objects = NoteTemplateQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["datetime_created"]

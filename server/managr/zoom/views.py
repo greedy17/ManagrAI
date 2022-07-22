@@ -436,11 +436,7 @@ def schedule_zoom_meeting(request):
     extra_participants = data.get("extra_participants")
     for contact in contacts:
         participant_data.append(
-            {
-                "email": contact.email,
-                "name": contact.secondary_data["Name"],
-                "status": "noreply",
-            }
+            {"email": contact.email, "name": contact.secondary_data["Name"], "status": "noreply",}
         )
     for u in internal:
         participant_data.append(
@@ -458,7 +454,6 @@ def schedule_zoom_meeting(request):
             zoom_res["join_url"],
             description,
         )
-        print("\n\ncal_res\n\n", cal_res, "\n\n")
     except Exception as e:
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
