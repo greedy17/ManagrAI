@@ -1313,7 +1313,7 @@
                 @filter-accounts="getAccounts"
                 :type="filterType"
                 :filterName="currentFilter"
-                :dropdowns="picklistQueryOpts"
+                :dropdowns="apiPicklistOptions"
                 :apiName="filterApiName"
                 :accounts="allAccounts"
                 :owners="allUsers"
