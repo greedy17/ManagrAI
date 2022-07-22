@@ -869,7 +869,20 @@ a {
     }
   }
 }
-
+.table-cell-name {
+  display: table-cell;
+  position: relative;
+  min-width: 18vw;
+  max-width: 24vw;
+  background-color: white;
+  padding: 2vh 3vh;
+  border: none;
+  z-index: 2;
+  left: 0;
+  position: sticky;
+  border-bottom: 2px solid $soft-gray;
+  font-size: 13px;
+}
 .table-row {
   display: table-row;
   left: 0;
@@ -881,7 +894,7 @@ a {
   background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
-  border-bottom: 1px solid $soft-gray;
+  border-bottom: 3px solid $soft-gray;
   font-size: 13px;
 }
 .left-green {
