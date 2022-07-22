@@ -92,7 +92,7 @@
               >
               </textarea> -->
             </div>
-            <div v-else-if="field.apiName === 'meeting_comments'">
+            <div style="margin-top: -2rem" v-else-if="field.apiName === 'meeting_comments'">
               <span class="input-container">
                 <textarea
                   class="basic-slide"
@@ -102,7 +102,7 @@
                   rows="4"
                   placeholder="Note"
                   style="line-height: 2rem"
-                  @input=";(value = $event.target.value), setUpdateValues(value, field.apiName)"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                 /><label for="Note">Note</label>
               </span>
               <!-- <p>Notes:</p>
@@ -2035,7 +2035,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4rem 1.5rem 0.5rem 1rem;
+  padding: 4rem 2rem 0.5rem 1.5rem;
   color: $base-gray;
 }
 .invert {
@@ -2351,7 +2351,7 @@ a {
   width: 36vw;
   max-height: 80vh;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: scroll;
@@ -2369,8 +2369,8 @@ a {
     position: fixed;
     background-color: white;
     width: 36vw;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     h3 {
       font-size: 21px;
       letter-spacing: 1px;
