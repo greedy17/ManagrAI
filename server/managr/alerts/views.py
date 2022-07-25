@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.forms import ValidationError
 import pytz
+from django.core import serializers
 from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,6 +26,8 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
+from managr.salesforce.routes import routes as model_routes
+
 from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
@@ -177,7 +180,6 @@ class AlertTemplateViewSet(
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
         data = self.request.data
-
         from_workflow = data.get("from_workflow", False)
         if from_workflow:
             config = obj.configs.all().first()
@@ -204,6 +206,7 @@ class AlertTemplateViewSet(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
+
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -219,7 +222,10 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
-            return Response({"ids": res_data})
+            model = model_routes[template.resource_type]["model"]
+            queryset = model.objects.filter(integration_id__in=res_data)
+            serialized = [i.secondary_data for i in queryset]
+            return Response({"results": serialized})
         else:
             for config in obj.configs.all():
                 template = config.template
