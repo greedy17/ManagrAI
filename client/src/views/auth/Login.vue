@@ -165,6 +165,7 @@ h2 {
 }
 input {
   margin-bottom: 0.3rem;
+  padding: 0.5rem;
   width: 22vw;
   height: 6vh;
   border-radius: 0.3rem;
@@ -176,7 +177,6 @@ input:focus {
 
 ::placeholder {
   color: $mid-gray;
-  padding: 0.5rem;
 }
 .logo {
   height: 4rem;
