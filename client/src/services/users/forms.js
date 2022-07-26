@@ -5,7 +5,7 @@ import {
   RequiredValidator,
   MinLengthValidator,
 } from '@thinknimble/tn-validators'
-import { MaxLengthValidator } from '../validators'
+import { MaxLengthValidator, PatternValidator } from '../validators'
 import moment from 'moment'
 
 export class UserRegistrationForm extends Form {
@@ -15,8 +15,11 @@ export class UserRegistrationForm extends Form {
     validators: [
       new RequiredValidator(),
       new MinLengthValidator({ minLength: 8, message: 'Minimum Length of 8 required' }),
-      new MaxLengthValidator({ maxLength: 50, message: 'Maximum Length of 50 characters' })
-      // new PatternValidator(),
+      new MaxLengthValidator({ maxLength: 50, message: 'Maximum Length of 50 characters' }),
+      new PatternValidator({ pattern: '(?=.*[A-Z])', message: 'Password must contain one upper case letter' }),
+      new PatternValidator({ pattern: '(?=.*[a-z])', message: 'Password must contain one lower case letter' }),
+      new PatternValidator({ pattern: '(?=.*\\d)', message: 'Password must contain one number' }),
+      new PatternValidator({ pattern: '(?=.*\\W)', message: 'Password must contain one symbol (!, ?, etc.)' }),
     ],
   })
   static confirmPassword = new FormField({ validators: [new RequiredValidator()] })
