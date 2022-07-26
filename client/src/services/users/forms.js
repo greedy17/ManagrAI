@@ -5,6 +5,7 @@ import {
   RequiredValidator,
   MinLengthValidator,
 } from '@thinknimble/tn-validators'
+import { MaxLengthValidator } from '../validators'
 import moment from 'moment'
 
 export class UserRegistrationForm extends Form {
@@ -13,7 +14,9 @@ export class UserRegistrationForm extends Form {
   static password = new FormField({
     validators: [
       new RequiredValidator(),
-      new MinLengthValidator({ minLength: 10, message: 'Minimum Length of 10 required' }),
+      new MinLengthValidator({ minLength: 8, message: 'Minimum Length of 8 required' }),
+      new MaxLengthValidator({ maxLength: 50, message: 'Maximum Length of 50 characters' })
+      // new PatternValidator(),
     ],
   })
   static confirmPassword = new FormField({ validators: [new RequiredValidator()] })
