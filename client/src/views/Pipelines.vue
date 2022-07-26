@@ -3177,7 +3177,7 @@ export default {
             }
           })
       } catch (e) {
-        console.log(e)
+        console.log(e.response)
       } finally {
         this.updateList = []
         this.formData = {}
