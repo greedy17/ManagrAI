@@ -459,7 +459,6 @@ def schedule_zoom_meeting(request):
             zoom_res["join_url"],
             description,
         )
-        print("\n\ncal_res\n\n", cal_res, "\n\n")
     except Exception as e:
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)

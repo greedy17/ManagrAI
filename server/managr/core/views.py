@@ -37,15 +37,13 @@ from managr.utils import sites as site_utils
 from managr.core.utils import get_totals_for_year
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import (
-    User,
-    NylasAuthAccount,
-)
+from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
+    NoteTemplateSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 from managr.core.background import emit_process_calendar_meetings
@@ -452,7 +450,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -460,7 +459,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -575,7 +576,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -809,7 +812,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -843,7 +848,9 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_task_status(request):
     verbose_name = request.GET.get("verbose_name", None)
@@ -856,3 +863,30 @@ def get_task_status(request):
             data = {"completed": False}
     return Response(data=data)
 
+
+class NoteTemplateViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+):
+
+    serializer_class = NoteTemplateSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        return NoteTemplate.objects.for_user(self.request.user)
+
+    def create(self, request):
+        user = self.request.user
+        print(self)
+        print(request)
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED)
