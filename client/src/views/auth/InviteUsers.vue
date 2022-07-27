@@ -90,19 +90,26 @@
           :disabled="savingTemplate"
           placeholder="Template Title"
         />
-
+        <!-- { list: 'ordered' } -->
         <quill-editor
           :disabled="savingTemplate"
           ref="message-body"
           :options="{
             modules: {
-              toolbar: { container: ['bold'] },
+              toolbar: [{ list: 'bullet' }],
             },
+            theme: 'snow',
             placeholder: 'Type out your template here.',
           }"
           v-model="noteBody"
           class="message__box"
         />
+
+        <div class="tooltip" style="margin-top: 1rem; display: flex; align-items: center">
+          <input type="checkbox" id="shared" v-model="isShared" />
+          <label class="small" for="shared">Share Template</label>
+          <span class="tooltiptext">Share this template with your organization</span>
+        </div>
       </div>
     </section>
   </div>
@@ -129,6 +136,7 @@ export default {
   },
   data() {
     return {
+      isShared: false,
       savingTemplate: false,
       noteSubject: null,
       noteBody: null,
@@ -147,6 +155,7 @@ export default {
         const res = await User.api.createTemplate({
           subject: this.noteSubject,
           body: this.noteBody,
+          is_shared: this.isShared,
           user: this.getUser.id,
         })
         this.$toast('Note template created successfully', {
@@ -169,6 +178,7 @@ export default {
         this.savingTemplate = false
         this.noteSubject = null
         this.noteBody = null
+        this.isShared = null
       }
     },
     setTime() {
@@ -249,10 +259,11 @@ export default {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 }
+
 .message__box {
   margin-bottom: 2rem;
   height: 24vh;
-  width: 32vw;
+  width: 36vw;
   border-radius: 0.25rem;
   background-color: transparent;
 }
@@ -261,7 +272,7 @@ export default {
   border-radius: 0.3rem;
   padding-left: 1rem;
   height: 50px;
-  width: 32vw;
+  width: 36vw;
   font-family: inherit;
   margin-bottom: 1rem;
 }
@@ -273,8 +284,8 @@ export default {
   border: 1px solid #e8e8e8;
   color: $base-gray;
   width: 60vw;
-  height: 40vh;
-  overflow: scroll;
+  min-height: 40vh;
+  overflow: visible;
   padding: 1.5rem 0rem 1.5rem 1rem;
   border-radius: 5px;
   display: flex;
@@ -301,6 +312,7 @@ export default {
   align-items: center;
   text-align: center;
   margin-top: 4rem;
+  padding-bottom: 1rem;
   &__header {
     display: flex;
     align-items: center;
@@ -347,5 +359,106 @@ h2 {
   cursor: pointer;
   transform: scale(1.025);
   box-shadow: 1px 2px 3px $mid-gray;
+}
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.small {
+  font-size: 12px;
+}
+@mixin epic-sides() {
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    position: absolute;
+    content: '';
+    display: block;
+    top: 0;
+    left: -5000px;
+    height: 100%;
+    width: 15000px;
+    z-index: -1;
+    @content;
+  }
+}
+
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 200px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
 }
 </style>

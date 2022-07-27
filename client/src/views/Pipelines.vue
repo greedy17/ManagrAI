@@ -2118,6 +2118,7 @@ export default {
       try {
         const res = await User.api.getTemplates()
         this.noteTemplates = res.results
+        console.log(res)
       } catch (e) {
         console.log(e)
       }
@@ -2129,7 +2130,6 @@ export default {
         .replace(/<br\s*[\/]?>/gi, '\r\n')
         .replace(/<li\s*[\/]?>/gi, '\r\n   -')
         .replace(/(<([^>]+)>)/gi, '')
-
       this.setUpdateValues(field, this.noteValue)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
@@ -2844,6 +2844,7 @@ export default {
       this.selectedAccount = null
       this.selectedOwner = null
       this.noteValue = null
+      this.noteTitle = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
