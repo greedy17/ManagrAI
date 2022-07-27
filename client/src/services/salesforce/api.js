@@ -324,6 +324,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/', {
         params: this.cls.toAPI(params),
+
       })
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {

@@ -93,12 +93,15 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
 
 
 class SObjectPicklistSerializer(serializers.ModelSerializer):
+    field_ref = SObjectFieldSerializer(source="field", required=False)
+
     class Meta:
         model = SObjectPicklist
         fields = (
             "id",
             "values",
             "field",
+            "field_ref",
             "salesforce_account",
             "picklist_for",
             "imported_by",

@@ -275,31 +275,32 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             return logger.warning(
                 f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
             )
-    for item in res:
-        existing = model_class.objects.filter(integration_id=item.integration_id).first()
-        if existing:
-            serializer = serializer_class(data=item.as_dict, instance=existing)
-        else:
-            serializer = serializer_class(data=item.as_dict)
-        # check if already exists and update
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
+    if len(res):
+        for item in res:
+            existing = model_class.objects.filter(integration_id=item.integration_id).first()
+            if existing:
+                serializer = serializer_class(data=item.as_dict, instance=existing)
+            else:
+                serializer = serializer_class(data=item.as_dict)
+            # check if already exists and update
+            try:
+                serializer.is_valid(raise_exception=True)
+            except ValidationError as e:
+                error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
 
-            # context = dict(email=user.email, error=error_str)
-            # subject = render_to_string("salesforce/error_saving_resource_data.txt")
-            # recipient = [settings.STAFF_EMAIL]
-            # send_html_email(
-            #     subject,
-            #     "salesforce/error_saving_resource_data.html",
-            #     settings.SERVER_EMAIL,
-            #     recipient,
-            #     context={**context},
-            # )
-            logger.exception(error_str)
-            continue
-        serializer.save()
+                # context = dict(email=user.email, error=error_str)
+                # subject = render_to_string("salesforce/error_saving_resource_data.txt")
+                # recipient = [settings.STAFF_EMAIL]
+                # send_html_email(
+                #     subject,
+                #     "salesforce/error_saving_resource_data.html",
+                #     settings.SERVER_EMAIL,
+                #     recipient,
+                #     context={**context},
+                # )
+                logger.exception(error_str)
+                continue
+            serializer.save()
 
     return
 
@@ -387,9 +388,11 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                     )
                 else:
                     picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
-
-                picklist_serializer.is_valid(raise_exception=True)
-                picklist_serializer.save()
+                try:
+                    picklist_serializer.is_valid(raise_exception=True)
+                    picklist_serializer.save()
+                except Exception as e:
+                    logger.exception(f"Picklist sync exception for {field.api_name}: {e}")
                 if for_dev:
                     logger.info(
                         f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer.data}>"

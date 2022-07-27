@@ -94,7 +94,8 @@ class SObjectValidationQuerySet(models.QuerySet):
 class SObjectPicklistQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(salesforce_account__user__id=user.id)
+            admin = user.organization.users.filter(is_admin=True).first()
+            return self.filter(salesforce_account__user__id=admin.id)
         else:
             return self.none()
 
@@ -174,7 +175,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            lambda opt: opt.get("value", None) == value,
+                            self.get_slack_options,
                         ),
                     ),
                 )
@@ -196,7 +198,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         ),
                     ),
@@ -212,7 +215,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         )
                     )
@@ -257,7 +261,10 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 resource = self.relationship_name
                 action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
                 return block_builders.external_select(
-                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
+                    "*Products*",
+                    action_query,
+                    block_id=self.api_name,
+                    initial_option=None,
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
@@ -746,7 +753,10 @@ class MeetingWorkflow(SFSyncOperation):
         template = (
             OrgCustomSlackForm.objects.for_user(self.user)
             .filter(
-                Q(resource=resource, form_type=form_type,)
+                Q(
+                    resource=resource,
+                    form_type=form_type,
+                )
                 & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
             )
             .first()
@@ -755,7 +765,11 @@ class MeetingWorkflow(SFSyncOperation):
 
             # check if a form with that template already exists and remove it
             self.forms.filter(template__id=template.id).delete()
-            kwargs = dict(user=self.user, template=template, workflow=self,)
+            kwargs = dict(
+                user=self.user,
+                template=template,
+                workflow=self,
+            )
             if self.resource:
                 kwargs["resource_id"] = str(self.resource.id)
 
@@ -825,7 +839,9 @@ class SalesforceAuthAccount(TimeStampModel):
     )
     # default for json field must be a callable
     sobjects = JSONField(
-        default=getSobjectDefaults, help_text="All resources we are retrieving", max_length=500,
+        default=getSobjectDefaults,
+        help_text="All resources we are retrieving",
+        max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,
@@ -1061,4 +1077,3 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
-

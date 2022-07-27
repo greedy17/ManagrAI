@@ -96,7 +96,6 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     # Force-invoke the API call
 
     # events = list()
-
     logger.info(f"    Found {len(events)} event/s")
 
     # Narrow down results
@@ -116,7 +115,6 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
         distances.append(
             {"distance": distance, "event": e,}
         )
-
     # Get events with distances less than the defined threshold
     best_events = [d["event"] for d in distances if d["distance"] < DISTANCE_THRESHOLD]
 

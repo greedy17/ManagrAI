@@ -33,14 +33,15 @@
               !meeting.participants[participantIndex].__has_changes &&
               (!resourceType || resourceType === 'Opportunity')
             "
-            class="green"
+            class="tooltip"
           >
             <img
               @click="addContact(participantIndex)"
-              class="contact-img"
+              class="contact-img green"
               src="@/assets/images/add-contact.svg"
               alt=""
             />
+            <span class="tooltiptext">Add Contact</span>
           </span>
           <span
             v-if="
@@ -48,14 +49,15 @@
               !meeting.participants[participantIndex].__has_changes &&
               (!resourceType || resourceType === 'Opportunity')
             "
-            class="red"
+            class="tooltip"
           >
             <img
               src="@/assets/images/remove.svg"
-              class="contact-img"
+              class="contact-img red"
               @click="removeParticipant(participantIndex)"
               alt=""
             />
+            <span class="tooltiptext">Remove</span>
           </span>
           <span v-if="meeting.participants[participantIndex].__has_changes">
             <img class="filter" src="@/assets/images/profile.svg" alt="" />
@@ -303,17 +305,23 @@
     </div>
 
     <div class="table-cell">
-      <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
-        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+      <div class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
+        <p>{{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}</p>
 
-        <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
-          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
-        </button>
+        <div class="tooltip">
+          <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
+          </button>
+          <span class="tooltiptext">Change Opp</span>
+        </div>
 
-        <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
-          <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
-        </button>
-      </p>
+        <div class="tooltip">
+          <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
+            <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
+          </button>
+          <span class="tooltiptext">View Notes</span>
+        </div>
+      </div>
       <p v-else-if="meetingUpdated">
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
@@ -533,6 +541,48 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
 
 input:focus {
   outline: none;
@@ -869,7 +919,20 @@ a {
     }
   }
 }
-
+.table-cell-name {
+  display: table-cell;
+  position: relative;
+  min-width: 18vw;
+  max-width: 24vw;
+  background-color: white;
+  padding: 2vh 3vh;
+  border: none;
+  z-index: 2;
+  left: 0;
+  position: sticky;
+  border-bottom: 2px solid $soft-gray;
+  font-size: 13px;
+}
 .table-row {
   display: table-row;
   left: 0;
@@ -881,16 +944,14 @@ a {
   background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
-  border-bottom: 1px solid $soft-gray;
+  border-bottom: 3px solid $soft-gray;
   font-size: 13px;
 }
 .left-green {
   border-left: 2px solid $dark-green !important;
-  bottom: 2px;
 }
 .left-red {
   border-left: 2px solid $coral !important;
-  bottom: 2px;
 }
 .wt-bg {
   background-color: white;

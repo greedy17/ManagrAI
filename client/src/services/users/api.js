@@ -5,6 +5,7 @@ import store from '@/store'
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
 const REGISTRATION_ENDPOINT = '/register/'
+const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
 const USERS_ENDPOINT = '/users/'
 const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
@@ -140,6 +141,19 @@ export default class UserAPI {
     let q = { id: uid, token: token }
     const promise = apiClient()
       .get(USERS_ENDPOINT + 'retrieve-email/', { params: q })
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.activate',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
+  refreshCalendarEvents() {
+    const promise = apiClient()
+      .get(USERS_ENDPOINT + 'refresh-calendar-events/')
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.activate',
@@ -288,5 +302,19 @@ export default class UserAPI {
       .post(USERS_UPDATE, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'User.usersUpdate' }))
+  }
+
+  createTemplate(data) {
+    return this.client
+      .post(NOTE_TEMPLATE_ENDPOINT, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'API error' }))
+  }
+
+  getTemplates() {
+    return this.client
+      .get(NOTE_TEMPLATE_ENDPOINT)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 }

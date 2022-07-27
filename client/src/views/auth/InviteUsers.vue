@@ -59,20 +59,79 @@
         />
       </form>
     </section>
+
+    <section>
+      <header class="invite-users__header">
+        <h3 style="color: #4d4e4c">Note Templates</h3>
+
+        <button
+          :disabled="!noteSubject || !noteBody"
+          class="invite_button"
+          type="submit"
+          @click="createTemplate"
+          v-if="!savingTemplate"
+        >
+          Save Template
+          <!-- <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" /> -->
+        </button>
+
+        <div v-else>
+          <PipelineLoader />
+        </div>
+      </header>
+
+      <div class="update-container">
+        <input
+          v-model="noteSubject"
+          class="template-input"
+          type="text"
+          name=""
+          id=""
+          :disabled="savingTemplate"
+          placeholder="Template Title"
+        />
+
+        <quill-editor
+          :disabled="savingTemplate"
+          ref="message-body"
+          :options="{
+            modules: {
+              toolbar: { container: ['bold'] },
+            },
+            placeholder: 'Type out your template here.',
+          }"
+          v-model="noteBody"
+          class="message__box"
+        />
+      </div>
+    </section>
   </div>
 </template>
 
 <script>
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
+import PipelineLoader from '@/components/PipelineLoader'
 import Invite from '../settings/_pages/_Invite'
 import User from '@/services/users'
 import { UserProfileForm } from '@/services/users/forms'
+import { quillEditor } from 'vue-quill-editor'
 import moment from 'moment-timezone'
 
 export default {
   name: 'InviteUsers',
-  components: { Invite, Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect') },
+  components: {
+    Invite,
+    quillEditor,
+    PipelineLoader,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
   data() {
     return {
+      savingTemplate: false,
+      noteSubject: null,
+      noteBody: null,
       inviteOpen: false,
       selectedTimezone: null,
       user: this.getUser,
@@ -82,6 +141,36 @@ export default {
     }
   },
   methods: {
+    async createTemplate() {
+      this.savingTemplate = true
+      try {
+        const res = await User.api.createTemplate({
+          subject: this.noteSubject,
+          body: this.noteBody,
+          user: this.getUser.id,
+        })
+        this.$toast('Note template created successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error creating template', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.savingTemplate = false
+        this.noteSubject = null
+        this.noteBody = null
+      }
+    },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
     },
@@ -149,6 +238,36 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+::v-deep .ql-toolbar.ql-snow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+::v-deep .ql-container.ql-snow {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.message__box {
+  margin-bottom: 2rem;
+  height: 24vh;
+  width: 32vw;
+  border-radius: 0.25rem;
+  background-color: transparent;
+}
+.template-input {
+  border: 1px solid #ccc;
+  border-radius: 0.3rem;
+  padding-left: 1rem;
+  height: 50px;
+  width: 32vw;
+  font-family: inherit;
+  margin-bottom: 1rem;
+}
+.template-input:focus {
+  outline: none;
+}
 .update-container {
   background-color: $white;
   border: 1px solid #e8e8e8;
@@ -208,8 +327,18 @@ h2 {
   background-color: white;
   border-radius: 0.25rem;
   transition: all 0.25s;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   font-weight: bolder;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
+}
+.invite_button:disabled {
+  color: $base-gray;
+  background-color: $soft-gray;
+  border-radius: 0.25rem;
+  transition: all 0.25s;
+  padding: 0.5rem 0.75rem;
+  font-weight: 400px;
   font-size: 14px;
   border: 1px solid #e8e8e8;
 }
@@ -217,6 +346,6 @@ h2 {
 .invite_button:hover {
   cursor: pointer;
   transform: scale(1.025);
-  box-shadow: 1px 2px 3px #e8e8e8;
+  box-shadow: 1px 2px 3px $mid-gray;
 }
 </style>

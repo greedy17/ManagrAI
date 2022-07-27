@@ -5,7 +5,7 @@ from managr.core.models import User
 from managr.core.background import (
     emit_check_reminders,
     emit_timezone_tasks,
-    emit_process_non_zoom_meetings,
+    emit_process_calendar_meetings,
 )
 
 
@@ -21,14 +21,13 @@ class Command(BaseCommand):
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
                 if options["meetings"]:
-                    emit_process_non_zoom_meetings(
-                        str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                    emit_process_calendar_meetings(
+                        str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
                     )
                 else:
                     # emit_check_reminders(
                     #     str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"
                     # )
-
                     emit_timezone_tasks(
                         str(user.id), f"timezone_tasks-{user.email}-{str(uuid.uuid4())}"
                     )
@@ -42,8 +41,8 @@ class Command(BaseCommand):
                 users = User.objects.filter(is_active=True)
                 for user in users:
                     if options["meetings"]:
-                        emit_process_non_zoom_meetings(
-                            str(user.id), f"non-zoom-meetings-{user.email}-{str(uuid.uuid4())}"
+                        emit_process_calendar_meetings(
+                            str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
                         )
                     else:
                         # emit_check_reminders(

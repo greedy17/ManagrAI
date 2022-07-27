@@ -133,7 +133,7 @@
         v-if="sortingIndexWorkflows !== oppFields.length + i"
         @click="
           $emit(
-            'sort-opps',
+            'sort-opps-workflows',
             `${field.dataType}`,
             `${field.referenceDisplayLabel}`,
             `${field.apiName}`,
@@ -167,7 +167,7 @@
         v-if="sortingIndexWorkflows === oppFields.length + i"
         @click="
           $emit(
-            'sort-opps-reverse',
+            'sort-opps-reverse-workflows',
             `${field.dataType}`,
             `${field.referenceDisplayLabel}`,
             `${field.apiName}`,
@@ -215,16 +215,7 @@ import { SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'WorkflowHeader',
-  computed: {
-    extraPipelineFields() {
-      let extras = []
-      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
-      return extras
-    },
-    hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
-    },
-  },
+
   data() {
     return {
       sortingIndexWorkflows: null,
@@ -291,6 +282,7 @@ export default {
   props: {
     oppFields: {},
     allWorkflowsSelected: {},
+    extraPipelineFields: {},
   },
 }
 </script>

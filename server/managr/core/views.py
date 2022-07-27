@@ -37,18 +37,16 @@ from managr.utils import sites as site_utils
 from managr.core.utils import get_totals_for_year
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import (
-    User,
-    NylasAuthAccount,
-)
+from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
+    NoteTemplateSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
-
+from managr.core.background import emit_process_calendar_meetings
 from .nylas.emails import (
     send_new_email_legacy,
     return_file_id_from_nylas,
@@ -68,7 +66,7 @@ def GET_COMMAND_OBJECTS():
     commands = {
         "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
         "SALESFORCE_RESOURCES": emit_gen_next_sync,
-        "PULL_USAGE_DATA": get_totals_for_year
+        "PULL_USAGE_DATA": get_totals_for_year,
     }
     return commands
 
@@ -347,7 +345,7 @@ class UserViewSet(
             response_data = {
                 "success": True,
                 "message": "Successfully started resource sync for users",
-                "data": command_function()
+                "data": command_function(),
             }
         return Response(data=response_data)
 
@@ -389,7 +387,7 @@ class UserViewSet(
             opps.append(serializer.data)
         print(opps)
         return Response(data=opps, status=status.HTTP_200_OK)
-    
+
     @action(
         methods=["POST"],
         # permission_classes=(IsSalesPerson,),
@@ -399,15 +397,15 @@ class UserViewSet(
     def update_user_info(self, request, *args, **kwargs):
         """endpoint to update the Event Calendar ID, the Fake Meeting ID, the Zoom Channel, the Recap Receiver, and the Realtime Alert Config sections"""
         d = request.data
-        print('\n!!data!!!!\n', d)
+        print("\n!!data!!!!\n", d)
         event_calendar_id = d.get("event_calendar_id")
         fake_meeting_id = d.get("fake_meeting_id")
         zoom_channel = d.get("zoom_channel")
         recap_receivers = d.get("recap_receivers")
         realtime_alert_config = d.get("realtime_alert_config")
         user_id = d.get("user_id")
-        user = User.objects.get(id = user_id)
-        print('\n\nuser\n\n', user, '\n\n')
+        user = User.objects.get(id=user_id)
+        print("\n\nuser\n\n", user, "\n\n")
         if user.event_calendar_id != event_calendar_id:
             user.event_calendar_id = event_calendar_id
         if user.fake_meeting_id != fake_meeting_id:
@@ -422,6 +420,20 @@ class UserViewSet(
         user.save()
         return Response(data=status.HTTP_200_OK)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="refresh-calendar-events",
+    )
+    def refresh_calendar_events(self, request, *args, **kwargs):
+        import uuid
+
+        user = self.request.user
+        emit_process_calendar_meetings(
+            str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
+        )
+        return Response(data={"success": True})
 
 
 class ActivationLinkView(APIView):
@@ -438,7 +450,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -446,7 +459,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -561,7 +576,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -795,7 +812,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -829,7 +848,9 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_task_status(request):
     verbose_name = request.GET.get("verbose_name", None)
@@ -841,3 +862,31 @@ def get_task_status(request):
         except CompletedTask.DoesNotExist:
             data = {"completed": False}
     return Response(data=data)
+
+
+class NoteTemplateViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+):
+
+    serializer_class = NoteTemplateSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        return NoteTemplate.objects.for_user(self.request.user)
+
+    def create(self, request):
+        user = self.request.user
+        print(self)
+        print(request)
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED)
