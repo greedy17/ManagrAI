@@ -62,7 +62,7 @@
 
     <section>
       <header class="invite-users__header">
-        <h3 style="color: #4d4e4c">Note Templates</h3>
+        <h3 style="color: #4d4e4c">Create Template</h3>
 
         <button
           :disabled="!noteSubject || !noteBody"
@@ -112,6 +112,34 @@
         </div>
       </div>
     </section>
+
+    <section>
+      <header class="invite-users__header">
+        <h3 style="color: #4d4e4c">Edit Templates</h3>
+      </header>
+
+      <div v-if="noteTemplates" class="update-container">
+        <div class="centered" v-if="!noteTemplates.length">
+          <p>Nothing here yet...</p>
+        </div>
+
+        <div class="row" v-else>
+          <div
+            @click="removeTemplate(template.id)"
+            class="small-container"
+            v-for="(template, i) in noteTemplates"
+            :key="i"
+          >
+            <div class="small-container__head">
+              <p>{{ template.subject }}</p>
+            </div>
+            <div class="small-container__body">
+              <p>{{ truncateText(template.body, 34) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -136,6 +164,7 @@ export default {
   },
   data() {
     return {
+      noteTemplates: null,
       isShared: false,
       savingTemplate: false,
       noteSubject: null,
@@ -149,6 +178,34 @@ export default {
     }
   },
   methods: {
+    truncateText(text, length) {
+      if (text.length <= length) {
+        return this.$sanitize(text).replace(/(<([^>]+)>)/gi, '')
+      }
+
+      return (
+        this.$sanitize(text)
+          .replace(/(<([^>]+)>)/gi, '')
+          .substr(0, length) + '\u2026'
+      )
+    },
+    async removeTemplate(data) {
+      try {
+        const res = await User.api.removeTemplate(data)
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getTemplates() {
+      try {
+        const res = await User.api.getTemplates()
+        this.noteTemplates = res.results
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async createTemplate() {
       this.savingTemplate = true
       try {
@@ -219,6 +276,7 @@ export default {
     },
   },
   async created() {
+    this.getTemplates()
     this.profileForm = new UserProfileForm({
       firstName: this.getUser.firstName,
       lastName: this.getUser.lastName,
@@ -460,5 +518,47 @@ input[type='checkbox'] + label::before {
 .tooltip:hover .tooltiptext {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
+}
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38vh;
+}
+.small-container {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 250px;
+  height: 110px;
+  overflow: hidden;
+  cursor: pointer;
+  &__head {
+    border-bottom: 1px solid #ccc;
+    padding: 1px 8px;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    height: 40px;
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px 8px;
+    opacity: 0.8;
+    font-size: 13px;
+  }
+}
+.small-container:hover {
+  opacity: 0.7;
+}
+.row {
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 </style>
