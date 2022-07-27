@@ -1,4 +1,5 @@
 import calendar
+from django.conf import settings
 from datetime import datetime
 from xml.parsers.expat import model
 from managr.core.models import User
@@ -29,6 +30,26 @@ def get_month_start_and_end(year, current_month):
     return date_arr[:current_month]
 
 
+def get_instance_averages(model_queryset, month_end):
+    obj = {}
+    for record in model_queryset:
+        if record.datetime_created.date() in obj.keys():
+            obj[record.datetime_created.date()] += 1
+        else:
+            obj[record.datetime_created.date()] = 1
+    days_list = obj.values()
+
+    average = (sum(days_list) / len(days_list)) if len(days_list) else 0
+    total_average = (
+        (sum(days_list) / int(month_end[len(month_end) - 2 :])) if sum(days_list) > 0 else 0
+    )
+    return {
+        "month average": total_average,
+        "session average": average,
+        "total sessions": len(days_list),
+    }
+
+
 def get_totals_for_year():
     # Base queries
     totals = {}
@@ -38,11 +59,16 @@ def get_totals_for_year():
         curr_month = {}
         start = datetime.strptime(f"{date[0]} 00:01", "%Y-%m-%d %H:%M")
         end = datetime.strptime(f"{date[1]} 23:59", "%Y-%m-%d %H:%M")
-        slack_form_instances = (
-            OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
-            .filter(is_submitted=True)
-            .exclude(user__organization__name="Managr")
-        )
+        if settings.IN_STAGING or settings.IN_DEV:
+            slack_form_instances = OrgCustomSlackFormInstance.objects.filter(
+                datetime_created__range=(start, end)
+            ).filter(is_submitted=True)
+        else:
+            slack_form_instances = (
+                OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
+                .filter(is_submitted=True)
+                .exclude(user__organization__name="Managr")
+            )
         curr_month["users"] = (
             User.objects.filter(datetime_created__range=(start, end))
             .exclude(organization__name="Managr")
@@ -69,18 +95,11 @@ def get_totals_for_year():
         creates["opportunities"] = create_forms.filter(template__resource="Opportunity").count()
         creates["products"] = create_forms.filter(template__resource="OpportunityLineItem").count()
         curr_month["creates"] = creates
+        curr_month["total active users"] = len(
+            slack_form_instances.order_by().values("user").distinct("user")
+        )
         totals[date[1]] = curr_month
     return totals
-
-
-def get_user_averages(model_queryset):
-    obj = {}
-    for record in model_queryset:
-        if record.datetime_created.date() in obj.keys():
-            obj[record.datetime_created.date()] += 1
-        else:
-            obj[record.datetime_created.date()] = 1
-    return obj
 
 
 def get_organization_totals():
@@ -92,11 +111,16 @@ def get_organization_totals():
     for date in date_list:
         start = datetime.strptime(f"{date[0]} 00:01", "%Y-%m-%d %H:%M")
         end = datetime.strptime(f"{date[1]} 23:59", "%Y-%m-%d %H:%M")
-        slack_form_instances = (
-            OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
-            .filter(is_submitted=True)
-            .exclude(user__organization__name="Managr")
-        )
+        if settings.IN_STAGING or settings.IN_DEV:
+            slack_form_instances = OrgCustomSlackFormInstance.objects.filter(
+                datetime_created__range=(start, end)
+            ).filter(is_submitted=True)
+        else:
+            slack_form_instances = (
+                OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
+                .filter(is_submitted=True)
+                .exclude(user__organization__name="Managr")
+            )
         org_totals = {}
         for org in orgs:
             org_obj = {}
@@ -106,7 +130,7 @@ def get_organization_totals():
             for user in org_users:
                 user_obj = {}
                 user_instances = org_totals_instances.filter(user=user)
-                per_day = get_user_averages(user_instances)
+                per_day = get_instance_averages(user_instances, date[1])
                 user_obj = {**per_day}
                 user_obj["updates"] = user_instances.filter(template__form_type="UPDATE").count()
                 user_obj["creates"] = user_instances.filter(template__form_type="CREATE").count()
@@ -114,7 +138,10 @@ def get_organization_totals():
             org_obj["users"] = users_obj
             org_obj["updates"] = org_totals_instances.filter(template__form_type="UPDATE").count()
             org_obj["creates"] = org_totals_instances.filter(template__form_type="CREATE").count()
+            org_averages = get_instance_averages(org_totals_instances, date[1])
+            org_obj.update(org_averages)
             org_totals[org.name] = org_obj
+
         totals[date[1]] = org_totals
     return totals
 
