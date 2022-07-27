@@ -632,6 +632,7 @@
                   class="basic-slide"
                   id="Title"
                   type="text"
+                  v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
                 /><label for="Title">Title</label>
@@ -672,7 +673,7 @@
                 <div
                   v-for="(template, i) in noteTemplates"
                   :key="i"
-                  @click="setTemplate(template.body, field.apiName)"
+                  @click="setTemplate(template.body, field.apiName, template.subject)"
                   class="note-templates2__content"
                 >
                   {{ template.subject }}
@@ -1868,6 +1869,7 @@ export default {
   },
   data() {
     return {
+      noteTitle: null,
       noteTemplates: null,
       noteValue: null,
       addingTemplate: false,
@@ -2120,7 +2122,8 @@ export default {
         console.log(e)
       }
     },
-    setTemplate(val, field) {
+    setTemplate(val, field, title) {
+      this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = this.$sanitize(val)
         .replace(/<br\s*[\/]?>/gi, '\r\n')
@@ -2128,6 +2131,7 @@ export default {
         .replace(/(<([^>]+)>)/gi, '')
 
       this.setUpdateValues(field, this.noteValue)
+      this.setUpdateValues('meeting_type', title ? title : null)
     },
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
