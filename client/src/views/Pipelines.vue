@@ -638,10 +638,10 @@
               </span>
             </div>
             <div
-              style="margin-left: -0.5rem; margin-top: -2rem"
+              style="margin-top: -2rem; position: relative"
               v-else-if="field.apiName === 'meeting_comments'"
             >
-              <span class="input-container">
+              <span style="margin-left: 0px" class="input-container">
                 <textarea
                   class="basic-slide"
                   id="notes"
@@ -650,9 +650,42 @@
                   rows="4"
                   placeholder="Note"
                   style="line-height: 2rem"
-                  @input=";(value = $event.target.value), replaceURLs(value, field.apiName)"
-                /><label for="Note">Note</label>
+                  v-model="noteValue"
+                  @input="setUpdateValues(field.apiName, noteValue)"
+                />
+                <label for="Note">Note</label>
               </span>
+              <section v-if="!addingTemplate" class="note-templates">
+                <span
+                  v-if="noteTemplates.length"
+                  @click="addingTemplate = !addingTemplate"
+                  class="note-templates__content"
+                >
+                  Insert Template <img src="@/assets/images/note.svg" alt="" />
+                </span>
+                <span @click="goToProfile" class="note-templates__content" v-else>
+                  Create a template <img src="@/assets/images/note.svg" alt=""
+                /></span>
+              </section>
+
+              <section class="note-templates2" v-else>
+                <div
+                  v-for="(template, i) in noteTemplates"
+                  :key="i"
+                  @click="setTemplate(template.body, field.apiName)"
+                  class="note-templates2__content"
+                >
+                  {{ template.subject }}
+                </div>
+              </section>
+
+              <div
+                v-if="addingTemplate"
+                @click="addingTemplate = !addingTemplate"
+                class="close-template"
+              >
+                <img src="@/assets/images/close.svg" height="20px" alt="" />
+              </div>
             </div>
             <div
               v-else-if="
@@ -1835,6 +1868,9 @@ export default {
   },
   data() {
     return {
+      noteTemplates: null,
+      noteValue: null,
+      addingTemplate: false,
       createData: {},
       savingCreateForm: false,
       allPicklistOptions: {},
@@ -2065,6 +2101,7 @@ export default {
   },
   mounted() {
     this.resourceSync()
+    this.getTemplates()
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -2075,6 +2112,26 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    async getTemplates() {
+      try {
+        const res = await User.api.getTemplates()
+        this.noteTemplates = res.results
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    setTemplate(val, field) {
+      this.addingTemplate = false
+      this.noteValue = this.$sanitize(val)
+        .replace(/<br\s*[\/]?>/gi, '\r\n')
+        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
+        .replace(/(<([^>]+)>)/gi, '')
+
+      this.setUpdateValues(field, this.noteValue)
+    },
+    goToProfile() {
+      this.$router.push({ name: 'InviteUsers' })
+    },
     async getAllPicklist() {
       try {
         const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
@@ -2782,6 +2839,7 @@ export default {
       this.currentAccount = null
       this.selectedAccount = null
       this.selectedOwner = null
+      this.noteValue = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
@@ -3763,14 +3821,19 @@ export default {
 }
 
 // .form-label {
-//   background-color: $dark-green;
-//   color: white;
-//   border-radius: 4px;
-//   padding: 8px;
-//   font-size: 16px;
+//   background-color: $white-green;
 //   width: fit-content;
+//   color: $dark-green;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+//   padding: 6px 12px;
+//   margin-bottom: -1px;
+//   font-size: 16px;
 // }
-
+.col {
+  display: flex;
+  flex-direction: column;
+}
 .light-green-bg {
   background-color: $white-green;
   color: $dark-green !important;
@@ -4835,7 +4898,7 @@ main:hover > span {
 .flex-end-opp {
   width: 100%;
   padding: 0.5rem 1.5rem;
-  height: 5rem;
+  height: 4rem;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -4861,5 +4924,72 @@ a {
   font-size: 11px;
   margin-right: 16px;
   color: $gray;
+}
+.note-templates {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 12px;
+  padding: 12px 6px;
+  margin-top: -34px;
+  border: 1px solid $soft-gray;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  cursor: pointer;
+  width: 34vw;
+
+  &__content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  img {
+    filter: invert(50%);
+    height: 12px;
+  }
+  &__content:hover {
+    opacity: 0.6;
+  }
+}
+
+.note-templates2 {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  font-size: 12px;
+  padding: 12px 6px;
+  margin-top: -34px;
+  border: 1px solid $soft-gray;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  width: 34vw;
+  height: 80px;
+  overflow: scroll;
+
+  &__content {
+    border-radius: 4px;
+    border: 0.5px solid $base-gray;
+    color: $base-gray;
+    padding: 8px 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  &__content:hover {
+    opacity: 0.6;
+  }
+}
+.close-template {
+  position: absolute;
+  bottom: 56px;
+  right: 8px;
+  z-index: 3;
+  cursor: pointer;
+  background-color: black;
+  border-radius: 3px;
+  opacity: 0.6;
+  img {
+    filter: invert(99%);
+  }
 }
 </style>
