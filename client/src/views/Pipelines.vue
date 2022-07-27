@@ -1974,7 +1974,6 @@ export default {
       instanceId: null,
       contactInstanceId: null,
       formData: {},
-      noteTitle: '',
       noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
@@ -4961,6 +4960,7 @@ a {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
+  gap: 4px;
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
