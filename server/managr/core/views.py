@@ -885,7 +885,7 @@ class NoteTemplateViewSet(
         serializer = self.serializer_class(instance=instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     def destroy(self, request):
         instance = self.get_object()
