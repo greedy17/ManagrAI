@@ -317,4 +317,19 @@ export default class UserAPI {
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
+
+  removeTemplate(data) {
+    return this.client
+      .delete(NOTE_TEMPLATE_ENDPOINT + data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'API error' }))
+  }
+
+  updateTemplate(id, data) {
+    return this.client
+      .patch(NOTE_TEMPLATE_ENDPOINT + id + '/', data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'API error' }))
+  }
+
 }
