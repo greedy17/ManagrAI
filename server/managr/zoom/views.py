@@ -176,6 +176,7 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
+    print(f"DATA FROM ZOOM WEBHOOK: obj {obj} / event {event}")
     if event == zoom_consts.MEETING_EVENT_ENDED:
         extra_obj = obj.pop("object", {})
         obj = {**obj, **extra_obj}
@@ -187,13 +188,14 @@ def zoom_meetings_webhook(request):
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
         if zoom_account and not zoom_account.is_revoked:
             # emit the process
-            workflow_check = (
-                MeetingWorkflow.objects.for_user(zoom_account.user)
-                .filter(meeting__topic=obj.get("topic", None))
-                .first()
-            )
-            logger.info(f"WORKFLOW CHECK FOR {zoom_account.user} --- {workflow_check}")
-            if workflow_check:
+            topic = obj["topic"]
+            workflows = MeetingWorkflow.objects.for_user(zoom_account.user)
+            workflow_check = workflows.filter(meeting__topic__icontains=topic).first()
+            if settings.IN_STAGING:
+                logger.info(
+                    f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
+                )
+            if workflow_check is not None:
                 workflow_check.meeting.meeting_id = meeting_uuid
                 workflow_check.meeting.save()
                 workflow_check.begin_communication()
