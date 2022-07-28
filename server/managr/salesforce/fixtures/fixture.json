@@ -141,31 +141,5 @@
       "datetime_created": "2020-08-03 11:39:23.632256Z",
       "last_edited": "2020-08-03 11:39:23.632256Z"
     }
-  },
-  {
-    "model": "salesforce.SObjectField",
-    "pk": "6597bb2d-a711-4e84-92f1-b3fff26e4a7f",
-    "fields": {
-      "api_name": "next_upcoming_meeting",
-      "allow_multiple": false,
-      "default_filters": [],
-      "custom": true,
-      "createable": true,
-      "updateable": true,
-      "unique": false,
-      "required": false,
-      "data_type": "Date",
-      "display_value": "",
-      "value": null,
-      "label": "Next Upcoming Meeting",
-      "length": 0,
-      "reference": false,
-      "reference_to_infos": [],
-      "options": [],
-      "relationship_name": null,
-      "is_public": true,
-      "datetime_created": "2020-08-03 11:39:23.632256Z",
-      "last_edited": "2020-08-03 11:39:23.632256Z"
-    }
   }
 ]
