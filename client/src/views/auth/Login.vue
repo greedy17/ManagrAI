@@ -6,23 +6,24 @@
         <h2>Log in to Managr</h2>
         <p class="enter-email">Please enter your email and password</p>
       </div>
-      <input
+      <FormField
         type="email"
         @input="execCheckEmail"
+         @blur="loginForm.field.email.validate()"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
         placeholder="email"
         :errors="loginForm.field.email.errors"
       />
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
-      <input
+      <FormField
         @blur="loginForm.field.password.validate()"
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
         v-if="showPassword"
         @keyup.enter="handleLoginAttempt"
         v-model="loginForm.field.password.value"
-        type="password"
+        inputType="password"
         placeholder="password"
       />
       <PulseLoadingSpinnerButton
@@ -60,6 +61,7 @@
 import User from '@/services/users'
 import { UserLoginForm } from '@/services/users/forms'
 import debounce from 'lodash.debounce'
+import FormField from '@/components/forms/FormField'
 /**
  * External Components
  */
@@ -70,7 +72,7 @@ import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
  */
 export default {
   name: 'Login',
-  components: { PulseLoadingSpinnerButton, PulseLoadingSpinner },
+  components: { PulseLoadingSpinnerButton, PulseLoadingSpinner, FormField },
   data() {
     return {
       loggingIn: false,
@@ -92,7 +94,9 @@ export default {
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()
+      console.log('here1', this.loginForm.field.email.isValid)
       if (this.loginForm.field.email.isValid) {
+        console.log('ummm here')
         this.loggingIn = true
         try {
           await User.api.checkStatus(this.loginForm.field.email.value)
@@ -164,7 +168,7 @@ h2 {
   font-weight: bold;
   text-align: center;
 }
-input {
+.input {
   margin-bottom: 0.3rem;
   padding: 0.5rem;
   width: 22vw;
@@ -174,6 +178,9 @@ input {
 }
 input:focus {
   outline: 2px solid $lighter-green;
+}
+::v-deep .tn-input:focus {
+  outline: none;
 }
 
 ::placeholder {
@@ -270,5 +277,12 @@ img {
 .links {
   font-size: 13px;
   margin: 2rem;
+}
+::v-deep .input-content {
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+::v-deep .input-form__active {
+  border: none;
 }
 </style>
