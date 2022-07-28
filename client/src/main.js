@@ -34,14 +34,14 @@ import { Drag, Drop } from 'vue-drag-drop';
 import outsideClickDirective from "@/services/directives/outside-click";
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
-import VueSanitize from "vue-sanitize";
+// import VueSanitize from "vue-sanitize";
 
-let defaults = VueSanitize.defaults;
-defaults.allowedTags = defaults.allowedTags.filter(t => t === 'br' || t === 'li');
+// let defaults = VueSanitize.defaults;
+// defaults.allowedTags = defaults.allowedTags.filter(t => t === 'br' || t === 'li');
 
-Vue.use(VueSanitize);
+// Vue.use(VueSanitize);
 
-Vue.config.productionTip = false;
+// Vue.config.productionTip = false;
 
 Vue.directive("outside-click", outsideClickDirective);
 Vue.config.productionTip = false
