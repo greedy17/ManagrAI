@@ -654,7 +654,7 @@ input:focus {
   display: flex;
   flex-flow: row;
   justify-content: center;
-  width: 80%;
+  width: 100%;
 }
 form {
   width: 100%;

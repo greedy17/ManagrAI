@@ -731,5 +731,8 @@ class NoteTemplate(TimeStampModel):
 
     objects = NoteTemplateQuerySet.as_manager()
 
+    def __str__(self):
+        return f"{self.subject} {self.user}"
+
     class Meta:
         ordering = ["datetime_created"]
