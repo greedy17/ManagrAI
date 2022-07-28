@@ -37,14 +37,11 @@ export default {
     '$route.path': function watchRoutePath() {
       const newDateTime = Date.now();
       // If it's been more than an hour,
-      console.log('one', localStorage.dateTime, newDateTime, localStorage.dateTime-newDateTime)
       if (newDateTime - localStorage.dateTime > 3600000) {
-        console.log('two')
         // Log out
         this.$store.dispatch('logoutUser')
         this.$router.push({ name: 'Login' })
       } else {
-        console.log('three')
         // reset localStorage datetime
         localStorage.dateTime = newDateTime;
         // scroll to the top
