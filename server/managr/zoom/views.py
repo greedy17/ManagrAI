@@ -195,9 +195,6 @@ def zoom_meetings_webhook(request):
                 logger.info(
                     f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
                 )
-            logger.info(
-                f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
-            )
             if workflow_check is not None:
                 workflow_check.meeting.meeting_id = meeting_uuid
                 workflow_check.meeting.save()
