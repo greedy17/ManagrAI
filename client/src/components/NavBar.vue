@@ -1,6 +1,6 @@
 <template>
   <div>
-    <nav id="nav" v-if="userIsLoggedIn">
+    <nav id="nav" v-if="userIsLoggedIn" @click="test">
       <router-link :to="{ name: 'Pipelines' }">
         <div class="logo">
           <img style="height: 2rem" src="@/assets/images/logo.png" />
@@ -137,8 +137,17 @@
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
+        
+        <div v-if="routeName === 'InviteUsers'">
+          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+            <div class="tooltip">
+              <small class="profile-wrapper">{{ user.email }}</small>
+              <span class="tooltiptext">Profile</span>
+            </div>
+          </div>
+        </div>
 
-        <div>
+        <div v-else>
           <router-link :to="{ name: 'InviteUsers' }">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
@@ -170,7 +179,16 @@
           </div>
         </router-link>
 
-        <div>
+        <div v-if="routeName === 'InviteUsers'">
+          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+            <div class="tooltip">
+              <small class="profile-wrapper">{{ user.email }}</small>
+              <span class="tooltiptext">Profile</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-else>
           <router-link :to="{ name: 'InviteUsers' }">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
@@ -211,6 +229,7 @@ export default {
       userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
       userLevel: this.$store.state.user.userLevel,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      // routeName: this.$route.name,
     }
   },
 
@@ -230,18 +249,34 @@ export default {
       ]
     }
   },
-
+  beforeMount() {
+    // this.routeName = this.$route.name
+    // console.log('this.routeName', this.routeName)
+  },
   methods: {
+    test() {
+      console.log(this.routeName)
+    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
+    goToProfile(id) {
+      console.log('hit', id)
+      this.$router.push({ path: `/invite-users/${id}` })
+    },
   },
   computed: {
     userIsLoggedIn() {
+      console.log('route', this.$route)
       return this.$store.getters.userIsLoggedIn
     },
+    routeName() {
+      console.log('hit here', this.$route.name)
+      return this.$route.name
+    },
     isAdmin() {
+      console.log('ummmm hi')
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
     },
     user() {
