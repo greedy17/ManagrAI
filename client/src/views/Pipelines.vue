@@ -2298,12 +2298,18 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        console.log(e)
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
-        }, 1000)
+        }, 750)
       }
     },
     setOpps() {
@@ -2977,6 +2983,13 @@ export default {
         }, 300)
         try {
           await SObjects.api.resourceSync()
+          this.$toast('Daily sync complete', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } catch (e) {
           this.$toast('Error syncing your resources, refresh page', {
             timeout: 2000,
@@ -2990,19 +3003,19 @@ export default {
           setTimeout(() => {
             this.loading = false
           }, 100)
-          this.$toast('Daily sync complete', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
         }
       }
     },
     async manualSync() {
       try {
         await SObjects.api.resourceSync()
+        this.$toast('Sync complete', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         this.$toast('Error syncing your resources, refresh page', {
           timeout: 2000,
@@ -3016,13 +3029,6 @@ export default {
         setTimeout(() => {
           this.loading = false
         }, 100)
-        this.$toast('Sync complete', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
       }
     },
     async updateStageForm() {
@@ -3074,12 +3080,6 @@ export default {
               this.stillNextMonth()
             }
           })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.closeStageForm()
-        this.formData = {}
-        this.dropdownLoading = false
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -3087,6 +3087,18 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } catch (e) {
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.closeStageForm()
+        this.formData = {}
+        this.dropdownLoading = false
       }
     },
     async createProduct(id = this.integrationId) {
@@ -3176,12 +3188,6 @@ export default {
               this.stillNextMonth()
             }
           })
-      } catch (e) {
-        console.log(e.response)
-      } finally {
-        this.updateList = []
-        this.formData = {}
-        this.closeFilterSelection()
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -3189,6 +3195,18 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } catch (e) {
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.updateList = []
+        this.formData = {}
+        this.closeFilterSelection()
       }
     },
     async createResource(product) {
@@ -3209,6 +3227,13 @@ export default {
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
           })
+        this.$toast('Opportunity created successfully.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         this.$toast('Error creating opportunity', {
           timeout: 2000,
@@ -3218,13 +3243,6 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.$toast('Opportunity created successfully.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
         this.savingCreateForm = false
         this.addOppModalOpen = false
       }
@@ -3238,9 +3256,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
-            res.data.ids.includes(opp.integration_id),
-          )
+          this.currentWorkflow = res.data.results
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
           }
@@ -3265,9 +3281,7 @@ export default {
         let res = await AlertTemplate.api.runAlertTemplateNow(id, {
           fromWorkflow: true,
         })
-        this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
-          res.data.ids.includes(opp.integration_id),
-        )
+        this.currentWorkflow = res.data.results
         this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
         this.$toast('Error updating workflow', {

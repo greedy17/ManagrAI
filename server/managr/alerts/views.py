@@ -51,7 +51,11 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True,)
+            Q(
+                organization=template_user.organization,
+                user_level=target,
+                is_active=True,
+            )
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -224,8 +228,8 @@ class AlertTemplateViewSet(
                     )
             model = model_routes[template.resource_type]["model"]
             queryset = model.objects.filter(integration_id__in=res_data)
-            serialized = [i.secondary_data for i in queryset]
-            return Response({"results": serialized})
+            serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
+            return Response({"results": serialized.data})
         else:
             for config in obj.configs.all():
                 template = config.template
@@ -319,7 +323,9 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user, config__id=config_id, invocation=last_instance.invocation,
+                user=user,
+                config__id=config_id,
+                invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -377,7 +383,8 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
