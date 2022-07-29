@@ -110,11 +110,11 @@
                 v-model="selectedAccount"
                 :options="allAccounts"
                 @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.value, false)"
+                @select="setUpdateValues(field.apiName, $event.id, false)"
                 openDirection="below"
                 style="width: 16.5vw"
                 selectLabel="Enter"
-                track-by="integration_id"
+                track-by="id"
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
@@ -1835,6 +1835,8 @@ export default {
   },
   data() {
     return {
+      countSets: 0,
+      updateAccountForm: {},
       createData: {},
       savingCreateForm: false,
       allPicklistOptions: {},
@@ -2057,11 +2059,11 @@ export default {
     this.getAllForms()
     this.getAllPicklist()
     this.getUsers()
-    this.objectFields.refresh()
     this.templates.refresh()
   },
   beforeMount() {
     this.selectList()
+    this.objectFields.refresh()
   },
   mounted() {
     this.resourceSync()
@@ -3256,6 +3258,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
+          console.log(res)
           this.currentWorkflow = res.data.results
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
@@ -3298,46 +3301,49 @@ export default {
       }
     },
     setForms() {
-      for (let i = 0; i < this.oppFormCopy.length; i++) {
-        if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
-        }
-      }
-
-      for (let i = 0; i < this.createOppForm.length; i++) {
-        if (this.createOppForm[i].dataType === 'Reference') {
-          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
-        }
-      }
-
-      if (this.hasProducts) {
-        for (let i = 0; i < this.createProductForm.length; i++) {
-          if (this.createProductForm[i].dataType === 'Reference') {
-            this.productReferenceOpts[this.createProductForm[i].apiName] =
-              this.createProductForm[i].id
+      this.countSets += 1
+      if (this.countSets < 2) {
+        for (let i = 0; i < this.oppFormCopy.length; i++) {
+          if (this.oppFormCopy[i].dataType === 'Reference') {
+            this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
           }
         }
-      }
 
-      for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
-      }
+        for (let i = 0; i < this.createOppForm.length; i++) {
+          if (this.createOppForm[i].dataType === 'Reference') {
+            this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
+          }
+        }
 
-      for (let i in this.createReferenceOpts) {
-        this.createReferenceOpts[i] = this.getReferenceFieldList(
-          i,
-          this.createReferenceOpts[i],
-          'create',
-        )
-      }
+        if (this.hasProducts) {
+          for (let i = 0; i < this.createProductForm.length; i++) {
+            if (this.createProductForm[i].dataType === 'Reference') {
+              this.productReferenceOpts[this.createProductForm[i].apiName] =
+                this.createProductForm[i].id
+            }
+          }
+        }
 
-      if (this.hasProducts) {
-        for (let i in this.productReferenceOpts) {
-          this.productReferenceOpts[i] = this.getReferenceFieldList(
+        for (let i in this.referenceOpts) {
+          this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+
+        for (let i in this.createReferenceOpts) {
+          this.createReferenceOpts[i] = this.getReferenceFieldList(
             i,
-            this.productReferenceOpts[i],
-            'createProduct',
+            this.createReferenceOpts[i],
+            'create',
           )
+        }
+
+        if (this.hasProducts) {
+          for (let i in this.productReferenceOpts) {
+            this.productReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.productReferenceOpts[i],
+              'createProduct',
+            )
+          }
         }
       }
     },
@@ -3376,25 +3382,26 @@ export default {
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
-        this.createOppForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
-        )
+        this.createOppForm = res
+          .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+          .fieldsRef.filter(
+            (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+          )
+
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
         )
-        let productForm = res.filter(
+        this.createProductForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )
+        )[0].fieldsRef
+
+        // this.updateAccountForm = res.filter(
+        //   (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
+        // )[0].fieldsRef
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        this.createOppForm = this.createOppForm[0].fieldsRef.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
-        this.createProductForm = productForm[0].fieldsRef.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -3437,6 +3444,7 @@ export default {
     },
     async getInitialAccounts() {
       this.loadingAccounts = true
+
       if (this.accountSobjectId) {
         try {
           const res = await SObjects.api.getSobjectPicklistValues({
