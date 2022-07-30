@@ -3123,7 +3123,7 @@ export default {
             bodyClassName: ['custom'],
           })
         } catch (e) {
-          this.$toast('Error creating Product!', {
+          this.$toast(`${e.response.data.error}`, {
             timeout: 2000,
             position: 'top-left',
             type: 'error',
@@ -3237,7 +3237,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$toast('Error creating opportunity', {
+        this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
