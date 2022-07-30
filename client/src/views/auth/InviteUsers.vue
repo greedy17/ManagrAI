@@ -397,7 +397,6 @@ export default {
       try {
         const res = await User.api.getTemplates()
         this.noteTemplates = res.results
-        console.log(res)
       } catch (e) {
         console.log(e)
       }
