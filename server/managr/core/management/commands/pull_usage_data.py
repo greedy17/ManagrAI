@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from managr.core.utils import get_totals_for_year
+from managr.core.utils import get_totals_for_year, get_organization_totals
 from managr.api.emails import send_html_email
 
 
@@ -23,6 +23,7 @@ class Command(BaseCommand):
         # email_subject = "Managr Usage Data"
         # recipients = ["zach@mymanagr.com"]
         totals = get_totals_for_year()
+        orgs = get_organization_totals()
         # send_html_email(
         #     email_subject,
         #     "core/email-templates/usage-data.html",
@@ -31,4 +32,5 @@ class Command(BaseCommand):
         #     context=totals,
         # )
         self.stdout.write(self.style.HTTP_INFO("{}").format(totals))
+        self.stdout.write(self.style.HTTP_INFO("{}").format(orgs))
 
