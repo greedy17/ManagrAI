@@ -2055,7 +2055,7 @@ export default {
   },
   async created() {
     this.getObjects()
-    this.getObjectsForWorkflows()
+    // this.getObjectsForWorkflows()
     this.getAllForms()
     this.getAllPicklist()
     this.getUsers()
@@ -2063,10 +2063,10 @@ export default {
   },
   beforeMount() {
     this.selectList()
-    this.objectFields.refresh()
   },
   mounted() {
     this.resourceSync()
+    this.objectFields.refresh()
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -2798,6 +2798,7 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
+        console.log(res.current_values)
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
@@ -2807,13 +2808,6 @@ export default {
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
-        // this.$toast('Error creating update form, close modal and try again.', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
         console.log(e)
       } finally {
         this.dropdownLoading = false
@@ -3478,23 +3472,23 @@ export default {
         this.loadingAccounts = false
       }
     },
-    async getObjectsForWorkflows() {
-      this.loading = true
-      try {
-        const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
-        this.allOppsForWorkflows = res.results
-      } catch (e) {
-        this.$toast('Error gathering Opportunities!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loading = false
-      }
-    },
+    // async getObjectsForWorkflows() {
+    //   this.loading = true
+    //   try {
+    //     const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
+    //     this.allOppsForWorkflows = res.results
+    //   } catch (e) {
+    //     this.$toast('Error gathering Opportunities!', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
     async getObjects(page = 1) {
       this.currentPage = page
       this.loading = true
@@ -4390,7 +4384,8 @@ h3 {
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 56vh;
   color: $base-gray;
   font-size: 16px;

@@ -2020,7 +2020,8 @@ input {
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 56vh;
   border-radius: 0.3rem;
   border-bottom: 3px solid $white;
