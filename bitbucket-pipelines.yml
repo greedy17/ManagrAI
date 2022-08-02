@@ -163,7 +163,6 @@ fargateStagingDeployment: &fargateStagingDeployment
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
-        WAIT_INTERVAL: 20
         DEBUG: 'true' # Optional
 
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
