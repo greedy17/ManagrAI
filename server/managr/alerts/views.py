@@ -51,11 +51,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(
-                organization=template_user.organization,
-                user_level=target,
-                is_active=True,
-            )
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -74,16 +70,19 @@ def create_configs_for_target(target, template_user, config):
         users = User.objects.filter(id=target)
     new_configs = []
     for user in users:
+        config_copy = copy(config)
+        config_copy["alert_targets"] = [str(user.id)]
         if user.has_slack_integration:
-            config_copy = copy(config)
             config_copy["recipients"] = [
                 user.slack_integration.zoom_channel
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
-            config_copy["alert_targets"] = [str(user.id)]
-            new_configs.append(config_copy)
+        else:
+            config_copy["recipients"] = ["default"]
+            config_copy["recipient_type"] = "default"
+        new_configs.append(config_copy)
     return new_configs
 
 
@@ -323,9 +322,7 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user,
-                config__id=config_id,
-                invocation=last_instance.invocation,
+                user=user, config__id=config_id, invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -383,8 +380,7 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,

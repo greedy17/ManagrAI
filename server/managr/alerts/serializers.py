@@ -402,7 +402,6 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
         return value
 
     def to_internal_value(self, data):
-        print(self.context.user)
         if (
             not self.context.user.user_level == "MANAGER"
             and not data.get("recipient_type") == "SLACK_CHANNEL"
@@ -415,8 +414,9 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
             )
             if not len(value):
                 value = ["SELF"]
-
             data.update({"recipients": value})
+        else:
+            data.update({"recipients": [data.get("recipients")]})
         internal_data = super().to_internal_value(data)
         return internal_data
 
