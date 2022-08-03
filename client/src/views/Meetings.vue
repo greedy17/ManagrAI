@@ -621,6 +621,14 @@
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
               </template>
+              <template slot="afterList">
+                <p v-if="hasNext" @click="addMoreContacts" class="multi-slot__more">
+                  Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                </p>
+                <p v-else class="multi-slot__more" style="color: #4d4e4c; cursor: text">
+                  End of list
+                </p>
+              </template>
             </Multiselect>
           </span>
 
@@ -735,6 +743,8 @@ export default {
   },
   data() {
     return {
+      page: 1,
+      hasNext: false,
       submitting: false,
       meetingOpen: false,
       integrationId: null,
@@ -1302,8 +1312,15 @@ export default {
           .then((res) => {
             this.getMeetingList()
           })
+        this.$toast('Meeting logged Successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
-        this.$toast('Error updating opportunity', {
+        this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -1313,13 +1330,6 @@ export default {
       } finally {
         this.updatingMeeting = false
         this.meetingLoading = false
-        this.$toast('Meeting logged Successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
       }
     },
     async createFormInstance(id, integrationId, alertInstanceId = null) {
@@ -1413,7 +1423,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$toast('Error updating opportunity', {
+        this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -1588,10 +1598,21 @@ export default {
     externalCustomLabel({ secondary_data, email }) {
       return `${secondary_data.Name ? secondary_data.Name : 'N/A'} (${email ? email : 'N/A'})`
     },
+    async addMoreContacts() {
+      this.page += 1
+      try {
+        const res = await SObjects.api.getObjects('Contact', this.page)
+        this.externalParticipants = [...res.results, ...this.externalParticipants]
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getExternalParticipants() {
       try {
         const res = await SObjects.api.getObjects('Contact')
-        this.externalParticipants = res.results //.filter((user) => user.has_salesforce_integration)
+        this.externalParticipants = res.results
+        res.next ? (this.hasNext = true) : (this.hasNext = false)
       } catch (e) {
         this.$toast('Error gathering users', {
           timeout: 2000,
@@ -1999,7 +2020,8 @@ input {
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 56vh;
   border-radius: 0.3rem;
   border-bottom: 3px solid $white;
