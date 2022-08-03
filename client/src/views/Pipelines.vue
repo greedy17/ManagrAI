@@ -632,6 +632,7 @@
                   class="basic-slide"
                   id="Title"
                   type="text"
+                  v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
                 /><label for="Title">Title</label>
@@ -672,7 +673,7 @@
                 <div
                   v-for="(template, i) in noteTemplates"
                   :key="i"
-                  @click="setTemplate(template.body, field.apiName)"
+                  @click="setTemplate(template.body, field.apiName, template.subject)"
                   class="note-templates2__content"
                 >
                   {{ template.subject }}
@@ -1868,6 +1869,7 @@ export default {
   },
   data() {
     return {
+      noteTitle: null,
       noteTemplates: null,
       noteValue: null,
       addingTemplate: false,
@@ -1974,7 +1976,6 @@ export default {
       instanceId: null,
       contactInstanceId: null,
       formData: {},
-      noteTitle: '',
       noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
@@ -2122,14 +2123,15 @@ export default {
         console.log(e)
       }
     },
-    setTemplate(val, field) {
+    setTemplate(val, field, title) {
+      this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = this.$sanitize(val)
         .replace(/<br\s*[\/]?>/gi, '\r\n')
         .replace(/<li\s*[\/]?>/gi, '\r\n   -')
         .replace(/(<([^>]+)>)/gi, '')
-
       this.setUpdateValues(field, this.noteValue)
+      this.setUpdateValues('meeting_type', title ? title : null)
     },
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
@@ -2848,6 +2850,7 @@ export default {
       this.selectedAccount = null
       this.selectedOwner = null
       this.noteValue = null
+      this.noteTitle = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
       try {
@@ -4974,6 +4977,7 @@ a {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
+  gap: 4px;
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;

@@ -72,8 +72,8 @@ class CustomSObjectField(admin.ModelAdmin):
         "last_edited",
         "salesforce_account",
     )
-    search_fields = ("label",)
 
+    search_fields = ("label",)
     ordering = ("-last_edited",)
 
 
