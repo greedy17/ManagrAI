@@ -2124,6 +2124,10 @@ export default {
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
+      this.noteValue = this.$sanitize(val)
+        .replace(/<br\s*[\/]?>/gi, '\r\n')
+        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
+        .replace(/(<([^>]+)>)/gi, '')
       this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
