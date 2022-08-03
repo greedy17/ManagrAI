@@ -78,21 +78,16 @@
                   class="basic-slide"
                   id="Title"
                   type="text"
+                  v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
                 /><label for="Title">Title</label>
               </span>
-              <!-- <p>Note Title:</p>
-              <textarea
-                id="user-input"
-                cols="30"
-                rows="2"
-                style="width: 36.5vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea> -->
             </div>
-            <div style="margin-top: -2rem" v-else-if="field.apiName === 'meeting_comments'">
+            <div
+              style="margin-top: -2rem; position: relative"
+              v-else-if="field.apiName === 'meeting_comments'"
+            >
               <span class="input-container">
                 <textarea
                   class="basic-slide"
@@ -102,18 +97,42 @@
                   rows="4"
                   placeholder="Note"
                   style="line-height: 2rem"
+                  v-model="noteValue"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                 /><label for="Note">Note</label>
               </span>
-              <!-- <p>Notes:</p>
-              <textarea
-                id="user-input"
-                ccols="30"
-                rows="8"
-                style="width: 36.5vw; border-radius: 0.2rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+
+              <section v-if="!addingTemplate" class="note-templates">
+                <span
+                  v-if="noteTemplates.length"
+                  @click="addingTemplate = !addingTemplate"
+                  class="note-templates__content"
+                >
+                  Insert Template <img src="@/assets/images/note.svg" alt="" />
+                </span>
+                <span @click="goToProfile" class="note-templates__content" v-else>
+                  Create a template <img src="@/assets/images/note.svg" alt=""
+                /></span>
+              </section>
+
+              <section class="note-templates2" v-else>
+                <div
+                  v-for="(template, i) in noteTemplates"
+                  :key="i"
+                  @click="setTemplate(template.body, field.apiName, template.subject)"
+                  class="note-templates2__content"
+                >
+                  {{ template.subject }}
+                </div>
+              </section>
+
+              <div
+                v-if="addingTemplate"
+                @click="addingTemplate = !addingTemplate"
+                class="close-template"
               >
-              </textarea> -->
+                <img src="@/assets/images/close.svg" height="20px" alt="" />
+              </div>
             </div>
             <div
               v-else-if="
@@ -745,6 +764,10 @@ export default {
     return {
       page: 1,
       hasNext: false,
+      noteTitle: null,
+      noteTemplates: null,
+      noteValue: null,
+      addingTemplate: false,
       submitting: false,
       meetingOpen: false,
       integrationId: null,
@@ -860,6 +883,9 @@ export default {
     this.getUsers()
     this.getExternalParticipants()
   },
+  mounted() {
+    this.getTemplates()
+  },
   watch: {
     accountSobjectId: 'getInitialAccounts',
     updateOppForm: 'setForms',
@@ -880,6 +906,24 @@ export default {
     // },
   },
   methods: {
+    async getTemplates() {
+      try {
+        const res = await User.api.getTemplates()
+        this.noteTemplates = res.results
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    setTemplate(val, field, title) {
+      this.noteTitle = title
+      this.addingTemplate = false
+      this.noteValue = this.$sanitize(val)
+        .replace(/<br\s*[\/]?>/gi, '\r\n')
+        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
+        .replace(/(<([^>]+)>)/gi, '')
+      this.setUpdateValues(field, this.noteValue)
+      this.setUpdateValues('meeting_type', title ? title : null)
+    },
     resetMeeting() {
       this.clearData()
       this.meetingOpen = !this.meetingOpen
@@ -1273,6 +1317,8 @@ export default {
       this.formData = {}
       this.oppId = id
       this.integrationId = integrationId
+      this.noteValue = null
+      this.noteTitle = null
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
@@ -1343,6 +1389,7 @@ export default {
       this.currentAccount = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
+
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
@@ -2484,5 +2531,88 @@ label {
 .tooltip:hover .tooltiptext {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
+}
+.close-template {
+  position: absolute;
+  bottom: 56px;
+  right: 8px;
+  z-index: 3;
+  cursor: pointer;
+  background-color: black;
+  border-radius: 3px;
+  opacity: 0.6;
+  img {
+    filter: invert(99%);
+  }
+}
+.note-templates {
+  margin-left: 2px;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 12px;
+  padding: 12px 6px;
+  margin-top: -34px;
+  border: 1px solid $soft-gray;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  cursor: pointer;
+  width: 36vw;
+
+  &__content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  img {
+    filter: invert(50%);
+    height: 12px;
+  }
+  &__content:hover {
+    opacity: 0.6;
+  }
+}
+
+.note-templates2 {
+  margin-left: 2px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  padding: 12px 6px;
+  margin-top: -34px;
+  border: 1px solid $soft-gray;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  width: 36vw;
+  height: 80px;
+  overflow: scroll;
+
+  &__content {
+    border-radius: 4px;
+    border: 0.5px solid $base-gray;
+    color: $base-gray;
+    padding: 8px 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  &__content:hover {
+    opacity: 0.6;
+  }
+}
+.close-template {
+  position: absolute;
+  bottom: 56px;
+  right: 8px;
+  z-index: 3;
+  cursor: pointer;
+  background-color: black;
+  border-radius: 3px;
+  opacity: 0.6;
+  img {
+    filter: invert(99%);
+  }
 }
 </style>

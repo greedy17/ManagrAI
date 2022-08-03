@@ -1,110 +1,296 @@
 <template>
   <div class="invite-users">
-    <div class="invite-users__header">
-      <h3 style="color: #4d4e4c">Manage Your Team</h3>
+    <div v-if="noSelection">
+      <figure
+        @click="
+          manageTeamSelected = true
+          noSelection = false
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/managrTeam.png" />
+        <figcaption>
+          <h5>Manage <br />Team</h5>
+        </figcaption>
 
-      <button class="invite_button" type="submit" @click="handleInvite">
-        Invite Member
-        <img
-          v-if="hasSlack"
-          style="height: 0.8rem; margin-left: 0.25rem"
-          src="@/assets/images/slackLogo.png"
-          alt=""
-        />
-        <img
-          v-else
-          style="height: 0.8rem; margin-left: 0.25rem"
-          src="@/assets/images/logo.png"
-          alt=""
-        />
-      </button>
+        <div class="figure-title">
+          <p>Manage your team <img src="@/assets/images/team.svg" height="16px" alt="" /></p>
+          <small>Invite others to join you on Managr</small>
+        </div>
+      </figure>
+
+      <figure
+        @click="
+          updateInfoSelected = true
+          noSelection = false
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/updateInfo.png" />
+        <figcaption>
+          <h5>Update<br />Info</h5>
+        </figcaption>
+        <div style="margin-top: 12px" class="figure-title">
+          <p>Update Info <img src="@/assets/images/profile.svg" height="16px" alt="" /></p>
+          <small>Update your profile information</small>
+        </div>
+      </figure>
+      <figure
+        @click="
+          createNoteSelected = true
+          noSelection = false
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/createTemplate.png" />
+        <figcaption>
+          <h5>Create<br />Template</h5>
+        </figcaption>
+        <div style="margin-top: 8px" class="figure-title">
+          <p>Create Template <img src="@/assets/images/list.svg" height="18px" alt="" /></p>
+          <small>Create a template for your notes</small>
+        </div>
+      </figure>
+      <figure
+        @click="
+          editNoteSelected = true
+          noSelection = false
+          getTemplates()
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/editTemplate.png" />
+        <figcaption>
+          <h5>Edit <br />Templates</h5>
+        </figcaption>
+        <div style="margin-top: 16px" class="figure-title">
+          <p>Edit Templates <img src="@/assets/images/pencil.svg" height="12px" alt="" /></p>
+          <small>edit your note templates</small>
+        </div>
+      </figure>
     </div>
 
-    <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
+    <section v-if="manageTeamSelected">
+      <div class="invite-users__header">
+        <h3 style="color: #4d4e4c">Manage Your Team</h3>
 
-    <section>
-      <header class="invite-users__header">
-        <h3 style="color: #4d4e4c">Update your Info</h3>
-
-        <button class="invite_button" type="submit" @click="handleUpdate">
-          Update
-          <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" />
+        <button class="invite_button" type="submit" @click="handleInvite">
+          Invite Member
+          <img
+            v-if="hasSlack"
+            style="height: 0.8rem; margin-left: 0.25rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            v-else
+            style="height: 0.8rem; margin-left: 0.25rem"
+            src="@/assets/images/logo.png"
+            alt=""
+          />
         </button>
-      </header>
+      </div>
 
-      <form class="update-container">
-        <input
-          v-model="profileForm.field.firstName.value"
-          placeholder="First Name"
-          :errors="profileForm.field.firstName.errors"
-          id="user-input"
-        />
-        <input
-          v-model="profileForm.field.lastName.value"
-          placeholder="Last Name"
-          :errors="profileForm.field.lastName.errors"
-          id="user-input"
-        />
-
-        <Multiselect
-          placeholder="Select Timezone"
-          style="width: 16rem"
-          v-model="selectedTimezone"
-          @input="setTime"
-          :options="timezones"
-          openDirection="below"
-          selectLabel="Enter"
-          label="key"
-          track-by="value"
-        />
-      </form>
-    </section>
-
-    <section>
-      <header class="invite-users__header">
-        <h3 style="color: #4d4e4c">Note Templates</h3>
-
-        <button
-          :disabled="!noteSubject || !noteBody"
-          class="invite_button"
-          type="submit"
-          @click="createTemplate"
-          v-if="!savingTemplate"
-        >
-          Save Template
-          <!-- <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" /> -->
+      <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
+      <div class="wide">
+        <button @click="homeView" class="invite_button">
+          <img src="@/assets/images/back.svg" height="12px" alt="" />
         </button>
-
-        <div v-else>
-          <PipelineLoader />
-        </div>
-      </header>
-
-      <div class="update-container">
-        <input
-          v-model="noteSubject"
-          class="template-input"
-          type="text"
-          name=""
-          id=""
-          :disabled="savingTemplate"
-          placeholder="Template Title"
-        />
-
-        <quill-editor
-          :disabled="savingTemplate"
-          ref="message-body"
-          :options="{
-            modules: {
-              toolbar: { container: ['bold'] },
-            },
-            placeholder: 'Type out your template here.',
-          }"
-          v-model="noteBody"
-          class="message__box"
-        />
       </div>
     </section>
+
+    <div v-if="updateInfoSelected">
+      <section>
+        <header class="invite-users__header">
+          <h3 style="color: #4d4e4c">Update your Info</h3>
+
+          <button class="invite_button" type="submit" @click="handleUpdate">
+            Update
+            <img
+              style="height: 0.8rem; margin-left: 0.25rem"
+              src="@/assets/images/logo.png"
+              alt=""
+            />
+          </button>
+        </header>
+
+        <form class="update-container">
+          <input
+            v-model="profileForm.field.firstName.value"
+            placeholder="First Name"
+            :errors="profileForm.field.firstName.errors"
+            id="user-input"
+          />
+          <input
+            v-model="profileForm.field.lastName.value"
+            placeholder="Last Name"
+            :errors="profileForm.field.lastName.errors"
+            id="user-input"
+          />
+
+          <Multiselect
+            placeholder="Select Timezone"
+            style="width: 16rem"
+            v-model="selectedTimezone"
+            @input="setTime"
+            :options="timezones"
+            openDirection="below"
+            selectLabel="Enter"
+            label="key"
+            track-by="value"
+          />
+        </form>
+        <div class="wide">
+          <button @click="homeView" class="invite_button">
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div v-if="createNoteSelected">
+      <section>
+        <header class="invite-users__header">
+          <h3 style="color: #4d4e4c">Create Template</h3>
+
+          <button
+            :disabled="!noteSubject || !noteBody"
+            class="invite_button"
+            type="submit"
+            @click="createTemplate"
+            v-if="!savingTemplate"
+          >
+            Save Template
+            <!-- <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" /> -->
+          </button>
+
+          <div v-else>
+            <PipelineLoader />
+          </div>
+        </header>
+
+        <div class="update-container">
+          <input
+            v-model="noteSubject"
+            class="template-input"
+            type="text"
+            name=""
+            id=""
+            :disabled="savingTemplate"
+            placeholder="Template Title"
+          />
+          <!-- { list: 'ordered' } -->
+          <quill-editor
+            :disabled="savingTemplate"
+            ref="message-body"
+            :options="{
+              modules: {
+                toolbar: [{ list: '' }],
+              },
+              theme: 'snow',
+              placeholder: 'Type out your template here.',
+            }"
+            v-model="noteBody"
+            class="message__box"
+          />
+
+          <div class="tooltip" style="margin-top: 1rem; display: flex; align-items: center">
+            <input type="checkbox" id="shared" v-model="isShared" />
+            <label class="small" for="shared">Share Template</label>
+            <span class="tooltiptext">Share template with your team</span>
+          </div>
+        </div>
+        <div class="wide">
+          <button @click="homeView" class="invite_button">
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div v-if="editNoteSelected">
+      <section>
+        <header class="invite-users__header">
+          <h3 style="color: #4d4e4c">Edit Templates</h3>
+
+          <div v-if="selectedTemplate" class="row">
+            <button class="invite_button" type="submit" @click="updateTemplate">
+              Update Template
+            </button>
+
+            <button
+              @click="selectedTemplate = !selectedTemplate"
+              class="invite_button"
+              style="color: #4d4e4c"
+            >
+              <img src="@/assets/images/back.svg" height="12px" alt="" /> All Templates
+            </button>
+
+            <button @click="removeTemplate" class="invite_button2">
+              <img src="@/assets/images/trash.svg" height="18px" alt="" />
+            </button>
+          </div>
+        </header>
+
+        <div v-if="noteTemplates" class="update-container">
+          <div class="centered" v-if="!noteTemplates.length">
+            <p>Nothing here yet... \_("/)_/</p>
+          </div>
+
+          <div class="row" v-else>
+            <template v-if="!selectedTemplate">
+              <div
+                @click="selectTemplate(template)"
+                class="small-container"
+                v-for="(template, i) in noteTemplates"
+                :key="i"
+              >
+                <div class="small-container__head">
+                  <p>{{ template.subject }}</p>
+                </div>
+                <div class="small-container__body">
+                  <p>{{ truncateText(template.body, 34) }}</p>
+                </div>
+              </div>
+            </template>
+
+            <div v-else>
+              <input
+                v-model="selectedTemplate.subject"
+                class="template-input"
+                type="text"
+                name=""
+                id=""
+                :disabled="savingTemplate"
+                placeholder="Template Title"
+              />
+              <!-- { list: 'ordered' } -->
+              <quill-editor
+                :disabled="savingTemplate"
+                ref="message-body"
+                :options="{
+                  modules: {
+                    toolbar: [{ list: '' }],
+                  },
+                  theme: 'snow',
+                }"
+                v-model="selectedTemplate.body"
+                class="message__box"
+              />
+              <div class="align-start">
+                <input type="checkbox" id="editShared" v-model="selectedTemplate.is_shared" />
+                <label class="small" for="editShared">Share Template</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wide">
+          <button @click="homeView" class="invite_button">
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -129,6 +315,14 @@ export default {
   },
   data() {
     return {
+      noSelection: true,
+      manageTeamSelected: false,
+      updateInfoSelected: false,
+      createNoteSelected: false,
+      editNoteSelected: false,
+      selectedTemplate: null,
+      noteTemplates: null,
+      isShared: false,
       savingTemplate: false,
       noteSubject: null,
       noteBody: null,
@@ -141,12 +335,83 @@ export default {
     }
   },
   methods: {
+    homeView() {
+      this.noSelection = true
+      this.manageTeamSelected = false
+      this.updateInfoSelected = false
+      this.createNoteSelected = false
+      this.editNoteSelected = false
+      this.selectedTemplate = false
+    },
+    selectTemplate(template) {
+      this.selectedTemplate = template
+    },
+    truncateText(text, length) {
+      if (text.length <= length) {
+        return text.replace(/(<([^>]+)>)/gi, '')
+      }
+
+      return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
+    },
+    async updateTemplate() {
+      try {
+        const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
+        this.$toast('Note template update successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error updating template', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.homeView()
+      }
+    },
+    async removeTemplate() {
+      try {
+        const res = await User.api.removeTemplate(this.selectedTemplate.id)
+        this.$toast('Template removal successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error removing template', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.homeView()
+      }
+    },
+    async getTemplates() {
+      try {
+        const res = await User.api.getTemplates()
+        this.noteTemplates = res.results
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async createTemplate() {
       this.savingTemplate = true
       try {
         const res = await User.api.createTemplate({
           subject: this.noteSubject,
           body: this.noteBody,
+          is_shared: this.isShared,
           user: this.getUser.id,
         })
         this.$toast('Note template created successfully', {
@@ -169,6 +434,8 @@ export default {
         this.savingTemplate = false
         this.noteSubject = null
         this.noteBody = null
+        this.isShared = null
+        this.homeView()
       }
     },
     setTime() {
@@ -209,6 +476,7 @@ export default {
     },
   },
   async created() {
+    this.getTemplates()
     this.profileForm = new UserProfileForm({
       firstName: this.getUser.firstName,
       lastName: this.getUser.lastName,
@@ -249,10 +517,11 @@ export default {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 }
+
 .message__box {
   margin-bottom: 2rem;
   height: 24vh;
-  width: 32vw;
+  width: 36vw;
   border-radius: 0.25rem;
   background-color: transparent;
 }
@@ -261,7 +530,7 @@ export default {
   border-radius: 0.3rem;
   padding-left: 1rem;
   height: 50px;
-  width: 32vw;
+  width: 36vw;
   font-family: inherit;
   margin-bottom: 1rem;
 }
@@ -273,8 +542,8 @@ export default {
   border: 1px solid #e8e8e8;
   color: $base-gray;
   width: 60vw;
-  height: 40vh;
-  overflow: scroll;
+  min-height: 40vh;
+  overflow: visible;
   padding: 1.5rem 0rem 1.5rem 1rem;
   border-radius: 5px;
   display: flex;
@@ -301,6 +570,7 @@ export default {
   align-items: center;
   text-align: center;
   margin-top: 4rem;
+  padding-bottom: 1rem;
   &__header {
     display: flex;
     align-items: center;
@@ -327,9 +597,16 @@ h2 {
   background-color: white;
   border-radius: 0.25rem;
   transition: all 0.25s;
-  padding: 0.5rem 0.75rem;
-  font-weight: bolder;
+  padding: 8px 12px;
+
   font-size: 14px;
+  border: 1px solid #e8e8e8;
+}
+.invite_button2 {
+  background-color: white;
+  border-radius: 0.25rem;
+  transition: all 0.25s;
+  padding: 6px 12px;
   border: 1px solid #e8e8e8;
 }
 .invite_button:disabled {
@@ -337,15 +614,276 @@ h2 {
   background-color: $soft-gray;
   border-radius: 0.25rem;
   transition: all 0.25s;
-  padding: 0.5rem 0.75rem;
+  padding: 8px 12px;
   font-weight: 400px;
   font-size: 14px;
   border: 1px solid #e8e8e8;
 }
 
-.invite_button:hover {
+.invite_button:hover,
+.invite_button2:hover {
   cursor: pointer;
   transform: scale(1.025);
   box-shadow: 1px 2px 3px $mid-gray;
+}
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.small {
+  font-size: 12px;
+}
+@mixin epic-sides() {
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    position: absolute;
+    content: '';
+    display: block;
+    top: 0;
+    left: -5000px;
+    height: 100%;
+    width: 15000px;
+    z-index: -1;
+    @content;
+  }
+}
+
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 200px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38vh;
+}
+.small-container {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 250px;
+  height: 110px;
+  overflow: hidden;
+  cursor: pointer;
+  &__head {
+    border-bottom: 1px solid #ccc;
+    padding: 1px 8px;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    height: 40px;
+    display: flex;
+    justify-content: flex-start;
+  }
+  &__body {
+    display: flex;
+    justify-content: flex-start;
+    padding: 4px 8px;
+    opacity: 0.8;
+    font-size: 13px;
+  }
+}
+.small-container:hover {
+  opacity: 0.7;
+}
+.row {
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.hover-img {
+  background-color: white;
+  border: 1px solid #ccc;
+  color: #fff;
+  display: inline-block;
+  margin: 8px;
+  max-width: 320px;
+  min-width: 240px;
+  height: 260px;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.hover-img * {
+  box-sizing: border-box;
+  transition: all 0.45s ease;
+}
+
+.hover-img:before,
+.hover-img:after {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-top: 2px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  content: '';
+  transition: all 0.3s ease;
+  z-index: 1;
+  opacity: 0;
+  transform: scaleY(2);
+}
+
+.hover-img img {
+  vertical-align: top;
+  max-width: 100%;
+  backface-visibility: hidden;
+}
+
+.hover-img figcaption {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  align-items: center;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.1em;
+  opacity: 0;
+  z-index: 2;
+  transition-delay: 0.1s;
+  font-size: 24px;
+  font-family: sans-serif;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.hover-img:hover:before,
+.hover-img:hover:after {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.hover-img:hover > img {
+  opacity: 0.7;
+}
+
+.hover-img:hover figcaption {
+  opacity: 1;
+}
+.wide {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.figure-title {
+  img {
+    margin-left: 6px;
+    filter: invert(20%);
+    // height: 20px;
+    visibility: hidden;
+  }
+  p {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+  }
+  background-color: $dark-green;
+  color: $base-gray;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px;
+
+  small {
+    color: white;
+    margin-top: -8px;
+  }
+}
+.align-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 3rem;
 }
 </style>

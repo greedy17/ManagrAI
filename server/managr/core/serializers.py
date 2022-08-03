@@ -238,5 +238,4 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
 class NoteTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = NoteTemplate
-        fields = ("subject", "body", "user", "is_shared")
-
+        fields = ("subject", "body", "user", "is_shared", "id")
