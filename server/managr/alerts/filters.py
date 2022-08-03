@@ -15,10 +15,7 @@ class AlertInstanceFilterSet(FilterSet):
         by_config = qs.filter(config__id=value)
         last = by_config.first()
         if last and last.datetime_created.date() == datetime.today().date():
-            instances = qs.filter(
-                config__id=value,
-                invocation=last.invocation,
-            )
+            instances = qs.filter(config__id=value, invocation=last.invocation,)
             return instances
         return AlertInstance.objects.none()
 
@@ -33,7 +30,7 @@ class AlertTemplateFilterSet(FilterSet):
                 user_targeted = AlertTemplate.objects.filter(
                     configs__alert_targets__contains=[str(user.id)]
                 ).exclude(user=user)
-
+                print(user_targeted)
                 return qs | user_targeted
             else:
                 return qs

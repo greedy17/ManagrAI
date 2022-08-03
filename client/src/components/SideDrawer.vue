@@ -18,7 +18,7 @@
     <section id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
       <h3 class="neg-mar-bottom">{{ `${day} ${today}` }}</h3>
       <div class="noti-section">
-        <p class="sticky yellowish">
+        <p @click="goToMeetings" style="cursor: pointer" class="sticky yellowish">
           Meetings <small class="yellow-bg">{{ meetings ? meetings.length : 0 }}</small>
         </p>
         <span v-if="meetings ? !meetings.length : null"
@@ -145,7 +145,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
             fromWorkflow: true,
           })
-          this.workflows.push(res.data.ids.length)
+          this.workflows.push(res.data.results.length)
         }
       } catch (error) {
         console.log(error)
