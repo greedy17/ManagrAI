@@ -277,6 +277,10 @@
                 v-model="selectedTemplate.body"
                 class="message__box"
               />
+              <div class="align-start">
+                <input type="checkbox" id="editShared" v-model="selectedTemplate.is_shared" />
+                <label class="small" for="editShared">Share Template</label>
+              </div>
             </div>
           </div>
         </div>
@@ -875,5 +879,11 @@ input[type='checkbox'] + label::before {
     color: white;
     margin-top: -8px;
   }
+}
+.align-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 3rem;
 }
 </style>
