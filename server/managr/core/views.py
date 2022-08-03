@@ -1,7 +1,5 @@
 from functools import partial
 import logging
-from signal import raise_signal
-from urllib import response
 import requests
 import textwrap
 from django.utils import timezone
