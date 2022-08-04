@@ -190,12 +190,12 @@ def zoom_meetings_webhook(request):
             # emit the process
             topic = obj["topic"]
             workflows = MeetingWorkflow.objects.for_user(zoom_account.user)
-            workflow_check = workflows.filter(meeting__topic=topic).first()
+            workflow_check = workflows.filter(meeting__topic__icontains=topic).first()
             if settings.IN_STAGING:
                 logger.info(
                     f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
                 )
-            if workflow_check:
+            if workflow_check is not None:
                 workflow_check.meeting.meeting_id = meeting_uuid
                 workflow_check.meeting.save()
                 workflow_check.begin_communication()
@@ -456,7 +456,6 @@ def schedule_zoom_meeting(request):
             zoom_res["join_url"],
             description,
         )
-        print("\n\ncal_res\n\n", cal_res, "\n\n")
     except Exception as e:
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)

@@ -291,6 +291,30 @@ def meeting_prep(processed_data, user_id):
     existing_contacts = Contact.objects.filter(
         email__in=participant_emails, owner__organization__id=user.organization.id
     ).exclude(email=user.email)
+    meeting_resource_data = dict(resource_id="", resource_type="")
+    opportunity = Opportunity.objects.filter(
+        contacts__email__in=participant_emails, owner__id=user.id
+    ).first()
+    logger.info(f"ZOOM OPP {opportunity}")
+    if opportunity:
+        meeting_resource_data["resource_id"] = str(opportunity.id)
+        meeting_resource_data["resource_type"] = "Opportunity"
+        existing_contacts = existing_contacts.filter(opportunities__in=[str(opportunity.id)])
+    else:
+        account = Account.objects.filter(
+            contacts__email__in=participant_emails, owner__id=user.id,
+        ).first()
+        logger.info(f"ZOOM Account {account}")
+        if account:
+            meeting_resource_data["resource_id"] = str(account.id)
+            meeting_resource_data["resource_type"] = "Account"
+            existing_contacts = existing_contacts.filter(account=account.id)
+        else:
+            lead = Lead.objects.filter(email__in=participant_emails, owner__id=user.id).first()
+            if lead:
+                meeting_resource_data["resource_id"] = str(lead.id)
+                meeting_resource_data["resource_type"] = "Lead"
+
     # convert all contacts to model representation and remove from array
     for contact in existing_contacts:
         formatted_contact = contact.adapter_class.as_dict
@@ -328,25 +352,6 @@ def meeting_prep(processed_data, user_id):
         *new_contacts,
         *meeting_contacts,
     ]
-    meeting_resource_data = dict(resource_id="", resource_type="")
-    opportunity = Opportunity.objects.filter(
-        contacts__email__in=participant_emails, owner__id=user.id
-    ).first()
-    if opportunity:
-        meeting_resource_data["resource_id"] = str(opportunity.id)
-        meeting_resource_data["resource_type"] = "Opportunity"
-    else:
-        account = Account.objects.filter(
-            contacts__email__in=participant_emails, owner__id=user.id,
-        ).first()
-        if account:
-            meeting_resource_data["resource_id"] = str(account.id)
-            meeting_resource_data["resource_type"] = "Account"
-        else:
-            lead = Lead.objects.filter(email__in=participant_emails, owner__id=user.id).first()
-            if lead:
-                meeting_resource_data["resource_id"] = str(lead.id)
-                meeting_resource_data["resource_type"] = "Lead"
 
     for contact in meeting_contacts:
         contact["_tracking_id"] = str(uuid.uuid4())

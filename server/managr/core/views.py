@@ -1,5 +1,4 @@
 import logging
-from urllib import response
 import requests
 import textwrap
 from django.utils import timezone
@@ -37,15 +36,13 @@ from managr.utils import sites as site_utils
 from managr.core.utils import get_totals_for_year
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import (
-    User,
-    NylasAuthAccount,
-)
+from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
+    NoteTemplateSerializer,
 )
 from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 from managr.core.background import emit_process_calendar_meetings
@@ -856,3 +853,42 @@ def get_task_status(request):
             data = {"completed": False}
     return Response(data=data)
 
+
+class NoteTemplateViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+
+    serializer_class = NoteTemplateSerializer
+
+    def get_queryset(self):
+        return NoteTemplate.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)

@@ -544,7 +544,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 _send_recap(update_form_ids, None, True)
             raise e
 
-    if len(user.slack_integration.recap_receivers):
+    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
     return res

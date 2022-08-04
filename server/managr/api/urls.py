@@ -158,6 +158,7 @@ urlpatterns = [
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
+router.register("note-template", core_views.NoteTemplateViewSet, "note-template")
 router.register("organizations", organization_views.OrganizationViewSet, "organizations")
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")

@@ -156,15 +156,14 @@ fargateStagingDeployment: &fargateStagingDeployment
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
-    - pipe: atlassian/aws-ecs-deploy:1.5.0
+    - pipe: atlassian/aws-ecs-deploy:1.6.2
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
         TASK_DEFINITION: 'task-definition.json' # Optional
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
-        WAIT_INTERVAL: 60
-        # DEBUG: '<string>' # Optional
+        # DEBUG: 'true' # Optional
 
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
@@ -214,7 +213,7 @@ fargateDemoDeployment: &fargateDemoDeployment
     - TASK_FAMILY="managr-app-task-demo" IMAGE_TAG="demo-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
-    - pipe: atlassian/aws-ecs-deploy:1.5.0
+    - pipe: atlassian/aws-ecs-deploy:1.6.2
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
@@ -271,7 +270,7 @@ fargateProdDeployment: &fargateProdDeployment
     - TASK_FAMILY="managr-app-task-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
-    - pipe: atlassian/aws-ecs-deploy:1.5.0
+    - pipe: atlassian/aws-ecs-deploy:1.6.2
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
