@@ -18,10 +18,10 @@ from managr.core.models import User
 class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            # if user.user_level in ["SDR", "MANAGER"]:
-            #     return self.filter(owner__organization=user.organization)
-            # else:
-            return self.filter(owner=user)
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
             return None
 
@@ -102,10 +102,10 @@ class Lead(TimeStampModel, IntegrationModel):
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            # if user.user_level in ["SDR", "MANAGER"]:
-            #     return self.filter(owner__organization=user.organization)
-            # else:
-            return self.filter(owner=user)
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__organization=user.organization)
+            else:
+                return self.filter(owner=user)
         else:
             return None
 

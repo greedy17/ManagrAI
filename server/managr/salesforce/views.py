@@ -343,7 +343,7 @@ class SalesforceSObjectViewSet(
         query = (
             sobject["model"].objects.filter(id=param_resource_id)
             if param_resource_id
-            else sobject["model"].objects.for_user(self.request.user)
+            else sobject["model"].objects.filter(owner=self.request.user)
         )
         if for_filter:
             filtered_query = SalesforceSObjectFilterSet.for_filter(
@@ -727,7 +727,10 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-        return Response(data=data)
+        if data["success"]:
+            return Response(data=data)
+        else:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
     @action(
         methods=["post"],

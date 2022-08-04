@@ -717,6 +717,7 @@ export default {
   },
   methods: {
     mapIds() {
+      console.log(this.selectedUsers)
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
@@ -978,8 +979,9 @@ export default {
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-        this.selectedChannel.id
+      this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = [
+        this.selectedChannel.id,
+      ]
     },
     onAddAlertGroup() {
       // length determines order

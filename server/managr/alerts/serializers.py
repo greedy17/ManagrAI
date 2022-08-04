@@ -416,7 +416,7 @@ class AlertConfigWriteSerializer(serializers.ModelSerializer):
                 value = ["SELF"]
             data.update({"recipients": value})
         else:
-            data.update({"recipients": [data.get("recipients")]})
+            data.update({"recipients": data.get("recipients")})
         internal_data = super().to_internal_value(data)
         return internal_data
 
@@ -442,7 +442,6 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data, *args, **kwargs):
-        print(validated_data)
         new_groups = validated_data.pop("new_groups", [])
         message_template = validated_data.pop("message_template")
         new_configs = validated_data.pop("new_configs", [])

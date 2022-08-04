@@ -628,14 +628,15 @@
           <section :key="i" v-for="(field, i) in oppFormCopy">
             <div style="margin-left: -0.5rem" v-if="field.apiName === 'meeting_type'">
               <span class="input-container">
+                <p>Title:</p>
                 <input
-                  class="basic-slide"
-                  id="Title"
+                  style="width: 34vw"
+                  id="user-input"
                   type="text"
                   v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
-                /><label for="Title">Title</label>
+                />
               </span>
             </div>
             <div
@@ -643,18 +644,17 @@
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span style="margin-left: 0px" class="input-container">
+                <p>Note</p>
                 <textarea
-                  class="basic-slide"
-                  id="notes"
+                  id="user-input"
                   type="text"
                   cols="30"
                   rows="4"
                   placeholder="Note"
-                  style="line-height: 2rem"
+                  style="line-height: 2rem; width: 34vw"
                   v-model="noteValue"
                   @input="setUpdateValues(field.apiName, noteValue)"
                 />
-                <label for="Note">Note</label>
               </span>
               <section v-if="!addingTemplate" class="note-templates">
                 <span

@@ -299,7 +299,7 @@ def meeting_prep(processed_data, user_id):
     if opportunity:
         meeting_resource_data["resource_id"] = str(opportunity.id)
         meeting_resource_data["resource_type"] = "Opportunity"
-        existing_contacts = existing_contacts.filter(opportunties__in=[str(opportunity.id)])
+        existing_contacts = existing_contacts.filter(opportunities__in=[str(opportunity.id)])
     else:
         account = Account.objects.filter(
             contacts__email__in=participant_emails, owner__id=user.id,
