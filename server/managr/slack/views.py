@@ -500,7 +500,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
         # Otherwise, handle a GET
         organization = request.user.organization
-
         # Retrieve the custom slack form and serialize it
         try:
             serializer = OrgCustomSlackFormSerializer(instance=organization.custom_slack_form)
@@ -576,11 +575,15 @@ class SlackFormsViewSet(
         serializer.save()
         instance = serializer.instance
         instance.fields.clear()
+        fields_state = {}
         for i, field in enumerate(fields_ref):
             instance.fields.add(
                 field["id"],
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )
+            fields_state[i] = field["apiName"]
+
+        instance.config = fields_state
         instance.save()
         if data["resource"] == "OpportunityLineItem":
             org = Organization.objects.get(id=request.data["organization"])
@@ -593,6 +596,8 @@ class SlackFormsViewSet(
             form.fields.clear()
             for i, field in enumerate(fields):
                 form.fields.add(field, through_defaults={"order": i})
+            form.config = fields_state
+            form.save()
         return Response(serializer.data)
 
 
