@@ -110,11 +110,11 @@
                 v-model="selectedAccount"
                 :options="allAccounts"
                 @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.value, false)"
+                @select="setUpdateValues(field.apiName, $event.id, false)"
                 openDirection="below"
                 style="width: 16.5vw"
                 selectLabel="Enter"
-                track-by="integration_id"
+                track-by="id"
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
@@ -651,14 +651,15 @@
           <section :key="i" v-for="(field, i) in oppFormCopy">
             <div style="margin-left: -0.5rem" v-if="field.apiName === 'meeting_type'">
               <span class="input-container">
+                <p>Title:</p>
                 <input
-                  class="basic-slide"
-                  id="Title"
+                  style="width: 34vw"
+                  id="user-input"
                   type="text"
                   v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
-                /><label for="Title">Title</label>
+                />
               </span>
             </div>
             <div
@@ -666,18 +667,17 @@
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span style="margin-left: 0px" class="input-container">
+                <p>Note</p>
                 <textarea
-                  class="basic-slide"
-                  id="notes"
+                  id="user-input"
                   type="text"
                   cols="30"
                   rows="4"
                   placeholder="Note"
-                  style="line-height: 2rem"
+                  style="line-height: 2rem; width: 34vw"
                   v-model="noteValue"
                   @input="setUpdateValues(field.apiName, noteValue)"
                 />
-                <label for="Note">Note</label>
               </span>
               <section v-if="!addingTemplate" class="note-templates">
                 <span
@@ -1921,6 +1921,8 @@ export default {
       noteTemplates: null,
       noteValue: null,
       addingTemplate: false,
+      countSets: 0,
+      updateAccountForm: {},
       createData: {},
       savingCreateForm: false,
       allPicklistOptions: {},
@@ -2141,7 +2143,7 @@ export default {
   },
   async created() {
     this.getObjects()
-    this.getObjectsForWorkflows()
+    // this.getObjectsForWorkflows()
     this.getAllForms()
     this.getAllPicklist()
     this.getUsers()
@@ -2155,6 +2157,7 @@ export default {
   mounted() {
     this.resourceSync()
     this.getTemplates()
+    this.objectFields.refresh()
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -2179,7 +2182,11 @@ export default {
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
-      this.setUpdateValues(field, val)
+      this.noteValue = this.$sanitize(val)
+        .replace(/<br\s*[\/]?>/gi, '\r\n')
+        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
+        .replace(/(<([^>]+)>)/gi, '')
+      this.setUpdateValues(field, this.noteValue)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
     goToProfile() {
@@ -2429,12 +2436,18 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        console.log(e)
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
-        }, 1000)
+        }, 750)
       }
     },
     setOpps() {
@@ -2923,6 +2936,7 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
+        console.log(res.current_values)
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
@@ -2932,13 +2946,6 @@ export default {
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
-        // this.$toast('Error creating update form, close modal and try again.', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
         console.log(e)
       } finally {
         this.dropdownLoading = false
@@ -3110,6 +3117,13 @@ export default {
         }, 300)
         try {
           await SObjects.api.resourceSync()
+          this.$toast('Daily sync complete', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         } catch (e) {
           this.$toast('Error syncing your resources, refresh page', {
             timeout: 2000,
@@ -3123,19 +3137,19 @@ export default {
           setTimeout(() => {
             this.loading = false
           }, 100)
-          this.$toast('Daily sync complete', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
         }
       }
     },
     async manualSync() {
       try {
         await SObjects.api.resourceSync()
+        this.$toast('Sync complete', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         this.$toast('Error syncing your resources, refresh page', {
           timeout: 2000,
@@ -3149,13 +3163,6 @@ export default {
         setTimeout(() => {
           this.loading = false
         }, 100)
-        this.$toast('Sync complete', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
       }
     },
     async updateStageForm() {
@@ -3207,12 +3214,6 @@ export default {
               this.stillNextMonth()
             }
           })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.closeStageForm()
-        this.formData = {}
-        this.dropdownLoading = false
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -3220,6 +3221,18 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } catch (e) {
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.closeStageForm()
+        this.formData = {}
+        this.dropdownLoading = false
       }
     },
     async createProduct(id = this.integrationId) {
@@ -3242,7 +3255,7 @@ export default {
             bodyClassName: ['custom'],
           })
         } catch (e) {
-          this.$toast('Error creating Product!', {
+          this.$toast(`${e.response.data.error}`, {
             timeout: 2000,
             position: 'top-left',
             type: 'error',
@@ -3309,12 +3322,6 @@ export default {
               this.stillNextMonth()
             }
           })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.updateList = []
-        this.formData = {}
-        this.closeFilterSelection()
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -3322,6 +3329,18 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } catch (e) {
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.updateList = []
+        this.formData = {}
+        this.closeFilterSelection()
       }
     },
     async createResource(product) {
@@ -3342,15 +3361,6 @@ export default {
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
           })
-      } catch (e) {
-        this.$toast('Error creating opportunity', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
           position: 'top-left',
@@ -3358,6 +3368,15 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } catch (e) {
+        this.$toast(`${e.response.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
         this.savingCreateForm = false
         this.addOppModalOpen = false
       }
@@ -3371,9 +3390,8 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
-            res.data.ids.includes(opp.integration_id),
-          )
+          console.log(res)
+          this.currentWorkflow = res.data.results
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
           }
@@ -3398,9 +3416,7 @@ export default {
         let res = await AlertTemplate.api.runAlertTemplateNow(id, {
           fromWorkflow: true,
         })
-        this.currentWorkflow = this.allOppsForWorkflows.filter((opp) =>
-          res.data.ids.includes(opp.integration_id),
-        )
+        this.currentWorkflow = res.data.results
         this.filteredWorkflows = this.currentWorkflow
       } catch (error) {
         this.$toast('Error updating workflow', {
@@ -3417,47 +3433,49 @@ export default {
       }
     },
     setForms() {
-      for (let i = 0; i < this.oppFormCopy.length; i++) {
-        if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
-        }
-      }
-
-      for (let i = 0; i < this.createOppForm.length; i++) {
-        if (this.createOppForm[i].dataType === 'Reference') {
-          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
-        }
-      }
-
-      if (this.hasProducts) {
-        for (let i = 0; i < this.createProductForm.length; i++) {
-          if (this.createProductForm[i].dataType === 'Reference') {
-            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
-            this.productReferenceOpts[this.createProductForm[i].apiName] =
-              this.createProductForm[i].id
+      this.countSets += 1
+      if (this.countSets < 2) {
+        for (let i = 0; i < this.oppFormCopy.length; i++) {
+          if (this.oppFormCopy[i].dataType === 'Reference') {
+            this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
           }
         }
-      }
 
-      for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
-      }
+        for (let i = 0; i < this.createOppForm.length; i++) {
+          if (this.createOppForm[i].dataType === 'Reference') {
+            this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
+          }
+        }
 
-      for (let i in this.createReferenceOpts) {
-        this.createReferenceOpts[i] = this.getReferenceFieldList(
-          i,
-          this.createReferenceOpts[i],
-          'create',
-        )
-      }
+        if (this.hasProducts) {
+          for (let i = 0; i < this.createProductForm.length; i++) {
+            if (this.createProductForm[i].dataType === 'Reference') {
+              this.productReferenceOpts[this.createProductForm[i].apiName] =
+                this.createProductForm[i].id
+            }
+          }
+        }
 
-      if (this.hasProducts) {
-        for (let i in this.productReferenceOpts) {
-          this.productReferenceOpts[i] = this.getReferenceFieldList(
+        for (let i in this.referenceOpts) {
+          this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+
+        for (let i in this.createReferenceOpts) {
+          this.createReferenceOpts[i] = this.getReferenceFieldList(
             i,
-            this.productReferenceOpts[i],
-            'createProduct',
+            this.createReferenceOpts[i],
+            'create',
           )
+        }
+
+        if (this.hasProducts) {
+          for (let i in this.productReferenceOpts) {
+            this.productReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.productReferenceOpts[i],
+              'createProduct',
+            )
+          }
         }
       }
     },
@@ -3495,25 +3513,26 @@ export default {
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
-        this.createOppForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
-        )
+        this.createOppForm = res
+          .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+          .fieldsRef.filter(
+            (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+          )
+
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
         )
-        let productForm = res.filter(
+        this.createProductForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )
+        )[0].fieldsRef
+
+        // this.updateAccountForm = res.filter(
+        //   (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
+        // )[0].fieldsRef
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        this.createOppForm = this.createOppForm[0].fieldsRef.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
-        this.createProductForm = productForm[0].fieldsRef.filter(
-          (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -3556,6 +3575,7 @@ export default {
     },
     async getInitialAccounts() {
       this.loadingAccounts = true
+
       if (this.accountSobjectId) {
         try {
           const res = await SObjects.api.getSobjectPicklistValues({
@@ -3589,23 +3609,23 @@ export default {
         this.loadingAccounts = false
       }
     },
-    async getObjectsForWorkflows() {
-      this.loading = true
-      try {
-        const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
-        this.allOppsForWorkflows = res.results
-      } catch (e) {
-        this.$toast('Error gathering Opportunities!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loading = false
-      }
-    },
+    // async getObjectsForWorkflows() {
+    //   this.loading = true
+    //   try {
+    //     const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
+    //     this.allOppsForWorkflows = res.results
+    //   } catch (e) {
+    //     this.$toast('Error gathering Opportunities!', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
     async getObjects(page = 1) {
       this.currentPage = page
       this.loading = true
@@ -4506,7 +4526,8 @@ h3 {
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 56vh;
   color: $base-gray;
   font-size: 16px;
