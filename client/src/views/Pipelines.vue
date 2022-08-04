@@ -453,6 +453,28 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
+              <div>
+                <p class="form-label" @click="test">Pricebook:</p>
+                <Multiselect
+                    @select="getPricebookEntries($event.integration_id)"
+                    :options="pricebooks"
+                    openDirection="below"
+                    v-model="selectedPriceBook"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                    label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -478,6 +500,7 @@
                           : $event.id,
                       )
                     "
+                    :loading="loadingProducts"
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
                     style="width: 16.5vw"
@@ -1087,31 +1110,28 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
-                <div>
-                  <p class="form-label" @click="test">Pricebook:</p>
-                  <Multiselect
-                      @select="
-                      getPricebookEntries($event.integration_id)
-                      "
-                      :options="pricebooks"
-                      openDirection="below"
-                      v-model="selectedPriceBook"
-                      style="width: 16.5vw"
-                      selectLabel="Enter"
-                    
-                      label="name"
-                    >
-                    <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{ 'Pricebook' }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                </div>
+              <div>
+                <p class="form-label" @click="test">Pricebook:</p>
+                <Multiselect
+                    @select="getPricebookEntries($event.integration_id)"
+                    :options="pricebooks"
+                    openDirection="below"
+                    v-model="selectedPriceBook"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                    label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -1146,6 +1166,7 @@
                         ? 'value'
                         : 'id'
                     "
+                    :loading="loadingProducts"
                     :label="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                         ? 'label'
@@ -1970,6 +1991,7 @@ export default {
       allOpps: null,
       loading: false,
       loadingAccounts: false,
+      loadingProducts: false,
       accountSobjectId: null,
       dropdownLoading: false,
       loadingWorkflows: false,
@@ -2165,10 +2187,16 @@ export default {
     },
     async getPricebookEntries(id){
         try {
+          console.log('id', id)
+          this.loadingProducts = true
           const res = await SObjects.api.getObjects('PricebookEntry',1,true, [['EQUALS', 'Pricebook2Id',id]])
           this.productReferenceOpts['PricebookEntryId'] = res.results
         } catch (e) {
           console.log(e)
+        } finally {
+          setTimeout(() => {
+            this.loadingProducts = false
+          }, 1000)
         }
     },
     async getAllPicklist() {
