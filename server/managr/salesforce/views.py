@@ -727,7 +727,10 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-        return Response(data=data)
+        if data["success"]:
+            return Response(data=data)
+        else:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
     @action(
         methods=["post"],
