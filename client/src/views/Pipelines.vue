@@ -1087,6 +1087,31 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
+                <div>
+                  <p class="form-label" @click="test">Pricebook:</p>
+                  <Multiselect
+                      @select="
+                      getPricebookEntries($event.integration_id)
+                      "
+                      :options="pricebooks"
+                      openDirection="below"
+                      v-model="selectedPriceBook"
+                      style="width: 16.5vw"
+                      selectLabel="Enter"
+                    
+                      label="name"
+                    >
+                    <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          {{ 'Pricebook' }}
+                        </p>
+                      </template>
+                    </Multiselect>
+                </div>
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -1095,7 +1120,7 @@
                     (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label" @click="test(productReferenceOpts[field.apiName])">{{ field.referenceDisplayLabel }}:</p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1734,7 +1759,7 @@
             ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOpps"
-            @create-form="createFormInstance(opp.id, opp.integration_id)"
+            @create-form="createFormInstance(opp.id, opp.integration_id,opp.secondary_data.Pricebook2Id)"
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
@@ -1869,6 +1894,8 @@ export default {
   },
   data() {
     return {
+      productRefCopy: {},
+      pricebookId: null,
       noteTitle: null,
       noteTemplates: null,
       noteValue: null,
@@ -2005,6 +2032,8 @@ export default {
       stageIntegrationId: null,
       stageId: null,
       allOppsForWorkflows: null,
+      pricebooks: null,
+      selectedPriceBook: null,
       booleans: ['true', 'false'],
       ladFilter: {
         apiName: 'LastActivityDate',
@@ -2094,6 +2123,7 @@ export default {
     this.getAllForms()
     this.getAllPicklist()
     this.getUsers()
+    this.getPricebooks()
     this.objectFields.refresh()
     this.templates.refresh()
   },
@@ -2113,6 +2143,9 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     async getTemplates() {
       try {
         const res = await User.api.getTemplates()
@@ -2129,6 +2162,14 @@ export default {
     },
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
+    },
+    async getPricebookEntries(id){
+        try {
+          const res = await SObjects.api.getObjects('PricebookEntry',1,true, [['EQUALS', 'Pricebook2Id',id]])
+          this.productReferenceOpts['PricebookEntryId'] = res.results
+        } catch (e) {
+          console.log(e)
+        }
     },
     async getAllPicklist() {
       try {
@@ -2174,6 +2215,13 @@ export default {
           bodyClassName: ['custom'],
         })
       }
+    },
+    async getPricebooks() {
+      const res = await SObjects.api.getObjects('Pricebook2')
+      this.pricebooks = res.results
+    },
+    pricebookLabel({name}) {
+      return name
     },
     nextPage() {
       this.currentPage += 1
@@ -2264,16 +2312,16 @@ export default {
     async getAllReferencePicklists() {
       try {
         const res = await SObjects.api.getSobjectPicklistValues()
-        console.log(res)
       } catch (e) {
         console.log(e)
       }
     },
-    async getReferenceFieldList(key, val, type, eventVal) {
+    async getReferenceFieldList(key, val, type, eventVal, filter) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
           value: eventVal ? eventVal : '',
+          for_filter: filter ? [filter] : null
         })
         if (type === 'update') {
           this.referenceOpts[key] = res
@@ -2613,7 +2661,6 @@ export default {
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
-      console.log(newField)
 
       if (field === 'Stage') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
@@ -2823,7 +2870,8 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async createFormInstance(id, integrationId, alertInstanceId = null) {
+    async createFormInstance(id, integrationId,pricebookId, alertInstanceId = null) {
+      pricebookId ? this.pricebookId = pricebookId : null
       this.addingProduct = false
       this.formData = {}
       this.createData = {}
@@ -3356,6 +3404,7 @@ export default {
       if (this.hasProducts) {
         for (let i = 0; i < this.createProductForm.length; i++) {
           if (this.createProductForm[i].dataType === 'Reference') {
+            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
             this.productReferenceOpts[this.createProductForm[i].apiName] =
               this.createProductForm[i].id
           }
@@ -3415,7 +3464,6 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
-
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
