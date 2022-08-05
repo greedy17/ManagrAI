@@ -84,19 +84,19 @@
                 (field.dataType === 'String' && field.apiName === 'NextStep')
               "
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
                 ccols="30"
                 rows="4"
                 :disabled="savingCreateForm"
-                style="width: 37vw; border-radius: 0.4rem"
+                style="width: 34vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
             </div>
-            <div v-else-if="field.dataType === 'String'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'String'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 :disabled="savingCreateForm"
                 id="user-input"
@@ -105,7 +105,7 @@
               />
             </div>
             <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}</p>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
@@ -137,7 +137,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
 
               <Multiselect
                 v-model="currentVals[field.apiName]"
@@ -305,7 +305,7 @@
                         rows="2"
                         :disabled="savingCreateForm"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 6px; padding: 7px"
+                        style="width: 32vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -389,8 +389,8 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'Date'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="date"
                 id="user-input"
@@ -398,10 +398,10 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>
+            <div class="col" v-else-if="field.dataType === 'DateTime'">
+              <label class="label">
                 {{ field.referenceDisplayLabel }}
-              </p>
+              </label>
               <input
                 type="datetime-local"
                 id="start"
@@ -415,8 +415,9 @@
                 field.dataType === 'Double' ||
                 field.dataType === 'Currency'
               "
+              class="col"
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="number"
@@ -425,7 +426,7 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
@@ -619,16 +620,19 @@
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            style="height: 1.5rem; margin-top: -1.5rem; margin-right: 0.75rem; cursor: pointer"
             @click="resetEdit"
             alt=""
           />
         </div>
         <div class="opp-modal">
           <section :key="i" v-for="(field, i) in oppFormCopy">
-            <div style="margin-left: -0.5rem" v-if="field.apiName === 'meeting_type'">
+            <div
+              style="margin-left: -0.5rem; margin-top: -1rem"
+              v-if="field.apiName === 'meeting_type'"
+            >
               <span class="input-container">
-                <p>Title:</p>
+                <label class="label">Title</label>
                 <input
                   style="width: 34vw"
                   id="user-input"
@@ -644,7 +648,7 @@
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span style="margin-left: 0px; margin-top: -4px" class="input-container">
-                <p>Note:</p>
+                <label class="label">Note</label>
                 <!-- <textarea
                   id="user-input"
                   type="text"
@@ -655,7 +659,12 @@
                   v-model="noteValue"
                   @input="setUpdateValues(field.apiName, noteValue)"
                 /> -->
-                <div class="divArea" v-html="noteValue" contenteditable="true"></div>
+                <div
+                  @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
+                  class="divArea"
+                  v-html="noteValue"
+                  contenteditable="true"
+                ></div>
               </span>
               <section v-if="!addingTemplate" class="note-templates">
                 <span
@@ -693,8 +702,9 @@
               v-else-if="
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
+              class="col"
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
                 ccols="30"
@@ -712,8 +722,9 @@
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 (field.dataType === 'String' && field.apiName !== 'NextStep')
               "
+              class="col"
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="text"
@@ -723,7 +734,7 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
@@ -744,7 +755,7 @@
               </Multiselect>
             </div>
             <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}</p>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
@@ -784,7 +795,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -962,7 +973,7 @@
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 6px; padding: 7px"
+                        style="width: 32vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -1043,8 +1054,8 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'Date'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="text"
                 onfocus="(this.type='date')"
@@ -1055,8 +1066,8 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'DateTime'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="datetime-local"
                 id="start"
@@ -1065,13 +1076,14 @@
               />
             </div>
             <div
+              class="col"
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
                 field.dataType === 'Currency'
               "
             >
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="number"
@@ -1629,7 +1641,7 @@
                 ccols="30"
                 rows="2"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 20vw; border-radius: 6px; padding: 7px"
+                style="width: 32vw; border-radius: 6px; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input="
                   ;(value = $event.target.value), setUpdateValidationValues(field.apiName, value)
@@ -1705,12 +1717,18 @@
           </div>
         </div>
         <div class="flex-end-opp">
-          <div style="display: flex; align-items: center">
-            <div v-if="dropdownLoading">
-              <PipelineLoader />
-            </div>
-            <button v-else @click="updateStageForm()" class="select-btn">Update</button>
+          <div></div>
+          <div v-if="dropdownLoading">
+            <PipelineLoader />
           </div>
+          <button
+            v-else
+            @click="updateStageForm()"
+            class="select-btn"
+            style="margin-bottom: 6px; margin-right: -6px"
+          >
+            Update
+          </button>
         </div>
       </div>
       <div class="results">
@@ -2272,7 +2290,6 @@ export default {
     async getAllReferencePicklists() {
       try {
         const res = await SObjects.api.getSobjectPicklistValues()
-        console.log(res)
       } catch (e) {
         console.log(e)
       }
@@ -2627,7 +2644,6 @@ export default {
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
-      console.log(newField)
 
       if (field === 'Stage') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
@@ -2861,7 +2877,6 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        console.log(res.current_values)
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
@@ -3315,7 +3330,6 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          console.log(res)
           this.currentWorkflow = res.data.results
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
@@ -3854,6 +3868,7 @@ export default {
 .col {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 .light-green-bg {
   background-color: $white-green;
@@ -4939,7 +4954,7 @@ main:hover > span {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 0.5rem 1.5rem;
+  padding: 0.25rem 1.5rem;
   height: 4rem;
   display: flex;
   align-items: flex-end;
@@ -5034,5 +5049,18 @@ a {
   img {
     filter: invert(99%);
   }
+}
+.label {
+  display: inline-block;
+  padding: 6px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 80px;
+  margin-top: 12px;
+  background-color: $white-green;
+  color: $dark-green;
+  font-weight: bold;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
 </style>
