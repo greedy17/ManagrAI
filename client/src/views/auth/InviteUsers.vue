@@ -10,11 +10,11 @@
       >
         <img src="@/assets/images/managrTeam.png" />
         <figcaption>
-          <h4>Manage <br />Team</h4>
+          <h5>Manage <br />Team</h5>
         </figcaption>
 
         <div class="figure-title">
-          <p>Manage your team <img src="@/assets/images/team.svg" alt="" /></p>
+          <p>Manage your team <img src="@/assets/images/team.svg" height="16px" alt="" /></p>
           <small>Invite others to join you on Managr</small>
         </div>
       </figure>
@@ -28,7 +28,7 @@
       >
         <img src="@/assets/images/updateInfo.png" />
         <figcaption>
-          <h4>Update<br />Info</h4>
+          <h5>Update<br />Info</h5>
         </figcaption>
         <div style="margin-top: 12px" class="figure-title">
           <p>Update Info <img src="@/assets/images/profile.svg" height="16px" alt="" /></p>
@@ -44,10 +44,10 @@
       >
         <img src="@/assets/images/createTemplate.png" />
         <figcaption>
-          <h4>Create<br />Template</h4>
+          <h5>Create<br />Template</h5>
         </figcaption>
         <div style="margin-top: 8px" class="figure-title">
-          <p>Create Template <img src="@/assets/images/note.svg" height="16px" alt="" /></p>
+          <p>Create Template <img src="@/assets/images/list.svg" height="18px" alt="" /></p>
           <small>Create a template for your notes</small>
         </div>
       </figure>
@@ -61,10 +61,10 @@
       >
         <img src="@/assets/images/editTemplate.png" />
         <figcaption>
-          <h4>Edit <br />Templates</h4>
+          <h5>Edit <br />Templates</h5>
         </figcaption>
         <div style="margin-top: 16px" class="figure-title">
-          <p>Edit Templates <img src="@/assets/images/note.svg" height="16px" alt="" /></p>
+          <p>Edit Templates <img src="@/assets/images/pencil.svg" height="12px" alt="" /></p>
           <small>edit your note templates</small>
         </div>
       </figure>
@@ -277,6 +277,10 @@
                 v-model="selectedTemplate.body"
                 class="message__box"
               />
+              <div class="align-start">
+                <input type="checkbox" id="editShared" v-model="selectedTemplate.is_shared" />
+                <label class="small" for="editShared">Share Template</label>
+              </div>
             </div>
           </div>
         </div>
@@ -397,7 +401,6 @@ export default {
       try {
         const res = await User.api.getTemplates()
         this.noteTemplates = res.results
-        console.log(res)
       } catch (e) {
         console.log(e)
       }
@@ -779,7 +782,6 @@ input[type='checkbox'] + label::before {
   overflow: hidden;
   position: relative;
   text-align: center;
-  letter-spacing: 0.2px;
   width: 100%;
   border-radius: 8px;
   cursor: pointer;
@@ -793,8 +795,8 @@ input[type='checkbox'] + label::before {
 .hover-img:before,
 .hover-img:after {
   background-color: rgba(0, 0, 0, 0.5);
-  border-top: 75px solid rgba(0, 0, 0, 0.5);
-  border-bottom: 75px solid rgba(0, 0, 0, 0.5);
+  border-top: 2px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
   position: absolute;
   top: 0;
   bottom: 0;
@@ -856,22 +858,32 @@ input[type='checkbox'] + label::before {
 .figure-title {
   img {
     margin-left: 6px;
-    filter: invert(40%);
-    height: 20px;
+    filter: invert(20%);
+    // height: 20px;
+    visibility: hidden;
   }
   p {
     font-size: 16px;
+    display: flex;
+    align-items: center;
   }
-  background-color: white;
+  background-color: $dark-green;
   color: $base-gray;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: center;
   padding: 8px;
 
   small {
-    color: $mid-gray;
+    color: white;
+    margin-top: -8px;
   }
+}
+.align-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 3rem;
 }
 </style>

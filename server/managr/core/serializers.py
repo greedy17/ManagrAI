@@ -3,7 +3,7 @@ from django.contrib.auth import login
 
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-
+import managr.core.constants as core_consts
 from managr.organization.serializers import (
     OrganizationSerializer,
     AccountSerializer,
@@ -158,9 +158,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         #      to register "trials" separately, but be tied to the same org in the back
         #      end. We will do this by looking at the domain name of the email.
         org_name = validated_data.pop("organization_name")
-        org = Organization.objects.create(name=org_name)
-
-        return User.objects.create_admin_user(organization=org, **validated_data)
+        try:
+            org_check = Organization.objects.get(name__iexact=org_name)
+            return User.objects.create_user(
+                organization=org_check, user_level=core_consts.ACCOUNT_TYPE_REP, **validated_data
+            )
+        except Organization.DoesNotExist:
+            org = Organization.objects.create(name=org_name)
+            return User.objects.create_admin_user(organization=org, **validated_data)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
