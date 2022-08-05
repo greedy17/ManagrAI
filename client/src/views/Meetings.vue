@@ -519,9 +519,178 @@
               </Multiselect>
             </div>
           </section>
+          <div ref="product" class="adding-product" v-if="addingProduct">
+            <div class="adding-product__header">
+              <img class="fullInvert" src="@/assets/images/tag.svg" alt="" />
+              <p>Add Product</p>
+            </div>
+            <div class="adding-product__body">
+              <div>
+                <p class="form-label">Pricebook:</p>
+                <Multiselect
+                    @select="getPricebookEntries($event.integration_id)"
+                    :options="pricebooks"
+                    openDirection="below"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                    label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    field.dataType === 'Reference'
+                  "
+                >
+                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setCreateValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : $event.id,
+                      )
+                    "
+                    :loading="loadingProducts"
+                    openDirection="below"
+                    v-model="dropdownVal[field.apiName]"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    :disabled="savingCreateForm"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :disabled="savingCreateForm"
+                    :placeholder="currentVals[field.apiName]"
+                    style="width: 20vw; border-radius: 6px; padding: 7px"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :disabled="savingCreateForm"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    :disabled="savingCreateForm"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="number"
+                    :disabled="savingCreateForm"
+                    v-model="currentVals[field.apiName]"
+                    :placeholder="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- <button>Add product</button> -->
         </div>
         <div class="flex-end-opp">
+          <div v-if="hasProducts">
+            <button
+              v-if="!addingProduct"
+              @click="addProduct"
+              style="margin-bottom: 0.75rem"
+              class="select-btn1"
+            >
+              Add Product
+            </button>
+
+            <p @click="addProduct" v-else class="product-text">
+              Adding product <img src="@/assets/images/remove.svg" alt="" />
+            </p>
+          </div>
+          <div v-else></div>
           <div v-if="updatingMeeting" style="display: flex; align-items: center">
             <button @click="onMakeMeetingUpdate" class="add-button__">Update</button>
             <p @click="resetEdit" class="cancel">Cancel</p>
@@ -762,7 +931,13 @@ export default {
   },
   data() {
     return {
+      productRefCopy: {},
+      productReferenceOpts: {},
+      allPicklistOptions: {},
+      apiPicklistOptions: {},
+      createReferenceOpts: {},
       page: 1,
+      savingCreateForm: false,
       hasNext: false,
       noteTitle: null,
       noteTemplates: null,
@@ -778,6 +953,8 @@ export default {
       key: 0,
       meetingKey: 0,
       dropdownLoading: false,
+      loadingProducts: false,
+      pricebooks: null,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
@@ -836,6 +1013,7 @@ export default {
       allUsers: null,
       showMeetingList: true,
       selectedMeeting: false,
+      createProductForm: null,
       meetings: null,
       referenceOpts: {},
       fiveMinuteIntervals: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
@@ -853,6 +1031,7 @@ export default {
       booleans: ['true', 'false'],
       notes: [],
       notesLength: 0,
+      addingProduct: false,
       days: {
         0: 'Sunday',
         1: 'Monday',
@@ -872,11 +1051,16 @@ export default {
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
+    hasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
+    },
   },
   created() {
     this.getMeetingList()
     this.getObjects()
     this.templates.refresh()
+    this.getPricebooks()
+    this.getAllPicklist()
     this.getAllForms()
   },
   beforeMount() {
@@ -923,6 +1107,12 @@ export default {
         .replace(/(<([^>]+)>)/gi, '')
       this.setUpdateValues(field, this.noteValue)
       this.setUpdateValues('meeting_type', title ? title : null)
+    },
+    addProduct() {
+      this.addingProduct = !this.addingProduct
+      setTimeout(() => {
+        this.$refs.product ? this.$refs.product.scrollIntoView() : null
+      }, 100)
     },
     resetMeeting() {
       this.clearData()
@@ -1022,6 +1212,11 @@ export default {
         this.resetMeeting()
       }
     },
+    setCreateValues(key, val) {
+      if (val) {
+        this.createData[key] = val
+      }
+    },
     resetNotes() {
       this.modalOpen = !this.modalOpen
       this.notes = []
@@ -1058,6 +1253,17 @@ export default {
       this.internalParticipantsSelected = []
       this.externalParticipantsSelected = []
       this.extraParticipantsSelected = ''
+    },
+    async getAllPicklist() {
+      try {
+        const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+        for (let i = 0; i < res.length; i++) {
+          this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
+          this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
+        }
+      } catch (e) {
+        console.log(e)
+      }
     },
     async stageGateInstance(field) {
       this.stageGateId = null
@@ -1223,6 +1429,9 @@ export default {
         }, 500)
       }
     },
+    goToProfile() {
+      this.$router.push({ name: 'InviteUsers' })
+    },
     selectMeeting(name) {
       this.currentList = name
       this.showList = false
@@ -1377,6 +1586,24 @@ export default {
         this.updatingMeeting = false
         this.meetingLoading = false
       }
+    },
+    async getPricebooks() {
+      const res = await SObjects.api.getObjects('Pricebook2')
+      this.pricebooks = res.results
+    },
+    async getPricebookEntries(id){
+        try {
+          console.log('id', id)
+          this.loadingProducts = true
+          const res = await SObjects.api.getObjects('PricebookEntry',1,true, [['EQUALS', 'Pricebook2Id',id]])
+          this.productReferenceOpts['PricebookEntryId'] = res.results
+        } catch (e) {
+          console.log(e)
+        } finally {
+          setTimeout(() => {
+            this.loadingProducts = false
+          }, 1000)
+        }
     },
     async createFormInstance(id, integrationId, alertInstanceId = null) {
       this.stageGateField = null
@@ -1573,6 +1800,23 @@ export default {
           salesforceObject: 'Opportunity',
         })
       }
+
+      if (this.hasProducts) {
+        for (let i = 0; i < this.createProductForm.length; i++) {
+          if (this.createProductForm[i].dataType === 'Reference') {
+            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
+            this.productReferenceOpts[this.createProductForm[i].apiName] =
+              this.createProductForm[i].id
+          }
+        }
+        for (let i in this.productReferenceOpts) {
+          this.productReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.productReferenceOpts[i],
+            'createProduct',
+          )
+        }
+      }
     },
     async getAllForms() {
       try {
@@ -1619,8 +1863,36 @@ export default {
               dupeStagesRemoved[i].referenceDisplayLabel
           }
         }
+
+        this.createProductForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+        )[0].fieldsRef
       } catch (error) {
         this.$toast('Error setting forms', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    async getReferenceFieldList(key, val, type, eventVal, filter) {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+          value: eventVal ? eventVal : '',
+          for_filter: filter ? [filter] : null
+        })
+        if (type === 'update') {
+          this.referenceOpts[key] = res
+        } else if (type === 'createProduct') {
+          this.productReferenceOpts[key] = res
+        } else {
+          this.createReferenceOpts[key] = res
+        }
+      } catch (e) {
+        this.$toast('Error gathering reference fields', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',

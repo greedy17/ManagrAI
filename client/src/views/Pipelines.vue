@@ -2143,12 +2143,10 @@ export default {
   },
   async created() {
     this.getObjects()
-    // this.getObjectsForWorkflows()
     this.getAllForms()
     this.getAllPicklist()
     this.getUsers()
     this.getPricebooks()
-    this.objectFields.refresh()
     this.templates.refresh()
   },
   beforeMount() {
@@ -3450,6 +3448,7 @@ export default {
         if (this.hasProducts) {
           for (let i = 0; i < this.createProductForm.length; i++) {
             if (this.createProductForm[i].dataType === 'Reference') {
+              this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
               this.productReferenceOpts[this.createProductForm[i].apiName] =
                 this.createProductForm[i].id
             }
