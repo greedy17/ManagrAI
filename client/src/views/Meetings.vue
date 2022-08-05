@@ -82,7 +82,7 @@
               v-if="field.apiName === 'meeting_type'"
             >
               <span class="input-container">
-                <p>Title</p>
+                <label class="label">Title</label>
                 <input
                   id="user-input"
                   type="text"
@@ -98,7 +98,7 @@
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span class="input-container">
-                <p>Note</p>
+                <label class="label">Note</label>
                 <!-- <textarea
                   id="user-input"
                   type="text"
@@ -109,7 +109,12 @@
                   v-model="noteValue"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                 /> -->
-                <div class="divArea" v-html="noteValue" contenteditable="true"></div>
+                <div
+                  @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
+                  class="divArea"
+                  v-html="noteValue"
+                  contenteditable="true"
+                ></div>
               </span>
 
               <section v-if="!addingTemplate" class="note-templates">
@@ -149,7 +154,7 @@
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
                 ccols="30"
@@ -167,8 +172,9 @@
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 (field.dataType === 'String' && field.apiName !== 'NextStep')
               "
+              class="col"
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="text"
@@ -178,7 +184,7 @@
               />
             </div>
             <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}</p>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
@@ -218,7 +224,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -353,7 +359,7 @@
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                        style="width: 32vw; border-radius: 0.2rem; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -470,8 +476,8 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'Date'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="date"
                 :placeholder="currentVals[field.apiName]"
@@ -480,8 +486,8 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'DateTime'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="datetime-local"
                 id="start"
@@ -490,13 +496,14 @@
               />
             </div>
             <div
+              class="col"
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
                 field.dataType === 'Currency'
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="number"
@@ -507,7 +514,7 @@
             </div>
 
             <div v-else-if="field.dataType === 'Boolean'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
@@ -1867,7 +1874,7 @@ export default {
   border: 2px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 36vw;
+  width: 34vw;
   min-height: 30vh;
   &__header {
     font-size: 11px;
@@ -2390,6 +2397,7 @@ a {
 }
 .label {
   margin-right: 0.5rem;
+  margin-top: 8px;
 }
 .select-btn {
   border: 0.5px solid $dark-green;
@@ -2643,5 +2651,10 @@ label {
   font-style: inherit;
   font-size: 13px;
   padding: 12px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>
