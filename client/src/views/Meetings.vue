@@ -951,7 +951,6 @@ export default {
         !this.meetingDuration ||
         !this.externalParticipantsSelected
       ) {
-        console.log('Please input all information')
         this.$toast('Please input all information', {
           timeout: 2000,
           position: 'top-left',

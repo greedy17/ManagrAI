@@ -2290,7 +2290,6 @@ export default {
     async getAllReferencePicklists() {
       try {
         const res = await SObjects.api.getSobjectPicklistValues()
-        console.log(res)
       } catch (e) {
         console.log(e)
       }
@@ -2645,7 +2644,6 @@ export default {
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
-      console.log(newField)
 
       if (field === 'Stage') {
         this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
@@ -2879,7 +2877,6 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        console.log(res.current_values)
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
@@ -3002,7 +2999,6 @@ export default {
       }
     },
     setUpdateValues(key, val, multi) {
-      console.log(val)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -3334,7 +3330,6 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          console.log(res)
           this.currentWorkflow = res.data.results
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
