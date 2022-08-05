@@ -33,7 +33,7 @@
           <p class="note-section__date">
             {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
           </p>
-          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
         </section>
       </div>
       <div v-else class="modal-container">
@@ -643,18 +643,19 @@
               style="margin-top: -2rem; position: relative"
               v-else-if="field.apiName === 'meeting_comments'"
             >
-              <span style="margin-left: 0px" class="input-container">
-                <p>Note</p>
-                <textarea
+              <span style="margin-left: 0px; margin-top: -4px" class="input-container">
+                <p>Note:</p>
+                <!-- <textarea
                   id="user-input"
                   type="text"
                   cols="30"
                   rows="4"
                   placeholder="Note"
-                  style="line-height: 2rem; width: 34vw"
+                  style="line-height: 2rem; width: 34vw; padding-left: 8px"
                   v-model="noteValue"
                   @input="setUpdateValues(field.apiName, noteValue)"
-                />
+                /> -->
+                <div class="divArea" v-html="noteValue" contenteditable="true"></div>
               </span>
               <section v-if="!addingTemplate" class="note-templates">
                 <span
@@ -2126,11 +2127,12 @@ export default {
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
-      this.noteValue = this.$sanitize(val)
-        .replace(/<br\s*[\/]?>/gi, '\r\n')
-        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
-        .replace(/(<([^>]+)>)/gi, '')
-      this.setUpdateValues(field, this.noteValue)
+      this.noteValue = val
+      // let newVal = this.$sanitize(val)
+      //   .replace(/<br\s*[\/]?>/gi, '\r\n')
+      //   .replace(/<li\s*[\/]?>/gi, '\r\n   -')
+      //   .replace(/(<([^>]+)>)/gi, '')
+      this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
     goToProfile() {
@@ -4539,6 +4541,26 @@ header,
 section {
   margin: 0;
   padding: 0px;
+}
+.divArea:focus {
+  outline: none;
+}
+.divArea {
+  -moz-appearance: textfield-multiline;
+  -webkit-appearance: textarea;
+  resize: both;
+  height: 30px;
+  width: 34vw;
+  min-height: 20vh;
+  margin-bottom: 4px;
+  border: 1px solid #e8e8e8;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  overflow-y: scroll;
+  font-family: inherit;
+  font-style: inherit;
+  font-size: 13px;
+  padding: 12px;
 }
 .flex-row {
   display: flex;

@@ -31,7 +31,7 @@
             {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
           </p>
           <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
-          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
         </section>
       </div>
       <div v-else class="modal-container">
@@ -917,11 +917,8 @@ export default {
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
-      this.noteValue = this.$sanitize(val)
-        .replace(/<br\s*[\/]?>/gi, '\r\n')
-        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
-        .replace(/(<([^>]+)>)/gi, '')
-      this.setUpdateValues(field, this.noteValue)
+      this.noteValue = val
+      this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
     resetMeeting() {

@@ -179,13 +179,17 @@
             :disabled="savingTemplate"
             placeholder="Template Title"
           />
-          <!-- { list: 'ordered' } -->
+
           <quill-editor
             :disabled="savingTemplate"
             ref="message-body"
             :options="{
               modules: {
-                toolbar: [{ list: '' }],
+                toolbar: [
+                  [{ header: 1 }, { header: 2 }],
+                  ['bold', 'italic', 'underline'],
+                  [{ list: 'ordered' }, { list: 'bullet' }],
+                ],
               },
               theme: 'snow',
               placeholder: 'Type out your template here.',
@@ -249,7 +253,7 @@
                   <p>{{ template.subject }}</p>
                 </div>
                 <div class="small-container__body">
-                  <p>{{ truncateText(template.body, 34) }}</p>
+                  <p v-html="template.body"></p>
                 </div>
               </div>
             </template>
@@ -264,15 +268,19 @@
                 :disabled="savingTemplate"
                 placeholder="Template Title"
               />
-              <!-- { list: 'ordered' } -->
               <quill-editor
                 :disabled="savingTemplate"
                 ref="message-body"
                 :options="{
                   modules: {
-                    toolbar: [{ list: '' }],
+                    toolbar: [
+                      [{ header: 1 }, { header: 2 }],
+                      ['bold', 'italic', 'underline'],
+                      [{ list: 'ordered' }, { list: 'bullet' }],
+                    ],
                   },
                   theme: 'snow',
+                  placeholder: 'Type out your template here.',
                 }"
                 v-model="selectedTemplate.body"
                 class="message__box"
@@ -346,13 +354,13 @@ export default {
     selectTemplate(template) {
       this.selectedTemplate = template
     },
-    truncateText(text, length) {
-      if (text.length <= length) {
-        return text.replace(/(<([^>]+)>)/gi, '')
-      }
+    // truncateText(text, length) {
+    //   if (text.length <= length) {
+    //     return text.replace(/(<([^>]+)>)/gi, '')
+    //   }
 
-      return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
-    },
+    //   return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
+    // },
     async updateTemplate() {
       try {
         const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
