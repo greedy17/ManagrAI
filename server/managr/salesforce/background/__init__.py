@@ -72,17 +72,12 @@ logger = logging.getLogger("managr")
 
 def replace_tags(description):
     description = re.split("</.*?>", description)
-    print(description)
     while "" in description:
         description.remove("")
     description = "\n".join(description)
-    print(description)
     description = re.split("<br>", description)
-    print(description)
     description = "\r".join(description)
-    print(description)
     description = re.sub("<.*?>", "", description)
-    print(description)
     return description
 
 
@@ -726,9 +721,11 @@ def _process_add_update_to_sf(form_id, *args):
         if form.saved_data.get("meeting_type") is None
         else form.saved_data.get("meeting_type")
     )
+    description = form.saved_data.get("meeting_comments")
+    description = replace_tags(description)
     data = dict(
         Subject=f"{subject}",
-        Description=f"{form.saved_data.get('meeting_comments')}",
+        Description=description,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
