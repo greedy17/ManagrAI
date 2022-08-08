@@ -455,7 +455,7 @@
             </div>
             <div class="adding-product__body">
               <div>
-                <p class="form-label" @click="test">Pricebook:</p>
+                <p class="form-label">Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
                   :options="pricebooks"
@@ -1124,7 +1124,7 @@
             </div>
             <div class="adding-product__body">
               <div>
-                <p class="form-label" @click="test">Pricebook:</p>
+                <p class="form-label">Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
                   :options="pricebooks"
