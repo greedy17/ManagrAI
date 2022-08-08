@@ -611,7 +611,7 @@ class OpportunityLineItemQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(organization=user.organization)
+            return self.filter(product__organization=user.organization)
         else:
             return None
 
