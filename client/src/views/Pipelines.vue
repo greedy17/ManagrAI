@@ -1153,9 +1153,7 @@
                     (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                   "
                 >
-                  <p class="form-label" @click="test(productReferenceOpts[field.apiName])">
-                    {{ field.referenceDisplayLabel }}:
-                  </p>
+                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -2189,9 +2187,6 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    test(log) {
-      console.log('log', log)
-    },
     async getTemplates() {
       try {
         const res = await User.api.getTemplates()

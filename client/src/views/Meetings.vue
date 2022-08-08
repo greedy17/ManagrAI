@@ -545,12 +545,12 @@
               <div>
                 <p class="form-label">Pricebook:</p>
                 <Multiselect
-                    @select="getPricebookEntries($event.integration_id)"
-                    :options="pricebooks"
-                    openDirection="below"
-                    style="width: 16.5vw"
-                    selectLabel="Enter"
-                    label="name"
+                  @select="getPricebookEntries($event.integration_id)"
+                  :options="pricebooks"
+                  openDirection="below"
+                  style="width: 16.5vw"
+                  selectLabel="Enter"
+                  label="name"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
@@ -709,7 +709,15 @@
           </div>
           <div v-else></div>
           <div v-if="updatingMeeting" style="display: flex; align-items: center">
-            <button @click="onMakeMeetingUpdate" class="add-button__">Update</button>
+            <button
+              @click="
+                onMakeMeetingUpdate()
+                createProduct()
+              "
+              class="add-button__"
+            >
+              Update
+            </button>
             <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
           <div v-else style="display: flex; align-items: center">
@@ -909,6 +917,7 @@
             :participants="meeting.meeting_ref.participants"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
+            :resourceRef="meeting.resource_ref"
             :resourceType="meeting.resource_type"
             :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
@@ -948,6 +957,7 @@ export default {
   },
   data() {
     return {
+      createData: {},
       productRefCopy: {},
       productReferenceOpts: {},
       allPicklistOptions: {},
@@ -1230,6 +1240,40 @@ export default {
         this.createData[key] = val
       }
     },
+    async createProduct(id = this.integrationId) {
+      if (this.addingProduct) {
+        try {
+          const res = await SObjects.api.createResource({
+            integration_ids: [id],
+            form_type: 'CREATE',
+            resource_type: 'OpportunityLineItem',
+            stage_name: this.stageGateField ? this.stageGateField : null,
+            resource_id: this.oppId,
+            form_data: this.createData,
+          })
+
+          this.$toast('Product created successfully', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } catch (e) {
+          this.$toast(`${e.response.data.error}`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } finally {
+          this.addingProduct = !this.addingProduct
+        }
+      } else {
+        return
+      }
+    },
     resetNotes() {
       this.modalOpen = !this.modalOpen
       this.notes = []
@@ -1355,6 +1399,7 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
+        console.log(res)
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -1530,6 +1575,7 @@ export default {
       }
     },
     async updateMeeting(meetingWorkflow, id, integrationId) {
+      console.log(integrationId)
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -1537,6 +1583,7 @@ export default {
       this.meetingWorkflowId = meetingWorkflow
       this.dropdownVal = {}
       this.formData = {}
+      this.createData = {}
       this.oppId = id
       this.integrationId = integrationId
       this.noteValue = null
@@ -1604,19 +1651,21 @@ export default {
       const res = await SObjects.api.getObjects('Pricebook2')
       this.pricebooks = res.results
     },
-    async getPricebookEntries(id){
-        try {
-          console.log('id', id)
-          this.loadingProducts = true
-          const res = await SObjects.api.getObjects('PricebookEntry',1,true, [['EQUALS', 'Pricebook2Id',id]])
-          this.productReferenceOpts['PricebookEntryId'] = res.results
-        } catch (e) {
-          console.log(e)
-        } finally {
-          setTimeout(() => {
-            this.loadingProducts = false
-          }, 1000)
-        }
+    async getPricebookEntries(id) {
+      try {
+        console.log('id', id)
+        this.loadingProducts = true
+        const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
+          ['EQUALS', 'Pricebook2Id', id],
+        ])
+        this.productReferenceOpts['PricebookEntryId'] = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingProducts = false
+        }, 1000)
+      }
     },
     async createFormInstance(id, integrationId, alertInstanceId = null) {
       this.stageGateField = null
@@ -1758,7 +1807,7 @@ export default {
       }
 
       for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
@@ -1895,7 +1944,7 @@ export default {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
           value: eventVal ? eventVal : '',
-          for_filter: filter ? [filter] : null
+          for_filter: filter ? [filter] : null,
         })
         if (type === 'update') {
           this.referenceOpts[key] = res
@@ -2436,6 +2485,111 @@ section {
   color: white;
   transition: all 0.3s;
 }
+.product-text {
+  display: flex;
+  align-items: center;
+  color: $dark-green;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background-color: $white-green;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+  cursor: pointer;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    height: 16px;
+    margin-left: 4px;
+  }
+}
+.select-btn1 {
+  border: 0.7px solid $dark-green;
+  padding: 0.45rem 1.25rem;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
+}
+
+.adding-product {
+  border: 1px solid $dark-green;
+  border-radius: 0.3rem;
+  margin: 0.5rem 0rem;
+  width: 34vw;
+  min-height: 30vh;
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 14px;
+    padding: 0.5rem;
+    color: $white;
+    width: 100%;
+    border-bottom: 1px solid $dark-green;
+    background-color: $dark-green;
+    img {
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
+  }
+  &__body {
+    padding: 0.25rem;
+    font-size: 11px !important;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    overflow: auto;
+    height: 30vh;
+    input {
+      width: 10vw !important;
+      height: 1.5rem !important;
+    }
+    .multiselect {
+      width: 12vw !important;
+      font-weight: 11px !important;
+    }
+    p {
+      margin-left: 0.25rem;
+    }
+    span {
+      color: $coral;
+    }
+  }
+
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-color: $dark-green;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 0.25rem;
+  }
+}
+
+.fullInvert {
+  filter: invert(99%);
+}
 .soon-button {
   display: flex;
   align-items: center;
@@ -2583,11 +2737,11 @@ section {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 0.5rem 1.5rem;
-  height: 5rem;
+  padding: 0.25rem 1.5rem;
+  height: 4rem;
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 textarea {
   resize: vertical;
