@@ -31,7 +31,7 @@
             {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
           </p>
           <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
-          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
         </section>
       </div>
       <div v-else class="modal-container">
@@ -58,7 +58,12 @@
           <div class="flex-row">
             <img
               src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              style="
+                height: 1.75rem;
+                margin-left: 0.5rem;
+                margin-right: 0.25rem;
+                filter: brightness(120%);
+              "
               alt=""
             />
             <h3>Update Opportunity</h3>
@@ -72,26 +77,30 @@
         </div>
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
-            <div v-if="field.apiName === 'meeting_type'">
+            <div
+              style="margin-top: -2rem; margin-left: -0.5rem"
+              v-if="field.apiName === 'meeting_type'"
+            >
               <span class="input-container">
+                <label class="label">Title</label>
                 <input
-                  class="basic-slide"
-                  id="Title"
+                  id="user-input"
                   type="text"
+                  style="width: 34vw"
                   v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
-                /><label for="Title">Title</label>
+                />
               </span>
             </div>
             <div
-              style="margin-top: -2rem; position: relative"
+              style="margin-top: -4rem; margin-left: -0.5rem; position: relative"
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span class="input-container">
-                <textarea
-                  class="basic-slide"
-                  id="notes"
+                <label class="label">Note</label>
+                <!-- <textarea
+                  id="user-input"
                   type="text"
                   cols="30"
                   rows="4"
@@ -99,7 +108,13 @@
                   style="line-height: 2rem"
                   v-model="noteValue"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                /><label for="Note">Note</label>
+                /> -->
+                <div
+                  @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
+                  class="divArea"
+                  v-html="noteValue"
+                  contenteditable="true"
+                ></div>
               </span>
 
               <section v-if="!addingTemplate" class="note-templates">
@@ -139,13 +154,13 @@
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 34vw; border-radius: 0.4rem; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -157,8 +172,9 @@
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 (field.dataType === 'String' && field.apiName !== 'NextStep')
               "
+              class="col"
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="text"
@@ -168,7 +184,7 @@
               />
             </div>
             <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}</p>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
@@ -183,7 +199,7 @@
                   )
                 "
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
@@ -208,7 +224,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -233,7 +249,7 @@
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -296,7 +312,7 @@
                         v-model="dropdownVal[field.apiName]"
                         openDirection="below"
                         :loading="dropdownLoading"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="value"
                         label="label"
@@ -343,7 +359,7 @@
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                        style="width: 32vw; border-radius: 0.2rem; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -412,7 +428,7 @@
                           )
                         "
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="salesforce_account_ref.salesforce_id"
                         label="full_name"
@@ -438,7 +454,7 @@
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
@@ -460,8 +476,8 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'Date'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="date"
                 :placeholder="currentVals[field.apiName]"
@@ -470,8 +486,8 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'DateTime'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="datetime-local"
                 id="start"
@@ -480,13 +496,14 @@
               />
             </div>
             <div
+              class="col"
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
                 field.dataType === 'Currency'
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="number"
@@ -497,14 +514,14 @@
             </div>
 
             <div v-else-if="field.dataType === 'Boolean'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
               >
                 <template slot="noResult">
@@ -1101,11 +1118,8 @@ export default {
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
-      this.noteValue = this.$sanitize(val)
-        .replace(/<br\s*[\/]?>/gi, '\r\n')
-        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
-        .replace(/(<([^>]+)>)/gi, '')
-      this.setUpdateValues(field, this.noteValue)
+      this.noteValue = val
+      this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
     addProduct() {
@@ -1127,7 +1141,6 @@ export default {
         !this.meetingDuration ||
         !this.externalParticipantsSelected
       ) {
-        console.log('Please input all information')
         this.$toast('Please input all information', {
           timeout: 2000,
           position: 'top-left',
@@ -2132,7 +2145,7 @@ export default {
   border: 2px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 36vw;
+  width: 34vw;
   min-height: 30vh;
   &__header {
     font-size: 11px;
@@ -2326,7 +2339,7 @@ input {
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
-  width: 40vw;
+  width: 38vw;
   align-items: center;
   border-radius: 0.6rem;
   padding: 1rem;
@@ -2463,7 +2476,7 @@ section {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 18vw;
+  width: 16.5vw;
 }
 .zoom-input {
   border: 1px solid $soft-gray;
@@ -2655,6 +2668,7 @@ a {
 }
 .label {
   margin-right: 0.5rem;
+  margin-top: 8px;
 }
 .select-btn {
   border: 0.5px solid $dark-green;
@@ -2828,7 +2842,8 @@ label {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   cursor: pointer;
-  width: 36vw;
+  width: 34vw;
+  margin-left: 10px;
 
   &__content {
     display: flex;
@@ -2855,10 +2870,11 @@ label {
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
+  margin-left: 10px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  width: 36vw;
+  width: 34vw;
   height: 80px;
   overflow: scroll;
 
@@ -2886,5 +2902,30 @@ label {
   img {
     filter: invert(99%);
   }
+}
+.divArea:focus {
+  outline: none;
+}
+.divArea {
+  -moz-appearance: textfield-multiline;
+  -webkit-appearance: textarea;
+  resize: both;
+  height: 30px;
+  width: 34vw;
+  min-height: 20vh;
+  margin-bottom: 4px;
+  border: 1px solid #e8e8e8;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  overflow-y: scroll;
+  font-family: inherit;
+  font-style: inherit;
+  font-size: 13px;
+  padding: 12px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>
