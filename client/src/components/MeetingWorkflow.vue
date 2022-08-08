@@ -380,7 +380,17 @@
       </p>
       <div>
         <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
-          <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
+          <button
+            @click="
+              $emit(
+                'update-Opportunity',
+                workflowId,
+                resourceId,
+                resourceRef ? resourceRef.integration_id : null,
+              )
+            "
+            class="add-button"
+          >
             Update Opportunity
           </button>
           <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
@@ -442,6 +452,7 @@ export default {
   },
   props: {
     meeting: {},
+    resourceRef: {},
     resourceId: {},
     resourceType: {},
     allOpps: {},

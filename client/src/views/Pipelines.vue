@@ -454,6 +454,28 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
+              <div>
+                <p class="form-label" @click="test">Pricebook:</p>
+                <Multiselect
+                  @select="getPricebookEntries($event.integration_id)"
+                  :options="pricebooks"
+                  openDirection="below"
+                  v-model="selectedPriceBook"
+                  style="width: 16.5vw"
+                  selectLabel="Enter"
+                  label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -479,6 +501,7 @@
                           : $event.id,
                       )
                     "
+                    :loading="loadingProducts"
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
                     style="width: 16.5vw"
@@ -1100,6 +1123,28 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
+              <div>
+                <p class="form-label" @click="test">Pricebook:</p>
+                <Multiselect
+                  @select="getPricebookEntries($event.integration_id)"
+                  :options="pricebooks"
+                  openDirection="below"
+                  v-model="selectedPriceBook"
+                  style="width: 16.5vw"
+                  selectLabel="Enter"
+                  label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -1134,6 +1179,7 @@
                         ? 'value'
                         : 'id'
                     "
+                    :loading="loadingProducts"
                     :label="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                         ? 'label'
@@ -1753,7 +1799,9 @@
             ref="pipelineTableChild"
             :key="i"
             v-for="(opp, i) in allOpps"
-            @create-form="createFormInstance(opp.id, opp.integration_id)"
+            @create-form="
+              createFormInstance(opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
+            "
             @get-notes="getNotes(opp.id)"
             @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
@@ -1888,6 +1936,8 @@ export default {
   },
   data() {
     return {
+      productRefCopy: {},
+      pricebookId: null,
       noteTitle: null,
       noteTemplates: null,
       noteValue: null,
@@ -1964,6 +2014,7 @@ export default {
       allOpps: null,
       loading: false,
       loadingAccounts: false,
+      loadingProducts: false,
       accountSobjectId: null,
       dropdownLoading: false,
       loadingWorkflows: false,
@@ -2026,6 +2077,8 @@ export default {
       stageIntegrationId: null,
       stageId: null,
       allOppsForWorkflows: null,
+      pricebooks: null,
+      selectedPriceBook: null,
       booleans: ['true', 'false'],
       ladFilter: {
         apiName: 'LastActivityDate',
@@ -2111,10 +2164,10 @@ export default {
   },
   async created() {
     this.getObjects()
-    // this.getObjectsForWorkflows()
     this.getAllForms()
     this.getAllPicklist()
     this.getUsers()
+    this.getPricebooks()
     this.templates.refresh()
   },
   beforeMount() {
@@ -2155,6 +2208,22 @@ export default {
     },
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
+    },
+    async getPricebookEntries(id) {
+      try {
+        console.log('id', id)
+        this.loadingProducts = true
+        const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
+          ['EQUALS', 'Pricebook2Id', id],
+        ])
+        this.productReferenceOpts['PricebookEntryId'] = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingProducts = false
+        }, 1000)
+      }
     },
     async getAllPicklist() {
       try {
@@ -2200,6 +2269,13 @@ export default {
           bodyClassName: ['custom'],
         })
       }
+    },
+    async getPricebooks() {
+      const res = await SObjects.api.getObjects('Pricebook2')
+      this.pricebooks = res.results
+    },
+    pricebookLabel({ name }) {
+      return name
     },
     nextPage() {
       this.currentPage += 1
@@ -2294,11 +2370,12 @@ export default {
         console.log(e)
       }
     },
-    async getReferenceFieldList(key, val, type, eventVal) {
+    async getReferenceFieldList(key, val, type, eventVal, filter) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
           value: eventVal ? eventVal : '',
+          for_filter: filter ? [filter] : null,
         })
         if (type === 'update') {
           this.referenceOpts[key] = res
@@ -2853,7 +2930,8 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
-    async createFormInstance(id, integrationId, alertInstanceId = null) {
+    async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
+      pricebookId ? (this.pricebookId = pricebookId) : null
       this.addingProduct = false
       this.formData = {}
       this.createData = {}
@@ -3389,6 +3467,7 @@ export default {
         if (this.hasProducts) {
           for (let i = 0; i < this.createProductForm.length; i++) {
             if (this.createProductForm[i].dataType === 'Reference') {
+              this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
               this.productReferenceOpts[this.createProductForm[i].apiName] =
                 this.createProductForm[i].id
             }
@@ -3449,7 +3528,6 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
-
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -4183,23 +4261,6 @@ export default {
     margin-right: 8px;
   }
 }
-.pag-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  padding: 2px;
-  font-size: 12px;
-  cursor: pointer;
-  color: $dark-green;
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
-}
-.rotate {
-  transform: rotate(180deg);
-}
 .row {
   display: flex;
   flex-direction: row;
@@ -4263,26 +4324,6 @@ select {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
     height: 1.05rem !important;
   }
-}
-.work-btn {
-  border: 1px solid #e8e8e8;
-  min-height: 4.5vh;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: $base-gray;
-  cursor: pointer;
-  color: white;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
-}
-.select-btn:hover,
-.work-btn:hover {
-  transform: scale(1.015);
-  box-shadow: 1px 1px 2px $very-light-gray;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -4367,10 +4408,6 @@ h3 {
 .table-section::-webkit-scrollbar-track-piece:end {
   margin-right: 50vw;
 }
-.green-text {
-  color: $dark-green;
-  text-decoration: underline;
-}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -4435,20 +4472,6 @@ h3 {
   border-radius: 0.5rem;
   border: 1px solid $very-light-gray;
   padding: 0px 4px;
-}
-.close-button {
-  border-radius: 50%;
-  background-color: white;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -1rem;
-  padding: 0.25rem;
-  cursor: pointer;
-  img {
-    filter: invert(80%);
-  }
 }
 .opp-modal-container {
   display: flex;
@@ -4524,11 +4547,6 @@ h3 {
 [type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
-}
-.centered {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 input[type='search'] {
   border: none;
@@ -4656,11 +4674,6 @@ section {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
-.bg-light-green {
-  background-color: $white-green !important;
-  color: $dark-green !important;
-  font-weight: bold;
-}
 .add-button {
   display: flex;
   align-items: center;
@@ -4686,13 +4699,6 @@ section {
   color: white;
   transition: all 0.3s;
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
 .add-button:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
@@ -4708,14 +4714,6 @@ section {
   padding: 2px;
   border-radius: 5px;
   margin-right: 0.5rem;
-}
-#update-input {
-  border: none;
-  border-radius: 6px;
-  box-shadow: 1px 1px 1px 1px $very-light-gray;
-  background-color: white;
-  min-height: 2.5rem;
-  width: 16.5vw;
 }
 #user-input {
   border: 1px solid #e8e8e8;
@@ -4741,13 +4739,6 @@ section {
 #update-input:focus,
 .number-input:focus {
   outline: 1px solid $dark-green;
-}
-.loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 60vh;
-  filter: invert(99%);
 }
 .header {
   font-size: 18px;
@@ -4821,51 +4812,6 @@ main:hover > span {
   color: white;
   font-weight: bold;
 }
-.work-section {
-  z-index: 4;
-  position: absolute;
-  top: 20vh;
-  left: 12.5vw;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  background-color: $white;
-  min-width: 20vw;
-  max-height: 70vh;
-  overflow: scroll;
-  margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 1px $very-light-gray;
-  &__title {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    color: $base-gray;
-    background-color: $off-white;
-    letter-spacing: 0.25px;
-    padding-left: 0.75rem;
-    font-weight: bold;
-    font-size: 16px;
-    width: 100%;
-  }
-  &__sub-title {
-    font-size: 12px;
-    letter-spacing: 0.3px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    margin-left: 0.75rem;
-    margin-top: 1rem;
-    color: $base-gray;
-    cursor: pointer;
-    width: 100%;
-    img {
-      margin: 2px 0px 0px 3px;
-      height: 0.75rem;
-      filter: invert(70%);
-    }
-  }
-}
 .list-section {
   z-index: 4;
   position: absolute;
@@ -4933,24 +4879,11 @@ main:hover > span {
   color: #41b883;
   margin-left: 0.2rem;
 }
-.exit {
-  padding-right: 0.75rem;
-  margin-top: -0.5rem;
-  height: 1rem;
-  cursor: pointer;
-}
 .cancel {
   color: $dark-green;
   font-weight: bold;
   margin-left: 1rem;
   cursor: pointer;
-}
-.flex-end {
-  width: 100%;
-  padding: 2rem 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
 }
 .flex-end-opp {
   width: 100%;
@@ -4973,9 +4906,6 @@ a {
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
-}
-.rotate {
-  transform: rotate(180deg);
 }
 .results-2 {
   font-size: 11px;
