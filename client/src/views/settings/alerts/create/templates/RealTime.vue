@@ -207,9 +207,6 @@ export default {
   async created() {
     this.templates.refresh()
   },
-  {% comment %} mounted() {
-    console.log(this.user)
-  }, {% endcomment %}
   methods: {
     goToStageAdvanced() {
       this.$router.push({ name: 'StageAdvanced' })

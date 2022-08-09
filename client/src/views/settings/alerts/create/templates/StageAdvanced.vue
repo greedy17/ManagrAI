@@ -304,9 +304,6 @@ export default {
     }
     this.getStageForms()
   },
-  {% comment %} mounted() {
-    console.log(this.users)
-  }, {% endcomment %}
   methods: {
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
