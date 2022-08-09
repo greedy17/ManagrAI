@@ -542,7 +542,7 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
-              <div>
+              <div v-if="!pricebookId">
                 <p class="form-label">Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
@@ -571,7 +571,13 @@
                     field.dataType === 'Reference'
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -959,6 +965,7 @@ export default {
   },
   data() {
     return {
+      pricebookId: null,
       createData: {},
       productRefCopy: {},
       productReferenceOpts: {},
@@ -1401,7 +1408,6 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
-        console.log(res)
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -1576,7 +1582,8 @@ export default {
         })
       }
     },
-    async updateMeeting(meetingWorkflow, id, integrationId) {
+    async updateMeeting(meetingWorkflow, id, integrationId, pricebookId) {
+      pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -1589,6 +1596,7 @@ export default {
       this.integrationId = integrationId
       this.noteValue = null
       this.noteTitle = null
+      this.addingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
@@ -1612,6 +1620,7 @@ export default {
         //   bodyClassName: ['custom'],
         // })
       } finally {
+        pricebookId ? this.getPricebookEntries(pricebookId) : null
         this.dropdownLoading = false
       }
     },

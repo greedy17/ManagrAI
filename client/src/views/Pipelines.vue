@@ -484,7 +484,13 @@
                     field.dataType === 'Reference'
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1125,7 +1131,7 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
-              <div>
+              <div v-if="!pricebookId">
                 <p class="form-label">Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
@@ -1155,7 +1161,13 @@
                     (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1846,7 +1858,13 @@
             :key="i"
             ref="workflowTableChild"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.id, workflow.integration_id)"
+            @create-form="
+              createFormInstance(
+                workflow.id,
+                workflow.integration_id,
+                opp.secondary_data.Pricebook2Id,
+              )
+            "
             @get-notes="getNotes(workflow.id)"
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
@@ -2215,12 +2233,11 @@ export default {
     },
     async getPricebookEntries(id) {
       try {
-        console.log('id', id)
         this.loadingProducts = true
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
         ])
-        console.log(res)
+
         this.productReferenceOpts['PricebookEntryId'] = res.results
       } catch (e) {
         console.log(e)
@@ -2936,7 +2953,7 @@ export default {
       this.addOppModalOpen = !this.addOppModalOpen
     },
     async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
-      pricebookId ? (this.pricebookId = pricebookId) : null
+      pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.addingProduct = false
       this.formData = {}
       this.createData = {}
@@ -2971,6 +2988,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        pricebookId ? this.getPricebookEntries(pricebookId) : null
         this.dropdownLoading = false
       }
     },
@@ -3655,6 +3673,7 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
+
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
         this.hasNextOriginal = this.hasNext
