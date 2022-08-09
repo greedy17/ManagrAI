@@ -137,8 +137,17 @@
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
+        
+        <div v-if="routeName === 'InviteUsers'">
+          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+            <div class="tooltip">
+              <small class="profile-wrapper">{{ user.email }}</small>
+              <span class="tooltiptext">Profile</span>
+            </div>
+          </div>
+        </div>
 
-        <div>
+        <div v-else>
           <router-link :to="{ name: 'InviteUsers' }">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
@@ -170,7 +179,16 @@
           </div>
         </router-link>
 
-        <div>
+        <div v-if="routeName === 'InviteUsers'">
+          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+            <div class="tooltip">
+              <small class="profile-wrapper">{{ user.email }}</small>
+              <span class="tooltiptext">Profile</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-else>
           <router-link :to="{ name: 'InviteUsers' }">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
@@ -230,16 +248,21 @@ export default {
       ]
     }
   },
-
   methods: {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
+    goToProfile(id) {
+      this.$router.push({ path: `/invite-users/${id}` })
+    },
   },
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
+    },
+    routeName() {
+      return this.$route.name
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin

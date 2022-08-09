@@ -19,9 +19,11 @@ from rest_framework.decorators import action
 from rest_framework import (
     filters,
     permissions,
+    status,
     mixins,
     viewsets,
 )
+
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -579,6 +581,7 @@ class SalesforceSObjectViewSet(
                     break
                 except FieldValidationError as e:
                     logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
+                    print(e)
                     data = {"success": False, "error": str(e)}
                     break
 
@@ -637,7 +640,8 @@ class SalesforceSObjectViewSet(
                 if from_workflow:
                     user.activity.increment_untouched_count("workflows")
                     user.activity.add_workflow_activity(str(main_form.id), title)
-        return Response(data=data)
+                return Response(data=data)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
     @action(
         methods=["post"],
@@ -663,7 +667,6 @@ class SalesforceSObjectViewSet(
             "stage_name": stage_name,
         }
         form_ids = create_form_instance(**instance_data)
-
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
         main_form = forms.filter(template__form_type="CREATE").first()
         if main_form.template.resource == "OpportunityLineItem":
@@ -723,7 +726,10 @@ class SalesforceSObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-        return Response(data=data)
+        if data["success"]:
+            return Response(data=data)
+        else:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
     @action(
         methods=["post"],

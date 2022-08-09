@@ -202,6 +202,34 @@ class OrgCustomSlackForm(TimeStampModel):
         ]
         unique_together = ["resource", "form_type", "organization", "stage"]
 
+    def generate_form_state(self):
+        form_fields = FormField.objects.filter(form=self)
+        state_object = {}
+        for i, field in enumerate(form_fields):
+            state_object[field.order] = field.field.api_name
+        self.config = state_object
+        self.save()
+
+    def recreate_form(self):
+        admin = self.organization.users.filter(is_admin=True).first()
+        fields = SObjectField.objects.filter(
+            Q(
+                api_name__in=self.config.values(),
+                salesforce_object=self.resource,
+                salesforce_account=admin.salesforce_account,
+            )
+            | Q(is_public=True)
+        )
+        self.fields.clear()
+        for i, field in enumerate(self.config.items()):
+            print(field)
+            current_field = fields.filter(api_name=field[1]).first()
+            print(current_field)
+            self.fields.add(
+                current_field.id, through_defaults={"order": field[0], "include_in_recap": True,},
+            )
+        return self.save()
+
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
     def for_user(self, user):

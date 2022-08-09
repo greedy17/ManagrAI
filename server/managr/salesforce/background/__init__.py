@@ -1,5 +1,5 @@
 import logging
-import json
+import re
 import pytz
 import time
 import random
@@ -68,6 +68,17 @@ from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
+
+
+def replace_tags(description):
+    description = re.split("</.*?>", description)
+    while "" in description:
+        description.remove("")
+    description = "\n".join(description)
+    description = re.split("<br>", description)
+    description = "\r".join(description)
+    description = re.sub("<.*?>", "", description)
+    return description
 
 
 def create_form_instance(user, resource_type, form_type, resource_id, stage_name):
@@ -544,7 +555,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 _send_recap(update_form_ids, None, True)
             raise e
 
-    if len(user.slack_integration.recap_receivers):
+    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
     return res
@@ -637,6 +648,9 @@ def _process_add_call_to_sf(workflow_id, *args):
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
     user_timezone = user.timezone
+
+    if description is not None:
+        description = replace_tags(description)
     start_time = workflow.meeting.start_time
     end_time = workflow.meeting.end_time
     formatted_start = datetime.strftime(
@@ -647,7 +661,7 @@ def _process_add_call_to_sf(workflow_id, *args):
     )
     data = dict(
         Subject=f"Meeting - {subject}",
-        Description=f"{'No comments' if description is None else description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
+        Description=f"{'No comments' if description is None else description}\n This meeting started on {formatted_start} and ended on {formatted_end} ",
         WhatId=workflow.resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
@@ -707,9 +721,11 @@ def _process_add_update_to_sf(form_id, *args):
         if form.saved_data.get("meeting_type") is None
         else form.saved_data.get("meeting_type")
     )
+    description = form.saved_data.get("meeting_comments")
+    description = replace_tags(description)
     data = dict(
         Subject=f"{subject}",
-        Description=f"{form.saved_data.get('meeting_comments')}",
+        Description=description,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
@@ -1742,3 +1758,4 @@ def _update_current_db_values(user_id, resource_type, integration_id):
         serializer.save()
         logger.info(f"Successfully {resource} in the Database for user {user.email}")
     return
+

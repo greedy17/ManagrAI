@@ -33,7 +33,11 @@ from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
-from managr.salesforce.background import emit_meeting_workflow_tracker, check_for_display_value
+from managr.salesforce.background import (
+    emit_meeting_workflow_tracker,
+    check_for_display_value,
+    replace_tags,
+)
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -1829,7 +1833,8 @@ def process_get_notes(payload, context):
             if current_stage and previous_stage:
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
-            block_message += f"\nNotes:\n {note[2]}"
+            note_message = replace_tags(note[2])
+            block_message += f"\nNotes:\n {note_message}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
     if len(note_blocks) == 1:

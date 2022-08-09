@@ -52,7 +52,8 @@ export default new Router({
       component: () => import('@/views/auth/ResetPassword'),
     },
     {
-      path: '/invite-users',
+      path: '/invite-users/:id?',
+      props: true,
       name: 'InviteUsers',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/auth/InviteUsers'),
