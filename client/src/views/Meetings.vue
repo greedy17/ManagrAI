@@ -31,7 +31,7 @@
             {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
           </p>
           <p class="note-section__date">{{ formatDateTime(note.submission_date) }}</p>
-          <pre class="note-section__body">{{ note.saved_data__meeting_comments }}</pre>
+          <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
         </section>
       </div>
       <div v-else class="modal-container">
@@ -58,7 +58,12 @@
           <div class="flex-row">
             <img
               src="@/assets/images/logo.png"
-              style="height: 1.75rem; margin-left: 0.5rem; margin-right: 0.25rem"
+              style="
+                height: 1.75rem;
+                margin-left: 0.5rem;
+                margin-right: 0.25rem;
+                filter: brightness(120%);
+              "
               alt=""
             />
             <h3>Update Opportunity</h3>
@@ -72,26 +77,30 @@
         </div>
         <div class="opp-modal">
           <section :key="field.id" v-for="field in oppFormCopy">
-            <div v-if="field.apiName === 'meeting_type'">
+            <div
+              style="margin-top: -2rem; margin-left: -0.5rem"
+              v-if="field.apiName === 'meeting_type'"
+            >
               <span class="input-container">
+                <label class="label">Title</label>
                 <input
-                  class="basic-slide"
-                  id="Title"
+                  id="user-input"
                   type="text"
+                  style="width: 34vw"
                   v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   placeholder="Title"
-                /><label for="Title">Title</label>
+                />
               </span>
             </div>
             <div
-              style="margin-top: -2rem; position: relative"
+              style="margin-top: -4rem; margin-left: -0.5rem; position: relative"
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span class="input-container">
-                <textarea
-                  class="basic-slide"
-                  id="notes"
+                <label class="label">Note</label>
+                <!-- <textarea
+                  id="user-input"
                   type="text"
                   cols="30"
                   rows="4"
@@ -99,7 +108,13 @@
                   style="line-height: 2rem"
                   v-model="noteValue"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                /><label for="Note">Note</label>
+                /> -->
+                <div
+                  @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
+                  class="divArea"
+                  v-html="noteValue"
+                  contenteditable="true"
+                ></div>
               </span>
 
               <section v-if="!addingTemplate" class="note-templates">
@@ -139,13 +154,13 @@
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                style="width: 34vw; border-radius: 0.4rem; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -157,8 +172,9 @@
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 (field.dataType === 'String' && field.apiName !== 'NextStep')
               "
+              class="col"
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="text"
@@ -168,7 +184,7 @@
               />
             </div>
             <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}</p>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
@@ -183,7 +199,7 @@
                   )
                 "
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
@@ -208,7 +224,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -233,7 +249,7 @@
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -296,7 +312,7 @@
                         v-model="dropdownVal[field.apiName]"
                         openDirection="below"
                         :loading="dropdownLoading"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="value"
                         label="label"
@@ -343,7 +359,7 @@
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 20vw; border-radius: 0.2rem; padding: 7px"
+                        style="width: 32vw; border-radius: 0.2rem; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -412,7 +428,7 @@
                           )
                         "
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="salesforce_account_ref.salesforce_id"
                         label="full_name"
@@ -438,7 +454,7 @@
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 18vw"
+                        style="width: 16.5vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
@@ -460,8 +476,8 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'Date'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="date"
                 :placeholder="currentVals[field.apiName]"
@@ -470,8 +486,8 @@
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               />
             </div>
-            <div v-else-if="field.dataType === 'DateTime'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+            <div class="col" v-else-if="field.dataType === 'DateTime'">
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 type="datetime-local"
                 id="start"
@@ -480,13 +496,14 @@
               />
             </div>
             <div
+              class="col"
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
                 field.dataType === 'Currency'
               "
             >
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <input
                 id="user-input"
                 type="number"
@@ -497,14 +514,14 @@
             </div>
 
             <div v-else-if="field.dataType === 'Boolean'">
-              <p>{{ field.referenceDisplayLabel }}:</p>
+              <label class="label">{{ field.referenceDisplayLabel }}:</label>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 18vw"
+                style="width: 16.5vw"
                 selectLabel="Enter"
               >
                 <template slot="noResult">
@@ -519,11 +536,190 @@
               </Multiselect>
             </div>
           </section>
+          <div ref="product" class="adding-product" v-if="addingProduct">
+            <div class="adding-product__header">
+              <img class="fullInvert" src="@/assets/images/tag.svg" alt="" />
+              <p>Add Product</p>
+            </div>
+            <div class="adding-product__body">
+              <div>
+                <p class="form-label">Pricebook:</p>
+                <Multiselect
+                  @select="getPricebookEntries($event.integration_id)"
+                  :options="pricebooks"
+                  openDirection="below"
+                  style="width: 16.5vw"
+                  selectLabel="Enter"
+                  label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    field.dataType === 'Reference'
+                  "
+                >
+                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setCreateValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
+                          : $event.id,
+                      )
+                    "
+                    :loading="loadingProducts"
+                    openDirection="below"
+                    v-model="dropdownVal[field.apiName]"
+                    style="width: 16.5vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    :disabled="savingCreateForm"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :disabled="savingCreateForm"
+                    :placeholder="currentVals[field.apiName]"
+                    style="width: 20vw; border-radius: 6px; padding: 7px"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :disabled="savingCreateForm"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    :disabled="savingCreateForm"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="number"
+                    :disabled="savingCreateForm"
+                    v-model="currentVals[field.apiName]"
+                    :placeholder="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- <button>Add product</button> -->
         </div>
         <div class="flex-end-opp">
+          <div v-if="hasProducts">
+            <button
+              v-if="!addingProduct"
+              @click="addProduct"
+              style="margin-bottom: 0.75rem"
+              class="select-btn1"
+            >
+              Add Product
+            </button>
+
+            <p @click="addProduct" v-else class="product-text">
+              Adding product <img src="@/assets/images/remove.svg" alt="" />
+            </p>
+          </div>
+          <div v-else></div>
           <div v-if="updatingMeeting" style="display: flex; align-items: center">
-            <button @click="onMakeMeetingUpdate" class="add-button__">Update</button>
+            <button
+              @click="
+                onMakeMeetingUpdate()
+                createProduct()
+              "
+              class="add-button__"
+            >
+              Update
+            </button>
             <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
           <div v-else style="display: flex; align-items: center">
@@ -723,6 +919,7 @@
             :participants="meeting.meeting_ref.participants"
             :workflowId="meeting.id"
             :resourceId="meeting.resource_id"
+            :resourceRef="meeting.resource_ref"
             :resourceType="meeting.resource_type"
             :meetingUpdated="meeting.is_completed"
             :allOpps="allOpps"
@@ -762,7 +959,14 @@ export default {
   },
   data() {
     return {
+      createData: {},
+      productRefCopy: {},
+      productReferenceOpts: {},
+      allPicklistOptions: {},
+      apiPicklistOptions: {},
+      createReferenceOpts: {},
       page: 1,
+      savingCreateForm: false,
       hasNext: false,
       noteTitle: null,
       noteTemplates: null,
@@ -778,6 +982,8 @@ export default {
       key: 0,
       meetingKey: 0,
       dropdownLoading: false,
+      loadingProducts: false,
+      pricebooks: null,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
@@ -836,6 +1042,7 @@ export default {
       allUsers: null,
       showMeetingList: true,
       selectedMeeting: false,
+      createProductForm: null,
       meetings: null,
       referenceOpts: {},
       fiveMinuteIntervals: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
@@ -853,6 +1060,7 @@ export default {
       booleans: ['true', 'false'],
       notes: [],
       notesLength: 0,
+      addingProduct: false,
       days: {
         0: 'Sunday',
         1: 'Monday',
@@ -872,11 +1080,16 @@ export default {
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
+    hasProducts() {
+      return this.$store.state.user.organizationRef.hasProducts
+    },
   },
   created() {
     this.getMeetingList()
     this.getObjects()
     this.templates.refresh()
+    this.getPricebooks()
+    this.getAllPicklist()
     this.getAllForms()
   },
   beforeMount() {
@@ -917,12 +1130,15 @@ export default {
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
-      this.noteValue = this.$sanitize(val)
-        .replace(/<br\s*[\/]?>/gi, '\r\n')
-        .replace(/<li\s*[\/]?>/gi, '\r\n   -')
-        .replace(/(<([^>]+)>)/gi, '')
-      this.setUpdateValues(field, this.noteValue)
+      this.noteValue = val
+      this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
+    },
+    addProduct() {
+      this.addingProduct = !this.addingProduct
+      setTimeout(() => {
+        this.$refs.product ? this.$refs.product.scrollIntoView() : null
+      }, 100)
     },
     resetMeeting() {
       this.clearData()
@@ -937,7 +1153,6 @@ export default {
         !this.meetingDuration ||
         !this.externalParticipantsSelected
       ) {
-        console.log('Please input all information')
         this.$toast('Please input all information', {
           timeout: 2000,
           position: 'top-left',
@@ -1022,6 +1237,45 @@ export default {
         this.resetMeeting()
       }
     },
+    setCreateValues(key, val) {
+      if (val) {
+        this.createData[key] = val
+      }
+    },
+    async createProduct(id = this.integrationId) {
+      if (this.addingProduct) {
+        try {
+          const res = await SObjects.api.createResource({
+            integration_ids: [id],
+            form_type: 'CREATE',
+            resource_type: 'OpportunityLineItem',
+            stage_name: this.stageGateField ? this.stageGateField : null,
+            resource_id: this.oppId,
+            form_data: this.createData,
+          })
+
+          this.$toast('Product created successfully', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } catch (e) {
+          this.$toast(`${e.response.data.error}`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } finally {
+          this.addingProduct = !this.addingProduct
+        }
+      } else {
+        return
+      }
+    },
     resetNotes() {
       this.modalOpen = !this.modalOpen
       this.notes = []
@@ -1058,6 +1312,17 @@ export default {
       this.internalParticipantsSelected = []
       this.externalParticipantsSelected = []
       this.extraParticipantsSelected = ''
+    },
+    async getAllPicklist() {
+      try {
+        const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+        for (let i = 0; i < res.length; i++) {
+          this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
+          this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
+        }
+      } catch (e) {
+        console.log(e)
+      }
     },
     async stageGateInstance(field) {
       this.stageGateId = null
@@ -1136,6 +1401,7 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
+        console.log(res)
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -1223,6 +1489,9 @@ export default {
         }, 500)
       }
     },
+    goToProfile() {
+      this.$router.push({ name: 'InviteUsers' })
+    },
     selectMeeting(name) {
       this.currentList = name
       this.showList = false
@@ -1308,6 +1577,7 @@ export default {
       }
     },
     async updateMeeting(meetingWorkflow, id, integrationId) {
+      console.log(integrationId)
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -1315,6 +1585,7 @@ export default {
       this.meetingWorkflowId = meetingWorkflow
       this.dropdownVal = {}
       this.formData = {}
+      this.createData = {}
       this.oppId = id
       this.integrationId = integrationId
       this.noteValue = null
@@ -1376,6 +1647,26 @@ export default {
       } finally {
         this.updatingMeeting = false
         this.meetingLoading = false
+      }
+    },
+    async getPricebooks() {
+      const res = await SObjects.api.getObjects('Pricebook2')
+      this.pricebooks = res.results
+    },
+    async getPricebookEntries(id) {
+      try {
+        console.log('id', id)
+        this.loadingProducts = true
+        const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
+          ['EQUALS', 'Pricebook2Id', id],
+        ])
+        this.productReferenceOpts['PricebookEntryId'] = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingProducts = false
+        }, 1000)
       }
     },
     async createFormInstance(id, integrationId, alertInstanceId = null) {
@@ -1518,7 +1809,7 @@ export default {
       }
 
       for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i])
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
@@ -1573,6 +1864,23 @@ export default {
           salesforceObject: 'Opportunity',
         })
       }
+
+      if (this.hasProducts) {
+        for (let i = 0; i < this.createProductForm.length; i++) {
+          if (this.createProductForm[i].dataType === 'Reference') {
+            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
+            this.productReferenceOpts[this.createProductForm[i].apiName] =
+              this.createProductForm[i].id
+          }
+        }
+        for (let i in this.productReferenceOpts) {
+          this.productReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.productReferenceOpts[i],
+            'createProduct',
+          )
+        }
+      }
     },
     async getAllForms() {
       try {
@@ -1619,8 +1927,36 @@ export default {
               dupeStagesRemoved[i].referenceDisplayLabel
           }
         }
+
+        this.createProductForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+        )[0].fieldsRef
       } catch (error) {
         this.$toast('Error setting forms', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    async getReferenceFieldList(key, val, type, eventVal, filter) {
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+          value: eventVal ? eventVal : '',
+          for_filter: filter ? [filter] : null,
+        })
+        if (type === 'update') {
+          this.referenceOpts[key] = res
+        } else if (type === 'createProduct') {
+          this.productReferenceOpts[key] = res
+        } else {
+          this.createReferenceOpts[key] = res
+        }
+      } catch (e) {
+        this.$toast('Error gathering reference fields', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -1860,7 +2196,7 @@ export default {
   border: 2px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 36vw;
+  width: 34vw;
   min-height: 30vh;
   &__header {
     font-size: 11px;
@@ -2054,7 +2390,7 @@ input {
 .opp-modal-container {
   overflow: hidden;
   background-color: white;
-  width: 40vw;
+  width: 38vw;
   align-items: center;
   border-radius: 0.6rem;
   padding: 1rem;
@@ -2151,6 +2487,111 @@ section {
   color: white;
   transition: all 0.3s;
 }
+.product-text {
+  display: flex;
+  align-items: center;
+  color: $dark-green;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background-color: $white-green;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+  cursor: pointer;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    height: 16px;
+    margin-left: 4px;
+  }
+}
+.select-btn1 {
+  border: 0.7px solid $dark-green;
+  padding: 0.45rem 1.25rem;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  }
+}
+
+.adding-product {
+  border: 1px solid $dark-green;
+  border-radius: 0.3rem;
+  margin: 0.5rem 0rem;
+  width: 34vw;
+  min-height: 30vh;
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 14px;
+    padding: 0.5rem;
+    color: $white;
+    width: 100%;
+    border-bottom: 1px solid $dark-green;
+    background-color: $dark-green;
+    img {
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
+  }
+  &__body {
+    padding: 0.25rem;
+    font-size: 11px !important;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    overflow: auto;
+    height: 30vh;
+    input {
+      width: 10vw !important;
+      height: 1.5rem !important;
+    }
+    .multiselect {
+      width: 12vw !important;
+      font-weight: 11px !important;
+    }
+    p {
+      margin-left: 0.25rem;
+    }
+    span {
+      color: $coral;
+    }
+  }
+
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-color: $dark-green;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 0.25rem;
+  }
+}
+
+.fullInvert {
+  filter: invert(99%);
+}
 .soon-button {
   display: flex;
   align-items: center;
@@ -2191,7 +2632,7 @@ section {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 18vw;
+  width: 16.5vw;
 }
 .zoom-input {
   border: 1px solid $soft-gray;
@@ -2298,11 +2739,11 @@ section {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 0.5rem 1.5rem;
-  height: 5rem;
+  padding: 0.25rem 1.5rem;
+  height: 4rem;
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 textarea {
   resize: vertical;
@@ -2383,6 +2824,7 @@ a {
 }
 .label {
   margin-right: 0.5rem;
+  margin-top: 8px;
 }
 .select-btn {
   border: 0.5px solid $dark-green;
@@ -2556,7 +2998,8 @@ label {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   cursor: pointer;
-  width: 36vw;
+  width: 34vw;
+  margin-left: 10px;
 
   &__content {
     display: flex;
@@ -2583,10 +3026,11 @@ label {
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
+  margin-left: 10px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  width: 36vw;
+  width: 34vw;
   height: 80px;
   overflow: scroll;
 
@@ -2614,5 +3058,30 @@ label {
   img {
     filter: invert(99%);
   }
+}
+.divArea:focus {
+  outline: none;
+}
+.divArea {
+  -moz-appearance: textfield-multiline;
+  -webkit-appearance: textarea;
+  resize: both;
+  height: 30px;
+  width: 34vw;
+  min-height: 20vh;
+  margin-bottom: 4px;
+  border: 1px solid #e8e8e8;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  overflow-y: scroll;
+  font-family: inherit;
+  font-style: inherit;
+  font-size: 13px;
+  padding: 12px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>

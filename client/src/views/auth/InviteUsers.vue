@@ -65,7 +65,7 @@
         </figcaption>
         <div style="margin-top: 16px" class="figure-title">
           <p>Edit Templates <img src="@/assets/images/pencil.svg" height="12px" alt="" /></p>
-          <small>edit your note templates</small>
+          <small>Edit your note templates</small>
         </div>
       </figure>
     </div>
@@ -179,13 +179,17 @@
             :disabled="savingTemplate"
             placeholder="Template Title"
           />
-          <!-- { list: 'ordered' } -->
+
           <quill-editor
             :disabled="savingTemplate"
             ref="message-body"
             :options="{
               modules: {
-                toolbar: [{ list: '' }],
+                toolbar: [
+                  [{ header: 1 }, { header: 2 }],
+                  ['bold', 'italic', 'underline'],
+                  [{ list: 'ordered' }, { list: 'bullet' }],
+                ],
               },
               theme: 'snow',
               placeholder: 'Type out your template here.',
@@ -218,14 +222,6 @@
               Update Template
             </button>
 
-            <button
-              @click="selectedTemplate = !selectedTemplate"
-              class="invite_button"
-              style="color: #4d4e4c"
-            >
-              <img src="@/assets/images/back.svg" height="12px" alt="" /> All Templates
-            </button>
-
             <button @click="removeTemplate" class="invite_button2">
               <img src="@/assets/images/trash.svg" height="18px" alt="" />
             </button>
@@ -249,7 +245,7 @@
                   <p>{{ template.subject }}</p>
                 </div>
                 <div class="small-container__body">
-                  <p>{{ truncateText(template.body, 34) }}</p>
+                  <p v-html="template.body"></p>
                 </div>
               </div>
             </template>
@@ -264,15 +260,19 @@
                 :disabled="savingTemplate"
                 placeholder="Template Title"
               />
-              <!-- { list: 'ordered' } -->
               <quill-editor
                 :disabled="savingTemplate"
                 ref="message-body"
                 :options="{
                   modules: {
-                    toolbar: [{ list: '' }],
+                    toolbar: [
+                      [{ header: 1 }, { header: 2 }],
+                      ['bold', 'italic', 'underline'],
+                      [{ list: 'ordered' }, { list: 'bullet' }],
+                    ],
                   },
                   theme: 'snow',
+                  placeholder: 'Type out your template here.',
                 }"
                 v-model="selectedTemplate.body"
                 class="message__box"
@@ -285,7 +285,14 @@
           </div>
         </div>
         <div class="wide">
-          <button @click="homeView" class="invite_button">
+          <button
+            v-if="selectedTemplate"
+            @click="selectedTemplate = !selectedTemplate"
+            class="invite_button"
+          >
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+          <button v-else @click="homeView" class="invite_button">
             <img src="@/assets/images/back.svg" height="12px" alt="" />
           </button>
         </div>
@@ -346,13 +353,13 @@ export default {
     selectTemplate(template) {
       this.selectedTemplate = template
     },
-    truncateText(text, length) {
-      if (text.length <= length) {
-        return text.replace(/(<([^>]+)>)/gi, '')
-      }
+    // truncateText(text, length) {
+    //   if (text.length <= length) {
+    //     return text.replace(/(<([^>]+)>)/gi, '')
+    //   }
 
-      return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
-    },
+    //   return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
+    // },
     async updateTemplate() {
       try {
         const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
@@ -735,7 +742,8 @@ input[type='checkbox'] + label::before {
   height: 38vh;
 }
 .small-container {
-  border: 1px solid #ccc;
+  box-shadow: 1px 1px 2px 1px #ccc;
+  border: 1px solid white;
   border-radius: 6px;
   width: 250px;
   height: 110px;
@@ -750,13 +758,15 @@ input[type='checkbox'] + label::before {
     height: 40px;
     display: flex;
     justify-content: flex-start;
+    background-color: $dark-green;
+    color: white;
   }
   &__body {
     display: flex;
     justify-content: flex-start;
-    padding: 4px 8px;
+    padding: 4px;
     opacity: 0.8;
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 .small-container:hover {
@@ -772,13 +782,14 @@ input[type='checkbox'] + label::before {
 }
 .hover-img {
   background-color: white;
-  border: 1px solid #ccc;
+  border: 1px solid white;
+  box-shadow: 1px 1px 2px 1px #ccc;
   color: #fff;
   display: inline-block;
   margin: 8px;
   max-width: 320px;
   min-width: 240px;
-  height: 260px;
+  height: 275px;
   overflow: hidden;
   position: relative;
   text-align: center;
@@ -859,25 +870,27 @@ input[type='checkbox'] + label::before {
   img {
     margin-left: 6px;
     filter: invert(20%);
-    // height: 20px;
     visibility: hidden;
   }
   p {
-    font-size: 16px;
+    font-size: 18px;
     display: flex;
     align-items: center;
   }
   background-color: $dark-green;
-  color: $base-gray;
+  color: white;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   padding: 8px;
+  font-weight: bold;
+  border-radius: 2px;
 
   small {
-    color: white;
+    color: $base-gray;
     margin-top: -8px;
+    letter-spacing: 0.5px;
   }
 }
 .align-start {
