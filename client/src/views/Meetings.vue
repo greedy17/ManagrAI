@@ -585,6 +585,8 @@
                           : field.apiName,
                         field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                           ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
                           : $event.id,
                       )
                     "
