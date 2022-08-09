@@ -3103,7 +3103,6 @@ export default {
       }
     },
     setCreateValues(key, val) {
-      console.log(key, val)
       if (val) {
         this.createData[key] = val
       }

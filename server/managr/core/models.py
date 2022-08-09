@@ -427,7 +427,6 @@ class NylasAuthAccount(TimeStampModel):
         else:
             status_code = response.status_code
             error_data = response.json()
-            print(error_data)
             error_param = error_data.get("error", None)
             error_message = error_data.get("message", None)
             error_code = error_data.get("code", None)

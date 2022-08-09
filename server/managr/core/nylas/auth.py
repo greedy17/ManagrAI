@@ -67,7 +67,6 @@ def get_account_details(token):
         f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}", headers=headers,
     )
     collected_data = {"account": account.json(), "calendars": calendar.json()}
-    print(f"COLLECTED_DATA {collected_data}")
     return collected_data
 
 

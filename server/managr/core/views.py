@@ -317,8 +317,6 @@ class UserViewSet(
         user = request.user
         data = request.data
         command = data.get("command")
-        print(command)
-        print(COMMANDS)
         command_function = COMMANDS[command]
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")

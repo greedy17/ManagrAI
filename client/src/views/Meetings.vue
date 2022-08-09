@@ -1577,7 +1577,6 @@ export default {
       }
     },
     async updateMeeting(meetingWorkflow, id, integrationId) {
-      console.log(integrationId)
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -1655,7 +1654,6 @@ export default {
     },
     async getPricebookEntries(id) {
       try {
-        console.log('id', id)
         this.loadingProducts = true
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
