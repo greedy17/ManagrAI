@@ -668,7 +668,7 @@ export default {
     },
     async getAllForms() {
       try {
-        let res = await SlackOAuth.api.getOrgCustomForm()
+        let res = await SlackOAuth.api.getOrgCustomForm(null, true)
         this.allForms = res
       } catch (e) {
         console.log(e)
@@ -676,7 +676,7 @@ export default {
     },
     async getAllMeetingWorkflows() {
       try {
-        let res = await MeetingWorkflows.api.getMeetingList({ fromAdmin: true })
+        let res = await MeetingWorkflows.api.getMeetingList(true)
         this.allMeetingWorkflows = res.results
       } catch (e) {
         console.log(e)

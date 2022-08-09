@@ -253,7 +253,6 @@ export default {
           return f.id !== form.id
         })
         this.allForms = [...forms]
-        console.log(this.allForms)
       }
     },
 

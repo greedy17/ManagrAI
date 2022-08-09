@@ -203,7 +203,6 @@ export default {
       let user
       try {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
-        console.log(this.registrationForm)
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,
@@ -216,7 +215,6 @@ export default {
       } finally {
         this.submitting = false
       }
-      console.log(user)
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
@@ -282,7 +280,7 @@ input:focus {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-left: 10vw;
+  margin-left: 44vw;
 
   img {
     height: 1.5rem;

@@ -44,9 +44,9 @@ export class MeetingWorkflowAPI extends ModelAPI {
     return apiClient()
   }
 
-  async getMeetingList(params = {}) {
+  async getMeetingList(fromAdmin = false) {
     try {
-      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT, { params: params })
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT, { params: { fromAdmin } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)

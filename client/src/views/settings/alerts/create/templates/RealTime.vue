@@ -207,9 +207,6 @@ export default {
   async created() {
     this.templates.refresh()
   },
-  mounted() {
-    console.log(this.user)
-  },
   methods: {
     goToStageAdvanced() {
       this.$router.push({ name: 'StageAdvanced' })
