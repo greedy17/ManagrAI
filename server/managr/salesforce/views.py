@@ -874,9 +874,10 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        from_admin = json.loads(self.request.GET.get("fromAdmin"))
+        from_admin = self.request.GET.get("fromAdmin", False)
+        from_admin
         user = self.request.user
-        if from_admin and user.is_staff:
+        if from_admin and user.is_staff and json.loads(from_admin):
             return MeetingWorkflow.objects.all()[:100]
         return MeetingWorkflow.objects.for_user(user).order_by("meeting__start_time")
 

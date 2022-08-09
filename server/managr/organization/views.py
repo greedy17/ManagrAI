@@ -1,5 +1,5 @@
 import copy
-
+import json
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.db import transaction
@@ -68,7 +68,7 @@ class OrganizationViewSet(
 
     def get_queryset(self):
         fromAdmin = self.request.GET.get("fromAdmin", False)
-        if fromAdmin and self.request.user.is_staff:
+        if fromAdmin and self.request.user.is_staff and json.loads(fromAdmin):
             return Organization.objects.all()
         return Organization.objects.for_user(self.request.user)
 
