@@ -80,9 +80,9 @@ export default class SlackAPI {
   }
 
   // Org Custom Slack Forms
-  getOrgCustomForm(resource = null) {
+  getOrgCustomForm(resource = null, fromAdmin = false) {
     return this.client
-      .get(SLACK_CUSTOM_FORM_ENDPOINT, { params: { resource } })
+      .get(SLACK_CUSTOM_FORM_ENDPOINT, { params: { resource, fromAdmin } })
       .then(response => (response.data.results.map(res => this.cls.customSlackForm.fromAPI(res))))
       .catch(apiErrorHandler({ apiName: 'SlackAPI.getOrgCustomForm', enable400Alert: false }))
   }

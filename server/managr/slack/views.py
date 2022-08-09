@@ -548,6 +548,9 @@ class SlackFormsViewSet(
     serializer_class = OrgCustomSlackFormSerializer
 
     def get_queryset(self):
+        fromAdmin = json.loads(self.request.GET.get("fromAdmin"))
+        if fromAdmin and self.request.user.is_staff:
+            return OrgCustomSlackForm.objects.for_staff()
         return OrgCustomSlackForm.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
