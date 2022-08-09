@@ -542,7 +542,7 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
-              <div>
+              <div v-if="!pricebookId">
                 <p class="form-label">Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
@@ -959,6 +959,7 @@ export default {
   },
   data() {
     return {
+      pricebookId: null,
       createData: {},
       productRefCopy: {},
       productReferenceOpts: {},
@@ -1576,8 +1577,9 @@ export default {
         })
       }
     },
-    async updateMeeting(meetingWorkflow, id, integrationId) {
-      console.log(integrationId)
+    async updateMeeting(meetingWorkflow, id, integrationId, pricebookId) {
+      pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
+      console.log(pricebookId)
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -1590,6 +1592,7 @@ export default {
       this.integrationId = integrationId
       this.noteValue = null
       this.noteTitle = null
+      this.addingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
@@ -1613,6 +1616,7 @@ export default {
         //   bodyClassName: ['custom'],
         // })
       } finally {
+        pricebookId ? this.getPricebookEntries(pricebookId) : null
         this.dropdownLoading = false
       }
     },

@@ -1125,7 +1125,7 @@
               <p>Add Product</p>
             </div>
             <div class="adding-product__body">
-              <div>
+              <div v-if="!pricebookId">
                 <p class="form-label">Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
@@ -1846,7 +1846,13 @@
             :key="i"
             ref="workflowTableChild"
             v-for="(workflow, i) in filteredWorkflows"
-            @create-form="createFormInstance(workflow.id, workflow.integration_id)"
+            @create-form="
+              createFormInstance(
+                workflow.id,
+                workflow.integration_id,
+                opp.secondary_data.Pricebook2Id,
+              )
+            "
             @get-notes="getNotes(workflow.id)"
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
@@ -2936,7 +2942,7 @@ export default {
       this.addOppModalOpen = !this.addOppModalOpen
     },
     async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
-      pricebookId ? (this.pricebookId = pricebookId) : null
+      pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.addingProduct = false
       this.formData = {}
       this.createData = {}
@@ -2971,6 +2977,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        pricebookId ? this.getPricebookEntries(pricebookId) : null
         this.dropdownLoading = false
       }
     },
@@ -3656,6 +3663,7 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
+        console.log(this.allOpps)
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
         this.hasNextOriginal = this.hasNext
