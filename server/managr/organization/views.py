@@ -67,6 +67,9 @@ class OrganizationViewSet(
     )
 
     def get_queryset(self):
+        fromAdmin = self.request.GET.get("fromAdmin", False)
+        if fromAdmin and self.request.user.is_staff:
+            return Organization.objects.all()
         return Organization.objects.for_user(self.request.user)
 
     def get_serializer_class(self):
@@ -91,7 +94,7 @@ class OrganizationViewSet(
         serializer = OrganizationRefSerializer(qs, many=True)
 
         return Response(serializer.data)
-    
+
     @action(
         methods=["POST"],
         # permission_classes=(IsSalesPerson,),
@@ -105,7 +108,7 @@ class OrganizationViewSet(
         ignore_emails = d.get("ignore_emails")
         has_products = d.get("has_products")
         org_id = d.get("org_id")
-        organization = Organization.objects.get(id = org_id)
+        organization = Organization.objects.get(id=org_id)
         if organization.state != state:
             organization.state = state
         if organization.has_products != has_products:
@@ -114,6 +117,7 @@ class OrganizationViewSet(
         organization.ignore_emails = split_emails
         organization.save()
         return Response(data=status.HTTP_200_OK)
+
 
 class AccountViewSet(
     viewsets.GenericViewSet,
