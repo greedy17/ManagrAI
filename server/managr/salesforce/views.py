@@ -667,7 +667,6 @@ class SalesforceSObjectViewSet(
             "stage_name": stage_name,
         }
         form_ids = create_form_instance(**instance_data)
-
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
         main_form = forms.filter(template__form_type="CREATE").first()
         if main_form.template.resource == "OpportunityLineItem":
