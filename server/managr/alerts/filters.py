@@ -30,7 +30,6 @@ class AlertTemplateFilterSet(FilterSet):
                 user_targeted = AlertTemplate.objects.filter(
                     configs__alert_targets__contains=[str(user.id)]
                 ).exclude(user=user)
-                print(user_targeted)
                 return qs | user_targeted
             else:
                 return qs

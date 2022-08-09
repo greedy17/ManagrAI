@@ -68,7 +68,6 @@ export default class ActionChoiceAPI {
   delete(id) {
     const url = ACTION_CHOICES_ENDPOINT + id
     const options = {}
-    console.log(id)
 
     return this.client
       .delete(url, options)

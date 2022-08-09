@@ -632,6 +632,7 @@ class SalesforceAuthAccountAdapter:
                 f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_BY_ID_URI(resource, fields, id_list)}",
                 headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
+            logger.info(f"FORECAST VALUES RES: {res}")
             res = self._handle_response(res)
         return self._format_resource_response(res, resource)
 

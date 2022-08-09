@@ -21,7 +21,7 @@
       <Input
         :id="$attrs.id"
         :disabled="$attrs.disabled"
-        :type="$attrs.type"
+        :type="inputType"
         @blur="$emit('blur')"
       />
     </slot>

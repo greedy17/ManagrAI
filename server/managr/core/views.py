@@ -317,8 +317,6 @@ class UserViewSet(
         user = request.user
         data = request.data
         command = data.get("command")
-        print(command)
-        print(COMMANDS)
         command_function = COMMANDS[command]
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
@@ -379,12 +377,12 @@ class UserViewSet(
 
         user = request.user
         res = user.current_forecast.get_current_values()
+        logger.info(f"FORECAST VALUES ENDPOINT: {res}")
         opps = []
         for item in res:
             serializer = OpportunitySerializer(data=item.as_dict)
             serializer.is_valid()
             opps.append(serializer.data)
-        print(opps)
         return Response(data=opps, status=status.HTTP_200_OK)
 
     @action(
@@ -396,7 +394,6 @@ class UserViewSet(
     def update_user_info(self, request, *args, **kwargs):
         """endpoint to update the Event Calendar ID, the Fake Meeting ID, the Zoom Channel, the Recap Receiver, and the Realtime Alert Config sections"""
         d = request.data
-        print("\n!!data!!!!\n", d)
         event_calendar_id = d.get("event_calendar_id")
         fake_meeting_id = d.get("fake_meeting_id")
         zoom_channel = d.get("zoom_channel")
@@ -404,7 +401,6 @@ class UserViewSet(
         realtime_alert_config = d.get("realtime_alert_config")
         user_id = d.get("user_id")
         user = User.objects.get(id=user_id)
-        print("\n\nuser\n\n", user, "\n\n")
         if user.event_calendar_id != event_calendar_id:
             user.event_calendar_id = event_calendar_id
         if user.fake_meeting_id != fake_meeting_id:

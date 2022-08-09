@@ -387,6 +387,7 @@
                 workflowId,
                 resourceId,
                 resourceRef ? resourceRef.integration_id : null,
+                resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
               )
             "
             class="add-button"

@@ -264,7 +264,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-left: 10vw;
+  margin-left: 44vw;
 
   img {
     height: 1.5rem;
