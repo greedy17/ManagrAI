@@ -696,7 +696,6 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
                 salesforce_object="OpportunityLineItem"
             ).values_list("api_name", flat=True)
             res = OpportunityLineItemAdapter.create(data, token, base_url, object_fields, user_id)
-            print(res)
             from managr.salesforce.routes import routes
 
             serializer = routes["OpportunityLineItem"]["serializer"](data=res.as_dict)

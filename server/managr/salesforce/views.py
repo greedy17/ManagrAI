@@ -898,7 +898,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
-        print(workflow.forms.all())
         return Response(data=data)
 
     @action(
@@ -979,7 +978,6 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_workflow(self, request, *args, **kwargs):
         request_data = self.request.data
-        print(request_data)
         user = request.user
         stage_form_ids = request_data.get("stage_form_id", None)
         workflow = MeetingWorkflow.objects.get(id=request_data.get("workflow_id"))
