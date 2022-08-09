@@ -9,7 +9,7 @@
       <FormField
         type="email"
         @input="execCheckEmail"
-         @blur="loginForm.field.email.validate()"
+        @blur="loginForm.field.email.validate()"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
         placeholder="email"
@@ -94,9 +94,7 @@ export default {
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()
-      console.log('here1', this.loginForm.field.email.isValid)
       if (this.loginForm.field.email.isValid) {
-        console.log('ummm here')
         this.loggingIn = true
         try {
           await User.api.checkStatus(this.loginForm.field.email.value)

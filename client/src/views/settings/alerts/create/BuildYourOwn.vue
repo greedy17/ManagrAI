@@ -717,7 +717,6 @@ export default {
   },
   methods: {
     mapIds() {
-      console.log(this.selectedUsers)
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
@@ -966,7 +965,6 @@ export default {
       n.forEach((day) => days.push(day.value))
       let newDays = [...new Set(days)]
       this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
-      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
     },
     setPipelines(obj) {
       if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.lenght < 1) {

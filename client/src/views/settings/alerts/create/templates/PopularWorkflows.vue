@@ -675,7 +675,6 @@ export default {
         this.selectedChannel
       this.config.newConfigs[0].recipients = [this.selectedChannel.id]
 
-      console.log(this.config.newConfigs[0].recipients)
     },
     setDay(n) {
       this.config.newConfigs[0].recurrenceDay = 0
