@@ -571,7 +571,13 @@
                     field.dataType === 'Reference'
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
