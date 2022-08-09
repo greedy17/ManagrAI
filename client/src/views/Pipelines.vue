@@ -484,7 +484,13 @@
                     field.dataType === 'Reference'
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1155,7 +1161,13 @@
                     (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                   "
                 >
-                  <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
                   <Multiselect
                     :options="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -2221,12 +2233,11 @@ export default {
     },
     async getPricebookEntries(id) {
       try {
-        console.log('id', id)
         this.loadingProducts = true
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
         ])
-        console.log(res)
+
         this.productReferenceOpts['PricebookEntryId'] = res.results
       } catch (e) {
         console.log(e)
@@ -3110,7 +3121,6 @@ export default {
       }
     },
     setCreateValues(key, val) {
-      console.log(key, val)
       if (val) {
         this.createData[key] = val
       }
@@ -3663,7 +3673,7 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
-        console.log(this.allOpps)
+
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
         this.hasNextOriginal = this.hasNext

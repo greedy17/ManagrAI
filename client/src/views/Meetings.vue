@@ -1402,7 +1402,6 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
-        console.log(res)
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -1579,7 +1578,6 @@ export default {
     },
     async updateMeeting(meetingWorkflow, id, integrationId, pricebookId) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
-      console.log(pricebookId)
       this.dropdownLoading = true
       this.currentVals = []
       this.editOpModalOpen = true
@@ -1659,7 +1657,6 @@ export default {
     },
     async getPricebookEntries(id) {
       try {
-        console.log('id', id)
         this.loadingProducts = true
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],

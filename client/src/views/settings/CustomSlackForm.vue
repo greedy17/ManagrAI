@@ -603,6 +603,10 @@
                 : 'width: 20vw; margin-top: 1rem'
             "
             selectLabel="Enter"
+            :customLabel="
+              ({ referenceDisplayLabel }) =>
+                referenceDisplayLabel === 'PricebookEntry' ? 'Products' : referenceDisplayLabel
+            "
             track-by="apiName"
             label="referenceDisplayLabel"
           >
@@ -1048,6 +1052,9 @@ export default {
     this.getActionChoices()
   },
   methods: {
+    test() {
+      console.log(this.formFields.list)
+    },
     async goToProducts() {
       if (
         (this.resource == 'Opportunity' || this.resource == 'Account') &&
