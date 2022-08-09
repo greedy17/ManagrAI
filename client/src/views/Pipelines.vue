@@ -2369,7 +2369,7 @@ export default {
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
-        this.allOppsForWorkflows.filter((opp) => opp.id === id)[0].account_ref
+        this.allOpps.filter((opp) => opp.id === id)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
@@ -2980,7 +2980,7 @@ export default {
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
-        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
+        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
