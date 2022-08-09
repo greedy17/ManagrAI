@@ -498,6 +498,8 @@
                           : field.apiName,
                         field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                           ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
                           : $event.id,
                       )
                     "
@@ -1167,6 +1169,8 @@
                           : field.apiName,
                         field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                           ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
                           : $event.id,
                       )
                     "
@@ -2216,6 +2220,7 @@ export default {
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
         ])
+        console.log(res)
         this.productReferenceOpts['PricebookEntryId'] = res.results
       } catch (e) {
         console.log(e)
@@ -3098,6 +3103,7 @@ export default {
       }
     },
     setCreateValues(key, val) {
+      console.log(key, val)
       if (val) {
         this.createData[key] = val
       }
