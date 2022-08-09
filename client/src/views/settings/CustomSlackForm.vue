@@ -689,10 +689,6 @@ export default {
       type: Function,
       default: () => null,
     },
-    selected_org: {
-      type: String,
-      default: '',
-    }
   },
   data() {
     return {
@@ -1223,7 +1219,7 @@ export default {
         })
         this.savingForm = false
         if (this.fromAdmin && this.formType !== 'UPDATE') {
-          this.$router.push({ name: 'Staff', params: { selected_org: this.selected_org } })
+          this.$router.push({ name: 'Staff' })
         } else {
           this.$router.push({ name: 'ProductForm' })
         }
