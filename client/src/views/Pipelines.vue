@@ -1862,7 +1862,7 @@
               createFormInstance(
                 workflow.id,
                 workflow.integration_id,
-                opp.secondary_data.Pricebook2Id,
+                workflow.secondary_data.Pricebook2Id,
               )
             "
             @get-notes="getNotes(workflow.id)"
