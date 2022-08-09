@@ -645,7 +645,10 @@ export default {
       page: null,
       orgForms: null,
       orgMeetingWorkflows: null,
-      organizations: CollectionManager.create({ ModelClass: Organization }),
+      organizations: CollectionManager.create({
+        ModelClass: Organization,
+        filters: { fromAdmin: true },
+      }),
     }
   },
   computed: {

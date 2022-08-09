@@ -19,6 +19,7 @@ export default class OrganizationAPI {
       // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
+      fromAdmin: ApiFilter.create({ key: 'fromAdmin' })
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
