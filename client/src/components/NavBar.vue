@@ -137,9 +137,9 @@
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
-        
+
         <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
               <span class="tooltiptext">Profile</span>
@@ -180,7 +180,7 @@
         </router-link>
 
         <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
               <span class="tooltiptext">Profile</span>
@@ -252,6 +252,7 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+      localStorage.isLoggedOut = true
     },
     goToProfile(id) {
       this.$router.push({ path: `/invite-users/${id}` })

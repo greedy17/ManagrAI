@@ -149,6 +149,7 @@ export default {
           }
         } finally {
           this.loggingIn = false
+          localStorage.isLoggedOut = false
         }
       }
     },
