@@ -2366,9 +2366,15 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        this.currentOwner = this.allUsers.filter(
+
+        this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
+        )
+          ? (this.currentOwner = this.allUsers.filter(
+              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+            )[0].full_name)
+          : (this.currentOwner = 'Owner')
+
         this.allOpps.filter((opp) => opp.id === id)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
           : (this.currentAccount = 'Account')
@@ -2977,9 +2983,15 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        this.currentOwner = this.allUsers.filter(
+
+        this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
+        )
+          ? (this.currentOwner = this.allUsers.filter(
+              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+            )[0].full_name)
+          : (this.currentOwner = 'Owner')
+
         this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,

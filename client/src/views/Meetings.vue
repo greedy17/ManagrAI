@@ -1939,13 +1939,14 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )[0].fieldsRef
       } catch (error) {
-        this.$toast('Error setting forms', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        // this.$toast('Error setting forms', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+        console.log(error)
       }
     },
     async getReferenceFieldList(key, val, type, eventVal, filter) {
