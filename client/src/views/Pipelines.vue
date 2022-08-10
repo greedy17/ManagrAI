@@ -680,16 +680,6 @@
             >
               <span style="margin-left: 0px; margin-top: -4px" class="input-container">
                 <label class="label">Note</label>
-                <!-- <textarea
-                  id="user-input"
-                  type="text"
-                  cols="30"
-                  rows="4"
-                  placeholder="Note"
-                  style="line-height: 2rem; width: 34vw; padding-left: 8px"
-                  v-model="noteValue"
-                  @input="setUpdateValues(field.apiName, noteValue)"
-                /> -->
                 <div
                   @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
                   class="divArea"
