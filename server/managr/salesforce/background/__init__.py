@@ -234,11 +234,9 @@ def _generate_form_template(user_id):
     org.custom_slack_forms.all().delete()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
-
         f = OrgCustomSlackForm.objects.create(
             form_type=form_type, resource=resource, organization=org
         )
-
         public_fields = SObjectField.objects.filter(
             is_public=True,
             id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
@@ -639,6 +637,7 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    task_type = args[0][0]
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
@@ -648,7 +647,6 @@ def _process_add_call_to_sf(workflow_id, *args):
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
     user_timezone = user.timezone
-
     if description is not None:
         description = replace_tags(description)
     start_time = workflow.meeting.start_time
@@ -667,6 +665,8 @@ def _process_add_call_to_sf(workflow_id, *args):
         Status="Completed",
         TaskSubType="Call",
     )
+    if task_type != "None":
+        data["Type"] = task_type
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -1312,6 +1312,7 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
+    print(workflow)
     workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)

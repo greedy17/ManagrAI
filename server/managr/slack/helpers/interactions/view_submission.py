@@ -72,7 +72,6 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    print(f"STAGE RELATED: {context}")
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
@@ -148,6 +147,10 @@ def process_zoom_meeting_data(payload, context):
 
     # get state - state contains the values based on the block_id
     state = view["state"]["values"]
+    task_selection = [
+        value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+    ][0]
+    task_type = task_selection.get("value") if task_selection is not None else None
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
     current_form_ids = []
@@ -166,7 +169,7 @@ def process_zoom_meeting_data(payload, context):
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
         # create call log
-        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
         # save meeting data
     ]
     for form in contact_forms:
