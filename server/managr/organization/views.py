@@ -40,6 +40,7 @@ from managr.core.permissions import (
     SuperUserCreateOnly,
     IsExternalIntegrationAccount,
 )
+from managr.core.models import User
 from managr.salesforce.background import emit_generate_form_template
 
 
@@ -406,8 +407,6 @@ class TeamViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
-    """endpoint to create Action Choice"""
-
     serializer_class = TeamSerializer
 
     def get_queryset(self):
@@ -436,6 +435,23 @@ class TeamViewSet(
         instance = self.get_object()
         try:
             instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["POST"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify-membership",
+    )
+    def modify_membership(self, request, *args, **kwargs):
+        """special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
+        request_data = request.data
+        to_add_users = User.objects.filter(id__in=request_data.get("users"))
+        team = Team.objects.get(id=request.data.get("team_id"))
+        try:
+            to_add_users.update(team=team)
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)

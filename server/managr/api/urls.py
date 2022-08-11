@@ -163,6 +163,7 @@ router.register("organizations", organization_views.OrganizationViewSet, "organi
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
+router.register("organization/teams", organization_views.TeamViewSet, "organization-teams")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
 router.register("salesforce/sobject", sf_views.SalesforceSObjectViewSet, "salesforce-sobject")
 router.register(
