@@ -713,14 +713,26 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         )
 
 
+class TeamQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(users__in=[user])
+        else:
+            return None
+
+
 class Team(TimeStampModel):
-    name = CharField(max_length=255)
+    name = models.CharField(max_length=255)
     organization = models.ForeignKey(
         "organization.Organization", related_name="teams", on_delete=models.CASCADE,
     )
     team_lead = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="team_lead_of"
     )
+
+    objects = TeamQuerySet.as_manager()
 
     def __str__(self):
         return f"{self.name} under {self.organization.name} lead: {self.team_lead.email}"

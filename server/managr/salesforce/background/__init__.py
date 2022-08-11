@@ -163,8 +163,8 @@ def emit_add_products_to_sf(workflow_id, *args):
     return _process_add_products_to_sf(workflow_id, *args)
 
 
-def emit_generate_form_template(user_id):
-    return _generate_form_template(user_id)
+def emit_generate_form_template(user_id, delete_forms=False):
+    return _generate_form_template(user_id, delete_forms)
 
 
 def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):
@@ -226,16 +226,17 @@ def _process_gen_next_object_field_sync(user_id, operations_list, for_dev):
 
 @background()
 @log_all_exceptions
-def _generate_form_template(user_id):
+def _generate_form_template(user_id, delete_forms):
     user = User.objects.get(id=user_id)
+
     org = user.organization
     # delete all existing forms
-
-    org.custom_slack_forms.all().delete()
+    if delete_forms:
+        org.custom_slack_forms.all().delete()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
         f = OrgCustomSlackForm.objects.create(
-            form_type=form_type, resource=resource, organization=org
+            form_type=form_type, resource=resource, organization=org, team=user.team
         )
         public_fields = SObjectField.objects.filter(
             is_public=True,
