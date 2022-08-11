@@ -168,6 +168,9 @@ class OrgCustomSlackForm(TimeStampModel):
     organization = models.ForeignKey(
         "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
     )
+    team = models.ForeignKey(
+        "organization.Team", related_name="team_forms", on_delete=models.CASCADE, null=True
+    )
     form_type = models.CharField(
         max_length=255,
         choices=slack_consts.FORM_TYPES,
