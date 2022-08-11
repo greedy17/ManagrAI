@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.forms import CharField
 
 from managr.salesforce.adapter.models import (
     Product2Adapter,
@@ -711,3 +712,10 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             integration_id, token, base_url, self.opportunity.owner.id
         )
 
+
+class Team(TimeStampModel):
+    name = CharField(max_length=255)
+    organization = models.ForeignKey(
+        "organization.Organization", related_name="teams", on_delete=models.CASCADE,
+    )
+    team_lead = models.OneToOneField("User", on_delete=models.CASCADE)
