@@ -718,4 +718,35 @@ class Team(TimeStampModel):
     organization = models.ForeignKey(
         "organization.Organization", related_name="teams", on_delete=models.CASCADE,
     )
-    team_lead = models.OneToOneField("User", on_delete=models.CASCADE)
+    team_lead = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="team_lead_of"
+    )
+
+    def __str__(self):
+        return f"{self.name} under {self.organization.name} lead: {self.team_lead.email}"
+
+    def change_team_lead(self, user, preserve_fields=False):
+        """Method to change the is_admin user for an organization"""
+        templates = user.organization.custom_slack_forms.all()
+
+        if preserve_fields:
+            for form in templates:
+                new_team_lead = user
+                fields = form.fields.filter(is_public=False)
+                form_fields = fields.values_list("api_name", flat=True)
+                new_admin_fields = new_team_lead.imported_sobjectfield.filter(
+                    api_name__in=[form_fields], salesforce_object=form.resource
+                )
+                form_field_set = form.formfield_set.all()
+                for formfield in form_field_set:
+                    new_field = new_admin_fields.filter(api_name=formfield.field.api_name).first()
+                    if new_field:
+                        formfield.field = new_field
+                        formfield.save()
+        else:
+            for form in templates:
+                form.fields.filter(is_public=False).delete()
+
+        self.team_lead = new_team_lead
+        self.save()
+
