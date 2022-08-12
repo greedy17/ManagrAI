@@ -223,7 +223,7 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 35vw"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
                         :multiple="field.dataType === 'MultiPicklist' ? true : false"
                         :track-by="
@@ -932,7 +932,7 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 35vw"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
                         :multiple="field.dataType === 'MultiPicklist' ? true : false"
                         :track-by="
@@ -4129,7 +4129,7 @@ export default {
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+    min-height: 30vh;
     input {
       width: 10vw;
       height: 1.5rem !important;
@@ -5054,14 +5054,14 @@ a {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 24px;
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  width: 34vw;
+  width: 40.25vw;
   height: 80px;
   overflow: scroll;
 
@@ -5080,7 +5080,7 @@ a {
 .close-template {
   position: absolute;
   bottom: 56px;
-  right: 8px;
+  right: 20px;
   z-index: 3;
   cursor: pointer;
   background-color: black;
