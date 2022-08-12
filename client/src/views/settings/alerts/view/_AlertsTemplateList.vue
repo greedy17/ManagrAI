@@ -72,7 +72,7 @@
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
-                Run now
+                Send to Slack
               </button>
             </div>
             <div class="added-collection__footer">
