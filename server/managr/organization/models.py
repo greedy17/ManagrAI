@@ -51,6 +51,12 @@ class Organization(TimeStampModel):
     number_of_allowed_users = models.IntegerField(default=1)
     objects = OrganizationQuerySet.as_manager()
 
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
     @property
     def deactivate_all_users(self):
         # TODO: When deleting an org also remember to revoke nylas tokens and request delete
@@ -94,11 +100,13 @@ class Organization(TimeStampModel):
             self.has_products = True
             self.save()
 
-    def __str__(self):
-        return f"{self.name}"
-
-    class Meta:
-        ordering = ["-datetime_created"]
+    def create_initial_team(self):
+        admin = self.users.filter(is_admin=True).first()
+        team = Team.objects.create(name=self.name, organization=self, team_lead=admin)
+        forms = self.custom_slack_forms
+        forms.update(team=team)
+        users = self.users
+        users.update(team=team)
 
 
 class AccountQuerySet(models.QuerySet):
@@ -726,7 +734,7 @@ class TeamQuerySet(models.QuerySet):
 class Team(TimeStampModel):
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "organization.Organization", related_name="teams", on_delete=models.CASCADE,
+        "organization.Organization", related_name="teams", on_delete=models.CASCADE
     )
     team_lead = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="team_lead_of"

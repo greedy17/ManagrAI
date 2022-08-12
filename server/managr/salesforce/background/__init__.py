@@ -167,6 +167,10 @@ def emit_generate_form_template(user_id, delete_forms=False):
     return _generate_form_template(user_id, delete_forms)
 
 
+def emit_generate_team_form_templates(user_id):
+    return _generate_team_form_templates(user_id)
+
+
 def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):
     return _update_current_db_values(
         user_id, resource_type, integration_id, verbose_name=verbose_name
@@ -228,7 +232,6 @@ def _process_gen_next_object_field_sync(user_id, operations_list, for_dev):
 @log_all_exceptions
 def _generate_form_template(user_id, delete_forms):
     user = User.objects.get(id=user_id)
-
     org = user.organization
     # delete all existing forms
     if delete_forms:
@@ -250,6 +253,31 @@ def _generate_form_template(user_id, delete_forms):
             elif i == 1 and note is not None:
                 f.fields.add(note, through_defaults={"order": i})
         f.save()
+
+
+@background()
+@log_all_exceptions
+def _generate_team_form_templates(user_id):
+    from managr.organization.models import Team
+
+    user = User.objects.get(id=user_id)
+    org = user.organization
+    team_ref = (
+        Team.objects.filter(organization=user.organization).order_by("datetime_created").first()
+    )
+    # delete all existing forms
+    forms = team_ref.team_forms
+    for form in slack_consts.INITIAL_FORMS:
+        resource, form_type = form.split(".")
+        form_ref = forms.filter(form_type=form_type, resource=resource).first()
+        f = OrgCustomSlackForm.objects.create(
+            form_type=form_type,
+            resource=resource,
+            organization=org,
+            team=user.team,
+            config=form_ref.config,
+        )
+        f.recreate_form()
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)

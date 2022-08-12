@@ -197,7 +197,7 @@ class OrgCustomSlackForm(TimeStampModel):
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
     def __str__(self):
-        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name}"
+        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name} - team: {self.team}"
 
     class Meta:
         ordering = [
@@ -214,12 +214,12 @@ class OrgCustomSlackForm(TimeStampModel):
         self.save()
 
     def recreate_form(self):
-        admin = self.organization.users.filter(is_admin=True).first()
+        team_lead = self.team.team_lead
         fields = SObjectField.objects.filter(
             Q(
                 api_name__in=self.config.values(),
                 salesforce_object=self.resource,
-                salesforce_account=admin.salesforce_account,
+                salesforce_account=team_lead.salesforce_account,
             )
             | Q(is_public=True)
         )

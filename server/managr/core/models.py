@@ -201,7 +201,7 @@ class User(AbstractUser, TimeStampModel):
         help_text="Object for reminder setting",
     )
     team = models.ForeignKey(
-        "organization.Team", related_name="users", on_delete=models.CASCADE, null=True
+        "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
     )
     objects = UserManager()
 
