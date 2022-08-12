@@ -1631,7 +1631,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="red-label">{{ field.dataType }} <span>*</span></label>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <Multiselect
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
