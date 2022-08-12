@@ -56,8 +56,17 @@
       <UpdateForm
         @reset-edit="resetEdit"
         @add-product="addProduct"
+        @set-update-values="setUpdateValues"
+        @set-template="setTemplate"
+        @update-resource="updateResource"
+        @update-meeting="onMakeMeetingUpdate"
+        @create-product="createProduct"
+        @set-create-values="setCreateValues"
+        @set-validation-values="setUpdateValidationValues"
+        @get-pricebooks="getPricebookEntries"
+        :resource="resourceType"
         :productReferenceOpts="productReferenceOpts"
-        :fields="oppFormCopy"
+        :fields="resourceFields"
         :currentVals="currentVals"
         :dropdownVal="dropdownVal"
         :noteTitle="noteTitle"
@@ -75,6 +84,10 @@
         :referenceOpts="referenceOpts"
         :loadingAccounts="loadingAccounts"
         :addingProduct="addingProduct"
+        :pricebookId="pricebookId"
+        :selectedPricebook="selectedPricebook"
+        :createProductForm="createProductForm"
+        :loadingProducts="loadingProducts"
       />
     </div>
 
@@ -262,6 +275,7 @@
             @add-participant="addParticipant"
             @get-notes="getNotes"
             @filter-accounts="getAccounts"
+            @get-pricebooks="getPricebookEntries"
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="createContactForm"
             :meeting="meeting.meeting_ref"
@@ -271,7 +285,6 @@
             :resourceRef="meeting.resource_ref"
             :resourceType="meeting.resource_type"
             :meetingUpdated="meeting.is_completed"
-            :allOpps="allOpps"
             :owners="allUsers"
             :accounts="allAccounts"
             :meetingLoading="meetingLoading"
@@ -310,6 +323,8 @@ export default {
   },
   data() {
     return {
+      resourceType: 'Opportunity',
+      resourceFields: this.oppFormCopy,
       selectedPricebook: null,
       pricebookId: null,
       createData: {},
@@ -384,8 +399,10 @@ export default {
       showPopularList: true,
       updateOppForm: null,
       oppFormCopy: null,
-      createOppForm: null,
       createContactForm: null,
+      updateContactForm: null,
+      updateAccountForm: null,
+      updateLeadForm: null,
       instanceId: null,
       contactInstanceId: null,
       formData: {},
@@ -440,10 +457,10 @@ export default {
   created() {
     this.getMeetingList()
     this.getObjects()
-    this.templates.refresh()
-    this.getPricebooks()
-    this.getAllPicklist()
     this.getAllForms()
+    this.getAllPicklist()
+    this.getPricebooks()
+    this.templates.refresh()
   },
   beforeMount() {
     this.getUsers()
@@ -456,22 +473,27 @@ export default {
     accountSobjectId: 'getInitialAccounts',
     updateOppForm: 'setForms',
     stageGateField: 'stageGateInstance',
-    // updateList: {
-    //   async handler(currList) {
-    //     if (currList.length === 0 && this.recapList.length) {
-    //       let bulk = true ? this.recapList.length > 1 : false
-    //       try {
-    //         const res = await SObjects.api.sendRecap(bulk, this.recapList)
-    //       } catch (e) {
-    //         console.log(e)
-    //       } finally {
-    //         this.recapList = []
-    //       }
-    //     }
-    //   },
-    // },
+    resourceType: 'selectFormFields',
   },
   methods: {
+    selectFormFields() {
+      switch (this.resourceType) {
+        case 'Opportunity':
+          this.resourceFields = this.oppFormCopy
+          break
+        case 'Account':
+          this.resourceFields = this.updateAccountForm
+          break
+        case 'Contact':
+          this.resourceFields = this.updateContactForm
+          break
+        case 'Lead':
+          this.resourceFields = this.updateLeadForm
+          break
+        default:
+          return
+      }
+    },
     async getTemplates() {
       try {
         const res = await User.api.getTemplates()
@@ -481,6 +503,7 @@ export default {
       }
     },
     setTemplate(val, field, title) {
+      console.log(val, field, title)
       this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = val
@@ -489,9 +512,6 @@ export default {
     },
     addProduct() {
       this.addingProduct = !this.addingProduct
-      setTimeout(() => {
-        this.$refs.product ? this.$refs.product.scrollIntoView() : null
-      }, 100)
     },
     resetMeeting() {
       this.clearData()
@@ -929,7 +949,8 @@ export default {
         })
       }
     },
-    async updateMeeting(meetingWorkflow, id, integrationId, pricebookId) {
+    async updateMeeting(resourceType, meetingWorkflow, id, integrationId, pricebookId) {
+      this.resourceType = resourceType
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.dropdownLoading = true
       this.currentVals = []
@@ -946,7 +967,7 @@ export default {
       this.addingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',
+          resourceType: resourceType,
           resourceId: id,
         })
         this.currentVals = res.current_values
@@ -1009,6 +1030,7 @@ export default {
       this.pricebooks = res.results
     },
     async getPricebookEntries(id) {
+      console.log('here')
       try {
         this.loadingProducts = true
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
@@ -1023,38 +1045,38 @@ export default {
         }, 1000)
       }
     },
-    async createFormInstance(id, integrationId, alertInstanceId = null) {
-      this.stageGateField = null
-      this.integrationId = integrationId
-      this.dropdownLoading = true
-      this.editOpModalOpen = true
-      this.currentVals = []
-      this.updatingMeeting = false
-      this.currentOwner = null
-      this.currentAccount = null
-      this.alertInstanceId = alertInstanceId
-      this.oppId = id
+    // async createFormInstance(id, integrationId, alertInstanceId = null) {
+    //   this.stageGateField = null
+    //   this.integrationId = integrationId
+    //   this.dropdownLoading = true
+    //   this.editOpModalOpen = true
+    //   this.currentVals = []
+    //   this.updatingMeeting = false
+    //   this.currentOwner = null
+    //   this.currentAccount = null
+    //   this.alertInstanceId = alertInstanceId
+    //   this.oppId = id
 
-      try {
-        const res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-        this.currentOwner = this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
-        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter(
-              (opp) => opp.id === this.oppId,
-            )[0].account_ref.name)
-          : (this.currentAccount = 'Account')
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.dropdownLoading = false
-      }
-    },
+    //   try {
+    //     const res = await SObjects.api.getCurrentValues({
+    //       resourceType: 'Opportunity',
+    //       resourceId: id,
+    //     })
+    //     this.currentVals = res.current_values
+    //     this.currentOwner = this.allUsers.filter(
+    //       (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+    //     )[0].full_name
+    //     this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
+    //       ? (this.currentAccount = this.allOpps.filter(
+    //           (opp) => opp.id === this.oppId,
+    //         )[0].account_ref.name)
+    //       : (this.currentAccount = 'Account')
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //     this.dropdownLoading = false
+    //   }
+    // },
     async createOppInstance() {
       try {
         const res = await SObjects.api.createFormInstance({
@@ -1067,7 +1089,8 @@ export default {
         console.log(e)
       }
     },
-    setUpdateValues(key, val, multi) {
+    setUpdateValues(key, val, multi = null) {
+      console.log(key, val, multi)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -1166,18 +1189,6 @@ export default {
         this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
       }
 
-      for (let i = 0; i < this.createOppForm.length; i++) {
-        if (
-          this.createOppForm[i].dataType === 'Picklist' ||
-          this.createOppForm[i].dataType === 'MultiPicklist'
-        ) {
-          this.createQueryOpts[this.createOppForm[i].apiName] = this.createOppForm[i].apiName
-        } else if (this.createOppForm[i].dataType === 'Reference') {
-          this.createQueryOpts[this.createOppForm[i].referenceDisplayLabel] =
-            this.createOppForm[i].referenceDisplayLabel
-        }
-      }
-
       for (let i in this.createQueryOpts) {
         this.createQueryOpts[i] = this.listCreatePicklists(i, {
           picklistFor: i,
@@ -1197,11 +1208,12 @@ export default {
         ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
             (field) => field.apiName === 'AccountId',
           )[0].id)
-        : this.createOppForm.filter((field) => field.apiName === 'AccountId').length
-        ? (this.accountSobjectId = this.createOppForm.filter(
-            (field) => field.apiName === 'AccountId',
-          )[0].id)
         : (this.accountSobjectId = null)
+
+      // this.createOppForm.filter((field) => field.apiName === 'AccountId').length
+      // ? (this.accountSobjectId = this.createOppForm.filter(
+      //     (field) => field.apiName === 'AccountId',
+      //   )[0].id)
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
@@ -1243,20 +1255,25 @@ export default {
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
-        this.createOppForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity',
-        )
         let stageGateForms = res.filter(
           (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
         )
         this.createContactForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
         )
+        this.updateContactForm = res.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
+        )[0].fieldsRef
+        this.updateAccountForm = res.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
+        )[0].fieldsRef
+        this.updateLeadForm = res.filter(
+          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Lead',
+        )[0].fieldsRef
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        this.createOppForm = this.createOppForm[0].fieldsRef
         this.createContactForm = this.createContactForm[0].fieldsRef.filter(
           (f) => f.apiName !== 'meeting_type' && f.apiName !== 'meeting_comments',
         )
@@ -1399,9 +1416,10 @@ export default {
     async getObjects() {
       this.loading = true
       try {
-        const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
+        const res = await SObjects.api.getObjectsForWorkflows(this.resourceType)
         this.allOpps = res.results
         this.originalList = res.results
+        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {

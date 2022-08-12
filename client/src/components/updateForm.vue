@@ -1,7 +1,5 @@
 <template>
   <div>
-    <!-- fields = oppFormCopy -->
-
     <Modal dimmed>
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
@@ -138,7 +136,7 @@
             <div v-else-if="field.apiName === 'AccountId'">
               <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
-                v-model="selectedAccount"
+                v-model="accountSelected"
                 :options="allAccounts"
                 @search-change="getAccounts($event)"
                 @select="
@@ -487,7 +485,7 @@
                   @select="getPricebookEntries($event.integration_id)"
                   :options="pricebooks"
                   openDirection="below"
-                  v-model="selectedPriceBook"
+                  v-model="selectedPricebookCopy"
                   style="width: 16.5vw"
                   selectLabel="Enter"
                   label="name"
@@ -636,7 +634,7 @@
         </div>
 
         <div class="flex-end-opp">
-          <div v-if="hasProducts">
+          <div v-if="hasProducts && resource === 'Opportunity'">
             <button
               v-if="!addingProduct"
               @click="addProduct"
@@ -653,9 +651,18 @@
           <div v-else></div>
 
           <div style="display: flex; align-items: center">
-            <button
+            <!-- <button
               @click="
                 updateResource()
+                createProduct()
+              "
+              class="add-button__"
+            >
+              Update
+            </button> -->
+            <button
+              @click="
+                onMakeMeetingUpdate()
                 createProduct()
               "
               class="add-button__"
@@ -681,6 +688,8 @@ export default {
   data() {
     return {
       addingTemplate: false,
+      accountSelected: this.selectedAccount,
+      selectedPricebookCopy: this.selectedPricebook,
     }
   },
   methods: {
@@ -689,6 +698,33 @@ export default {
     },
     addProduct() {
       this.$emit('add-product')
+      setTimeout(() => {
+        this.$refs.product ? this.$refs.product.scrollIntoView() : null
+      }, 100)
+    },
+    setUpdateValues(arg, arg2) {
+      this.$emit('set-update-values', arg, arg2)
+    },
+    setCreateValues(arg, arg2) {
+      this.$emit('set-create-values', arg, arg2)
+    },
+    setUpdateValidationValues(arg, arg2) {
+      this.$emit('set-validation-values', arg, arg2)
+    },
+    setTemplate(arg1, arg2, arg3) {
+      this.$emit('set-template', arg1, arg2, arg3)
+    },
+    updateResource() {
+      this.$emit('update-resource')
+    },
+    onMakeMeetingUpdate() {
+      this.$emit('update-meeting')
+    },
+    createProduct() {
+      this.$emit('create-product')
+    },
+    getPricebookEntries(arg) {
+      this.$emit('get-pricebooks', arg)
     },
   },
   props: {
@@ -716,6 +752,9 @@ export default {
     loadingAccounts: {},
     currentOwner: {},
     addingProduct: {},
+    pricebookId: {},
+    createProductForm: {},
+    loadingProducts: {},
   },
 }
 </script>
@@ -861,6 +900,9 @@ export default {
   font-style: inherit;
   font-size: 13px;
   padding: 12px;
+}
+.divArea:focus {
+  outline: none;
 }
 .note-templates {
   display: flex;
@@ -1048,5 +1090,102 @@ export default {
   font-weight: bold;
   margin-left: 1rem;
   cursor: pointer;
+}
+input {
+  padding: 7px;
+}
+.adding-product {
+  border: 1px solid $dark-green;
+  border-radius: 0.3rem;
+  margin: 0.5rem 0rem;
+  width: 34vw;
+  min-height: 30vh;
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 14px;
+    padding: 0.5rem;
+    color: $white;
+    width: 100%;
+    border-bottom: 1px solid $dark-green;
+    background-color: $dark-green;
+    img {
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
+  }
+  &__body {
+    padding: 0.25rem;
+    font-size: 11px !important;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    overflow: auto;
+    height: 30vh;
+    input {
+      width: 22vw !important;
+      height: 1.5rem !important;
+    }
+    .multiselect {
+      width: 22vw !important;
+      font-weight: 11px !important;
+    }
+    p {
+      margin-left: 0.25rem;
+    }
+    span {
+      color: $coral;
+    }
+  }
+}
+
+.fullInvert {
+  filter: invert(99%);
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 11px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    // border-top: 1px solid #e8e8e8;
+    width: 100%;
+    height: 40px;
+    padding: 4px 0px 6px 0px;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 </style>
