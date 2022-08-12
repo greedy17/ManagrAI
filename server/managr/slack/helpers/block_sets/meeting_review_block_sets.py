@@ -513,7 +513,13 @@ def meeting_review_modal_block_set(context):
         except Exception as e:
             print(e)
     blocks = []
+    action_query = (
+        f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource=Task&field=Type"
+    )
 
+    blocks.append(
+        block_builders.external_select("Note Type", action_query, block_id="managr_task_type")
+    )
     # additional validations
 
     blocks.extend(slack_form.generate_form())
