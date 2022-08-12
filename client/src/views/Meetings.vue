@@ -248,7 +248,7 @@
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 40.25vw;"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -306,7 +306,7 @@
                         v-model="dropdownVal[field.apiName]"
                         openDirection="below"
                         :loading="dropdownLoading"
-                        style="width: 40.25vw;"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
                         track-by="value"
                         label="label"
@@ -316,7 +316,8 @@
                         </template>
                         <template slot="afterList">
                           <p class="multi-slot__more">
-                            Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                            Load more
+                            <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                           </p>
                         </template>
                         <template slot="placeholder">
@@ -373,7 +374,7 @@
                         onfocus="(this.type='date')"
                         onblur="(this.type='text')"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 40.25vw;"
+                        style="width: 40.25vw"
                         v-model="currentVals[field.apiName]"
                         id="user-input"
                         @input="
@@ -387,7 +388,7 @@
                       <input
                         type="datetime-local"
                         id="start"
-                        style="width: 40.25vw;"
+                        style="width: 40.25vw"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -405,7 +406,7 @@
                       <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                       <input
                         id="user-input"
-                        style="width: 40.25vw;"
+                        style="width: 40.25vw"
                         type="number"
                         v-model="currentVals[field.apiName]"
                         :placeholder="currentVals[field.apiName]"
@@ -429,7 +430,7 @@
                           )
                         "
                         openDirection="below"
-                        style="width: 40.25vw;"
+                        style="width: 40.25vw"
                         selectLabel="Enter"
                         track-by="salesforce_account_ref.salesforce_id"
                         label="full_name"
@@ -455,7 +456,7 @@
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 40.25vw;"
+                        style="width: 40.25vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
@@ -522,7 +523,7 @@
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 40.25vw;"
+                style="width: 40.25vw"
                 selectLabel="Enter"
               >
                 <template slot="noResult">
@@ -600,7 +601,7 @@
                     :loading="loadingProducts"
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
-                    style="width: 36vw;"
+                    style="width: 36vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -630,7 +631,7 @@
                   <input
                     id="user-input"
                     type="text"
-                    style="width: 36vw;"
+                    style="width: 36vw"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
@@ -663,7 +664,7 @@
                     type="text"
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
-                    style="width: 36vw;"
+                    style="width: 36vw"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
@@ -676,7 +677,7 @@
                   <input
                     type="datetime-local"
                     id="start"
-                    style="width: 36vw;"
+                    style="width: 36vw"
                     :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -693,7 +694,7 @@
                   <input
                     id="user-input"
                     type="number"
-                    style="width: 36vw;"
+                    style="width: 36vw"
                     :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     :placeholder="currentVals[field.apiName]"
@@ -1679,16 +1680,16 @@ export default {
           ['EQUALS', 'Pricebook2Id', this.savedPricebookEntryId],
         ])
         console.log('double?', res.results, this.productList)
-        const iterable = [...res.results,...this.productList]
+        const iterable = [...res.results, ...this.productList]
         const filtered = []
-        const filteredSet = new Set();
+        const filteredSet = new Set()
         for (let i = 0; i < iterable.length; i++) {
           if (!filteredSet.has(iterable[i].id)) {
             filteredSet.add(iterable[i].id)
             filtered.push(iterable[i])
           }
         }
-        this.productReferenceOpts['PricebookEntryId'] = [...res.results,...this.productList]
+        this.productReferenceOpts['PricebookEntryId'] = [...res.results, ...this.productList]
         if (res.hasNext) {
           this.pricebookPage++
           this.showLoadMore = true
