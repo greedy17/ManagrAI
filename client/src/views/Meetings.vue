@@ -310,6 +310,7 @@
                         selectLabel="Enter"
                         track-by="value"
                         label="label"
+                        :multiple="field.dataType === 'MultiPicklist' ? true : false"
                       >
                         <template slot="noResult">
                           <p class="multi-slot">No results. Try loading more</p>
@@ -1268,7 +1269,7 @@ export default {
             integration_ids: [id],
             form_type: 'CREATE',
             resource_type: 'OpportunityLineItem',
-            stage_name: this.stageGateField ? this.stageGateField : null,
+            // stage_name: this.stageGateField ? this.stageGateField : null,
             resource_id: this.oppId,
             form_data: this.createData,
           })
