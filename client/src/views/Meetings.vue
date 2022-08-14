@@ -564,6 +564,11 @@
                       {{ 'Pricebook' }}
                     </p>
                   </template>
+                  <template slot="afterList">
+                    <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                      Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                    </p>
+                  </template>
                 </Multiselect>
               </div>
               <div v-for="(field, i) in createProductForm" :key="i">
