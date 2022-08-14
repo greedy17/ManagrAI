@@ -310,6 +310,7 @@
                         selectLabel="Enter"
                         track-by="value"
                         label="label"
+                        :multiple="field.dataType === 'MultiPicklist' ? true : false"
                       >
                         <template slot="noResult">
                           <p class="multi-slot">No results. Try loading more</p>
@@ -561,6 +562,11 @@
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
+                    </p>
+                  </template>
+                  <template slot="afterList">
+                    <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                      Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                 </Multiselect>
@@ -1268,7 +1274,7 @@ export default {
             integration_ids: [id],
             form_type: 'CREATE',
             resource_type: 'OpportunityLineItem',
-            stage_name: this.stageGateField ? this.stageGateField : null,
+            // stage_name: this.stageGateField ? this.stageGateField : null,
             resource_id: this.oppId,
             form_data: this.createData,
           })
