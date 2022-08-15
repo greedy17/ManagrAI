@@ -48,7 +48,7 @@
           </div>
         </div>
         <section class="note-section">
-          <p class="note-section__body">No notes for this opportunity</p>
+          <p class="note-section__body">No notes for selected Record</p>
         </section>
       </div>
     </Modal>
@@ -73,7 +73,7 @@
         :allAccounts="allAccounts"
         :selectedAccount="selectedAccount"
         :hasProducts="hasProducts"
-        :allPicklistOptions="allPicklistOptions"
+        :allPicklistOptions="apiPicklistOptions"
         :pricebooks="pricebooks"
         :noteValue="noteValue"
         :noteTemplates="noteTemplates"
@@ -81,7 +81,7 @@
         :stageGateField="stageGateField"
         :stageValidationFields="stageValidationFields"
         :currentAccount="currentAccount"
-        :referenceOpts="referenceOpts"
+        :referenceOpts="currentRefList"
         :loadingAccounts="loadingAccounts"
         :addingProduct="addingProduct"
         :pricebookId="pricebookId"
@@ -349,8 +349,7 @@ export default {
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
-      key: 0,
-      meetingKey: 0,
+      countSets: 0,
       dropdownLoading: false,
       loadingProducts: false,
       pricebooks: null,
@@ -421,6 +420,10 @@ export default {
       createProductForm: null,
       meetings: null,
       referenceOpts: {},
+      accountReferenceOpts: {},
+      contactReferenceOpts: {},
+      leadReferenceOpts: {},
+      currentRefList: null,
       fiveMinuteIntervals: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
       meetingTitle: '',
       description: '',
@@ -433,7 +436,6 @@ export default {
       externalParticipantsSelected: [],
       extraParticipantsSelected: '',
       stageGateId: null,
-      booleans: ['true', 'false'],
       notes: [],
       notesLength: 0,
       addingProduct: false,
@@ -479,7 +481,7 @@ export default {
     accountSobjectId: 'getInitialAccounts',
     updateOppForm: 'setForms',
     stageGateField: 'stageGateInstance',
-    resourceType: ['getObjects', 'selectFormFields'],
+    resourceType: ['selectFormFields'],
   },
   methods: {
     changeResource(i) {
@@ -489,15 +491,19 @@ export default {
       switch (this.resourceType) {
         case 'Opportunity':
           this.resourceFields = this.oppFormCopy
+          this.currentRefList = this.referenceOpts
           break
         case 'Account':
           this.resourceFields = this.updateAccountForm
+          this.currentRefList = this.accountReferenceOpts
           break
         case 'Contact':
           this.resourceFields = this.updateContactForm
+          this.currentRefList = this.contactReferenceOpts
           break
         case 'Lead':
           this.resourceFields = this.updateLeadForm
+          this.currentRefList = this.leadReferenceOpts
           break
         default:
           return
@@ -727,12 +733,23 @@ export default {
         })
       }
     },
-    async getReferenceFieldList(key, val, eventVal) {
+    async getReferenceFieldList(key, val, type, eventVal) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
           value: eventVal ? eventVal : '',
         })
+        if (type === 'update') {
+          this.referenceOpts[key] = res
+        } else if (type === 'createProduct') {
+          this.productReferenceOpts[key] = res
+        } else if (type === 'updateAccount') {
+          this.accountReferenceOpts[key] = res
+        } else if (type === 'updateContact') {
+          this.contactReferenceOpts[key] = res
+        } else if (type === 'updateLead') {
+          this.leadReferenceOpts[key] = res
+        }
         this.referenceOpts[key] = res
       } catch (e) {
         this.$toast('Error gathering reference fields', {
@@ -785,7 +802,7 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
-        console.log(res.results)
+        console.log(res)
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -982,9 +999,11 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
+
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
+
         this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
@@ -1076,7 +1095,6 @@ export default {
       this.pricebooks = res.results
     },
     async getPricebookEntries(id) {
-      console.log('here')
       try {
         this.loadingProducts = true
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
@@ -1100,38 +1118,6 @@ export default {
         }, 1000)
       }
     },
-    // async createFormInstance(id, integrationId, alertInstanceId = null) {
-    //   this.stageGateField = null
-    //   this.integrationId = integrationId
-    //   this.dropdownLoading = true
-    //   this.editOpModalOpen = true
-    //   this.currentVals = []
-    //   this.updatingMeeting = false
-    //   this.currentOwner = null
-    //   this.currentAccount = null
-    //   this.alertInstanceId = alertInstanceId
-    //   this.oppId = id
-
-    //   try {
-    //     const res = await SObjects.api.getCurrentValues({
-    //       resourceType: 'Opportunity',
-    //       resourceId: id,
-    //     })
-    //     this.currentVals = res.current_values
-    //     this.currentOwner = this.allUsers.filter(
-    //       (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-    //     )[0].full_name
-    //     this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-    //       ? (this.currentAccount = this.allOpps.filter(
-    //           (opp) => opp.id === this.oppId,
-    //         )[0].account_ref.name)
-    //       : (this.currentAccount = 'Account')
-    //   } catch (e) {
-    //     console.log(e)
-    //   } finally {
-    //     this.dropdownLoading = false
-    //   }
-    // },
 
     setUpdateValues(key, val, multi = null) {
       console.log(key, val, multi)
@@ -1192,103 +1178,77 @@ export default {
       }
     },
     setForms() {
-      for (let i = 0; i < this.createContactForm.length; i++) {
-        if (
-          this.createContactForm[i].dataType === 'Picklist' ||
-          this.createContactForm[i].dataType === 'MultiPicklist'
-        ) {
-          this.picklistQueryOptsContacts[this.createContactForm[i].apiName] =
-            this.createContactForm[i].apiName
-        } else if (this.createContactForm[i].dataType === 'Reference') {
-          this.picklistQueryOptsContacts[this.createContactForm[i].referenceDisplayLabel] =
-            this.createContactForm[i].referenceDisplayLabel
-        }
-      }
-      for (let i in this.picklistQueryOptsContacts) {
-        this.picklistQueryOptsContacts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
-      for (let i = 0; i < this.oppFormCopy.length; i++) {
-        if (
-          this.oppFormCopy[i].dataType === 'Picklist' ||
-          this.oppFormCopy[i].dataType === 'MultiPicklist'
-        ) {
-          this.picklistQueryOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].apiName
-        } else if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
-        }
-      }
-
-      for (let i in this.picklistQueryOpts) {
-        this.picklistQueryOpts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
-      for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
-      }
-
-      for (let i in this.createQueryOpts) {
-        this.createQueryOpts[i] = this.listCreatePicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
-      this.filterFields = this.updateOppForm[0].fieldsRef.filter(
-        (field) =>
-          field.apiName !== 'meeting_type' &&
-          field.apiName !== 'meeting_comments' &&
-          !field.apiName.includes('__c'),
-      )
-      this.filterFields = [...this.filterFields, this.ladFilter, this.lmdFilter]
-
-      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
-        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
-            (field) => field.apiName === 'AccountId',
-          )[0].id)
-        : (this.accountSobjectId = null)
-
-      // this.createOppForm.filter((field) => field.apiName === 'AccountId').length
-      // ? (this.accountSobjectId = this.createOppForm.filter(
-      //     (field) => field.apiName === 'AccountId',
-      //   )[0].id)
-
-      this.oppFields = this.updateOppForm[0].fieldsRef.filter(
-        (field) =>
-          field.apiName !== 'meeting_type' &&
-          field.apiName !== 'meeting_comments' &&
-          field.apiName !== 'Name' &&
-          field.apiName !== 'AccountId' &&
-          field.apiName !== 'OwnerId',
-      )
-
-      for (let i in this.stagePicklistQueryOpts) {
-        this.stagePicklistQueryOpts[i] = this.listStagePicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
-      }
-
-      if (this.hasProducts) {
-        for (let i = 0; i < this.createProductForm.length; i++) {
-          if (this.createProductForm[i].dataType === 'Reference') {
-            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
-            this.productReferenceOpts[this.createProductForm[i].apiName] =
-              this.createProductForm[i].id
+      this.countSets += 1
+      if (this.countSets < 2) {
+        for (let i = 0; i < this.oppFormCopy.length; i++) {
+          if (this.oppFormCopy[i].dataType === 'Reference') {
+            this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
           }
         }
-        for (let i in this.productReferenceOpts) {
-          this.productReferenceOpts[i] = this.getReferenceFieldList(
+
+        for (let i = 0; i < this.updateContactForm.length; i++) {
+          if (this.updateContactForm[i].dataType === 'Reference') {
+            this.contactReferenceOpts[this.updateContactForm[i].apiName] =
+              this.updateContactForm[i].id
+          }
+        }
+
+        for (let i = 0; i < this.updateAccountForm.length; i++) {
+          if (this.updateAccountForm[i].dataType === 'Reference') {
+            this.accountReferenceOpts[this.updateAccountForm[i].apiName] =
+              this.updateAccountForm[i].id
+          }
+        }
+
+        for (let i = 0; i < this.updateLeadForm.length; i++) {
+          if (this.updateLeadForm[i].dataType === 'Reference') {
+            this.LeadReferenceOpts[this.updateLeadForm[i].apiName] = this.updateLeadForm[i].id
+          }
+        }
+
+        if (this.hasProducts) {
+          for (let i = 0; i < this.createProductForm.length; i++) {
+            if (this.createProductForm[i].dataType === 'Reference') {
+              this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
+              this.productReferenceOpts[this.createProductForm[i].apiName] =
+                this.createProductForm[i].id
+            }
+          }
+        }
+
+        for (let i in this.referenceOpts) {
+          this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+        for (let i in this.accountReferenceOpts) {
+          this.accountReferenceOpts[i] = this.getReferenceFieldList(
             i,
-            this.productReferenceOpts[i],
-            'createProduct',
+            this.accountReferenceOpts[i],
+            'updateAccount',
           )
+        }
+        for (let i in this.contactReferenceOpts) {
+          this.contactReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.contactReferenceOpts[i],
+            'updateContact',
+          )
+        }
+        for (let i in this.leadReferenceOpts) {
+          this.leadReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.leadReferenceOpts[i],
+            'updateLead',
+          )
+        }
+
+        if (this.hasProducts) {
+          for (let i in this.productReferenceOpts) {
+            this.productReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.productReferenceOpts[i],
+              'createProduct',
+            )
+          }
         }
       }
     },
@@ -1314,38 +1274,35 @@ export default {
         this.updateLeadForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Lead',
         )[0].fieldsRef
+        this.createProductForm = res.filter(
+          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+        )[0].fieldsRef
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        this.createContactForm = this.createContactForm[0].fieldsRef.filter(
-          (f) => f.apiName !== 'meeting_type' && f.apiName !== 'meeting_comments',
-        )
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
         }
-        let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
-        let allStageFields = [].concat.apply([], stageArrayOfArrays)
-        let dupeStagesRemoved = [
-          ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
-        ]
 
-        for (let i = 0; i < dupeStagesRemoved.length; i++) {
-          if (
-            dupeStagesRemoved[i].dataType === 'Picklist' ||
-            dupeStagesRemoved[i].dataType === 'MultiPicklist'
-          ) {
-            this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
-          } else if (dupeStagesRemoved[i].dataType === 'Reference') {
-            this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
-              dupeStagesRemoved[i].referenceDisplayLabel
-          }
-        }
+        // let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
+        // let allStageFields = [].concat.apply([], stageArrayOfArrays)
+        // let dupeStagesRemoved = [
+        //   ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
+        // ]
 
-        this.createProductForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )[0].fieldsRef
+        // for (let i = 0; i < dupeStagesRemoved.length; i++) {
+        //   if (
+        //     dupeStagesRemoved[i].dataType === 'Picklist' ||
+        //     dupeStagesRemoved[i].dataType === 'MultiPicklist'
+        //   ) {
+        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
+        //   } else if (dupeStagesRemoved[i].dataType === 'Reference') {
+        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
+        //       dupeStagesRemoved[i].referenceDisplayLabel
+        //   }
+        // }
       } catch (error) {
         // this.$toast('Error setting forms', {
         //   timeout: 2000,
@@ -1355,30 +1312,6 @@ export default {
         //   bodyClassName: ['custom'],
         // })
         console.log(error)
-      }
-    },
-    async getReferenceFieldList(key, val, type, eventVal, filter) {
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: val,
-          value: eventVal ? eventVal : '',
-          for_filter: filter ? [filter] : null,
-        })
-        if (type === 'update') {
-          this.referenceOpts[key] = res
-        } else if (type === 'createProduct') {
-          this.productReferenceOpts[key] = res
-        } else {
-          this.createReferenceOpts[key] = res
-        }
-      } catch (e) {
-        this.$toast('Error gathering reference fields', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
       }
     },
 
@@ -1463,7 +1396,6 @@ export default {
         const res = await SObjects.api.getObjectsForWorkflows(this.resourceType)
         this.allOpps = res.results
         this.originalList = res.results
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {

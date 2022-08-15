@@ -306,10 +306,10 @@
 
     <div class="table-cell">
       <div class="roww" v-if="resourceId && !meetingUpdated">
-        <p>{{ allOpps.filter((opp) => opp.id === resourceId)[0].secondary_data.Name }}</p>
+        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
 
         <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
+          <button class="name-cell-edit-note-button-1" @click="switchResource">
             <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
           </button>
           <span class="tooltiptext">Change {{ resourceType }}</span>
@@ -328,26 +328,20 @@
       >
         Record Type: {{ resourceType }}
       </p>
-      <!-- <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
-        <button @click="addingOpp = !addingOpp" class="add-button">Map to Record</button>
-        <small>currently mapped to {{ resourceType }}</small>
-      </div> -->
       <div v-else-if="meetingUpdated">
-        <p>
-          {{ allOpps.filter((opp) => opp.id === resourceId)[0].secondary_data.Name }}
-        </p>
+        <p>{{ resourceRef ? resourceRef.name : 'Undefined' }}</p>
         <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
           Record Type: {{ resourceType }}
         </p>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Record</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to Record</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
           <p v-if="!resourceType">Select Record</p>
           <!-- <p v-else-if="resourceType && resourceId">Select {{ resourceType }}</p> -->
-          <p style="cursor: pointer" @click="removeResource" v-else>
+          <p v-else style="cursor: pointer" @click="removeResource" v-else>
             Select {{ resourceType }} <img src="@/assets/images/swap.svg" height="14px" alt="" />
           </p>
 
@@ -380,7 +374,7 @@
           <Multiselect
             v-else
             style="width: 20vw"
-            v-model="resourceType"
+            v-model="selectedResourceType"
             @select="changeResource($event)"
             placeholder="Select Record Type"
             selectLabel="Enter"
@@ -394,16 +388,16 @@
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Add</p>
+          <p @click="mapOpp">Link</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Add</p>
+          <p style="color: gray; cursor: text">Link</p>
         </div>
       </div>
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
-      <p v-if="!resourceId && !meetingLoading" class="red-text">Map meeting to take action.</p>
+      <p v-if="!resourceId && !meetingLoading" class="red-text">Link meeting to take action.</p>
       <div>
         <div class="column" v-if="resourceId && !meetingLoading">
           <button
@@ -461,6 +455,7 @@ export default {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      selectedResourceType: null,
       addingOpp: false,
       noUpdate: false,
       mappedOpp: null,
@@ -473,7 +468,6 @@ export default {
       selectedOwner: null,
       formData: {},
       currentVals: [],
-      allOpps: null,
     }
   },
   components: {
@@ -496,6 +490,7 @@ export default {
     owners: {},
     index: {},
     participants: {},
+    allOpps: {},
   },
   computed: {
     hasLastName() {
@@ -508,15 +503,16 @@ export default {
   watch: {
     resourceType: 'getObjects',
   },
-  created() {
-    this.getObjects()
-  },
   mounted() {
     if (this.resourceId) {
       this.getCurrentVals()
     }
   },
   methods: {
+    switchResource() {
+      this.getObjects()
+      this.addingOpp = !this.addingOpp
+    },
     removeResource() {
       this.resourceType = null
     },
@@ -526,7 +522,6 @@ export default {
         const res = await SObjects.api.getObjectsForWorkflows(this.resourceType)
         this.allOpps = res.results
         this.originalList = res.results
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -534,7 +529,10 @@ export default {
       }
     },
     changeResource(i) {
+      this.$emit('change-resource', i)
       this.resourceType = i
+      this.mappedOpp = null
+      this.selectedResourceType = null
     },
     emitGetNotes(id) {
       this.$emit('get-notes', id)
@@ -569,6 +567,9 @@ export default {
     },
     selectOpp(val) {
       this.resource = val.id
+      this.$emit('change-resource', resourceType)
+      this.mappedOpp = null
+      this.selectedResourceType = null
     },
     mapOpp() {
       this.$emit('map-opp', this.workflowId, this.resource, this.resourceType)
