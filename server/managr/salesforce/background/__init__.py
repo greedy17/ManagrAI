@@ -666,7 +666,7 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    task_type = args[0][0]
+    task_type = args[0][0] if len(args[0]) else "None"
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
