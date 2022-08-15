@@ -832,12 +832,12 @@ export default {
 .modal-container-notes {
   background-color: $white;
   overflow: auto;
-  min-width: 32vw;
-  max-width: 34vw;
+  min-width: 36vw;
+  max-width: 36vw;
   min-height: 44vh;
   max-height: 80vh;
   align-items: center;
-  border-radius: 0.3rem;
+  border-radius: 0.5rem;
   border: 1px solid #e8e8e8;
 }
 .flex-row {
