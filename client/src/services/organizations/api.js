@@ -1,6 +1,7 @@
 import { apiClient, apiErrorHandler, ApiFilter, ModelAPI } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
+const TEAM_ENDPOINT = '/organizations/teams/'//modify-membership/ // <-- This is for adding members to different teams (and deleting, kind of)
 const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
 
 export default class OrganizationAPI {

@@ -3658,6 +3658,7 @@ export default {
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
+        console.log('this.updateOppForm', this.updateOppForm)
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
 
         for (const field of stageGateForms) {

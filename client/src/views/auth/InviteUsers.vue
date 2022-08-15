@@ -334,6 +334,8 @@ export default {
       noteSubject: null,
       noteBody: null,
       inviteOpen: false,
+      editTeam: false,
+      newTeam: false,
       selectedTimezone: null,
       user: this.getUser,
       timezones: moment.tz.names(),
@@ -451,8 +453,16 @@ export default {
     handleInvite() {
       this.inviteOpen = !this.inviteOpen
     },
+    handleEdit() {
+      this.editTeam = !this.editTeam
+    },
+    handleNewTeam() {
+      this.newTeam = !this.newTeam
+    },
     handleCancel() {
       this.inviteOpen = false
+      this.editTeam = false
+      this.newTeam = false
     },
     handleUpdate() {
       this.loading = true

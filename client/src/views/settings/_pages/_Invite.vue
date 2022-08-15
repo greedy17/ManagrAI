@@ -281,7 +281,7 @@
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item"
           >
-            {{ member.isActive ? 'Registered' : 'Pending..' }}
+            {{ member.isActive ? 'Registered' : 'Pending...' }}
           </div>
           <div
             style="display: flex; align-items: flex-start"
