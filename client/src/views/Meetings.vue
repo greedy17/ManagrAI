@@ -65,6 +65,7 @@
         @set-validation-values="setUpdateValidationValues"
         @get-pricebooks="getPricebookEntries"
         @get-accounts="getAccounts"
+        @load-more="loadMore"
         :resource="resourceType"
         :productReferenceOpts="productReferenceOpts"
         :fields="resourceFields"
@@ -89,6 +90,8 @@
         :selectedPricebook="selectedPricebook"
         :createProductForm="createProductForm"
         :loadingProducts="loadingProducts"
+        :savingCreateForm="savingCreateForm"
+        :showLoadMore="showLoadMore"
       />
     </div>
 
@@ -327,7 +330,7 @@ export default {
   data() {
     return {
       resourceType: 'Opportunity',
-      resourceFields: this.oppFormCopy,
+      resourceFields: null,
       selectedPricebook: null,
       pricebookId: null,
       createData: {},
@@ -672,6 +675,7 @@ export default {
       this.notes = []
     },
     async getNotes(id) {
+      console.log(id)
       try {
         const res = await SObjects.api.getNotes({
           resourceId: id,
@@ -1000,6 +1004,7 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
+        console.log(res)
 
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -1184,6 +1189,7 @@ export default {
         for (let i = 0; i < this.oppFormCopy.length; i++) {
           if (this.oppFormCopy[i].dataType === 'Reference') {
             this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+            this.currentRefList = this.referenceOpts
           }
         }
 
@@ -1289,6 +1295,7 @@ export default {
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
+        this.resourceFields = this.updateOppForm[0].fieldsRef
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef

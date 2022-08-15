@@ -104,6 +104,7 @@
             </div>
             <div
               v-else-if="
+                field.dataType === 'Email' ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 (field.dataType === 'String' && field.apiName !== 'NextStep')
@@ -157,7 +158,8 @@
               v-else-if="
                 field.dataType === 'Picklist' ||
                 field.dataType === 'MultiPicklist' ||
-                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                (field.dataType === 'Reference' && field.apiName !== 'AccountId') ||
+                (field.dataType === 'Reference' && field.apiName !== 'OwnerId')
               "
             >
               <label class="label">{{ field.referenceDisplayLabel }}:</label>
@@ -205,11 +207,7 @@
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
-                      field.apiName === 'AccountId'
-                        ? currentAccount
-                        : field.apiName === 'OwnerId'
-                        ? currentOwner
-                        : `${currentVals[field.apiName]}` !== 'null'
+                      `${currentVals[field.apiName]}` !== 'null'
                         ? `${currentVals[field.apiName]}`
                         : `${field.referenceDisplayLabel}`
                     }}
@@ -355,7 +353,7 @@
                       />
                     </div>
 
-                    <!-- <div v-else-if="field.apiName === 'OwnerId'">
+                    <div v-else-if="field.apiName === 'OwnerId'">
                       <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
 
                       <Multiselect
@@ -384,7 +382,7 @@
                           </p>
                         </template>
                       </Multiselect>
-                    </div> -->
+                    </div>
 
                     <div v-else-if="field.apiName === 'AccountId'">
                       <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
@@ -699,12 +697,10 @@ export default {
       booleans: ['true', 'false'],
     }
   },
-  mounted() {
-    setTimeout(() => {
-      console.log(this.fields)
-    }, 2000)
-  },
   methods: {
+    loadMore() {
+      this.$emit('load-more')
+    },
     getAccounts(i) {
       this.$emit('get-accounts', i)
     },
@@ -770,6 +766,8 @@ export default {
     pricebookId: {},
     createProductForm: {},
     loadingProducts: {},
+    savingCreateForm: {},
+    showLoadMore: {},
   },
 }
 </script>

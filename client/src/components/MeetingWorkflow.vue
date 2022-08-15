@@ -341,7 +341,7 @@
         <div class="add-field-section__title">
           <p v-if="!resourceType">Select Record</p>
           <!-- <p v-else-if="resourceType && resourceId">Select {{ resourceType }}</p> -->
-          <p v-else style="cursor: pointer" @click="removeResource" v-else>
+          <p v-else style="cursor: pointer" @click="removeResource">
             Select {{ resourceType }} <img src="@/assets/images/swap.svg" height="14px" alt="" />
           </p>
 
