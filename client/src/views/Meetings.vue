@@ -64,6 +64,7 @@
         @set-create-values="setCreateValues"
         @set-validation-values="setUpdateValidationValues"
         @get-pricebooks="getPricebookEntries"
+        @get-accounts="getAccounts"
         :resource="resourceType"
         :productReferenceOpts="productReferenceOpts"
         :fields="resourceFields"
@@ -479,7 +480,7 @@ export default {
   },
   watch: {
     accountSobjectId: 'getInitialAccounts',
-    updateOppForm: 'setForms',
+    updateOppForm: ['setForms', 'filtersAndOppFields'],
     stageGateField: 'stageGateInstance',
     resourceType: ['selectFormFields'],
   },
@@ -1251,6 +1252,13 @@ export default {
           }
         }
       }
+    },
+    filtersAndOppFields() {
+      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
+        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+            (field) => field.apiName === 'AccountId',
+          )[0].id)
+        : (this.accountSobjectId = null)
     },
     async getAllForms() {
       try {

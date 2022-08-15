@@ -13,7 +13,7 @@
         </span>
       </div>
     </div>
-    <div class="table-cell">
+    <div class="table-cell-small">
       {{ meeting.participants.length }}
     </div>
 
@@ -692,6 +692,7 @@ a {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  font-size: 12px;
 }
 .no-update {
   background-color: $base-gray;
@@ -702,6 +703,7 @@ a {
   min-height: 2rem;
   padding: 0.5rem 1.25rem;
   cursor: pointer;
+  font-size: 12px;
 }
 .roww {
   display: flex;
@@ -1004,12 +1006,22 @@ a {
   display: table-row;
   left: 0;
 }
+.table-cell-small {
+  display: table-cell;
+  position: relative;
+  min-width: 3vw;
+  background-color: $off-white;
+  padding: 2vh;
+  border: none;
+  border-bottom: 3px solid $soft-gray;
+  font-size: 13px;
+}
 .table-cell {
   display: table-cell;
   position: relative;
   min-width: 12vw;
   background-color: $off-white;
-  padding: 2vh 3vh;
+  padding: 2vh;
   border: none;
   border-bottom: 3px solid $soft-gray;
   font-size: 13px;
@@ -1024,7 +1036,8 @@ a {
   background-color: white;
 }
 
-.table-cell:hover {
+.table-cell:hover,
+.table-cell-small:hover {
   cursor: text;
   background-color: white;
 }

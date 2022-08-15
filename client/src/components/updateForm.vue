@@ -705,6 +705,9 @@ export default {
     }, 2000)
   },
   methods: {
+    getAccounts(i) {
+      this.$emit('get-accounts', i)
+    },
     resetEdit() {
       this.$emit('reset-edit')
     },
