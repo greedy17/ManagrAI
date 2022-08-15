@@ -1,5 +1,103 @@
 <template>
   <div class="invite-users">
+    <!-- Edit Team -->
+    <Modal
+      v-if="editTeam"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), resetData()
+        }
+      "
+    >
+      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
+        <div class="header">
+          <h3 class="invite-form__title">Edit Your Team</h3>
+          <h4 class="invite-form__subtitle">
+            {{ $store.state.user.organizationRef.name }}
+          </h4>
+        </div>
+
+        <div
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+        >
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <!-- Make this one Team -->
+                <Multiselect
+                  placeholder="Select Slack User"
+                  @input="mapMember"
+                  v-model="selectedMember"
+                  :options="slackMembers.members"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="realName"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
+                      Load More
+                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Team
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <!-- Make this users to add to team -->
+                <Multiselect
+                  placeholder="Select User Level"
+                  @input="mapUserLevel"
+                  v-model="selectedLevel"
+                  :options="userTypes"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  label="key"
+                  :multiple="true"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Users
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <template>
+            <PulseLoadingSpinnerButton
+              @click="handleInvite"
+              class="invite-button"
+              text="Invite"
+              :loading="loading"
+              >Save</PulseLoadingSpinnerButton
+            >
+            <div class="cancel-button" @click="handleCancel">Cancel</div>
+          </template>
+        </div>
+      </form>
+    </Modal>
     <div v-if="noSelection">
       <figure
         @click="
