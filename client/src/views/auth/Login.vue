@@ -232,7 +232,7 @@ input:focus {
 button {
   @include primary-button();
   margin-bottom: 6px;
-  width: 22vw;
+  width: 256px;
   height: 6vh;
   background-color: #41b883 !important;
   color: white !important;
