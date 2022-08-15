@@ -4573,7 +4573,7 @@ h3 {
 .modal-container {
   background-color: $white;
   overflow: auto;
-  min-width: 32vw;
+  min-width: 36vw;
   max-width: 36vw;
   min-height: 44vh;
   max-height: 80vh;
