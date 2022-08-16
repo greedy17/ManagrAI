@@ -1,5 +1,84 @@
 <template>
   <div class="invite-users">
+    <!-- Create Team -->
+    <Modal
+      v-if="newTeam"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleCancel()
+        }
+      "
+    >
+      <form v-if="true/*hasSlack*/" class="invite-form">
+        <div class="header">
+          <h3 class="invite-form__title">Create a Team</h3>
+          <h4 class="invite-form__subtitle">
+            {{ $store.state.user.organizationRef.name }}
+          </h4>
+        </div>
+
+        <div
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+        >
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <label>Team Name:</label>
+                <input
+                  placeholder="Team Name"
+                  v-model="teamName"
+                  style="min-width: 15vw"
+                  class="template-input"
+                  type="text"
+                  name=""
+                  id=""
+                  :disabled="false/*savingTemplate*/"
+                />
+              </template>
+            </FormField>
+          </div>
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <label @click="test(team)">Team Lead</label>
+                <Multiselect
+                  placeholder="Team Lead"
+                  v-model="teamLead/*might need @ input here (no space)*/"
+                  :options="team.list"
+                  openDirection="below"
+                  style="min-width: 15vw"
+                  selectLabel="Enter"
+                  label="email"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Users
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <template>
+            <PulseLoadingSpinnerButton
+              @click="createSubmit"
+              class="invite-button"
+              text="Save"
+              :loading="loading"
+              >Save</PulseLoadingSpinnerButton
+            >
+            <div class="cancel-button" @click="handleCancel">Cancel</div>
+          </template>
+        </div>
+      </form>
+    </Modal>
     <!-- Edit Team -->
     <Modal
       v-if="editTeam"
@@ -10,7 +89,7 @@
         }
       "
     >
-      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="true/*hasSlack*/" class="invite-form">
         <div class="header">
           <h3 class="invite-form__title">Edit Your Team</h3>
           <h4 class="invite-form__subtitle">
@@ -26,10 +105,9 @@
               <template v-slot:input>
                 <!-- Make this one Team -->
                 <Multiselect
-                  placeholder="Select Slack User"
-                  @input="mapMember"
-                  v-model="selectedMember"
-                  :options="slackMembers.members"
+                  placeholder="Select Team"
+                  v-model="selectedTeam"
+                  :options="null/*slackMembers.members*/"
                   openDirection="below"
                   style="min-width: 15vw"
                   selectLabel="Enter"
@@ -62,8 +140,8 @@
                 <Multiselect
                   placeholder="Select User Level"
                   @input="mapUserLevel"
-                  v-model="selectedLevel"
-                  :options="userTypes"
+                  v-model="selectedUsers"
+                  :options="null/*userTypes*/"
                   openDirection="below"
                   style="min-width: 15vw"
                   selectLabel="Enter"
@@ -87,9 +165,9 @@
         <div class="invite-form__actions">
           <template>
             <PulseLoadingSpinnerButton
-              @click="handleInvite"
+              @click="null/*handleInvite*/"
               class="invite-button"
-              text="Invite"
+              text="Save"
               :loading="loading"
               >Save</PulseLoadingSpinnerButton
             >
@@ -171,7 +249,21 @@
     <section v-if="manageTeamSelected">
       <div class="invite-users__header">
         <h3 style="color: #4d4e4c">Manage Your Team</h3>
-
+        <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
+          Create New Team
+          <!-- <img
+            v-if="hasSlack"
+            style="height: 0.8rem; margin-left: 0.25rem"
+            src="@/assets/images/slackLogo.png"
+            alt=""
+          />
+          <img
+            v-else
+            style="height: 0.8rem; margin-left: 0.25rem"
+            src="@/assets/images/logo.png"
+            alt=""
+          /> -->
+        </button>
         <button class="invite_button" type="submit" @click="handleInvite">
           Invite Member
           <img
@@ -403,6 +495,10 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import CollectionManager from '@/services/collectionManager'
+import Modal from '@/components/InviteModal'
+import FormField from '@/components/forms/FormField'
 import PipelineLoader from '@/components/PipelineLoader'
 import Invite from '../settings/_pages/_Invite'
 import User from '@/services/users'
@@ -414,7 +510,10 @@ export default {
   name: 'InviteUsers',
   components: {
     Invite,
+    Modal,
+    FormField,
     quillEditor,
+    PulseLoadingSpinnerButton,
     PipelineLoader,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -434,6 +533,11 @@ export default {
       inviteOpen: false,
       editTeam: false,
       newTeam: false,
+      teamName: '',
+      teamLead: '',
+      team: CollectionManager.create({ ModelClass: User }),
+      selectedTeam: null,
+      selectedUsers: [],
       selectedTimezone: null,
       user: this.getUser,
       timezones: moment.tz.names(),
@@ -442,6 +546,9 @@ export default {
     }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     homeView() {
       this.noSelection = true
       this.manageTeamSelected = false
@@ -545,6 +652,12 @@ export default {
         this.homeView()
       }
     },
+    createSubmit() {
+      console.log('Submit')
+    },
+    async refresh() {
+      this.team.refresh()
+    },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
     },
@@ -600,6 +713,7 @@ export default {
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
+    this.refresh()
   },
   computed: {
     getUser() {
@@ -1006,5 +1120,114 @@ input[type='checkbox'] + label::before {
   align-items: center;
   justify-content: flex-start;
   margin-top: 3rem;
+}
+.multi-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem 0rem;
+  margin: 0;
+  cursor: text;
+  &__more {
+    background-color: white;
+    color: $dark-green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #e8e8e8;
+    width: 100%;
+    padding: 0.75rem 0rem;
+    margin: 0;
+    cursor: pointer;
+
+    img {
+      height: 0.8rem;
+      margin-left: 0.25rem;
+      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+        brightness(93%) contrast(89%);
+    }
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
+.invert {
+  filter: invert(80%);
+}
+.header {
+  margin-top: -1rem;
+}
+// form {
+//   width: 100%;
+//   background-color: $white;
+//   height: 50vh;
+//   justify-content: space-evenly;
+// }
+.invite-button {
+  background-color: $dark-green;
+  color: white;
+  margin-top: 2.5rem;
+  width: 15vw;
+  font-size: 16px;
+  box-shadow: none;
+}
+// button {
+//   @include primary-button();
+//   margin-top: 1.25rem;
+//   height: 2.5rem;
+//   width: 19rem;
+//   font-size: 14px;
+// }
+.invite-form {
+  border: none;
+  border-radius: 0.75rem;
+  min-width: 27vw;
+  min-height: 64vh;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  background-color: white;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+  }
+  &__subtitle {
+    color: $dark-green;
+  }
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: -4rem;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.cancel-button {
+  margin-top: 1rem;
+  position: relative;
+  right: 1px;
+  color: $gray;
+  &:hover {
+    cursor: pointer;
+  }
 }
 </style>
