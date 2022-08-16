@@ -567,7 +567,6 @@ class SalesforceSObjectViewSet(
 
             forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
             main_form = forms.filter(template__form_type="UPDATE").first()
-            print(main_form)
             stage_form_data_collector = {}
             for form in forms:
                 form.save_form(form_data, False)
@@ -580,7 +579,12 @@ class SalesforceSObjectViewSet(
             while True:
                 sf = user.salesforce_account
                 try:
-                    resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                    if resource_type == "OpportunityLineItem":
+                        resource = main_form.resource_object.update_in_salesforce(
+                            str(user.id), all_form_data
+                        )
+                    else:
+                        resource = main_form.resource_object.update_in_salesforce(all_form_data)
                     data = {
                         "success": True,
                     }
@@ -631,7 +635,7 @@ class SalesforceSObjectViewSet(
                     data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
             if data["success"]:
-                if all_form_data.get("meeting_comments") is not None:
+                if all_form_data.get("meeting_comments", None) is not None:
                     emit_add_update_to_sf(str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
@@ -902,8 +906,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

@@ -1667,7 +1667,8 @@ class OpportunityLineItemAdapter:
 
     @staticmethod
     def update_opportunitylineitem(data, access_token, custom_base, salesforce_id, object_fields):
-        data.pop("PricebookEntryId")
+        if "PricebookEntryId" in data.keys():
+            data.pop("PricebookEntryId")
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields
