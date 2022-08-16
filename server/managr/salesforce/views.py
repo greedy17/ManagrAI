@@ -524,8 +524,12 @@ class SalesforceSObjectViewSet(
                     f"AND OpportunityId = '{model_object.integration_id}'",
                 ],
             )
-            product_values = [product.as_dict for product in current_products]
-            data["current_products"] = product_values
+            product_values = [product.integration_id for product in current_products]
+            internal_products = routes["OpportunityLineItem"]["model"].objects.filter(
+                integration_id__in=product_values
+            )
+            product_as_dict = [item.adapter_class.as_dict for item in internal_products]
+            data["current_products"] = product_as_dict
         return Response(data=data)
 
     @action(

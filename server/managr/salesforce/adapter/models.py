@@ -1561,6 +1561,7 @@ class PricebookEntryAdapter:
 
 class OpportunityLineItemAdapter:
     def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
         self.name = kwargs.get("name", None)
         self.description = kwargs.get("description", None)
         self.unit_price = kwargs.get("unit_price", None)
