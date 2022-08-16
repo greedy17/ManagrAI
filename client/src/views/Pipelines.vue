@@ -1305,7 +1305,9 @@
             </section>
 
             <div class="current-products" v-if="editingProduct">
-              <p>Edit {{ productName }}</p>
+              <p style="color: #41b883; font-size: 14px; margin-bottom: 24px">
+                Edit {{ productName }}
+              </p>
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -1319,7 +1321,7 @@
                       field.referenceDisplayLabel === 'PricebookEntry'
                         ? 'Products'
                         : field.referenceDisplayLabel
-                    }}:
+                    }}
                   </p>
                   <Multiselect
                     :options="
@@ -1373,7 +1375,7 @@
                 </div>
 
                 <div v-else-if="field.dataType === 'String'">
-                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
                     type="text"
@@ -1390,7 +1392,7 @@
                     (field.length > 250 && field.dataType === 'String')
                   "
                 >
-                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <p>{{ field.referenceDisplayLabel }}</p>
                   <textarea
                     id="user-input"
                     ccols="30"
@@ -1403,7 +1405,7 @@
                   </textarea>
                 </div>
                 <div v-else-if="field.dataType === 'Date'">
-                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     type="text"
                     onfocus="(this.type='date')"
@@ -1416,7 +1418,7 @@
                   />
                 </div>
                 <div v-else-if="field.dataType === 'DateTime'">
-                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     type="datetime-local"
                     id="start"
@@ -1432,7 +1434,7 @@
                     field.dataType === 'Currency'
                   "
                 >
-                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
                     style="width: 35vw"
@@ -1443,13 +1445,11 @@
                   />
                 </div>
               </div>
-              <span>
-                <i></i>
-                <div>
-                  <button @click="editingProduct = !editingProduct">Cancel</button
-                  ><button @click="updateProduct">Save</button>
-                </div>
-              </span>
+
+              <div class="current-products__footer">
+                <p @click="editingProduct = !editingProduct">Cancel</p>
+                <button class="add-button__" @click="updateProduct">Save</button>
+              </div>
             </div>
           </div>
         </div>
@@ -4140,9 +4140,12 @@ export default {
 .current-products {
   font-size: 12px;
   padding-left: 4px;
-  width: 39vw;
-  border-bottom: 2px solid $soft-gray;
-  padding-bottom: 8px;
+  width: 40.25vw;
+  // border: 1px solid $soft-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 16px;
 
   h4 {
     font-weight: bold;
@@ -4159,17 +4162,35 @@ export default {
       padding: 4px;
       border-radius: 4px;
     }
+
+    button {
+      border: 1px solid $dark-green;
+      color: $dark-green;
+      background-color: white;
+      border-radius: 4px;
+      padding: 5px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 4px;
+      margin-right: 4px;
+    }
   }
 
-  button {
-    border: 1px solid $dark-green;
-    color: $dark-green;
-    background-color: white;
-    border-radius: 4px;
-    padding: 5px 6px;
-    font-size: 11px;
-    cursor: pointer;
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 39vw;
+    padding: 8px;
+    margin-top: 1rem;
+    position: sticky;
+
+    p {
+      margin-right: 16px;
+      cursor: pointer;
+    }
   }
+
   // button:hover {
   //   background-color: $base-gray;
   //   opacity: 0.8;
@@ -4277,15 +4298,9 @@ export default {
 }
 
 // .form-label {
-//   background-color: $white-green;
 //   width: fit-content;
-//   color: $dark-green;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-//   padding: 6px 12px;
-//   margin-bottom: -1px;
-//   font-size: 16px;
 // }
+
 .col {
   display: flex;
   flex-direction: column;
