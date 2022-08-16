@@ -557,7 +557,6 @@ class SalesforceSObjectViewSet(
             "resource_id": resource_id,
             "stage_name": stage_name,
         }
-        print(instance_data)
         # update_name = f"resource_update_{user.email}_{str(uuid.uuid4())}"
         # emit_process_update_resources_in_salesforce(
         #     form_data, user, instance_data, integration_ids, update_name
@@ -568,6 +567,7 @@ class SalesforceSObjectViewSet(
 
             forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
             main_form = forms.filter(template__form_type="UPDATE").first()
+            print(main_form)
             stage_form_data_collector = {}
             for form in forms:
                 form.save_form(form_data, False)
@@ -902,7 +902,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

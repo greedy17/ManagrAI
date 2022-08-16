@@ -1297,15 +1297,7 @@
                 <p>Quantity: {{ product.quantity }}</p>
                 <span
                   ><p>Total Price: ${{ product.total_price }}</p>
-                  <button
-                    @click="
-                      editProduct(
-                        product.secondary_data.Id,
-                        product.secondary_data.PricebookEntryId,
-                        product.name,
-                      )
-                    "
-                  >
+                  <button @click="editProduct(product.secondary_data.Id, product.id, product.name)">
                     Edit Product
                   </button></span
                 >
@@ -4148,8 +4140,8 @@ export default {
 .current-products {
   font-size: 12px;
   padding-left: 4px;
-  width: 38vw;
-  border-bottom: 1px solid $soft-gray;
+  width: 39vw;
+  border-bottom: 2px solid $soft-gray;
   padding-bottom: 8px;
 
   h4 {
