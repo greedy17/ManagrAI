@@ -81,13 +81,13 @@
         :noteTemplates="noteTemplates"
         :dropdownLoading="dropdownLoading"
         :stageGateField="stageGateField"
+        :stagePicklistQueryOpts="stagePicklistQueryOpts"
         :stageValidationFields="stageValidationFields"
         :currentAccount="currentAccount"
         :referenceOpts="currentRefList"
         :loadingAccounts="loadingAccounts"
         :addingProduct="addingProduct"
         :pricebookId="pricebookId"
-        :selectedPricebook="selectedPricebook"
         :createProductForm="createProductForm"
         :loadingProducts="loadingProducts"
         :savingCreateForm="savingCreateForm"
@@ -279,7 +279,6 @@
             @add-participant="addParticipant"
             @get-notes="getNotes"
             @filter-accounts="getAccounts"
-            @get-pricebooks="getPricebookEntries"
             @change-resource="changeResource"
             :dropdowns="picklistQueryOptsContacts"
             :contactFields="createContactForm"
@@ -522,7 +521,6 @@ export default {
       }
     },
     setTemplate(val, field, title) {
-      console.log(val, field, title)
       this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = val
@@ -675,12 +673,10 @@ export default {
       this.notes = []
     },
     async getNotes(id) {
-      console.log(id)
       try {
         const res = await SObjects.api.getNotes({
           resourceId: id,
         })
-        console.log('thisone', res)
         this.modalOpen = true
         if (res.length) {
           for (let i = 0; i < res.length; i++) {
@@ -808,7 +804,6 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetings = res.results
-        console.log(res)
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -1005,7 +1000,6 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        console.log(res)
 
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -1067,23 +1061,16 @@ export default {
         return
       }
       try {
-        console.log('this.savedPricebookEntryId', this.savedPricebookEntryId)
         this.loadingProducts = true
+        this.savedProductedReferenceOps = [...this.productReferenceOpts['PricebookEntryId']]
         const res = await SObjects.api.getObjects('PricebookEntry', this.pricebookPage, true, [
           ['EQUALS', 'Pricebook2Id', this.savedPricebookEntryId],
         ])
-        console.log('double?', res.results, this.productList)
-        const iterable = [...res.results, ...this.productList]
-        const filtered = []
-        const filteredSet = new Set()
-        for (let i = 0; i < iterable.length; i++) {
-          if (!filteredSet.has(iterable[i].id)) {
-            filteredSet.add(iterable[i].id)
-            filtered.push(iterable[i])
-          }
-        }
-        this.productReferenceOpts['PricebookEntryId'] = [...res.results, ...this.productList]
-        if (res.hasNext) {
+        this.productReferenceOpts['PricebookEntryId'] = [
+          ...res.results,
+          ...this.savedProductedReferenceOps,
+        ]
+        if (res.next) {
           this.pricebookPage++
           this.showLoadMore = true
         } else {
@@ -1109,7 +1096,7 @@ export default {
         ])
         this.productReferenceOpts['PricebookEntryId'] = res.results
         this.productList = res.results
-        if (res.hasNext) {
+        if (res.next) {
           this.pricebookPage++
           this.showLoadMore = true
         } else {
@@ -1127,7 +1114,6 @@ export default {
     },
 
     setUpdateValues(key, val, multi = null) {
-      console.log(key, val, multi)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val

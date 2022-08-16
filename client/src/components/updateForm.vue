@@ -229,7 +229,7 @@
                     <div v-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
                       <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                       <Multiselect
-                        :options="stagePicklistQueryOpts[field.apiName]"
+                        :options="allPicklistOptions[field.apiName]"
                         @select="
                           setUpdateValidationValues(
                             field.apiName === 'ForecastCategory'
@@ -485,8 +485,9 @@
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
                   :options="pricebooks"
+                  v-model="selectedPriceBook"
                   openDirection="below"
-                  style="width: 16.5vw"
+                  style="width: 36vw"
                   selectLabel="Enter"
                   label="name"
                 >
@@ -497,11 +498,6 @@
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
-                    </p>
-                  </template>
-                  <template slot="afterList">
-                    <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
-                      Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                     </p>
                   </template>
                 </Multiselect>
@@ -555,6 +551,11 @@
                         : 'name'
                     "
                   >
+                    <template slot="afterList">
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
                     </template>
@@ -695,6 +696,7 @@ export default {
       accountSelected: this.selectedAccount,
       selectedPricebookCopy: this.selectedPricebook,
       booleans: ['true', 'false'],
+      selectedPriceBook: null,
     }
   },
   methods: {
@@ -749,7 +751,6 @@ export default {
     noteValue: {},
     allAccounts: {},
     selectedAccount: {},
-    selectedPricebook: {},
     hasProducts: {},
     allPicklistOptions: {},
     productReferenceOpts: {},
@@ -768,6 +769,7 @@ export default {
     loadingProducts: {},
     savingCreateForm: {},
     showLoadMore: {},
+    stagePicklistQueryOpts: {},
   },
 }
 </script>
@@ -790,12 +792,26 @@ export default {
     @content;
   }
 }
+.red-label {
+  background-color: #fa646a;
+  color: white;
+  display: inline-block;
+  padding: 6px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 80px;
+  margin-top: 12px;
+  margin-left: 2px;
+  font-weight: bold;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
 .opp-modal-container {
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background-color: white;
-  width: 38vw;
+  width: 44vw;
   border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid #e8e8e8;
@@ -805,7 +821,7 @@ export default {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 16.5vw;
+  width: 40.25vw;
   font-family: $base-font-family;
 }
 #user-input:focus {
@@ -843,7 +859,7 @@ export default {
   }
 }
 .opp-modal {
-  width: 36vw;
+  width: 42vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -856,7 +872,7 @@ export default {
   font-size: 16px;
   letter-spacing: 0.75px;
   div {
-    margin-right: 0.25rem;
+    margin-right: -1.25rem;
   }
 }
 .col {
@@ -880,7 +896,7 @@ export default {
 .close-template {
   position: absolute;
   bottom: 56px;
-  right: 8px;
+  right: 20px;
   z-index: 3;
   cursor: pointer;
   background-color: black;
@@ -902,7 +918,7 @@ export default {
   -webkit-appearance: textarea;
   resize: both;
   height: 30px;
-  width: 34vw;
+  width: 40.25vw;
   min-height: 20vh;
   margin-bottom: 4px;
   border: 1px solid #e8e8e8;
@@ -923,11 +939,12 @@ export default {
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
+  margin-left: 10px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   cursor: pointer;
-  width: 34vw;
+  width: 40.25vw;
 
   &__content {
     display: flex;
@@ -949,14 +966,15 @@ export default {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 24px;
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
+  margin-left: 10px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  width: 34vw;
+  width: 40.25vw;
   height: 80px;
   overflow: scroll;
 
@@ -973,11 +991,11 @@ export default {
   }
 }
 .adding-stage-gate {
-  border: 1px solid $coral;
+  // border: 1px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 34vw;
-  min-height: 30vh;
+  width: 40.25vw;
+  // min-height: 30vh;
   &__header {
     display: flex;
     flex-direction: row;
@@ -986,8 +1004,8 @@ export default {
     padding: 0.5rem;
     color: $white;
     width: 100%;
-    border-bottom: 1px solid $coral;
-    background-color: $coral;
+    // border-bottom: 1px solid $coral;
+    // background-color: $coral;
     img {
       height: 1rem;
       margin-right: 0.5rem;
@@ -1001,20 +1019,21 @@ export default {
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+    margin-left: -6px;
+    // height: 30vh;
     input {
-      width: 10vw !important;
+      width: 10vw;
       height: 1.5rem !important;
     }
     .multiselect {
-      width: 12vw !important;
+      width: 12vw;
       font-weight: 11px !important;
     }
     p {
       margin-left: 0.25rem;
     }
     span {
-      color: $coral;
+      // color: $coral;
     }
   }
 
@@ -1111,7 +1130,7 @@ input {
   border: 1px solid $dark-green;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 34vw;
+  width: 40.5vw;
   min-height: 30vh;
   &__header {
     display: flex;
@@ -1138,11 +1157,11 @@ input {
     overflow: auto;
     height: 30vh;
     input {
-      width: 22vw !important;
+      width: 10vw;
       height: 1.5rem !important;
     }
     .multiselect {
-      width: 22vw !important;
+      width: 12vw;
       font-weight: 11px !important;
     }
     p {
@@ -1151,6 +1170,23 @@ input {
     span {
       color: $coral;
     }
+  }
+
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-color: $dark-green;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 0.25rem;
   }
 }
 

@@ -553,6 +553,7 @@ class SalesforceSObjectViewSet(
             "resource_id": resource_id,
             "stage_name": stage_name,
         }
+        print(instance_data)
         # update_name = f"resource_update_{user.email}_{str(uuid.uuid4())}"
         # emit_process_update_resources_in_salesforce(
         #     form_data, user, instance_data, integration_ids, update_name

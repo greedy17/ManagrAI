@@ -118,11 +118,11 @@
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Account
@@ -175,18 +175,13 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results ? Try loading more</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ `${field.referenceDisplayLabel}` }}
-                  </p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more">
-                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
                 </template>
               </Multiselect>
@@ -237,10 +232,10 @@
                             : 'name'
                         "
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ field.apiName }}
@@ -262,11 +257,11 @@
                         label="name"
                         :loading="dropdownLoading || loadingAccounts"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
 
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             Accounts
@@ -381,10 +376,10 @@
                         style="width: 35vw"
                         selectLabel="Enter"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
@@ -443,10 +438,10 @@
                 style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -472,7 +467,7 @@
                   selectLabel="Enter"
                   label="name"
                 >
-                  <template slot="placeholder">
+                  <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
@@ -529,15 +524,15 @@
                         : 'name'
                     "
                   >
-                    <template slot="noResult">
+                    <template v-slot:noResult>
                       <p class="multi-slot">No results. Try loading more</p>
                     </template>
-                    <template slot="afterList">
+                    <template v-slot:afterList>
                       <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
                         Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                       </p>
                     </template>
-                    <template slot="placeholder">
+                    <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.referenceDisplayLabel }}
@@ -776,10 +771,10 @@
                 style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -809,11 +804,11 @@
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
@@ -866,15 +861,10 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results. Try loading more</p>
                 </template>
-                <template slot="afterList">
-                  <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
-                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
@@ -936,10 +926,10 @@
                             : 'name'
                         "
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{
@@ -965,11 +955,11 @@
                         label="name"
                         :loading="dropdownLoading || loadingAccounts"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
 
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentAccount }}
@@ -1079,10 +1069,10 @@
                         style="width: 40.25vw"
                         selectLabel="Enter"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
@@ -1151,7 +1141,7 @@
                   selectLabel="Enter"
                   label="name"
                 >
-                  <template slot="placeholder">
+                  <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
@@ -1208,15 +1198,15 @@
                         : 'name'
                     "
                   >
-                    <template slot="noResult">
+                    <template v-slot:noResult>
                       <p class="multi-slot">No results. Try loading more</p>
                     </template>
-                    <template slot="afterList">
-                      <p class="multi-slot__more">
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
                         Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                       </p>
                     </template>
-                    <template slot="placeholder">
+                    <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.referenceDisplayLabel }}
@@ -1296,6 +1286,178 @@
                   />
                 </div>
               </div>
+            </div>
+          </div>
+          <div v-if="currentProducts.length">
+            <section v-if="!editingProduct">
+              <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
+                <h4>
+                  {{ product.name }}
+                </h4>
+                <p>Quantity: {{ product.quantity }}</p>
+                <span
+                  ><p>Total Price: ${{ product.total_price }}</p>
+                  <button
+                    @click="
+                      editProduct(
+                        product.secondary_data.Id,
+                        product.secondary_data.PricebookEntryId,
+                        product.name,
+                      )
+                    "
+                  >
+                    Edit Product
+                  </button></span
+                >
+              </div>
+            </section>
+
+            <div class="current-products" v-if="editingProduct">
+              <p>Edit {{ productName }}</p>
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                  "
+                >
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}:
+                  </p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setProductValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
+                          : $event.id,
+                      )
+                    "
+                    openDirection="below"
+                    v-model="dropdownVal[field.apiName]"
+                    style="width: 35vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :loading="loadingProducts"
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
+                      <small class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </small>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    style="width: 35vw"
+                    :placeholder="currentVals[field.apiName]"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :placeholder="currentVals[field.apiName]"
+                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :placeholder="currentVals[field.apiName]"
+                    style="width: 35vw"
+                    v-model="currentVals[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    style="width: 35vw"
+                    v-model="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                  <input
+                    id="user-input"
+                    style="width: 35vw"
+                    type="number"
+                    v-model="currentVals[field.apiName]"
+                    :placeholder="currentVals[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+              </div>
+              <span>
+                <i></i>
+                <div>
+                  <button @click="editingProduct = !editingProduct">Cancel</button
+                  ><button @click="updateProduct">Save</button>
+                </div>
+              </span>
             </div>
           </div>
         </div>
@@ -1517,11 +1679,11 @@
                 track-by="value"
                 label="label"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Stage
@@ -1544,11 +1706,11 @@
                 track-by="value"
                 label="label"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Forecast Category
@@ -1652,10 +1814,10 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
@@ -1683,11 +1845,11 @@
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
@@ -1781,10 +1943,10 @@
                 style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -1974,6 +2136,10 @@ export default {
   },
   data() {
     return {
+      productName: null,
+      editingProduct: false,
+      productId: null,
+      productIntegrationId: null,
       productRefCopy: {},
       pricebookId: null,
       noteTitle: null,
@@ -1994,6 +2160,7 @@ export default {
           salesforceObject: 'Opportunity',
         },
       }),
+      currentProducts: [],
       createProductForm: null,
       addingProduct: false,
       originalOppTotal: null,
@@ -2084,6 +2251,7 @@ export default {
       instanceId: null,
       contactInstanceId: null,
       formData: {},
+      updateProductData: {},
       noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
@@ -2229,6 +2397,12 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    editProduct(integrationId, id, name) {
+      this.editingProduct = true
+      this.productIntegrationId = integrationId
+      this.productId = id
+      this.productName = name
+    },
     async getTemplates() {
       try {
         const res = await User.api.getTemplates()
@@ -3039,12 +3213,18 @@ export default {
       this.noteTitle = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
+      this.currentProducts = []
+      this.updateProductData = {}
+      this.productId = null
+      this.productIntegrationId = null
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
           resourceId: id,
         })
+        console.log(res)
         this.currentVals = res.current_values
+        this.currentProducts = res.current_products
 
         this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -3198,6 +3378,11 @@ export default {
     setCreateValues(key, val) {
       if (val) {
         this.createData[key] = val
+      }
+    },
+    setProductValues(key, val) {
+      if (val) {
+        this.updateProductData[key] = val
       }
     },
     async updateOpps() {
@@ -3383,6 +3568,33 @@ export default {
         }
       } else {
         return
+      }
+    },
+
+    async updateProduct() {
+      this.savingProduct = true
+      try {
+        const res = await SObjects.api.updateResource({
+          form_data: this.updateProductData,
+          from_workflow: this.selectedWorkflow ? true : false,
+          workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+          form_type: 'UPDATE',
+          integration_ids: [this.productIntegrationId],
+          resource_type: 'OpportunityLineItem',
+          resource_id: this.productId,
+          stage_name: null,
+        })
+      } catch (e) {
+        this.$toast('Error updating Product', {
+          timeout: 1500,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingProduct = false
+        this.savingProduct = false
       }
     },
     async updateResource() {
@@ -3931,6 +4143,46 @@ export default {
     opacity: 0.95;
     transform: translate(0%, 50%);
   }
+}
+
+.current-products {
+  font-size: 12px;
+  padding-left: 4px;
+  width: 38vw;
+  border-bottom: 1px solid $soft-gray;
+  padding-bottom: 8px;
+
+  h4 {
+    font-weight: bold;
+  }
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -6px;
+
+    p {
+      background-color: $white-green;
+      color: $dark-green;
+      padding: 4px;
+      border-radius: 4px;
+    }
+  }
+
+  button {
+    border: 1px solid $dark-green;
+    color: $dark-green;
+    background-color: white;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  // button:hover {
+  //   background-color: $base-gray;
+  //   opacity: 0.8;
+  //   color: white;
+  // }
 }
 
 .tooltip {
@@ -5044,14 +5296,14 @@ a {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 24px;
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  width: 34vw;
+  width: 40.25vw;
   height: 80px;
   overflow: scroll;
 
