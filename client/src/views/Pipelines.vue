@@ -218,7 +218,7 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 35vw"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
                         :multiple="field.dataType === 'MultiPicklist' ? true : false"
                         :track-by="
@@ -912,7 +912,7 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 35vw"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
                         :multiple="field.dataType === 'MultiPicklist' ? true : false"
                         :track-by="
@@ -3988,7 +3988,6 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
-
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
         this.hasNextOriginal = this.hasNext
@@ -4415,7 +4414,7 @@ export default {
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+    min-height: 30vh;
     input {
       width: 10vw;
       height: 1.5rem !important;
@@ -4860,7 +4859,7 @@ h3 {
 .modal-container {
   background-color: $white;
   overflow: auto;
-  min-width: 32vw;
+  min-width: 36vw;
   max-width: 36vw;
   min-height: 44vh;
   max-height: 80vh;
@@ -5366,7 +5365,7 @@ a {
 .close-template {
   position: absolute;
   bottom: 56px;
-  right: 8px;
+  right: 20px;
   z-index: 3;
   cursor: pointer;
   background-color: black;

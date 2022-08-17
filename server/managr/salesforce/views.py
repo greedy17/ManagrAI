@@ -681,14 +681,10 @@ class SalesforceSObjectViewSet(
         main_form = forms.filter(template__form_type="CREATE").first()
         if main_form.template.resource == "OpportunityLineItem":
             opp_ref = integration_ids[0]
-        stage_forms = []
         stage_form_data_collector = {}
-        for form in stage_forms:
+        for form in forms:
             form.save_form(form_data, False)
             stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-        if not len(stage_forms):
-            main_form.save_form(form_data, False)
-
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
 
         data = None

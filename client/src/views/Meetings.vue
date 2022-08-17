@@ -670,7 +670,7 @@ export default {
             integration_ids: [id],
             form_type: 'CREATE',
             resource_type: 'OpportunityLineItem',
-            stage_name: this.stageGateField ? this.stageGateField : null,
+            // stage_name: this.stageGateField ? this.stageGateField : null,
             resource_id: this.oppId,
             form_data: this.createData,
           })
@@ -1810,12 +1810,12 @@ input {
 .modal-container {
   background-color: $white;
   overflow: auto;
-  min-width: 32vw;
-  // max-width: 34vw;
+  min-width: 36vw;
+  max-width: 36vw;
   min-height: 44vh;
   max-height: 80vh;
   align-items: center;
-  border-radius: 0.3rem;
+  border-radius: 0.5rem;
   border: 1px solid #e8e8e8;
 }
 .opp-modal-container {
