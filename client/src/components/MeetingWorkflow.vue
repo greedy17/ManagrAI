@@ -13,7 +13,7 @@
         </span>
       </div>
     </div>
-    <div class="table-cell">
+    <div class="table-cell-small">
       {{ meeting.participants.length }}
     </div>
 
@@ -326,15 +326,15 @@
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
       <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
-        <button @click="addingOpp = !addingOpp" class="add-button">Map to Opportunity</button>
+        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM record</button>
         <small>currently mapped to {{ resourceType }}</small>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM record</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p>Map to Opportunity</p>
+          <p>Link to Opportunity</p>
           <img
             src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
@@ -959,6 +959,16 @@ a {
   border-bottom: 3px solid $soft-gray;
   font-size: 13px;
 }
+.table-cell-small {
+  display: table-cell;
+  position: relative;
+  min-width: 4vw;
+  background-color: $off-white;
+  padding: 2vh 3vh;
+  border: none;
+  border-bottom: 3px solid $soft-gray;
+  font-size: 13px;
+}
 .left-green {
   border-left: 2px solid $dark-green !important;
 }
@@ -969,7 +979,8 @@ a {
   background-color: white;
 }
 
-.table-cell:hover {
+.table-cell:hover,
+.table-cell-small:hover {
   cursor: text;
   background-color: white;
 }

@@ -374,6 +374,7 @@ class SalesforceSObjectViewSet(
             )
         )
         if note_data:
+            print("NOTE DATA", note_data)
             return Response(data=note_data)
         return Response(data=[])
 
@@ -523,8 +524,12 @@ class SalesforceSObjectViewSet(
                     f"AND OpportunityId = '{model_object.integration_id}'",
                 ],
             )
-            product_values = [product.as_dict for product in current_products]
-            data["current_products"] = product_values
+            product_values = [product.integration_id for product in current_products]
+            internal_products = routes["OpportunityLineItem"]["model"].objects.filter(
+                integration_id__in=product_values
+            )
+            product_as_dict = [item.adapter_class.as_dict for item in internal_products]
+            data["current_products"] = product_as_dict
         return Response(data=data)
 
     @action(
@@ -574,7 +579,12 @@ class SalesforceSObjectViewSet(
             while True:
                 sf = user.salesforce_account
                 try:
-                    resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                    if resource_type == "OpportunityLineItem":
+                        resource = main_form.resource_object.update_in_salesforce(
+                            str(user.id), all_form_data
+                        )
+                    else:
+                        resource = main_form.resource_object.update_in_salesforce(all_form_data)
                     data = {
                         "success": True,
                     }
@@ -625,7 +635,7 @@ class SalesforceSObjectViewSet(
                     data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
             if data["success"]:
-                if all_form_data.get("meeting_comments") is not None:
+                if all_form_data.get("meeting_comments", None) is not None:
                     emit_add_update_to_sf(str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
