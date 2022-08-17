@@ -794,7 +794,7 @@ class SalesforceSObjectViewSet(
     )
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
-        operations = ["Account", "Lead", "Opportunity", "Contact"]
+        operations = ["Account", "Opportunity", "OpportunityLineItem"]
         currenttime = datetime.now()
         to_sync_ids = []
         synced_ids = []
