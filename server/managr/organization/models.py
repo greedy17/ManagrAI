@@ -679,6 +679,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             res = OpportunityLineItemAdapter.update_opportunitylineitem(
                 data, token, base_url, self.integration_id, object_fields
             )
+            print(res)
             self.is_stale = True
             self.save()
             return res
@@ -711,3 +712,8 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             integration_id, token, base_url, self.opportunity.owner.id
         )
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()

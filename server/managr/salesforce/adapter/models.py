@@ -1561,6 +1561,7 @@ class PricebookEntryAdapter:
 
 class OpportunityLineItemAdapter:
     def __init__(self, **kwargs):
+        self.id = kwargs.get("id", None)
         self.name = kwargs.get("name", None)
         self.description = kwargs.get("description", None)
         self.unit_price = kwargs.get("unit_price", None)
@@ -1666,7 +1667,8 @@ class OpportunityLineItemAdapter:
 
     @staticmethod
     def update_opportunitylineitem(data, access_token, custom_base, salesforce_id, object_fields):
-        data.pop("PricebookEntryId")
+        if "PricebookEntryId" in data.keys():
+            data.pop("PricebookEntryId")
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields

@@ -160,7 +160,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async updateResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
-      console.log(res)
       return res.data
     } catch (e) {
       return apiErrorHandler({ apiName: 'Salesforce API' })(e)
@@ -190,7 +189,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
-  async getSobjectPicklistValues(sobject_id, value,for_filter = false) {
+  async getSobjectPicklistValues(sobject_id, value, for_filter = false) {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value, for_filter })
       return res.data

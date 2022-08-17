@@ -118,11 +118,11 @@
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Account
@@ -175,18 +175,13 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results ? Try loading more</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ `${field.referenceDisplayLabel}` }}
-                  </p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more">
-                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
                 </template>
               </Multiselect>
@@ -237,10 +232,10 @@
                             : 'name'
                         "
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ field.apiName }}
@@ -262,11 +257,11 @@
                         label="name"
                         :loading="dropdownLoading || loadingAccounts"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
 
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             Accounts
@@ -381,10 +376,10 @@
                         style="width: 35vw"
                         selectLabel="Enter"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
@@ -443,10 +438,10 @@
                 style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -472,7 +467,7 @@
                   selectLabel="Enter"
                   label="name"
                 >
-                  <template slot="placeholder">
+                  <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
@@ -529,15 +524,15 @@
                         : 'name'
                     "
                   >
-                    <template slot="noResult">
+                    <template v-slot:noResult>
                       <p class="multi-slot">No results. Try loading more</p>
                     </template>
-                    <template slot="afterList">
+                    <template v-slot:afterList>
                       <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
                         Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                       </p>
                     </template>
-                    <template slot="placeholder">
+                    <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.referenceDisplayLabel }}
@@ -692,16 +687,6 @@
             >
               <span style="margin-left: 0px; margin-top: -4px" class="input-container">
                 <label class="label">Note</label>
-                <!-- <textarea
-                  id="user-input"
-                  type="text"
-                  cols="30"
-                  rows="4"
-                  placeholder="Note"
-                  style="line-height: 2rem; width: 34vw; padding-left: 8px"
-                  v-model="noteValue"
-                  @input="setUpdateValues(field.apiName, noteValue)"
-                /> -->
                 <div
                   @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
                   class="divArea"
@@ -786,10 +771,10 @@
                 style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -819,11 +804,11 @@
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
@@ -876,15 +861,10 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results. Try loading more</p>
                 </template>
-                <template slot="afterList">
-                  <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
-                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
@@ -946,10 +926,10 @@
                             : 'name'
                         "
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{
@@ -975,11 +955,11 @@
                         label="name"
                         :loading="dropdownLoading || loadingAccounts"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
 
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentAccount }}
@@ -1089,10 +1069,10 @@
                         style="width: 40.25vw"
                         selectLabel="Enter"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
@@ -1161,7 +1141,7 @@
                   selectLabel="Enter"
                   label="name"
                 >
-                  <template slot="placeholder">
+                  <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
@@ -1218,15 +1198,15 @@
                         : 'name'
                     "
                   >
-                    <template slot="noResult">
+                    <template v-slot:noResult>
                       <p class="multi-slot">No results. Try loading more</p>
                     </template>
-                    <template slot="afterList">
-                      <p class="multi-slot__more">
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
                         Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                       </p>
                     </template>
-                    <template slot="placeholder">
+                    <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.referenceDisplayLabel }}
@@ -1305,6 +1285,181 @@
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="currentProducts.length">
+            <section v-if="!editingProduct">
+              <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
+                <h4>
+                  {{ product.secondary_data.Name }}
+                </h4>
+                <p>Quantity: {{ product.secondary_data.Quantity }}</p>
+                <span
+                  ><p>Total Price: ${{ product.secondary_data.TotalPrice }}</p>
+                  <button
+                    @click="
+                      editProduct(
+                        product.secondary_data.Id,
+                        product.id,
+                        product.name,
+                        product.secondary_data,
+                      )
+                    "
+                  >
+                    Edit Product
+                  </button>
+                </span>
+              </div>
+            </section>
+
+            <div class="current-products" v-if="editingProduct">
+              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+                {{ productName }}
+              </p>
+              <PipelineLoader v-if="savingProduct" />
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                  "
+                >
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}
+                  </p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setProductValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
+                          : $event.id,
+                      )
+                    "
+                    openDirection="below"
+                    v-model="dropdownProductVal[field.apiName]"
+                    style="width: 35vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :loading="loadingProducts"
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
+                      <small class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </small>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    style="width: 35vw"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    style="width: 35vw"
+                    v-model="dropdownProductVal[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    style="width: 35vw"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    id="user-input"
+                    style="width: 35vw"
+                    type="number"
+                    v-model="dropdownProductVal[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+              </div>
+
+              <div class="current-products__footer">
+                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <p @click="cancelEditProduct">Cancel</p>
               </div>
             </div>
           </div>
@@ -1527,11 +1682,11 @@
                 track-by="value"
                 label="label"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Stage
@@ -1554,11 +1709,11 @@
                 track-by="value"
                 label="label"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Forecast Category
@@ -1662,10 +1817,10 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
@@ -1693,11 +1848,11 @@
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
@@ -1791,10 +1946,10 @@
                 style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -1984,6 +2139,12 @@ export default {
   },
   data() {
     return {
+      currentSelectedProduct: null,
+      savingProduct: null,
+      productName: null,
+      editingProduct: false,
+      productId: null,
+      productIntegrationId: null,
       productRefCopy: {},
       pricebookId: null,
       noteTitle: null,
@@ -2004,6 +2165,7 @@ export default {
           salesforceObject: 'Opportunity',
         },
       }),
+      currentProducts: [],
       createProductForm: null,
       addingProduct: false,
       originalOppTotal: null,
@@ -2035,6 +2197,7 @@ export default {
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
+      dropdownProductVal: {},
       selectedAccount: null,
       selectedOwner: null,
       currentOwner: null,
@@ -2094,6 +2257,7 @@ export default {
       instanceId: null,
       contactInstanceId: null,
       formData: {},
+      updateProductData: {},
       noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
@@ -2239,6 +2403,17 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    cancelEditProduct() {
+      this.dropdownProductVal = {}
+      this.editingProduct = !this.editingProduct
+    },
+    editProduct(integrationId, id, name, secondaryData) {
+      this.editingProduct = true
+      this.productIntegrationId = integrationId
+      this.productId = id
+      this.productName = name
+      this.currentSelectedProduct = secondaryData
+    },
     async getTemplates() {
       try {
         const res = await User.api.getTemplates()
@@ -2563,6 +2738,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        this.formData = {}
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
@@ -3049,12 +3225,19 @@ export default {
       this.noteTitle = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
+      this.currentProducts = []
+      this.updateProductData = {}
+      this.productId = null
+      this.productIntegrationId = null
+      this.dropdownProductVal = {}
+      this.editingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
           resourceId: id,
         })
         this.currentVals = res.current_values
+        this.currentProducts = res.current_products
 
         this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -3208,6 +3391,11 @@ export default {
     setCreateValues(key, val) {
       if (val) {
         this.createData[key] = val
+      }
+    },
+    setProductValues(key, val) {
+      if (val) {
+        this.updateProductData[key] = val
       }
     },
     async updateOpps() {
@@ -3393,6 +3581,48 @@ export default {
         }
       } else {
         return
+      }
+    },
+
+    async updateProduct() {
+      this.savingProduct = true
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: this.updateProductData,
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+            form_type: 'UPDATE',
+            integration_ids: [this.productIntegrationId],
+            resource_type: 'OpportunityLineItem',
+            resource_id: this.productId,
+            stage_name: null,
+          })
+          .then(async (res) => {
+            const res2 = await SObjects.api.getCurrentValues({
+              resourceType: 'Opportunity',
+              resourceId: this.oppId,
+            })
+            this.currentProducts = res2.current_products
+          })
+        this.$toast('Product updated successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error updating Product', {
+          timeout: 1500,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingProduct = false
+        this.savingProduct = false
       }
     },
     async updateResource() {
@@ -3942,6 +4172,68 @@ export default {
   }
 }
 
+.current-products {
+  font-size: 12px;
+  padding-left: 4px;
+  width: 40.25vw;
+  // border: 1px solid $soft-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 16px;
+
+  h4 {
+    font-weight: bold;
+  }
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -6px;
+
+    p {
+      background-color: $white-green;
+      color: $dark-green;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    button {
+      border: 1px solid $dark-green;
+      color: $dark-green;
+      background-color: white;
+      border-radius: 4px;
+      padding: 5px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 4px;
+      margin-right: 4px;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 39vw;
+    padding: 8px;
+    margin-top: 1rem;
+    position: sticky;
+
+    p {
+      margin-left: 16px;
+      cursor: pointer;
+      color: $dark-green;
+    }
+  }
+
+  // button:hover {
+  //   background-color: $base-gray;
+  //   opacity: 0.8;
+  //   color: white;
+  // }
+}
+
 .tooltip {
   position: relative;
   display: flex;
@@ -4042,15 +4334,9 @@ export default {
 }
 
 // .form-label {
-//   background-color: $white-green;
 //   width: fit-content;
-//   color: $dark-green;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-//   padding: 6px 12px;
-//   margin-bottom: -1px;
-//   font-size: 16px;
 // }
+
 .col {
   display: flex;
   flex-direction: column;
@@ -4229,7 +4515,7 @@ export default {
   border: 1px solid $dark-green;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 42vw;
+  width: 40.25vw;
   min-height: 30vh;
   &__header {
     display: flex;
