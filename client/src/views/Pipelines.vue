@@ -1292,22 +1292,32 @@
             <section v-if="!editingProduct">
               <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
                 <h4>
-                  {{ product.name }}
+                  {{ product.secondary_data.Name }}
                 </h4>
-                <p>Quantity: {{ product.quantity }}</p>
+                <p>Quantity: {{ product.secondary_data.Quantity }}</p>
                 <span
-                  ><p>Total Price: ${{ product.total_price }}</p>
-                  <button @click="editProduct(product.secondary_data.Id, product.id, product.name)">
+                  ><p>Total Price: ${{ product.secondary_data.TotalPrice }}</p>
+                  <button
+                    @click="
+                      editProduct(
+                        product.secondary_data.Id,
+                        product.id,
+                        product.name,
+                        product.secondary_data,
+                      )
+                    "
+                  >
                     Edit Product
-                  </button></span
-                >
+                  </button>
+                </span>
               </div>
             </section>
 
             <div class="current-products" v-if="editingProduct">
-              <p style="color: #41b883; font-size: 14px; margin-bottom: 24px">
-                Edit {{ productName }}
+              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+                {{ productName }}
               </p>
+              <PipelineLoader v-if="savingProduct" />
               <div v-for="(field, i) in createProductForm" :key="i">
                 <div
                   v-if="
@@ -1342,7 +1352,7 @@
                       )
                     "
                     openDirection="below"
-                    v-model="dropdownVal[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
                     style="width: 35vw"
                     selectLabel="Enter"
                     :track-by="
@@ -1380,8 +1390,8 @@
                     id="user-input"
                     type="text"
                     style="width: 35vw"
-                    :placeholder="currentVals[field.apiName]"
-                    v-model="currentVals[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
                   />
                 </div>
@@ -1397,9 +1407,9 @@
                     id="user-input"
                     ccols="30"
                     rows="2"
-                    :placeholder="currentVals[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
                     style="width: 40.25vw; border-radius: 6px; padding: 7px"
-                    v-model="currentVals[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
                   >
                   </textarea>
@@ -1410,9 +1420,9 @@
                     type="text"
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
-                    :placeholder="currentVals[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
                     style="width: 35vw"
-                    v-model="currentVals[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
                     id="user-input"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
                   />
@@ -1423,7 +1433,8 @@
                     type="datetime-local"
                     id="start"
                     style="width: 35vw"
-                    v-model="currentVals[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
                   />
                 </div>
@@ -1439,16 +1450,16 @@
                     id="user-input"
                     style="width: 35vw"
                     type="number"
-                    v-model="currentVals[field.apiName]"
-                    :placeholder="currentVals[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
                   />
                 </div>
               </div>
 
               <div class="current-products__footer">
-                <p @click="editingProduct = !editingProduct">Cancel</p>
-                <button class="add-button__" @click="updateProduct">Save</button>
+                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <p @click="cancelEditProduct">Cancel</p>
               </div>
             </div>
           </div>
@@ -2128,6 +2139,8 @@ export default {
   },
   data() {
     return {
+      currentSelectedProduct: null,
+      savingProduct: null,
       productName: null,
       editingProduct: false,
       productId: null,
@@ -2184,6 +2197,7 @@ export default {
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
+      dropdownProductVal: {},
       selectedAccount: null,
       selectedOwner: null,
       currentOwner: null,
@@ -2389,11 +2403,16 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    editProduct(integrationId, id, name) {
+    cancelEditProduct() {
+      this.dropdownProductVal = {}
+      this.editingProduct = !this.editingProduct
+    },
+    editProduct(integrationId, id, name, secondaryData) {
       this.editingProduct = true
       this.productIntegrationId = integrationId
       this.productId = id
       this.productName = name
+      this.currentSelectedProduct = secondaryData
     },
     async getTemplates() {
       try {
@@ -2719,6 +2738,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        this.formData = {}
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
@@ -3209,12 +3229,13 @@ export default {
       this.updateProductData = {}
       this.productId = null
       this.productIntegrationId = null
+      this.dropdownProductVal = {}
+      this.editingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
           resourceId: id,
         })
-        console.log(res)
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
 
@@ -3566,15 +3587,30 @@ export default {
     async updateProduct() {
       this.savingProduct = true
       try {
-        const res = await SObjects.api.updateResource({
-          form_data: this.updateProductData,
-          from_workflow: this.selectedWorkflow ? true : false,
-          workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
-          form_type: 'UPDATE',
-          integration_ids: [this.productIntegrationId],
-          resource_type: 'OpportunityLineItem',
-          resource_id: this.productId,
-          stage_name: null,
+        const res = await SObjects.api
+          .updateResource({
+            form_data: this.updateProductData,
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+            form_type: 'UPDATE',
+            integration_ids: [this.productIntegrationId],
+            resource_type: 'OpportunityLineItem',
+            resource_id: this.productId,
+            stage_name: null,
+          })
+          .then(async (res) => {
+            const res2 = await SObjects.api.getCurrentValues({
+              resourceType: 'Opportunity',
+              resourceId: this.oppId,
+            })
+            this.currentProducts = res2.current_products
+          })
+        this.$toast('Product updated successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         this.$toast('Error updating Product', {
@@ -4186,8 +4222,9 @@ export default {
     position: sticky;
 
     p {
-      margin-right: 16px;
+      margin-left: 16px;
       cursor: pointer;
+      color: $dark-green;
     }
   }
 
@@ -4479,7 +4516,7 @@ export default {
   border: 1px solid $dark-green;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 42vw;
+  width: 40.25vw;
   min-height: 30vh;
   &__header {
     display: flex;

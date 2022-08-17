@@ -646,7 +646,181 @@
               </div>
             </div>
           </div>
-          <!-- <button>Add product</button> -->
+          <div v-if="currentProducts.length">
+            <section v-if="!editingProduct">
+              <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
+                <h4>
+                  {{ product.secondary_data.Name }}
+                </h4>
+                <p>Quantity: {{ product.secondary_data.Quantity }}</p>
+                <span
+                  ><p>Total Price: ${{ product.secondary_data.TotalPrice }}</p>
+                  <button
+                    @click="
+                      editProduct(
+                        product.secondary_data.Id,
+                        product.id,
+                        product.name,
+                        product.secondary_data,
+                      )
+                    "
+                  >
+                    Edit Product
+                  </button>
+                </span>
+              </div>
+            </section>
+
+            <div class="current-products" v-if="editingProduct">
+              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+                {{ productName }}
+              </p>
+              <PipelineLoader v-if="savingProduct" />
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                  "
+                >
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}
+                  </p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setProductValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
+                          : $event.id,
+                      )
+                    "
+                    openDirection="below"
+                    v-model="dropdownProductVal[field.apiName]"
+                    style="width: 35vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :loading="loadingProducts"
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
+                      <small class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </small>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    style="width: 35vw"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    style="width: 35vw"
+                    v-model="dropdownProductVal[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    style="width: 35vw"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    id="user-input"
+                    style="width: 35vw"
+                    type="number"
+                    v-model="dropdownProductVal[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+              </div>
+
+              <div class="current-products__footer">
+                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <p @click="cancelEditProduct">Cancel</p>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="flex-end-opp">
           <div v-if="hasProducts && resource === 'Opportunity'">
@@ -689,6 +863,7 @@ export default {
   components: {
     Modal,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
   data() {
     return {
@@ -700,6 +875,15 @@ export default {
     }
   },
   methods: {
+    cancelEditProduct() {
+      this.$emit('cancel-edit-product')
+    },
+    updateProduct() {
+      this.$emit('update-product')
+    },
+    editProduct(arg, arg2, arg3, arg4) {
+      this.$emit('edit-product', arg, arg2, arg3, arg4)
+    },
     loadMore() {
       this.$emit('load-more')
     },
@@ -714,6 +898,9 @@ export default {
       setTimeout(() => {
         this.$refs.product ? this.$refs.product.scrollIntoView() : null
       }, 100)
+    },
+    setProductValues(arg, arg2) {
+      this.$emit('set-product-values', arg, arg2)
     },
     setUpdateValues(arg, arg2) {
       this.$emit('set-update-values', arg, arg2)
@@ -746,7 +933,6 @@ export default {
     },
     fields: {},
     currentVals: {},
-    dropdownVal: {},
     noteTitle: {},
     noteValue: {},
     allAccounts: {},
@@ -770,6 +956,13 @@ export default {
     savingCreateForm: {},
     showLoadMore: {},
     stagePicklistQueryOpts: {},
+    currentSelectedProduct: {},
+    currentProducts: {},
+    editingProduct: {},
+    productName: {},
+    savingProduct: {},
+    dropdownVal: {},
+    dropdownProductVal: {},
   },
 }
 </script>
@@ -1236,5 +1429,66 @@ input {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+.current-products {
+  font-size: 12px;
+  padding-left: 4px;
+  width: 40.25vw;
+  // border: 1px solid $soft-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 16px;
+
+  h4 {
+    font-weight: bold;
+  }
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -6px;
+
+    p {
+      background-color: $white-green;
+      color: $dark-green;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    button {
+      border: 1px solid $dark-green;
+      color: $dark-green;
+      background-color: white;
+      border-radius: 4px;
+      padding: 5px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 4px;
+      margin-right: 4px;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 39vw;
+    padding: 8px;
+    margin-top: 1rem;
+    position: sticky;
+
+    p {
+      margin-left: 16px;
+      cursor: pointer;
+      color: $dark-green;
+    }
+  }
+
+  // button:hover {
+  //   background-color: $base-gray;
+  //   opacity: 0.8;
+  //   color: white;
+  // }
 }
 </style>

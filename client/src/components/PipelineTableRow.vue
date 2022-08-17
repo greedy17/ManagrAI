@@ -437,6 +437,7 @@ export default {
       this.editIndex = index
     },
     setUpdateValues(key, val, dataType, multi) {
+      this.formData = {}
       if (multi) {
         this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
       }

@@ -66,11 +66,14 @@
         @get-pricebooks="getPricebookEntries"
         @get-accounts="getAccounts"
         @load-more="loadMore"
+        @edit-product="editProduct"
+        @update-product="updateProduct"
+        @cancel-edit-product="cancelEditProduct"
+        @set-product-values="setProductValues"
         :resource="resourceType"
         :productReferenceOpts="productReferenceOpts"
         :fields="resourceFields"
         :currentVals="currentVals"
-        :dropdownVal="dropdownVal"
         :noteTitle="noteTitle"
         :allAccounts="allAccounts"
         :selectedAccount="selectedAccount"
@@ -92,6 +95,13 @@
         :loadingProducts="loadingProducts"
         :savingCreateForm="savingCreateForm"
         :showLoadMore="showLoadMore"
+        :currentProducts="currentProducts"
+        :editingProduct="editingProduct"
+        :productName="productName"
+        :savingProduct="savingProduct"
+        :currentSelectedProduct="currentSelectedProduct"
+        :dropdownProductVal="dropdownProductVal"
+        :dropdownVal="dropdownVal"
       />
     </div>
 
@@ -328,6 +338,14 @@ export default {
   },
   data() {
     return {
+      currentSelectedProduct: null,
+      savingProduct: null,
+      productName: null,
+      editingProduct: false,
+      productId: null,
+      productIntegrationId: null,
+      currentProducts: [],
+      updateProductData: {},
       resourceType: 'Opportunity',
       resourceFields: null,
       selectedPricebook: null,
@@ -487,6 +505,17 @@ export default {
     resourceType: ['selectFormFields'],
   },
   methods: {
+    cancelEditProduct() {
+      this.dropdownProductVal = {}
+      this.editingProduct = !this.editingProduct
+    },
+    editProduct(integrationId, id, name, secondaryData) {
+      this.editingProduct = true
+      this.productIntegrationId = integrationId
+      this.productId = id
+      this.productName = name
+      this.currentSelectedProduct = secondaryData
+    },
     changeResource(i) {
       this.resourceType = i
     },
@@ -978,6 +1007,47 @@ export default {
         })
       }
     },
+    async updateProduct() {
+      this.savingProduct = true
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: this.updateProductData,
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+            form_type: 'UPDATE',
+            integration_ids: [this.productIntegrationId],
+            resource_type: 'OpportunityLineItem',
+            resource_id: this.productId,
+            stage_name: null,
+          })
+          .then(async (res) => {
+            const res2 = await SObjects.api.getCurrentValues({
+              resourceType: 'Opportunity',
+              resourceId: this.oppId,
+            })
+            this.currentProducts = res2.current_products
+          })
+        this.$toast('Product updated successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error updating Product', {
+          timeout: 1500,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingProduct = false
+        this.savingProduct = false
+      }
+    },
     async updateMeeting(resourceType, meetingWorkflow, id, integrationId, pricebookId) {
       this.resourceType = resourceType
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
@@ -994,12 +1064,18 @@ export default {
       this.noteValue = null
       this.noteTitle = null
       this.addingProduct = false
+      this.updateProductData = {}
+      this.productId = null
+      this.productIntegrationId = null
+      this.dropdownProductVal = {}
+      this.editingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: resourceType,
           resourceId: id,
         })
         this.currentVals = res.current_values
+        this.currentProducts = res.current_products
 
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
@@ -1133,7 +1209,11 @@ export default {
         this.formData[key] = val
       }
     },
-
+    setProductValues(key, val) {
+      if (val) {
+        this.updateProductData[key] = val
+      }
+    },
     async updateResource() {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
