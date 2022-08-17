@@ -326,15 +326,15 @@
         {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
       <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
-        <button @click="addingOpp = !addingOpp" class="add-button">Map to Opportunity</button>
+        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM record</button>
         <small>currently mapped to {{ resourceType }}</small>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM record</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p>Map to Opportunity</p>
+          <p>Link to Opportunity</p>
           <img
             src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
