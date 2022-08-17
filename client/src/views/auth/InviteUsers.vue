@@ -281,7 +281,7 @@
         </button>
       </div>
 
-      <Invite class="invite-users__inviter" :inviteOpen="inviteOpen" @cancel="handleCancel" />
+      <Invite class="invite-users__inviter" :handleEdit="handleEdit" :inviteOpen="inviteOpen" @cancel="handleCancel" />
       <div class="wide">
         <button @click="homeView" class="invite_button">
           <img src="@/assets/images/back.svg" height="12px" alt="" />
@@ -705,11 +705,11 @@ export default {
     handleInvite() {
       this.inviteOpen = !this.inviteOpen
     },
-    handleEdit() {
-      this.editTeam = !this.editTeam
-    },
     handleNewTeam() {
       this.newTeam = !this.newTeam
+    },
+    handleEdit() {
+      this.editTeam = !this.editTeam
     },
     handleCancel() {
       this.inviteOpen = false
