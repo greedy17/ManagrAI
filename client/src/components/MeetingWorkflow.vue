@@ -305,14 +305,14 @@
     </div>
 
     <div class="table-cell">
-      <div class="roww" v-if="resourceId && !meetingUpdated">
-        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
+      <div class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
+        <p>{{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}</p>
 
         <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="switchResource">
+          <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
             <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
           </button>
-          <span class="tooltiptext">Change {{ resourceType }}</span>
+          <span class="tooltiptext">Change Opp</span>
         </div>
 
         <div class="tooltip">
@@ -322,29 +322,19 @@
           <span class="tooltiptext">View Notes</span>
         </div>
       </div>
-      <p
-        style="color: #9b9b9b; font-size: 11px; margin-top: -6px"
-        v-if="resourceId && !meetingUpdated"
-      >
-        Record Type: {{ resourceType }}
+      <p v-else-if="meetingUpdated">
+        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
       </p>
-      <div v-else-if="meetingUpdated">
-        <p>{{ resourceRef ? resourceRef.name : 'Undefined' }}</p>
-        <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
-          Record Type: {{ resourceType }}
-        </p>
+      <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
+        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM record</button>
+        <small>currently mapped to {{ resourceType }}</small>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to Record</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM record</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p v-if="!resourceType">Select Record</p>
-          <!-- <p v-else-if="resourceType && resourceId">Select {{ resourceType }}</p> -->
-          <p v-else style="cursor: pointer" @click="removeResource">
-            Select {{ resourceType }} <img src="@/assets/images/swap.svg" height="14px" alt="" />
-          </p>
-
+          <p>Link to Opportunity</p>
           <img
             src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
@@ -354,14 +344,12 @@
 
         <div class="add-field-section__body">
           <Multiselect
-            v-if="resourceType"
             style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
-            :placeholder="`Select ${resourceType}`"
+            placeholder="Select Opportunity"
             selectLabel="Enter"
             label="name"
-            :customLabel="({ name, email }) => (name ? name : email)"
             openDirection="below"
             track-by="id"
             :options="allOpps"
@@ -370,41 +358,32 @@
               <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
-
-          <Multiselect
-            v-else
-            style="width: 20vw"
-            v-model="selectedResourceType"
-            @select="changeResource($event)"
-            placeholder="Select Record Type"
-            selectLabel="Enter"
-            openDirection="below"
-            :options="resources"
-          >
-            <template slot="noResult">
-              <p class="multi-slot">No results.</p>
-            </template>
-          </Multiselect>
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Link</p>
+          <p @click="mapOpp">Add</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Link</p>
+          <p style="color: gray; cursor: text">Add</p>
         </div>
       </div>
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
-      <p v-if="!resourceId && !meetingLoading" class="red-text">Link meeting to take action.</p>
+      <p
+        v-if="
+          (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
+        "
+        class="red-text"
+      >
+        Map meeting to take action.
+      </p>
       <div>
-        <div class="column" v-if="resourceId && !meetingLoading">
+        <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
           <button
             @click="
               $emit(
                 'update-Opportunity',
-                resourceType,
                 workflowId,
                 resourceId,
                 resourceRef ? resourceRef.integration_id : null,
@@ -413,7 +392,7 @@
             "
             class="add-button"
           >
-            Update {{ resourceType }}
+            Update Opportunity
           </button>
           <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
         </div>
@@ -454,13 +433,10 @@ export default {
   data() {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
-      resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
-      selectedResourceType: null,
       addingOpp: false,
       noUpdate: false,
       mappedOpp: null,
       resource: null,
-      loading: false,
       removingParticipant: null,
       selectedIndex: null,
       addingContact: false,
@@ -480,6 +456,7 @@ export default {
     resourceRef: {},
     resourceId: {},
     resourceType: {},
+    allOpps: {},
     index: {},
     workflowId: {},
     meetingUpdated: {},
@@ -490,7 +467,6 @@ export default {
     owners: {},
     index: {},
     participants: {},
-    allOpps: {},
   },
   computed: {
     hasLastName() {
@@ -500,40 +476,12 @@ export default {
       return lastName
     },
   },
-  watch: {
-    resourceType: 'getObjects',
-  },
   mounted() {
     if (this.resourceId) {
       this.getCurrentVals()
     }
   },
   methods: {
-    switchResource() {
-      this.getObjects()
-      this.addingOpp = !this.addingOpp
-    },
-    removeResource() {
-      this.resourceType = null
-    },
-    async getObjects() {
-      this.loading = true
-      try {
-        const res = await SObjects.api.getObjectsForWorkflows(this.resourceType)
-        this.allOpps = res.results
-        this.originalList = res.results
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loading = false
-      }
-    },
-    changeResource(i) {
-      this.$emit('change-resource', i)
-      this.resourceType = i
-      this.mappedOpp = null
-      this.selectedResourceType = null
-    },
     emitGetNotes(id) {
       this.$emit('get-notes', id)
     },
@@ -567,12 +515,9 @@ export default {
     },
     selectOpp(val) {
       this.resource = val.id
-      this.$emit('change-resource', resourceType)
-      this.mappedOpp = null
-      this.selectedResourceType = null
     },
     mapOpp() {
-      this.$emit('map-opp', this.workflowId, this.resource, this.resourceType)
+      this.$emit('map-opp', this.workflowId, this.resource, 'Opportunity')
       this.addingOpp = !this.addingOpp
     },
     formatUnix(unix) {
@@ -692,7 +637,6 @@ a {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
-  font-size: 12px;
 }
 .no-update {
   background-color: $base-gray;
@@ -703,7 +647,6 @@ a {
   min-height: 2rem;
   padding: 0.5rem 1.25rem;
   cursor: pointer;
-  font-size: 12px;
 }
 .roww {
   display: flex;
@@ -951,7 +894,7 @@ a {
   flex-direction: column;
   align-items: center;
   background-color: $white;
-  min-width: 28vw;
+  min-width: 25vw;
   height: auto;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
@@ -1006,22 +949,22 @@ a {
   display: table-row;
   left: 0;
 }
-.table-cell-small {
-  display: table-cell;
-  position: relative;
-  min-width: 3vw;
-  background-color: $off-white;
-  padding: 2vh;
-  border: none;
-  border-bottom: 3px solid $soft-gray;
-  font-size: 13px;
-}
 .table-cell {
   display: table-cell;
   position: relative;
   min-width: 12vw;
   background-color: $off-white;
-  padding: 2vh;
+  padding: 2vh 3vh;
+  border: none;
+  border-bottom: 3px solid $soft-gray;
+  font-size: 13px;
+}
+.table-cell-small {
+  display: table-cell;
+  position: relative;
+  min-width: 4vw;
+  background-color: $off-white;
+  padding: 2vh 3vh;
   border: none;
   border-bottom: 3px solid $soft-gray;
   font-size: 13px;
