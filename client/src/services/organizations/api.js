@@ -1,7 +1,7 @@
 import { apiClient, apiErrorHandler, ApiFilter, ModelAPI } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
-const TEAM_ENDPOINT = '/organizations/teams/'//modify-membership/ // <-- This is for adding members to different teams (and deleting, kind of)
+const TEAM_ENDPOINT = '/organization/teams/'//modify-membership/ // <-- This is for adding members to different teams (and deleting, kind of)
 const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
 
 export default class OrganizationAPI {
@@ -40,5 +40,11 @@ export default class OrganizationAPI {
       .post(ORGANIZATIONS_UPDATE, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.orgUpdate' }))
+  }
+  async createNewTeam(data) {
+    return this.client
+      .post(TEAM_ENDPOINT, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.createNewTeam' }))
   }
 }

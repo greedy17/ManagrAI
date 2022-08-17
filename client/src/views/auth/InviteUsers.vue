@@ -68,10 +68,10 @@
         <div class="invite-form__actions">
           <template>
             <PulseLoadingSpinnerButton
-              @click="createSubmit"
+              @click="createTeamSubmit"
               class="invite-button"
               text="Save"
-              :loading="loading"
+              :loading="pulseLoading"
               >Save</PulseLoadingSpinnerButton
             >
             <div class="cancel-button" @click="handleCancel">Cancel</div>
@@ -168,7 +168,7 @@
               @click="null/*handleInvite*/"
               class="invite-button"
               text="Save"
-              :loading="loading"
+              :loading="pulseLoading"
               >Save</PulseLoadingSpinnerButton
             >
             <div class="cancel-button" @click="handleCancel">Cancel</div>
@@ -502,6 +502,7 @@ import FormField from '@/components/forms/FormField'
 import PipelineLoader from '@/components/PipelineLoader'
 import Invite from '../settings/_pages/_Invite'
 import User from '@/services/users'
+import Organization from '@/services/organizations'
 import { UserProfileForm } from '@/services/users/forms'
 import { quillEditor } from 'vue-quill-editor'
 import moment from 'moment-timezone'
@@ -533,6 +534,7 @@ export default {
       inviteOpen: false,
       editTeam: false,
       newTeam: false,
+      pulseLoading: false,
       teamName: '',
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
@@ -652,8 +654,47 @@ export default {
         this.homeView()
       }
     },
-    createSubmit() {
-      console.log('Submit')
+    async createTeamSubmit() {
+      this.pulseLoading = true
+      if (!this.teamLead || !this.teamName) {
+        setTimeout(() => {
+          console.log('Please submit all info')
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const data = {
+            name: this.teamName,
+            organization: this.$store.state.user.organizationRef.id,
+            team_lead: this.teamLead.id
+          }
+          const res = await Organization.api.createNewTeam(data)
+          setTimeout(() => {
+            this.handleCancel()
+            this.teamName = ''
+            this.teamLead = ''
+            this.selectedTeam = null
+            this.$toast('Sucessfully submitted', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.pulseLoading = false
+          }, 1400)
+        } catch(e) {
+          console.log("Error: ", e)
+          this.$toast('Error Creating Team', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+        }
+      }
     },
     async refresh() {
       this.team.refresh()
