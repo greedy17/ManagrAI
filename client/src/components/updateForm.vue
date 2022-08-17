@@ -14,7 +14,7 @@
               "
               alt=""
             />
-            <h3>Update {{ resource }}</h3>
+            <h3>Update Opportunity</h3>
           </div>
           <img
             src="@/assets/images/close.svg"

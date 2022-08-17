@@ -12,7 +12,7 @@ export default {
   name: 'MeetingWorkflowHeader',
   data() {
     return {
-      columns: ['Attendees', 'Attendees', 'Record Type', 'Actions'],
+      columns: ['Attendees', 'Attendees', 'CRM Record', 'Actions'],
     }
   },
 }
