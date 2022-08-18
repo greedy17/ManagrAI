@@ -1967,7 +1967,7 @@
           <button
             v-else
             @click="updateStageForm()"
-            class="select-btn"
+            class="add-button"
             style="margin-bottom: 6px; margin-right: -6px"
           >
             Update
@@ -3882,10 +3882,6 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )[0].fieldsRef
 
-        // this.updateAccountForm = res.filter(
-        //   (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
-        // )[0].fieldsRef
-
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
@@ -3893,24 +3889,6 @@ export default {
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
         }
-
-        // let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
-        // let allStageFields = [].concat.apply([], stageArrayOfArrays)
-        // let dupeStagesRemoved = [
-        //   ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
-        // ]
-
-        // for (let i = 0; i < dupeStagesRemoved.length; i++) {
-        //   if (
-        //     dupeStagesRemoved[i].dataType === 'Picklist' ||
-        //     dupeStagesRemoved[i].dataType === 'MultiPicklist'
-        //   ) {
-        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
-        //   } else if (dupeStagesRemoved[i].dataType === 'Reference') {
-        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
-        //       dupeStagesRemoved[i].referenceDisplayLabel
-        //   }
-        // }
       } catch (e) {
         console.log(e)
       }
