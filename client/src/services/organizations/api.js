@@ -60,4 +60,10 @@ export default class OrganizationAPI {
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.createNewTeam' }))
   }
+  async addTeamMember(data) {
+    return this.client
+      .post(TEAM_ENDPOINT + 'modify-membership/', data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.addTeamMember' }))
+  }
 }

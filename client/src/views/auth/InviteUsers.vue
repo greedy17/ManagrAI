@@ -107,12 +107,13 @@
                 <Multiselect
                   placeholder="Select Team"
                   v-model="selectedTeam"
-                  :options="null/*slackMembers.members*/"
+                  @select="updateAvailableUsers($event)"
+                  :options="teamsList"
                   openDirection="below"
                   style="min-width: 15vw"
                   selectLabel="Enter"
                   track-by="id"
-                  label="realName"
+                  label="name"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results. Try loading more</p>
@@ -138,18 +139,17 @@
               <template v-slot:input>
                 <!-- Make this users to add to team -->
                 <Multiselect
-                  placeholder="Select User Level"
-                  @input="mapUserLevel"
+                  placeholder="Select Users"
                   v-model="selectedUsers"
-                  :options="null/*userTypes*/"
+                  :options="usersList"
                   openDirection="below"
                   style="min-width: 15vw"
                   selectLabel="Enter"
-                  label="key"
+                  label="email"
                   :multiple="true"
                 >
                   <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
+                    <p class="multi-slot">Please select a team.</p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
@@ -181,6 +181,7 @@
         @click="
           manageTeamSelected = true
           noSelection = false
+          getTeams()
         "
         class="hover-img"
       >
@@ -538,9 +539,11 @@ export default {
       teamName: '',
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
-      teamsList: null,
+      teamsList: [],
+      originalTeam: null,
       selectedTeam: null,
       selectedUsers: [],
+      usersList: [],
       selectedTimezone: null,
       user: this.getUser,
       timezones: moment.tz.names(),
@@ -591,6 +594,28 @@ export default {
       } finally {
         this.homeView()
       }
+    },
+    updateAvailableUsers(team, users) {
+      console.log('hit', team, this.teamsList, this.team.list)
+      let filterUsers
+      if (this.team.list.length) {
+        filterUsers = this.team.list
+      } else {
+        filterUsers = users
+      }
+      console.log('filterUsers', filterUsers)
+      if (this.isAdmin) {
+        // If they are an admin, show all users except the ones in the selected team
+        this.usersList = filterUsers.filter(user => user.team !== team.id && !user.isTeamLeader)
+      } else {
+        // If they are not an admin, show users in their team or in original team, depending on which team is selected
+        if (team.id === originalTeam.id) {
+          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.getUser.team && !user.isTeamLeader)
+        } else {
+          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.originalTeam.id && !user.isTeamLeader)
+        }
+      }
+      console.log('this.usersList', this.usersList)
     },
     async removeTemplate() {
       try {
@@ -670,7 +695,15 @@ export default {
             organization: this.$store.state.user.organizationRef.id,
             team_lead: this.teamLead.id
           }
-          const res = await Organization.api.createNewTeam(data)
+          const teamRes = await Organization.api.createNewTeam(data)
+          console.log('res in createTeamSubmit', teamRes)
+          const addTeamData = {
+            users: [this.teamLead.id],
+            team_id: teamRes.id
+          }
+          const res2 = await Organization.api.addTeamMember(addTeamData)
+          this.refresh()
+          console.log('res2', res2)
           setTimeout(() => {
             this.handleCancel()
             this.teamName = ''
@@ -701,7 +734,12 @@ export default {
     },
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)
-      console.log('res in getTeams', res)
+      this.teamsList = res.results
+      this.originalTeam = res.results[0]
+      const currentTeam = res.results.filter(team => team.id === this.getUser.team)[0]
+      this.selectedTeam = currentTeam
+      this.updateAvailableUsers(currentTeam)
+      // console.log('res in getTeams', res)
     },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
@@ -758,11 +796,13 @@ export default {
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
-    // this.getTeams()
     this.refresh()
   },
   mounted() {
-    this.getTeams()
+    // this.getTeams()
+  },
+  updated() {
+    // this.getTeams()
   },
   computed: {
     getUser() {

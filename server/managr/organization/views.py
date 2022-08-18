@@ -421,7 +421,7 @@ class TeamViewSet(
         except Exception as e:
             print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
