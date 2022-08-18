@@ -726,7 +726,7 @@ class TeamQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(users__in=[user])
+            return self.filter(organization=user.organization)
         else:
             return None
 
