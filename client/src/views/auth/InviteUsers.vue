@@ -12,10 +12,10 @@
     >
       <form v-if="true/*hasSlack*/" class="invite-form modal-form">
         <div class="header">
-          <h3 class="invite-form__title">Create a Team</h3>
-          <h4 class="invite-form__subtitle">
-            {{ $store.state.user.organizationRef.name }}
-          </h4>
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Create a Team</h3>
+          </div>
         </div>
 
         <div
@@ -27,7 +27,7 @@
                 <input
                   placeholder="Team Name"
                   v-model="teamName"
-                  style="min-width: 15vw"
+                  style="width: 26vw"
                   class="template-input modal-input"
                   type="text"
                   name=""
@@ -45,7 +45,7 @@
                   v-model="teamLead/*might need @ input here (no space)*/"
                   :options="team.list"
                   openDirection="below"
-                  style="min-width: 15vw"
+                  style="width: 26vw"
                   selectLabel="Enter"
                   label="email"
                 >
@@ -64,16 +64,20 @@
           </div>
         </div>
         <div class="invite-form__actions">
-          <template>
-            <PulseLoadingSpinnerButton
-              @click="createTeamSubmit"
-              class="invite-button modal-button"
-              text="Save"
-              :loading="pulseLoading"
-              >Save</PulseLoadingSpinnerButton
-            >
-            <div class="cancel-button" @click="handleCancel">Cancel</div>
-          </template>
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="createTeamSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                text="Save"
+                :loading="pulseLoading"
+                >Save</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
+            </template>
+          </div>
         </div>
       </form>
     </Modal>
@@ -89,10 +93,10 @@
     >
       <form v-if="true/*hasSlack*/" class="invite-form modal-form">
         <div class="header">
-          <h3 class="invite-form__title" @click="test(team)">Add Members to Team</h3>
-          <h4 class="invite-form__subtitle">
-            {{ $store.state.user.organizationRef.name }}
-          </h4>
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title" @click="test(team)">Add Members to Team</h3>
+          </div>
         </div>
 
         <div
@@ -108,7 +112,7 @@
                   @select="updateAvailableUsers($event)"
                   :options="teamsList"
                   openDirection="below"
-                  style="min-width: 15vw"
+                  style="width: 26vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="name"
@@ -141,7 +145,7 @@
                   v-model="selectedUsers"
                   :options="usersList"
                   openDirection="below"
-                  style="min-width: 15vw"
+                  style="width: 26vw"
                   selectLabel="Enter"
                   label="email"
                   :multiple="true"
@@ -161,16 +165,20 @@
           </div>
         </div>
         <div class="invite-form__actions">
-          <template>
-            <PulseLoadingSpinnerButton
-              @click="editTeamSubmit"
-              class="invite-button modal-button"
-              text="Save"
-              :loading="pulseLoading"
-              >Save</PulseLoadingSpinnerButton
-            >
-            <div class="cancel-button" @click="handleCancel">Cancel</div>
-          </template>
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="editTeamSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                text="Save"
+                :loading="pulseLoading"
+                >Save</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
+            </template>
+          </div>
         </div>
       </form>
     </Modal>
@@ -1288,6 +1296,7 @@ input[type='checkbox'] + label::before {
   filter: invert(80%);
 }
 .header {
+  width: 100%;
   margin-top: -1rem;
 }
 // form {
@@ -1314,25 +1323,37 @@ input[type='checkbox'] + label::before {
 .invite-form {
   border: none;
   border-radius: 0.75rem;
-  min-width: 27vw;
-  min-height: 64vh;
+  min-width: 37vw;
+  // min-height: 64vh;
   display: flex;
   align-items: center;
+  justify-content: space-around;
   flex-direction: column;
   background-color: white;
   color: $base-gray;
   &__title {
     font-weight: bold;
     text-align: left;
+    font-size: 22px;
   }
   &__subtitle {
     color: $dark-green;
+    margin: 0.1rem;
+    font-size: 18px;
   }
   &__actions {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    // flex-direction: column;
+    justify-content: flex-end;
+    // align-items: flex-end;
+    width: 100%;
     margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
   }
   &__actions-noslack {
     display: flex;
@@ -1368,13 +1389,33 @@ input[type='checkbox'] + label::before {
   width: 100%;
   background-color: $white;
   height: 50vh;
-  justify-content: space-evenly;
+  // justify-content: space-evenly;
 }
 .modal-button {
   @include primary-button();
+  box-shadow: none;
   margin-top: 1.25rem;
   height: 2.5rem;
   width: 19rem;
   font-size: 14px;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  width: 90%;
+  margin: 0 auto;
+  letter-spacing: 1px;
+  h4 {
+    font-size: 20px;
+  }
+}
+.logo {
+  height: 24px;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
 </style>

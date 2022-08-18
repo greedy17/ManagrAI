@@ -640,6 +640,7 @@ input:focus {
 }
 .back-logo {
   position: absolute;
+  z-index: -1;
   opacity: 0.06;
   filter: alpha(opacity=50);
   height: 28%;
@@ -735,6 +736,7 @@ button {
       width: 100%;
       display: flex;
       margin-bottom: 0.5rem;
+      z-index: 2;
     }
     &__item {
       width: 33%;
@@ -767,6 +769,7 @@ button {
   margin-left: .5rem;
   box-shadow: none;
   height: 2rem;
+  z-index: 3;
 }
 .invite_button:disabled {
   color: $base-gray;
