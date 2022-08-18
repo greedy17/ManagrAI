@@ -10,7 +10,7 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form">
+      <form v-if="true/*hasSlack*/" class="invite-form modal-form">
         <div class="header">
           <h3 class="invite-form__title">Create a Team</h3>
           <h4 class="invite-form__subtitle">
@@ -24,12 +24,11 @@
           <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
               <template v-slot:input>
-                <label>Team Name:</label>
                 <input
                   placeholder="Team Name"
                   v-model="teamName"
                   style="min-width: 15vw"
-                  class="template-input"
+                  class="template-input modal-input"
                   type="text"
                   name=""
                   id=""
@@ -41,7 +40,6 @@
           <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
               <template v-slot:input>
-                <label @click="test(team)">Team Lead</label>
                 <Multiselect
                   placeholder="Team Lead"
                   v-model="teamLead/*might need @ input here (no space)*/"
@@ -69,7 +67,7 @@
           <template>
             <PulseLoadingSpinnerButton
               @click="createTeamSubmit"
-              class="invite-button"
+              class="invite-button modal-button"
               text="Save"
               :loading="pulseLoading"
               >Save</PulseLoadingSpinnerButton
@@ -89,9 +87,9 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form">
+      <form v-if="true/*hasSlack*/" class="invite-form modal-form">
         <div class="header">
-          <h3 class="invite-form__title" @click="test(team)">Edit Your Team</h3>
+          <h3 class="invite-form__title" @click="test(team)">Add Members to Team</h3>
           <h4 class="invite-form__subtitle">
             {{ $store.state.user.organizationRef.name }}
           </h4>
@@ -166,7 +164,7 @@
           <template>
             <PulseLoadingSpinnerButton
               @click="editTeamSubmit"
-              class="invite-button"
+              class="invite-button modal-button"
               text="Save"
               :loading="pulseLoading"
               >Save</PulseLoadingSpinnerButton
@@ -250,36 +248,26 @@
     <section v-if="manageTeamSelected">
       <div class="invite-users__header">
         <h3 style="color: #4d4e4c">Manage Your Team</h3>
-        <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
-          Create New Team
-          <!-- <img
-            v-if="hasSlack"
-            style="height: 0.8rem; margin-left: 0.25rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            v-else
-            style="height: 0.8rem; margin-left: 0.25rem"
-            src="@/assets/images/logo.png"
-            alt=""
-          /> -->
-        </button>
-        <button class="invite_button" type="submit" @click="handleInvite">
-          Invite Member
-          <img
-            v-if="hasSlack"
-            style="height: 0.8rem; margin-left: 0.25rem"
-            src="@/assets/images/slackLogo.png"
-            alt=""
-          />
-          <img
-            v-else
-            style="height: 0.8rem; margin-left: 0.25rem"
-            src="@/assets/images/logo.png"
-            alt=""
-          />
-        </button>
+        <div>
+          <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
+            Create New Team
+          </button>
+          <button class="invite_button" type="submit" @click="handleInvite">
+            Invite Member
+            <img
+              v-if="hasSlack"
+              style="height: 0.8rem; margin-left: 0.25rem"
+              src="@/assets/images/slackLogo.png"
+              alt=""
+            />
+            <img
+              v-else
+              style="height: 0.8rem; margin-left: 0.25rem"
+              src="@/assets/images/logo.png"
+              alt=""
+            />
+          </button>
+        </div>
       </div>
 
       <Invite class="invite-users__inviter" :handleEdit="handleEdit" :inviteOpen="inviteOpen" @cancel="handleCancel" />
@@ -959,7 +947,7 @@ h2 {
   border-radius: 0.25rem;
   transition: all 0.25s;
   padding: 8px 12px;
-
+  margin-left: .5rem;
   font-size: 14px;
   border: 1px solid #e8e8e8;
 }
@@ -1361,5 +1349,32 @@ input[type='checkbox'] + label::before {
   &:hover {
     cursor: pointer;
   }
+}
+
+.modal-input {
+  width: 15vw;
+  height: 2.5rem;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+}
+.modal-input:focus {
+  outline: none;
+}
+.modal-input::placeholder {
+  // color: #35495e;
+  color: $very-light-gray;
+}
+.modal-form {
+  width: 100%;
+  background-color: $white;
+  height: 50vh;
+  justify-content: space-evenly;
+}
+.modal-button {
+  @include primary-button();
+  margin-top: 1.25rem;
+  height: 2.5rem;
+  width: 19rem;
+  font-size: 14px;
 }
 </style>

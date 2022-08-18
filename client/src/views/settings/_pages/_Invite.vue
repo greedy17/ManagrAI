@@ -171,7 +171,7 @@
       <div class="key">
         <div class="left-key">
           <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
-          <button @click="handleEdit">Edit Team</button>
+          <button class="invite_button" @click="handleEdit">Edit Team</button>
         </div>
         <div class="right-key">
           <p class="complete">Complete</p>
@@ -247,10 +247,11 @@
         </div>
       </div>
       <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
-        <template v-if="member.id !== user.id">
+        <template v-if="member.id !== user.id && member.team === $store.state.user.team">
           <div
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item col"
+            @click="test(team.list)"
           >
             {{ member.firstName ? member.firstName : 'Pending' }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
@@ -366,10 +367,14 @@ export default {
     }
   },
   async created() {
+    console.log("this.$store.state.user.team", this.$store.state.user.team)
     this.refresh()
     await this.listUsers()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     onCopy: function () {
       this.$toast('Link copied.', {
         timeout: 2000,
@@ -749,4 +754,46 @@ button {
     cursor: pointer;
   }
 }
+.invite_button {
+  color: $dark-green;
+  background-color: white;
+  border-radius: 0.25rem;
+  transition: all 0.25s;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
+  width: 6rem;
+  margin-top: .75rem;
+  margin-left: .5rem;
+  box-shadow: none;
+  height: 2rem;
+}
+.invite_button:disabled {
+  color: $base-gray;
+  background-color: $soft-gray;
+  border-radius: 0.25rem;
+  transition: all 0.25s;
+  padding: 8px 12px;
+  font-weight: 400px;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
+}
+.invite_button:hover{
+  cursor: pointer;
+  transform: scale(1.025);
+  box-shadow: 1px 2px 3px $mid-gray;
+  background-color: white;
+}
+// .green__button {
+//   border-radius: 0.33rem;
+//   padding: 0.5rem 0.3rem;
+//   font-size: 14px;
+//   color: white;
+//   background-color: $dark-green;
+//   border: none;
+//   cursor: pointer;
+//   width: 6rem;
+//   margin-top: .5rem;
+//   margin-left: .5rem;
+// }
 </style>
