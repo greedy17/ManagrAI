@@ -1,5 +1,5 @@
 <template>
-  <div class="pipelines">
+  <div @click="test" class="pipelines">
     <Modal
       v-if="modalOpen"
       dimmed
@@ -204,7 +204,7 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : createReferenceOpts[field.apiName]
+                            : stageReferenceOpts[field.apiName]
                         "
                         @select="
                           setUpdateValidationValues(
@@ -898,7 +898,7 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : referenceOpts[field.apiName]
+                            : stageReferenceOpts[field.apiName]
                         "
                         @select="
                           setUpdateValidationValues(
@@ -1791,7 +1791,7 @@
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
-                    : referenceOpts[field.apiName]
+                    : stageReferenceOpts[field.apiName]
                 "
                 @select="
                   setUpdateValidationValues(
@@ -2139,6 +2139,8 @@ export default {
   },
   data() {
     return {
+      stageGateCopy: {},
+      stageReferenceOpts: {},
       currentSelectedProduct: null,
       savingProduct: null,
       productName: null,
@@ -2403,6 +2405,9 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    test() {
+      console.log(this.stageReferenceOpts)
+    },
     cancelEditProduct() {
       this.dropdownProductVal = {}
       this.editingProduct = !this.editingProduct
@@ -2656,6 +2661,8 @@ export default {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
           this.productReferenceOpts[key] = res
+        } else if (type === 'stage') {
+          this.stageReferenceOpts[key] = res
         } else {
           this.createReferenceOpts[key] = res
         }
@@ -3795,6 +3802,11 @@ export default {
             this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
           }
         }
+        for (let i = 0; i < this.stageGateCopy.length; i++) {
+          if (this.stageGateCopy[i].dataType === 'Reference') {
+            this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+          }
+        }
 
         for (let i = 0; i < this.createOppForm.length; i++) {
           if (this.createOppForm[i].dataType === 'Reference') {
@@ -3814,6 +3826,14 @@ export default {
 
         for (let i in this.referenceOpts) {
           this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+
+        for (let i in this.stageReferenceOpts) {
+          this.stageReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.stageReferenceOpts[i],
+            'stage',
+          )
         }
 
         for (let i in this.createReferenceOpts) {
@@ -3866,6 +3886,8 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
+
+        console.log(res)
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -3882,6 +3904,7 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )[0].fieldsRef
 
+        this.stageGateCopy = stageGateForms[0].fieldsRef
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef

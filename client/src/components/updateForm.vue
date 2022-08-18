@@ -875,6 +875,9 @@ export default {
     }
   },
   methods: {
+    goToProfile() {
+      this.$emit('go-to-profile')
+    },
     cancelEditProduct() {
       this.$emit('cancel-edit-product')
     },

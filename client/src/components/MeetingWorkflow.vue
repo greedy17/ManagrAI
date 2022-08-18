@@ -136,6 +136,64 @@
                   </template>
                 </Multiselect>
               </div>
+
+              <div
+                v-else-if="
+                  field.dataType === 'Picklist' ||
+                  field.dataType === 'MultiPicklist' ||
+                  (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                "
+              >
+                <p>{{ field.dataType }}:</p>
+                <Multiselect
+                  v-model="dropdownVal[field.apiName]"
+                  :options="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? allPicklistOptions[field.id]
+                      : referenceOpts[field.apiName]
+                  "
+                  @select="
+                    setUpdateValues(
+                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? $event.value
+                        : $event.id,
+                      field.dataType === 'MultiPicklist' ? true : false,
+                    )
+                  "
+                  @search-change="
+                    field.dataType === 'Reference'
+                      ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                      : null
+                  "
+                  :loading="dropdownLoading"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                  :track-by="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'value'
+                      : 'id'
+                  "
+                  :label="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'label'
+                      : 'name'
+                  "
+                >
+                  <template v-slot:noResult>
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template v-slot:placeholder>
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ field.referenceDisplayLabel }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+
               <div
                 v-else-if="
                   field.dataType === 'TextArea' ||
@@ -463,6 +521,7 @@ export default {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      dropdownVal: {},
       selectedResourceType: null,
       selectingResource: false,
       addingOpp: false,
@@ -501,6 +560,9 @@ export default {
     owners: {},
     index: {},
     participants: {},
+    allPicklistOptions: {},
+    referenceOpts: {},
+    dropdownLoading: {},
   },
   computed: {
     hasLastName() {
@@ -634,7 +696,18 @@ export default {
     transform: translate(0%, 50%);
   }
 }
-
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 .tooltip {
   position: relative;
   display: flex;
@@ -823,6 +896,7 @@ a {
     gap: 0.5rem;
     flex-direction: row;
     flex-wrap: wrap;
+    overflow: scroll;
   }
   &__footer {
     display: flex;
@@ -865,7 +939,7 @@ a {
     cursor: pointer;
 
     img {
-      height: 0.8rem;
+      height: 12px;
       margin-left: 0.25rem;
       filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
         brightness(93%) contrast(89%);

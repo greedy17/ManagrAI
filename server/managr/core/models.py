@@ -630,9 +630,7 @@ class UserActivity(models.Model):
         from managr.salesforce.models import MeetingWorkflow
 
         workflow = MeetingWorkflow.objects.get(id=meeting_id)
-        main_form = workflow.forms.filter(
-            template__form_type__in=["CREATE", "UPDATE"], resource=workflow.resource_type
-        ).first()
+        main_form = workflow.forms.filter(resource_id=workflow.resource_id).first()
         saved_data = [
             key
             for key in main_form.saved_data.keys()

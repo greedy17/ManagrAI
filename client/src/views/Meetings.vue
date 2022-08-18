@@ -70,6 +70,7 @@
         @update-product="updateProduct"
         @cancel-edit-product="cancelEditProduct"
         @set-product-values="setProductValues"
+        @go-to-profile="goToProfile"
         :resource="resourceType"
         :productReferenceOpts="productReferenceOpts"
         :fields="resourceFields"
@@ -303,6 +304,9 @@
             :accounts="allAccounts"
             :meetingLoading="meetingLoading"
             :allOpps="allOpps"
+            :allPicklistOptions="allPicklistOptions"
+            :referenceOpts="contactCreateReferenceOpts"
+            :dropdownLoading="dropdownLoading"
             :index="i"
           />
         </div>
@@ -338,6 +342,7 @@ export default {
   },
   data() {
     return {
+      contactCreateReferenceOpts: {},
       currentSelectedProduct: null,
       savingProduct: null,
       productName: null,
@@ -783,6 +788,8 @@ export default {
           this.accountReferenceOpts[key] = res
         } else if (type === 'updateContact') {
           this.contactReferenceOpts[key] = res
+        } else if (type === 'createContact') {
+          this.contactCreateReferenceOpts[key] = res
         } else if (type === 'updateLead') {
           this.leadReferenceOpts[key] = res
         }
@@ -1272,6 +1279,13 @@ export default {
           }
         }
 
+        for (let i = 0; i < this.createContactForm.length; i++) {
+          if (this.createContactForm[i].dataType === 'Reference') {
+            this.contactCreateReferenceOpts[this.createContactForm[i].apiName] =
+              this.createContactForm[i].id
+          }
+        }
+
         for (let i = 0; i < this.updateAccountForm.length; i++) {
           if (this.updateAccountForm[i].dataType === 'Reference') {
             this.accountReferenceOpts[this.updateAccountForm[i].apiName] =
@@ -1312,6 +1326,15 @@ export default {
             'updateContact',
           )
         }
+
+        for (let i in this.contactCreateReferenceOpts) {
+          this.contactCreateReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.contactCreateReferenceOpts[i],
+            'createContact',
+          )
+        }
+
         for (let i in this.leadReferenceOpts) {
           this.leadReferenceOpts[i] = this.getReferenceFieldList(
             i,
