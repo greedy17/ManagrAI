@@ -85,13 +85,13 @@
       dimmed
       @close-modal="
         () => {
-          $emit('cancel'), resetData()
+          $emit('cancel'), handleCancel()
         }
       "
     >
       <form v-if="true/*hasSlack*/" class="invite-form">
         <div class="header">
-          <h3 class="invite-form__title">Edit Your Team</h3>
+          <h3 class="invite-form__title" @click="test(team)">Edit Your Team</h3>
           <h4 class="invite-form__subtitle">
             {{ $store.state.user.organizationRef.name }}
           </h4>
@@ -538,6 +538,7 @@ export default {
       teamName: '',
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
+      teamsList: null,
       selectedTeam: null,
       selectedUsers: [],
       selectedTimezone: null,
@@ -674,7 +675,6 @@ export default {
             this.handleCancel()
             this.teamName = ''
             this.teamLead = ''
-            this.selectedTeam = null
             this.$toast('Sucessfully submitted', {
               timeout: 2000,
               position: 'top-left',
@@ -698,6 +698,10 @@ export default {
     },
     async refresh() {
       this.team.refresh()
+    },
+    async getTeams() {
+      const res = await Organization.api.listTeams(this.getUser.id)
+      console.log('res in getTeams', res)
     },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
@@ -754,7 +758,11 @@ export default {
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
+    // this.getTeams()
     this.refresh()
+  },
+  mounted() {
+    this.getTeams()
   },
   computed: {
     getUser() {

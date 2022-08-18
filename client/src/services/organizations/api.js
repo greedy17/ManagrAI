@@ -41,6 +41,19 @@ export default class OrganizationAPI {
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.orgUpdate' }))
   }
+  async listTeams(id) {
+    try {
+      const res = await this.client.get(TEAM_ENDPOINT, { params: { user: id } })
+      console.log('teamRes', res)
+      return res.data
+      // return {
+      //   ...res.data,
+      //   results: res.data.results.map(this.cls.fromAPI)
+      // }
+    } catch {
+      apiErrorHandler({ apiName: 'Organization.listTeams' })
+    }
+  }
   async createNewTeam(data) {
     return this.client
       .post(TEAM_ENDPOINT, data)
