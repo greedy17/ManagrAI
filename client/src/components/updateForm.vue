@@ -14,7 +14,7 @@
               "
               alt=""
             />
-            <h3>Update Opportunity</h3>
+            <h3>Update {{ resource }}</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -875,6 +875,9 @@ export default {
     }
   },
   methods: {
+    goToProfile() {
+      this.$emit('go-to-profile')
+    },
     cancelEditProduct() {
       this.$emit('cancel-edit-product')
     },
