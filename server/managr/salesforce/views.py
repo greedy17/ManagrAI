@@ -902,7 +902,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -994,11 +995,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             else []
         )
         current_form_ids = []
-        main_form = (
-            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE)
-            .exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-            .first()
-        )
+        main_form = workflow.forms.filter(resource_id=workflow.resource_id).first()
         current_form_ids.append(str(main_form.id))
         main_form.save_form(request_data.get("form_data"), False)
         if len(forms):
