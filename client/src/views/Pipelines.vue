@@ -1288,7 +1288,7 @@
               </div>
             </div>
           </div>
-          <div v-if="currentProducts.length">
+          <div v-if="hasProducts && currentProducts.length">
             <section v-if="!editingProduct">
               <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
                 <h4>
