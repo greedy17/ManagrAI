@@ -165,7 +165,7 @@
         <div class="invite-form__actions">
           <template>
             <PulseLoadingSpinnerButton
-              @click="null/*handleInvite*/"
+              @click="editTeamSubmit"
               class="invite-button"
               text="Save"
               :loading="pulseLoading"
@@ -708,6 +708,49 @@ export default {
             this.handleCancel()
             this.teamName = ''
             this.teamLead = ''
+            this.$toast('Sucessfully submitted', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.pulseLoading = false
+          }, 1400)
+        } catch(e) {
+          console.log("Error: ", e)
+          this.$toast('Error Creating Team', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+        }
+      }
+    },
+    async editTeamSubmit() {
+      this.pulseLoading = true
+      if (!this.selectedTeam || !this.selectedUsers.length) {
+        setTimeout(() => {
+          console.log('Please submit all info')
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const userIds = this.selectedUsers.map(user => user.id)
+          const addTeamData = {
+            users: userIds,
+            team_id: this.selectedTeam.id
+          }
+          const res = await Organization.api.addTeamMember(addTeamData)
+          this.refresh()
+          console.log('res', res)
+          setTimeout(() => {
+            this.handleCancel()
+            this.selectedUsers = []
+            this.selectedTeam = ''
             this.$toast('Sucessfully submitted', {
               timeout: 2000,
               position: 'top-left',
