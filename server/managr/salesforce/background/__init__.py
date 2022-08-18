@@ -660,11 +660,14 @@ def _process_add_call_to_sf(workflow_id, *args):
     data = dict(
         Subject=f"Meeting - {subject}",
         Description=f"{'No comments' if description is None else description}\n This meeting started on {formatted_start} and ended on {formatted_end} ",
-        WhatId=workflow.resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Call",
     )
+    if workflow.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = workflow.resource.integration_id
+    else:
+        data["WhoId"] = workflow.resource.integration_id
     if task_type != "None":
         data["Type"] = task_type
     attempts = 1
