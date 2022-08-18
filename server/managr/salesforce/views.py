@@ -504,6 +504,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    data = {"error": str(e), "success": False}
                     break
                 else:
                     if model_object.owner == user:
