@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <NavBar v-if="!hideNavBar && userIsLoggedIn" />
-    <SideDrawer></SideDrawer>
+    <SideDrawer :key="$route.fullPath"></SideDrawer>
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -33,9 +33,25 @@ export default {
     }
   },
   watch: {
-    // When route changes, scroll to the top
+    // When route changes,
     '$route.path': function watchRoutePath() {
-      VueScrollTo.scrollTo('#app', 200)
+      const newDateTime = Date.now()
+      // If it's been more than an hour,
+      if (newDateTime - localStorage.dateTime > 3600000) {
+        // Log out
+        if (localStorage.isLoggedOut) {
+          return
+        } else {
+          localStorage.isLoggedOut = true
+          this.$store.dispatch('logoutUser')
+          this.$router.push({ name: 'Login' })
+        }
+      } else {
+        // reset localStorage datetime
+        localStorage.dateTime = newDateTime
+        // scroll to the top
+        VueScrollTo.scrollTo('#app', 200)
+      }
     },
   },
   async created() {

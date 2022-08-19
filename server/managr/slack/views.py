@@ -53,7 +53,11 @@ from .models import (
     OrgCustomSlackForm,
     OrgCustomSlackFormInstance,
 )
-from .serializers import OrgCustomSlackFormSerializer, OrgSlackIntegrationWriteSerializer
+from .serializers import (
+    OrgCustomSlackFormSerializer,
+    OrgSlackIntegrationWriteSerializer,
+    OrgCustomSlackFormInstanceSerializer,
+)
 
 
 from managr.salesforce.routes import routes as model_routes
@@ -496,7 +500,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
         # Otherwise, handle a GET
         organization = request.user.organization
-
         # Retrieve the custom slack form and serialize it
         try:
             serializer = OrgCustomSlackFormSerializer(instance=organization.custom_slack_form)
@@ -544,6 +547,9 @@ class SlackFormsViewSet(
     serializer_class = OrgCustomSlackFormSerializer
 
     def get_queryset(self):
+        fromAdmin = self.request.GET.get("fromAdmin", False)
+        if fromAdmin and self.request.user.is_staff and json.loads(fromAdmin):
+            return OrgCustomSlackForm.objects.for_staff()
         return OrgCustomSlackForm.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -572,29 +578,34 @@ class SlackFormsViewSet(
         serializer.save()
         instance = serializer.instance
         instance.fields.clear()
+        fields_state = {}
         for i, field in enumerate(fields_ref):
             instance.fields.add(
                 field["id"],
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )
+            fields_state[i] = field["apiName"]
+
+        instance.config = fields_state
         instance.save()
         if data["resource"] == "OpportunityLineItem":
             org = Organization.objects.get(id=request.data["organization"])
+            org.update_has_settings("products")
             form = OrgCustomSlackForm.objects.filter(
                 organization=self.request.user.organization_id,
                 resource="OpportunityLineItem",
                 form_type="UPDATE",
             ).first()
-            org.update_has_settings("products")
             update_data = data
             update_data["form_type"] = "UPDATE"
             update_serializer = self.get_serializer(data=update_data, instance=form)
             update_serializer.is_valid(raise_exception=True)
-            update_serializer.save()
             instance = update_serializer.instance
             instance.fields.clear()
             for i, field in enumerate(fields):
-                instance.fields.add(field, through_defaults={"order": i})
+                form.fields.add(field, through_defaults={"order": i})
+            instance.config = fields_state
+            instance.save()
         return Response(serializer.data)
 
 
@@ -1216,3 +1227,22 @@ def launch_digest(request):
         generate_reminder_message(user.id)
 
     return Response()
+
+
+class SlackFormInstanceViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = OrgCustomSlackFormInstanceSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return OrgCustomSlackFormInstance.objects.all()[:50]
+        return OrgCustomSlackFormInstance.objects.filter(
+            user__organization=self.request.user.organization
+        )
+

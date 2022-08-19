@@ -1,23 +1,5 @@
 <template>
   <div class="slack-form-builder">
-    <div>
-      <div>
-        <template v-if="showValidations">
-          <template v-if="sfValidations.length">
-            <ul :key="val.id" v-for="val in sfValidations">
-              <li>
-                <strong>Title:</strong>
-                {{ val.description }}
-                <strong>Message:</strong>
-                {{ val.message }}
-              </li>
-            </ul>
-          </template>
-          <template v-else>{{ resource }} does not appear to have any custom validations</template>
-        </template>
-      </div>
-    </div>
-    <!-- <p @click="test">test</p> -->
     <div class="opportunity__row">
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div v-if="formType === 'STAGE_GATING'">
@@ -42,11 +24,10 @@
           </div>
 
           <div v-if="resource === 'OpportunityLineItem'">
-            <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered">
+            <!-- <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered">
               <p style="margin-left: 0.5rem">
                 PricebookEntry <span style="color: #fa646a">*</span>
               </p>
-
               <Multiselect
                 placeholder="Select Pricebook field"
                 :options="
@@ -108,18 +89,29 @@
                   </p>
                 </template>
               </Multiselect>
-            </div>
+            </div> -->
           </div>
         </div>
 
-        <div v-if="resource === 'Contact'">
+        <div v-if="resource === 'Contact' || resource === 'Lead' || resource === 'Account'">
           <p class="section-title">Select required form fields:</p>
           <div v-if="formType === 'CREATE'">
-            <div v-if="!addedFieldNames.includes('LastName')" class="centered">
-              <p style="margin-left: 0.5rem">Last Name <span style="color: #fa646a">*</span></p>
-
+            <div
+              v-if="
+                (!addedFieldNames.includes('LastName') &&
+                  (resource === 'Contact' || resource === 'Lead')) ||
+                (!addedFieldNames.includes('LastName') && resource === 'Account')
+              "
+              class="centered"
+            >
+              <p style="margin-left: 0.5rem">
+                {{ resource === 'Account' ? 'Account Name' : 'Last Name'
+                }}<span style="color: #fa646a">*</span>
+              </p>
               <Multiselect
-                placeholder="Search for 'Last Name'"
+                :placeholder="
+                  resource === 'Account' ? `Search for Account` : `Search for 'Last Name'`
+                "
                 :options="
                   formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
                 "
@@ -141,50 +133,16 @@
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
-                    Search for 'Last Name'
+                    {{ resource === 'Account' ? `Search for 'Account'` : `Search for 'Last Name'` }}
                   </p>
                 </template>
               </Multiselect>
             </div>
-          </div>
-        </div>
-
-        <div v-if="resource === 'Lead'">
-          <p class="section-title">Select required form fields:</p>
-          <div v-if="formType === 'CREATE'">
-            <div v-if="!addedFieldNames.includes('LastName')" class="centered">
-              <p style="margin-left: 0.5rem">Last Name<span style="color: #fa646a">*</span></p>
-              <Multiselect
-                placeholder="Search for 'Last Name'"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Search for 'Last Name'
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div v-if="!addedFieldNames.includes('Company')" class="centered">
+            <div
+              v-if="!addedFieldNames.includes('Company') && resource === 'Lead'"
+              class="centered"
+            >
               <p style="margin-left: 0.5rem">Company<span style="color: #fa646a">*</span></p>
-
               <Multiselect
                 placeholder="Search for 'Company'"
                 :options="
@@ -213,9 +171,8 @@
                 </template>
               </Multiselect>
             </div>
-            <div v-if="!addedFieldNames.includes('Status')" class="centered">
+            <div v-if="!addedFieldNames.includes('Status') && resource === 'Lead'" class="centered">
               <p style="margin-left: 0.5rem">Status<span style="color: #fa646a">*</span></p>
-
               <Multiselect
                 placeholder="Search for 'Status'"
                 :options="
@@ -240,43 +197,6 @@
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Search for 'Status'
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="resource === 'Account'">
-          <p class="section-title">Select required form fields:</p>
-          <div v-if="formType === 'CREATE'">
-            <div v-if="!addedFieldNames.includes('Name')" class="centered">
-              <p style="margin-left: 0.5rem">Account Name <span style="color: #fa646a">*</span></p>
-
-              <Multiselect
-                placeholder="Search for Account"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Search for 'Account'
                   </p>
                 </template>
               </Multiselect>
@@ -478,11 +398,45 @@
         </draggable>
 
         <div
-          v-if="resource === 'Opportunity'"
-          style="display: flex; align-items: center; justify-content: center"
+          v-if="
+            resource === 'Opportunity' ||
+            (resource === 'Contact' &&
+              !addingFields &&
+              addedFieldNames.includes('LastName') &&
+              formType === 'CREATE') ||
+            (!addingFields && formType === 'UPDATE' && resource === 'Contact') ||
+            resource === 'OpportunityLineItem' ||
+            (!addingFields && formType === 'UPDATE' && resource === 'Lead') ||
+            (resource === 'Lead' &&
+              requiredLeadFields.every((i) => addedFieldNames.includes(i)) &&
+              formType === 'CREATE') ||
+            (resource === 'Account' &&
+              !addingFields &&
+              addedFieldNames.includes('Name') &&
+              formType === 'CREATE') ||
+            (!addingFields && formType === 'UPDATE' && resource === 'Account')
+          "
+          :style="
+            resource === 'Opportunity'
+              ? `
+              display: flex; 
+              align-items: center; 
+              justify-content: center;
+            `
+              : `
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              margin-top: 0.5rem;
+            `
+          "
         >
           <button
-            v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+            v-if="
+              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) ||
+              resource !== 'Opportunity'
+            "
             @click="
               () => {
                 addingFields = !addingFields
@@ -490,187 +444,89 @@
             "
             class="default_button"
           >
-            Add more fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-
-        <div
-          v-else-if="
-            resource === 'Contact' &&
-            !addingFields &&
-            addedFieldNames.includes('LastName') &&
-            formType === 'CREATE'
-          "
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add more fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-        <div
-          v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Contact'"
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-
-        <div
-          v-else-if="
-            resource === 'OpportunityLineItem' &&
-            requiredProductFields.every((i) => addedFieldNames.includes(i))
-          "
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add more fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-        <div
-          v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Lead'"
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add more fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-        <div
-          v-else-if="
-            resource === 'Lead' &&
-            requiredLeadFields.every((i) => addedFieldNames.includes(i)) &&
-            formType === 'CREATE'
-          "
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add more fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-
-        <div
-          v-else-if="
-            resource === 'Account' &&
-            !addingFields &&
-            addedFieldNames.includes('Name') &&
-            formType === 'CREATE'
-          "
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add more fields
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-
-        <div
-          v-else-if="!addingFields && formType === 'UPDATE' && resource === 'Account'"
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: 0.5rem;
-          "
-        >
-          <button
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            Add more fields
+            {{
+              !addingFields && formType === 'UPDATE' && resource === 'Contact'
+                ? `Add fields`
+                : `Add more fields`
+            }}
             <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
           </button>
         </div>
 
         <div class="example--footer">
+          <PulseLoadingSpinnerButton
+            v-if="
+              resource === 'Opportunity' &&
+              !productSelected &&
+              !userHasProducts &&
+              formType === 'UPDATE'
+            "
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+          />
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Opportunity' && !productSelected && formType === 'CREATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+
+          <div
+            v-if="
+              resource === 'Opportunity' &&
+              (productSelected || userHasProducts) &&
+              formType !== 'CREATE' &&
+              formType !== 'STAGE_GATING'
+            "
+          >
+            <button
+              v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
+              class="save"
+              @click="goToProducts"
+              style="margin-right: 4px"
+            >
+              Save + Continue to products
+            </button>
+            <button v-else class="disabled" style="margin-right: 4px">
+              Save + Continue to products
+            </button>
+          </div>
+
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact' && formType === 'CREATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+            :disabled="!addedFieldNames.includes('LastName')"
+          />
+          <PulseLoadingSpinnerButton
+            v-else-if="resource === 'Contact' && formType === 'UPDATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'OpportunityLineItem'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
+
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Lead' || resource === 'Account'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
           <button
             v-if="
               formType !== 'STAGE_GATING' &&
@@ -706,104 +562,22 @@
             Back
           </button>
           <div class="row__" v-if="formType === 'STAGE_GATING'">
-            <button style="margin-right: 0.5rem" @click="goToValidations" class="disabled__">
-              Cancel
-            </button>
             <PulseLoadingSpinnerButton
               @click="onSave"
               class="primary-button"
               text="Save"
               :loading="savingForm"
             />
-          </div>
-
-          <PulseLoadingSpinnerButton
-            v-if="
-              resource === 'Opportunity' &&
-              !productSelected &&
-              !userHasProducts &&
-              formType === 'UPDATE'
-            "
-            @click="onSave"
-            class="primary-button"
-            :class="
-              !requiredOpportunityFields.every((i) => addedFieldNames.includes(i))
-                ? 'primary-button'
-                : 'primary-button'
-            "
-            text="Save"
-            :loading="savingForm"
-            :disabled="!requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
-          />
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity' && !productSelected && formType === 'CREATE'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-
-          <div
-            v-if="
-              resource === 'Opportunity' &&
-              (productSelected || userHasProducts) &&
-              formType !== 'CREATE' &&
-              formType !== 'STAGE_GATING'
-            "
-          >
-            <button
-              v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
-              class="save"
-              @click="goToProducts"
-            >
-              Save + Continue to products
+            <button style="margin-right: 0.5rem" @click="goToValidations" class="disabled__">
+              Cancel
             </button>
-            <button v-else class="disabled">Save + Continue to products</button>
           </div>
-
-          <PulseLoadingSpinnerButton
-            v-else-if="resource === 'Contact' && formType === 'CREATE'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!addedFieldNames.includes('LastName')"
-          />
-          <PulseLoadingSpinnerButton
-            v-else-if="resource === 'Contact' && formType === 'UPDATE'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'OpportunityLineItem'"
-            @click="onSave"
-            class="primary-button"
-            :class="
-              !requiredProductFields.every((i) => addedFieldNames.includes(i))
-                ? 'primary-button'
-                : 'primary-button'
-            "
-            text="Save"
-            :loading="savingForm"
-            :disabled="!requiredProductFields.every((i) => addedFieldNames.includes(i))"
-          />
-
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'Lead' || resource === 'Account'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
         </div>
       </div>
 
       <div class="recommend" v-if="addingFields">
-        <div v-if="formType !== 'STAGE_GATING'" class="recommend__header">
-          <h4>Add More Fields</h4>
+        <div class="recommend__header">
+          <h4>{{ formType !== 'STAGE_GATING' ? 'Add More Fields' : 'Add Fields' }}</h4>
           <img
             @click="
               () => {
@@ -815,27 +589,24 @@
             alt=""
           />
         </div>
-        <div class="recommend__header" v-else>
-          <h4>Add Fields</h4>
-          <img
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            height="1rem"
-            src="@/assets/images/close.svg"
-            alt=""
-          />
-        </div>
-        <div v-if="formType === 'STAGE_GATING'" class="recommend__body">
+        <div class="recommend__body">
           <Multiselect
-            placeholder="Search for Validation Fields"
+            :placeholder="
+              formType === 'STAGE_GATING' ? 'Search for Validation Fields' : 'Search Fields'
+            "
             :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
             @input="onAddField($event)"
             openDirection="below"
-            style="width: 20vw; margin-top: 1.5rem"
+            :style="
+              formType === 'STAGE_GATING'
+                ? 'width: 20vw; margin-top: 1.5rem'
+                : 'width: 20vw; margin-top: 1rem'
+            "
             selectLabel="Enter"
+            :customLabel="
+              ({ referenceDisplayLabel }) =>
+                referenceDisplayLabel === 'PricebookEntry' ? 'Products' : referenceDisplayLabel
+            "
             track-by="apiName"
             label="referenceDisplayLabel"
           >
@@ -850,205 +621,10 @@
             <template slot="placeholder">
               <p class="slot-icon">
                 <img src="@/assets/images/search.svg" alt="" />
-                Search for Validation Fields
+                {{ formType === 'STAGE_GATING' ? 'Search for Validation Fields' : 'Search Fields' }}
               </p>
             </template>
           </Multiselect>
-        </div>
-        <div class="recommend__body" v-if="formType !== 'STAGE_GATING'">
-          <Multiselect
-            placeholder="Search Fields"
-            :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-            @input="onAddField($event)"
-            openDirection="below"
-            style="width: 20vw; margin-top: 1rem"
-            selectLabel="Enter"
-            track-by="apiName"
-            label="referenceDisplayLabel"
-          >
-            <template slot="noResult">
-              <p class="multi-slot">No results. Try loading more</p>
-            </template>
-            <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">
-                Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-              </p>
-            </template>
-            <template slot="placeholder">
-              <p class="slot-icon">
-                <img src="@/assets/images/search.svg" alt="" />
-                Search Fields
-              </p>
-            </template>
-          </Multiselect>
-        </div>
-      </div>
-
-      <div
-        style="cursor: not-allowed"
-        :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'"
-      >
-        <div
-          style="
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            margin-top: -0.75rem;
-          "
-        >
-          <div style="display: flex; flex-direction: row; align-items: center">
-            <div class="white-background">
-              <img src="@/assets/images/logo.png" style="height: 1.5rem" alt="" />
-            </div>
-            <h3 v-if="resource !== 'OpportunityLineItem' && formType !== 'STAGE_GATING'">
-              {{ lowerCase(formType, resource) }}
-            </h3>
-            <h3 v-else-if="resource === 'OpportunityLineItem'">Product</h3>
-            <h3 v-else>Stage Specific</h3>
-          </div>
-
-          <div
-            style="
-              display: flex;
-              flex-direction: row;
-              align-items: center;
-              justify-content: center;
-              filter: invert(90%);
-            "
-          >
-            <img src="@/assets/images/share.svg" class="invert2" style="height: 1rem" alt="" />
-            <img
-              src="@/assets/images/close.svg"
-              class="invert2"
-              style="height: 1rem; margin-left: 0.5rem"
-              alt=""
-            />
-          </div>
-        </div>
-
-        <h1 class="example-text">SLACK PREVIEW</h1>
-        <div v-if="resource !== 'OpportunityLineItem'">
-          <p>Note Subject: <span style="color: #beb5cc">(optional)</span></p>
-          <textarea
-            disabled
-            name=""
-            id=""
-            cols="30"
-            rows="3"
-            style="width: 100%; border-radius: 0.25rem; resize: none"
-          >
-“Meeting Subject goes here” (lives in Tasks)
-          </textarea>
-        </div>
-        <div v-if="resource !== 'OpportunityLineItem'">
-          <p>Note: <span style="color: #beb5cc">(optional)</span></p>
-          <textarea
-            disabled
-            name=""
-            id=""
-            cols="30"
-            rows="4"
-            style="width: 100%; border-radius: 0.25rem; resize: none"
-          >
-“Meeting Notes go here” (lives in Tasks)
-          </textarea>
-        </div>
-        <div v-for="field in addedFields" :key="field.id">
-          <div
-            v-if="
-              field.dataType === 'String' ||
-              field.dataType === 'Currency' ||
-              field.dataType === 'TextArea'
-            "
-          >
-            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-              {{ field.referenceDisplayLabel }}
-            </p>
-            <textarea
-              disabled
-              :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-              name=""
-              id=""
-              cols="30"
-              rows="2"
-              style="width: 100%; border-radius: 0.25rem"
-            >
-            </textarea>
-          </div>
-          <div
-            class="drop-row"
-            v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
-          >
-            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-              {{ field.referenceDisplayLabel }}
-            </p>
-            <select
-              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
-              disabled
-              name="select"
-              id=""
-            >
-              <option value="select">Select</option>
-            </select>
-          </div>
-          <div class="drop-row" v-else-if="field.dataType === 'Date'">
-            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-              {{ field.referenceDisplayLabel }}
-            </p>
-            <input
-              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
-              type="date"
-              id="start"
-              name="trip-start"
-              value="0000-00-00"
-              disabled
-            />
-          </div>
-          <div class="drop-row" v-else-if="field.dataType === 'DateTime'">
-            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-              {{ field.referenceDisplayLabel }}
-            </p>
-            <input
-              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
-              type="datetime-local"
-              id="start"
-              name="trip-start"
-              value="0000-00-00"
-              disabled
-            />
-          </div>
-          <div
-            class="drop-row"
-            v-else-if="field.dataType === 'Phone' || field.dataType === 'Reference'"
-          >
-            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-              {{ field.referenceDisplayLabel }}
-            </p>
-            <input
-              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
-              type="text"
-              disabled
-            />
-          </div>
-          <div
-            class="drop-row"
-            v-else-if="field.dataType === 'Phone' || field.dataType === 'Double'"
-          >
-            <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-              {{ field.referenceDisplayLabel }}
-            </p>
-            <input
-              :class="unshownIds.includes(field.id) ? 'invisible' : 'drop'"
-              type="number"
-              disabled
-            />
-          </div>
-        </div>
-        <div class="example--footer">
-          <div style="margin-top: 1rem">
-            <button class="close">Close</button>
-            <button class="save">Update</button>
-          </div>
         </div>
       </div>
     </div>
@@ -1093,10 +669,6 @@ export default {
       type: String,
       required: true,
     },
-    showValidations: {
-      type: Boolean,
-      default: false,
-    },
     fields: {
       type: Array,
       default: () => [],
@@ -1108,6 +680,14 @@ export default {
     managrFields: {
       type: Array,
       default: () => [],
+    },
+    fromAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    goBackAdmin: {
+      type: Function,
+      default: () => null,
     },
   },
   data() {
@@ -1130,7 +710,7 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
-      requiredProductFields: ['PricebookEntryId', 'Quantity'],
+      // requiredProductFields: ['PricebookEntryId', 'Quantity'],
       requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
       requiredLeadFields: ['LastName', 'Company', 'Status'],
       nameValue: '',
@@ -1472,6 +1052,9 @@ export default {
     this.getActionChoices()
   },
   methods: {
+    test() {
+      console.log(this.formFields.list)
+    },
     async goToProducts() {
       if (
         (this.resource == 'Opportunity' || this.resource == 'Account') &&
@@ -1503,6 +1086,7 @@ export default {
         })
         .then((res) => {
           this.$emit('update:selectedForm', res)
+          this.$store.dispatch('refreshCurrentUser')
           this.$toast('Form added successfully', {
             timeout: 2000,
             position: 'top-left',
@@ -1513,7 +1097,11 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
-          this.$router.push({ name: 'ProductForm' })
+          if (this.fromAdmin) {
+            this.$router.go()
+          } else {
+            this.$router.push({ name: 'ProductForm' })
+          }
         })
     },
     lowerCase(word1, word2) {
@@ -1566,7 +1154,11 @@ export default {
       // this.formFields.refresh()
     },
     goBack() {
-      this.$router.push({ name: 'Required' })
+      if (this.fromAdmin) {
+        this.goBackAdmin()
+      } else {
+        this.$router.push({ name: 'Required' })
+      }
     },
     goToUpdateOpp() {
       this.$router.push({ name: 'UpdateOpportunity' })
@@ -1626,7 +1218,7 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
-          if (this.formType !== 'STAGE_GATING') {
+          if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
             this.$router.push({ name: 'Required' })
           } else {
             this.$router.go()

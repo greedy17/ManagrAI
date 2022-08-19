@@ -1,5 +1,5 @@
 import logging
-import json
+import re
 import pytz
 import time
 import random
@@ -11,34 +11,29 @@ from background_task.models import CompletedTask, Task
 
 from django.utils import timezone
 from django.conf import settings
-from django.template.loader import render_to_string
 from django.db.models import Q
 
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import ValidationError
 
 from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
-from managr.api.emails import send_html_email
 
 from managr.core.models import User
 from managr.organization.models import (
     Account,
-    Stage,
     Contact,
     Organization,
     PricebookEntry,
-    OpportunityLineItem,
 )
-from managr.organization.serializers import AccountSerializer, StageSerializer, ContactSerializer
+from managr.organization.serializers import ContactSerializer
 from managr.opportunity.models import Opportunity, Lead
-from managr.opportunity.serializers import OpportunitySerializer
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
-from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.slack.models import UserSlackIntegration
+from managr.salesforce.utils import process_text_field_format
 
 from ..routes import routes
 from ..models import (
@@ -55,8 +50,6 @@ from ..serializers import (
     SObjectPicklistSerializer,
 )
 from ..adapter.models import (
-    AccountAdapter,
-    OpportunityAdapter,
     ActivityAdapter,
     ContactAdapter,
     OpportunityLineItemAdapter,
@@ -69,11 +62,46 @@ from ..adapter.exceptions import (
     SFNotFoundError,
     UnableToUnlockRow,
     CannotRetreiveObjectType,
+    UnhandledSalesforceError,
 )
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
 
 logger = logging.getLogger("managr")
+
+
+def replace_tags(description):
+    description = re.split("</.*?>", description)
+    while "" in description:
+        description.remove("")
+    description = "\n".join(description)
+    description = re.split("<br>", description)
+    description = "\r".join(description)
+    description = re.sub("<.*?>", "", description)
+    return description
+
+
+def create_form_instance(user, resource_type, form_type, resource_id, stage_name):
+    form_ids = []
+    template_list = OrgCustomSlackForm.objects.for_user(user).filter(resource=resource_type)
+    template = template_list.filter(form_type=form_type).first()
+    slack_form = (
+        OrgCustomSlackFormInstance.objects.create(
+            template=template, user=user, resource_id=resource_id
+        )
+        if form_type == "UPDATE"
+        else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
+    )
+    if slack_form:
+        if stage_name:
+            stage_template = template_list.filter(stage=stage_name).first()
+            stage_form = OrgCustomSlackFormInstance.objects.create(
+                template=stage_template, user=user
+            )
+            if stage_form:
+                form_ids.append(str(stage_form.id))
+        form_ids.append(str(slack_form.id))
+    return form_ids
 
 
 def emit_sf_sync(user_id, sync_id, resource, limit, offset):
@@ -151,6 +179,14 @@ def emit_meeting_workflow_tracker(workflow_id):
     return _process_workflow_tracker(workflow_id, schedule=schedule)
 
 
+def emit_process_update_resources_in_salesforce(
+    form_data, user, instance_data, integration_ids, verbose_name
+):
+    return _process_update_resources_in_salesforce(
+        form_data, user, instance_data, integration_ids, verbose_name=verbose_name
+    )
+
+
 # SF Resource Sync Tasks
 
 
@@ -198,11 +234,9 @@ def _generate_form_template(user_id):
     org.custom_slack_forms.all().delete()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
-
         f = OrgCustomSlackForm.objects.create(
             form_type=form_type, resource=resource, organization=org
         )
-
         public_fields = SObjectField.objects.filter(
             is_public=True,
             id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
@@ -249,31 +283,32 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
             return logger.warning(
                 f"Failed to sync some data for resource {resource} for user {user_id} because of SF LIMIT"
             )
-    for item in res:
-        existing = model_class.objects.filter(integration_id=item.integration_id).first()
-        if existing:
-            serializer = serializer_class(data=item.as_dict, instance=existing)
-        else:
-            serializer = serializer_class(data=item.as_dict)
-        # check if already exists and update
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
+    if len(res):
+        for item in res:
+            existing = model_class.objects.filter(integration_id=item.integration_id).first()
+            if existing:
+                serializer = serializer_class(data=item.as_dict, instance=existing)
+            else:
+                serializer = serializer_class(data=item.as_dict)
+            # check if already exists and update
+            try:
+                serializer.is_valid(raise_exception=True)
+            except ValidationError as e:
+                error_str = f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with salesforce id {item.integration_id} due to the following error {e.detail}"
 
-            # context = dict(email=user.email, error=error_str)
-            # subject = render_to_string("salesforce/error_saving_resource_data.txt")
-            # recipient = [settings.STAFF_EMAIL]
-            # send_html_email(
-            #     subject,
-            #     "salesforce/error_saving_resource_data.html",
-            #     settings.SERVER_EMAIL,
-            #     recipient,
-            #     context={**context},
-            # )
-            logger.exception(error_str)
-            continue
-        serializer.save()
+                # context = dict(email=user.email, error=error_str)
+                # subject = render_to_string("salesforce/error_saving_resource_data.txt")
+                # recipient = [settings.STAFF_EMAIL]
+                # send_html_email(
+                #     subject,
+                #     "salesforce/error_saving_resource_data.html",
+                #     settings.SERVER_EMAIL,
+                #     recipient,
+                #     context={**context},
+                # )
+                logger.exception(error_str)
+                continue
+            serializer.save()
 
     return
 
@@ -361,9 +396,11 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                     )
                 else:
                     picklist_serializer = SObjectPicklistSerializer(data=object_picklist.as_dict)
-
-                picklist_serializer.is_valid(raise_exception=True)
-                picklist_serializer.save()
+                try:
+                    picklist_serializer.is_valid(raise_exception=True)
+                    picklist_serializer.save()
+                except Exception as e:
+                    logger.exception(f"Picklist sync exception for {field.api_name}: {e}")
                 if for_dev:
                     logger.info(
                         f"PICKLIST <{object_picklist.as_dict}>\nPICKLIST SERIALIZER <{picklist_serializer.data}>"
@@ -515,7 +552,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 _send_recap(update_form_ids, None, True)
             raise e
 
-    if len(user.slack_integration.recap_receivers):
+    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
     return res
@@ -599,6 +636,7 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_call_to_sf(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    task_type = args[0][0] if len(args[0]) else "None"
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
@@ -607,41 +645,30 @@ def _process_add_call_to_sf(workflow_id, *args):
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
-    if workflow.meeting:
-        title = workflow.meeting.topic if subject is None else subject
-        user_timezone = user.zoom_account.timezone
-        start_time = workflow.meeting.start_time
-        end_time = workflow.meeting.end_time
-
-    else:
-        title = workflow.non_zoom_meeting.event_data["title"] if subject is None else subject
-        user_timezone = user.timezone
-        start_time = datetime.utcfromtimestamp(
-            int(workflow.non_zoom_meeting.event_data["times"]["start_time"])
-        )
-        end_time = datetime.utcfromtimestamp(
-            int(workflow.non_zoom_meeting.event_data["times"]["end_time"])
-        )
-    formatted_start = (
-        datetime.strftime(
-            start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
-        )
-        if start_time
-        else start_time
+    user_timezone = user.timezone
+    if description is not None:
+        description = replace_tags(description)
+    start_time = workflow.meeting.start_time
+    end_time = workflow.meeting.end_time
+    formatted_start = datetime.strftime(
+        start_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
     )
-    formatted_end = (
-        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p")
-        if end_time
-        else end_time
+    formatted_end = datetime.strftime(
+        end_time.astimezone(pytz.timezone(user_timezone)), "%a, %B, %Y %I:%M %p"
     )
     data = dict(
-        Subject=f"Zoom Meeting - {title}",
-        Description=f"{'No comments' if description is None else description}, this meeting started on {formatted_start} and ended on {formatted_end} ",
-        WhatId=workflow.resource.integration_id,
+        Subject=f"Meeting - {subject}",
+        Description=f"{'No comments' if description is None else description}\n This meeting started on {formatted_start} and ended on {formatted_end} ",
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Call",
     )
+    if workflow.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = workflow.resource.integration_id
+    else:
+        data["WhoId"] = workflow.resource.integration_id
+    if task_type != "None":
+        data["Type"] = task_type
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -696,9 +723,11 @@ def _process_add_update_to_sf(form_id, *args):
         if form.saved_data.get("meeting_type") is None
         else form.saved_data.get("meeting_type")
     )
+    description = form.saved_data.get("meeting_comments")
+    description = replace_tags(description)
     data = dict(
         Subject=f"{subject}",
-        Description=f"{form.saved_data.get('meeting_comments')}",
+        Description=description,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Task",
@@ -742,6 +771,90 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+    return
+
+
+@background()
+def _process_update_resources_in_salesforce(form_data, user, instance_data, integration_ids):
+    for id in integration_ids:
+        form_ids = create_form_instance(**instance_data)
+
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+        main_form = forms.filter(template__form_type="UPDATE").first()
+        stage_form_data_collector = {}
+        for form in forms:
+            form.save_form(form_data, False)
+            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        formatted_saved_data = process_text_field_format(
+            str(user.id), main_form.template.resource, all_form_data
+        )
+        data = None
+        attempts = 1
+        while True:
+            sf = user.salesforce_account
+            try:
+                resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                data = {
+                    "success": True,
+                    "task_hash": resource["task_hash"],
+                    "verbose_name": resource["verbose_name"],
+                }
+                break
+            except FieldValidationError as e:
+                logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
+                data = {"success": False, "error": str(e)}
+                break
+
+            except RequiredFieldError as e:
+                logger.info(f"UPDATE REQUIRED FIELD ERROR {e}")
+
+                data = {"success": False, "error": str(e)}
+                break
+            except UnhandledSalesforceError as e:
+                logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
+                data = {"success": False, "error": str(e)}
+                break
+
+            except SFNotFoundError as e:
+                logger.info(f"UPDATE SF NOT FOUND ERROR {e}")
+                data = {"success": False, "error": str(e)}
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
+                    data = {"success": False, "error": "Could not refresh token"}
+                    break
+                else:
+                    if main_form.resource_object.owner == user:
+                        sf.regenerate_token()
+                    else:
+                        main_form.resource_object.owner.salesforce_account.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError:
+                if attempts >= 5:
+                    logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
+                    data = {"success": False, "error": "Connection was reset"}
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"UPDATE ERROR {e}")
+                break
+        if all_form_data.get("meeting_comments") is not None:
+            emit_add_update_to_sf(str(main_form.id))
+        if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
+            _send_instant_alert(form_ids)
+        forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
+        value_update = main_form.resource_object.update_database_values(all_form_data)
+        from_workflow = data.get("from_workflow")
+        title = data.get("workflow_title", None)
+        if from_workflow:
+            user.activity.increment_untouched_count("workflows")
+            user.activity.add_workflow_activity(str(main_form.id), title)
     return
 
 
@@ -822,7 +935,7 @@ def _process_create_new_contacts(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+    meeting = workflow.meeting
     attempts = 1
     if not len(args):
         return
@@ -1201,7 +1314,6 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
-    workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
         all_tasks = set(workflow.operations)
@@ -1647,3 +1759,4 @@ def _update_current_db_values(user_id, resource_type, integration_id):
         serializer.save()
         logger.info(f"Successfully {resource} in the Database for user {user.email}")
     return
+

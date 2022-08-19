@@ -18,6 +18,7 @@ export default class User extends Model {
   static organizationRef = new fields.Field()
   static salesforceAccount = new fields.Field()
   static salesforceAccountRef = new fields.Field()
+  static reminders = new fields.Field()
 
   static state = new fields.Field()
   static type = new fields.Field()
@@ -33,6 +34,7 @@ export default class User extends Model {
   static slackAccount = new fields.Field()
   static hubspotAccount = new fields.Field()
   static hasHubspotIntegration = new fields.Field({ readOnly: true })
+  static zoomRef = new fields.Field()
   static zoomAccount = new fields.Field()
   static token = new fields.Field()
   static hasZoomIntegration = new fields.Field({ readOnly: true })

@@ -38,17 +38,13 @@ from managr.zoom.utils import score_meeting
 from managr.organization.models import Contact
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.zoom.background import _split_first_name, _split_last_name
-from managr.core.calendars import calendar_participants_from_zoom_meeting
 from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.opportunity.models import Lead, Opportunity
 from managr.organization.models import Account
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
-from managr.zoom.serializers import ZoomMeetingSerializer
-from managr.zoom import constants as zoom_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.models import MeetingWorkflow
-from managr.core.background import emit_non_zoom_meetings
-from managr.core.background import non_zoom_meeting_message
+from managr.core.background import emit_process_calendar_meeting_message
 
 
 NOTIFICATION_TITLE_STALLED_IN_STAGE = "Opportunity Stalled in Stage"
@@ -128,19 +124,20 @@ def _send_slack_int_email(user):
 def _process_calendar_details(user_id):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data()
+    print(events)
     if events:
-        processed_data = []
-        for event in events:
-            data = {}
-            data["title"] = event.get("title", None)
-            data["owner"] = event.get("owner", None)
-            data["participants"] = event.get("participants", None)
-            conferencing = event.get("conferencing", None)
-            if conferencing:
-                data["provider"] = conferencing["provider"]
-            data["times"] = event.get("when", None)
-            processed_data.append(data)
-        return processed_data
+        # processed_data = []
+        # for event in events:
+        #     data = {}
+        #     data["title"] = event.get("title", None)
+        #     data["owner"] = event.get("owner", None)
+        #     data["participants"] = event.get("participants", None)
+        #     conferencing = event.get("conferencing", None)
+        #     if conferencing:
+        #         data["provider"] = conferencing["provider"]
+        #     data["times"] = event.get("when", None)
+        #     processed_data.append(data)
+        return events
     else:
         return None
 

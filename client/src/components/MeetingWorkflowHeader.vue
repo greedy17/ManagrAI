@@ -12,7 +12,7 @@ export default {
   name: 'MeetingWorkflowHeader',
   data() {
     return {
-      columns: ['# of Attendees', 'Attendees', 'Account/Opportunity', 'Actions'],
+      columns: ['Attendees', 'Attendees', 'CRM Record Type', 'Actions'],
     }
   },
 }
@@ -29,8 +29,8 @@ export default {
   display: table-cell;
   padding: 3vh;
   border: none;
-  border-bottom: 1px solid $light-orange-gray;
-  border-radius: 2px;
+  border-bottom: 1px solid $soft-gray;
+  border-radius: 1px;
   z-index: 3;
   left: 0;
   top: 0;
@@ -43,10 +43,10 @@ export default {
 }
 .table-cell-header {
   display: table-cell;
-  padding: 1.25vh 3vh;
+  padding: 1.25vh 2vh;
   border: none;
-  border-bottom: 1px solid $light-orange-gray;
-  border-radius: 2px;
+  border-bottom: 1px solid $soft-gray;
+  border-radius: 1px;
   z-index: 2;
   top: 0;
   position: sticky;

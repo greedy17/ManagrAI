@@ -85,10 +85,7 @@
           </div>
         </div>
 
-        <div
-          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && !user.isAdmin"
-          class="card"
-        >
+        <div v-if="hasSalesforceIntegration && user.onboarding && !user.isAdmin" class="card">
           <div class="card__header centered">
             <h3>Last Step...</h3>
           </div>
@@ -104,10 +101,7 @@
           </div>
         </div>
 
-        <div
-          v-if="hasNylasIntegration && hasSalesforceIntegration && user.onboarding && user.isAdmin"
-          class="card"
-        >
+        <div v-if="hasSalesforceIntegration && user.onboarding && user.isAdmin" class="card">
           <div class="card__header centered">
             <h4>Map CRM fields to Managr</h4>
           </div>
@@ -125,7 +119,7 @@
       </div>
       <p class="grey-text margin-left">Optional</p>
       <div class="integrations__cards">
-        <div v-if="hasNylasIntegration" class="card">
+        <div v-if="hasSalesforceIntegration" class="card">
           <div class="required__header">
             <div class="card__header">
               <img style="height: 1rem" src="@/assets/images/slackLogo.png" />
@@ -161,7 +155,7 @@
             </div>
           </div>
         </div>
-        <div v-if="hasNylasIntegration" class="card">
+        <div v-if="hasSalesforceIntegration" class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/zoom.png" />
             <h3 class="card__title">Zoom</h3>
@@ -196,7 +190,7 @@
           </div>
         </div>
 
-        <div v-if="hasNylasIntegration" class="card">
+        <div v-if="hasSalesforceIntegration" class="card">
           <div class="card__header">
             <img style="height: 1rem" src="@/assets/images/outreach.webp" />
           </div>

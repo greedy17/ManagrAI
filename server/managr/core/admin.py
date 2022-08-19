@@ -17,6 +17,7 @@ from .models import (
     MeetingPrepInstance,
     UserActivity,
     UserForecast,
+    NoteTemplate,
     #    NotificationOption,
     #    NotificationSelection,
 )
@@ -216,11 +217,19 @@ class CustomUserForecast(admin.ModelAdmin):
     list_display = ("user",)
 
 
+class CustomNoteTemplate(admin.ModelAdmin):
+    model = NoteTemplate
+    list_display = ("subject", "user")
+    ordering = ("-datetime_created",)
+    list_filter = ("user",)
+
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(MeetingPrepInstance, CustomMeetingPrepInstance)
 admin.site.register(UserActivity, CustomUserActivity)
 admin.site.register(UserForecast, CustomUserActivity)
+admin.site.register(NoteTemplate, CustomNoteTemplate)
 
 
 # admin.site.register(NotificationOption, CustomNotificationOption)

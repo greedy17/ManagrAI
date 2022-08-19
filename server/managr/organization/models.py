@@ -564,7 +564,7 @@ class PricebookEntryQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(organization=user.organization)
+            return self.filter(pricebook__organization=user.organization)
         else:
             return None
 
@@ -611,7 +611,7 @@ class OpportunityLineItemQuerySet(models.QuerySet):
         if user.is_superuser:
             return self.all()
         elif user.organization and user.is_active:
-            return self.filter(organization=user.organization)
+            return self.filter(product__organization=user.organization)
         else:
             return None
 
@@ -679,6 +679,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             res = OpportunityLineItemAdapter.update_opportunitylineitem(
                 data, token, base_url, self.integration_id, object_fields
             )
+            print(res)
             self.is_stale = True
             self.save()
             return res
@@ -687,6 +688,9 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
     def create_in_salesforce(data=None, user_id=None):
         user = User.objects.get(id=user_id)
         if user and hasattr(user, "salesforce_account"):
+            if "UnitPrice" not in data.keys():
+                entry = PricebookEntry.objects.get(integration_id=data["PricebookEntryId"])
+                data["UnitPrice"] = str(entry.unit_price)
             token = user.salesforce_account.access_token
             base_url = user.salesforce_account.instance_url
             object_fields = user.salesforce_account.object_fields.filter(
@@ -708,3 +712,8 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             integration_id, token, base_url, self.opportunity.owner.id
         )
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()

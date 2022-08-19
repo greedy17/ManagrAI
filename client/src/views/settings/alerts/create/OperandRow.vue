@@ -7,8 +7,7 @@
         style="margin: 0 0.3rem"
       >
         <FormField :errors="form.field.operandIdentifier.errors">
-          <template v-slot:input>
-          </template>
+          <template v-slot:input> </template>
         </FormField>
       </div>
       <div
@@ -17,8 +16,7 @@
         style="margin: 0 0.3rem"
       >
         <FormField :errors="form.field.operandOperator.errors">
-          <template v-slot:input>
-          </template>
+          <template v-slot:input> </template>
         </FormField>
       </div>
       <div class="alert-operand-row__value">
@@ -26,16 +24,14 @@
           v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
           :errors="form.field.operandValue.errors"
         >
-          <template v-slot:input>
-          </template>
+          <template v-slot:input> </template>
         </FormField>
         <template v-else>
           <FormField
             v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
             :errors="form.field.operandValue.errors"
           >
-            <template v-slot:input>
-            </template>
+            <template v-slot:input> </template>
           </FormField>
           <div v-else>
             <FormField
@@ -94,16 +90,8 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import {
-  SObjectField,
-  SObjectPicklist,
-  NON_FIELD_ALERT_OPTS,
-} from '@/services/salesforce'
-import {
-  ALERT_DATA_TYPE_MAP,
-  INPUT_TYPE_MAP,
-  STRING
-} from '@/services/salesforce/models'
+import { SObjectField, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { ALERT_DATA_TYPE_MAP, INPUT_TYPE_MAP, STRING } from '@/services/salesforce/models'
 
 export default {
   /**
@@ -117,7 +105,7 @@ export default {
   props: {
     form: { type: AlertOperandForm },
     resourceType: { type: String },
-    operand: { type: Array}
+    operand: { type: Array },
   },
   data() {
     return {
@@ -275,26 +263,19 @@ export default {
     //   updateable: false,
     //   value: '',
     // }
-    console.log("Huuuhbhghh", this.form.field.operandIdentifier, typeof this.form.field.operandIdentifier.value)
     // if (this.operand[0]) {
-      if (this.form.field.operandOrder.value === 0) {
-        console.log('hit 1')
-        this.form.field.operandIdentifier.value = this.operand[0].operandIdentifier
-        console.log('hit 2')
-        this.form.field.operandOperator.value = this.operand[0].operandOperator
-        console.log('hit 3')
-        // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
-        this.form.field.operandValue.value = this.operand[0].operandValue
-    // } else if (this.operand[1]) {
+    if (this.form.field.operandOrder.value === 0) {
+      this.form.field.operandIdentifier.value = this.operand[0].operandIdentifier
+      this.form.field.operandOperator.value = this.operand[0].operandOperator
+      // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
+      this.form.field.operandValue.value = this.operand[0].operandValue
+      // } else if (this.operand[1]) {
     } else if (this.form.field.operandOrder.value === 1) {
       // if (this.operand[1]) {
-        console.log('hit 4', this.form.field)
-          this.form.field.operandIdentifier.value = this.operand[1].operandIdentifier
-          console.log('hit 5')
-          this.form.field.operandOperator.value = this.operand[1].operandOperator
-          // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
-          console.log('hit 6')
-          this.form.field.operandValue.value = this.operand[1].operandValue
+      this.form.field.operandIdentifier.value = this.operand[1].operandIdentifier
+      this.form.field.operandOperator.value = this.operand[1].operandOperator
+      // this.form.field._operandOperator.value = { label: '!= (Does Not Equal)', value: '!=' }
+      this.form.field.operandValue.value = this.operand[1].operandValue
       // }
     }
   },

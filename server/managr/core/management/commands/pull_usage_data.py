@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from managr.core.utils import get_totals_for_year
+from managr.core.utils import get_totals_for_year, get_organization_totals
+from managr.api.emails import send_html_email
 
 
 class Command(BaseCommand):
@@ -19,6 +20,17 @@ class Command(BaseCommand):
     help = "Pull usage statistics for the application"
 
     def handle(self, *args, **options):
+        # email_subject = "Managr Usage Data"
+        # recipients = ["zach@mymanagr.com"]
         totals = get_totals_for_year()
+        orgs = get_organization_totals()
+        # send_html_email(
+        #     email_subject,
+        #     "core/email-templates/usage-data.html",
+        #     settings.SERVER_EMAIL,
+        #     recipients,
+        #     context=totals,
+        # )
         self.stdout.write(self.style.HTTP_INFO("{}").format(totals))
+        self.stdout.write(self.style.HTTP_INFO("{}").format(orgs))
 

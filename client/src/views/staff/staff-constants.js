@@ -1,0 +1,7 @@
+
+
+export const COMMANDS = {
+    "SYNC": {
+        "SALESFORCE": { "FIELDS": "SALESFORCE_FIELDS", "RESOURCES": "SALESFORCE_RESOURCES" }
+    }
+}

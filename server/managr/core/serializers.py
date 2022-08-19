@@ -3,7 +3,7 @@ from django.contrib.auth import login
 
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-
+import managr.core.constants as core_consts
 from managr.organization.serializers import (
     OrganizationSerializer,
     AccountSerializer,
@@ -14,9 +14,9 @@ from managr.slack.serializers import (
     UserSlackIntegrationSerializer,
     UserFrontEndSlackIntegrationSerializer,
 )
+from managr.zoom.serializers import ZoomAuthSerializer
 
-
-from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast
+from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast, NoteTemplate
 
 
 class UserForecastSerializer(serializers.ModelSerializer):
@@ -53,6 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
+    zoom_ref = ZoomAuthSerializer(source="zoom_account", read_only=True)
     activated_template_ref = serializers.SerializerMethodField("get_alert_template_refs")
     forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
@@ -89,6 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
             "slack_ref",
             "slack_account",
             "zoom_account",
+            "zoom_ref",
             "salesloft_account",
             "has_salesloft_integration",
             "gong_account",
@@ -158,9 +160,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         #      to register "trials" separately, but be tied to the same org in the back
         #      end. We will do this by looking at the domain name of the email.
         org_name = validated_data.pop("organization_name")
-        org = Organization.objects.create(name=org_name)
-
-        return User.objects.create_admin_user(organization=org, **validated_data)
+        try:
+            org_check = Organization.objects.get(name__iexact=org_name)
+            return User.objects.create_user(
+                organization=org_check, user_level=core_consts.ACCOUNT_TYPE_REP, **validated_data
+            )
+        except Organization.DoesNotExist:
+            org = Organization.objects.create(name=org_name)
+            return User.objects.create_admin_user(organization=org, **validated_data)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -228,3 +235,9 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
             "resource_id",
             "resource_type",
         )
+
+
+class NoteTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NoteTemplate
+        fields = ("subject", "body", "user", "is_shared", "id")

@@ -110,7 +110,6 @@
       <template v-if="selectedForm">
         <div class="box__content--expanded">
           <CustomSlackForm
-            :show-validations="showValidations"
             :formType="formType"
             :customForm="selectedForm"
             :resource="resource"
@@ -138,34 +137,33 @@
         "
         class="stage__dropdown"
       >
-        <div>
-          <div class="stage__dropdown__header">
-            {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
-          </div>
+        <div class="stage__dropdown__header">
+          {{ formLength ? 'Saved Validation Rules' : 'No Saved Validation Rules' }}
+        </div>
+        <div
+          v-for="form in formStages"
+          :key="form.stage"
+          class="stage__dropdown__stages__container"
+          :class="{
+            'stage__dropdown__stages__container--selected':
+              selectedForm &&
+              selectedForm.formType == 'STAGE_GATING' &&
+              selectedForm.resource == 'Opportunity' &&
+              selectedForm.stage == form.stage,
+          }"
+        >
           <div
-            v-for="form in formStages"
-            :key="form.stage"
-            class="stage__dropdown__stages__container"
-            :class="{
-              'stage__dropdown__stages__container--selected':
-                selectedForm &&
-                selectedForm.formType == 'STAGE_GATING' &&
-                selectedForm.resource == 'Opportunity' &&
-                selectedForm.stage == form.stage,
-            }"
+            class="stage__dropdown__stages__title"
+            @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
           >
-            <div
-              class="stage__dropdown__stages__title"
-              @click="selectForm('Opportunity', 'STAGE_GATING', form.stage)"
-            >
-              {{ form.stage }}
-            </div>
+            {{ form.stage }}
+          </div>
 
-            <div class="img-border" @click.prevent="deleteForm(form)">
-              <img src="@/assets/images/trash.svg" class="invertTrash" alt="" />
-            </div>
+          <div class="img-border" @click.prevent="deleteForm(form)">
+            <img src="@/assets/images/trash.svg" class="invertTrash" alt="" />
           </div>
         </div>
+
         <div style="display: flex; justify-content: center; margin-top: 1rem">
           <button @click="onAddForm" class="modal-container__box__button">Add</button>
         </div>
@@ -207,7 +205,6 @@ export default {
       selectedTab: null,
       resource: null,
       selectedForm: null,
-      showValidations: false,
       newForms: [],
       selectedStage: null,
       selectedFormFields: [],
@@ -515,11 +512,15 @@ export default {
   }
 }
 .header {
-  width: 50vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
   p {
     font-size: 14px;
     color: $gray;
-    margin-top: -0.75rem;
   }
 }
 @keyframes dotFlashing {
@@ -536,13 +537,14 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
+  width: 80vw;
 }
 .container {
-  margin-left: 12vw;
-  margin-top: 3.5rem;
   color: $base-gray;
   display: flex;
-  align-items: center;
+  margin: 0px 120px;
+  justify-content: center;
+  align-items: flex-start;
   flex-direction: column;
   height: 100%;
 }
@@ -565,7 +567,7 @@ export default {
   border-radius: 0.3rem;
   background-color: $white;
   color: $base-gray;
-  width: 50vw;
+  width: 82vw;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -627,6 +629,7 @@ button:disabled {
 .popup-paginator {
   @include paginator();
 }
+
 .centered__stage {
   display: flex;
   justify-content: center;
@@ -634,10 +637,11 @@ button:disabled {
   flex-direction: row;
   height: 100%;
 }
+
 .stage {
   &__dropdown {
     min-height: 40vh;
-    width: 50vw;
+    width: 82vw;
     border-radius: 0.3rem;
     border: 1px solid #e8e8e8;
     background-color: $white;

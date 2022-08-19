@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from urllib.parse import urlencode
 from managr.core.background import emit_create_calendar_event
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -175,7 +176,7 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
-    logger.info({f"--ZOOM_MEETING_FROM_ZOOM event {event} payload{obj}"})
+    print(f"DATA FROM ZOOM WEBHOOK: obj {obj} / event {event}")
     if event == zoom_consts.MEETING_EVENT_ENDED:
         extra_obj = obj.pop("object", {})
         obj = {**obj, **extra_obj}
@@ -187,9 +188,21 @@ def zoom_meetings_webhook(request):
         zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
         if zoom_account and not zoom_account.is_revoked:
             # emit the process
-            _get_past_zoom_meeting_details(
-                str(zoom_account.user.id), meeting_uuid, original_duration
-            )
+            topic = obj["topic"]
+            workflows = MeetingWorkflow.objects.for_user(zoom_account.user)
+            workflow_check = workflows.filter(meeting__topic__icontains=topic).first()
+            if settings.IN_STAGING:
+                logger.info(
+                    f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
+                )
+            if workflow_check is not None:
+                workflow_check.meeting.meeting_id = meeting_uuid
+                workflow_check.meeting.save()
+                workflow_check.begin_communication()
+            else:
+                _get_past_zoom_meeting_details(
+                    str(zoom_account.user.id), meeting_uuid, original_duration
+                )
 
     return Response()
 
@@ -198,6 +211,8 @@ def zoom_meetings_webhook(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def init_fake_meeting(request):
+    from managr.meetings.models import Meeting
+
     # list of accepted commands for this fake endpoint
     allowed_commands = ["opp", "acc", "lead"]
     slack_id = request.data.get("user_id", None)
@@ -217,7 +232,6 @@ def init_fake_meeting(request):
         return Response(
             data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
         )
-    host_id = user.zoom_account.zoom_id
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
@@ -246,8 +260,7 @@ def init_fake_meeting(request):
         return Response(
             data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom meeting",}
         )
-    host_id = host_id
-    meeting = ZoomMeeting.objects.filter(meeting_uuid=meeting_uuid).first()
+    meeting = Meeting.objects.filter(meeting_id=meeting_uuid).first()
     if meeting:
         meeting.delete()
     original_duration = None
@@ -266,7 +279,7 @@ def init_fake_meeting(request):
             return Response(data={"response_type": "ephemeral", "text": "An error occured",})
         # get meeting
         workflow.begin_communication(now=True)
-        workflow = MeetingWorkflow.objects.filter(meeting__meeting_uuid=meeting_uuid).first()
+        workflow = MeetingWorkflow.objects.filter(meeting__meeting_id=meeting_uuid).first()
         if meeting_resource and meeting_resource.lower() == "acc":
             acc = user.accounts.first()
             workflow.resource_id = str(acc.id)
@@ -305,6 +318,7 @@ def init_fake_meeting(request):
                     block_builders.context_block(f"Owned by {user.full_name}"),
                 ],
             )
+
         except InvalidBlocksException as e:
             return logger.exception(
                 f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
@@ -417,17 +431,14 @@ def schedule_zoom_meeting(request):
         "meeting_time": data["meeting_time"],
         "meeting_duration": data["meeting_duration"],
     }
+    # print("\n\nMeeting Duration\n\n", zoom_data["meeting_duration"], "\n\n")
     participant_data = []
-    contacts = Contact.objectsd.filter(id__in=data.get("contacts"))
+    contacts = Contact.objects.filter(id__in=data.get("contacts"))
     internal = User.objects.filter(id__in=data.get("internal"))
     extra_participants = data.get("extra_participants")
     for contact in contacts:
         participant_data.append(
-            {
-                "email": contact.email,
-                "name": contact["secondary_data"]["Name"],
-                "status": "noreply",
-            }
+            {"email": contact.email, "name": contact.secondary_data["Name"], "status": "noreply",}
         )
     for u in internal:
         participant_data.append(

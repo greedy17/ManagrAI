@@ -1,7 +1,9 @@
 import logging
+import json
 from django.conf import settings
 from django.forms import ValidationError
 import pytz
+from django.core import serializers
 from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
@@ -24,6 +26,8 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
+from managr.salesforce.routes import routes as model_routes
+
 from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
@@ -47,11 +51,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(
-                organization=template_user.organization,
-                user_level=target,
-                is_active=True,
-            )
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -69,18 +69,20 @@ def create_configs_for_target(target, template_user, config):
     else:
         users = User.objects.filter(id=target)
     new_configs = []
-    print(users)
     for user in users:
+        config_copy = copy(config)
+        config_copy["alert_targets"] = [str(user.id)]
         if user.has_slack_integration:
-            config_copy = copy(config)
             config_copy["recipients"] = [
                 user.slack_integration.zoom_channel
                 if user.slack_integration.zoom_channel
                 else user.slack_integration.channel
             ]
             config_copy["recipient_type"] = "SLACK_CHANNEL"
-            config_copy["alert_targets"] = [str(user.id)]
-            new_configs.append(config_copy)
+        else:
+            config_copy["recipients"] = ["default"]
+            config_copy["recipient_type"] = "default"
+        new_configs.append(config_copy)
     return new_configs
 
 
@@ -180,13 +182,10 @@ class AlertTemplateViewSet(
     )
     def run_now(self, request, *args, **kwargs):
         obj = self.get_object()
-        print(obj.configs)
         data = self.request.data
-
         from_workflow = data.get("from_workflow", False)
         if from_workflow:
             config = obj.configs.all().first()
-            print(config)
             template = config.template
             attempts = 1
             while True:
@@ -210,6 +209,7 @@ class AlertTemplateViewSet(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
+
                     break
                 except TokenExpired:
                     if attempts >= 5:
@@ -225,7 +225,10 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
-            return Response({"ids": res_data})
+            model = model_routes[template.resource_type]["model"]
+            queryset = model.objects.filter(integration_id__in=res_data)
+            serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
+            return Response({"results": serialized.data})
         else:
             for config in obj.configs.all():
                 template = config.template
@@ -319,9 +322,7 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user,
-                config__id=config_id,
-                invocation=last_instance.invocation,
+                user=user, config__id=config_id, invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -379,8 +380,7 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,

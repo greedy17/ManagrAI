@@ -6,16 +6,19 @@
         runWorkflows()
       "
       class="notis"
+      :class="{
+        'pulse green-img': notiRight === 8 && (activeNotis || $route.name === 'Pipelines'),
+      }"
       :style="`right: ${notiRight}px`"
     >
-      <img v-if="notiRight === 0" src="@/assets/images/dropdown-arrow.svg" height="16px" alt="" />
-      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="16px" alt="" />
+      <img v-if="notiRight === 8" src="@/assets/images/dropdown-arrow.svg" height="20px" alt="" />
+      <img v-else src="@/assets/images/dropdown-arrow.svg" class="rotate" height="18px" alt="" />
       <!-- <small class="red">5</small> -->
     </button>
-    <section @click="test" id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
+    <section id="mySidenav" :style="`width: ${navWidth}px`" class="sidenav">
       <h3 class="neg-mar-bottom">{{ `${day} ${today}` }}</h3>
       <div class="noti-section">
-        <p class="sticky yellowish">
+        <p @click="goToMeetings" style="cursor: pointer" class="sticky yellowish">
           Meetings <small class="yellow-bg">{{ meetings ? meetings.length : 0 }}</small>
         </p>
         <span v-if="meetings ? !meetings.length : null"
@@ -25,21 +28,13 @@
         <div v-else>
           <span @click="goToMeetings" :key="i" v-for="(meeting, i) in meetings"
             ><a class="yellow-border"
-              >{{
-                meeting.meeting_ref.event_data
-                  ? meeting.meeting_ref.event_data.title
-                  : meeting.meeting_ref.topic
-              }}
-              <span class="grey">{{
-                formatDateTimeToTime(
-                  meeting.meeting_ref.event_data
-                    ? meeting.meeting_ref.event_data.times.start_time
-                    : meeting.meeting_ref.start_time,
-                )
-              }}</span>
+              >{{ meeting.meeting_ref.topic }}
+              <span class="grey">{{ formatDateTimeToTime(meeting.meeting_ref.start_time) }}</span>
               <p
                 :class="
-                  meeting.is_completed ? 'small-font no-margin yellow' : 'small-font no-margin red'
+                  meeting.is_completed
+                    ? 'small-font no-margin yellow-text'
+                    : 'small-font no-margin red'
                 "
               >
                 {{ meeting.is_completed ? 'Logged' : 'Please log' }}
@@ -92,9 +87,10 @@ export default {
   name: 'SideDrawer',
   data() {
     return {
-      notiRight: 0,
-      navWidth: 18,
+      notiRight: 8,
+      navWidth: 26,
       meetings: null,
+      activeNotis: false,
       today: null,
       day: null,
       workflows: [],
@@ -128,7 +124,20 @@ export default {
       //   }
     }
   },
+  watch: {
+    meetings: 'needsAction',
+  },
   methods: {
+    needsAction() {
+      let NA = 0
+      if (this.meetings.length) {
+        for (let i = 0; i < this.meetings.length; i++) {
+          !this.meetings[i].is_completed ? (NA += 1) : null
+
+          NA === 0 ? (this.activeNotis = false) : (this.activeNotis = true)
+        }
+      }
+    },
     async runWorkflows() {
       let ids = this.templates.list.map((wf) => wf.id)
       try {
@@ -136,7 +145,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
             fromWorkflow: true,
           })
-          this.workflows.push(res.data.ids.length)
+          this.workflows.push(res.data.results.length)
         }
       } catch (error) {
         console.log(error)
@@ -173,10 +182,7 @@ export default {
     goToMeetings() {
       this.$router.push({ name: 'Meetings' })
     },
-    test() {
-      console.log(this.users.list)
-      console.log(this.templates.list)
-    },
+
     async getMeetingList() {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
@@ -187,8 +193,8 @@ export default {
       }
     },
     changeWidth() {
-      this.notiRight === 0 ? (this.notiRight = 235) : (this.notiRight = 0)
-      this.navWidth === 18 ? (this.navWidth = 250) : (this.navWidth = 18)
+      this.notiRight === 8 ? (this.notiRight = 288) && this.getMeetingList() : (this.notiRight = 8)
+      this.navWidth === 26 ? (this.navWidth = 300) : (this.navWidth = 26)
     },
     setDate() {
       let today = new Date()
@@ -216,6 +222,32 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 1.25s infinite;
+}
+.green-img {
+  img {
+    filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
+  }
+}
 .m-bottom {
   margin-bottom: 1rem;
 }
@@ -265,6 +297,9 @@ button:disabled {
 .yellow {
   color: $yellow !important;
 }
+.yellow-text {
+  color: $yellow !important;
+}
 .yellowish {
   color: $yellow !important;
   background-color: #fdf7e6 !important;
@@ -286,7 +321,10 @@ button:disabled {
   cursor: pointer;
 }
 .green {
-  color: $dark-green !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  color: $dark-green;
+  margin-left: 2px;
 }
 .greenish {
   color: $dark-green !important;
@@ -313,17 +351,17 @@ button:disabled {
   margin-bottom: -3px;
 }
 .noti-section-lg {
-  height: 350px;
+  height: 58vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
 }
 .noti-section {
-  height: 200px;
+  height: 32vh;
   overflow-y: scroll;
-  padding: 0px 16px;
+  padding: 2px 16px;
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
@@ -365,6 +403,14 @@ button:disabled {
   display: flex;
   flex-direction: row;
 }
+.green-drawer {
+  border: 1px solid $dark-green !important;
+  background-color: $dark-green !important;
+  img {
+    // filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
+    filter: invert(99%);
+  }
+}
 .notis {
   display: flex;
   flex-direction: row;
@@ -372,7 +418,7 @@ button:disabled {
   position: fixed;
   z-index: 21;
   right: 0;
-  bottom: 2rem;
+  top: 4rem;
   border: 1px solid $soft-gray;
   border-radius: 50%;
   background-color: white;
@@ -399,6 +445,8 @@ button:disabled {
   background-color: white;
   overflow-x: hidden;
   padding-top: 60px;
+  padding-left: 10px;
+  padding-right: 6px;
   transition: 0.5s;
 }
 

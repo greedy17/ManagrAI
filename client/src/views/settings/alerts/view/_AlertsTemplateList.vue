@@ -18,7 +18,7 @@
       </div>
     </Modal>
 
-    <div @click="test" class="center__">
+    <div class="center__">
       <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
         Edit your Workflow Automation
       </h3>
@@ -27,7 +27,7 @@
       </h3>
       <p
         :class="templates.refreshing ? 'loading-title titles' : ''"
-        style="font-weight: bold; color: #aaaaaa; margin-top: -0.5rem; font-size: 13px"
+        style="font-weight: bold; color: #aaaaaa; font-size: 13px"
       >
         Edit, Run, and Schedule your saved Automations
       </p>
@@ -72,7 +72,7 @@
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
               >
-                Run now
+                Send to Slack
               </button>
             </div>
             <div class="added-collection__footer">
@@ -80,14 +80,14 @@
                 v-if="hasSlackIntegration"
                 style="margin-right: 0.25rem"
                 src="@/assets/images/slackLogo.png"
-                height="15px"
+                height="12px"
                 alt=""
               />
-              <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p>
+              <!-- <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p> -->
               <div v-if="hasSlackIntegration" class="row__">
                 <p
                   :class="!alert.isActive ? 'green' : ''"
-                  style="margin-right: 0.5rem; font-size: 12px; letter-spacing: 1px"
+                  style="margin-right: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
                 >
                   OFF
                 </p>
@@ -99,7 +99,7 @@
                 />
                 <p
                   :class="alert.isActive ? 'green' : ''"
-                  style="margin-left: 0.5rem; font-size: 12px; letter-spacing: 1px"
+                  style="margin-left: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
                 >
                   ON
                 </p>
@@ -258,9 +258,6 @@ export default {
     await this.listUserChannels()
   },
   methods: {
-    test() {
-      console.log(this.templates)
-    },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -503,7 +500,7 @@ button:disabled {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   color: $base-gray;
-  width: 100%;
+  width: 84vw;
   height: 74vh;
   overflow: scroll;
   display: flex;
@@ -558,7 +555,7 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
-  margin-left: 10vw;
+  // margin-left: 75px;
   margin-top: 3.5rem;
   color: $base-gray;
 }
@@ -566,10 +563,11 @@ button:disabled {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: flex-start;
+  // align-items: flex-start;
   margin-top: 1rem;
   flex-wrap: wrap;
   padding: 0;
+  width: 86vw;
 }
 .added-collection:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -580,12 +578,13 @@ button:disabled {
   background-color: white;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
-  width: 22vw;
+  width: 20vw;
   margin-right: 1rem;
   margin-bottom: 1rem;
   transition: all 0.25s;
+  font-size: 12px;
   &__header {
-    max-height: 3rem;
+    max-height: 50px;
     padding: 1.75rem 1rem;
     font-size: 13px;
     display: flex;
@@ -597,15 +596,13 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 5rem;
-    font-size: 13px;
+    height: 100px;
   }
   &__footer {
     display: flex;
     align-items: center;
-    height: 3rem;
+    height: 50px;
     padding: 1rem;
-    font-size: 14px;
     justify-content: space-evenly;
   }
 }
@@ -666,9 +663,9 @@ a {
 }
 .center__ {
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 82vw;
 }
 .center-loader {
   display: flex;

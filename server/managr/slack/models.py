@@ -161,6 +161,9 @@ class OrgCustomSlackFormQuerySet(models.QuerySet):
         else:
             return self.none()
 
+    def for_staff(self):
+        return self
+
 
 class OrgCustomSlackForm(TimeStampModel):
     """Model to store the organizations JSON-based custom Slack form config - these are templates"""
@@ -201,6 +204,32 @@ class OrgCustomSlackForm(TimeStampModel):
             "resource",
         ]
         unique_together = ["resource", "form_type", "organization", "stage"]
+
+    def generate_form_state(self):
+        form_fields = FormField.objects.filter(form=self)
+        state_object = {}
+        for i, field in enumerate(form_fields):
+            state_object[field.order] = field.field.api_name
+        self.config = state_object
+        self.save()
+
+    def recreate_form(self):
+        admin = self.organization.users.filter(is_admin=True).first()
+        fields = SObjectField.objects.filter(
+            Q(
+                api_name__in=self.config.values(),
+                salesforce_object=self.resource,
+                salesforce_account=admin.salesforce_account,
+            )
+            | Q(is_public=True)
+        )
+        self.fields.clear()
+        for i, field in enumerate(self.config.items()):
+            current_field = fields.filter(api_name=field[1]).first()
+            self.fields.add(
+                current_field.id, through_defaults={"order": field[0], "include_in_recap": True,},
+            )
+        return self.save()
 
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
@@ -269,17 +298,12 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return model_object
 
     def get_user_fields(self):
-        if self.user.crm == "SALESFORCE":
-            template_fields = (
-                self.template.formfield_set.all()
-                .values_list("field__api_name", "field__salesforce_object",)
-                .order_by("order")
-            )
-        else:
-            fields = self.template.formfield_set.all().order_by("order")
-            template_fields = [
-                (field.field_ref.name, field.field_ref.hubspot_object) for field in fields
-            ]
+        print(self.template)
+        template_fields = (
+            self.template.formfield_set.all()
+            .values_list("field__api_name", "field__salesforce_object",)
+            .order_by("order")
+        )
         user_fields = []
         # hack to maintain order
         for field in template_fields:
@@ -368,7 +392,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
-                    val, user=self.user, resource=self.resource_type, resoure_id=self.resource_id,
+                    val, user=self.user, resource=self.resource_type,
                 )
                 if isinstance(generated_field, list):
                     form_blocks.extend(generated_field)

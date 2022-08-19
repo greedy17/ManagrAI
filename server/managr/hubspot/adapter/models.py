@@ -334,6 +334,7 @@ class HubspotAuthAccountAdapter:
         # always retreive id
         fields.insert(0, "Id")
         url = f"{self.instance_url}{hubspot_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
+        print(url)
         with Client as client:
             res = client.get(
                 url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),

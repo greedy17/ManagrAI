@@ -33,7 +33,11 @@ from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
-from managr.salesforce.background import emit_meeting_workflow_tracker, check_for_display_value
+from managr.salesforce.background import (
+    emit_meeting_workflow_tracker,
+    check_for_display_value,
+    replace_tags,
+)
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -517,8 +521,7 @@ def process_no_changes_made(payload, context):
 @processor(required_context=["w", "tracking_id"])
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
-    type = "zoom" if workflow.meeting else "non-zoom"
+    meeting = workflow.meeting
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
     for i, part in enumerate(meeting.participants):
@@ -529,7 +532,7 @@ def process_remove_contact_from_meeting(payload, context):
             del meeting.participants[i]
             break
     meeting.save()
-    if check_contact_last_name(workflow.id, type):
+    if check_contact_last_name(workflow.id):
         update_res = slack_requests.update_channel_message(
             context.get("original_message_channel"),
             context.get("original_message_timestamp"),
@@ -1833,7 +1836,8 @@ def process_get_notes(payload, context):
             if current_stage and previous_stage:
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
-            block_message += f"\nNotes:\n {note[2]}"
+            note_message = replace_tags(note[2])
+            block_message += f"\nNotes:\n {note_message}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
     if len(note_blocks) == 1:

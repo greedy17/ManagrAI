@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("salesforce", "0025_auto_20220323_1731"),
+        ("salesforce", "0025_salesforceauthaccount_last_sync_time"),
     ]
 
     operations = [

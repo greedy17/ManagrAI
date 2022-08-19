@@ -18,9 +18,11 @@ from .models import (
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    ignore_email_ref = serializers.SerializerMethodField("get_ignore_emails")
     class Meta:
         model = Organization
         fields = (
+            "id",
             "name",
             "photo",
             "state",
@@ -28,7 +30,11 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "slack_integration",
             "has_products",
             "number_of_allowed_users",
+            "ignore_email_ref"
         )
+    
+    def get_ignore_emails(self, instance):
+        return instance.ignore_emails
 
 
 class ActionChoiceSerializer(serializers.ModelSerializer):

@@ -62,6 +62,7 @@ urlpatterns = [
     ),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
+    path("task-status", core_views.get_task_status, name="get-task-status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
         "nylas/callback/accounts",
@@ -126,7 +127,7 @@ urlpatterns = [
         "zoom/webhooks/recordings", zoom_views.zoom_recordings_webhook, name="get_zoom_recording",
     ),
     path("zoom/fake-recording", zoom_views.fake_recording, name="fake-recording"),
-    path("zoom/schedule-meeting", zoom_views.schedule_zoom_meeting, name="schedule-zoom-meeting"),
+    path("users/zoom/schedule-meeting", zoom_views.schedule_zoom_meeting, name="schedule-meeting"),
     path(
         "users/salesforce/authorization",
         sf_views.salesforce_auth_link,
@@ -178,6 +179,7 @@ urlpatterns = [
 
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
+router.register("note-template", core_views.NoteTemplateViewSet, "note-template")
 router.register("organizations", organization_views.OrganizationViewSet, "organizations")
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
@@ -195,6 +197,7 @@ router.register("salesforce/picklists", sf_views.SObjectPicklistViewSet, "salesf
 
 router.register("slack", slack_views.SlackViewSet, "slack")
 router.register("slack/forms", slack_views.SlackFormsViewSet, "slack-forms")
+router.register("slack/instances", slack_views.SlackFormInstanceViewSet, "slack-form-instances"),
 router.register("alerts/templates", alert_views.AlertTemplateViewSet, "alert-templates")
 router.register(
     "alerts/message-templates", alert_views.AlertMessageTemplateViewSet, "alert-message-templates"

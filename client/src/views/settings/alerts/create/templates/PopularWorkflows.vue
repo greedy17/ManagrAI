@@ -395,7 +395,7 @@ export default {
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
-     
+
       alertTemplateForm: new AlertTemplateForm(),
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -534,7 +534,7 @@ export default {
       this.loading = true
 
       User.api
-        .update(this.user.id, )
+        .update(this.user.id)
         .then((response) => {
           this.$store.dispatch('updateUser', User.fromAPI(response.data))
         })
@@ -673,7 +673,8 @@ export default {
     setRecipient() {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
-      this.config.newConfigs[0].recipients = this.selectedChannel.id
+      this.config.newConfigs[0].recipients = [this.selectedChannel.id]
+
     },
     setDay(n) {
       this.config.newConfigs[0].recurrenceDay = 0
@@ -698,7 +699,7 @@ export default {
           directToUsers: true,
         })
         console.log(res)
-       
+
         this.handleUpdate()
 
         this.$toast('Workflow saved successfully', {
@@ -746,7 +747,7 @@ export default {
             directToUsers: this.directToUsers,
           })
           console.log(res)
-        
+
           this.handleUpdate()
 
           this.$toast('Workflow saved Successfully', {

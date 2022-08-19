@@ -148,23 +148,18 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
     ignore_emails = user.organization.ignore_emails
     meeting = {}
     if zoom_account and not zoom_account.is_revoked:
-
-        # emit the process
-
         while True:
             attempts = 1
             zoom_account = user.zoom_account
             try:
                 meeting = zoom_account.helper_class.get_past_meeting(meeting_uuid)
-
-                meeting.original_duration = original_duration
-                logger.info(f"{meeting.original_duration}")
-                if meeting.original_duration < 0:
+                meeting.meta_data["original_duration"] = original_duration
+                logger.info(f"{meeting.meta_data['original_duration']}")
+                if meeting.meta_data["original_duration"] < 0:
                     # zoom weired bug where instance meetings get a random -1324234234 negative big int
-                    meeting.original_duration = 0
+                    meeting.meta_data["original_duration"] = 0
                 # this will fail if a user has a free account
                 meeting = meeting.get_past_meeting_participants(zoom_account.access_token)
-
                 break
             except TokenExpired:
                 if attempts >= 5:
@@ -281,6 +276,35 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             existing_contacts = Contact.objects.filter(
                 email__in=participant_emails, owner__organization__id=user.organization.id
             ).exclude(email=user.email)
+            print(existing_contacts)
+            meeting_resource_data = dict(resource_id="", resource_type="")
+            opportunity = Opportunity.objects.filter(
+                contacts__email__in=participant_emails, owner__id=user.id
+            ).first()
+            logger.info(f"ZOOM OPP {opportunity}")
+            if opportunity:
+                meeting_resource_data["resource_id"] = str(opportunity.id)
+                meeting_resource_data["resource_type"] = "Opportunity"
+                existing_contacts = existing_contacts.filter(
+                    opportunities__in=[str(opportunity.id)]
+                )
+            else:
+                account = Account.objects.filter(
+                    contacts__email__in=participant_emails, owner__id=user.id,
+                ).first()
+                logger.info(f"ZOOM Account {account}")
+                if account:
+                    meeting_resource_data["resource_id"] = str(account.id)
+                    meeting_resource_data["resource_type"] = "Account"
+                    existing_contacts = existing_contacts.filter(account=account.id)
+                else:
+                    lead = Lead.objects.filter(
+                        email__in=participant_emails, owner__id=user.id
+                    ).first()
+                    if lead:
+                        meeting_resource_data["resource_id"] = str(lead.id)
+                        meeting_resource_data["resource_type"] = "Lead"
+
             # convert all contacts to model representation and remove from array
             for contact in existing_contacts:
                 formatted_contact = contact.adapter_class.as_dict
@@ -323,28 +347,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 *new_contacts,
                 *meeting_contacts,
             ]
-            meeting_resource_data = dict(resource_id="", resource_type="")
-            opportunity = Opportunity.objects.filter(
-                contacts__email__in=participant_emails, owner__id=user.id
-            ).first()
-            if opportunity:
-                meeting_resource_data["resource_id"] = str(opportunity.id)
-                meeting_resource_data["resource_type"] = "Opportunity"
-
-            else:
-                account = Account.objects.filter(
-                    contacts__email__in=participant_emails, owner__id=user.id,
-                ).first()
-                if account:
-                    meeting_resource_data["resource_id"] = str(account.id)
-                    meeting_resource_data["resource_type"] = "Account"
-                else:
-                    lead = Lead.objects.filter(
-                        email__in=participant_emails, owner__id=user.id
-                    ).first()
-                    if lead:
-                        meeting_resource_data["resource_id"] = str(lead.id)
-                        meeting_resource_data["resource_type"] = "Lead"
+            logger.info(f"PARTICIPANT EMAILS {participant_emails}")
 
             for contact in meeting_contacts:
                 contact["_tracking_id"] = str(uuid.uuid4())
@@ -374,24 +377,14 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     contact_forms.append(form)
                     contact["_form"] = str(form.id)
             meeting.participants = meeting_contacts
-            serializer = ZoomMeetingSerializer(data=meeting.as_dict)
-            try:
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-            except ValidationError as e:
-                logger.exception(
-                    f"Unable to save and initiate slack for meeting with uuid "
-                    f"{meeting_uuid} because of error {json.dumps(e.detail)}"
-                )
-                return e
-            # emit the event to start slack interaction
+            meeting.save()
+            logger.info(f"MEETING RESOURCE DATA {meeting_resource_data}")
             workflow = MeetingWorkflow.objects.create(
                 user=user,
-                meeting=serializer.instance,
+                meeting=meeting,
                 operation_type=zoom_consts.MEETING_REVIEW_OPERATION,
                 **meeting_resource_data,
             )
-
             workflow.forms.set(contact_forms)
             if send_slack:
                 # sends false only for Mike testing
@@ -561,12 +554,14 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         hour = hour + 12
     formatted_time = f"{str(hour)}:{zoom_data['meeting_minute']}"
     try:
+        # print("\n\nmeeting_duration normal + int\n\n", zoom_data["meeting_duration"], "\n\n", int(zoom_data["meeting_duration"]), "\n\n")
         res = user.zoom_account.helper_class.schedule_meeting(
             zoom_data["meeting_topic"],
             zoom_data["meeting_date"],
             formatted_time,
             int(zoom_data["meeting_duration"]),
         )
+        # print(res.json())
         return res
     except Exception as e:
         logger.warning(f"Zoom schedule error: {e}")

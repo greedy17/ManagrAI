@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
+from django.db.models import Q
 from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField, ArrayField
 
@@ -51,7 +52,9 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+        max_length=255,
+        choices=org_consts.INTEGRATION_SOURCES,
+        blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -73,7 +76,7 @@ class UserQuerySet(models.QuerySet):
     # TODO pb 10/15/20: Ideally, we are trying to attach user roles so that
     #       INTEGRATION can assume roles for managr
     def for_user(self, user):
-        if user.is_superuser:
+        if user.is_superuser or user.is_staff:
             return self.all()
         elif user.is_active:
             if user.user_level == core_consts.USER_LEVEL_MANAGER:
@@ -147,13 +150,34 @@ class User(AbstractUser, TimeStampModel):
     ENABLEMENT = "ENABLEMENT"
     SDR = "SDR"
     ROLE_CHOICES = [
-        (LEADERSHIP, "Leadership",),
-        (FRONTLINE_MANAGER, "Frontline Manager",),
-        (ACCOUNT_EXEC, "Account Executive",),
-        (ACCOUNT_MANAGER, "Account Manager",),
-        (OPERATIONS, "OPERATIONS",),
-        (ENABLEMENT, "Enablement",),
-        (SDR, "SDR",),
+        (
+            LEADERSHIP,
+            "Leadership",
+        ),
+        (
+            FRONTLINE_MANAGER,
+            "Frontline Manager",
+        ),
+        (
+            ACCOUNT_EXEC,
+            "Account Executive",
+        ),
+        (
+            ACCOUNT_MANAGER,
+            "Account Manager",
+        ),
+        (
+            OPERATIONS,
+            "OPERATIONS",
+        ),
+        (
+            ENABLEMENT,
+            "Enablement",
+        ),
+        (
+            SDR,
+            "SDR",
+        ),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 
@@ -168,9 +192,14 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS,
+        max_length=255,
+        default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(max_length=255, blank=True,)
+    first_name = models.CharField(
+        max_length=255,
+        blank=True,
+    )
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -436,7 +465,6 @@ class NylasAuthAccount(TimeStampModel):
                 return logger.error(f"An error occured with a nylas integration, {e}")
 
         else:
-
             status_code = response.status_code
             error_data = response.json()
             error_param = error_data.get("error", None)
@@ -448,8 +476,7 @@ class NylasAuthAccount(TimeStampModel):
                 "error_param": error_param,
                 "error_message": error_message,
             }
-
-            NylasAPIError(kwargs)
+            return NylasAPIError(error_message)
         return data
 
     def _get_calendar_data(self):
@@ -461,7 +488,12 @@ class NylasAuthAccount(TimeStampModel):
         starts_after = convert_local_time_to_unix(user_timezone, 7, 00)
         ends_before = convert_local_time_to_unix(user_timezone, 20, 00)
 
-        query = dict({"starts_after": starts_after, "ends_before": ends_before,})
+        query = dict(
+            {
+                "starts_after": starts_after,
+                "ends_before": ends_before,
+            }
+        )
         if self.event_calendar_id:
             query["calendar_id"] = self.event_calendar_id
         params = urlencode(query)
@@ -561,7 +593,8 @@ class MeetingPrepInstance(TimeStampModel):
         max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
     invocation = models.PositiveIntegerField(
-        default=0, help_text="Keeps track of the number of times the meeting instance was called",
+        default=0,
+        help_text="Keeps track of the number of times the meeting instance was called",
     )
     form = models.OneToOneField(
         "slack.OrgCustomSlackFormInstance",
@@ -609,11 +642,7 @@ class UserActivity(models.Model):
         from managr.salesforce.models import MeetingWorkflow
 
         workflow = MeetingWorkflow.objects.get(id=meeting_id)
-        main_form = (
-            workflow.forms.filter(template__form_type__in=["CREATE", "UPDATE"])
-            .exclude(template__resource__in=["Contact", "OpportunityLineItem"])
-            .first()
-        )
+        main_form = workflow.forms.filter(resource_id=workflow.resource_id).first()
         saved_data = [
             key
             for key in main_form.saved_data.keys()
@@ -623,6 +652,7 @@ class UserActivity(models.Model):
                 or main_form.previous_data[key] != main_form.saved_data[key]
             )
         ]
+        print(saved_data)
         contact_forms = workflow.forms.filter(
             template__resource="Contact", template__form_type="CREATE"
         )
@@ -682,7 +712,10 @@ class UserForecast(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="current_forecast"
     )
-    state = JSONField(default=dict, null=True,)
+    state = JSONField(
+        default=dict,
+        null=True,
+    )
 
     def __str__(self):
         return f"Forecast for {self.user.email}"
@@ -711,11 +744,9 @@ class UserForecast(models.Model):
         return "Opportunity already in current forecast state"
 
     def remove_from_state(self, id):
-        from managr.opportunity.models import Opportunity
 
-        opp = Opportunity.objects.get(integration_id=id)
-        if opp.integration_id in self.state.keys():
-            del self.state[opp.integration_id]
+        if id in self.state.keys():
+            del self.state[id]
             self.save()
             return "Opportunity removed from current forecast state"
         return "Opportunity not in current forecast state"
@@ -725,3 +756,28 @@ class UserForecast(models.Model):
             "Opportunity", list(self.state.keys())
         )
         return res
+
+
+class NoteTemplateQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(
+                Q(user=user.id) | Q(is_shared=True, user__organization=user.organization)
+            )
+
+
+class NoteTemplate(TimeStampModel):
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE)
+    is_shared = models.BooleanField(default=False)
+
+    objects = NoteTemplateQuerySet.as_manager()
+
+    def __str__(self):
+        return f"{self.subject} {self.user}"
+
+    class Meta:
+        ordering = ["datetime_created"]

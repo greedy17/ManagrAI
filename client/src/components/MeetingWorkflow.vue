@@ -1,32 +1,19 @@
 <template>
   <div class="table-row">
     <div
-      class="table-cell wt-bg"
+      class="table-cell sticky-header wt-bg"
       :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
     >
-      <div v-if="!meeting.event_data">
-        <div>
-          <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
-            {{ meeting.topic ? meeting.topic : 'Meeting' }}
-          </p>
-          <span style="color: #9b9b9b; font-size: 11px">
-            Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-          </span>
-        </div>
-      </div>
-
-      <div v-else>
-        <div>
-          <p style="letter-spacing: 0.25px; font-size: 15px; margin-bottom: 3px">
-            {{ meeting.event_data.title }}
-          </p>
-          <span style="color: #9b9b9b; font-size: 11px">
-            Time: {{ formatUnix(meeting.event_data.times.start_time) }}
-          </span>
-        </div>
+      <div>
+        <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
+          {{ meeting.topic ? meeting.topic : 'Meeting' }}
+        </p>
+        <span style="color: #9b9b9b; font-size: 11px">
+          Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
+        </span>
       </div>
     </div>
-    <div class="table-cell">
+    <div class="table-cell-small">
       {{ meeting.participants.length }}
     </div>
 
@@ -46,14 +33,15 @@
               !meeting.participants[participantIndex].__has_changes &&
               (!resourceType || resourceType === 'Opportunity')
             "
-            class="green"
+            class="tooltip"
           >
             <img
               @click="addContact(participantIndex)"
-              class="contact-img"
+              class="contact-img green"
               src="@/assets/images/add-contact.svg"
               alt=""
             />
+            <span class="tooltiptext">Add Contact</span>
           </span>
           <span
             v-if="
@@ -61,14 +49,15 @@
               !meeting.participants[participantIndex].__has_changes &&
               (!resourceType || resourceType === 'Opportunity')
             "
-            class="red"
+            class="tooltip"
           >
             <img
               src="@/assets/images/remove.svg"
-              class="contact-img"
+              class="contact-img red"
               @click="removeParticipant(participantIndex)"
               alt=""
             />
+            <span class="tooltiptext">Remove</span>
           </span>
           <span v-if="meeting.participants[participantIndex].__has_changes">
             <img class="filter" src="@/assets/images/profile.svg" alt="" />
@@ -147,6 +136,64 @@
                   </template>
                 </Multiselect>
               </div>
+
+              <div
+                v-else-if="
+                  field.dataType === 'Picklist' ||
+                  field.dataType === 'MultiPicklist' ||
+                  (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                "
+              >
+                <p>{{ field.dataType }}:</p>
+                <Multiselect
+                  v-model="dropdownVal[field.apiName]"
+                  :options="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? allPicklistOptions[field.id]
+                      : referenceOpts[field.apiName]
+                  "
+                  @select="
+                    setUpdateValues(
+                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? $event.value
+                        : $event.id,
+                      field.dataType === 'MultiPicklist' ? true : false,
+                    )
+                  "
+                  @search-change="
+                    field.dataType === 'Reference'
+                      ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                      : null
+                  "
+                  :loading="dropdownLoading"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                  :track-by="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'value'
+                      : 'id'
+                  "
+                  :label="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'label'
+                      : 'name'
+                  "
+                >
+                  <template v-slot:noResult>
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template v-slot:placeholder>
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ field.referenceDisplayLabel }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+
               <div
                 v-else-if="
                   field.dataType === 'TextArea' ||
@@ -316,30 +363,54 @@
     </div>
 
     <div class="table-cell">
-      <p class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
-        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+      <div class="roww" v-if="resourceId && !meetingUpdated">
+        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
 
-        <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
-          <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
-        </button>
+        <div class="tooltip">
+          <button class="name-cell-edit-note-button-1" @click="switchResource">
+            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
+          </button>
+          <span class="tooltiptext">Change {{ resourceType }}</span>
+        </div>
 
-        <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
-          <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
-        </button>
+        <div class="tooltip">
+          <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
+            <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
+          </button>
+          <span class="tooltiptext">View Notes</span>
+        </div>
+      </div>
+      <p
+        style="color: #9b9b9b; font-size: 11px; margin-top: -6px"
+        v-if="resourceId && !meetingUpdated"
+      >
+        Record Type: {{ resourceType }}
       </p>
-      <p v-else-if="meetingUpdated">
-        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
-      </p>
-      <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
-        <button @click="addingOpp = !addingOpp" class="add-button">Map to Opportunity</button>
-        <small>currently mapped to {{ resourceType }}</small>
+      <div v-else-if="meetingUpdated">
+        <p>{{ resourceRef ? resourceRef.name : 'Undefined' }}</p>
+        <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
+          Record Type: {{ resourceType }}
+        </p>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Map to Opportunity</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM Record</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p>Map to Opportunity</p>
+          <p v-if="!resourceType || !mapType">Select Record</p>
+          <p
+            v-else-if="resourceType && resourceId"
+            style="cursor: pointer"
+            @click="changeMapType(null)"
+          >
+            Select {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
+            <img src="@/assets/images/swap.svg" height="14px" alt="" />
+          </p>
+          <p v-else style="cursor: pointer" @click="changeMapType(null)">
+            Select {{ mapType ? mapType : 'Record' }}
+            <img src="@/assets/images/swap.svg" height="14px" alt="" />
+          </p>
+
           <img
             src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
@@ -349,12 +420,29 @@
 
         <div class="add-field-section__body">
           <Multiselect
+            v-if="selectingResource || !mapType"
+            style="width: 20vw"
+            v-model="selectedResourceType"
+            @select="changeResource($event)"
+            placeholder="Select Record Type"
+            selectLabel="Enter"
+            openDirection="below"
+            :options="resources"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+          </Multiselect>
+
+          <Multiselect
+            v-else
             style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
-            placeholder="Select Opportunity"
+            :placeholder="`Select ${mapType}`"
             selectLabel="Enter"
             label="name"
+            :customLabel="({ name, email }) => (name ? name : email)"
             openDirection="below"
             track-by="id"
             :options="allOpps"
@@ -366,27 +454,32 @@
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Add</p>
+          <p @click="mapOpp">Link</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Add</p>
+          <p style="color: gray; cursor: text">Link</p>
         </div>
       </div>
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
-      <p
-        v-if="
-          (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
-        "
-        class="red-text"
-      >
-        Map meeting to take action.
-      </p>
+      <p v-if="!resourceId && !meetingLoading" class="red-text">Link meeting to take action.</p>
       <div>
-        <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
-          <button @click="$emit('update-Opportunity', workflowId, resourceId)" class="add-button">
-            Update Opportunity
+        <div class="column" v-if="resourceId && !meetingLoading">
+          <button
+            @click="
+              $emit(
+                'update-Opportunity',
+                resourceType,
+                workflowId,
+                resourceId,
+                resourceRef ? resourceRef.integration_id : null,
+                resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
+              )
+            "
+            class="add-button"
+          >
+            Update {{ resourceType }}
           </button>
           <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
         </div>
@@ -427,10 +520,16 @@ export default {
   data() {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
+      resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      dropdownVal: {},
+      selectedResourceType: null,
+      selectingResource: false,
       addingOpp: false,
       noUpdate: false,
       mappedOpp: null,
       resource: null,
+      loading: false,
+      mapType: this.resourceType,
       removingParticipant: null,
       selectedIndex: null,
       addingContact: false,
@@ -438,6 +537,7 @@ export default {
       selectedOwner: null,
       formData: {},
       currentVals: [],
+      allOpps: null,
     }
   },
   components: {
@@ -447,9 +547,9 @@ export default {
   },
   props: {
     meeting: {},
+    resourceRef: {},
     resourceId: {},
     resourceType: {},
-    allOpps: {},
     index: {},
     workflowId: {},
     meetingUpdated: {},
@@ -460,6 +560,9 @@ export default {
     owners: {},
     index: {},
     participants: {},
+    allPicklistOptions: {},
+    referenceOpts: {},
+    dropdownLoading: {},
   },
   computed: {
     hasLastName() {
@@ -469,12 +572,48 @@ export default {
       return lastName
     },
   },
+  // watch: {
+  //   resourceType: 'getObjects',
+  // },
   mounted() {
     if (this.resourceId) {
       this.getCurrentVals()
     }
   },
+  created() {
+    this.getObjects()
+  },
   methods: {
+    changeMapType(i) {
+      this.mapType = i
+    },
+    selectResource() {
+      this.selectingResource = true
+    },
+    switchResource() {
+      this.getObjects()
+      this.addingOpp = !this.addingOpp
+    },
+    async getObjects() {
+      this.loading = true
+      try {
+        const res = await SObjects.api.getObjectsForWorkflows(this.mapType)
+        this.allOpps = res.results
+        this.originalList = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loading = false
+      }
+    },
+    changeResource(i) {
+      this.$emit('change-resource', i)
+      this.mapType = i
+      this.mappedOpp = null
+      this.selectedResourceType = null
+      this.selectingResource = false
+      this.getObjects()
+    },
     emitGetNotes(id) {
       this.$emit('get-notes', id)
     },
@@ -507,10 +646,14 @@ export default {
       this.selectedIndex = index
     },
     selectOpp(val) {
+      console.log(val)
       this.resource = val.id
+      // this.$emit('change-resource', this.resourceType)
+      this.mappedOpp = null
+      this.selectedResourceType = null
     },
     mapOpp() {
-      this.$emit('map-opp', this.workflowId, this.resource, 'Opportunity')
+      this.$emit('map-opp', this.workflowId, this.resource, this.mapType)
       this.addingOpp = !this.addingOpp
     },
     formatUnix(unix) {
@@ -546,6 +689,59 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
 
 input:focus {
   outline: none;
@@ -588,6 +784,7 @@ a {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  font-size: 12px;
 }
 .no-update {
   background-color: $base-gray;
@@ -598,6 +795,7 @@ a {
   min-height: 2rem;
   padding: 0.5rem 1.25rem;
   cursor: pointer;
+  font-size: 12px;
 }
 .roww {
   display: flex;
@@ -660,6 +858,7 @@ a {
   align-items: center;
   justify-content: center;
   border: 0.7px solid $gray;
+  cursor: pointer;
 }
 .add-contact {
   img {
@@ -697,6 +896,7 @@ a {
     gap: 0.5rem;
     flex-direction: row;
     flex-wrap: wrap;
+    overflow: scroll;
   }
   &__footer {
     display: flex;
@@ -739,7 +939,7 @@ a {
     cursor: pointer;
 
     img {
-      height: 0.8rem;
+      height: 12px;
       margin-left: 0.25rem;
       filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
         brightness(93%) contrast(89%);
@@ -844,7 +1044,7 @@ a {
   flex-direction: column;
   align-items: center;
   background-color: $white;
-  min-width: 25vw;
+  min-width: 28vw;
   height: auto;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
@@ -881,34 +1081,53 @@ a {
     }
   }
 }
-
+.table-cell-name {
+  display: table-cell;
+  position: relative;
+  min-width: 18vw;
+  max-width: 24vw;
+  background-color: white;
+  padding: 2vh 3vh;
+  border: none;
+  z-index: 2;
+  left: 0;
+  position: sticky;
+  border-bottom: 2px solid $soft-gray;
+  font-size: 13px;
+}
 .table-row {
   display: table-row;
   left: 0;
 }
-.table-cell {
+.table-cell-small {
   display: table-cell;
   position: relative;
-  min-width: 12vw;
+  min-width: 3vw;
   background-color: $off-white;
-  padding: 2vh 3vh;
+  padding: 2vh;
   border: none;
-  border-bottom: 1px solid $soft-gray;
+  border-bottom: 3px solid $soft-gray;
   font-size: 13px;
 }
 .left-green {
   border-left: 2px solid $dark-green !important;
-  bottom: 2px;
 }
 .left-red {
   border-left: 2px solid $coral !important;
-  bottom: 2px;
 }
 .wt-bg {
   background-color: white;
 }
 
-.table-cell:hover {
+.sticky-header {
+  z-index: 3;
+  left: 0;
+  top: 0;
+  position: sticky;
+}
+
+.table-cell:hover,
+.table-cell-small:hover {
   cursor: text;
   background-color: white;
 }

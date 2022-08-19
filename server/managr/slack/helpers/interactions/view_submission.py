@@ -72,14 +72,17 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    print(f"STAGE RELATED: {context}")
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
 
     state = view["state"]["values"]
+    task_selection = [
+        value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+    ][0]
+    task_type = task_selection.get("value") if task_selection is not None else "None"
     private_metadata = json.loads(view["private_metadata"])
-
+    private_metadata["task_type"] = task_type
     review_form = workflow.forms.filter(template__form_type=context.get("form_type")).first()
     review_form.save_form(state)
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).all()
@@ -118,6 +121,7 @@ def process_stage_next_page(payload, context):
 def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    private_metadata = json.loads(payload["view"]["private_metadata"])
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
@@ -148,6 +152,12 @@ def process_zoom_meeting_data(payload, context):
 
     # get state - state contains the values based on the block_id
     state = view["state"]["values"]
+    task_type = private_metadata.get("task_type", None)
+    if not task_type:
+        task_selection = [
+            value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+        ][0]
+        task_type = task_selection.get("value") if task_selection is not None else None
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
     current_form_ids = []
@@ -160,18 +170,13 @@ def process_zoom_meeting_data(payload, context):
         form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
         current_form_ids.append(str(form.id))
         form.save_form(state)
-    if workflow.meeting:
-        contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    else:
-        contact_ids = [
-            participant["_form"] for participant in workflow.non_zoom_meeting.participants
-        ]
-        contact_forms = OrgCustomSlackFormInstance.objects.filter(id__in=contact_ids)
+    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
+
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
         # create call log
-        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
         # save meeting data
     ]
     for form in contact_forms:
@@ -826,7 +831,7 @@ def process_update_meeting_contact(payload, context):
         form = OrgCustomSlackFormInstance.objects.get(id=contact["_form"])
     else:
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        meeting = workflow.meeting if workflow.meeting else workflow.non_zoom_meeting
+        meeting = workflow.meeting
         contact = dict(
             *filter(
                 lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
@@ -891,8 +896,7 @@ def process_update_meeting_contact(payload, context):
             "original_message_channel": context.get("original_message_channel"),
             "original_message_timestamp": context.get("original_message_timestamp"),
         }
-        meeting_type = "zoom" if workflow.meeting else "non-zoom"
-        if check_contact_last_name(workflow.id, meeting_type):
+        if check_contact_last_name(workflow.id):
             update_res = slack_requests.update_channel_message(
                 context.get("original_message_channel"),
                 context.get("original_message_timestamp"),

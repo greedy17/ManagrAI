@@ -1,8 +1,6 @@
-import re
 import pytz
 import logging
 import datetime
-import operator as _operator
 from dateutil.relativedelta import relativedelta
 from calendar import monthrange
 
@@ -74,8 +72,8 @@ class AlertTemplate(TimeStampModel):
             ["Id"],
             additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
         )
-        print(f"{user_sf.instance_url}{q}")
-        return f"{user_sf.instance_url}{q}"
+
+        return f"{user_sf.instance_url}{q[0]}"
 
     @property
     def get_users(self):

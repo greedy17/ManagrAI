@@ -1,4 +1,5 @@
 import re
+import math
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -14,7 +15,7 @@ AUTHORIZATION_URI = f"{BASE_URL}/services/oauth2/authorize"
 AUTHENTICATION_URI = f"{BASE_URL}/services/oauth2/token"
 REVOKE_URI = f"{BASE_URL}/services/oauth2/revoke"
 REFRESH_URI = f"{BASE_URL}/services/oauth2/token"
-
+SF_CHAR_LIMIT = 12000
 # SF CUSTOM URIS - Used to retrieve data
 
 CUSTOM_BASE_URI = f"/services/data/{SF_API_VERSION}"
@@ -40,6 +41,75 @@ REMOVE_OWNER_ID = {
 
 ADD_RESOURCE_TYPE_FIELDS = ["RecordType"]
 
+
+def SEPARATE_FIELDS(fields):
+    char_count = ",".join(fields)
+    field_list = []
+    if len(char_count) > SF_CHAR_LIMIT:
+        fields_listed = list(fields)
+        divider = 2
+        while True:
+            if (len(char_count) / divider) > SF_CHAR_LIMIT:
+                divider += 1
+            else:
+                step = round(len(fields) / divider)
+                current_step = 0
+                for i in range(divider):
+                    if (current_step + step) > len(fields):
+                        field_slice = fields_listed[current_step:]
+                        if "Id" not in field_slice:
+                            field_slice.append("Id")
+                        field_list.append(",".join(field_slice))
+                    else:
+                        field_slice = fields_listed[current_step : (current_step + step)]
+                        if "Id" not in field_slice:
+                            field_slice.append("Id")
+                        field_list.append(",".join(field_slice))
+                    current_step += step
+                break
+    else:
+        field_list.append(char_count)
+    return field_list
+
+
+# def SALESFORCE_RESOURCE_QUERY_URI(
+#     owner_id,
+#     resource,
+#     fields,
+#     childRelationshipFields=[],
+#     additional_filters=[],
+#     limit=SALESFORCE_QUERY_LIMIT,
+#     SobjectType=None,
+# ):
+#     # make a set to remove duplicates
+#     fields = set(fields)
+#     if resource in ADD_RESOURCE_TYPE_FIELDS:
+#         if len(additional_filters):
+#             additional_filters.append(f"AND SobjectType = '{SobjectType}'")
+#         else:
+#             additional_filters.append(f"SobjectType = '{SobjectType}'")
+#     url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
+#     if len(childRelationshipFields):
+#         for rel, v in childRelationshipFields.items():
+#             url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+#     url = f"{url} FROM {resource}"
+#     if resource not in REMOVE_OWNER_ID:
+#         additional_filters.insert(0, f"OwnerId = '{owner_id}'")
+#     for i, f in enumerate(additional_filters):
+#         if i == 0:
+#             # check to see if additional query is AND/OR and remove from the start
+#             #  it since it is the first option
+#             # note it must remove from the start only so it does not remove from LIKE searches
+#             # all additional queries should be added to the classes if available with AND/OR
+#             # or on the fly with AND/OR
+
+#             f = re.sub(r"^(AND|OR)", "", f)
+#             f = f"WHERE {f}"
+
+#         url = f"{url} {f}"
+#     # TODO: [MGR-917] make ordering dynamic
+#     return f"{url} order by LastModifiedDate DESC limit {limit}"
+
 # SF CUSTOM URI QUERIES
 def SALESFORCE_RESOURCE_QUERY_URI(
     owner_id,
@@ -52,32 +122,35 @@ def SALESFORCE_RESOURCE_QUERY_URI(
 ):
     # make a set to remove duplicates
     fields = set(fields)
-    if resource in ADD_RESOURCE_TYPE_FIELDS:
-        if len(additional_filters):
-            additional_filters.append(f"AND SobjectType = '{SobjectType}'")
-        else:
-            additional_filters.append(f"SobjectType = '{SobjectType}'")
-    url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {','.join(fields)}"
-    if len(childRelationshipFields):
-        for rel, v in childRelationshipFields.items():
-            url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
-    url = f"{url} FROM {resource}"
     if resource not in REMOVE_OWNER_ID:
         additional_filters.insert(0, f"OwnerId = '{owner_id}'")
-    for i, f in enumerate(additional_filters):
-        if i == 0:
-            # check to see if additional query is AND/OR and remove from the start
-            #  it since it is the first option
-            # note it must remove from the start only so it does not remove from LIKE searches
-            # all additional queries should be added to the classes if available with AND/OR
-            # or on the fly with AND/OR
+    field_list = SEPARATE_FIELDS(fields)
+    url_list = []
+    for idx, field_string in enumerate(field_list):
+        if resource in ADD_RESOURCE_TYPE_FIELDS:
+            if len(additional_filters):
+                additional_filters.append(f"AND SobjectType = '{SobjectType}'")
+            else:
+                additional_filters.append(f"SobjectType = '{SobjectType}'")
+        url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {field_string}"
+        if len(childRelationshipFields) and idx == 0:
+            for rel, v in childRelationshipFields.items():
+                url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+        url = f"{url} FROM {resource}"
+        for i, f in enumerate(additional_filters):
+            if i == 0:
+                # check to see if additional query is AND/OR and remove from the start
+                #  it since it is the first option
+                # note it must remove from the start only so it does not remove from LIKE searches
+                # all additional queries should be added to the classes if available with AND/OR
+                # or on the fly with AND/OR
 
-            f = re.sub(r"^(AND|OR)", "", f)
-            f = f"WHERE {f}"
+                f = re.sub(r"^(AND|OR)", "", f)
+                f = f"WHERE {f}"
 
-        url = f"{url} {f}"
-    # TODO: [MGR-917] make ordering dynamic
-    return f"{url} order by LastModifiedDate DESC limit {limit}"
+            url = f"{url} {f}"
+        url_list.append(f"{url} order by LastModifiedDate DESC limit {limit}")
+    return url_list
 
 
 def SALESFORCE_RESOURCE_QUERY_BY_ID_URI(resource, fields, ids):

@@ -150,7 +150,6 @@ export default class LeadAPI {
    */
 
   clearLog(lead) {
-    console.log(lead)
     const data = {
       lead: lead,
     }

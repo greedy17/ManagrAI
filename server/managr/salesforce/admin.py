@@ -55,7 +55,7 @@ class CustomMeetingWorkflow(admin.ModelAdmin):
     model = models.MeetingWorkflow
     inlines = (CustomFormInstanceInline,)
     list_filter = ("user__email",)
-    list_display = ("datetime_created", "user")
+    list_display = ("datetime_created", "user", "meeting")
     readonly_fields = ["user"]
     ordering = ("-datetime_created",)
 
@@ -72,6 +72,8 @@ class CustomSObjectField(admin.ModelAdmin):
         "last_edited",
         "salesforce_account",
     )
+
+    search_fields = ("label",)
     ordering = ("-last_edited",)
 
 

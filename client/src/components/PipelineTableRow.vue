@@ -1,12 +1,18 @@
 <template>
   <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
     <div v-if="opp" class="table-cell-checkbox">
-      <div v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)">
+      <div
+        v-if="
+          updateList.includes(opp.id) ||
+          updatedList.includes(opp.id) ||
+          (inlineLoader && currentInlineRow === index)
+        "
+      >
         <SkeletonBox width="10px" height="9px" />
       </div>
       <div v-else>
         <input
-          @click="emitCheckedBox"
+          @click="emitCheckedBox(index)"
           type="checkbox"
           :id="index"
           v-model="primaryCheckList"
@@ -21,7 +27,11 @@
         <div>
           <div
             class="flex-column"
-            v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
+            v-if="
+              updateList.includes(opp.id) ||
+              updatedList.includes(opp.id) ||
+              (inlineLoader && currentInlineRow === index)
+            "
           >
             <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
             <SkeletonBox width="125px" height="9px" />
@@ -34,17 +44,31 @@
             :owner="opp.owner_ref.first_name"
           />
         </div>
-        <div v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)" class="flex-row">
+        <div
+          v-if="
+            updateList.includes(opp.id) ||
+            updatedList.includes(opp.id) ||
+            (inlineLoader && currentInlineRow === index)
+          "
+          class="flex-row"
+        >
           <SkeletonBox width="15px" height="14px" />
           <SkeletonBox width="15px" height="14px" />
         </div>
         <div v-else class="flex-row">
-          <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
-          </button>
-          <button @click="emitGetNotes" class="name-cell-note-button-1">
-            <img class="gray" src="@/assets/images/white-note.svg" />
-          </button>
+          <div class="tooltip">
+            <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
+              <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
+            </button>
+            <span class="tooltiptext">Update</span>
+          </div>
+
+          <div class="tooltip">
+            <button @click="emitGetNotes" class="name-cell-note-button-1">
+              <img class="gray" src="@/assets/images/white-note.svg" />
+            </button>
+            <span class="tooltiptext">View Notes</span>
+          </div>
         </div>
       </div>
     </div>
@@ -70,7 +94,11 @@
       }"
     >
       <SkeletonBox
-        v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
+        v-if="
+          updateList.includes(opp.id) ||
+          updatedList.includes(opp.id) ||
+          (inlineLoader && currentInlineRow === index)
+        "
         width="100px"
         height="14px"
       />
@@ -83,19 +111,18 @@
             "
             class="inline-row"
           >
-            <textarea
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+            <input
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               id="user-input-wide"
               :value="
                 field.apiName.includes('__c')
                   ? opp['secondary_data'][field.apiName]
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
-            >
-            </textarea>
+            />
 
-            <div v-if="inlineLoader">
-              <PipelineLoader />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
             </div>
           </div>
           <div
@@ -108,7 +135,7 @@
             class="inline-row"
           >
             <input
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               id="user-input"
               type="text"
               :value="
@@ -117,21 +144,18 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="inlineLoader">
-              <PipelineLoader />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
             </div>
           </div>
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-            <div v-if="inlineLoader">
-              <PipelineLoader />
-            </div>
             <Multiselect
-              v-else-if="field.apiName !== 'StageName'"
-              :options="picklistOpts[field.apiName]"
+              v-if="field.apiName !== 'StageName'"
+              :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 8rem"
+              style="width: 14vw; padding-bottom: 8rem; margin-left: 1vw"
               track-by="value"
               label="label"
               v-model="dropdownVal[field.apiName]"
@@ -153,16 +177,22 @@
                 <p class="slot-icon">
                   <img src="@/assets/images/search.svg" alt="" />
                   {{
-                    field.apiName.includes('__c')
-                      ? opp['secondary_data'][field.apiName]
-                      : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                    (
+                      field.apiName.includes('__c')
+                        ? opp['secondary_data'][field.apiName]
+                        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                    )
+                      ? field.apiName.includes('__c')
+                        ? opp['secondary_data'][field.apiName]
+                        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                      : field.referenceDisplayLabel
                   }}
                 </p>
               </template>
             </Multiselect>
             <Multiselect
               v-else-if="field.apiName === 'StageName'"
-              :options="picklistOpts[field.apiName]"
+              :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
               style="width: 14vw; padding-bottom: 8rem"
@@ -182,13 +212,9 @@
               </template>
             </Multiselect>
           </div>
-          <div v-else-if="field.dataType === 'Date'">
-            <div v-if="inlineLoader">
-              <PipelineLoader />
-            </div>
+          <div class="inline-row" v-else-if="field.dataType === 'Date'">
             <input
-              v-else
-              @input="setUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               type="date"
               id="user-input"
               :value="
@@ -197,22 +223,24 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
+            </div>
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
-            <div v-if="inlineLoader">
-              <PipelineLoader />
-            </div>
             <input
-              v-else
               type="datetime-local"
               id="user-input"
-              @input="setUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               :value="
                 field.apiName.includes('__c')
                   ? opp['secondary_data'][field.apiName]
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
+            </div>
           </div>
           <div
             v-else-if="
@@ -223,7 +251,7 @@
             class="inline-row"
           >
             <input
-              @input="executeUpdateValues(field.apiName, $event.target.value)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
               id="user-input"
               type="number"
               :value="
@@ -232,8 +260,8 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="inlineLoader">
-              <PipelineLoader />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
             </div>
           </div>
           <div v-else-if="field.dataType === 'Boolean'">
@@ -283,7 +311,11 @@
       "
     >
       <SkeletonBox
-        v-if="updateList.includes(opp.id) || updatedList.includes(opp.id)"
+        v-if="
+          updateList.includes(opp.id) ||
+          updatedList.includes(opp.id) ||
+          (inlineLoader && currentInlineRow === index)
+        "
         width="100px"
         height="14px"
       />
@@ -309,8 +341,7 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjects, SObjectField } from '@/services/salesforce'
+import { SObjects } from '@/services/salesforce'
 import debounce from 'lodash.debounce'
 
 export default {
@@ -322,12 +353,10 @@ export default {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
-  async created() {
-    await this.objectFields.refresh()
-  },
   data() {
     return {
       booleans: ['true', 'false'],
+      isSelected: false,
       currentRow: null,
       formData: {},
       dropdownValue: {},
@@ -336,13 +365,13 @@ export default {
       editing: false,
       editIndex: null,
       currentOpp: null,
-      objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 300 },
-        filters: {
-          salesforceObject: 'Opportunity',
-        },
-      }),
+      // objectFields: CollectionManager.create({
+      //   ModelClass: SObjectField,
+      //   pagination: { size: 300 },
+      //   filters: {
+      //     salesforceObject: 'Opportunity',
+      //   },
+      // }),
       updatedList: [],
       newCloseDate: null,
     }
@@ -350,10 +379,11 @@ export default {
   watch: {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
+    primaryCheckList: 'checkSelect',
     dropdownValue: {
       handler(val) {
         if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.opp.id)
+          this.$emit('open-stage-form', val, this.opp.id, this.opp.integration_id)
         } else {
           this.setUpdateValues('StageName', val)
         }
@@ -374,18 +404,26 @@ export default {
     closeEdit: {},
     stages: {},
     currentInlineRow: {},
-  },
-  computed: {
-    extraPipelineFields() {
-      let extras = []
-      extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
-      return extras
-    },
-    hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
-    },
+    extraPipelineFields: {},
   },
   methods: {
+    // async setForm() {
+    //   try {
+    //     const res = await SObjects.api.createFormInstance({
+    //       resourceType: 'Opportunity',
+    //       formType: 'UPDATE',
+    //       resourceId: this.opp.id,
+    //     })
+    //     this.formId = res.form_id
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
+    checkSelect() {
+      this.primaryCheckList.includes(this.opp.id)
+        ? (this.isSelected = true)
+        : (this.isSelected = false)
+    },
     closeInline() {
       this.editing = false
     },
@@ -393,12 +431,13 @@ export default {
       this.dropdownValue = val.value
     },
     editInline(index) {
+      this.editing = true
       this.$emit('current-inline-row', this.index)
       this.currentRow = this.index
       this.editIndex = index
-      this.editing = true
     },
     setUpdateValues(key, val, dataType, multi) {
+      this.formData = {}
       if (multi) {
         this.formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
       }
@@ -407,7 +446,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
-        this.$emit('inline-edit', this.formData, this.opp.id, dataType)
+        this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
     emitCreateForm() {
@@ -416,8 +455,8 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox() {
-      this.$emit('checked-box')
+    emitCheckedBox(i) {
+      this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -438,93 +477,88 @@ export default {
       this.newCloseDate = dateString
     },
     async onAdvanceStage() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { StageName: this.stageData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+        SObjects.api
+          .updateResource({
+            form_data: { StageName: this.stageData },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
           })
-        }
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 1000)
       }
     },
     async onPushCloseDate() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { CloseDate: this.newCloseDate },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: { CloseDate: this.newCloseDate },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
           })
-        }
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 1000)
       }
     },
     async onChangeForecast() {
-      if (this.primaryCheckList.includes(this.opp.id)) {
-        this.updatedList.push(this.opp.id)
-        try {
-          const res = await SObjects.api
-            .createFormInstance({
-              resourceType: 'Opportunity',
-              formType: 'UPDATE',
-              resourceId: this.opp.id,
-            })
-            .then(async (res) => {
-              const response = await SObjects.api.updateResource({
-                form_id: [res.form_id],
-                form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-              })
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.updatedList = []
-          this.$toast('Salesforce Update Successful', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
           })
-        }
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 2000)
       }
     },
   },
@@ -535,11 +569,71 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+@keyframes tooltips-horz {
+  to {
+    opacity: 0.95;
+    transform: translate(0%, 50%);
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0px;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
+.save {
+  background-color: transparent;
+  color: $dark-green;
+  letter-spacing: 0.75px;
+  font-weight: bold;
+  font-size: 10px;
+  z-index: 2;
+  // opacity: 0.5;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  p {
+    background-color: $white-green;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+}
 #user-input {
   border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2rem;
+  padding: 7px;
   width: 12vw;
 }
 #user-input-wide {
@@ -549,7 +643,7 @@ export default {
   min-height: 2rem;
   width: 20vw;
   font-family: $base-font-family;
-  margin: 1.5rem 1rem;
+  // margin: 1.5rem 1rem;
   padding: 7px;
 }
 #user-input:focus,
@@ -590,9 +684,9 @@ input {
 }
 .inline-row {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 .active-edit {
   border-bottom: 2px solid $dark-green !important;
@@ -663,7 +757,7 @@ input {
 .table-cell {
   display: table-cell;
   position: sticky;
-  min-width: 12vw;
+  min-width: 16vw;
   background-color: $off-white;
   padding: 2vh 3vh;
   border: none;
@@ -681,6 +775,7 @@ input {
 .table-cell:hover,
 .empty:hover {
   border: 1px solid $dark-green;
+  background-color: white;
   border-radius: 4px;
 }
 .cell-name:hover {

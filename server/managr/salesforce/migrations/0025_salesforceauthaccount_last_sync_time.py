@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("salesforce", "0026_salesforceauthaccount_extra_pipeline_fields"),
+        ("salesforce", "0024_meetingworkflow_non_zoom_meeting"),
     ]
 
     operations = [

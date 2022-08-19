@@ -1,9 +1,13 @@
+import pytz
+from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel, IntegrationModel
 from django.contrib.postgres.fields import JSONField, ArrayField
 
-from managr.crm import constants as crm_consts
 from managr.crm import routes as adapters
+from managr.crm import constants as crm_consts
+from background_task.models import CompletedTask
+
 
 # Create your models here.
 class BaseAccountQuerySet(models.QuerySet):
@@ -148,3 +152,4 @@ class BaseContact(TimeStampModel, IntegrationModel):
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
         return adapters[self.integration_source]["Contact"](**data)
+

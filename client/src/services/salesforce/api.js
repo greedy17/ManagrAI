@@ -44,9 +44,9 @@ export class MeetingWorkflowAPI extends ModelAPI {
     return apiClient()
   }
 
-  async getMeetingList() {
+  async getMeetingList(fromAdmin = false) {
     try {
-      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT)
+      const res = await this.client.get(MeetingWorkflowAPI.ENDPOINT, { params: { fromAdmin } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)
@@ -128,15 +128,26 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
-  async getObjects(sobject, for_filter = false, filters = false, resource_id = false) {
+  async getObjects(sobject, page = 1, for_filter = false, filters = false, resource_id = false,) {
 
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 750 } })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, page: page, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 20, } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
     }
   }
+
+  async getObjectsForWorkflows(sobject, for_filter = false, filters = false, resource_id = false,) {
+
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
   async getNotes(resourceId) {
     let id = objectToSnakeCase(resourceId)
     try {
@@ -149,9 +160,10 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async updateResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
+      console.log(res)
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      return apiErrorHandler({ apiName: 'Salesforce API' })(e)
     }
   }
   async createResource(formData) {
@@ -178,9 +190,9 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
-  async getSobjectPicklistValues(sobject_id, value) {
+  async getSobjectPicklistValues(sobject_id, value, for_filter = false) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value, for_filter })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
@@ -210,10 +222,31 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Confirmation error' })(e)
     }
   }
+
   async createFormInstance(formData) {
     let d = objectToSnakeCase(formData)
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-form-instance/', { params: d })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
+  async getCurrentValues(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/get-current-values/', { params: d })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    }
+  }
+
+  async createBulkFormInstance(formData) {
+    let d = objectToSnakeCase(formData)
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create-bulk-form-instance/', { params: d })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -292,6 +325,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/', {
         params: this.cls.toAPI(params),
+
       })
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {

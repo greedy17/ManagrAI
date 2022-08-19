@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from datetime import datetime
-from managr.zoom.serializers import ZoomMeetingSerializer
 from managr.organization.models import Organization
 from managr.crm.models import BaseContact, BaseAccount, BaseOpportunity
+from managr.meetings.serializers import MeetingFrontendSerializer
+from managr.salesforce.exceptions import ResourceAlreadyImported
 from .models import (
     MeetingWorkflow,
     SalesforceAuthAccount,
@@ -10,6 +11,7 @@ from .models import (
     SObjectField,
     SObjectValidation,
 )
+from managr.core.models import User
 
 
 class SalesforceAuthSerializer(serializers.ModelSerializer):
@@ -92,12 +94,15 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
 
 
 class SObjectPicklistSerializer(serializers.ModelSerializer):
+    field_ref = SObjectFieldSerializer(source="field", required=False)
+
     class Meta:
         model = SObjectPicklist
         fields = (
             "id",
             "values",
             "field",
+            "field_ref",
             "salesforce_account",
             "picklist_for",
             "imported_by",
@@ -119,22 +124,38 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
 
+class MeetingUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "first_name", "last_name", "email")
+
+
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
-    meeting_ref = serializers.SerializerMethodField("get_meeting_ref")
+    org_ref = serializers.SerializerMethodField("get_org_ref")
+    meeting_ref = MeetingFrontendSerializer(many=False, source="meeting", read_only=True)
+    resource_ref = serializers.SerializerMethodField("get_resource_ref")
     is_completed = serializers.SerializerMethodField("get_completed_status")
+    user_ref = MeetingUserSerializer(source="user")
 
     class Meta:
         model = MeetingWorkflow
-        fields = ("id", "meeting", "meeting_ref", "resource_id", "resource_type", "is_completed")
+        fields = (
+            "id",
+            "meeting",
+            "meeting_ref",
+            "resource_id",
+            "resource_type",
+            "resource_ref",
+            "user",
+            "user_ref",
+            "org_ref",
+            "is_completed",
+        )
 
-    def get_meeting_ref(self, instance):
-        from managr.core.serializers import MeetingPrepInstanceSerializer
+    def get_org_ref(self, instance):
+        from managr.core.serializers import OrganizationSerializer
 
-        if instance.non_zoom_meeting is None:
-            meeting = ZoomMeetingSerializer(instance=instance.meeting)
-        else:
-            meeting = MeetingPrepInstanceSerializer(instance=instance.non_zoom_meeting)
-        return meeting.data
+        return OrganizationSerializer(instance=instance.user.organization).data
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()
@@ -142,6 +163,17 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             if form.saved_data:
                 return True
         return False
+
+    def get_resource_ref(self, instance):
+        from managr.salesforce.routes import routes
+
+        if instance.resource_type:
+            resource = instance.resource_type
+            serializer = routes[resource]["serializer"]
+            resource_id = routes[resource]["model"].objects.get(id=instance.resource_id)
+            return serializer(instance=resource_id).data
+        else:
+            return None
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -305,3 +337,4 @@ class OpportunitySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+
