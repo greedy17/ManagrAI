@@ -1336,16 +1336,9 @@ input[type='checkbox'] + label::before {
     text-align: left;
     font-size: 22px;
   }
-  &__subtitle {
-    color: $dark-green;
-    margin: 0.1rem;
-    font-size: 18px;
-  }
   &__actions {
     display: flex;
-    // flex-direction: column;
     justify-content: flex-end;
-    // align-items: flex-end;
     width: 100%;
     margin-top: -4rem;
   }
