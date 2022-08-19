@@ -245,6 +245,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sobject_id = request.GET.get("sobject_id", None)
         value = request.GET.get("value", None)
         sobject_field = SObjectField.objects.get(id=sobject_id)
+        for_meetings = self.request.GET.get("for_meetings", False)
         attempts = 1
         while True:
             sf_account = user.salesforce_account
@@ -255,6 +256,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                     sobject_field.display_value_keys["name_fields"],
                     value,
                     sobject_field.salesforce_object,
+                    include_owner=for_meetings,
                 )
                 break
             except TokenExpired:

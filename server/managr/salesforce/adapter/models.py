@@ -581,7 +581,9 @@ class SalesforceAuthAccountAdapter:
         merged_res = self._format_resource_response(merged_res, resource)
         return merged_res
 
-    def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
+    def list_relationship_data(
+        self, relationship, fields, value, include_owner=False, *args, **kwargs
+    ):
         # build the filter query from the name fields and value
         sobject_type = args[0] if len(args) else None
         filter_query = ""
@@ -591,11 +593,15 @@ class SalesforceAuthAccountAdapter:
                 if index != 0:
                     string_val = f" OR {string_val}"
                 filter_query = filter_query + string_val
-
+        query = (
+            sf_consts.SALESFORCE_RESOURCE_REFRENCE_QUERY_URI
+            if include_owner
+            else sf_consts.SALESFORCE_RESOURCE_QUERY_URI
+        )
         filter_query_string = [f"AND ({filter_query})"] if len(filter_query) else []
         # always retreive id
         fields.insert(0, "Id")
-        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_REFRENCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )[0]}"
+        url = f"{self.instance_url}{query(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )[0]}"
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
