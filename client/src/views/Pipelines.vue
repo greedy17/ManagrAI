@@ -297,7 +297,7 @@
                       >
                       <textarea
                         id="user-input"
-                        ccols="30"
+                        cols="30"
                         rows="2"
                         :disabled="savingCreateForm"
                         :placeholder="currentVals[field.apiName]"

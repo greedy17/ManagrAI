@@ -28,11 +28,7 @@
             {{ meeting.participants[participantIndex].email }}
           </p>
           <span
-            v-if="
-              !meetingUpdated &&
-              !meeting.participants[participantIndex].__has_changes &&
-              (!resourceType || resourceType === 'Opportunity')
-            "
+            v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
             class="tooltip"
           >
             <img
@@ -44,11 +40,7 @@
             <span class="tooltiptext">Add Contact</span>
           </span>
           <span
-            v-if="
-              !meetingUpdated &&
-              !meeting.participants[participantIndex].__has_changes &&
-              (!resourceType || resourceType === 'Opportunity')
-            "
+            v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
             class="tooltip"
           >
             <img
@@ -387,7 +379,7 @@
         Record Type: {{ resourceType }}
       </p>
       <div v-else-if="meetingUpdated">
-        <p>{{ resourceRef ? resourceRef.name : 'Undefined' }}</p>
+        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
         <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
           Record Type: {{ resourceType }}
         </p>
@@ -423,7 +415,7 @@
             v-if="selectingResource || !mapType"
             style="width: 20vw"
             v-model="selectedResourceType"
-            @select="changeResource($event)"
+            @select="mapType === 'Account' ? changeResource($event) : null"
             placeholder="Select Record Type"
             selectLabel="Enter"
             openDirection="below"
@@ -439,6 +431,7 @@
             style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
+            @search-change="getAccounts($event)"
             :placeholder="`Select ${mapType}`"
             selectLabel="Enter"
             label="name"
@@ -446,6 +439,7 @@
             openDirection="below"
             track-by="id"
             :options="allOpps"
+            :loading="dropdownLoading || loadingAccounts"
           >
             <template slot="noResult">
               <p class="multi-slot">No results.</p>
@@ -524,6 +518,7 @@ export default {
       dropdownVal: {},
       selectedResourceType: null,
       selectingResource: false,
+      loadingAccounts: false,
       addingOpp: false,
       noUpdate: false,
       mappedOpp: null,
@@ -563,6 +558,7 @@ export default {
     allPicklistOptions: {},
     referenceOpts: {},
     dropdownLoading: {},
+    accountSobjectId: {},
   },
   computed: {
     hasLastName() {
@@ -584,6 +580,26 @@ export default {
     this.getObjects()
   },
   methods: {
+    async getAccounts(val) {
+      this.loadingAccounts = true
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: this.accountSobjectId,
+          value: val,
+        })
+        this.allOpps = res
+      } catch (e) {
+        this.$toast('Error gathering Accounts!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loadingAccounts = false
+      }
+    },
     changeMapType(i) {
       this.mapType = i
     },
@@ -1130,7 +1146,6 @@ a {
 }
 
 .sticky-header {
-  z-index: 3;
   left: 0;
   top: 0;
   position: sticky;

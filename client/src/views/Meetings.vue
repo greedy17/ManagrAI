@@ -307,6 +307,7 @@
             :allPicklistOptions="allPicklistOptions"
             :referenceOpts="contactCreateReferenceOpts"
             :dropdownLoading="dropdownLoading"
+            :accountSobjectId="accountSobjectId"
             :index="i"
           />
         </div>

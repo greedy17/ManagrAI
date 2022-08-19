@@ -154,6 +154,46 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     return url_list
 
 
+def SALESFORCE_RESOURCE_REFRENCE_QUERY_URI(
+    owner_id,
+    resource,
+    fields,
+    childRelationshipFields=[],
+    additional_filters=[],
+    limit=SALESFORCE_QUERY_LIMIT,
+    SobjectType=None,
+):
+    # make a set to remove duplicates
+    fields = set(fields)
+    field_list = SEPARATE_FIELDS(fields)
+    url_list = []
+    for idx, field_string in enumerate(field_list):
+        if resource in ADD_RESOURCE_TYPE_FIELDS:
+            if len(additional_filters):
+                additional_filters.append(f"AND SobjectType = '{SobjectType}'")
+            else:
+                additional_filters.append(f"SobjectType = '{SobjectType}'")
+        url = f"{CUSTOM_BASE_URI}/query/?q=SELECT {field_string}"
+        if len(childRelationshipFields) and idx == 0:
+            for rel, v in childRelationshipFields.items():
+                url += f", (SELECT {','.join(v['fields'])} FROM {rel} {' '.join(v['attrs'])})"
+        url = f"{url} FROM {resource}"
+        for i, f in enumerate(additional_filters):
+            if i == 0:
+                # check to see if additional query is AND/OR and remove from the start
+                #  it since it is the first option
+                # note it must remove from the start only so it does not remove from LIKE searches
+                # all additional queries should be added to the classes if available with AND/OR
+                # or on the fly with AND/OR
+
+                f = re.sub(r"^(AND|OR)", "", f)
+                f = f"WHERE {f}"
+
+            url = f"{url} {f}"
+        url_list.append(f"{url} order by LastModifiedDate DESC limit {limit}")
+    return url_list
+
+
 def SALESFORCE_RESOURCE_QUERY_BY_ID_URI(resource, fields, ids):
     fields = set(fields)
     ids_string = ""
