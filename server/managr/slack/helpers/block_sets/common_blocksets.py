@@ -497,7 +497,7 @@ def calendar_reminders_blockset(context):
     else:
         action_blocks.append(
             block_builders.simple_button_block(
-                "Map to Opportunity",
+                "Link to CRM Record",
                 f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 style="primary",
