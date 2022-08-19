@@ -276,7 +276,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             existing_contacts = Contact.objects.filter(
                 email__in=participant_emails, owner__organization__id=user.organization.id
             ).exclude(email=user.email)
-            print(existing_contacts)
             meeting_resource_data = dict(resource_id="", resource_type="")
             opportunity = Opportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__id=user.id

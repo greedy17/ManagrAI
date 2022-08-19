@@ -377,7 +377,6 @@ class UserViewSet(
 
         user = request.user
         res = user.current_forecast.get_current_values()
-        logger.info(f"FORECAST VALUES ENDPOINT: {res}")
         opps = []
         for item in res:
             serializer = OpportunitySerializer(data=item.as_dict)
