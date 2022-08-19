@@ -1146,7 +1146,6 @@ a {
 }
 
 .sticky-header {
-  z-index: 3;
   left: 0;
   top: 0;
   position: sticky;
