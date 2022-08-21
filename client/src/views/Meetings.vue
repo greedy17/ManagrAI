@@ -307,6 +307,7 @@
             :allPicklistOptions="allPicklistOptions"
             :referenceOpts="contactCreateReferenceOpts"
             :dropdownLoading="dropdownLoading"
+            f
             :accountSobjectId="accountSobjectId"
             :index="i"
           />
@@ -858,6 +859,7 @@ export default {
       }
     },
     async mapOpp(workflow, resource, resourceType) {
+      console.log(workflow, resource, resourceType)
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api

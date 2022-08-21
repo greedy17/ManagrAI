@@ -586,6 +586,7 @@ export default {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: this.accountSobjectId,
           value: val,
+          for_meetings: true,
         })
         this.allOpps = res
       } catch (e) {
