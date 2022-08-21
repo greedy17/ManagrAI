@@ -131,21 +131,13 @@
         </header>
         <section class="create-modal__body">
           <span>
-            <input
-              v-model="meetingTitle"
-              class="zoom-input"
-              type="text"
-              placeholder="Meeting Title"
-            />
+            <label for="title">Meeting Title</label>
+            <input v-model="meetingTitle" class="zoom-input" type="text" id="title" />
           </span>
 
           <span>
-            <textarea
-              v-model="description"
-              class="zoom-input-ta"
-              type="text"
-              placeholder="Meeting Description"
-            />
+            <label for="description">Meeting Description</label>
+            <textarea v-model="description" class="zoom-input-ta" type="text" id="description" />
           </span>
 
           <span>
@@ -307,7 +299,6 @@
             :allPicklistOptions="allPicklistOptions"
             :referenceOpts="contactCreateReferenceOpts"
             :dropdownLoading="dropdownLoading"
-            f
             :accountSobjectId="accountSobjectId"
             :index="i"
           />

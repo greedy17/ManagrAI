@@ -425,13 +425,12 @@
               <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
-
+          <!-- @search-change="mapType === 'Account' ? getAccounts($event) : null" -->
           <Multiselect
             v-else
             style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
-            @search-change="mapType === 'Account' ? getAccounts($event) : null"
             :placeholder="`Select ${mapType}`"
             selectLabel="Enter"
             label="name"
@@ -571,11 +570,11 @@ export default {
   // watch: {
   //   resourceType: 'getObjects',
   // },
-  mounted() {
-    if (this.resourceId) {
-      this.getCurrentVals()
-    }
-  },
+  // mounted() {
+  //   if (this.resourceId) {
+  //     this.getCurrentVals()
+  //   }
+  // },
   created() {
     this.getObjects()
   },
