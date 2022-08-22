@@ -3,102 +3,36 @@
     <nav id="nav" v-if="userIsLoggedIn">
       <router-link :to="{ name: 'Pipelines' }">
         <div class="logo">
-          <img style="height: 2rem" src="@/assets/images/logo.png" />
+          <img style="height: 40px" src="@/assets/images/logo.png" />
         </div>
       </router-link>
 
-      <div class="left" ref="user-menu-icon">
-        <div class="mar" v-if="isAdmin && userLevel !== 'REP'">
-          <ul>
-            <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Workflows
-              </router-link>
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
-                >Meetings</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Tracker <span>Beta</span>
-              </router-link>
-            </li>
-            <li v-if="user.isStaff">
-              <router-link exact-active-class="active" :to="{ name: 'Staff' }">Admin</router-link>
-            </li>
-          </ul>
-        </div>
+      <ul class="align-left">
+        <li>
+          <router-link active-class="active" :to="{ name: 'ListTemplates' }"
+            >Workflows
+          </router-link>
+        </li>
+        <li>
+          <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
+            >Pipeline</router-link
+          >
+        </li>
+        <li>
+          <router-link exact-active-class="active" :to="{ name: 'Meetings' }">Meetings</router-link>
+        </li>
+        <li>
+          <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
+            >Tracker <span>Beta</span>
+          </router-link>
+        </li>
+        <li v-if="user.isStaff">
+          <router-link exact-active-class="active" :to="{ name: 'Staff' }">Admin</router-link>
+        </li>
+      </ul>
 
-        <div class="mar" v-else-if="userLevel === 'MANAGER' && !isAdmin">
+      <!-- <div class="mar">
           <ul>
-            <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Workflows
-              </router-link>
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
-                >Meetings</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Tracker<span>Beta</span></router-link
-              >
-            </li>
-          </ul>
-        </div>
-
-        <div class="mar" v-else-if="userLevel === 'SDR'">
-          <ul>
-            <li>
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Workflows
-              </router-link>
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
-                >Meetings</router-link
-              >
-            </li>
-            <li>
-              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Tracker<span>Beta</span></router-link
-              >
-            </li>
-          </ul>
-        </div>
-
-        <div class="mar" v-else-if="userLevel === 'REP'">
-          <ul>
-            <!-- <li>
-              <router-link
-                v-if="isOnboarding"
-                exact-active-class="active"
-                :to="{ name: 'Integrations' }"
-                >Onboarding
-              </router-link>
-              <router-link v-else exact-active-class="active" :to="{ name: 'Integrations' }"
-                >Connect
-              </router-link>
-            </li> -->
             <li v-if="!isOnboarding">
               <router-link active-class="active" :to="{ name: 'ListTemplates' }"
                 >Workflows
@@ -120,10 +54,49 @@
               >
             </li>
           </ul>
+        </div> -->
+
+      <div class="right">
+        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }">
+          <div class="tooltip">
+            <img src="@/assets/images/connect.svg" class="nav-img" alt="" />
+            <span class="tooltiptext">Integrations</span>
+          </div>
+        </router-link>
+
+        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
+          <div class="tooltip">
+            <img src="@/assets/images/list.svg" alt="" />
+            <span class="tooltiptext">Forms</span>
+          </div>
+        </router-link>
+
+        <div v-if="routeName === 'InviteUsers'">
+          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
+            <div class="tooltip">
+              <img src="@/assets/images/profile.svg" alt="" />
+              <span class="tooltiptext">Profile</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-else>
+          <router-link :to="{ name: 'InviteUsers' }">
+            <div class="tooltip">
+              <img src="@/assets/images/profile.svg" height="16px" alt="" />
+              <span class="tooltiptext">Profile</span>
+            </div>
+          </router-link>
+        </div>
+
+        <div>
+          <router-link :to="{ name: 'Login' }">
+            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
+          </router-link>
         </div>
       </div>
 
-      <div v-if="userLevel == 'REP' && !user.onboarding" class="right">
+      <!-- <div v-else class="right">
         <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }">
           <div class="tooltip">
             <img src="@/assets/images/connect.svg" class="nav-img" alt="" />
@@ -151,7 +124,7 @@
           <router-link :to="{ name: 'InviteUsers' }">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
-              <!-- <img src="@/assets/images/profile.svg" alt="" /> -->
+            
               <span class="tooltiptext">Profile</span>
             </div>
           </router-link>
@@ -162,48 +135,7 @@
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </router-link>
         </div>
-      </div>
-
-      <div v-else class="right">
-        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }">
-          <div class="tooltip">
-            <img src="@/assets/images/connect.svg" class="nav-img" alt="" />
-            <span class="tooltiptext">Integrations</span>
-          </div>
-        </router-link>
-
-        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
-          <div class="tooltip">
-            <img src="@/assets/images/list.svg" alt="" />
-            <span class="tooltiptext">Forms</span>
-          </div>
-        </router-link>
-
-        <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
-            <div class="tooltip">
-              <small class="profile-wrapper">{{ user.email }}</small>
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </div>
-        </div>
-
-        <div v-else>
-          <router-link :to="{ name: 'InviteUsers' }">
-            <div class="tooltip">
-              <small class="profile-wrapper">{{ user.email }}</small>
-              <!-- <img src="@/assets/images/profile.svg" alt="" /> -->
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </router-link>
-        </div>
-
-        <div class="center">
-          <router-link :to="{ name: 'Login' }">
-            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
-          </router-link>
-        </div>
-      </div>
+      </div> -->
     </nav>
   </div>
 </template>
@@ -336,11 +268,6 @@ span {
   //   height: 1.2rem;
   // }
 }
-.center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 .logout {
   border: 1px solid #e8e8e8;
   padding: 0.25rem 0.5rem;
@@ -356,56 +283,47 @@ span {
   font-size: 11px;
 }
 nav {
-  height: 3.5rem;
+  height: 100vh;
   display: flex;
-  flex-flow: row;
+  flex-direction: column;
   align-items: center;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 200;
-  width: 100vw;
-  padding: 0.25rem 0 1rem 0;
-  border-bottom: 1px solid #e8e8e8;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  z-index: 20;
+  width: 120px;
+  background-color: white;
+  padding: 8px 0px;
+  border-right: 1px solid $soft-gray;
 }
 .logo {
-  margin-left: 0.5rem;
-  margin-right: 1rem;
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
+  margin-bottom: 32px;
   cursor: pointer;
-  padding: 0.5rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
 .right {
-  margin-left: auto;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  margin-right: 1rem;
-  margin-top: 0.75rem;
+  margin-bottom: 16px;
+  margin-left: 8px;
+  // > * {
+  //   margin-right: 1rem;
+  // }
+}
 
-  > * {
-    margin-right: 1rem;
-  }
-}
-.left {
-  margin-right: auto;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  position: relative;
-  margin-right: 0.75rem;
-}
 ul {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   list-style-type: none;
   margin: 0;
+  margin-left: -7px;
   padding: 0;
 }
 ul:hover {
@@ -416,17 +334,9 @@ li {
   display: inline;
   letter-spacing: 0.4px;
   text-align: center;
-  margin-right: 0.75rem;
-  font-size: 13px;
-  padding: 0.5rem;
-  @media only screen and (max-width: 800px) {
-    margin-right: 0.5rem;
-    font-size: 11px;
-  }
-  @media only screen and (max-width: 700px) {
-    margin-right: 0.25rem;
-    font-size: 10px;
-  }
+  margin-bottom: 12px;
+  font-size: 12px;
+  padding: 8px;
 }
 
 img {
