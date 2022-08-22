@@ -230,16 +230,13 @@ class AlertTemplateViewSet(
             serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
             return Response({"results": serialized.data})
         else:
-            print(obj.configs.all())
             for config in obj.configs.all():
                 template = config.template
                 template.invocation = template.invocation + 1
                 template.last_invocation_datetime = timezone.now()
                 template.save()
                 users = config.target_users
-                print(users)
                 for user in users:
-                    print(user)
                     run_time = datetime.now(pytz.utc)
                     _process_check_alert(
                         str(config.id),
