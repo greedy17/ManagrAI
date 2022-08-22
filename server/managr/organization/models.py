@@ -720,6 +720,12 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             integration_id, token, base_url, self.opportunity.owner.id
         )
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class TeamQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -779,4 +785,3 @@ class Team(TimeStampModel):
 
         self.team_lead = new_team_lead
         self.save()
-

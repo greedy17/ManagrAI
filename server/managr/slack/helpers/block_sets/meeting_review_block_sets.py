@@ -438,7 +438,7 @@ def initial_meeting_interaction_block_set(context):
         {"type": "divider"},
     ]
     resource_button = (
-        "Change Opportunity" if workflow.resource_type == "Opportunity" else "Map to Opportunity"
+        f"Change {workflow.resource_type}" if workflow.resource_type else "Link to CRM Record"
     )
     resource_block = (
         block_builders.section_with_button_block(

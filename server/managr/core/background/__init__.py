@@ -295,7 +295,6 @@ def meeting_prep(processed_data, user_id):
     opportunity = Opportunity.objects.filter(
         contacts__email__in=participant_emails, owner__id=user.id
     ).first()
-    logger.info(f"ZOOM OPP {opportunity}")
     if opportunity:
         meeting_resource_data["resource_id"] = str(opportunity.id)
         meeting_resource_data["resource_type"] = "Opportunity"
@@ -304,7 +303,6 @@ def meeting_prep(processed_data, user_id):
         account = Account.objects.filter(
             contacts__email__in=participant_emails, owner__id=user.id,
         ).first()
-        logger.info(f"ZOOM Account {account}")
         if account:
             meeting_resource_data["resource_id"] = str(account.id)
             meeting_resource_data["resource_type"] = "Account"
@@ -638,9 +636,9 @@ def _process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end
         time_difference = end_time_timestamp - current_time
         seconds = time_difference.total_seconds()
         seconds = int(seconds)
-    logger.info(
-        f"MEETING SCHEDULER: \n END TIME: {end_time_timestamp}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
-    )
+    # logger.info(
+    #     f"MEETING SCHEDULER: \n END TIME: {end_time_timestamp}\n CURRENT TIME: {current_time} \n TIME DIFFERENCE: {time_difference}"
+    # )
     return emit_kick_off_slack_interaction(user_id, workflow_id, schedule=seconds)
 
 
@@ -919,18 +917,18 @@ def _process_add_calendar_id(user_id):
                 calendar_id = calendar[0]["id"]
             else:
                 calendar_id = None
-        logger.info(
-            textwrap.dedent(
-                f"""
-            ------------------------------------
-            NYLAS CALENAR ACCOUNT CREATION INFO: \n
-            CALENDAR INFO:{calendar}\n
-            EMAIL CHECK: {email_check} \n 
-            CALENDAR CHECK: {calendar} \n
-            FOUND CALENDAR ID: {calendar_id}\n
-            ------------------------------------"""
-            )
-        )
+        # logger.info(
+        #     textwrap.dedent(
+        #         f"""
+        #     ------------------------------------
+        #     NYLAS CALENAR ACCOUNT CREATION INFO: \n
+        #     CALENDAR INFO:{calendar}\n
+        #     EMAIL CHECK: {email_check} \n
+        #     CALENDAR CHECK: {calendar} \n
+        #     FOUND CALENDAR ID: {calendar_id}\n
+        #     ------------------------------------"""
+        #     )
+        # )
         if calendar_id:
             user.nylas.event_calendar_id = calendar_id
             user.nylas.save()

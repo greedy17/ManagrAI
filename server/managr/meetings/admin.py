@@ -12,6 +12,7 @@ class CustomMeeting(admin.ModelAdmin):
         "provider",
         "user",
     )
+    list_filter = ("user",)
     ordering = ("-datetime_created",)
 
 
