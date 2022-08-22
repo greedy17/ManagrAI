@@ -74,7 +74,6 @@ class AlertTemplate(TimeStampModel):
             ["Id"],
             additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
         )
-
         return f"{user_sf.instance_url}{q[0]}"
 
     @property
