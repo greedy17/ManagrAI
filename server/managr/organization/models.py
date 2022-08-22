@@ -749,6 +749,11 @@ class Team(TimeStampModel):
         if self.team_forms:
             for form in self.team_forms.all():
                 form.delete()
+        admin_team = Team.objects.filter(organization=self.organization).first()
+        self.users.all().update(team=admin_team)
+        team_lead = self.team_lead
+        team_lead.team = admin_team
+        self.team_lead.save()
         super(Team, self).delete()
 
     def change_team_lead(self, user, preserve_fields=False):

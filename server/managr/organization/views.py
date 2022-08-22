@@ -417,7 +417,7 @@ class TeamViewSet(
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            emit_generate_team_form_templates(str(request.user.id))
+            emit_generate_team_form_templates(request.data.get("team_lead"))
         except Exception as e:
             print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
