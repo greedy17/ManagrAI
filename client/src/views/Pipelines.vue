@@ -3799,9 +3799,12 @@ export default {
             this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
           }
         }
-        for (let i = 0; i < this.stageGateCopy.length; i++) {
-          if (this.stageGateCopy[i].dataType === 'Reference') {
-            this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+
+        if (this.stageGateCopy) {
+          for (let i = 0; i < this.stageGateCopy.length; i++) {
+            if (this.stageGateCopy[i].dataType === 'Reference') {
+              this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+            }
           }
         }
 
@@ -3825,12 +3828,14 @@ export default {
           this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
         }
 
-        for (let i in this.stageReferenceOpts) {
-          this.stageReferenceOpts[i] = this.getReferenceFieldList(
-            i,
-            this.stageReferenceOpts[i],
-            'stage',
-          )
+        if (this.stageReferenceOpts) {
+          for (let i in this.stageReferenceOpts) {
+            this.stageReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.stageReferenceOpts[i],
+              'stage',
+            )
+          }
         }
 
         for (let i in this.createReferenceOpts) {
@@ -3883,6 +3888,7 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
+
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -3899,14 +3905,19 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )[0].fieldsRef
 
-        this.stageGateCopy = stageGateForms[0].fieldsRef
-        let stages = stageGateForms.map((field) => field.stage)
-        this.stagesWithForms = stages
-        this.oppFormCopy = this.updateOppForm[0].fieldsRef
-
-        for (const field of stageGateForms) {
-          this.stageValidationFields[field.stage] = field.fieldsRef
+        if (stageGateForms.length) {
+          this.stageGateCopy = stageGateForms[0].fieldsRef
+          let stages = stageGateForms.map((field) => field.stage)
+          this.stagesWithForms = stages
+          for (const field of stageGateForms) {
+            this.stageValidationFields[field.stage] = field.fieldsRef
+          }
         }
+
+        // this.stageGateCopy = stageGateForms[0].fieldsRef
+        // let stages = stageGateForms.map((field) => field.stage)
+        // this.stagesWithForms = stages
+        this.oppFormCopy = this.updateOppForm[0].fieldsRef
       } catch (e) {
         console.log(e)
       }
