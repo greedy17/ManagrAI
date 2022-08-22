@@ -689,11 +689,14 @@ def _process_add_call_to_sf(workflow_id, *args):
     data = dict(
         Subject=f"Meeting - {subject}",
         Description=f"{'No comments' if description is None else description}\n This meeting started on {formatted_start} and ended on {formatted_end} ",
-        WhatId=workflow.resource.integration_id,
         ActivityDate=start_time.strftime("%Y-%m-%d"),
         Status="Completed",
         TaskSubType="Call",
     )
+    if workflow.resource_type in ["Account", "Opportunity"]:
+        data["WhatId"] = workflow.resource.integration_id
+    else:
+        data["WhoId"] = workflow.resource.integration_id
     if task_type != "None":
         data["Type"] = task_type
     attempts = 1
@@ -1341,8 +1344,6 @@ def _process_list_tasks(user_id, data, *args):
 def _process_workflow_tracker(workflow_id):
     """gets workflow and check's if all tasks are completed and manually completes if not already completed"""
     workflow = MeetingWorkflow.objects.filter(id=workflow_id).first()
-    print(workflow)
-    workflow.user.activity.add_meeting_activity(workflow_id)
     if workflow and workflow.in_progress:
         completed_tasks = set(workflow.completed_operations)
         all_tasks = set(workflow.operations)

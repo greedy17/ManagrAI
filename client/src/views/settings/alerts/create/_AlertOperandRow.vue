@@ -327,6 +327,12 @@ export default {
         { label: 'Ends With', value: 'ENDSWITH' },
         { label: '= (Equals)', value: '=' },
         { label: '!= (Not Equals)', value: '!=' },
+        { label: 'Greater or equal to', value: '>=' },
+        { label: 'Greater than', value: '>' },
+        { label: 'Less or equal to', value: '<=' },
+        { label: 'Less than', value: '<' },
+        { label: 'Equal to', value: '=' },
+        { label: 'Not equal to', value: '!=' },
       ],
       dateValueOpts: [
         { label: 'Same Day as alert day', value: '0' },
