@@ -245,6 +245,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sobject_id = request.GET.get("sobject_id", None)
         value = request.GET.get("value", None)
         sobject_field = SObjectField.objects.get(id=sobject_id)
+        for_meetings = self.request.GET.get("for_meetings", False)
         attempts = 1
         while True:
             sf_account = user.salesforce_account
@@ -255,6 +256,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                     sobject_field.display_value_keys["name_fields"],
                     value,
                     sobject_field.salesforce_object,
+                    include_owner=for_meetings,
                 )
                 break
             except TokenExpired:
@@ -374,7 +376,6 @@ class SalesforceSObjectViewSet(
             )
         )
         if note_data:
-            print("NOTE DATA", note_data)
             return Response(data=note_data)
         return Response(data=[])
 
@@ -504,6 +505,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    data = {"error": str(e), "success": False}
                     break
                 else:
                     if model_object.owner == user:
@@ -794,7 +796,7 @@ class SalesforceSObjectViewSet(
     )
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
-        operations = ["Account", "Lead", "Opportunity", "Contact"]
+        operations = ["Account", "Opportunity", "OpportunityLineItem"]
         currenttime = datetime.now()
         to_sync_ids = []
         synced_ids = []
@@ -902,7 +904,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -994,11 +997,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             else []
         )
         current_form_ids = []
-        main_form = (
-            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE)
-            .exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-            .first()
-        )
+        main_form = workflow.forms.filter(resource_id=workflow.resource_id).first()
         current_form_ids.append(str(main_form.id))
         main_form.save_form(request_data.get("form_data"), False)
         if len(forms):

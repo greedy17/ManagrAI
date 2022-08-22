@@ -204,7 +204,7 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : createReferenceOpts[field.apiName]
+                            : stageReferenceOpts[field.apiName]
                         "
                         @select="
                           setUpdateValidationValues(
@@ -297,7 +297,7 @@
                       >
                       <textarea
                         id="user-input"
-                        ccols="30"
+                        cols="30"
                         rows="2"
                         :disabled="savingCreateForm"
                         :placeholder="currentVals[field.apiName]"
@@ -898,7 +898,7 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : referenceOpts[field.apiName]
+                            : stageReferenceOpts[field.apiName]
                         "
                         @select="
                           setUpdateValidationValues(
@@ -1791,7 +1791,7 @@
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
-                    : referenceOpts[field.apiName]
+                    : stageReferenceOpts[field.apiName]
                 "
                 @select="
                   setUpdateValidationValues(
@@ -1967,7 +1967,7 @@
           <button
             v-else
             @click="updateStageForm()"
-            class="select-btn"
+            class="add-button"
             style="margin-bottom: 6px; margin-right: -6px"
           >
             Update
@@ -2139,6 +2139,8 @@ export default {
   },
   data() {
     return {
+      stageGateCopy: {},
+      stageReferenceOpts: {},
       currentSelectedProduct: null,
       savingProduct: null,
       productName: null,
@@ -2656,6 +2658,8 @@ export default {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
           this.productReferenceOpts[key] = res
+        } else if (type === 'stage') {
+          this.stageReferenceOpts[key] = res
         } else {
           this.createReferenceOpts[key] = res
         }
@@ -3795,6 +3799,11 @@ export default {
             this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
           }
         }
+        for (let i = 0; i < this.stageGateCopy.length; i++) {
+          if (this.stageGateCopy[i].dataType === 'Reference') {
+            this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+          }
+        }
 
         for (let i = 0; i < this.createOppForm.length; i++) {
           if (this.createOppForm[i].dataType === 'Reference') {
@@ -3814,6 +3823,14 @@ export default {
 
         for (let i in this.referenceOpts) {
           this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+
+        for (let i in this.stageReferenceOpts) {
+          this.stageReferenceOpts[i] = this.getReferenceFieldList(
+            i,
+            this.stageReferenceOpts[i],
+            'stage',
+          )
         }
 
         for (let i in this.createReferenceOpts) {
@@ -3882,10 +3899,7 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )[0].fieldsRef
 
-        // this.updateAccountForm = res.filter(
-        //   (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
-        // )[0].fieldsRef
-
+        this.stageGateCopy = stageGateForms[0].fieldsRef
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
@@ -3893,24 +3907,6 @@ export default {
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
         }
-
-        // let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
-        // let allStageFields = [].concat.apply([], stageArrayOfArrays)
-        // let dupeStagesRemoved = [
-        //   ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
-        // ]
-
-        // for (let i = 0; i < dupeStagesRemoved.length; i++) {
-        //   if (
-        //     dupeStagesRemoved[i].dataType === 'Picklist' ||
-        //     dupeStagesRemoved[i].dataType === 'MultiPicklist'
-        //   ) {
-        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
-        //   } else if (dupeStagesRemoved[i].dataType === 'Reference') {
-        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
-        //       dupeStagesRemoved[i].referenceDisplayLabel
-        //   }
-        // }
       } catch (e) {
         console.log(e)
       }

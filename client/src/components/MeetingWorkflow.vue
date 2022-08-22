@@ -1,7 +1,7 @@
 <template>
   <div class="table-row">
     <div
-      class="table-cell wt-bg"
+      class="table-cell sticky-header wt-bg"
       :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
     >
       <div>
@@ -28,11 +28,7 @@
             {{ meeting.participants[participantIndex].email }}
           </p>
           <span
-            v-if="
-              !meetingUpdated &&
-              !meeting.participants[participantIndex].__has_changes &&
-              (!resourceType || resourceType === 'Opportunity')
-            "
+            v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
             class="tooltip"
           >
             <img
@@ -44,11 +40,7 @@
             <span class="tooltiptext">Add Contact</span>
           </span>
           <span
-            v-if="
-              !meetingUpdated &&
-              !meeting.participants[participantIndex].__has_changes &&
-              (!resourceType || resourceType === 'Opportunity')
-            "
+            v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
             class="tooltip"
           >
             <img
@@ -136,6 +128,75 @@
                   </template>
                 </Multiselect>
               </div>
+
+              <div
+                v-else-if="
+                  field.dataType === 'Picklist' ||
+                  field.dataType === 'MultiPicklist' ||
+                  (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                "
+              >
+                <p>{{ field.referenceDisplayLabel }}:</p>
+                <Multiselect
+                  v-model="dropdownVal[field.apiName]"
+                  :options="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? allPicklistOptions[field.id]
+                      : referenceOpts[field.apiName]
+                  "
+                  @select="
+                    setUpdateValues(
+                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? $event.value
+                        : $event.id,
+                      field.dataType === 'MultiPicklist' ? true : false,
+                    )
+                  "
+                  @search-change="
+                    field.dataType === 'Reference'
+                      ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                      : null
+                  "
+                  :loading="dropdownLoading"
+                  openDirection="below"
+                  style="width: 14vw"
+                  selectLabel="Enter"
+                  :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                  :track-by="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'value'
+                      : 'id'
+                  "
+                  :label="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'label'
+                      : 'name'
+                  "
+                >
+                  <template v-slot:noResult>
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template v-slot:placeholder>
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{
+                        `${
+                          meeting.participants[participantIndex].secondary_data[field.apiName]
+                        }` === 'null' ||
+                        `${
+                          meeting.participants[participantIndex].secondary_data[field.apiName]
+                        }` === 'undefined'
+                          ? `${field.referenceDisplayLabel}`
+                          : `${
+                              meeting.participants[participantIndex].secondary_data[field.apiName]
+                            }`
+                      }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+
               <div
                 v-else-if="
                   field.dataType === 'TextArea' ||
@@ -305,14 +366,14 @@
     </div>
 
     <div class="table-cell">
-      <div class="roww" v-if="resourceId && resourceType === 'Opportunity' && !meetingUpdated">
-        <p>{{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}</p>
+      <div class="roww" v-if="resourceId && !meetingUpdated">
+        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
 
         <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="addingOpp = !addingOpp">
+          <button class="name-cell-edit-note-button-1" @click="switchResource">
             <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
           </button>
-          <span class="tooltiptext">Change Opp</span>
+          <span class="tooltiptext">Change {{ resourceType }}</span>
         </div>
 
         <div class="tooltip">
@@ -322,19 +383,37 @@
           <span class="tooltiptext">View Notes</span>
         </div>
       </div>
-      <p v-else-if="meetingUpdated">
-        {{ allOpps.filter((opp) => opp.id === resourceId)[0].name }}
+      <p
+        style="color: #9b9b9b; font-size: 11px; margin-top: -6px"
+        v-if="resourceId && !meetingUpdated"
+      >
+        Record Type: {{ resourceType }}
       </p>
-      <div v-else-if="resourceId && resourceType !== 'Opportunity' && !meetingUpdated">
-        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM record</button>
-        <small>currently mapped to {{ resourceType }}</small>
+      <div v-else-if="meetingUpdated">
+        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
+        <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
+          Record Type: {{ resourceType }}
+        </p>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM record</button>
+      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM Record</button>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p>Link to Opportunity</p>
+          <p v-if="!resourceType || !mapType">Select Record</p>
+          <p
+            v-else-if="resourceType && resourceId"
+            style="cursor: pointer"
+            @click="changeMapType(null)"
+          >
+            Select {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
+            <img src="@/assets/images/swap.svg" height="14px" alt="" />
+          </p>
+          <p v-else style="cursor: pointer" @click="changeMapType(null)">
+            Select {{ mapType ? mapType : 'Record' }}
+            <img src="@/assets/images/swap.svg" height="14px" alt="" />
+          </p>
+
           <img
             src="@/assets/images/close.svg"
             style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
@@ -344,15 +423,34 @@
 
         <div class="add-field-section__body">
           <Multiselect
+            v-if="selectingResource || !mapType"
+            style="width: 20vw"
+            v-model="selectedResourceType"
+            @select="changeResource($event)"
+            placeholder="Select Record Type"
+            selectLabel="Enter"
+            openDirection="below"
+            :options="resources"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+          </Multiselect>
+          <!-- @search-change="mapType === 'Account' ? getAccounts($event) : null" -->
+          <Multiselect
+            v-else
             style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
-            placeholder="Select Opportunity"
+            @search-change="getFilteredList($event)"
+            :placeholder="`Select ${mapType}`"
             selectLabel="Enter"
             label="name"
+            :customLabel="({ name, email }) => (name ? name : email)"
             openDirection="below"
             track-by="id"
             :options="allOpps"
+            :loading="dropdownLoading || loadingAccounts"
           >
             <template slot="noResult">
               <p class="multi-slot">No results.</p>
@@ -361,29 +459,23 @@
         </div>
 
         <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Add</p>
+          <p @click="mapOpp">Link</p>
         </div>
         <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Add</p>
+          <p style="color: gray; cursor: text">Link</p>
         </div>
       </div>
     </div>
 
     <div v-if="!meetingUpdated" class="table-cell">
-      <p
-        v-if="
-          (!resourceId && !meetingLoading) || (resourceType !== 'Opportunity' && !meetingLoading)
-        "
-        class="red-text"
-      >
-        Map meeting to take action.
-      </p>
+      <p v-if="!resourceId && !meetingLoading" class="red-text">Link meeting to take action.</p>
       <div>
-        <div class="column" v-if="resourceId && !meetingLoading && resourceType === 'Opportunity'">
+        <div class="column" v-if="resourceId && !meetingLoading">
           <button
             @click="
               $emit(
                 'update-Opportunity',
+                resourceType,
                 workflowId,
                 resourceId,
                 resourceRef ? resourceRef.integration_id : null,
@@ -392,7 +484,7 @@
             "
             class="add-button"
           >
-            Update Opportunity
+            Update {{ resourceType }}
           </button>
           <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
         </div>
@@ -433,10 +525,17 @@ export default {
   data() {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
+      resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      dropdownVal: {},
+      selectedResourceType: null,
+      selectingResource: false,
+      loadingAccounts: false,
       addingOpp: false,
       noUpdate: false,
       mappedOpp: null,
       resource: null,
+      loading: false,
+      mapType: this.resourceType,
       removingParticipant: null,
       selectedIndex: null,
       addingContact: false,
@@ -444,6 +543,7 @@ export default {
       selectedOwner: null,
       formData: {},
       currentVals: [],
+      allOpps: null,
     }
   },
   components: {
@@ -456,7 +556,6 @@ export default {
     resourceRef: {},
     resourceId: {},
     resourceType: {},
-    allOpps: {},
     index: {},
     workflowId: {},
     meetingUpdated: {},
@@ -467,6 +566,10 @@ export default {
     owners: {},
     index: {},
     participants: {},
+    allPicklistOptions: {},
+    referenceOpts: {},
+    dropdownLoading: {},
+    accountSobjectId: {},
   },
   computed: {
     hasLastName() {
@@ -476,12 +579,82 @@ export default {
       return lastName
     },
   },
-  mounted() {
-    if (this.resourceId) {
-      this.getCurrentVals()
-    }
+  // watch: {
+  //   resourceType: 'getObjects',
+  // },
+  // mounted() {
+  //   if (this.resourceId) {
+  //     this.getCurrentVals()
+  //   }
+  // },
+  created() {
+    this.getObjects()
   },
   methods: {
+    async getAccounts(val) {
+      this.loadingAccounts = true
+      try {
+        const res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: this.accountSobjectId,
+          value: val,
+          for_meetings: true,
+        })
+        this.allOpps = res
+      } catch (e) {
+        this.$toast('Error gathering Accounts!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loadingAccounts = false
+      }
+    },
+    changeMapType(i) {
+      this.mapType = i
+    },
+    selectResource() {
+      this.selectingResource = true
+    },
+    switchResource() {
+      this.getObjects()
+      this.addingOpp = !this.addingOpp
+    },
+    async getFilteredList(name) {
+      this.loadingAccounts = true
+      try {
+        const res = await SObjects.api.getObjects(this.mapType, 1, true, [
+          ['CONTAINS', this.mapType === 'Contact' ? 'Email' : 'Name', name],
+        ])
+        this.allOpps = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingAccounts = false
+      }
+    },
+    async getObjects() {
+      this.loading = true
+      try {
+        const res = await SObjects.api.getObjectsForWorkflows(this.mapType)
+        this.allOpps = res.results
+        this.originalList = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loading = false
+      }
+    },
+    changeResource(i) {
+      this.$emit('change-resource', i)
+      this.mapType = i
+      this.mappedOpp = null
+      this.selectedResourceType = null
+      this.selectingResource = false
+      this.getObjects()
+    },
     emitGetNotes(id) {
       this.$emit('get-notes', id)
     },
@@ -514,10 +687,14 @@ export default {
       this.selectedIndex = index
     },
     selectOpp(val) {
+      console.log(val)
       this.resource = val.id
+      // this.$emit('change-resource', this.resourceType)
+      this.mappedOpp = null
+      this.selectedResourceType = null
     },
     mapOpp() {
-      this.$emit('map-opp', this.workflowId, this.resource, 'Opportunity')
+      this.$emit('map-opp', this.workflowId, this.resource, this.mapType)
       this.addingOpp = !this.addingOpp
     },
     formatUnix(unix) {
@@ -560,7 +737,18 @@ export default {
     transform: translate(0%, 50%);
   }
 }
-
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
+}
 .tooltip {
   position: relative;
   display: flex;
@@ -637,6 +825,7 @@ a {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  font-size: 12px;
 }
 .no-update {
   background-color: $base-gray;
@@ -647,6 +836,7 @@ a {
   min-height: 2rem;
   padding: 0.5rem 1.25rem;
   cursor: pointer;
+  font-size: 12px;
 }
 .roww {
   display: flex;
@@ -747,6 +937,7 @@ a {
     gap: 0.5rem;
     flex-direction: row;
     flex-wrap: wrap;
+    overflow: scroll;
   }
   &__footer {
     display: flex;
@@ -789,7 +980,7 @@ a {
     cursor: pointer;
 
     img {
-      height: 0.8rem;
+      height: 12px;
       margin-left: 0.25rem;
       filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
         brightness(93%) contrast(89%);
@@ -894,7 +1085,7 @@ a {
   flex-direction: column;
   align-items: center;
   background-color: $white;
-  min-width: 25vw;
+  min-width: 28vw;
   height: auto;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
@@ -949,22 +1140,22 @@ a {
   display: table-row;
   left: 0;
 }
+.table-cell-small {
+  display: table-cell;
+  position: relative;
+  min-width: 3vw;
+  background-color: $off-white;
+  padding: 2vh;
+  border: none;
+  border-bottom: 3px solid $soft-gray;
+  font-size: 13px;
+}
 .table-cell {
   display: table-cell;
   position: relative;
   min-width: 12vw;
   background-color: $off-white;
-  padding: 2vh 3vh;
-  border: none;
-  border-bottom: 3px solid $soft-gray;
-  font-size: 13px;
-}
-.table-cell-small {
-  display: table-cell;
-  position: relative;
-  min-width: 4vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
+  padding: 2vh;
   border: none;
   border-bottom: 3px solid $soft-gray;
   font-size: 13px;
@@ -977,6 +1168,12 @@ a {
 }
 .wt-bg {
   background-color: white;
+}
+
+.sticky-header {
+  left: 0;
+  top: 0;
+  position: sticky;
 }
 
 .table-cell:hover,

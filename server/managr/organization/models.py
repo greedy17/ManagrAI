@@ -679,7 +679,6 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             res = OpportunityLineItemAdapter.update_opportunitylineitem(
                 data, token, base_url, self.integration_id, object_fields
             )
-            print(res)
             self.is_stale = True
             self.save()
             return res
