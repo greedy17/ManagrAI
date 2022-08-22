@@ -51,7 +51,7 @@
                 :errors="registrationForm.field.password.errors"
                 v-model="registrationForm.field.password.value"
                 placeholder=""
-                intputType="password"
+                inputType="password"
                 large
                 id="password"
               />
