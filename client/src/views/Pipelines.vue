@@ -1,5 +1,5 @@
 <template>
-  <div @click="test" class="pipelines">
+  <div class="pipelines">
     <Modal
       v-if="modalOpen"
       dimmed
@@ -2405,9 +2405,6 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
-    test() {
-      console.log(this.stageReferenceOpts)
-    },
     cancelEditProduct() {
       this.dropdownProductVal = {}
       this.editingProduct = !this.editingProduct
@@ -3886,8 +3883,6 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
-
-        console.log(res)
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )

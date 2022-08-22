@@ -136,7 +136,7 @@
                   (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                 "
               >
-                <p>{{ field.dataType }}:</p>
+                <p>{{ field.referenceDisplayLabel }}:</p>
                 <Multiselect
                   v-model="dropdownVal[field.apiName]"
                   :options="
@@ -180,7 +180,18 @@
                   <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      {{ field.referenceDisplayLabel }}
+                      {{
+                        `${
+                          meeting.participants[participantIndex].secondary_data[field.apiName]
+                        }` === 'null' ||
+                        `${
+                          meeting.participants[participantIndex].secondary_data[field.apiName]
+                        }` === 'undefined'
+                          ? `${field.referenceDisplayLabel}`
+                          : `${
+                              meeting.participants[participantIndex].secondary_data[field.apiName]
+                            }`
+                      }}
                     </p>
                   </template>
                 </Multiselect>
@@ -615,7 +626,7 @@ export default {
       this.loadingAccounts = true
       try {
         const res = await SObjects.api.getObjects(this.mapType, 1, true, [
-          ['CONTAINS', 'Name', name],
+          ['CONTAINS', this.mapType === 'Contact' ? 'Email' : 'Name', name],
         ])
         this.allOpps = res.results
       } catch (e) {
