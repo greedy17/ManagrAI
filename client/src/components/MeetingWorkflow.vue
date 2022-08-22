@@ -431,6 +431,7 @@
             style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
+            @search-change="getFilteredList($event)"
             :placeholder="`Select ${mapType}`"
             selectLabel="Enter"
             label="name"
@@ -609,6 +610,19 @@ export default {
     switchResource() {
       this.getObjects()
       this.addingOpp = !this.addingOpp
+    },
+    async getFilteredList(name) {
+      this.loadingAccounts = true
+      try {
+        const res = await SObjects.api.getObjects(this.mapType, 1, true, [
+          ['CONTAINS', 'Name', name],
+        ])
+        this.allOpps = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingAccounts = false
+      }
     },
     async getObjects() {
       this.loading = true
