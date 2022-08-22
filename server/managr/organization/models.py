@@ -745,8 +745,13 @@ class Team(TimeStampModel):
     def __str__(self):
         return f"{self.name} under {self.organization.name} lead: {self.team_lead.email}"
 
+    def delete(self):
+        if self.team_forms:
+            for form in self.team_forms.all():
+                form.delete()
+        super(Team, self).delete()
+
     def change_team_lead(self, user, preserve_fields=False):
-        """Method to change the is_admin user for an organization"""
         templates = user.organization.custom_slack_forms.all()
 
         if preserve_fields:
