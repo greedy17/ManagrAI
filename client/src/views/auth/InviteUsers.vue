@@ -42,7 +42,7 @@
               <template v-slot:input>
                 <Multiselect
                   placeholder="Team Lead"
-                  v-model="teamLead/*might need @ input here (no space)*/"
+                  v-model="teamLead"
                   :options="team.list"
                   openDirection="below"
                   style="width: 26vw"
@@ -55,7 +55,7 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      Select Users
+                      Select Team Lead
                     </p>
                   </template>
                 </Multiselect>
