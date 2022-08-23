@@ -115,7 +115,7 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
             )
     instances = []
     for item in res:
-        user.activity.increment_untouched_count("workflow")
+        # user.activity.increment_untouched_count("workflow")
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             # create alert instance to keep on hand and track errors
