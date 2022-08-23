@@ -197,6 +197,12 @@ class Opportunity(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
     @staticmethod
     def create_in_salesforce(data=None, user_id=None):
         """when synchronous create in db first to be able to use immediately"""

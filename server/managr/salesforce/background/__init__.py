@@ -552,7 +552,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             if len(user.slack_integration.recap_receivers):
                 _send_recap(update_form_ids, None, True)
             raise e
-
+    value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
@@ -772,6 +772,7 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+
     return
 
 
