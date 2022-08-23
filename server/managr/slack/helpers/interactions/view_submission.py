@@ -2528,7 +2528,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
-    user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
+    # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
     return {"response_action": "clear"}
 
