@@ -536,7 +536,6 @@ def process_submit_resource_data(payload, context):
             return logger.exception(
                 f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
             )
-
     else:
         form_id = current_form_ids[0]
         # update the channel message to clear it
@@ -556,6 +555,7 @@ def process_submit_resource_data(payload, context):
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
+        internal_update = main_form.resource_object.update_database_values(all_form_data)
         try:
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,
