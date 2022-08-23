@@ -166,10 +166,6 @@
             </Multiselect>
           </span>
 
-          <!-- <div style="text-align: center">
-            <h3>Add Participants</h3>
-          </div> -->
-
           <span>
             <label>Internal Participants</label>
             <Multiselect
@@ -269,41 +265,36 @@
         </div>
       </div>
 
-      <section class="table-section">
-        <div class="table">
-          <MeetingWorkflowHeader />
-          <MeetingWorkflow
-            v-for="(meeting, i) in meetings"
-            :key="i"
-            @map-opp="mapOpp"
-            @update-Opportunity="updateMeeting"
-            @no-update="NoMeetingUpdate"
-            @remove-participant="removeParticipant"
-            @add-participant="addParticipant"
-            @get-notes="getNotes"
-            @filter-accounts="getAccounts"
-            @change-resource="changeResource"
-            :dropdowns="picklistQueryOptsContacts"
-            :contactFields="createContactForm"
-            :meeting="meeting.meeting_ref"
-            :participants="meeting.meeting_ref.participants"
-            :workflowId="meeting.id"
-            :resourceId="meeting.resource_id"
-            :resourceRef="meeting.resource_ref"
-            :resourceType="meeting.resource_type ? meeting.resource_type : resourceType"
-            :meetingUpdated="meeting.is_completed"
-            :owners="allUsers"
-            :accounts="allAccounts"
-            :meetingLoading="meetingLoading"
-            :allOpps="allOpps"
-            :allPicklistOptions="allPicklistOptions"
-            :referenceOpts="contactCreateReferenceOpts"
-            :dropdownLoading="dropdownLoading"
-            :accountSobjectId="accountSobjectId"
-            :index="i"
-          />
-        </div>
-      </section>
+      <MeetingWorkflow
+        v-for="(meeting, i) in meetings"
+        :key="i"
+        @map-opp="mapOpp"
+        @update-Opportunity="updateMeeting"
+        @no-update="NoMeetingUpdate"
+        @remove-participant="removeParticipant"
+        @add-participant="addParticipant"
+        @get-notes="getNotes"
+        @filter-accounts="getAccounts"
+        @change-resource="changeResource"
+        :dropdowns="picklistQueryOptsContacts"
+        :contactFields="createContactForm"
+        :meeting="meeting.meeting_ref"
+        :participants="meeting.meeting_ref.participants"
+        :workflowId="meeting.id"
+        :resourceId="meeting.resource_id"
+        :resourceRef="meeting.resource_ref"
+        :resourceType="meeting.resource_type ? meeting.resource_type : resourceType"
+        :meetingUpdated="meeting.is_completed"
+        :owners="allUsers"
+        :accounts="allAccounts"
+        :meetingLoading="meetingLoading"
+        :allOpps="allOpps"
+        :allPicklistOptions="allPicklistOptions"
+        :referenceOpts="contactCreateReferenceOpts"
+        :dropdownLoading="dropdownLoading"
+        :accountSobjectId="accountSobjectId"
+        :index="i"
+      />
     </div>
     <div v-if="loading">
       <Loader :loaderText="loaderText" />

@@ -254,7 +254,7 @@ img {
 }
 .sidenav {
   height: 100%;
-  width: 62px;
+  width: 200px;
   font-size: 14px;
   position: fixed;
   left: 0;

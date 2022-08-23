@@ -7,93 +7,85 @@
         </div>
       </router-link>
 
-      <ul class="align-left">
-        <li>
-          <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-            >Workflows
-          </router-link>
-        </li>
-        <li>
-          <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-            >Pipeline</router-link
-          >
-        </li>
-        <li>
-          <router-link exact-active-class="active" :to="{ name: 'Meetings' }">Meetings</router-link>
-        </li>
-        <li>
-          <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-            >Tracker <span>Beta</span>
-          </router-link>
-        </li>
+      <div class="align-left">
+        <router-link active-class="active" :to="{ name: 'Home' }">
+          <div class="tooltip">
+            <img src="@/assets/images/star.svg" height="16px" alt="" />
+            <span class="tooltiptext">Home</span>
+          </div>
+        </router-link>
+
+        <router-link exact-active-class="active" :to="{ name: 'Pipelines' }">
+          <div class="tooltip">
+            <img src="@/assets/images/pipeline.svg" height="16px" alt="" />
+            <span class="tooltiptext">Pipeline</span>
+          </div>
+        </router-link>
+
+        <router-link exact-active-class="active" :to="{ name: 'Forecast' }">
+          <div class="tooltip">
+            <img src="@/assets/images/tracker.svg" height="16px" alt="" />
+            <span class="tooltiptext">Tracker</span>
+          </div>
+          <!-- <span>Beta</span> -->
+        </router-link>
+
         <li v-if="user.isStaff">
           <router-link exact-active-class="active" :to="{ name: 'Staff' }">Admin</router-link>
         </li>
-      </ul>
 
-      <!-- <div class="mar">
-          <ul>
-            <li v-if="!isOnboarding">
-              <router-link active-class="active" :to="{ name: 'ListTemplates' }"
-                >Workflows
-              </router-link>
-            </li>
-            <li v-if="!isOnboarding">
-              <router-link exact-active-class="active" :to="{ name: 'Pipelines' }"
-                >Pipeline</router-link
-              >
-            </li>
-            <li v-if="!isOnboarding">
-              <router-link exact-active-class="active" :to="{ name: 'Meetings' }"
-                >Meetings</router-link
-              >
-            </li>
-            <li v-if="!isOnboarding">
-              <router-link exact-active-class="active" :to="{ name: 'Forecast' }"
-                >Tracker<span>Beta</span></router-link
-              >
-            </li>
-          </ul>
-        </div> -->
-
-      <div class="right">
-        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }">
+        <router-link exact-active-class="active" :to="{ name: 'Integrations' }">
           <div class="tooltip">
-            <img src="@/assets/images/connect.svg" class="nav-img" alt="" />
+            <img src="@/assets/images/connect.svg" class="nav-img" height="16px" alt="" />
             <span class="tooltiptext">Integrations</span>
           </div>
         </router-link>
 
-        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
+        <router-link v-if="isAdmin" exact-active-class="active" :to="{ name: 'Required' }">
           <div class="tooltip">
-            <img src="@/assets/images/list.svg" alt="" />
+            <img src="@/assets/images/list.svg" height="16px" alt="" />
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
 
-        <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
-            <div class="tooltip">
-              <img src="@/assets/images/profile.svg" alt="" />
-              <span class="tooltiptext">Profile</span>
-            </div>
+        <router-link active-class="active" :to="{ name: 'ListTemplates' }">
+          <div class="tooltip">
+            <img src="@/assets/images/workflows.svg" height="16px" alt="" />
+            <span class="tooltiptext">Workflows</span>
           </div>
-        </div>
+        </router-link>
 
-        <div v-else>
-          <router-link :to="{ name: 'InviteUsers' }">
-            <div class="tooltip">
-              <img src="@/assets/images/profile.svg" height="16px" alt="" />
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </router-link>
-        </div>
+        <!-- @click="goToProfile(Math.floor(Math.random() * 10000))" -->
+        <router-link
+          exact-active-class="active"
+          v-if="routeName === 'InviteUsers'"
+          :to="{ name: 'InviteUsers' }"
+        >
+          <div class="tooltip">
+            <img src="@/assets/images/profile.svg" height="16px" alt="" />
+            <span class="tooltiptext">Profile</span>
+          </div>
+        </router-link>
 
-        <div>
-          <router-link :to="{ name: 'Login' }">
+        <router-link exact-active-class="active" v-else :to="{ name: 'InviteUsers' }">
+          <div class="tooltip">
+            <img src="@/assets/images/profile.svg" height="16px" alt="" />
+            <span class="tooltiptext">Profile</span>
+          </div>
+        </router-link>
+
+        <router-link exact-active-class="active" :to="{ name: 'Meetings' }">
+          <div class="tooltip">
+            <img src="@/assets/images/calendar.svg" height="16px" alt="" />
+            <span class="tooltiptext">Meetings</span>
+          </div>
+        </router-link>
+
+        <router-link :to="{ name: 'Login' }">
+          <div>
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
-          </router-link>
-        </div>
+          </div>
+        </router-link>
       </div>
 
       <!-- <div v-else class="right">
@@ -227,10 +219,11 @@ export default {
 /* Extra large devices (large laptops and desktops, 1200px and up) */
 @media only screen and (min-width: 1200px) {
 }
+
 @keyframes tooltips-horz {
   to {
-    opacity: 0.95;
-    transform: translate(0%, 50%);
+    opacity: 0.9;
+    transform: translate(10%, 0%);
   }
 }
 
@@ -291,52 +284,34 @@ nav {
   top: 0;
   left: 0;
   z-index: 20;
-  width: 120px;
+  width: 72px;
   background-color: white;
-  padding: 8px 0px;
+  padding: 0px 4px;
   border-right: 1px solid $soft-gray;
 }
 .logo {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  margin-bottom: 32px;
+  justify-content: flex-start;
+  margin-top: -8px;
+  margin-left: -4px;
+  margin-bottom: 12px;
   cursor: pointer;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
-.right {
+.align-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   margin-bottom: 16px;
-  margin-left: 8px;
+  padding: 0;
+  margin-left: -8px;
   // > * {
   //   margin-right: 1rem;
   // }
-}
-
-ul {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  list-style-type: none;
-  margin: 0;
-  margin-left: -7px;
-  padding: 0;
-}
-ul:hover {
-  color: white;
-}
-
-li {
-  display: inline;
-  letter-spacing: 0.4px;
-  text-align: center;
-  margin-bottom: 12px;
-  font-size: 12px;
-  padding: 8px;
 }
 
 img {
@@ -347,29 +322,26 @@ a {
   color: $base-gray;
   font-family: #{$base-font-family};
   font-weight: bold;
-  padding: 0.5rem 0.2rem;
+  padding: 16px 12px;
+  img {
+    transition: all 0.2s;
+  }
 }
 a:hover {
   color: white;
 }
 
-li:hover {
-  background-color: $dark-green;
-  border-radius: 0.2rem;
-  color: white;
-}
 .mar {
   margin-top: 1rem;
 }
-.active-img {
-  border-bottom: 2.25px solid $dark-green;
-  color: $dark-green;
-}
 .active {
-  border-bottom: 2.25px solid $dark-green;
-  color: $dark-green;
-  padding-bottom: 0.9rem;
-
+  // img {
+  //   filter: invert(99%);
+  // }
+  background-color: $white-green;
+  margin: 14px 0px 4px 0px;
+  padding-top: 0px;
+  border-radius: 4px;
   img {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
@@ -378,36 +350,61 @@ li:hover {
 
 .tooltip {
   position: relative;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 2px 0px;
+  margin: 4px 0px;
 }
 .tooltip .tooltiptext {
   visibility: hidden;
+  width: 160px;
   background-color: $base-gray;
   color: white;
   text-align: center;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 4px 0px;
+  border: none !important;
+  letter-spacing: 1px;
+  padding: 8px 0;
   border-radius: 6px;
   font-size: 12px;
-
-  /* Position the tooltip text */
+  font-weight: bold !important;
   position: absolute;
   z-index: 1;
-  width: 100px;
-  top: 100%;
-  left: 50%;
-  margin-left: -50px;
-
-  /* Fade in tooltip */
-  opacity: 0;
+  top: 4px;
+  left: 270%;
+  margin-left: -32px;
+  opacity: 70%;
   transition: opacity 0.3s;
 }
+
 .tooltip:hover .tooltiptext {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
 }
+.end {
+  height: 20vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+// @media screen and (max-width: 700px) {
+//   nav {
+//     width: 100%;
+//     display: flex;
+//     flex-direction: row;
+//   }
+//   nav a {
+//     float: left;
+//   }
+//   div.content {
+//     margin-left: 0;
+//   }
+// }
+
+// @media screen and (max-width: 400px) {
+//   nav a {
+//     text-align: center;
+//     float: none;
+//   }
+// }
 </style>

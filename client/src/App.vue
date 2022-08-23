@@ -108,7 +108,7 @@ body {
 }
 
 .page-content {
-  padding: 1rem;
+  padding: 2px 16px;
 }
 
 .section-shadow {

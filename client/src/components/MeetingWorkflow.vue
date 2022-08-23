@@ -1,23 +1,21 @@
 <template>
-  <div class="table-row">
-    <div
-      class="table-cell sticky-header wt-bg"
-      :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
-    >
-      <div>
-        <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
-          {{ meeting.topic ? meeting.topic : 'Meeting' }}
-        </p>
-        <span style="color: #9b9b9b; font-size: 11px">
-          Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-        </span>
-      </div>
-    </div>
-    <div class="table-cell-small">
-      {{ meeting.participants.length }}
+  <div class="card">
+    <!-- :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }" -->
+
+    <div>
+      <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
+        {{ meeting.topic ? meeting.topic : 'Meeting' }}
+      </p>
+      <span style="color: #9b9b9b; font-size: 11px">
+        {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
+      </span>
     </div>
 
-    <div class="table-cell">
+    <div class="card__attendees">
+      <p>{{ meeting.participants.length }} Attendees</p>
+    </div>
+
+    <div class="card__scroll">
       <div
         v-for="(participant, participantIndex) in participants"
         :key="participantIndex"
@@ -726,6 +724,28 @@ export default {
     transform: translate(0%, 50%);
   }
 }
+.card {
+  width: 100%;
+  outline: 1px solid $soft-gray;
+  height: 100%;
+  margin-top: 16px;
+  min-height: 70vh;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
+
+  &__attendees {
+    background-color: $soft-gray;
+    color: $light-gray-blue;
+    border-radius: 4px;
+    width: 100%;
+  }
+
+  &__scroll {
+    width: 100%;
+  }
+}
+
 .slot-icon {
   display: flex;
   flex-direction: row;
