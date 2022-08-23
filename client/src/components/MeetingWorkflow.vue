@@ -209,7 +209,7 @@
                 >
                 </textarea>
 
-                <p style="display: none">
+                <!-- <p style="display: none">
                   {{
                     meeting.participants[participantIndex].secondary_data[field.apiName] ===
                       'null' ||
@@ -221,7 +221,7 @@
                           meeting.participants[participantIndex].secondary_data[field.apiName],
                         )
                   }}
-                </p>
+                </p> -->
               </div>
               <div
                 v-else-if="
@@ -245,7 +245,7 @@
                   "
                 />
 
-                <p style="display: none">
+                <!-- <p style="display: none">
                   {{
                     meeting.participants[participantIndex].secondary_data[field.apiName] ===
                       'null' ||
@@ -257,7 +257,7 @@
                           meeting.participants[participantIndex].secondary_data[field.apiName],
                         )
                   }}
-                </p>
+                </p> -->
               </div>
 
               <div
@@ -280,7 +280,7 @@
                       : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
                   "
                 />
-
+                <!-- 
                 <p style="display: none">
                   {{
                     meeting.participants[participantIndex].secondary_data[field.apiName] ===
@@ -293,7 +293,7 @@
                           meeting.participants[participantIndex].secondary_data[field.apiName],
                         )
                   }}
-                </p>
+                </p> -->
               </div>
             </div>
           </div>
