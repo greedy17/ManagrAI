@@ -592,27 +592,23 @@ export default {
       }
     },
     updateAvailableUsers(team, users) {
-      console.log('hit', team, this.teamsList, this.team.list)
       let filterUsers
       if (this.team.list.length) {
         filterUsers = this.team.list
       } else {
         filterUsers = users
       }
-      console.log('filterUsers', filterUsers)
       if (this.isAdmin) {
         // If they are an admin, show all users except the ones in the selected team
         this.usersList = filterUsers.filter(user => user.team !== team.id && !user.isTeamLeader)
       } else {
-        console.log('this.getUser', this.getUser)
         // If they are not an admin, show users in their team or in original team, depending on which team is selected
         if (team.id === this.originalTeam.id) {
-          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.getUser.team && !this.getUser.isTeamLeader)
+          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.getUser.team && !filteredUser.isTeamLeader)
         } else {
-          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.originalTeam.id && !this.getUser.isTeamLeader)
+          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.originalTeam.id && !filteredUser.isTeamLeader)
         }
       }
-      console.log('this.usersList', this.usersList)
     },
     async removeTemplate() {
       try {
