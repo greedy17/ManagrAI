@@ -254,7 +254,6 @@
           <div
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item col"
-            @click="test(team.list)"
           >
             {{ member.firstName ? member.firstName : 'Pending' }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
@@ -370,7 +369,6 @@ export default {
     }
   },
   async created() {
-    console.log("this.$store.state.user.team", this.$store.state.user.team)
     this.refresh()
     await this.listUsers()
   },
@@ -445,13 +443,10 @@ export default {
       }
       // check form data for this request
       try {
-        console.log('1')
         this.userInviteForm.field.email.value = this.slackMembers.members.filter(
           (member) => member.id == this.userInviteForm.field.slackId.value,
         )[0].profile.email
-        console.log('2', this.userInviteForm.value)
         const res = await User.api.invite(this.userInviteForm.value)
-        console.log('3', res)
         this.$toast('Invitation Sent', {
           timeout: 2000,
           position: 'top-left',

@@ -95,7 +95,7 @@
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title" @click="test(team)">Add Members to Team</h3>
+            <h3 class="invite-form__title">Add Members to Team</h3>
           </div>
         </div>
 
@@ -678,6 +678,13 @@ export default {
       if (!this.teamLead || !this.teamName) {
         setTimeout(() => {
           console.log('Please submit all info')
+          this.$toast('Please submit all info', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
           this.pulseLoading = false
           return
         }, 200)
@@ -689,14 +696,12 @@ export default {
             team_lead: this.teamLead.id
           }
           const teamRes = await Organization.api.createNewTeam(data)
-          console.log('res in createTeamSubmit', teamRes)
           const addTeamData = {
             users: [this.teamLead.id],
             team_id: teamRes.id
           }
-          const res2 = await Organization.api.addTeamMember(addTeamData)
+          await Organization.api.addTeamMember(addTeamData)
           this.refresh()
-          console.log('res2', res2)
           setTimeout(() => {
             this.handleCancel()
             this.teamName = ''
@@ -727,6 +732,13 @@ export default {
       if (!this.selectedTeam || !this.selectedUsers.length) {
         setTimeout(() => {
           console.log('Please submit all info')
+          this.$toast('Please submit all info', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
           this.pulseLoading = false
           return
         }, 200)
@@ -737,9 +749,8 @@ export default {
             users: userIds,
             team_id: this.selectedTeam.id
           }
-          const res = await Organization.api.addTeamMember(addTeamData)
+          await Organization.api.addTeamMember(addTeamData)
           this.refresh()
-          console.log('res', res)
           setTimeout(() => {
             this.handleCancel()
             this.selectedUsers = []
@@ -781,7 +792,6 @@ export default {
       const currentTeam = res.results.filter(team => team.id === this.getUser.team)[0]
       this.selectedTeam = currentTeam
       this.updateAvailableUsers(currentTeam)
-      // console.log('res in getTeams', res)
     },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
