@@ -774,7 +774,13 @@ export default {
     },
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)
-      this.teamsList = res.results
+      const teamList = [res.results[0]]
+      for (let i = 1; i < res.results.length; i++) {
+        if (res.results[i].team_lead === this.getUser.id) {
+          teamList.push(res.results[i])
+        }
+      }
+      this.teamsList = teamList
       this.originalTeam = res.results[0]
       const currentTeam = res.results.filter(team => team.id === this.getUser.team)[0]
       this.selectedTeam = currentTeam

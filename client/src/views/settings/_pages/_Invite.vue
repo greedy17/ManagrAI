@@ -174,7 +174,7 @@
       <div class="key">
         <div class="left-key">
           <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
-          <button class="invite_button" @click="handleEdit">Edit Team</button>
+          <button v-if="$store.state.user.isTeamLeader" class="invite_button" @click="handleEdit">Edit Team</button>
         </div>
         <div class="right-key">
           <p class="complete">Complete</p>
