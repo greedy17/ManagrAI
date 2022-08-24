@@ -445,11 +445,13 @@ export default {
       }
       // check form data for this request
       try {
+        console.log('1')
         this.userInviteForm.field.email.value = this.slackMembers.members.filter(
           (member) => member.id == this.userInviteForm.field.slackId.value,
         )[0].profile.email
+        console.log('2', this.userInviteForm.value)
         const res = await User.api.invite(this.userInviteForm.value)
-        console.log(res)
+        console.log('3', res)
         this.$toast('Invitation Sent', {
           timeout: 2000,
           position: 'top-left',
@@ -462,7 +464,7 @@ export default {
       } catch (e) {
         let err = e.response.data
         if (err.email) {
-          this.$toast('Emanil error', {
+          this.$toast('Email error', {
             timeout: 2000,
             position: 'top-left',
             type: 'error',

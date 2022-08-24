@@ -604,11 +604,12 @@ export default {
         // If they are an admin, show all users except the ones in the selected team
         this.usersList = filterUsers.filter(user => user.team !== team.id && !user.isTeamLeader)
       } else {
+        console.log('this.getUser', this.getUser)
         // If they are not an admin, show users in their team or in original team, depending on which team is selected
-        if (team.id === originalTeam.id) {
-          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.getUser.team && !user.isTeamLeader)
+        if (team.id === this.originalTeam.id) {
+          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.getUser.team && !this.getUser.isTeamLeader)
         } else {
-          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.originalTeam.id && !user.isTeamLeader)
+          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.originalTeam.id && !this.getUser.isTeamLeader)
         }
       }
       console.log('this.usersList', this.usersList)
