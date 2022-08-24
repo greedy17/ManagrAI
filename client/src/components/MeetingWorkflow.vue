@@ -147,10 +147,7 @@
                   @select="
                     setUpdateValues(
                       field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                        ? $event.value
-                        : $event.id,
-                      field.dataType === 'MultiPicklist' ? true : false,
+                      $event.id ? $event.id : $event.value,
                     )
                   "
                   @search-change="
@@ -212,7 +209,7 @@
                 >
                 </textarea>
 
-                <p style="display: none">
+                <!-- <p style="display: none">
                   {{
                     meeting.participants[participantIndex].secondary_data[field.apiName] ===
                       'null' ||
@@ -224,7 +221,7 @@
                           meeting.participants[participantIndex].secondary_data[field.apiName],
                         )
                   }}
-                </p>
+                </p> -->
               </div>
               <div
                 v-else-if="
@@ -248,7 +245,7 @@
                   "
                 />
 
-                <p style="display: none">
+                <!-- <p style="display: none">
                   {{
                     meeting.participants[participantIndex].secondary_data[field.apiName] ===
                       'null' ||
@@ -260,7 +257,7 @@
                           meeting.participants[participantIndex].secondary_data[field.apiName],
                         )
                   }}
-                </p>
+                </p> -->
               </div>
 
               <div
@@ -283,7 +280,7 @@
                       : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
                   "
                 />
-
+                <!-- 
                 <p style="display: none">
                   {{
                     meeting.participants[participantIndex].secondary_data[field.apiName] ===
@@ -296,7 +293,7 @@
                           meeting.participants[participantIndex].secondary_data[field.apiName],
                         )
                   }}
-                </p>
+                </p> -->
               </div>
             </div>
           </div>
@@ -670,6 +667,7 @@ export default {
       }
     },
     setUpdateValues(key, val) {
+      console.log(key, val)
       if (val) {
         this.formData[key] = val
       }
@@ -687,7 +685,6 @@ export default {
       this.selectedIndex = index
     },
     selectOpp(val) {
-      console.log(val)
       this.resource = val.id
       // this.$emit('change-resource', this.resourceType)
       this.mappedOpp = null

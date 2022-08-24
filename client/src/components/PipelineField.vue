@@ -8,9 +8,10 @@
           dataType !== 'DateTime' &&
           apiName !== 'StageName'
         "
+        v-html="fieldData ? fieldData : ''"
         :class="fieldData ? '' : 'blank'"
       >
-        {{ fieldData ? fieldData : '' }}
+        <!-- {{ fieldData ? fieldData : '' }} -->
       </p>
 
       <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'Date'">
