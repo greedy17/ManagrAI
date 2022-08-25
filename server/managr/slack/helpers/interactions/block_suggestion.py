@@ -88,19 +88,19 @@ def process_get_user_accounts(payload, context):
     }
 
 
-@processor(required_context=["u", "resource"])
+@processor(required_context=["u", "resource_type"])
 def process_get_local_resource_options(payload, context):
     """
     Retrieves data saved in our db for resources, note this is not used when fields are from the slack forms built with fields
     additional options can be passed in the context
     """
+    print(context)
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-    resource = context.get("resource")
+    resource = context.get("resource_type")
     additional_opts = json.loads(context.get("add_opts", json.dumps([])))
     field_id = context.get("field_id")
     # conver type to make sure it follows {label:str|num, values:str|num}
-
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
     if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
         return {
