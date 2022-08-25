@@ -128,9 +128,7 @@ def revoke(request):
     if hasattr(user, "salesforce_account"):
         sf_acc = user.salesforce_account
         sf_acc.revoke()
-        if user.is_admin:
-            OrgCustomSlackForm.objects.for_user(user).delete()
-            # admins remove the forms since they created them to avoid duplication
+        # admins remove the forms since they created them to avoid duplication
 
         user_context = dict(organization=user.organization.name)
         admin_context = dict(
