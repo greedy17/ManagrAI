@@ -1297,16 +1297,16 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
-    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource_type=User"][
         "selected_options"
     ]:
         query_data = User.objects.filter(
             id__in=list(
                 map(
                     lambda val: val["value"],
-                    data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
-                        "selected_options"
-                    ],
+                    data["meeting_internals"][
+                        f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource_type=User"
+                    ]["selected_options"],
                 )
             )
         ).values("email", "first_name", "last_name")
@@ -1543,14 +1543,12 @@ def process_add_contacts_to_sequence(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_get_notes(payload, context):
-    meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
-    trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = payload["view"]["state"]["values"]["select_opp"][
-        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource=Opportunity"
+        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource_type=Opportunity"
     ]["selected_option"]["value"]
     opportunity = Opportunity.objects.get(id=resource_id)
     note_data = (
@@ -1625,13 +1623,13 @@ def process_send_recaps(payload, context):
     leadership = [
         option["value"]
         for option in values["__send_recap_to_leadership"][
-            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=e286d1d5-5447-47e6-ad55-5f54fdd2b00d"
+            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource_type=User&field_id=e286d1d5-5447-47e6-ad55-5f54fdd2b00d"
         ]["selected_options"]
     ]
     reps = [
         option["value"]
         for option in values["__send_recap_to_reps"][
-            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
+            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource_type=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
         ]["selected_options"]
     ]
     send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}

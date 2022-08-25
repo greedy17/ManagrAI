@@ -237,13 +237,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = (
-                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
-                )
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}"
             elif self.is_public and self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
                     f"_{self.reference_display_label}_",
                     action_query,
@@ -256,7 +254,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
             ):
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
                 return block_builders.external_select(
                     "*Products*", action_query, block_id=self.api_name, initial_option=None,
                 )
