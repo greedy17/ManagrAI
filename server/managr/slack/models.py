@@ -154,7 +154,7 @@ class UserSlackIntegration(TimeStampModel):
 class OrgCustomSlackFormQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
+            return self.filter(organization=user.organization_id, team=user.team)
         else:
             return self.none()
 
@@ -203,7 +203,7 @@ class OrgCustomSlackForm(TimeStampModel):
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "organization", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage"]
 
     def generate_form_state(self):
         form_fields = FormField.objects.filter(form=self)
