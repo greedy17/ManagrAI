@@ -128,9 +128,7 @@ def revoke(request):
     if hasattr(user, "salesforce_account"):
         sf_acc = user.salesforce_account
         sf_acc.revoke()
-        if user.is_admin:
-            OrgCustomSlackForm.objects.for_user(user).delete()
-            # admins remove the forms since they created them to avoid duplication
+        # admins remove the forms since they created them to avoid duplication
 
         user_context = dict(organization=user.organization.name)
         admin_context = dict(
@@ -647,11 +645,11 @@ class SalesforceSObjectViewSet(
                     is_submitted=True, update_source="pipeline", submission_date=timezone.now()
                 )
                 value_update = main_form.resource_object.update_database_values(all_form_data)
-                from_workflow = data.get("from_workflow")
-                title = data.get("workflow_title", None)
-                if from_workflow:
-                    user.activity.increment_untouched_count("workflows")
-                    user.activity.add_workflow_activity(str(main_form.id), title)
+                # from_workflow = data.get("from_workflow")
+                # title = data.get("workflow_title", None)
+                # if from_workflow:
+                #     user.activity.increment_untouched_count("workflows")
+                #     user.activity.add_workflow_activity(str(main_form.id), title)
                 return Response(data=data)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
@@ -904,8 +902,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)

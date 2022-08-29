@@ -221,6 +221,12 @@ class Account(TimeStampModel, IntegrationModel):
         base_url = self.owner.salesforce_account.instance_url
         return AccountAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -336,9 +342,11 @@ class Contact(TimeStampModel, IntegrationModel):
         base_url = self.owner.salesforce_account.instance_url
         return ContactAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
 
-    @property
-    def as_slack_option(self):
-        return block_builders.option(self.name, str(self.id))
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
 
 
 class StageQuerySet(models.QuerySet):

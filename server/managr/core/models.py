@@ -650,12 +650,12 @@ class UserActivity(models.Model):
         ]
 
         note_added = (
-            False
+            True
             if (
-                "meeting_comments" not in workflow.saved_data.keys()
-                or workflow.saved_data["meeting_comments"] is None
+                "meeting_comments" in workflow.saved_data.keys()
+                and workflow.saved_data["meeting_comments"] is not None
             )
-            else True
+            else False
         )
         obj = dict(
             source=workflow.update_source,

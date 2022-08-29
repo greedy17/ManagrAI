@@ -451,7 +451,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                 )
 
             # save slack message ts and channel id to remove if the meeting is deleted before being filled
-            user.activity.increment_untouched_count("meeting")
+            # user.activity.increment_untouched_count("meeting")
             workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
             workflow.save()
 

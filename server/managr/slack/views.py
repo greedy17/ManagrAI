@@ -1122,19 +1122,23 @@ def get_notes_command(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
+    options = "%".join(["Contact", "Opportunity", "Account"])
     context = {
         "u": str(user.id),
         "slack_id": slack_id,
         "type": "command",
+        "options": options,
+        "action_id": "GET_NOTES",
     }
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.GET_NOTES,
-            "title": {"type": "plain_text", "text": "Choose opportunity"},
-            "blocks": get_block_set("choose_opportunity", context=context),
+            "title": {"type": "plain_text", "text": "Choose Record Type"},
+            "blocks": get_block_set("pick_resource_modal_block_set", context=context),
             "private_metadata": json.dumps(context),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }
     slack_requests.generic_request(url, data, access_token=access_token)

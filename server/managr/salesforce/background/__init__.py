@@ -581,7 +581,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             if len(user.slack_integration.recap_receivers):
                 _send_recap(update_form_ids, None, True)
             raise e
-
+    value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
@@ -801,6 +801,7 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+
     return
 
 
@@ -880,11 +881,11 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
             _send_instant_alert(form_ids)
         forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        from_workflow = data.get("from_workflow")
-        title = data.get("workflow_title", None)
-        if from_workflow:
-            user.activity.increment_untouched_count("workflows")
-            user.activity.add_workflow_activity(str(main_form.id), title)
+        # from_workflow = data.get("from_workflow")
+        # title = data.get("workflow_title", None)
+        # if from_workflow:
+        #     user.activity.increment_untouched_count("workflows")
+        #     user.activity.add_workflow_activity(str(main_form.id), title)
     return
 
 
