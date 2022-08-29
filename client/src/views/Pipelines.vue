@@ -87,7 +87,7 @@
               <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
-                ccols="30"
+                cols="30"
                 rows="4"
                 :disabled="savingCreateForm"
                 style="width: 40.25vw; border-radius: 0.4rem"
@@ -4348,7 +4348,12 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+
+  ::v-deep div {
+    display: none !important;
+  }
 }
+
 .light-green-bg {
   background-color: $white-green;
   color: $dark-green !important;
@@ -4966,6 +4971,10 @@ input[type='text']:focus {
 input[type='checkbox'] {
   cursor: pointer;
 }
+div[id^='user-input'] {
+  // display: none;
+  outline: 1px solid yellow !important;
+}
 select {
   cursor: pointer;
 }
@@ -5124,6 +5133,9 @@ section {
   min-height: 2.5rem;
   width: 40.25vw;
   font-family: $base-font-family;
+}
+#user-input > div {
+  color: red !important;
 }
 #user-input:focus {
   outline: none;

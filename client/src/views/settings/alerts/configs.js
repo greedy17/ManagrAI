@@ -56,9 +56,9 @@ const CLOSE_DATE_PASSED = {
     alertLevel: "ORGANIZATION",
 }
 
-const UPDATE_FORECAST = {
-    title: "Update Forecast",
-    subtitle: 'Update your forecast here',
+const NINETY_DAY_PIPELINE = {
+    title: "90 Day Pipeline",
+    subtitle: 'Update your Pipeline',
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -66,23 +66,23 @@ const UPDATE_FORECAST = {
         {
             groupCondition: "AND",
             newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "ForecastCategoryName",
-                    operandOperator: "!=",
-                    operandValue: 'Commit',
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "STRING",
-                    group: "",
-                },
+                // {
+                //     operandCondition: "AND",
+                //     operandIdentifier: "ForecastCategoryName",
+                //     operandOperator: "<=",
+                //     operandValue: 'Commit',
+                //     operandType: "FIELD",
+                //     operandOrder: 0,
+                //     dataType: "STRING",
+                //     group: "",
+                // },
                 {
                     operandCondition: "AND",
                     operandIdentifier: "CloseDate",
                     operandOperator: "<=",
-                    operandValue: "14",
+                    operandValue: "90",
                     operandType: "FIELD",
-                    operandOrder: 1,
+                    operandOrder: 0,
                     dataType: "DATE",
                     group: "",
                 },
@@ -95,10 +95,10 @@ const UPDATE_FORECAST = {
         bindings: [
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
-            " Opportunity.ForecastCategoryName ",
-            " Opportunity.NextStep ",
+            " Opportunity.StageName ",
+            " Opportunity.LastActivityDate ",
         ],
-        body: "Please update the forecast for <strong>{ Opportunity.Name }</strong> ! it’s expected to close on <strong>{ Opportunity.CloseDate }</strong> and forecasted as <strong>{ Opportunity.ForecastCategoryName }</strong> - please either move to Commit or update the Close Date.<br><br> <strong>Next Step</strong>: { Opportunity.NextStep }",
+        body: "<strong>{ Opportunity.Name }</strong> has a Close Date of <strong>{ Opportunity.CloseDate }</strong> \n <strong>Stage</strong>:{ Opportunity.StageName } \n <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
     },
     newConfigs: [
         {
@@ -115,9 +115,9 @@ const UPDATE_FORECAST = {
     alertLevel: "ORGANIZATION",
 }
 
-const DEAL_ROTTING = {
-    title: "Deal Rotting",
-    subtitle: 'View and update all Opportunities that havent been worked in 30 days',
+const DEAL_REVIEW = {
+    title: "Deal Review",
+    subtitle: 'View and update all Opportunities that havent been worked in the last week',
     user: null,
     isActive: true,
     resourceType: "Opportunity",
@@ -127,12 +127,12 @@ const DEAL_ROTTING = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "LastActivityDate", // Select your Amount
-                    operandOperator: "<",
-                    operandValue: "-30", // Amount is greater than
+                    operandIdentifier: "LastModifiedDate", // Select your Amount
+                    operandOperator: "<=",
+                    operandValue: "-6", // Amount is greater than
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATE",
+                    dataType: "DATETIME",
                     group: "",
                 },
             ],
@@ -144,14 +144,14 @@ const DEAL_ROTTING = {
         bindings: [
             " __Recipient.full_name ",
             " Opportunity.Name ",
-            " Opportunity.LastActivityDate ",
+            " Opportunity.LastModifiedDate ",
         ],
-        body: "Hey  <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong>, hasnt been touched since <strong>{ Opportunity.LastActivityDate }</strong>",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Opportunity.Name }</strong>, hasnt been updated since <strong>{ Opportunity.LastModifiedDate }</strong>",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [0, 3],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -364,8 +364,8 @@ const LARGE_OPPORTUNITIES = {
 
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
-    UPDATE_FORECAST,
-    DEAL_ROTTING,
+    NINETY_DAY_PIPELINE,
+    DEAL_REVIEW,
     CLOSE_DATE_APPROACHING,
     UPCOMING_NEXT_STEP,
     REQUIRED_FIELD_EMPTY,
