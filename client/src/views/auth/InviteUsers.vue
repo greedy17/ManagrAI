@@ -52,7 +52,7 @@
           <div class="invite-form__inner_actions">
             <template>
               <PulseLoadingSpinnerButton
-                @click="createTeamSubmit"
+                @click="changeAdminSubmit"
                 class="invite-button modal-button"
                 style="width: 5rem; margin-right: 1rem; height: 2rem;"
                 text="Save"
@@ -741,6 +741,53 @@ export default {
         this.noteBody = null
         this.isShared = null
         this.homeView()
+      }
+    },
+    async changeAdminSubmit() {
+      this.pulseLoading = true
+      if (!this.newAdmin || !this.newAdmin.id === this.getUser.id) {
+        setTimeout(() => {
+          console.log('Please choose a new admin')
+          this.$toast('Please choose a new admin', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const data = {
+            new_admin: this.newAdmin.id
+          }
+          const teamRes = await Organization.api.changeAdmin(data)
+          this.refresh()
+          setTimeout(() => {
+            this.handleCancel()
+            this.$toast('Sucessfully submitted', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.pulseLoading = false
+            this.$router.go()
+          }, 1400)
+        } catch(e) {
+          console.log("Error: ", e)
+          this.$toast('Error changing admin', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          this.pulseLoading = false
+        }
       }
     },
     async createTeamSubmit() {

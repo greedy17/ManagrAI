@@ -41,6 +41,7 @@ from managr.core.permissions import (
     IsExternalIntegrationAccount,
 )
 
+from managr.core.models import User
 
 from .models import Organization, Account, Contact, Stage, ActionChoice, Team
 from . import constants as org_consts
