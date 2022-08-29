@@ -98,7 +98,7 @@ const NINETY_DAY_PIPELINE = {
             " Opportunity.StageName ",
             " Opportunity.LastActivityDate ",
         ],
-        body: "<strong>{ Opportunity.Name }</strong> has a Close Date of <strong>{ Opportunity.CloseDate }</strong> \n <strong>Stage</strong>:{ Opportunity.StageName } \n <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
+        body: "<strong>{ Opportunity.Name }</strong> has a Close Date of <strong>{ Opportunity.CloseDate }</strong> \n \n <strong>Stage</strong>: { Opportunity.StageName } \n \n <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
     },
     newConfigs: [
         {
@@ -146,7 +146,7 @@ const DEAL_REVIEW = {
             " Opportunity.Name ",
             " Opportunity.LastModifiedDate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Opportunity.Name }</strong>, hasnt been updated since <strong>{ Opportunity.LastModifiedDate }</strong>",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Opportunity.Name }</strong> hasnt been updated since <strong>{ Opportunity.LastModifiedDate }</strong>",
     },
     newConfigs: [
         {

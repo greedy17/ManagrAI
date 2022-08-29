@@ -541,7 +541,7 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String'">
+                <div class="col" v-else-if="field.dataType === 'String'">
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     id="user-input"
@@ -573,7 +573,7 @@
                   >
                   </textarea>
                 </div>
-                <div v-else-if="field.dataType === 'Date'">
+                <div class="col" v-else-if="field.dataType === 'Date'">
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     type="text"
@@ -587,7 +587,7 @@
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
                 </div>
-                <div v-else-if="field.dataType === 'DateTime'">
+                <div class="col" v-else-if="field.dataType === 'DateTime'">
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     type="datetime-local"
@@ -599,6 +599,7 @@
                   />
                 </div>
                 <div
+                  class="col"
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
