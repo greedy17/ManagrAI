@@ -112,7 +112,7 @@ def get_organization_totals(month_only=False):
     totals = {}
     current_date = datetime.now(tz=timezone.utc)
     date_list = get_month_start_and_end(current_date.year, current_date.month, month_only)
-    orgs = Organization.objects.all()
+    orgs = Organization.objects.all().order_by("name")
     users = User.objects.all()
     for date in date_list:
         start = timezone.make_aware(datetime.strptime(f"{date[0]} 00:01", "%Y-%m-%d %H:%M"))
