@@ -168,6 +168,7 @@ class CustomUserAdmin(UserAdmin):
                     "reminders",
                     "onboarding",
                     "activated_managr_configs",
+                    "team",
                 )
             },
         ),

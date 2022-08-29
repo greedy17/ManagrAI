@@ -51,7 +51,7 @@
                 :errors="registrationForm.field.password.errors"
                 v-model="registrationForm.field.password.value"
                 placeholder=""
-                intputType="password"
+                inputType="password"
                 large
                 id="password"
               />
@@ -269,7 +269,7 @@ input:focus {
 }
 .logo {
   height: 2rem;
-  margin-left: 37%;
+  // margin-left: 37%;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
@@ -279,8 +279,7 @@ input:focus {
 .header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  margin-left: 44vw;
+  justify-content: center;
 
   img {
     height: 1.5rem;

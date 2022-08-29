@@ -228,6 +228,9 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
         help_text="Object for reminder setting",
     )
+    team = models.ForeignKey(
+        "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
+    )
     objects = UserManager()
 
     @property
@@ -349,6 +352,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def has_outreach_integration(self):
         return hasattr(self, "outreach_account")
+
+    @property
+    def is_team_leader(self):
+        return hasattr(self, "team_lead_of")
 
     @property
     def as_slack_option(self):

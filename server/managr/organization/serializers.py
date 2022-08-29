@@ -19,11 +19,13 @@ from .models import (
     Stage,
     ActionChoice,
     Product2,
+    Team,
 )
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
     ignore_email_ref = serializers.SerializerMethodField("get_ignore_emails")
+
     class Meta:
         model = Organization
         fields = (
@@ -35,9 +37,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "slack_integration",
             "has_products",
             "number_of_allowed_users",
-            "ignore_email_ref"
+            "ignore_email_ref",
         )
-    
+
     def get_ignore_emails(self, instance):
         return instance.ignore_emails
 
@@ -317,3 +319,10 @@ class OpportunityLineItemSerializer(serializers.ModelSerializer):
         # remove contacts from validation
         internal_data = super().to_internal_value(data)
         return internal_data
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+
+        fields = ("id", "name", "organization", "team_lead")

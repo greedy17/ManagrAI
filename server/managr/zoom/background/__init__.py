@@ -280,7 +280,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             opportunity = Opportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__id=user.id
             ).first()
-            logger.info(f"ZOOM OPP {opportunity}")
             if opportunity:
                 meeting_resource_data["resource_id"] = str(opportunity.id)
                 meeting_resource_data["resource_type"] = "Opportunity"
@@ -291,7 +290,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 account = Account.objects.filter(
                     contacts__email__in=participant_emails, owner__id=user.id,
                 ).first()
-                logger.info(f"ZOOM Account {account}")
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
                     meeting_resource_data["resource_type"] = "Account"
