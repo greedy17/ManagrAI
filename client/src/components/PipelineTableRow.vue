@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div style="min-width: 26vw" class="table-cell cell-name">
+    <div class="table-cell cell-name">
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
@@ -43,32 +43,6 @@
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
-        </div>
-        <div
-          v-if="
-            updateList.includes(opp.id) ||
-            updatedList.includes(opp.id) ||
-            (inlineLoader && currentInlineRow === index)
-          "
-          class="flex-row"
-        >
-          <SkeletonBox width="15px" height="14px" />
-          <SkeletonBox width="15px" height="14px" />
-        </div>
-        <div v-else class="flex-row">
-          <div class="tooltip">
-            <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-              <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
-            </button>
-            <span class="tooltiptext">Update</span>
-          </div>
-
-          <div class="tooltip">
-            <button @click="emitGetNotes" class="name-cell-note-button-1">
-              <img class="gray" src="@/assets/images/white-note.svg" />
-            </button>
-            <span class="tooltiptext">View Notes</span>
-          </div>
         </div>
       </div>
     </div>
@@ -151,11 +125,11 @@
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
             <Multiselect
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
               v-if="field.apiName !== 'StageName'"
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 8rem; margin-left: 1vw"
               track-by="value"
               label="label"
               v-model="dropdownVal[field.apiName]"
@@ -195,7 +169,8 @@
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 8rem"
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
+              optionHeight="20"
               track-by="value"
               label="label"
               @select="setDropdownValue($event)"
@@ -334,7 +309,42 @@
         />
       </div>
     </div>
-    <div class="table-cell-checkbox"></div>
+    <div class="cell-end">
+      <div
+        v-if="
+          updateList.includes(opp.id) ||
+          updatedList.includes(opp.id) ||
+          (inlineLoader && currentInlineRow === index)
+        "
+        class="flex-row"
+      >
+        <SkeletonBox width="15px" height="14px" />
+        <SkeletonBox width="15px" height="14px" />
+        <SkeletonBox width="15px" height="14px" />
+        <SkeletonBox width="15px" height="14px" />
+      </div>
+      <div v-else class="flex-row">
+        <div class="tooltip mar-right">
+          <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
+          <span class="tooltiptext">Update</span>
+        </div>
+
+        <div class="tooltip mar-right">
+          <img src="@/assets/images/note.svg" height="16px" alt="" />
+          <span class="tooltiptext">View Notes</span>
+        </div>
+
+        <div class="tooltip mar-right">
+          <img src="@/assets/images/tracker.svg" height="16px" alt="" />
+          <span class="tooltiptext">Add to Tracker</span>
+        </div>
+
+        <div class="tooltip mar-right">
+          <img src="@/assets/images/more.svg" height="16px" alt="" />
+          <span class="tooltiptext">More</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -685,15 +695,14 @@ input {
 .inline-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 .active-edit {
-  border-bottom: 2px solid $dark-green !important;
-  border-left: 1px solid $soft-gray !important;
-  border-right: 1px solid $soft-gray !important;
-  border-top: 1px solid $soft-gray !important;
-  background-color: white !important;
+  // border-bottom: 2px solid $dark-green !important;
+  // border-left: 1px solid $soft-gray !important;
+  // border-right: 1px solid $soft-gray !important;
+  // border-top: 1px solid $soft-gray !important;
 }
 .multi-slot {
   display: flex;
@@ -745,11 +754,11 @@ input {
 .empty {
   display: table-cell;
   position: sticky;
-  background: $off-white;
+  // background: $off-white;
   min-width: 12vw;
-  border-left: 1px solid $soft-gray;
-  border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
+  // border-left: 1px solid $soft-gray;
+  // border-right: 1px solid $soft-gray;
 }
 .selected {
   color: $dark-green !important;
@@ -758,11 +767,11 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 16vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
+  // padding: 2vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
+  padding: 1px 6px;
 }
 .cell-name {
   background-color: white;
@@ -771,25 +780,41 @@ input {
   position: sticky;
   left: 3.5vw;
   z-index: 2;
+  padding: 1px 4px;
 }
-.table-cell:hover,
-.empty:hover {
-  border: 1px solid $dark-green;
+.cell-end {
+  display: table-cell;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+  position: sticky;
+  border: none;
+  font-size: 13px;
   background-color: white;
-  border-radius: 4px;
+  border-bottom: 1px solid $soft-gray;
+  padding: 10px 20px;
+  color: $base-gray;
+  letter-spacing: 0.75px;
+  position: sticky;
+  right: 0;
+  z-index: 2;
 }
+// .table-cell:hover,
+// .empty:hover {
+//   opacity: 0.6;
+// }
 .cell-name:hover {
   border: none;
-  border-bottom: 1px solid #e8e8e8;
 }
 .table-cell-wide {
   display: table-cell;
   position: sticky;
   min-width: 26vw;
-  background-color: $off-white;
-  padding: 2vh 3.5vh;
+  border-bottom: 1px solid $soft-gray !important;
+  // padding: 2vh 3.5vh;
+  padding: 1px 6px;
   border: none;
-  border-bottom: 1px solid $soft-gray;
+
   font-size: 13px;
 }
 .table-cell-checkbox-header {
@@ -895,7 +920,7 @@ input[type='checkbox'] + label::before {
 }
 .limit-cell-height {
   max-height: 8rem;
-  // width: 110%;
+  background-color: white;
   padding: 0;
   overflow: auto;
   img {
@@ -907,7 +932,7 @@ input[type='checkbox'] + label::before {
 .name-cell-note-button-1 {
   height: 1.5rem;
   width: 1.5rem;
-  margin-right: 0.2rem;
+  margin-right: 12px;
   padding: 0.25rem;
   border-radius: 4px;
   background-color: white;
@@ -929,7 +954,7 @@ input[type='checkbox'] + label::before {
 .name-cell-edit-note-button-1 {
   height: 1.5rem;
   width: 1.5rem;
-  margin-right: 0.2rem;
+  margin-right: 12px;
   padding: 0.25rem;
   border-radius: 4px;
   background-color: white;
@@ -940,5 +965,8 @@ input[type='checkbox'] + label::before {
   img {
     height: 1.2rem;
   }
+}
+.mar-right {
+  margin-right: 16px;
 }
 </style>

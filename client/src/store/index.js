@@ -3,6 +3,8 @@ import Vuex from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
 import User from '@/services/users/'
 import Status from '@/services/statuses'
+// import { apiClient, apiErrorHandler } from '@/services/api'
+import { MeetingWorkflows } from '@/services/salesforce'
 
 Vue.use(Vuex)
 
@@ -13,6 +15,7 @@ const state = {
   user: null,
   token: null,
   stages: null,
+  meetings: [],
   showToolbarNav: false,
   pollingData: {
     items: {},
@@ -39,6 +42,9 @@ const mutations = {
     state.user = null
     state.stages = []
   },
+  SAVE_MEETINGS(state, meetings) {
+    state.meetings = meetings
+  },
 }
 
 const actions = {
@@ -48,6 +54,21 @@ const actions = {
     const res = await Status.api.list({})
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
+  },
+  async loadMeetings({ commit }) {
+    try {
+      const res = await MeetingWorkflows.api.getMeetingList()
+      commit('SAVE_MEETINGS', res.results)
+    } catch (e) {
+      console.log(e)
+      // this.$toast('Error gathering Meetings!', {
+      //   timeout: 2000,
+      //   position: 'top-left',
+      //   type: 'error',
+      //   toastClassName: 'custom',
+      //   bodyClassName: ['custom'],
+      // })
+    }
   },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)

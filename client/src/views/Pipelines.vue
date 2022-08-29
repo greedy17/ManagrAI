@@ -1499,6 +1499,9 @@
     </Modal>
 
     <div ref="pipelines" v-if="!loading">
+      <h3 class="pipeline-header">
+        {{ !currentWorkflowName ? currentList : currentWorkflowName }}
+      </h3>
       <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
           <button @click.stop="showList = !showList" class="select-btn1">
@@ -1507,12 +1510,10 @@
               v-if="!showList"
               style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/rightArrow.svg"
-              class="invert"
               alt=""
             />
             <img
               v-else
-              class="invert"
               style="height: 0.7rem; margin-left: 0.5rem"
               src="@/assets/images/downArrow.svg"
               alt=""
@@ -1569,6 +1570,7 @@
               >
             </button>
           </div>
+
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -1732,17 +1734,23 @@
         </div>
         <div class="flex-row">
           <div v-if="!selectedWorkflow" class="search-bar">
+            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
             <input
               type="search"
+              placeholder="search"
               v-model="filterText"
               @input="getFilteredOpps"
-              placeholder="search"
             />
-            <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
           </div>
           <div v-else class="search-bar">
-            <input type="search" v-model="workflowFilterText" placeholder="search" />
-            <img src="@/assets/images/search.svg" style="height: 1rem" alt="" />
+            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <input type="search" placeholder="search" v-model="workflowFilterText" />
+          </div>
+          <div class="tooltip">
+            <button @click="manualSync" class="select-btn">
+              <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
+            </button>
+            <span class="tooltiptext">Sync Fields</span>
           </div>
           <button @click="createOppInstance()" class="add-button">
             <img
@@ -1753,12 +1761,6 @@
             />
             Create Opportunity
           </button>
-          <div class="tooltip">
-            <button @click="manualSync" class="select-btn">
-              <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
-            </button>
-            <span class="tooltiptext">Sync Fields</span>
-          </div>
         </div>
       </section>
 
@@ -1975,10 +1977,9 @@
         </div>
       </div>
       <div class="results">
-        <h6 style="color: #9b9b9b">
+        <!-- <h6 style="color: #9b9b9b">
           {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-          <!-- <span>{{ selectedWorkflow ? currentWorkflow.length : allOpps.length }}</span> -->
-        </h6>
+        </h6> -->
       </div>
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div v-outside-click="emitCloseEdit" class="table">
@@ -4618,7 +4619,7 @@ export default {
   font-size: 18px;
   letter-spacing: 0.5px;
   // outline: 1px solid red;
-  height: 34px;
+  height: 24px;
 }
 .pagination {
   width: 100vw;
@@ -4684,41 +4685,41 @@ select {
   border-radius: 0;
 }
 .select-btn1 {
-  border: 0.7px solid $dark-green;
-  padding: 0.45rem 1.25rem;
+  box-shadow: 1px 1px 1px $very-light-gray;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 6px 8px;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: white;
   cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
   margin-right: 0.5rem;
   transition: all 0.25s;
 
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
+  // img {
+  //   filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+  // }
 }
 .select-btn {
-  border: 0.5px solid $dark-green;
-  padding: 0.375rem 0.75rem;
+  box-shadow: 1px 1px 2px $very-light-gray;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 6px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: white;
   cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
+  // color: $dark-green;
   margin-right: 0.5rem;
   transition: all 0.25s;
 
   img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1.05rem !important;
+    height: 18px !important;
   }
 }
 input[type='checkbox']:checked + label::after {
@@ -4779,31 +4780,30 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 68vh;
+  max-height: 72vh;
   overflow: scroll;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
   border-spacing: 3px;
   background-color: white;
 }
-.table-section::-webkit-scrollbar {
-  width: 0px; /* Mostly for vertical scrollbars */
-  height: 8px; /* Mostly for horizontal scrollbars */
-}
-.table-section::-webkit-scrollbar-thumb {
-  background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
-  box-shadow: inset 4px 4px 8px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 0.3rem;
-}
-.table-section::-webkit-scrollbar-track {
-  // background: $soft-gray;
-  box-shadow: inset 4px 4px 8px 0 $soft-gray;
-  border-radius: 0.3rem;
-}
-.table-section::-webkit-scrollbar-track-piece:end {
-  margin-right: 50vw;
-}
+// .table-section::-webkit-scrollbar {
+//   width: 0px;
+//   height: 8px;
+// }
+// .table-section::-webkit-scrollbar-thumb {
+//   background-color: $dark-green;
+//   box-shadow: inset 4px 4px 6px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// .table-section::-webkit-scrollbar-track {
+//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
+//   border-radius: 0.3rem;
+// }
+// .table-section::-webkit-scrollbar-track-piece:end {
+//   margin-right: 50vw;
+// }
 .multi-slot {
   display: flex;
   align-items: center;
@@ -4926,32 +4926,21 @@ h3 {
     letter-spacing: 0.6px;
   }
 }
-.table-cell-header {
-  display: table-cell;
-  padding: 1.25vh 3vh;
-  border-bottom: 1px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 2;
-  top: 0;
-  position: sticky;
-  background-color: $off-white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
+
 [type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
 }
 input[type='search'] {
+  width: 60px;
+  cursor: pointer;
   border: none;
-  background-color: $off-white;
   padding: 4px;
   margin: 0;
 }
 input[type='search']:focus {
   outline: none;
+  width: 150px;
 }
 input[type='text']:focus {
   outline: none;
@@ -5032,9 +5021,10 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4.5rem 2rem 0.75rem 1.5rem;
+  padding: 32px 0px 0px 80px;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
+  letter-spacing: 0.75px !important;
 }
 .invert {
   filter: invert(80%);
@@ -5051,6 +5041,7 @@ section {
   background-color: $gray;
   cursor: text;
   color: white;
+  letter-spacing: 0.75px;
 }
 .add-button:disabled:hover {
   transform: none;
@@ -5082,6 +5073,7 @@ section {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  letter-spacing: 0.75px;
 }
 .add-button__ {
   display: flex;
@@ -5094,6 +5086,7 @@ section {
   cursor: pointer;
   color: white;
   transition: all 0.3s;
+  letter-spacing: 0.75px;
 }
 .add-button:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
@@ -5102,13 +5095,13 @@ section {
   box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
-  height: 1.8rem;
-  background-color: $off-white;
-  border: 0.7px solid $gray;
+  background-color: white;
+  box-shadow: 1px 1px 1px $very-light-gray;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 2px;
-  border-radius: 5px;
+  border-radius: 8px;
   margin-right: 0.5rem;
 }
 #user-input {
@@ -5402,5 +5395,12 @@ a {
   font-weight: bold;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+}
+.pipeline-header {
+  padding: 0;
+  margin-top: -4px;
+  margin-left: 4px;
+  font-size: 16px;
+  color: $light-gray-blue;
 }
 </style>

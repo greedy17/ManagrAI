@@ -191,10 +191,10 @@
       </div>
     </div>
 
-    <div class="table-cell-header">
+    <div class="table-cell-header-end">
       <div class="direction-row" @click="addField">
-        <p style="color: white">.</p>
-        <img src="@/assets/images/plusOne.svg" class="add-row" alt="" />
+        <p style="color: #4d4e4c">Actions</p>
+        <img src="@/assets/images/plusOne.svg" class="add-img" alt="" />
       </div>
 
       <div v-if="addingField" class="add-field-section">
@@ -455,10 +455,11 @@ export default {
 .table-cell-header-wide {
   display: table-cell;
   padding: 0.25rem;
-  padding: 1.25vh 2.5vh;
+  padding: 1.25vh;
   min-width: 3rem;
   border: none;
-  border-bottom: 1px solid #e8e8e8;
+  color: $light-gray-blue !important;
+  border-bottom: 1px solid $soft-gray;
   border-radius: 2px;
   z-index: 2;
   top: 0;
@@ -486,21 +487,47 @@ export default {
 }
 .table-cell-checkbox-header {
   display: table-cell;
-  padding: 2vh 1vh;
+  padding: 8px 4px;
   border: none;
-  border-bottom: 1px solid #e8e8e8;
+  color: $light-gray-blue !important;
   z-index: 3;
   width: 4vw;
   top: 0;
   left: 0;
   position: sticky;
   background-color: white;
+  border-bottom: 1px solid $soft-gray;
+}
+.table-cell-header-end {
+  display: table-cell;
+  border-bottom: 1px solid $soft-gray !important;
+  border: none;
+  color: $light-gray-blue !important;
+  border-radius: 2px;
+  z-index: 3;
+  right: 0;
+  top: 0;
+  position: sticky;
+  background-color: white;
+  font-weight: bolder;
+  font-size: 13.5px;
+  letter-spacing: 0.75px;
+  color: $base-gray;
+  padding: 8px 16px;
+}
+.direction-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 .cell-name-header {
   display: table-cell;
-  padding: 3vh;
+  // padding: 3vh;
+  padding: 1px 6px;
   border: none;
-  border-bottom: 1px solid #e8e8e8;
+  color: $light-gray-blue !important;
+  border-bottom: 1px solid $soft-gray;
   border-radius: 2px;
   z-index: 3;
   left: 3.5vw;
@@ -514,9 +541,11 @@ export default {
 }
 .table-cell-header {
   display: table-cell;
-  padding: 1.25vh 3vh;
+  // padding: 1.25vh 3vh;
+  padding: 1px 6px;
   border: none;
-  border-bottom: 1px solid #e8e8e8;
+  color: $light-gray-blue !important;
+  border-bottom: 1px solid $soft-gray;
   border-radius: 2px;
   z-index: 2;
   top: 0;
@@ -527,22 +556,14 @@ export default {
   letter-spacing: 0.75px;
   color: $base-gray;
 }
-.add-row {
-  height: 1rem;
-  margin-left: 0.25rem;
-  padding-right: 0.25rem;
+.add-img {
+  height: 18px;
   filter: invert(36%) sepia(81%) saturate(5047%) hue-rotate(139deg) brightness(77%) contrast(80%);
 }
 .invert {
   filter: invert(80%);
 }
-.direction-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  cursor: pointer;
-  color: $dark-green;
-}
+
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;

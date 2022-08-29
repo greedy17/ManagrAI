@@ -8,20 +8,20 @@
           dataType !== 'DateTime' &&
           apiName !== 'StageName'
         "
-        :class="fieldData ? '' : 'blank'"
+        :class="fieldData ? 'bg' : 'blank'"
       >
         {{ fieldData ? fieldData : '' }}
       </p>
 
-      <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'Date'">
+      <p :class="fieldData ? 'bg' : 'blank'" v-else-if="dataType === 'Date'">
         {{ fieldData ? formatDate(fieldData) : '' }}
       </p>
 
-      <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'DateTime'">
+      <p :class="fieldData ? 'bg' : 'blank'" v-else-if="dataType === 'DateTime'">
         {{ fieldData ? formatDateTime(fieldData) : '' }}
       </p>
 
-      <p :class="fieldData ? 'flex-columned' : 'blank'" v-else-if="apiName === 'StageName'">
+      <p :class="fieldData ? 'flex-columned bg' : 'blank'" v-else-if="apiName === 'StageName'">
         {{ fieldData ? fieldData : '' }}
         <span class="daysinstage">{{
           fieldData
@@ -35,7 +35,7 @@
         {{ fieldData ? formatCash(fieldData) : '' }}
       </p>
     </div>
-    <div v-else>
+    <div v-else class="bg">
       <p>{{ fieldData }}</p>
     </div>
   </div>
@@ -119,7 +119,16 @@ export default {
   color: $dark-green;
   background-color: $white-green;
   border-radius: 6px;
-  padding: 5px;
+  padding: 8px 14px;
+  letter-spacing: 0.75px;
+}
+.bg {
+  color: $base-gray;
+  background-color: $off-white;
+  border-radius: 6px;
+  padding: 8px 14px;
+  letter-spacing: 0.75px;
+  border: 1px solid $soft-gray;
 }
 .yellow {
   color: $yellow !important;

@@ -239,26 +239,27 @@
     </Modal>
     <div ref="pipelines" v-if="!loading">
       <div class="results">
-        <h6 style="color: #9b9b9b">
-          Today's Meetings:
-          <span>{{ meetings ? meetings.length : 0 }}</span>
-        </h6>
+        <!-- <div class="results-title">
+          <p>Meetings</p>
+          <span>You have {{ meetings.length }} meetings today</span>
+        </div> -->
+        <div></div>
         <div class="flex-row">
-          <div v-if="!hasZoomIntegration" class="tooltip">
-            <button class="select-btn" :disabled="!hasZoomIntegration">
-              Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+          <div v-if="hasZoomIntegration" class="tooltip">
+            <button class="img-button" :disabled="!hasZoomIntegration">
+              <img src="@/assets/images/calendar.svg" alt="" style="height: 1rem" />
             </button>
             <span class="tooltiptext">Connect Zoom</span>
           </div>
           <div v-else>
-            <button @click="resetMeeting()" class="select-btn" :disabled="!hasZoomIntegration">
-              Create Meeting <img src="@/assets/images/zoom.png" alt="" style="height: 1rem" />
+            <button @click="resetMeeting()" class="img-button" :disabled="!hasZoomIntegration">
+              <img src="@/assets/images/calendar.svg" alt="" style="height: 1rem" />
             </button>
           </div>
 
           <div class="tooltip">
-            <button @click="refreshCalEvents" class="select-btn cloud">
-              <img src="@/assets/images/eventRepeat.svg" style="height: 26px" alt="" />
+            <button @click="refreshCalEvents" class="img-button">
+              <img src="@/assets/images/refresh.svg" style="height: 22px" alt="" />
             </button>
             <span class="tooltiptext">Sync Calendar</span>
           </div>
@@ -428,7 +429,7 @@ export default {
       showMeetingList: true,
       selectedMeeting: false,
       createProductForm: null,
-      meetings: null,
+      // meetings: null,
       referenceOpts: {},
       accountReferenceOpts: {},
       contactReferenceOpts: {},
@@ -471,10 +472,14 @@ export default {
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
+    meetings() {
+      return this.$store.state.meetings
+    },
   },
   created() {
-    this.getMeetingList()
-    this.getObjects()
+    // this.getMeetingList()
+    // this.$store.dispatch('loadMeetings')
+    // this.getObjects()
     this.getAllForms()
     this.getAllPicklist()
     this.getPricebooks()
@@ -1716,11 +1721,38 @@ export default {
   margin: 0;
   width: 100%;
   display: flex;
-  padding-left: 1rem;
-  margin-bottom: -0.25rem;
-  margin-top: -0.75rem;
   align-items: center;
   justify-content: space-between;
+  z-index: 20;
+  padding: 0 12px;
+  h4 {
+    span {
+      background-color: $yellow;
+      color: white;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.results-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  margin-left: 4px;
+
+  p {
+    font-size: 14px;
+    font-weight: bold;
+    color: $base-gray;
+    padding: 0;
+    margin: 0;
+
+    span {
+      color: $light-gray-blue !important;
+    }
+  }
 }
 
 select {
@@ -1876,6 +1908,8 @@ section {
   display: flex;
   flex-direction: row;
   align-items: center;
+  padding-top: 8px;
+  padding-bottom: 0;
 }
 .flex-row-spread {
   display: flex;
@@ -1884,7 +1918,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 4rem 2rem 0.5rem 1.5rem;
+  width: 24vw;
   color: $base-gray;
 }
 .invert {
@@ -2541,5 +2575,10 @@ label {
   font-weight: bold;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+}
+.img-button {
+  background-color: transparent;
+  padding: 4px 6px;
+  border: none;
 }
 </style>

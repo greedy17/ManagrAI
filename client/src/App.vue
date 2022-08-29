@@ -8,7 +8,7 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-    <img src="@/assets/images/backgroundLogo.png" class="background-logo" />
+    <!-- <img src="@/assets/images/backgroundLogo.png" class="background-logo" /> -->
   </div>
 </template>
 
@@ -58,6 +58,7 @@ export default {
     if (this.userIsLoggedIn) {
       this.refreshCurrentUser()
     }
+    this.$store.dispatch('loadMeetings')
   },
 
   methods: {
@@ -97,7 +98,7 @@ body {
   margin: 0;
   //  margin: 0 1rem 0 1rem;
   min-height: 100vh;
-  background-color: white;
+  background-color: $off-white;
 }
 
 #app {

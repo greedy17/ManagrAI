@@ -74,15 +74,15 @@
           </div>
         </router-link>
 
-        <router-link exact-active-class="active" :to="{ name: 'Meetings' }">
+        <!-- <router-link exact-active-class="active" :to="{ name: 'Meetings' }">
           <div class="tooltip">
             <img src="@/assets/images/calendar.svg" height="16px" alt="" />
             <span class="tooltiptext">Meetings</span>
           </div>
-        </router-link>
+        </router-link> -->
 
         <router-link :to="{ name: 'Login' }">
-          <div>
+          <div style="margin-top: auto">
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </div>
         </router-link>
@@ -238,28 +238,6 @@ span {
   margin-left: 0.25rem;
   padding: 0.2rem;
   border-radius: 0.2rem;
-}
-.profile-wrapper {
-  font-size: 10px;
-  color: $base-gray;
-  letter-spacing: 0.25px;
-  border: none;
-  margin: 1.2rem 0rem 0.25rem 0rem;
-  background-color: #f3f0f0;
-  padding: 4px 6px;
-  border-radius: 6px;
-  // small {
-  //   font-size: 10px;
-  //   margin-right: 0.5rem;
-  //   margin-left: 0.25rem;
-  //   color: $base-gray;
-  //   letter-spacing: 0.25px;
-  // }
-  // img {
-  //   filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
-  //   margin-top: 0.2rem;
-  //   height: 1.2rem;
-  // }
 }
 .logout {
   border: 1px solid #e8e8e8;

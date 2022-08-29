@@ -138,6 +138,7 @@
     >
       <div class="modal-container"></div>
     </Modal> -->
+    <p class="title">Tracker</p>
     <header class="forecast-header">
       <section class="row">
         <div>
@@ -914,7 +915,7 @@ export default {
   align-items: center;
 }
 .forecast {
-  margin: 3.5rem 1rem 0.5rem 0.5rem;
+  margin: 28px 0px 0px 72px;
   padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {
@@ -959,7 +960,7 @@ export default {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  height: 78vh;
+  height: 72vh;
   overflow: scroll;
   margin-top: -0.5rem;
   border-radius: 8px;
@@ -1458,5 +1459,13 @@ export default {
     margin-bottom: 8px;
     letter-spacing: 0.6px;
   }
+}
+.title {
+  padding: 0;
+  margin: 0;
+  margin-left: 8px;
+  margin-bottom: 9px;
+  font-size: 18px;
+  color: $light-gray-blue;
 }
 </style>

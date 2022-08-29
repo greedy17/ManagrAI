@@ -1,27 +1,31 @@
 <template>
-  <div class="card">
-    <!-- :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }" -->
+  <div class="cards">
+    <section class="cards__header">
+      <img src="@/assets/images/meeting.svg" height="16px" alt="" />
+      <div>
+        <h4>
+          {{ meeting.topic ? meeting.topic : 'Meeting' }}
+        </h4>
+        <p>
+          {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
+        </p>
+      </div>
+    </section>
 
-    <div>
-      <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
-        {{ meeting.topic ? meeting.topic : 'Meeting' }}
-      </p>
-      <span style="color: #9b9b9b; font-size: 11px">
-        {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-      </span>
-    </div>
+    <section class="cards__header">
+      <img src="@/assets/images/people.svg" height="16px" alt="" />
+      <div class="cards__attendees">
+        <p>{{ meeting.participants.length }} <span>Attendees</span></p>
+      </div>
+    </section>
 
-    <div class="card__attendees">
-      <p>{{ meeting.participants.length }} Attendees</p>
-    </div>
-
-    <div class="card__scroll">
+    <!-- <div class="cards__scroll">
       <div
         v-for="(participant, participantIndex) in participants"
         :key="participantIndex"
         class="column"
       >
-        <div v-if="!meeting.participants[participantIndex].id" class="roww">
+        <div v-if="!meeting.participants[participantIndex].id">
           <p class="add-contact">
             {{ meeting.participants[participantIndex].email }}
           </p>
@@ -350,40 +354,43 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
-    <div class="table-cell">
-      <div class="roww" v-if="resourceId && !meetingUpdated">
-        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
-
-        <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="switchResource">
-            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
-          </button>
-          <span class="tooltiptext">Change {{ resourceType }}</span>
+    <div class="cards__header">
+      <img src="@/assets/images/link.svg" height="15px" alt="" />
+      <section v-if="resourceId && !meetingUpdated">
+        <div class="removeSpace">
+          <p class="header-text">{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
+          <p>{{ resourceType }}</p>
         </div>
 
-        <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
-            <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
-          </button>
-          <span class="tooltiptext">View Notes</span>
+        <div class="row">
+          <div class="tooltip">
+            <button class="img-button" @click="switchResource">
+              <img src="@/assets/images/replace.svg" height="16px" />
+            </button>
+            <span class="tooltiptext">Change {{ resourceType }}</span>
+          </div>
+
+          <div class="tooltip">
+            <button class="img-button" @click="emitGetNotes(resourceId)">
+              <img src="@/assets/images/note.svg" height="16px" alt="" />
+            </button>
+            <span class="tooltiptext">View Notes</span>
+          </div>
         </div>
-      </div>
-      <p
-        style="color: #9b9b9b; font-size: 11px; margin-top: -6px"
-        v-if="resourceId && !meetingUpdated"
-      >
-        Record Type: {{ resourceType }}
-      </p>
+      </section>
+
       <div v-else-if="meetingUpdated">
-        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
-        <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
-          Record Type: {{ resourceType }}
+        <p class="header-text">{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
+        <p>
+          {{ resourceType }}
         </p>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM Record</button>
+      <div v-else>
+        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM Record</button>
+      </div>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
@@ -454,53 +461,63 @@
       </div>
     </div>
 
-    <div v-if="!meetingUpdated" class="table-cell">
-      <p v-if="!resourceId && !meetingLoading" class="red-text">Link meeting to take action.</p>
+    <div class="cards__header bottom" v-if="!meetingUpdated">
+      <img src="@/assets/images/cloud-upload.svg" height="16px" alt="" />
+
       <div>
-        <div class="column" v-if="resourceId && !meetingLoading">
-          <button
-            @click="
-              $emit(
-                'update-Opportunity',
-                resourceType,
-                workflowId,
-                resourceId,
-                resourceRef ? resourceRef.integration_id : null,
-                resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
-              )
-            "
-            class="add-button"
-          >
-            Update {{ resourceType }}
-          </button>
-          <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
+        <p v-if="!resourceId && !meetingLoading" class="red-text">
+          Link to record in order to update.
+        </p>
+      </div>
+
+      <div class="row" v-if="resourceId && !meetingLoading">
+        <button
+          style="margin-left: -16px"
+          @click="
+            $emit(
+              'update-Opportunity',
+              resourceType,
+              workflowId,
+              resourceId,
+              resourceRef ? resourceRef.integration_id : null,
+              resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
+            )
+          "
+          class="add-button"
+        >
+          Update
+        </button>
+        <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
+      </div>
+      <div v-if="noUpdate" class="noupdate-field-section">
+        <div class="noupdate-field-section__title">
+          <p>No Update Needed</p>
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+            @click="noUpdate = !noUpdate"
+          />
         </div>
-        <div v-if="noUpdate" class="noupdate-field-section">
-          <div class="noupdate-field-section__title">
-            <p>No Update Needed</p>
-            <img
-              src="@/assets/images/close.svg"
-              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-              @click="noUpdate = !noUpdate"
-            />
-          </div>
 
-          <div class="noupdate-field-section__body">Are you sure ?</div>
+        <div class="noupdate-field-section__body">Are you sure ?</div>
 
-          <div class="noupdate-field-section__footer">
-            <p @click="onNoUpdate">Yes</p>
-            <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
-          </div>
+        <div class="noupdate-field-section__footer">
+          <p @click="onNoUpdate">Yes</p>
+          <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
         </div>
       </div>
+
       <div v-if="meetingLoading">
         <div>
           <PipelineLoader />
         </div>
       </div>
     </div>
-    <div v-else class="table-cell">
-      <p class="success">Meeting Logged</p>
+    <div class="cards__header bottom" v-else>
+      <img src="@/assets/images/cloud-upload.svg" height="16px" alt="" />
+      <div>
+        <p class="success">Meeting Logged</p>
+      </div>
     </div>
   </div>
 </template>
@@ -724,28 +741,92 @@ export default {
     transform: translate(0%, 50%);
   }
 }
-.card {
+.cards {
   width: 100%;
-  outline: 1px solid $soft-gray;
   height: 100%;
   margin-top: 16px;
   min-height: 70vh;
   border-radius: 4px;
   background-color: white;
-  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  padding: 0px 16px;
+  overflow: hidden;
+  margin-top: auto;
+  // box-shadow: 1px 1px 2px 1px $very-light-gray;
 
   &__attendees {
-    background-color: $soft-gray;
-    color: $light-gray-blue;
+    width: fit-content !important;
+    background-color: $off-white;
     border-radius: 4px;
     width: 100%;
+    padding: 6px 10px;
+    p {
+      color: $base-gray !important;
+    }
+    span {
+      color: $light-gray-blue;
+    }
   }
 
   &__scroll {
     width: 100%;
+    visibility: hidden;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+    width: 100%;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      margin-left: 16px;
+      h4 {
+        font-weight: 900;
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+      }
+
+      p {
+        font-weight: bold;
+        font-size: 11px;
+        color: $light-gray-blue;
+        padding: 0;
+        margin: 0;
+        margin-top: 2px;
+      }
+    }
+
+    section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      background-color: $off-white;
+      border-radius: 8px;
+      padding: 8px;
+      margin-left: 16px;
+    }
   }
 }
-
+.header-text {
+  font-size: 13px !important;
+  color: $base-gray !important;
+}
+.removeSpace {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.bottom {
+  padding-bottom: 16px;
+  border-bottom: 2px solid $soft-gray;
+}
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -825,11 +906,9 @@ a {
 }
 .add-button {
   border: none;
-  max-height: 4.5vh;
-  min-height: 2rem;
-  padding: 0.5rem 1.25rem;
+  padding: 8px 12px;
   margin-right: 1rem;
-  border-radius: 0.2rem;
+  border-radius: 8px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
@@ -837,19 +916,20 @@ a {
   font-size: 12px;
 }
 .no-update {
-  background-color: $base-gray;
-  color: white;
   border: none;
-  border-radius: 0.2rem;
-  max-height: 4.5vh;
-  min-height: 2rem;
-  padding: 0.5rem 1.25rem;
+  padding: 8px 12px;
+  margin-right: 1rem;
+  border-radius: 8px;
+  background-color: $base-gray;
   cursor: pointer;
+  color: white;
+  transition: all 0.3s;
   font-size: 12px;
 }
-.roww {
+.row {
   display: flex;
-  align-items: center;
+  flex-direction: row !important;
+  align-items: flex-start;
   justify-content: flex-start;
 }
 .contact-img {
@@ -874,20 +954,19 @@ a {
   margin-left: 0.25rem;
 }
 .success {
-  color: $dark-green;
+  color: $dark-green !important;
   background-color: $white-green;
-  padding: 5px;
-  border-radius: 6px;
+  padding: 4px 8px !important;
+  border-radius: 4px;
   max-width: 140px;
   display: flex;
   align-items: center;
 }
 .red-text {
-  color: $coral;
+  color: $coral !important;
   background-color: $light-coral;
-  padding: 4px;
-  border-radius: 4px;
-  max-width: 180px;
+  padding: 8px !important;
+  border-radius: 8px;
   display: flex;
   align-items: center;
 }
@@ -1189,5 +1268,11 @@ a {
 .table-cell-small:hover {
   cursor: text;
   background-color: white;
+}
+
+.img-button {
+  background-color: transparent;
+  padding: 4px 6px;
+  border: none;
 }
 </style> 
