@@ -3,7 +3,6 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import datetime
 from django.db.models import Q
-from xml.parsers.expat import model
 from managr.core.models import User
 from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
@@ -49,6 +48,24 @@ def get_instance_averages(model_queryset, month_end):
         "session average": average,
         "total sessions": len(days_list),
     }
+
+
+def get_org_averages(user_obj):
+    total_active = 0
+    update_total = 0
+    session_total = 0
+    for user in user_obj.keys():
+        if int(user_obj[user]["session average"]) > 0:
+            total_active += 1
+            update_total += user_obj[user]["session average"]
+            session_total += user_obj[user]["total sessions"]
+    if total_active > 0:
+        session_average = update_total / total_active
+        session_total_average = session_total / total_active
+    else:
+        session_average = 0
+        session_total_average = 0
+    return {"session average": session_average, "average total sessions": session_total_average}
 
 
 def get_totals_for_year(month_only=False):
@@ -150,7 +167,7 @@ def get_organization_totals(month_only=False):
                 template__form_type__in=["UPDATE", "STAGE_GATING"]
             ).count()
             org_obj["creates"] = org_totals_instances.filter(template__form_type="CREATE").count()
-            org_averages = get_instance_averages(org_totals_instances, date[1])
+            org_averages = get_org_averages(users_obj)
             org_obj.update(org_averages)
             org_totals[org.name] = org_obj
 
