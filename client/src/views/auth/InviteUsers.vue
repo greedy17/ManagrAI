@@ -1,5 +1,70 @@
 <template>
   <div class="invite-users">
+    <!-- Change Admin -->
+    <Modal
+      v-if="changeAdminModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleCancel()
+        }
+      "
+    >
+      <form v-if="true/*hasSlack*/" class="invite-form modal-form">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Change Organization's Admin</h3>
+          </div>
+        </div>
+
+        <div
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+        >
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <Multiselect
+                  placeholder="Select New Admin"
+                  v-model="newAdmin"
+                  :options="team.list/* do not show the current admin */"
+                  openDirection="below"
+                  style="width: 26vw"
+                  selectLabel="Enter"
+                  label="email"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select New Admin
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="createTeamSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                text="Save"
+                :loading="pulseLoading"
+                >Save</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
     <!-- Create Team -->
     <Modal
       v-if="newTeam"
@@ -257,6 +322,9 @@
       <div class="invite-users__header">
         <h3 style="color: #4d4e4c">Manage Your Team</h3>
         <div>
+          <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
+            Change Admin
+          </button>
           <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
             Create New Team
           </button>
@@ -531,7 +599,9 @@ export default {
       inviteOpen: false,
       editTeam: false,
       newTeam: false,
+      changeAdminModal: false,
       pulseLoading: false,
+      newAdmin: null,
       teamName: '',
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
@@ -796,6 +866,9 @@ export default {
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
     },
+    showChangeAdmin() {
+      this.changeAdminModal = !this.changeAdminModal
+    },
     handleInvite() {
       this.inviteOpen = !this.inviteOpen
     },
@@ -809,6 +882,7 @@ export default {
       this.inviteOpen = false
       this.editTeam = false
       this.newTeam = false
+      this.changeAdminModal = false
     },
     handleUpdate() {
       this.loading = true
@@ -851,10 +925,9 @@ export default {
     this.refresh()
   },
   mounted() {
-    // this.getTeams()
-  },
-  updated() {
-    // this.getTeams()
+    if (this.isAdmin) {
+      this.newAdmin = this.getUser
+    }
   },
   computed: {
     getUser() {
