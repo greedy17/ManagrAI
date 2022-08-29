@@ -1,5 +1,43 @@
 <template>
   <div class="invite-users">
+    <!-- Change Admin Confirmation -->
+    <Modal
+      v-if="changeAdminConfirmModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleConfirmCancel()
+        }
+      "
+    >
+      <form v-if="true/*hasSlack*/" class="invite-form modal-form confirm-form">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Are you sure?</h3>
+          </div>
+          <div class="flex-row">
+            <h4 class="invite-form__subtitle">Once you choose this person, you will lose all admin privileges, and the user you selected will gain admin priviledges.</h4>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="changeAdminSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                text="Save"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem;">Cancel</div>
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
     <!-- Change Admin -->
     <Modal
       v-if="changeAdminModal"
@@ -51,13 +89,11 @@
           <!-- <div style="width: 10vw;"></div> -->
           <div class="invite-form__inner_actions">
             <template>
-              <PulseLoadingSpinnerButton
-                @click="changeAdminSubmit"
+              <div
+                @click="handleConfirm"
                 class="invite-button modal-button"
                 style="width: 5rem; margin-right: 1rem; height: 2rem;"
-                text="Save"
-                :loading="pulseLoading"
-                >Save</PulseLoadingSpinnerButton
+                >Save</div
               >
               <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
             </template>
@@ -600,6 +636,7 @@ export default {
       editTeam: false,
       newTeam: false,
       changeAdminModal: false,
+      changeAdminConfirmModal: false,
       pulseLoading: false,
       newAdmin: null,
       teamName: '',
@@ -925,11 +962,19 @@ export default {
     handleEdit() {
       this.editTeam = !this.editTeam
     },
+    handleConfirm() {
+      this.changeAdminConfirmModal = !this.changeAdminConfirmModal
+      this.changeAdminModal = !this.changeAdminModal
+    },
     handleCancel() {
       this.inviteOpen = false
       this.editTeam = false
       this.newTeam = false
       this.changeAdminModal = false
+    },
+    handleConfirmCancel() {
+      this.changeAdminConfirmModal = false
+      this.changeAdminModal = !this.changeAdminModal
     },
     handleUpdate() {
       this.loading = true
@@ -1469,6 +1514,11 @@ input[type='checkbox'] + label::before {
     text-align: left;
     font-size: 22px;
   }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
   &__actions {
     display: flex;
     justify-content: flex-end;
@@ -1534,7 +1584,7 @@ input[type='checkbox'] + label::before {
   margin: 0 auto;
   letter-spacing: 1px;
   h4 {
-    font-size: 20px;
+    // font-size: 20px;
   }
 }
 .logo {
@@ -1543,5 +1593,9 @@ input[type='checkbox'] + label::before {
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+.confirm-form {
+  width: 37vw;
+  height: 40vh;
 }
 </style>
