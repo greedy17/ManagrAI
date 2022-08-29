@@ -48,7 +48,7 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form modal-form">
+      <form v-if="true/*hasSlack*/" class="invite-form modal-form confirm-form">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
