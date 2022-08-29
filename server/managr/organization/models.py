@@ -87,6 +87,7 @@ class Organization(TimeStampModel):
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
         new_admin.save()
+        return new_admin
 
     def update_has_settings(self, type):
         if type == "products":

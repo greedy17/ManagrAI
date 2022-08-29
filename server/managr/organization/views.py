@@ -40,7 +40,7 @@ from managr.core.permissions import (
     SuperUserCreateOnly,
     IsExternalIntegrationAccount,
 )
-
+from managr.core.models import User
 
 from .models import Organization, Account, Contact, Stage, ActionChoice
 from . import constants as org_consts
@@ -117,6 +117,24 @@ class OrganizationViewSet(
         organization.ignore_emails = split_emails
         organization.save()
         return Response(data=status.HTTP_200_OK)
+
+    @action(
+        methods=["POST"],
+        # permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="change-admin",
+    )
+    def change_admin(self, request, *args, **kwargs):
+        """endpoint to update the State, Ignore Emails, and Has Products sections"""
+        data = request.data
+        new_admin_id = data.get("new_admin")
+        new_admin = User.objects.get(id=new_admin_id)
+        org = request.user.organization
+        changed_admin = org.change_admin_user(new_admin, preserve_fields=True)
+        if changed_admin.is_admin:
+            return Response(data=status.HTTP_200_OK)
+        else:
+            return Response(data=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AccountViewSet(
