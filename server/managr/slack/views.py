@@ -576,12 +576,10 @@ class SlackFormsViewSet(
             {"organization": self.request.user.organization_id, "team": self.request.user.team}
         )
         serializer = self.get_serializer(data=data, instance=self.get_object())
-        print(serializer)
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
             print(e)
-        print(serializer)
         serializer.save()
         instance = serializer.instance
         instance.fields.clear()
@@ -599,9 +597,7 @@ class SlackFormsViewSet(
             org = Organization.objects.get(id=request.data["organization"])
             org.update_has_settings("products")
             form = OrgCustomSlackForm.objects.filter(
-                organization=self.request.user.organization_id,
-                resource="OpportunityLineItem",
-                form_type="UPDATE",
+                team=self.request.user.team, resource="OpportunityLineItem", form_type="UPDATE",
             ).first()
             update_data = data
             update_data["form_type"] = "UPDATE"

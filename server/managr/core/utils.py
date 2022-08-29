@@ -145,3 +145,37 @@ def get_organization_totals():
         totals[date[1]] = org_totals
     return totals
 
+
+def get_org_fields(org):
+    forms = OrgCustomSlackFormInstance.objects.filter(user__organization=org).exclude(
+        template__isnull=True
+    )
+    list(forms.first().__dict__.get("saved_data").keys())
+    obj = {}
+    for form in forms:
+        old_data = form.previous_data
+        new_data = form.saved_data
+        for key, new_value in new_data.items():
+            if key in old_data:
+                if str(old_data.get(key)) != str(new_value):
+                    if form.user.email in obj.keys():
+                        if key in obj[form.user.email].keys():
+                            obj[form.user.email][key] += 1
+                        else:
+                            obj[form.user.email][key] = 1
+
+                    else:
+                        obj[form.user.email] = {}
+                        obj[form.user.email][key] = 1
+            else:
+                if form.user.email in obj.keys():
+                    if key in obj[form.user.email].keys():
+                        obj[form.user.email][key] += 1
+                    else:
+                        obj[form.user.email][key] = 1
+
+                else:
+                    obj[form.user.email] = {}
+                    obj[form.user.email][key] = 1
+
+    return obj

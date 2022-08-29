@@ -356,7 +356,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 template = OrgCustomSlackForm.objects.filter(
                     form_type=form_type,
                     resource=slack_consts.FORM_RESOURCE_CONTACT,
-                    organization=user.organization,
+                    team=user.team,
                 ).first()
                 if not template:
                     logger.exception(

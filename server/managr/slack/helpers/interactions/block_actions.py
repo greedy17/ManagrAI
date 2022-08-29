@@ -880,7 +880,7 @@ def process_add_products_form(payload, context):
     product_form_id = context.get("product_form", None)
     if product_form_id is None:
         product_template = OrgCustomSlackForm.objects.filter(
-            Q(resource="OpportunityLineItem", form_type="CREATE", organization=user.organization)
+            Q(resource="OpportunityLineItem", form_type="CREATE", team=user.team)
         ).first()
         product_form = OrgCustomSlackFormInstance.objects.create(
             template=product_template, user=user
