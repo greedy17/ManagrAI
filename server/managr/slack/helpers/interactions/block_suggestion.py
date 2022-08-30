@@ -94,7 +94,6 @@ def process_get_local_resource_options(payload, context):
     Retrieves data saved in our db for resources, note this is not used when fields are from the slack forms built with fields
     additional options can be passed in the context
     """
-    print(context)
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource_type")
