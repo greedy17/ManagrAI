@@ -53,6 +53,11 @@ class CustomFormField(admin.ModelAdmin):
 class CustomOrgSlackForms(admin.ModelAdmin):
     model = slack_models.OrgCustomSlackForm
     inlines = (CustomFormFieldInline,)
+    list_display = (
+        "form_type",
+        "resource",
+        "team",
+    )
     list_filter = ("organization",)
 
 
