@@ -265,17 +265,14 @@ def _generate_team_form_templates(user_id):
     team_ref = (
         Team.objects.filter(organization=user.organization).order_by("datetime_created").first()
     )
-    # delete all existing forms
-    forms = team_ref.team_forms
-    for form in slack_consts.INITIAL_FORMS:
-        resource, form_type = form.split(".")
-        form_ref = forms.filter(form_type=form_type, resource=resource).first()
+    forms = team_ref.team_forms.all()
+    for form in forms:
         f = OrgCustomSlackForm.objects.create(
-            form_type=form_type,
-            resource=resource,
+            form_type=form.form_type,
+            resource=form.resource,
             organization=org,
             team=user.team,
-            config=form_ref.config,
+            config=form.config,
         )
         f.recreate_form()
 
