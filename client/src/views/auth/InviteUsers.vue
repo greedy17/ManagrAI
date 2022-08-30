@@ -933,6 +933,10 @@ export default {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
+
+  // ::v-deep div {
+  //   display: none !important;
+  // }
 }
 #user-input {
   border: 1px solid #e8e8e8;
