@@ -138,112 +138,34 @@
     >
       <div class="modal-container"></div>
     </Modal> -->
-    <p class="title">Tracker</p>
-    <header class="forecast-header">
-      <section class="row">
-        <div>
-          <button @click.stop="showList = !showList" class="select-btn1">
-            {{ currentForecast }}
-            <img
-              v-if="!showList"
-              style="height: 0.75rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.svg"
-              class="invert"
-              alt=""
-            />
-            <img
-              v-else
-              class="invert"
-              style="height: 0.75rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.svg"
-              alt=""
-            />
-          </button>
-          <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
-            <div class="list-section__title row-spread">
-              <p>Active Trackers</p>
-            </div>
-            <button class="list-button">
-              My Tracker
-              <span class="green-text" v-if="currentForecast === 'My Tracker'"> active</span>
-            </button>
-          </div>
-          <p class="gray-text smaller-font margin-left-s" v-if="forecastOpps && !loading">
-            Opportunites Tracked: {{ forecastLength }}
-          </p>
-          <p v-else></p>
-        </div>
 
-        <!-- <section class="relative">
-          <button @click.stop="addingFilter" class="add-filter-button margin-left-s">
-            <img
-              src="@/assets/images/plusOne.svg"
-              style="height: 0.8rem; margin-right: 0.25rem"
-              alt=""
-            />Add filter
-          </button>
-          <div v-outside-click="closeFilters" v-if="filtering" class="list-section">
-            <div class="list-section__title flex-row-spread">
-              <p>Select Filter</p>
-            </div>
-            <button
-              :key="i"
-              v-for="(filter, i) in filters"
-              @click="addFilter(filter.apiName, filter.name, filter.type)"
-              class="list-button-2"
-            >
-              {{ filter.name }}
-            </button>
-          </div>
-        </section>
-
-        <div
-          v-for="(filter, i) in activeFilters"
-          :key="i"
-          @mouseenter="hoveredIndex = filter"
-          @mouseleave="hoveredIndex = null"
-          class="main"
-        >
-          <strong class="medium-font">{{ filter }}</strong>
-          <small class="margin-left-s">{{ activeOperators[i] }}</small>
-          <small class="margin-left-s">{{ filterValues[i] }}</small>
-          <span v-if="hoveredIndex === filter" class="selected-filters__close"
-            ><img src="@/assets/images/close.png" @click="removeFilter(filter, i)" alt=""
-          /></span>
-        </div>
-
-        <section class="row relative" v-if="filterSelected">
-          <main class="main__before">
-            <small
-              ><strong>{{ currentFilter }}</strong></small
-            >
-            <small style="margin-left: 0.2rem">{{ currentOperator }}</small>
-            <small style="margin-left: 0.2rem">{{ currentVal }}</small>
-          </main>
-
-          <div>
-            <FilterSelection
-              @filter-added="applyFilter"
-              @operator-selected="addOperator"
-              @value-selected="valueSelected"
-              @close-selection="closeFilterSelection"
-              :type="filterType"
-              :filterName="currentFilter"
-              :dropdowns="picklistQueryOpts"
-              :apiName="filterApiName"
-            />
-          </div>
-        </section> -->
-      </section>
-      <div class="row">
-        <!-- <button class="forecast-header__green-button">
+    <div class="forecast-header title">
+      <p>Tracker</p>
+      <div class="row margin-top-s">
+        <button class="forecast-header__button">
           <p class="green-text">%</p>
-        </button> -->
+        </button>
         <button class="margin-left-s forecast-header__button" @click="resetSettings">
           <img src="@/assets/images/settings.svg" alt="" />
         </button>
       </div>
-    </header>
+    </div>
+
+    <section class="forecast-overview">
+      <div class="forecast-overview__section" v-if="forecastOpps && !loading">
+        <h3>{{ forecastLength }}</h3>
+        <p>Opportunites Tracked</p>
+      </div>
+      <div class="forecast-overview__section">
+        <h3>$5,000,000</h3>
+        <p>Total</p>
+      </div>
+      <div class="forecast-overview__section">
+        <h3>$1,000,000</h3>
+        <p>Average</p>
+      </div>
+    </section>
+
     <section v-if="!loading && stages" class="table-section">
       <div class="table">
         <div class="table-row">
@@ -915,7 +837,7 @@ export default {
   align-items: center;
 }
 .forecast {
-  margin: 28px 0px 0px 72px;
+  margin: 8px 0px 0px 64px;
   padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {
@@ -957,6 +879,7 @@ export default {
   filter: invert(40%);
 }
 .table-section {
+  display: none;
   margin: 0;
   padding: 0;
   min-height: 50vh;
@@ -1060,20 +983,21 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 0.5rem 0.25rem;
-  margin-bottom: -0.5rem;
+  padding: 4px 0px;
   position: relative;
   z-index: 4;
 
   &__button {
+    margin-top: 4px;
     background-color: white;
-    border: 0.8px solid $gray;
+    box-shadow: 1px 2px 2px $very-light-gray;
+    border: none;
     height: 2rem;
     width: 3rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 3px;
+    border-radius: 8px;
     cursor: pointer;
   }
   &__green-button {
@@ -1089,7 +1013,6 @@ export default {
   }
   button > img {
     height: 1rem;
-    // filter: invert(70%);
   }
 }
 .forecast-footer {
@@ -1467,5 +1390,36 @@ export default {
   margin-bottom: 9px;
   font-size: 18px;
   color: $light-gray-blue;
+}
+.margin-top-s {
+  margin-top: 12px;
+}
+.forecast-overview {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 12px;
+  box-shadow: 1px 2px 2px 1px $very-light-gray;
+  border-radius: 8px;
+  width: 40vw;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    margin-right: 32px;
+
+    p {
+      font-size: 11px;
+      color: $light-gray-blue;
+      margin-top: -8px;
+    }
+    h3 {
+      color: $dark-green;
+      background-color: $white-green;
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+  }
 }
 </style>
