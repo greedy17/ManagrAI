@@ -2363,6 +2363,7 @@ export default {
       }
     },
     syncDay() {
+      console.log(this.$store.state.user)
       if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
         return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
           .substring(

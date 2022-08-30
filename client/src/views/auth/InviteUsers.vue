@@ -43,7 +43,9 @@
                 <Multiselect
                   placeholder="Team Lead"
                   v-model="teamLead"
-                  :options="team.list"
+                  :options="
+                    isAdmin ? team.list.filter((user) => user.id !== getUser.id) : team.list
+                  "
                   openDirection="below"
                   style="width: 26vw"
                   selectLabel="Enter"
@@ -609,7 +611,9 @@ export default {
       }
       if (this.isAdmin) {
         // If they are an admin, show all users except the ones in the selected team
-        this.usersList = filterUsers.filter((user) => user.team !== team.id && !user.isTeamLead)
+        this.usersList = team
+          ? filterUsers.filter((user) => user.team !== team.id && !user.isTeamLead)
+          : []
       } else {
         // If they are not an admin, show users in their team or in original team, depending on which team is selected
         if (team.id === this.originalTeam.id) {
@@ -691,7 +695,6 @@ export default {
       this.pulseLoading = true
       if (!this.teamLead || !this.teamName) {
         setTimeout(() => {
-          console.log('Please submit all info')
           this.$toast('Please submit all info', {
             timeout: 2000,
             position: 'top-left',
@@ -730,7 +733,6 @@ export default {
             this.pulseLoading = false
           }, 1400)
         } catch (e) {
-          console.log('Error: ', e)
           this.$toast('Error Creating Team', {
             timeout: 2000,
             position: 'top-left',
@@ -745,7 +747,6 @@ export default {
       this.pulseLoading = true
       if (!this.selectedTeam || !this.selectedUsers.length) {
         setTimeout(() => {
-          console.log('Please submit all info')
           this.$toast('Please submit all info', {
             timeout: 2000,
             position: 'top-left',
@@ -796,6 +797,7 @@ export default {
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)
       const teamList = [res.results[0]]
+      console.log(res)
       for (let i = 1; i < res.results.length; i++) {
         if (res.results[i].team_lead === this.getUser.id) {
           teamList.push(res.results[i])
@@ -803,7 +805,9 @@ export default {
       }
       this.teamsList = teamList
       this.originalTeam = res.results[0]
-      const currentTeam = res.results.filter((team) => team.id === this.getUser.team)[0]
+      const currentTeam = res.results.length
+        ? res.results.filter((team) => team.id === this.getUser.team)[0]
+        : null
       this.selectedTeam = currentTeam
       this.updateAvailableUsers(currentTeam)
     },
@@ -865,7 +869,10 @@ export default {
     this.refresh()
   },
   mounted() {
-    // this.getTeams()
+    // console.log(this.getUser)
+    // setTimeout(() => {
+    //   console.log(this.team.list)
+    // }, 2000)
   },
   updated() {
     // this.getTeams()
