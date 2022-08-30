@@ -103,6 +103,9 @@ export default {
     font-family: $base-font-family;
     z-index: 999;
   }
+  background-img {
+    display: none;
+  }
 }
 
 ::v-deep .input-content {

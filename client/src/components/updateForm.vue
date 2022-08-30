@@ -1044,6 +1044,10 @@ export default {
   @include epic-sides() {
     background: inherit;
   }
+
+  ::v-deep div {
+    display: none !important;
+  }
 }
 .flex-row {
   display: flex;
@@ -1075,6 +1079,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  ::v-deep div {
+    display: none !important;
+  }
 }
 .label {
   display: inline-block;

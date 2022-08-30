@@ -369,7 +369,7 @@ def process_stage_selected(payload, context):
 
         # delete all existing stage forms
         workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
-        stage_form = org.custom_slack_forms.filter(
+        stage_form = org.custom_slack_forms.for_user(user).filter(
             form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
         ).first()
 
@@ -1048,7 +1048,7 @@ def process_stage_selected_command_form(payload, context):
         index, action_block = block_finder(action["block_id"], blocks)
 
         # find all stages previous to it
-        stage_form = org.custom_slack_forms.filter(
+        stage_form = org.custom_slack_forms.for_user(user).filter(
             form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
         ).first()
         if stage_form:
@@ -1479,7 +1479,6 @@ def process_resource_selected_for_task(payload, context):
 
 @processor(required_context="u")
 def process_select_resource(payload, context):
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
