@@ -588,9 +588,11 @@ export default {
         : ''
       this.generatingToken = true
       this.selectedIntegration = integration
-      const modelClass = this.selectedIntegrationSwitcher
+      console.log(this.selectedIntegration)
+      let modelClass = this.selectedIntegrationSwitcher
       try {
         const res = await modelClass.api.getAuthLink()
+        console.log(res)
         if (res.link) {
           window.location.href = res.link
         }

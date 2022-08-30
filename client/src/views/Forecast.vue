@@ -153,16 +153,34 @@
 
     <section class="forecast-overview">
       <div class="forecast-overview__section" v-if="forecastOpps && !loading">
-        <h3>{{ forecastLength }}</h3>
+        <!-- <h3>{{ forecastLength }}</h3> -->
+        <div>
+          <img src="@/assets/images/coins.svg" height="16px" style="margin-right: 8px" alt="" />
+          <h3>5</h3>
+        </div>
         <p>Opportunites Tracked</p>
       </div>
       <div class="forecast-overview__section">
-        <h3>$5,000,000</h3>
-        <p>Total</p>
+        <div>
+          <span class="filter-red"
+            ><img src="@/assets/images/caret-down.svg" height="18px" alt=""
+          /></span>
+
+          <h3>$1,000,000</h3>
+          <!-- <h3>{{ formatCash(averageDeal) }}</h3> -->
+        </div>
+        <p>Avg Deal Size <span class="red">4.25%</span></p>
       </div>
       <div class="forecast-overview__section">
-        <h3>$1,000,000</h3>
-        <p>Average</p>
+        <div>
+          <span class="filter-green">
+            <img src="@/assets/images/caret-up.svg" height="18px" alt="" />
+          </span>
+
+          <h3>$5,000,000</h3>
+          <!-- <h3>{{formatCash(originalAmount) }}</h3> -->
+        </div>
+        <p>Total <span class="green">8.73%</span></p>
       </div>
     </section>
 
@@ -192,7 +210,6 @@
           <div class="table-cell cell-name row">
             <div class="row-spread">
               <div>
-                <!-- <p>{{ index }}</p> -->
                 <p>{{ opp.data.Name }}</p>
                 <p class="green-text">
                   {{
@@ -336,36 +353,6 @@
               }}
             </p>
           </div>
-        </div>
-        <div class="table-row-sticky" v-if="forecastOpps">
-          <div class="table-cell-s">
-            <p class="letter-spacing">Total:</p>
-          </div>
-          <div class="table-cell-s">
-            <p class="green-text align-center letter-spacing">
-              {{ formatCash(totalAmount) }}
-              <span v-if="totalAmount < originalAmount"
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span v-else-if="totalAmount > originalAmount"
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text letter-spacing">{{ formatCash(originalAmount) }}</p>
-          </div>
-          <div class="table-cell-s"><p class="letter-spacing">Avg Deal Size:</p></div>
-          <div class="table-cell-s">
-            <p class="letter-spacing">{{ formatCash(averageDeal) }}</p>
-          </div>
-          <div class="table-cell-s"></div>
-          <div class="table-cell-s"></div>
-          <div class="table-cell-s"></div>
         </div>
       </div>
     </section>
@@ -534,8 +521,8 @@ export default {
       this.loading = true
       try {
         const res = await User.api.getForecastValues()
+        // console.log(res)
         this.currentValues = res
-
         for (let i = 0; i < res.length; i++) {
           this.totalAmount += parseInt(res[i].amount) ? parseInt(res[i].amount) : 0
         }
@@ -847,11 +834,39 @@ export default {
   position: relative;
 }
 .filter-green {
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: $white-green;
+  margin-right: 8px;
+  padding: 2px;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    padding: 0px;
+  }
 }
 .filter-red {
-  filter: invert(48%) sepia(76%) saturate(3436%) hue-rotate(326deg) brightness(113%) contrast(96%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: $light-red;
+  margin-right: 8px;
+  padding: 2px;
+  img {
+    filter: invert(48%) sepia(76%) saturate(3436%) hue-rotate(326deg) brightness(113%) contrast(96%);
+    padding: 0px;
+  }
+}
+.red {
+  color: $coral;
+  margin-left: 8px;
+}
+.green {
+  color: $dark-green;
+  margin-left: 8px;
 }
 .row {
   display: flex;
@@ -879,14 +894,13 @@ export default {
   filter: invert(40%);
 }
 .table-section {
-  display: none;
   margin: 0;
   padding: 0;
-  min-height: 50vh;
-  height: 72vh;
+  height: 66vh;
+  width: 60vw;
+  margin-top: 16px;
   overflow: scroll;
-  margin-top: -0.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1.25px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
   background-color: white;
@@ -947,7 +961,7 @@ export default {
   position: sticky;
   background-color: white;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 11px;
   letter-spacing: 0.5px;
   color: $base-gray;
 }
@@ -963,7 +977,7 @@ export default {
   position: sticky;
   background-color: white;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 11px;
   letter-spacing: 0.5px;
   color: $base-gray;
 }
@@ -1400,14 +1414,22 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0px 12px;
-  box-shadow: 1px 2px 2px 1px $very-light-gray;
-  border-radius: 8px;
-  width: 40vw;
+  border: 1px solid $soft-gray;
+  border-radius: 12px;
+  width: 60vw;
+  background-color: white;
 
   &__section {
     display: flex;
     flex-direction: column;
     margin-right: 32px;
+    padding: 12px;
+
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
 
     p {
       font-size: 11px;
@@ -1415,10 +1437,7 @@ export default {
       margin-top: -8px;
     }
     h3 {
-      color: $dark-green;
-      background-color: $white-green;
-      padding: 12px 16px;
-      border-radius: 8px;
+      color: $base-gray;
     }
   }
 }
