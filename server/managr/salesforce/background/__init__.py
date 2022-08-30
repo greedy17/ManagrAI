@@ -273,8 +273,10 @@ def _generate_team_form_templates(user_id):
             organization=org,
             team=user.team,
             config=form.config,
+            stage=form.stage,
         )
-        f.recreate_form()
+        if len(f.config):
+            f.recreate_form()
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
