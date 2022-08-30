@@ -22,7 +22,7 @@ class CustomFormFieldInline(admin.StackedInline):
                     (
                         Q(salesforce_account__user__organization=parent.organization)
                         & Q(salesforce_object=parent.resource)
-                        & Q(salesforce_account__user__is_admin=True)
+                        & Q(salesforce_account__user__team_lead_of=parent.team)
                     )
                     | Q(is_public=True)
                 )

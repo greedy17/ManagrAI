@@ -403,6 +403,7 @@ export default {
         { key: 'Myself', value: 'SELF' },
         { key: 'All Managers', value: 'MANAGERS' },
         { key: 'All Reps', value: 'REPS' },
+        { key: 'My Team', value: 'TEAM' },
         { key: 'Everyone', value: 'ALL' },
         { key: 'SDR', value: 'SDR' },
       ],
