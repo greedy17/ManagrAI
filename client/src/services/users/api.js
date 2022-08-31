@@ -11,6 +11,11 @@ const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
+const STAFF_ENDPOINT = '/users/staff/'
+const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
+const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
+const STAFF_FORMS = '/users/staff/slack-forms/'
+const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
