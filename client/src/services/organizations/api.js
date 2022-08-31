@@ -44,7 +44,6 @@ export default class OrganizationAPI {
   async listTeams(id) {
     try {
       const res = await this.client.get(TEAM_ENDPOINT, { params: { user: id } })
-      console.log('teamRes', res)
       return res.data
       // return {
       //   ...res.data,
