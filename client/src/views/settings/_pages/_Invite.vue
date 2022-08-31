@@ -722,7 +722,7 @@ button {
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    align-items: end;
+    align-items: flex-end;
   }
   &__actions-noslack {
     display: flex;

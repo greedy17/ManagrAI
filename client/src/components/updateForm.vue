@@ -1044,10 +1044,6 @@ export default {
   @include epic-sides() {
     background: inherit;
   }
-
-  ::v-deep div {
-    display: none !important;
-  }
 }
 .flex-row {
   display: flex;
