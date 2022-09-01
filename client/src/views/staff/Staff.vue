@@ -385,7 +385,6 @@
         :options="organizations.list"
         openDirection="below"
         selectLabel="Enter"
-        track-by="value"
         label="name"
       >
         <template slot="noResult">
