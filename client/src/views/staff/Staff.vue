@@ -712,7 +712,7 @@ export default {
             for (let key in res.data) {
               const item = res.data[key]
               item['date'] = key
-              newResContent.push(item)
+              newResContent.unshift(item)
             }
             this.contentModalInfo = newResContent
             this.displayCommandModal = true
