@@ -464,7 +464,7 @@
                   openDirection="below"
                   selectLabel="Enter"
                   track-by="id"
-                  label="fullName"
+                  :custom-label="customUserLabel"
                   :multiple="false"
                 >
                   <template slot="noResult">
@@ -809,6 +809,9 @@ export default {
       } else {
         return `${hours}:${minutes} AM`
       }
+    },
+    customUserLabel(user) {
+      return user.fullName.trim() ? user.fullName : user.email
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
