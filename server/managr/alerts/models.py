@@ -414,13 +414,25 @@ class AlertConfig(TimeStampModel):
             if target == "SELF":
                 user_ids_to_include.append(self.template.user.id)
             elif target == "MANAGERS":
-                query |= Q(user_level=core_consts.USER_LEVEL_MANAGER, is_active=True)
+                query |= Q(
+                    user_level=core_consts.USER_LEVEL_MANAGER,
+                    is_active=True,
+                    salesforce_account__isnull=False,
+                )
             elif target == "REPS":
-                query |= Q(user_level=core_consts.USER_LEVEL_REP, is_active=True)
+                query |= Q(
+                    user_level=core_consts.USER_LEVEL_REP,
+                    is_active=True,
+                    salesforce_account__isnull=False,
+                )
             elif target == "ALL":
-                query |= Q(is_active=True)
+                query |= Q(is_active=True, salesforce_account__isnull=False,)
             elif target == "SDR":
-                query |= Q(user_level=core_consts.USER_LEVEL_SDR, is_active=True)
+                query |= Q(
+                    user_level=core_consts.USER_LEVEL_SDR,
+                    is_active=True,
+                    salesforce_account__isnull=False,
+                )
             else:
                 user_ids_to_include.append(target)
         if len(user_ids_to_include):
