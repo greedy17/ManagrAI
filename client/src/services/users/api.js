@@ -337,4 +337,36 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
+  async getStaffOrganizations(org_id) {
+    try {
+      const response = await this.client.get(STAFF_ORGANIZATIONS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffOrganizations' })
+    }
+  }
+  async getStaffWorkflows(org_id) {
+    try {
+      const response = await this.client.get(STAFF_WORKFLOWS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffWorkflows' })
+    }
+  }
+  async getStaffForms(org_id) {
+    try {
+      const response = await this.client.get(STAFF_FORMS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffForms' })
+    }
+  }
+  async getStaffSObjects(org_id) {
+    try {
+      const response = await this.client.get(STAFF_SOBJECTS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffSObjects' })
+    }
+  }
 }

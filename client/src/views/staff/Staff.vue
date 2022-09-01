@@ -552,7 +552,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(meetingWorkflow, i) in orgMeetingWorkflows"
+          v-for="(meetingWorkflow, i) in orgMeetingWorkflows /* here */"
           :key="meetingWorkflow.id"
         >
           <h4 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
@@ -645,7 +645,8 @@ export default {
       page: null,
       orgForms: null,
       orgMeetingWorkflows: null,
-      organizations: CollectionManager.create({
+      //organizations: null,
+      organizations: CollectionManager.create({ // change to null, make this update in create with new endpoint
         ModelClass: Organization,
         filters: { fromAdmin: true },
       }),
@@ -671,7 +672,8 @@ export default {
     },
     async getAllForms() {
       try {
-        let res = await SlackOAuth.api.getOrgCustomForm(null, true)
+        let res = await SlackOAuth.api.getOrgCustomForm(null, true) // change to new users staff endpoint
+        // let res = await User.api.getStaffForms()
         this.allForms = res
       } catch (e) {
         console.log(e)
@@ -679,8 +681,18 @@ export default {
     },
     async getAllMeetingWorkflows() {
       try {
-        let res = await MeetingWorkflows.api.getMeetingList(true)
+        let res = await MeetingWorkflows.api.getMeetingList(true) // change to new users meeting workflows endpoint
+        // let res = await User.api.getStaffWorkflows()
         this.allMeetingWorkflows = res.results
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getStaffOrgs() {
+      try {
+        console.log('getStaffOrgs')
+        // let res = await User.api.getStaffOrganizations()
+        // this.organizations = res.results
       } catch (e) {
         console.log(e)
       }
@@ -943,6 +955,7 @@ export default {
   created() {
     this.getAllForms()
     this.getAllMeetingWorkflows()
+    this.getStaffOrgs()
     this.organizations.refresh()
     this.allUsers.refresh()
   },
