@@ -44,7 +44,7 @@ from managr.salesforce.adapter.exceptions import (
 )
 
 from ..models import AlertTemplate, AlertInstance, AlertConfig
-
+from managr.core.models import User
 
 logger = logging.getLogger("managr")
 
@@ -71,10 +71,8 @@ def _process_init_alert(config_id, invocation):
     if not config:
         return logger.exception(f"Could not find config for template to send {config_id}")
     users = config.target_users
-
-    for user in users:
-
-        _process_check_alert(config_id, str(user.id), invocation, None)
+    user = str(config.template.user.id) if len(users) > 1 else str(users.first().id)
+    _process_check_alert(config_id, user, invocation, None)
 
 
 @background(queue="MANAGR_ALERTS_QUEUE")
@@ -82,23 +80,24 @@ def _process_init_alert(config_id, invocation):
 def _process_check_alert(config_id, user_id, invocation, run_time):
     config = AlertConfig.objects.filter(id=config_id).first()
     template = config.template
-
+    user_list = config.target_users
+    owners_list = [user.salesforce_account.salesforce_id for user in user_list]
     alert_id = str(template.id)
     resource = template.resource_type
     route = model_routes[resource]
     model_class = route["model"]
-    user = template.get_users.filter(id=user_id).first()
     template_user = template.user
-
+    user = template.get_users.filter(id=user_id).first()
     attempts = 1
-    if not hasattr(user, "salesforce_account"):
-        return
     while True:
-        sf = user.salesforce_account
+        sf = template_user.salesforce_account
+        url = (
+            template.manager_url_str(owners_list, config_id)
+            if len(user_list) > 1
+            else template.url_str(user, config_id)
+        )
         try:
-            res = sf.adapter_class.execute_alert_query(
-                template.url_str(user, config_id), template.resource_type
-            )
+            res = sf.adapter_class.execute_alert_query(url, template.resource_type)
             logger.info(f"Pulled total {len(res)} from request for {resource} matching alert query")
             break
         except TokenExpired:

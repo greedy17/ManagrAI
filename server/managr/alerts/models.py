@@ -76,6 +76,21 @@ class AlertTemplate(TimeStampModel):
         )
         return f"{user_sf.instance_url}{q[0]}"
 
+    def manager_url_str(self, user_list, config_id):
+        """Generates Url Str for request when executing alert"""
+        user_sf = self.user.salesforce_account if hasattr(self.user, "salesforce_account") else None
+        operand_groups = [group.query_str(config_id) for group in self.groups.all()]
+
+        operand_groups = f"AND ({' '.join(operand_groups)})"
+        q = sf_consts.SALESFORCE_MULTIPLE_OWNER_RESOURCE_QUERY_URI(
+            user_sf.salesforce_id,
+            self.resource_type,
+            ["Id"],
+            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+            user_list=user_list,
+        )
+        return f"{user_sf.instance_url}{q[0]}"
+
     @property
     def get_users(self):
         # get user groups
@@ -409,7 +424,7 @@ class AlertConfig(TimeStampModel):
             else:
                 user_ids_to_include.append(target)
         if len(user_ids_to_include):
-            query |= Q(id__in=user_ids_to_include, is_active=True)
+            query |= Q(id__in=user_ids_to_include, is_active=True, salesforce_account__isnull=False)
         return self.template.user.organization.users.filter(query).distinct()
 
     def calculate_scheduled_time_for_alert(self, user):
@@ -545,11 +560,11 @@ class AlertInstance(TimeStampModel):
             except TokenExpired:
                 if attempts >= 5:
                     logger.exception(
-                        f"Failed to retrieve alerts current data for user {str(user.id)} after {attempts} tries"
+                        f"Failed to retrieve alerts current data for user {str(self.user.id)} after {attempts} tries"
                     )
                     break
                 else:
-                    self.user.salesforce_account.regenerate_token()
+                    self.resource.owner.salesforce_account.regenerate_token()
                     attempts += 1
             except Exception as e:
                 return logger.warning(
