@@ -724,6 +724,7 @@ export default {
               timeout: 3000,
             })
           } else {
+            console.log(res['message'])
             this.$toast('Something went wrong. Please try again.', {
               type: 'error',
               timeout: 3000,
