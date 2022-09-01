@@ -1785,7 +1785,7 @@ def process_get_notes(payload, context):
     resource_type = context.get("resource_type", "Opportunity")
     resource_id = (
         context.get("resource_id")
-        if type == "alert"
+        if type in ["alert", "recap"]
         else payload["view"]["state"]["values"]["selected_object"][
             f"GET_NOTES?u={u.id}&resource_type={resource_type}"
         ]["selected_option"]["value"]

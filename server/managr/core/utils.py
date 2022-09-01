@@ -175,10 +175,10 @@ def get_organization_totals(month_only=False):
     return totals
 
 
-def get_org_fields(org):
-    forms = OrgCustomSlackFormInstance.objects.filter(user__organization=org).exclude(
-        template__isnull=True
-    )
+def get_org_fields(org, first, last):
+    forms = OrgCustomSlackFormInstance.objects.filter(
+        user__organization=org, datetime_created__range=(first, last)
+    ).exclude(template__isnull=True)
     list(forms.first().__dict__.get("saved_data").keys())
     obj = {}
     for form in forms:
@@ -192,7 +192,6 @@ def get_org_fields(org):
                             obj[form.user.email][key] += 1
                         else:
                             obj[form.user.email][key] = 1
-
                     else:
                         obj[form.user.email] = {}
                         obj[form.user.email][key] = 1
@@ -202,9 +201,7 @@ def get_org_fields(org):
                         obj[form.user.email][key] += 1
                     else:
                         obj[form.user.email][key] = 1
-
                 else:
                     obj[form.user.email] = {}
                     obj[form.user.email][key] = 1
-
     return obj

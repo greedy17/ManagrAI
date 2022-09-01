@@ -223,12 +223,9 @@ class OrgCustomSlackForm(TimeStampModel):
             )
             | Q(is_public=True)
         )
-        print(fields)
         self.fields.clear()
         for i, field in enumerate(self.config.items()):
-            print(field)
             current_field = fields.filter(api_name=field[1]).first()
-            print(current_field)
             if current_field:
                 self.fields.add(
                     current_field.id,

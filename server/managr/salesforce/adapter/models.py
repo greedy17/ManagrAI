@@ -351,7 +351,6 @@ class SalesforceAuthAccountAdapter:
             res = client.post(
                 f"{sf_consts.REFRESH_URI}", data=data, headers=sf_consts.AUTHENTICATION_HEADERS,
             )
-
             return SalesforceAuthAccountAdapter._handle_response(res)
 
     def list_fields(self, resource):
