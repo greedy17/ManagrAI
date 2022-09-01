@@ -705,26 +705,38 @@ export default {
         return
       }
       try {
-        const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
-          if (res.data) {
-            const newResContent = []
-            for (let key in res.data) {
-              const item = res.data[key]
-              item['date'] = key
-              newResContent.unshift(item)
-            }
-            this.contentModalInfo = newResContent
-            this.displayCommandModal = true
-            this.contentType = 'PullUsageData'
-          } else {
+        const res = await User.api.callCommand(this.selectedCommand.value)
+        console.log('res', res)
+        if (res.data) {
+          const newResContent = []
+          for (let key in res.data) {
+            const item = res.data[key]
+            item['date'] = key
+            newResContent.unshift(item)
+          }
+          this.contentModalInfo = newResContent
+          this.displayCommandModal = true
+          this.contentType = 'PullUsageData'
+        } else {
+          if (res.success) {
             this.$toast(res['message'], {
               type: 'success',
               timeout: 3000,
             })
+          } else {
+            console.log(res['message'])
+            this.$toast('Something went wrong. Please try again.', {
+              type: 'error',
+              timeout: 3000,
+            })
           }
-        })
+        }
       } catch (e) {
         console.log(e)
+        this.$toast('Something went wrong. Please try again.', {
+          type: 'error',
+          timeout: 3000,
+        })
       }
     },
     async getSlackFormInstance() {
