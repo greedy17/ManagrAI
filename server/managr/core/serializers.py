@@ -102,7 +102,7 @@ class UserSerializer(serializers.ModelSerializer):
             "onboarding",
             "forecast",
             "team",
-            "is_team_leader",
+            "is_team_lead",
         )
 
     read_only_fields = (

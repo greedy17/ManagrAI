@@ -51,7 +51,7 @@ export default class User extends Model {
   static forecast = new fields.Field()
   static activationLinkRef = new fields.Field()
   static team = new fields.Field()
-  static isTeamLeader = new fields.Field({ readOnly: true })
+  static isTeamLead = new fields.Field({ readOnly: true })
 
 
   static fromAPI(json = {}) {

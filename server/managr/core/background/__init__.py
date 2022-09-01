@@ -359,9 +359,7 @@ def meeting_prep(processed_data, user_id):
             else slack_consts.FORM_TYPE_CREATE
         )
         template = OrgCustomSlackForm.objects.filter(
-            form_type=form_type,
-            resource=slack_consts.FORM_RESOURCE_CONTACT,
-            organization=user.organization,
+            form_type=form_type, resource=slack_consts.FORM_RESOURCE_CONTACT, team=user.team
         ).first()
         if not template:
             logger.exception(

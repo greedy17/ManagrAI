@@ -369,9 +369,11 @@ def process_stage_selected(payload, context):
 
         # delete all existing stage forms
         workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
-        stage_form = org.custom_slack_forms.filter(
-            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
-        ).first()
+        stage_form = (
+            org.custom_slack_forms.for_user(user)
+            .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
+            .first()
+        )
 
         if stage_form:
             workflow.add_form(
@@ -880,7 +882,7 @@ def process_add_products_form(payload, context):
     product_form_id = context.get("product_form", None)
     if product_form_id is None:
         product_template = OrgCustomSlackForm.objects.filter(
-            Q(resource="OpportunityLineItem", form_type="CREATE", organization=user.organization)
+            Q(resource="OpportunityLineItem", form_type="CREATE", team=user.team)
         ).first()
         product_form = OrgCustomSlackFormInstance.objects.create(
             template=product_template, user=user
@@ -1048,9 +1050,11 @@ def process_stage_selected_command_form(payload, context):
         index, action_block = block_finder(action["block_id"], blocks)
 
         # find all stages previous to it
-        stage_form = org.custom_slack_forms.filter(
-            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
-        ).first()
+        stage_form = (
+            org.custom_slack_forms.for_user(user)
+            .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
+            .first()
+        )
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user, template=stage_form, resource_id=main_form.resource_id
@@ -1479,7 +1483,6 @@ def process_resource_selected_for_task(payload, context):
 
 @processor(required_context="u")
 def process_select_resource(payload, context):
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
@@ -1782,7 +1785,7 @@ def process_get_notes(payload, context):
     resource_type = context.get("resource_type", "Opportunity")
     resource_id = (
         context.get("resource_id")
-        if type == "alert"
+        if type in ["alert", "recap"]
         else payload["view"]["state"]["values"]["selected_object"][
             f"GET_NOTES?u={u.id}&resource_type={resource_type}"
         ]["selected_option"]["value"]
@@ -2139,7 +2142,7 @@ def process_show_alert_update_resource_form(payload, context):
     if slack_form:
         current_stage = slack_form.resource_object.secondary_data.get("StageName")
         stage_template = (
-            OrgCustomSlackForm.objects.filter(stage=current_stage).first()
+            OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
             if current_stage
             else None
         )

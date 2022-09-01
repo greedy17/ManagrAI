@@ -86,12 +86,18 @@
               <PulseLoadingSpinnerButton
                 @click="handleInvite"
                 class="invite-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
                 text="Invite"
                 :loading="loading"
                 >Invite</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem; margin-bottom: 0.4rem;">Cancel</div>
+              <div
+                class="cancel-button"
+                @click="handleCancel"
+                style="margin-right: 2.5rem; margin-bottom: 0.4rem"
+              >
+                Cancel
+              </div>
             </template>
           </div>
         </div>
@@ -174,7 +180,9 @@
       <div class="key">
         <div class="left-key">
           <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
-          <button v-if="$store.state.user.isTeamLeader" class="invite_button" @click="handleEdit">Edit Team</button>
+          <button v-if="$store.state.user.isTeamLead" class="invite_button" @click="handleEdit">
+            Edit Team
+          </button>
         </div>
         <div class="right-key">
           <p class="complete">Complete</p>
@@ -332,7 +340,7 @@ export default {
       default: false,
     },
     handleEdit: {
-      type: Function
+      type: Function,
     },
   },
   data() {
@@ -717,7 +725,7 @@ button {
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    align-items: end;
+    align-items: flex-end;
   }
   &__actions-noslack {
     display: flex;
@@ -774,8 +782,8 @@ button {
   font-size: 14px;
   border: 1px solid #e8e8e8;
   width: 6rem;
-  margin-top: .75rem;
-  margin-left: .5rem;
+  margin-top: 0.75rem;
+  margin-left: 0.5rem;
   box-shadow: none;
   height: 2rem;
   z-index: 3;
@@ -790,7 +798,7 @@ button {
   font-size: 14px;
   border: 1px solid #e8e8e8;
 }
-.invite_button:hover{
+.invite_button:hover {
   cursor: pointer;
   transform: scale(1.025);
   box-shadow: 1px 2px 3px $mid-gray;

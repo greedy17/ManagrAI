@@ -59,7 +59,7 @@ class Command(BaseCommand):
                 print(f" {org}")
                 o = orgs[date][org]
                 print(
-                    f" Org: Session Avg: {o['session average']} | Total Sessions: {o['total sessions']} | Updates: {o['updates']} | Creates: {o['creates']}"
+                    f" Org: Session Avg: {o['session average']} | Avg Total Sessions: {o['average total sessions']} | Updates: {o['updates']} | Creates: {o['creates']}"
                 )
                 print(f" Users:")
                 for user in o["users"].keys():

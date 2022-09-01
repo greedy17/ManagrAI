@@ -10,14 +10,17 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form modal-form confirm-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
             <h3 class="invite-form__title">Are you sure?</h3>
           </div>
           <div class="flex-row">
-            <h4 class="invite-form__subtitle">Once you choose this person, you will lose all admin privileges, and the user you selected will gain admin priviledges.</h4>
+            <h4 class="invite-form__subtitle">
+              Once you choose this person, you will lose all admin privileges, and the user you
+              selected will gain admin priviledges.
+            </h4>
           </div>
         </div>
         <div class="invite-form__actions">
@@ -27,12 +30,14 @@
               <PulseLoadingSpinnerButton
                 @click="changeAdminSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
                 text="Save"
                 :loading="pulseLoading"
                 >Confirm</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem;">Cancel</div>
+              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
             </template>
           </div>
         </div>
@@ -48,7 +53,7 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form modal-form confirm-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -65,7 +70,7 @@
                 <Multiselect
                   placeholder="Select New Admin"
                   v-model="newAdmin"
-                  :options="team.list/* do not show the current admin */"
+                  :options="team.list /* do not show the current admin */"
                   openDirection="below"
                   style="width: 26vw"
                   selectLabel="Enter"
@@ -92,10 +97,13 @@
               <div
                 @click="handleConfirm"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem;"
-                >Save</div
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
               >
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
+                Save
+              </div>
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
             </template>
           </div>
         </div>
@@ -111,7 +119,7 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form modal-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -133,7 +141,7 @@
                   type="text"
                   name=""
                   id=""
-                  :disabled="false/*savingTemplate*/"
+                  :disabled="false /*savingTemplate*/"
                 />
               </template>
             </FormField>
@@ -144,7 +152,9 @@
                 <Multiselect
                   placeholder="Team Lead"
                   v-model="teamLead"
-                  :options="team.list"
+                  :options="
+                    isAdmin ? team.list.filter((user) => user.id !== getUser.id) : team.list
+                  "
                   openDirection="below"
                   style="width: 26vw"
                   selectLabel="Enter"
@@ -171,12 +181,14 @@
               <PulseLoadingSpinnerButton
                 @click="createTeamSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
                 text="Save"
                 :loading="pulseLoading"
                 >Save</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
             </template>
           </div>
         </div>
@@ -192,7 +204,7 @@
         }
       "
     >
-      <form v-if="true/*hasSlack*/" class="invite-form modal-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -272,12 +284,14 @@
               <PulseLoadingSpinnerButton
                 @click="editTeamSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem;"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
                 text="Save"
                 :loading="pulseLoading"
                 >Save</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem;">Cancel</div>
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
             </template>
           </div>
         </div>
@@ -382,7 +396,12 @@
         </div>
       </div>
 
-      <Invite class="invite-users__inviter" :handleEdit="handleEdit" :inviteOpen="inviteOpen" @cancel="handleCancel" />
+      <Invite
+        class="invite-users__inviter"
+        :handleEdit="handleEdit"
+        :inviteOpen="inviteOpen"
+        @cancel="handleCancel"
+      />
       <div class="wide">
         <button @click="homeView" class="invite_button">
           <img src="@/assets/images/back.svg" height="12px" alt="" />
@@ -707,13 +726,20 @@ export default {
       }
       if (this.isAdmin) {
         // If they are an admin, show all users except the ones in the selected team
-        this.usersList = filterUsers.filter(user => user.team !== team.id && !user.isTeamLeader)
+        this.usersList = team
+          ? filterUsers.filter((user) => user.team !== team.id && !user.isTeamLead)
+          : []
       } else {
         // If they are not an admin, show users in their team or in original team, depending on which team is selected
         if (team.id === this.originalTeam.id) {
-          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.getUser.team && !filteredUser.isTeamLeader)
+          this.usersList = filterUsers.filter(
+            (filteredUser) => filteredUser.team === this.getUser.team && !filteredUser.isTeamLead,
+          )
         } else {
-          this.usersList = filterUsers.filter(filteredUser => filteredUser.team === this.originalTeam.id && !filteredUser.isTeamLeader)
+          this.usersList = filterUsers.filter(
+            (filteredUser) =>
+              filteredUser.team === this.originalTeam.id && !filteredUser.isTeamLead,
+          )
         }
       }
     },
@@ -786,19 +812,19 @@ export default {
         setTimeout(() => {
           console.log('Please choose a new admin')
           this.$toast('Please choose a new admin', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
           this.pulseLoading = false
           return
         }, 200)
       } else {
         try {
           const data = {
-            new_admin: this.newAdmin.id
+            new_admin: this.newAdmin.id,
           }
           const teamRes = await Organization.api.changeAdmin(data)
           this.refresh()
@@ -814,15 +840,15 @@ export default {
             this.pulseLoading = false
             this.$router.go()
           }, 1400)
-        } catch(e) {
-          console.log("Error: ", e)
+        } catch (e) {
+          console.log('Error: ', e)
           this.$toast('Error changing admin', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
           this.pulseLoading = false
         }
       }
@@ -831,14 +857,13 @@ export default {
       this.pulseLoading = true
       if (!this.teamLead || !this.teamName) {
         setTimeout(() => {
-          console.log('Please submit all info')
           this.$toast('Please submit all info', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
           this.pulseLoading = false
           return
         }, 200)
@@ -847,12 +872,12 @@ export default {
           const data = {
             name: this.teamName,
             organization: this.$store.state.user.organizationRef.id,
-            team_lead: this.teamLead.id
+            team_lead: this.teamLead.id,
           }
           const teamRes = await Organization.api.createNewTeam(data)
           const addTeamData = {
             users: [this.teamLead.id],
-            team_id: teamRes.id
+            team_id: teamRes.id,
           }
           await Organization.api.addTeamMember(addTeamData)
           this.refresh()
@@ -869,15 +894,14 @@ export default {
             })
             this.pulseLoading = false
           }, 1400)
-        } catch(e) {
-          console.log("Error: ", e)
+        } catch (e) {
           this.$toast('Error Creating Team', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         }
       }
     },
@@ -885,23 +909,22 @@ export default {
       this.pulseLoading = true
       if (!this.selectedTeam || !this.selectedUsers.length) {
         setTimeout(() => {
-          console.log('Please submit all info')
           this.$toast('Please submit all info', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
           this.pulseLoading = false
           return
         }, 200)
       } else {
         try {
-          const userIds = this.selectedUsers.map(user => user.id)
+          const userIds = this.selectedUsers.map((user) => user.id)
           const addTeamData = {
             users: userIds,
-            team_id: this.selectedTeam.id
+            team_id: this.selectedTeam.id,
           }
           await Organization.api.addTeamMember(addTeamData)
           this.refresh()
@@ -918,15 +941,15 @@ export default {
             })
             this.pulseLoading = false
           }, 1400)
-        } catch(e) {
-          console.log("Error: ", e)
+        } catch (e) {
+          console.log('Error: ', e)
           this.$toast('Error Creating Team', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         }
       }
     },
@@ -936,6 +959,7 @@ export default {
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)
       const teamList = [res.results[0]]
+      console.log(res)
       for (let i = 1; i < res.results.length; i++) {
         if (res.results[i].team_lead === this.getUser.id) {
           teamList.push(res.results[i])
@@ -943,7 +967,9 @@ export default {
       }
       this.teamsList = teamList
       this.originalTeam = res.results[0]
-      const currentTeam = res.results.filter(team => team.id === this.getUser.team)[0]
+      const currentTeam = res.results.length
+        ? res.results.filter((team) => team.id === this.getUser.team)[0]
+        : null
       this.selectedTeam = currentTeam
       this.updateAvailableUsers(currentTeam)
     },
@@ -1084,6 +1110,10 @@ export default {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
+
+  // ::v-deep div {
+  //   display: none !important;
+  // }
 }
 #user-input {
   border: 1px solid #e8e8e8;
@@ -1133,7 +1163,7 @@ h2 {
   border-radius: 0.25rem;
   transition: all 0.25s;
   padding: 8px 12px;
-  margin-left: .5rem;
+  margin-left: 0.5rem;
   font-size: 14px;
   border: 1px solid #e8e8e8;
 }

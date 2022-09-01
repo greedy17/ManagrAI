@@ -154,7 +154,7 @@ class UserSlackIntegration(TimeStampModel):
 class OrgCustomSlackFormQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
+            return self.filter(team=user.team)
         else:
             return self.none()
 
@@ -203,7 +203,7 @@ class OrgCustomSlackForm(TimeStampModel):
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "organization", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage"]
 
     def generate_form_state(self):
         form_fields = FormField.objects.filter(form=self)
@@ -226,9 +226,11 @@ class OrgCustomSlackForm(TimeStampModel):
         self.fields.clear()
         for i, field in enumerate(self.config.items()):
             current_field = fields.filter(api_name=field[1]).first()
-            self.fields.add(
-                current_field.id, through_defaults={"order": field[0], "include_in_recap": True,},
-            )
+            if current_field:
+                self.fields.add(
+                    current_field.id,
+                    through_defaults={"order": field[0], "include_in_recap": True,},
+                )
         return self.save()
 
 
@@ -304,11 +306,14 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         user_fields = []
         # hack to maintain order
         for field in template_fields:
-            f = SObjectField.objects.get(
-                Q(api_name=field[0])
-                & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
-                & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
-            )
+            try:
+                f = SObjectField.objects.get(
+                    Q(api_name=field[0])
+                    & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
+                    & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+                )
+            except SObjectField.DoesNotExist:
+                logger.exception(f"GET USER FIELDS EXCEPTION DOES NOT EXIST: {field}")
             user_fields.append(f)
         if not template_fields:
             # user has not created form use all fields

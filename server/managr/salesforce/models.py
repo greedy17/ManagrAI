@@ -94,8 +94,7 @@ class SObjectValidationQuerySet(models.QuerySet):
 class SObjectPicklistQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            admin = user.organization.users.filter(is_admin=True).first()
-            return self.filter(salesforce_account__user__id=admin.id)
+            return self.filter(salesforce_account__user__id=user.team.team_lead.id)
         else:
             return self.none()
 
