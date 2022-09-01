@@ -1031,9 +1031,8 @@ class UserTestCase(TestCase):
 
         conf_1.alert_targets = [str(rep.id)]
         conf_1.save()
-
-        self.assertEquals(conf_1.target_users.count(), 1)
-        self.assertIn(rep.id, conf_1.target_users.values_list("id", flat=True))
+        print(conf_1.target_users)
+        self.assertEquals(conf_1.target_users.count(), 0)
 
         conf_1.alert_targets = ["MANAGERS", str(self.admin_user.id)]
         conf_1.save()
