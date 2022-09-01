@@ -706,6 +706,7 @@ export default {
       }
       try {
         const res = await User.api.callCommand(this.selectedCommand.value)
+        console.log('res', res)
         if (res.data) {
           const newResContent = []
           for (let key in res.data) {
@@ -717,13 +718,24 @@ export default {
           this.displayCommandModal = true
           this.contentType = 'PullUsageData'
         } else {
-          this.$toast(res['message'], {
-            type: 'success',
-            timeout: 3000,
-          })
+          if (res.success) {
+            this.$toast(res['message'], {
+              type: 'success',
+              timeout: 3000,
+            })
+          } else {
+            this.$toast('Something went wrong. Please try again.', {
+              type: 'error',
+              timeout: 3000,
+            })
+          }
         }
       } catch (e) {
         console.log(e)
+        this.$toast('Something went wrong. Please try again.', {
+          type: 'error',
+          timeout: 3000,
+        })
       }
     },
     async getSlackFormInstance() {
