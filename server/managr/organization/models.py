@@ -108,6 +108,13 @@ class Organization(TimeStampModel):
         users = self.users
         users.update(team=team)
 
+    def add_to_admin_team(self, user_email):
+        user = self.users.filter(email=user_email).first()
+        admin = self.users.filter(is_admin=True).first()
+        user.team = admin.team
+        user.save()
+        return
+
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -793,3 +800,4 @@ class Team(TimeStampModel):
 
         self.team_lead = new_team_lead
         self.save()
+
