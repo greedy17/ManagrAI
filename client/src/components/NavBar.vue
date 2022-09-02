@@ -131,7 +131,11 @@
           </div>
         </router-link>
 
-        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
+        <router-link
+          v-if="isTeamLead || isAdmin"
+          exact-active-class="active-img"
+          :to="{ name: 'Required' }"
+        >
           <div class="tooltip">
             <img src="@/assets/images/list.svg" alt="" />
             <span class="tooltiptext">Forms</span>
@@ -172,7 +176,11 @@
           </div>
         </router-link>
 
-        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
+        <router-link
+          v-if="isTeamLead || this.isAdmin"
+          exact-active-class="active-img"
+          :to="{ name: 'Required' }"
+        >
           <div class="tooltip">
             <img src="@/assets/images/list.svg" alt="" />
             <span class="tooltiptext">Forms</span>
@@ -234,7 +242,7 @@ export default {
 
   async created() {
     this.templates.refresh()
-    if (this.isAdmin) {
+    if (this.isTeamLead || this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },
         { key: 'Slack Forms', value: 'SlackFormSettings' },
@@ -267,6 +275,9 @@ export default {
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
+    },
+    isTeamLead() {
+      return this.userIsLoggedIn && this.$store.state.user.isTeamLead
     },
     user() {
       return this.$store.state.user

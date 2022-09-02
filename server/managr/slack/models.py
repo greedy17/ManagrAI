@@ -154,7 +154,7 @@ class UserSlackIntegration(TimeStampModel):
 class OrgCustomSlackFormQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
+            return self.filter(team=user.team)
         else:
             return self.none()
 
@@ -167,6 +167,9 @@ class OrgCustomSlackForm(TimeStampModel):
 
     organization = models.ForeignKey(
         "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
+    )
+    team = models.ForeignKey(
+        "organization.Team", related_name="team_forms", on_delete=models.CASCADE, null=True
     )
     form_type = models.CharField(
         max_length=255,
@@ -194,13 +197,13 @@ class OrgCustomSlackForm(TimeStampModel):
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
     def __str__(self):
-        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name}"
+        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name} - team: {self.team}"
 
     class Meta:
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "organization", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage"]
 
     def generate_form_state(self):
         form_fields = FormField.objects.filter(form=self)
@@ -211,21 +214,23 @@ class OrgCustomSlackForm(TimeStampModel):
         self.save()
 
     def recreate_form(self):
-        admin = self.organization.users.filter(is_admin=True).first()
+        team_lead = self.team.team_lead
         fields = SObjectField.objects.filter(
             Q(
                 api_name__in=self.config.values(),
                 salesforce_object=self.resource,
-                salesforce_account=admin.salesforce_account,
+                salesforce_account=team_lead.salesforce_account,
             )
             | Q(is_public=True)
         )
         self.fields.clear()
         for i, field in enumerate(self.config.items()):
             current_field = fields.filter(api_name=field[1]).first()
-            self.fields.add(
-                current_field.id, through_defaults={"order": field[0], "include_in_recap": True,},
-            )
+            if current_field:
+                self.fields.add(
+                    current_field.id,
+                    through_defaults={"order": field[0], "include_in_recap": True,},
+                )
         return self.save()
 
 

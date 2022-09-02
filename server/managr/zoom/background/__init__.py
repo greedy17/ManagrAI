@@ -280,7 +280,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             opportunity = Opportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__id=user.id
             ).first()
-            logger.info(f"ZOOM OPP {opportunity}")
             if opportunity:
                 meeting_resource_data["resource_id"] = str(opportunity.id)
                 meeting_resource_data["resource_type"] = "Opportunity"
@@ -291,7 +290,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 account = Account.objects.filter(
                     contacts__email__in=participant_emails, owner__id=user.id,
                 ).first()
-                logger.info(f"ZOOM Account {account}")
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
                     meeting_resource_data["resource_type"] = "Account"
@@ -358,7 +356,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 template = OrgCustomSlackForm.objects.filter(
                     form_type=form_type,
                     resource=slack_consts.FORM_RESOURCE_CONTACT,
-                    organization=user.organization,
+                    team=user.team,
                 ).first()
                 if not template:
                     logger.exception(

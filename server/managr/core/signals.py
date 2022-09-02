@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 
 from .models import User, UserActivity, UserForecast
+from managr.organization.models import Team
 
 
 @receiver(post_save, sender=User)
@@ -19,3 +20,11 @@ def create_user_related_models(sender, instance, created, **kwargs):
         UserActivity.objects.create(user=instance)
         UserForecast.objects.create(user=instance)
 
+
+@receiver(post_save, sender=User)
+def add_user_to_admin_team(sender, instance, created, **kwargs):
+    """When a new user is created, automatically generate an auth token for them."""
+    if created:
+        admin_team = Team.objects.filter(organization=instance.organization).first()
+        instance.team = admin_team
+        instance.save()

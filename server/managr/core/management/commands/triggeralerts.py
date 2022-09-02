@@ -13,5 +13,4 @@ class Command(BaseCommand):
     help = "Helper for restarting the sf sync"
 
     def handle(self, *args, **options):
-
         return init_alert_check()

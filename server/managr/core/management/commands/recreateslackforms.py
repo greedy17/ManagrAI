@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         if user.is_admin:
 
-            emit_generate_form_template(str(user.id))
+            emit_generate_form_template(str(user.id), True)
             self.stdout.write(
                 self.style.SUCCESS(
                     "Successfully initiated the object field sync for the user {}".format(
