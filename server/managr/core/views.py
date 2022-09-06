@@ -44,6 +44,7 @@ from .serializers import (
     UserRegistrationSerializer,
     NoteTemplateSerializer,
 )
+from managr.organization.models import Team
 from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 from managr.core.background import emit_process_calendar_meetings
 from .nylas.emails import (
@@ -709,7 +710,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
-
+        user.organization.add_to_admin_team(user.email)
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         if slack_id:
