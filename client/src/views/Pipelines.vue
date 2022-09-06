@@ -1499,13 +1499,19 @@
     </Modal>
 
     <div ref="pipelines" v-if="!loading">
-      <h3 class="pipeline-header">
+      <!-- <h3 class="pipeline-header">
         {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-      </h3>
-      <section class="flex-row-spread">
+      </h3> -->
+      <section style="margin-top: -10px" class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
+          <!-- <Multiselect
+            style="z-index: 20"
+            :options="listViews"
+            selectLabel="Enter"
+            value="All Opportunities"
+          /> -->
           <button @click.stop="showList = !showList" class="select-btn1">
-            {{ currentList }}
+            {{ !currentWorkflowName ? currentList : currentWorkflowName }}
             <img
               v-if="!showList"
               style="height: 0.7rem; margin-left: 0.5rem"
@@ -1753,12 +1759,12 @@
             <span class="tooltiptext">Sync Fields</span>
           </div>
           <button @click="createOppInstance()" class="add-button">
-            <img
+            <!-- <img
               src="@/assets/images/plusOne.svg"
               class="fullInvert"
               style="height: 0.8rem"
               alt=""
-            />
+            /> -->
             Create Opportunity
           </button>
         </div>
@@ -1976,11 +1982,8 @@
           </button>
         </div>
       </div>
-      <div class="results">
-        <!-- <h6 style="color: #9b9b9b">
-          {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-        </h6> -->
-      </div>
+      <div style="margin-top: 16px"></div>
+      <!-- <div class="results"></div> -->
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
         <div v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
@@ -2091,12 +2094,20 @@
         </div>
       </section>
       <div class="row between height-s">
+        <!-- <h6 style="color: #484a6e; min-width: fit-content">
+          {{ !currentWorkflowName ? currentList : currentWorkflowName }}
+        </h6> -->
         <div class="pagination">
           <span class="results-2">
             Displaying {{ selectedWorkflow ? currentWorkflow.length : allOpps.length }} of
             {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
           >
-          <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
+          <button
+            v-if="hasNext && !selectedWorkflow"
+            @click="nextPage"
+            style="font-size: 11px"
+            class="select-btn"
+          >
             Load More
           </button>
         </div>
@@ -2140,6 +2151,7 @@ export default {
   },
   data() {
     return {
+      listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
       stageGateCopy: {},
       stageReferenceOpts: {},
       currentSelectedProduct: null,
@@ -4654,9 +4666,6 @@ export default {
     color: $white;
     padding: 3px 6px;
   }
-  button {
-    margin-right: 8px;
-  }
 }
 .row {
   display: flex;
@@ -4665,6 +4674,7 @@ export default {
 }
 .height-s {
   height: 36px;
+  margin-top: 8px;
 }
 .between {
   justify-content: space-between;
@@ -4685,15 +4695,15 @@ select {
   border-radius: 0;
 }
 .select-btn1 {
-  box-shadow: 1px 1px 1px $very-light-gray;
-  letter-spacing: 0.75px;
-  border: none;
-  padding: 6px 8px;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+  border: 1px solid $soft-gray;
+  letter-spacing: 1px;
+  padding: 8px 12px;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9px;
   background-color: white;
   cursor: pointer;
   margin-right: 0.5rem;
@@ -4704,14 +4714,14 @@ select {
   // }
 }
 .select-btn {
-  box-shadow: 1px 1px 2px $very-light-gray;
-  letter-spacing: 0.75px;
-  border: none;
-  padding: 6px 8px;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+  letter-spacing: 1px;
+  border: 1px solid $soft-gray;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9px;
   background-color: white;
   cursor: pointer;
   // color: $dark-green;
@@ -4780,7 +4790,7 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 72vh;
+  max-height: 79vh;
   overflow: scroll;
   border-radius: 12px;
   border: 1px solid #e8e8e8;
@@ -5021,7 +5031,7 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  padding: 32px 0px 0px 80px;
+  padding: 32px 0px 0px 72px;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
   letter-spacing: 0.75px !important;
@@ -5066,7 +5076,7 @@ section {
   align-items: center;
   border: none;
   margin: 0 0.5rem 0 0;
-  padding: 0.45rem 1rem;
+  padding: 9px 12px;
   font-size: 13px;
   border-radius: 6px;
   background-color: $dark-green;
@@ -5079,7 +5089,7 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  padding: 0.4rem 0.75rem;
+  padding: 8px 12px;
   font-size: 14px;
   border-radius: 6px;
   background-color: $dark-green;
@@ -5096,11 +5106,12 @@ section {
 }
 .search-bar {
   background-color: white;
-  box-shadow: 1px 1px 1px $very-light-gray;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+  border: 1px solid $soft-gray;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  padding: 6px;
   border-radius: 8px;
   margin-right: 0.5rem;
 }
@@ -5298,7 +5309,7 @@ a {
 }
 .results-2 {
   font-size: 11px;
-  margin-right: 16px;
+  margin-right: 8px;
   color: $gray;
 }
 .note-templates {

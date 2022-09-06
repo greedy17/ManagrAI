@@ -309,7 +309,7 @@
         />
       </div>
     </div>
-    <div class="cell-end">
+    <div class="cell-end left-border">
       <div
         v-if="
           updateList.includes(opp.id) ||
@@ -323,7 +323,7 @@
         <SkeletonBox width="15px" height="14px" />
         <SkeletonBox width="15px" height="14px" />
       </div>
-      <div v-else class="flex-row">
+      <div v-else class="flex-row action-buttons">
         <div class="tooltip mar-right">
           <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
           <span class="tooltiptext">Update</span>
@@ -586,12 +586,25 @@ export default {
   }
 }
 
+.action-buttons {
+  background-color: white;
+  padding: 8px;
+  border-radius: 6px;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+}
+// .left-border {
+//   border-left: 2px solid $off-white !important;
+// }
 .tooltip {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 2px 0px;
+
+  img {
+    filter: invert(30%);
+  }
 }
 .tooltip .tooltiptext {
   visibility: hidden;
@@ -803,9 +816,7 @@ input {
 // .empty:hover {
 //   opacity: 0.6;
 // }
-.cell-name:hover {
-  border: none;
-}
+
 .table-cell-wide {
   display: table-cell;
   position: sticky;

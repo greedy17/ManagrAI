@@ -193,7 +193,7 @@
 
     <div class="table-cell-header-end">
       <div class="direction-row" @click="addField">
-        <p style="color: #4d4e4c">Actions</p>
+        <p>Quick Actions</p>
         <img src="@/assets/images/plusOne.svg" class="add-img" alt="" />
       </div>
 
@@ -458,7 +458,6 @@ export default {
   padding: 1.25vh;
   min-width: 3rem;
   border: none;
-  color: $light-gray-blue !important;
   border-bottom: 1px solid $soft-gray;
   border-radius: 2px;
   z-index: 2;
@@ -489,7 +488,6 @@ export default {
   display: table-cell;
   padding: 8px 4px;
   border: none;
-  color: $light-gray-blue !important;
   z-index: 3;
   width: 4vw;
   top: 0;
@@ -502,7 +500,6 @@ export default {
   display: table-cell;
   border-bottom: 1px solid $soft-gray !important;
   border: none;
-  color: $light-gray-blue !important;
   border-radius: 2px;
   z-index: 3;
   right: 0;
@@ -515,6 +512,9 @@ export default {
   color: $base-gray;
   padding: 8px 16px;
 }
+.black {
+  color: $base-gray;
+}
 .direction-row {
   display: flex;
   flex-direction: row;
@@ -526,7 +526,6 @@ export default {
   // padding: 3vh;
   padding: 1px 6px;
   border: none;
-  color: $light-gray-blue !important;
   border-bottom: 1px solid $soft-gray;
   border-radius: 2px;
   z-index: 3;
@@ -544,7 +543,7 @@ export default {
   // padding: 1.25vh 3vh;
   padding: 1px 6px;
   border: none;
-  color: $light-gray-blue !important;
+
   border-bottom: 1px solid $soft-gray;
   border-radius: 2px;
   z-index: 2;

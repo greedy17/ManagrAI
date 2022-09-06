@@ -1,18 +1,6 @@
 <template>
   <div style="margin-top: 3rem">
     <div class="sidenav">
-      <!-- <div
-        style="
-          margin-bottom: 1rem;
-          margin-left: 0.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-        "
-      >
-        <h3 class="title">Manage Actions</h3>
-        <h5 style="margin-top: -0.5rem">Access & Update CRM Fields</h5>
-      </div> -->
       <router-link exact-active-class="active" :to="{ name: 'Required' }">
         <div class="tooltip">
           <img
@@ -24,13 +12,6 @@
           <span class="tooltiptext">Field Mapping</span>
         </div>
       </router-link>
-
-      <!-- <router-link exact-active-class="active" :to="{ name: 'Custom' }">
-        <div class="row">
-          <img src="@/assets/images/optional.png" style="height: 1rem; margin-right: 1rem" alt="" />
-          <h5>Optional</h5>
-        </div>
-      </router-link> -->
 
       <router-link exact-active-class="active" :to="{ name: 'ValidationRules' }">
         <div class="tooltip">

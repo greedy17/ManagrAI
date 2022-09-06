@@ -79,7 +79,7 @@ export default {
 @import '@/styles/variables';
 
 .home {
-  margin-left: 88px;
+  margin-left: 80px;
   letter-spacing: 0.75px;
 }
 .heading {
