@@ -765,7 +765,7 @@ class Team(TimeStampModel):
     objects = TeamQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.name} under {self.organization.name} lead: {self.team_lead.email}"
+        return f"{self.name} - {self.team_lead.email}"
 
     def delete(self):
         if self.team_forms:

@@ -15,7 +15,9 @@ class TokenExpired(Exception):
 
 
 class InvalidRefreshToken(Exception):
-    def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
+    def __init(
+        self, message="There was a problem with your SFDC connection, please reconnect to SFDC"
+    ):
         self.message = message
         super().__init__(self.message)
 
