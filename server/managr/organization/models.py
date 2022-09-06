@@ -88,12 +88,14 @@ class Organization(TimeStampModel):
         else:
             for form in templates:
                 form.fields.filter(is_public=False).delete()
-
+        admin_team = current_admin.team
         current_admin.is_admin = False
         current_admin.save()
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
         new_admin.save()
+        admin_team.team_lead = new_admin
+        admin_team.save()
         return new_admin
 
     def update_has_settings(self, type):
