@@ -94,6 +94,7 @@ class Organization(TimeStampModel):
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
         new_admin.save()
+        return new_admin
 
     def update_has_settings(self, type):
         if type == "products":
@@ -764,7 +765,7 @@ class Team(TimeStampModel):
     objects = TeamQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.name} under {self.organization.name} lead: {self.team_lead.email}"
+        return f"{self.name} - {self.team_lead.email}"
 
     def delete(self):
         if self.team_forms:

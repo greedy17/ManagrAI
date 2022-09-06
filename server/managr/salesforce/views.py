@@ -5,6 +5,7 @@ import json
 import uuid
 from urllib.parse import unquote
 from datetime import datetime
+
 from .routes import routes
 import time
 from background_task.models import CompletedTask
@@ -106,7 +107,13 @@ def authenticate(request):
         emit_gen_next_object_field_sync(str(request.user.id), operations, False, formatted_time)
         # generate forms
         if serializer.instance.user.is_admin:
-            emit_generate_form_template(data.user)
+            form_check = request.user.team.team_forms.all()
+            schedule = (
+                (timezone.now() + timezone.timedelta(minutes=5))
+                if len(form_check) > 0
+                else timezone.now()
+            )
+            emit_generate_form_template(data.user, schedule=schedule)
         user = User.objects.get(id=request.user.id)
         sync_operations = [*user.salesforce_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
@@ -263,8 +270,16 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                         f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries"
                     )
                 else:
-                    sf_account.regenerate_token()
-                    attempts += 1
+                    try:
+                        sf_account.regenerate_token()
+                        attempts += 1
+                    except InvalidRefreshToken:
+                        return Response(
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            data={
+                                "error": "There was a problem with your connection to Salesforce, please reconnect to SFDC"
+                            },
+                        )
             except Exception as e:
                 return logger.exception(
                     f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries: {e}"
