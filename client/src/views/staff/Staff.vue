@@ -709,8 +709,10 @@ export default {
         console.log('res', res)
         if (res.data) {
           const newResContent = []
-          for (let key in res.data) {
-            const item = res.data[key]
+          // console.log('res.data.totals', res.data.totals)
+          for (let key in res.data.totals) {
+            const item = res.data.totals[key]
+            // console.log('res.data.totals[key]', res.data.totals[key])
             item['date'] = key
             newResContent.unshift(item)
           }
