@@ -18,8 +18,8 @@
           </div>
           <div class="flex-row">
             <h4 class="invite-form__subtitle">
-              Once you choose this person, you will lose all admin privileges, and the user you
-              selected will gain admin priviledges.
+              By clicking Confirm, you will transferring the Admin role to
+              {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
             </h4>
           </div>
         </div>
@@ -31,7 +31,7 @@
                 @click="changeAdminSubmit"
                 class="invite-button modal-button"
                 style="width: 5rem; margin-right: 1rem; height: 2rem"
-                text="Save"
+                text="Confirm"
                 :loading="pulseLoading"
                 >Confirm</PulseLoadingSpinnerButton
               >
@@ -99,7 +99,7 @@
                 class="invite-button modal-button"
                 style="width: 5rem; margin-right: 1rem; height: 2rem"
               >
-                Save
+                Confirm
               </div>
               <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
                 Cancel
