@@ -158,8 +158,11 @@ class OrgCustomSlackFormQuerySet(models.QuerySet):
         else:
             return self.none()
 
-    def for_staff(self):
-        return self
+    def for_staff(self, org=None):
+        if org:
+            return self.filter(organization=org)
+        else:
+            return self
 
 
 class OrgCustomSlackForm(TimeStampModel):
