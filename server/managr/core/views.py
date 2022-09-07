@@ -33,7 +33,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.core.utils import get_totals_for_year
+from managr.core.utils import pull_usage_data
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
@@ -66,7 +66,7 @@ def GET_COMMAND_OBJECTS():
     commands = {
         "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
         "SALESFORCE_RESOURCES": emit_gen_next_sync,
-        "PULL_USAGE_DATA": get_totals_for_year,
+        "PULL_USAGE_DATA": pull_usage_data,
     }
     return commands
 

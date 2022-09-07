@@ -257,7 +257,7 @@
           </span>
         </div>
       </div>
-      <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
+      <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id && member.team === $store.state.user.team">
           <div
             style="display: flex; align-items: flex-start; font-size: 13px"
@@ -532,6 +532,9 @@ export default {
     },
     hasSlack() {
       return !!this.$store.state.user.slackRef
+    },
+    usersInTeam() {
+      return this.team.list.filter(member => member.id !== this.$store.state.user.id && member.team === this.$store.state.user.team)
     },
   },
 }

@@ -197,7 +197,7 @@ class OrgCustomSlackForm(TimeStampModel):
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
     def __str__(self):
-        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name} - team: {self.team}"
+        return f"{self.organization.name}-{self.resource} {self.form_type} - ({self.team})"
 
     class Meta:
         ordering = [

@@ -1,11 +1,7 @@
-import jwt
 import pytz
 import math
 import logging
-import json
 from collections import OrderedDict
-from functools import reduce
-
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
@@ -14,7 +10,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 
-from background_task.models import CompletedTask, Task
+from background_task.models import CompletedTask
 
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
