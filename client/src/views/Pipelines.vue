@@ -1631,7 +1631,7 @@
         </div>
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
-            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
+            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected && !changeFieldsSelected">
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
@@ -1661,6 +1661,7 @@
                   />
                 </button>
                 <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
+                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Change Fields</button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -1724,6 +1725,61 @@
 
               <button @click="changeForecast(currentCheckList)" class="add-button">
                 Change Forecast
+              </button>
+            </div>
+            <div class="flex-row-pad" v-if="changeFieldsSelected">
+              <p style="font-size: 14px" @click="test(selectedOpp)">Change Field:</p>
+              <Multiselect
+                :options="filteredSelectOppFields"
+                v-model="selectedOpp"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 20vw"
+                selectLabel="Enter"
+                label="label"
+              >
+                <template v-slot:noResult>
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template v-slot:placeholder>
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Fields
+                  </p>
+                </template>
+              </Multiselect>
+              <div v-if="selectedOpp">
+                <div
+                  v-if="
+                    selectedOpp.dataType === 'String' ||
+                    selectedOpp.dataType === 'TextArea' ||
+                    selectedOpp.dataType === 'Email' ||
+                    selectedOpp.dataType === 'Date' ||
+                    selectedOpp.dataType === 'DateTime'
+                  "
+                >
+                  <input
+                    @input="oppNewValue = $event.target.value"
+                    type="text"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    selectedOpp.dataType === 'Phone' ||
+                    selectedOpp.dataType === 'Double' ||
+                    selectedOpp.dataType === 'Currency'
+                  "
+                >
+                  <input
+                    type="number"
+                    @input="oppNewValue = $event.target.value"
+                  />
+                </div>
+              </div>
+
+              <button @click="() => null" class="add-button">
+                Change Field Values
               </button>
             </div>
           </div>
@@ -2218,9 +2274,12 @@ export default {
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
+      changeFieldsSelected: false,
       selection: false,
       allStages: [],
       allForecasts: [],
+      selectedOpp: null,
+      oppNewValue: null,
       newStage: null,
       newForecast: null,
       originalList: null,
@@ -2345,6 +2404,9 @@ export default {
         this.currentWorkflow = newvalue
       },
     },
+    filteredSelectOppFields() {
+      return this.oppFields.filter(f => f.label !== 'Stage' && f.label !== 'Close Date' && f.dataType !== 'Reference')
+    },
     currentMonth() {
       let date = new Date()
       return date.getMonth()
@@ -2407,6 +2469,9 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     cancelEditProduct() {
       this.dropdownProductVal = {}
       this.editingProduct = !this.editingProduct
@@ -3101,6 +3166,7 @@ export default {
         this.closeDateSelected = false
         this.advanceStageSelected = false
         this.forecastSelected = false
+        this.changeFieldsSelected = false
       }
     },
     setStage(val) {
