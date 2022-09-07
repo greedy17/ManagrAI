@@ -35,15 +35,20 @@ export default {
   watch: {
     // When route changes,
     '$route.path': function watchRoutePath() {
-      const newDateTime = Date.now();
+      const newDateTime = Date.now()
       // If it's been more than an hour,
       if (newDateTime - localStorage.dateTime > 3600000) {
         // Log out
-        this.$store.dispatch('logoutUser')
-        this.$router.push({ name: 'Login' })
+        if (localStorage.isLoggedOut) {
+          return
+        } else {
+          localStorage.isLoggedOut = true
+          this.$store.dispatch('logoutUser')
+          this.$router.push({ name: 'Login' })
+        }
       } else {
         // reset localStorage datetime
-        localStorage.dateTime = newDateTime;
+        localStorage.dateTime = newDateTime
         // scroll to the top
         VueScrollTo.scrollTo('#app', 200)
       }
@@ -93,6 +98,15 @@ body {
   //  margin: 0 1rem 0 1rem;
   min-height: 100vh;
   background-color: $off-white;
+}
+
+div[id^='user-input'] {
+  // display: none;
+  outline: 1px solid yellow !important;
+}
+
+input {
+  background-image: none !important;
 }
 
 #app {

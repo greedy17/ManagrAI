@@ -59,7 +59,7 @@ def create_task_modal_block_set(context):
         ),
         block_builders.external_select(
             "Related To",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource={resource_type}",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource_type={resource_type}",
             block_id="managr_task_related_to",
             initial_option=related_to_initial_option,
         ),
@@ -129,7 +129,7 @@ def create_event_modal_block_set(context):
         ),
         block_builders.external_select(
             "Related To",
-            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource={resource_type}",
+            f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={context.get('u')}&resource_type={resource_type}",
             block_id="managr_event_related_to",
             initial_option=related_to_initial_option,
         ),

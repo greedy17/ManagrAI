@@ -11,6 +11,11 @@ const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
+const STAFF_ENDPOINT = '/users/staff/'
+const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
+const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
+const STAFF_FORMS = '/users/staff/slack-forms/'
+const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
@@ -332,4 +337,36 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
+  async getStaffOrganizations(org_id) {
+    try {
+      const response = await this.client.get(STAFF_ORGANIZATIONS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffOrganizations' })
+    }
+  }
+  async getStaffWorkflows(org_id) {
+    try {
+      const response = await this.client.get(STAFF_WORKFLOWS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffWorkflows' })
+    }
+  }
+  async getStaffForms(org_id) {
+    try {
+      const response = await this.client.get(STAFF_FORMS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffForms' })
+    }
+  }
+  async getStaffSObjects(org_id) {
+    try {
+      const response = await this.client.get(STAFF_SOBJECTS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getStaffSObjects' })
+    }
+  }
 }

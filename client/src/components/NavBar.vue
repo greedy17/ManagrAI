@@ -131,15 +131,19 @@
           </div>
         </router-link>
 
-        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
+        <router-link
+          v-if="isTeamLead || isAdmin"
+          exact-active-class="active-img"
+          :to="{ name: 'Required' }"
+        >
           <div class="tooltip">
             <img src="@/assets/images/list.svg" alt="" />
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
-        
+
         <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
               <span class="tooltiptext">Profile</span>
@@ -172,7 +176,11 @@
           </div>
         </router-link>
 
-        <router-link v-if="isAdmin" exact-active-class="active-img" :to="{ name: 'Required' }">
+        <router-link
+          v-if="isTeamLead || this.isAdmin"
+          exact-active-class="active-img"
+          :to="{ name: 'Required' }"
+        >
           <div class="tooltip">
             <img src="@/assets/images/list.svg" alt="" />
             <span class="tooltiptext">Forms</span>
@@ -180,7 +188,7 @@
         </router-link>
 
         <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer;" @click="goToProfile(Math.floor(Math.random() * 10000))">
+          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
             <div class="tooltip">
               <small class="profile-wrapper">{{ user.email }}</small>
               <span class="tooltiptext">Profile</span>
@@ -234,7 +242,7 @@ export default {
 
   async created() {
     this.templates.refresh()
-    if (this.isAdmin) {
+    if (this.isTeamLead || this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },
         { key: 'Slack Forms', value: 'SlackFormSettings' },
@@ -252,6 +260,7 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+      localStorage.isLoggedOut = true
     },
     goToProfile(id) {
       this.$router.push({ path: `/invite-users/${id}` })
@@ -266,6 +275,9 @@ export default {
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
+    },
+    isTeamLead() {
+      return this.userIsLoggedIn && this.$store.state.user.isTeamLead
     },
     user() {
       return this.$store.state.user

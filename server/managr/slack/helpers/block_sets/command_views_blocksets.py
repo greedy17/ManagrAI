@@ -35,7 +35,7 @@ def command_update_resource_interaction(context):
     return [
         block_builders.external_select(
             f"*Search for an {context.get('resource_type')}*",
-            f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
+            f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={context.get('resource_type')}",
             block_id="select_existing",
             placeholder="Type to search",
         ),
@@ -80,7 +80,7 @@ def command_meeting_summary(context):
     return [
         block_builders.external_select(
             f"*Search for an {context.get('resource_type')}*",
-            f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={context.get('resource_type')}",
+            f"{slack_const.COMMAND_SUMMARY__GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={context.get('resource_type')}",
             block_id="select_existing",
             placeholder="Type to search",
         ),
@@ -211,23 +211,21 @@ def alert_instance_block_set(context):
                 instance.render_text(), text_type="mrkdwn", block_id=f"{instance.id}_text",
             ),
         ]
-        options = []
+        options = [
+            block_builders.option("Get Notes", "get_notes"),
+        ]
 
         action_blocks = [
             block_builders.simple_button_block(
                 f"Update {instance.template.resource_type} + Notes",
                 instance.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
+                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource_type={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
                 style="primary",
             )
         ]
-        if instance.template.resource_type == "Opportunity":
+        if hasattr(user, "gong_account"):
             options.extend(
-                [
-                    block_builders.option("Mark as Complete", "mark_as_complete"),
-                    block_builders.option("Get Notes", "get_notes"),
-                    block_builders.option("Call Details", "call_details"),
-                ]
+                [block_builders.option("Call Details", "call_details"),]
             )
         if instance.template.resource_type != "Lead":
             if hasattr(user, "outreach_account"):
@@ -245,7 +243,6 @@ def alert_instance_block_set(context):
                         f"alert_id={str(instance.id)}",
                         f"page={context.get('current_page',1)}",
                         f"resource_id={str(instance.resource_id)}",
-                        f"resource_name={instance.resource.name}",
                         f"resource_type={instance.template.resource_type}",
                     ],
                 ),
@@ -301,7 +298,7 @@ def update_modal_block_set(context, *args, **kwargs):
         blocks.append(
             block_builders.external_select(
                 f"*Search for an {context.get('resource_type')}*",
-                f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource_type}&type={type}",
+                f"{slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource_type}&type={type}",
                 block_id="select_existing",
                 placeholder="Type to search",
                 initial_option=block_builders.option(resource_id, resource_id)
@@ -413,7 +410,7 @@ def choose_opportunity_block_set(context):
     blocks = [
         block_builders.external_select(
             "Which opportunity would you like your notes for?",
-            f"{slack_const.GET_NOTES}?u={user_id}&resource={sf_consts.RESOURCE_SYNC_OPPORTUNITY}&type={type}",
+            f"{slack_const.GET_NOTES}?u={user_id}&resource_type={sf_consts.RESOURCE_SYNC_OPPORTUNITY}&type={type}",
             block_id="select_opp",
             placeholder="Type to search",
         )
@@ -485,7 +482,7 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
         blocks.append(
             block_builders.external_select(
                 f"*Search for an {context.get('resource_type')}*",
-                action_id=f"{context.get('action_id')}?u={user_id}&resource={resource_type}",
+                action_id=f"{context.get('action_id')}?u={user_id}&resource_type={resource_type}",
                 block_id="selected_object",
                 placeholder="Type to search",
                 initial_option=block_builders.option(resource_id, resource_id)

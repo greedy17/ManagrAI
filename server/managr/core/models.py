@@ -74,7 +74,7 @@ class UserQuerySet(models.QuerySet):
     # TODO pb 10/15/20: Ideally, we are trying to attach user roles so that
     #       INTEGRATION can assume roles for managr
     def for_user(self, user):
-        if user.is_superuser or user.is_staff:
+        if user.is_superuser:
             return self.all()
         elif user.is_active:
             if user.user_level == core_consts.USER_LEVEL_MANAGER:
@@ -200,6 +200,9 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
         help_text="Object for reminder setting",
     )
+    team = models.ForeignKey(
+        "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
+    )
     objects = UserManager()
 
     @property
@@ -321,6 +324,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def has_outreach_integration(self):
         return hasattr(self, "outreach_account")
+
+    @property
+    def is_team_lead(self):
+        return hasattr(self, "team_lead_of")
 
     @property
     def as_slack_option(self):
@@ -596,11 +603,7 @@ class UserActivity(models.Model):
         from managr.salesforce.models import MeetingWorkflow
 
         workflow = MeetingWorkflow.objects.get(id=meeting_id)
-        main_form = (
-            workflow.forms.filter(template__form_type__in=["CREATE", "UPDATE"])
-            .exclude(template__resource__in=["Contact", "OpportunityLineItem"])
-            .first()
-        )
+        main_form = workflow.forms.filter(resource_id=workflow.resource_id).first()
         saved_data = [
             key
             for key in main_form.saved_data.keys()
@@ -647,12 +650,12 @@ class UserActivity(models.Model):
         ]
 
         note_added = (
-            False
+            True
             if (
-                "meeting_comments" not in workflow.saved_data.keys()
-                or workflow.saved_data["meeting_comments"] is None
+                "meeting_comments" in workflow.saved_data.keys()
+                and workflow.saved_data["meeting_comments"] is not None
             )
-            else True
+            else False
         )
         obj = dict(
             source=workflow.update_source,

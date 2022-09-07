@@ -1,6 +1,8 @@
 import { apiClient, apiErrorHandler, ApiFilter, ModelAPI } from '@/services/api'
 
 const ORGANIZATIONS_ENDPOINT = '/organizations/'
+const TEAM_ENDPOINT = '/organization/teams/'
+const CHANGE_ADMIN = '/organizations/change-admin/'
 const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
 
 export default class OrganizationAPI {
@@ -19,6 +21,7 @@ export default class OrganizationAPI {
       // Pagination
       page: ApiFilter.create({ key: 'page' }),
       pageSize: ApiFilter.create({ key: 'page_size' }),
+      fromAdmin: ApiFilter.create({ key: 'fromAdmin' })
     }
     const options = {
       params: ApiFilter.buildParams(filtersMap, { ...pagination, ...filters }),
@@ -38,5 +41,35 @@ export default class OrganizationAPI {
       .post(ORGANIZATIONS_UPDATE, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.orgUpdate' }))
+  }
+  async changeAdmin(data) {
+    return this.client
+      .post(CHANGE_ADMIN, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.changeAdmin' }))
+  }
+  async listTeams(id) {
+    try {
+      const res = await this.client.get(TEAM_ENDPOINT, { params: { user: id } })
+      return res.data
+      // return {
+      //   ...res.data,
+      //   results: res.data.results.map(this.cls.fromAPI)
+      // }
+    } catch {
+      apiErrorHandler({ apiName: 'Organization.listTeams' })
+    }
+  }
+  async createNewTeam(data) {
+    return this.client
+      .post(TEAM_ENDPOINT, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.createNewTeam' }))
+  }
+  async addTeamMember(data) {
+    return this.client
+      .post(TEAM_ENDPOINT + 'modify-membership/', data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.addTeamMember' }))
   }
 }

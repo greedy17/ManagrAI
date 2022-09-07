@@ -1,11 +1,7 @@
-import jwt
 import pytz
 import math
 import logging
-import json
 from collections import OrderedDict
-from functools import reduce
-
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
@@ -14,7 +10,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 
-from background_task.models import CompletedTask, Task
+from background_task.models import CompletedTask
 
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
@@ -94,8 +90,7 @@ class SObjectValidationQuerySet(models.QuerySet):
 class SObjectPicklistQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            admin = user.organization.users.filter(is_admin=True).first()
-            return self.filter(salesforce_account__user__id=admin.id)
+            return self.filter(salesforce_account__user__id=user.team.team_lead.id)
         else:
             return self.none()
 
@@ -175,8 +170,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
-                            lambda opt: opt.get("value", None) == value,
-                            self.get_slack_options,
+                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
                         ),
                     ),
                 )
@@ -198,8 +192,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value,
-                                self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
                             ),
                         ),
                     ),
@@ -215,8 +208,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value,
-                                self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
                             ),
                         )
                     )
@@ -240,13 +232,11 @@ class SObjectField(TimeStampModel, IntegrationModel):
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = (
-                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
-                )
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}"
             elif self.is_public and self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
                     f"_{self.reference_display_label}_",
                     action_query,
@@ -259,12 +249,9 @@ class SObjectField(TimeStampModel, IntegrationModel):
             ):
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
                 return block_builders.external_select(
-                    "*Products*",
-                    action_query,
-                    block_id=self.api_name,
-                    initial_option=None,
+                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
@@ -753,10 +740,7 @@ class MeetingWorkflow(SFSyncOperation):
         template = (
             OrgCustomSlackForm.objects.for_user(self.user)
             .filter(
-                Q(
-                    resource=resource,
-                    form_type=form_type,
-                )
+                Q(resource=resource, form_type=form_type,)
                 & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
             )
             .first()
@@ -765,11 +749,7 @@ class MeetingWorkflow(SFSyncOperation):
 
             # check if a form with that template already exists and remove it
             self.forms.filter(template__id=template.id).delete()
-            kwargs = dict(
-                user=self.user,
-                template=template,
-                workflow=self,
-            )
+            kwargs = dict(user=self.user, template=template, workflow=self,)
             if self.resource:
                 kwargs["resource_id"] = str(self.resource.id)
 
@@ -815,6 +795,7 @@ class MeetingWorkflow(SFSyncOperation):
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
+            # self.user.activity.add_meeting_activity(self.id)
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
@@ -839,9 +820,7 @@ class SalesforceAuthAccount(TimeStampModel):
     )
     # default for json field must be a callable
     sobjects = JSONField(
-        default=getSobjectDefaults,
-        help_text="All resources we are retrieving",
-        max_length=500,
+        default=getSobjectDefaults, help_text="All resources we are retrieving", max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,

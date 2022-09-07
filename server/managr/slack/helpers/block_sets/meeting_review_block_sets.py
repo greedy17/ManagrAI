@@ -438,7 +438,7 @@ def initial_meeting_interaction_block_set(context):
         {"type": "divider"},
     ]
     resource_button = (
-        "Change Opportunity" if workflow.resource_type == "Opportunity" else "Map to Opportunity"
+        f"Change {workflow.resource_type}" if workflow.resource_type else "Link to CRM Record"
     )
     resource_block = (
         block_builders.section_with_button_block(
@@ -513,7 +513,13 @@ def meeting_review_modal_block_set(context):
         except Exception as e:
             print(e)
     blocks = []
+    action_query = (
+        f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource=Task&field=Type"
+    )
 
+    blocks.append(
+        block_builders.external_select("Note Type", action_query, block_id="managr_task_type")
+    )
     # additional validations
 
     blocks.extend(slack_form.generate_form())
@@ -628,9 +634,9 @@ def create_or_search_modal_block_set(context):
             form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
         )
     action_id = (
-        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}&type=prep"
+        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}&type=prep"
         if type
-        else f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}"
+        else f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}"
     )
     return [
         block_builders.external_select(
@@ -869,7 +875,7 @@ def schedule_zoom_meeting_modal(context):
         ),
         block_builders.multi_external_select(
             "*Add internal people to this meeting*",
-            action_id=f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user.id}&resource={slack_const.SLACK_ACTION_RESOURCE_USER}",
+            action_id=f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={user.id}&resource_type={slack_const.SLACK_ACTION_RESOURCE_USER}",
             block_id="meeting_internals",
             placeholder="Search Users",
         ),
@@ -978,7 +984,7 @@ def convert_lead_block_set(context):
                 slack_const.GET_LOCAL_RESOURCE_OPTIONS,
                 params=[
                     f"u={context.get('u')}",
-                    f"resource={slack_const.SLACK_ACTION_RESOURCE_USER}",
+                    f"resource_type={slack_const.SLACK_ACTION_RESOURCE_USER}",
                 ],
             ),
             block_id="RECORD_OWNER",

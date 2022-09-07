@@ -5,6 +5,7 @@ import json
 import uuid
 from urllib.parse import unquote
 from datetime import datetime
+
 from .routes import routes
 import time
 from background_task.models import CompletedTask
@@ -106,7 +107,13 @@ def authenticate(request):
         emit_gen_next_object_field_sync(str(request.user.id), operations, False, formatted_time)
         # generate forms
         if serializer.instance.user.is_admin:
-            emit_generate_form_template(data.user)
+            form_check = request.user.team.team_forms.all()
+            schedule = (
+                (timezone.now() + timezone.timedelta(minutes=5))
+                if len(form_check) > 0
+                else timezone.now()
+            )
+            emit_generate_form_template(data.user, schedule=schedule)
         user = User.objects.get(id=request.user.id)
         sync_operations = [*user.salesforce_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
@@ -128,9 +135,7 @@ def revoke(request):
     if hasattr(user, "salesforce_account"):
         sf_acc = user.salesforce_account
         sf_acc.revoke()
-        if user.is_admin:
-            OrgCustomSlackForm.objects.for_user(user).delete()
-            # admins remove the forms since they created them to avoid duplication
+        # admins remove the forms since they created them to avoid duplication
 
         user_context = dict(organization=user.organization.name)
         admin_context = dict(
@@ -245,6 +250,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sobject_id = request.GET.get("sobject_id", None)
         value = request.GET.get("value", None)
         sobject_field = SObjectField.objects.get(id=sobject_id)
+        for_meetings = self.request.GET.get("for_meetings", False)
         attempts = 1
         while True:
             sf_account = user.salesforce_account
@@ -255,6 +261,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                     sobject_field.display_value_keys["name_fields"],
                     value,
                     sobject_field.salesforce_object,
+                    include_owner=for_meetings,
                 )
                 break
             except TokenExpired:
@@ -263,8 +270,16 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                         f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries"
                     )
                 else:
-                    sf_account.regenerate_token()
-                    attempts += 1
+                    try:
+                        sf_account.regenerate_token()
+                        attempts += 1
+                    except InvalidRefreshToken:
+                        return Response(
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            data={
+                                "error": "There was a problem with your connection to Salesforce, please reconnect to SFDC"
+                            },
+                        )
             except Exception as e:
                 return logger.exception(
                     f"Failed to retrieve reference data for {sobject_field.display_value_keys['api_name']} data for user {str(user.id)} after {attempts} tries: {e}"
@@ -503,6 +518,7 @@ class SalesforceSObjectViewSet(
             except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    data = {"error": str(e), "success": False}
                     break
                 else:
                     if model_object.owner == user:
@@ -523,8 +539,12 @@ class SalesforceSObjectViewSet(
                     f"AND OpportunityId = '{model_object.integration_id}'",
                 ],
             )
-            product_values = [product.as_dict for product in current_products]
-            data["current_products"] = product_values
+            product_values = [product.integration_id for product in current_products]
+            internal_products = routes["OpportunityLineItem"]["model"].objects.filter(
+                integration_id__in=product_values
+            )
+            product_as_dict = [item.adapter_class.as_dict for item in internal_products]
+            data["current_products"] = product_as_dict
         return Response(data=data)
 
     @action(
@@ -574,7 +594,12 @@ class SalesforceSObjectViewSet(
             while True:
                 sf = user.salesforce_account
                 try:
-                    resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                    if resource_type == "OpportunityLineItem":
+                        resource = main_form.resource_object.update_in_salesforce(
+                            str(user.id), all_form_data
+                        )
+                    else:
+                        resource = main_form.resource_object.update_in_salesforce(all_form_data)
                     data = {
                         "success": True,
                     }
@@ -625,7 +650,7 @@ class SalesforceSObjectViewSet(
                     data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
             if data["success"]:
-                if all_form_data.get("meeting_comments") is not None:
+                if all_form_data.get("meeting_comments", None) is not None:
                     emit_add_update_to_sf(str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
@@ -635,11 +660,11 @@ class SalesforceSObjectViewSet(
                     is_submitted=True, update_source="pipeline", submission_date=timezone.now()
                 )
                 value_update = main_form.resource_object.update_database_values(all_form_data)
-                from_workflow = data.get("from_workflow")
-                title = data.get("workflow_title", None)
-                if from_workflow:
-                    user.activity.increment_untouched_count("workflows")
-                    user.activity.add_workflow_activity(str(main_form.id), title)
+                # from_workflow = data.get("from_workflow")
+                # title = data.get("workflow_title", None)
+                # if from_workflow:
+                #     user.activity.increment_untouched_count("workflows")
+                #     user.activity.add_workflow_activity(str(main_form.id), title)
                 return Response(data=data)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
@@ -671,14 +696,10 @@ class SalesforceSObjectViewSet(
         main_form = forms.filter(template__form_type="CREATE").first()
         if main_form.template.resource == "OpportunityLineItem":
             opp_ref = integration_ids[0]
-        stage_forms = []
         stage_form_data_collector = {}
-        for form in stage_forms:
+        for form in forms:
             form.save_form(form_data, False)
             stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-        if not len(stage_forms):
-            main_form.save_form(form_data, False)
-
         all_form_data = {**stage_form_data_collector, **main_form.saved_data}
 
         data = None
@@ -788,7 +809,7 @@ class SalesforceSObjectViewSet(
     )
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
-        operations = ["Account", "Lead", "Opportunity", "Contact"]
+        operations = ["Account", "Opportunity", "OpportunityLineItem"]
         currenttime = datetime.now()
         to_sync_ids = []
         synced_ids = []
@@ -874,9 +895,10 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        from_admin = json.loads(self.request.GET.get("fromAdmin"))
+        from_admin = self.request.GET.get("fromAdmin", False)
+        from_admin
         user = self.request.user
-        if from_admin and user.is_staff:
+        if from_admin and user.is_staff and json.loads(from_admin):
             return MeetingWorkflow.objects.all()[:100]
         return MeetingWorkflow.objects.for_user(user).order_by("meeting__start_time")
 
@@ -987,11 +1009,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             else []
         )
         current_form_ids = []
-        main_form = (
-            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE)
-            .exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-            .first()
-        )
+        main_form = workflow.forms.filter(resource_id=workflow.resource_id).first()
         current_form_ids.append(str(main_form.id))
         main_form.save_form(request_data.get("form_data"), False)
         if len(forms):

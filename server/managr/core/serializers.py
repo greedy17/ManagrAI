@@ -101,6 +101,8 @@ class UserSerializer(serializers.ModelSerializer):
             "activated_template_ref",
             "onboarding",
             "forecast",
+            "team",
+            "is_team_lead",
         )
 
     read_only_fields = (

@@ -250,8 +250,10 @@ def get_notes_command(context):
     block_context = {
         "u": str(user.id),
         "type": "command",
+        "options": "%".join(["Contact", "Opportunity", "Account"]),
+        "action_id": "GET_NOTES",
     }
-    blocks = get_block_set("choose_opportunity", context=block_context)
+    blocks = get_block_set("pick_resource_modal_block_set", context=block_context)
     view_id = context.get("view_id", None)
     url = (
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -262,9 +264,10 @@ def get_notes_command(context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.GET_NOTES,
-            "title": {"type": "plain_text", "text": "Choose opportunity"},
+            "title": {"type": "plain_text", "text": "Choose Record Type"},
             "blocks": blocks,
             "private_metadata": json.dumps(context),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }
     if view_id:

@@ -87,10 +87,10 @@
               <label class="label">{{ field.referenceDisplayLabel }}:</label>
               <textarea
                 id="user-input"
-                ccols="30"
+                cols="30"
                 rows="4"
                 :disabled="savingCreateForm"
-                style="width: 34vw; border-radius: 0.4rem"
+                style="width: 40.25vw; border-radius: 0.4rem"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
               </textarea>
@@ -112,17 +112,17 @@
                 @search-change="getAccounts($event)"
                 @select="setUpdateValues(field.apiName, $event.id, false)"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 track-by="id"
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Account
@@ -162,7 +162,7 @@
                 "
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -175,18 +175,13 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results ? Try loading more</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ `${field.referenceDisplayLabel}` }}
-                  </p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more">
-                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
                 </template>
               </Multiselect>
@@ -195,11 +190,7 @@
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
                 v-if="field.apiName === 'StageName'"
               >
-                <div class="adding-stage-gate__header">
-                  <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
-                  <p>This Stage has validation rules</p>
-                </div>
-                <div class="adding-stage-gate__body">
+                <div class="adding-stage-gate__body" style="padding: 0">
                   <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
                     <div
                       v-if="
@@ -208,12 +199,12 @@
                         (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
-                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                      <label class="form-label red-label">{{ field.referenceDisplayLabel }}:</label>
                       <Multiselect
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : createReferenceOpts[field.apiName]
+                            : stageReferenceOpts[field.apiName]
                         "
                         @select="
                           setUpdateValidationValues(
@@ -227,8 +218,9 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 16.5vw"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
+                        :multiple="field.dataType === 'MultiPicklist' ? true : false"
                         :track-by="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? 'value'
@@ -240,10 +232,10 @@
                             : 'name'
                         "
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ field.apiName }}
@@ -252,24 +244,24 @@
                       </Multiselect>
                     </div>
                     <div v-else-if="field.apiName === 'AccountId'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                       <Multiselect
                         v-model="selectedAccount"
                         :options="allAccounts"
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 16.5vw"
+                        style="width: 40.25vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
                         :loading="dropdownLoading || loadingAccounts"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
 
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             Accounts
@@ -278,7 +270,9 @@
                       </Multiselect>
                     </div>
                     <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         id="user-input"
                         type="text"
@@ -298,14 +292,16 @@
                         (field.length > 250 && field.dataType === 'String')
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <textarea
                         id="user-input"
-                        ccols="30"
+                        cols="30"
                         rows="2"
                         :disabled="savingCreateForm"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 32vw; border-radius: 6px; padding: 7px"
+                        style="width: 40.25vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -315,7 +311,9 @@
                       </textarea>
                     </div>
                     <div v-else-if="field.dataType === 'Date'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         type="text"
                         :disabled="savingCreateForm"
@@ -331,7 +329,9 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'DateTime'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         type="datetime-local"
                         id="start"
@@ -350,7 +350,9 @@
                         field.dataType === 'Currency'
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         id="user-input"
                         type="number"
@@ -364,20 +366,20 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'Boolean'">
-                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                      <label class="form-label red-label">{{ field.referenceDisplayLabel }}:</label>
 
                       <Multiselect
                         v-model="dropdownVal[field.apiName]"
                         :options="booleans"
                         @select="setUpdateValidationValues(field.apiName, $event)"
                         openDirection="below"
-                        style="width: 16.5vw"
+                        style="width: 35vw"
                         selectLabel="Enter"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
@@ -433,13 +435,13 @@
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -461,14 +463,11 @@
                   :options="pricebooks"
                   openDirection="below"
                   v-model="selectedPriceBook"
-                  style="width: 16.5vw"
+                  style="width: 35vw"
                   selectLabel="Enter"
                   label="name"
                 >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                  <template slot="placeholder">
+                  <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
@@ -512,7 +511,7 @@
                     :loading="loadingProducts"
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
-                    style="width: 16.5vw"
+                    style="width: 35vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -525,10 +524,15 @@
                         : 'name'
                     "
                   >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
                     </template>
-                    <template slot="placeholder">
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.referenceDisplayLabel }}
@@ -537,11 +541,12 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String'">
+                <div class="col" v-else-if="field.dataType === 'String'">
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     id="user-input"
                     type="text"
+                    style="width: 35vw"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
@@ -562,18 +567,19 @@
                     rows="2"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
-                    style="width: 20vw; border-radius: 6px; padding: 7px"
+                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   >
                   </textarea>
                 </div>
-                <div v-else-if="field.dataType === 'Date'">
+                <div class="col" v-else-if="field.dataType === 'Date'">
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     type="text"
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
+                    style="width: 35vw"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
@@ -581,17 +587,19 @@
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
                 </div>
-                <div v-else-if="field.dataType === 'DateTime'">
+                <div class="col" v-else-if="field.dataType === 'DateTime'">
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     type="datetime-local"
                     id="start"
+                    style="width: 35vw"
                     :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
                 </div>
                 <div
+                  class="col"
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
@@ -602,6 +610,7 @@
                   <input
                     id="user-input"
                     type="number"
+                    style="width: 35vw"
                     :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     :placeholder="currentVals[field.apiName]"
@@ -665,12 +674,11 @@
               <span class="input-container">
                 <label class="label">Title</label>
                 <input
-                  style="width: 34vw"
+                  style="width: 40.25vw"
                   id="user-input"
                   type="text"
                   v-model="noteTitle"
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                  placeholder="Title"
                 />
               </span>
             </div>
@@ -680,16 +688,6 @@
             >
               <span style="margin-left: 0px; margin-top: -4px" class="input-container">
                 <label class="label">Note</label>
-                <!-- <textarea
-                  id="user-input"
-                  type="text"
-                  cols="30"
-                  rows="4"
-                  placeholder="Note"
-                  style="line-height: 2rem; width: 34vw; padding-left: 8px"
-                  v-model="noteValue"
-                  @input="setUpdateValues(field.apiName, noteValue)"
-                /> -->
                 <div
                   @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
                   class="divArea"
@@ -741,7 +739,7 @@
                 ccols="30"
                 rows="4"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 34vw; border-radius: 0.4rem; padding: 7px; resize: none"
+                style="width: 40.25vw; border-radius: 0.4rem; padding: 7px; resize: none"
                 v-model="currentVals[field.apiName]"
                 @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
               >
@@ -771,13 +769,13 @@
                 :options="booleans"
                 @select="setUpdateValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -801,17 +799,17 @@
                   )
                 "
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
@@ -850,7 +848,7 @@
                 "
                 :loading="dropdownLoading"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 :track-by="
@@ -864,15 +862,10 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results. Try loading more</p>
                 </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more">
-                    Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
@@ -892,11 +885,7 @@
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
                 v-if="field.apiName === 'StageName'"
               >
-                <div class="adding-stage-gate__header">
-                  <img class="fullInvert" src="@/assets/images/warning.svg" alt="" />
-                  <p>This Stage has validation rules</p>
-                </div>
-                <div class="adding-stage-gate__body">
+                <div class="adding-stage-gate__body" style="padding: 0">
                   <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
                     <div
                       v-if="
@@ -905,12 +894,12 @@
                         (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
-                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                      <label class="form-label red-label">{{ field.referenceDisplayLabel }}:</label>
                       <Multiselect
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : referenceOpts[field.apiName]
+                            : stageReferenceOpts[field.apiName]
                         "
                         @select="
                           setUpdateValidationValues(
@@ -924,8 +913,9 @@
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
-                        style="width: 16.5vw"
+                        style="width: 40vw; margin-bottom: 2rem"
                         selectLabel="Enter"
+                        :multiple="field.dataType === 'MultiPicklist' ? true : false"
                         :track-by="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? 'value'
@@ -937,10 +927,10 @@
                             : 'name'
                         "
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{
@@ -953,24 +943,24 @@
                       </Multiselect>
                     </div>
                     <div v-else-if="field.apiName === 'AccountId'">
-                      <p>{{ field.referenceDisplayLabel }}*</p>
+                      <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                       <Multiselect
                         v-model="selectedAccount"
                         :options="allAccounts"
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
-                        style="width: 16.5vw"
+                        style="width: 40.25vw"
                         selectLabel="Enter"
                         track-by="integration_id"
                         label="name"
                         :loading="dropdownLoading || loadingAccounts"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
 
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentAccount }}
@@ -979,7 +969,9 @@
                       </Multiselect>
                     </div>
                     <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         id="user-input"
                         type="text"
@@ -998,13 +990,15 @@
                         (field.length > 250 && field.dataType === 'String')
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <textarea
                         id="user-input"
                         ccols="30"
                         rows="2"
                         :placeholder="currentVals[field.apiName]"
-                        style="width: 32vw; border-radius: 6px; padding: 7px"
+                        style="width: 40.25vw; border-radius: 6px; padding: 7px"
                         v-model="currentVals[field.apiName]"
                         @input="
                           ;(value = $event.target.value),
@@ -1014,7 +1008,9 @@
                       </textarea>
                     </div>
                     <div v-else-if="field.dataType === 'Date'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         type="text"
                         onfocus="(this.type='date')"
@@ -1029,7 +1025,9 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'DateTime'">
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         type="datetime-local"
                         id="start"
@@ -1047,7 +1045,9 @@
                         field.dataType === 'Currency'
                       "
                     >
-                      <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+                      <label class="red-label"
+                        >{{ field.referenceDisplayLabel }} <span>*</span></label
+                      >
                       <input
                         id="user-input"
                         type="number"
@@ -1060,20 +1060,20 @@
                       />
                     </div>
                     <div v-else-if="field.dataType === 'Boolean'">
-                      <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+                      <label class="form-label red-label">{{ field.referenceDisplayLabel }}:</label>
 
                       <Multiselect
                         v-model="dropdownVal[field.apiName]"
                         :options="booleans"
                         @select="setUpdateValidationValues(field.apiName, $event)"
                         openDirection="below"
-                        style="width: 16.5vw"
+                        style="width: 40.25vw"
                         selectLabel="Enter"
                       >
-                        <template slot="noResult">
+                        <template v-slot:noResult>
                           <p class="multi-slot">No results.</p>
                         </template>
-                        <template slot="placeholder">
+                        <template v-slot:placeholder>
                           <p class="slot-icon">
                             <img src="@/assets/images/search.svg" alt="" />
                             {{ currentVals[field.apiName] }}
@@ -1138,14 +1138,11 @@
                   :options="pricebooks"
                   openDirection="below"
                   v-model="selectedPriceBook"
-                  style="width: 16.5vw"
+                  style="width: 35vw"
                   selectLabel="Enter"
                   label="name"
                 >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                  <template slot="placeholder">
+                  <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ 'Pricebook' }}
@@ -1188,7 +1185,7 @@
                     "
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
-                    style="width: 16.5vw"
+                    style="width: 35vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1202,10 +1199,15 @@
                         : 'name'
                     "
                   >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
                     </template>
-                    <template slot="placeholder">
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.referenceDisplayLabel }}
@@ -1219,6 +1221,7 @@
                   <input
                     id="user-input"
                     type="text"
+                    style="width: 35vw"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -1237,7 +1240,7 @@
                     ccols="30"
                     rows="2"
                     :placeholder="currentVals[field.apiName]"
-                    style="width: 20vw; border-radius: 6px; padding: 7px"
+                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   >
@@ -1250,6 +1253,7 @@
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
                     :placeholder="currentVals[field.apiName]"
+                    style="width: 35vw"
                     v-model="currentVals[field.apiName]"
                     id="user-input"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -1260,6 +1264,7 @@
                   <input
                     type="datetime-local"
                     id="start"
+                    style="width: 35vw"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
@@ -1274,12 +1279,188 @@
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     id="user-input"
+                    style="width: 35vw"
                     type="number"
                     v-model="currentVals[field.apiName]"
                     :placeholder="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="hasProducts && currentProducts.length">
+            <section v-if="!editingProduct">
+              <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
+                <h4>
+                  {{ product.secondary_data.Name }}
+                </h4>
+                <p>Quantity: {{ product.secondary_data.Quantity }}</p>
+                <span
+                  ><p>Total Price: ${{ product.secondary_data.TotalPrice }}</p>
+                  <button
+                    @click="
+                      editProduct(
+                        product.secondary_data.Id,
+                        product.id,
+                        product.name,
+                        product.secondary_data,
+                      )
+                    "
+                  >
+                    Edit Product
+                  </button>
+                </span>
+              </div>
+            </section>
+
+            <div class="current-products" v-if="editingProduct">
+              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+                {{ productName }}
+              </p>
+              <PipelineLoader v-if="savingProduct" />
+              <div v-for="(field, i) in createProductForm" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                  "
+                >
+                  <p class="form-label">
+                    {{
+                      field.referenceDisplayLabel === 'PricebookEntry'
+                        ? 'Products'
+                        : field.referenceDisplayLabel
+                    }}
+                  </p>
+                  <Multiselect
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : productReferenceOpts[field.apiName]
+                    "
+                    @select="
+                      setProductValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? $event.value
+                          : field.apiName === 'PricebookEntryId'
+                          ? $event.integration_id
+                          : $event.id,
+                      )
+                    "
+                    openDirection="below"
+                    v-model="dropdownProductVal[field.apiName]"
+                    style="width: 35vw"
+                    selectLabel="Enter"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :loading="loadingProducts"
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
+                      <small class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.referenceDisplayLabel }}
+                      </small>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div v-else-if="field.dataType === 'String'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    id="user-input"
+                    type="text"
+                    style="width: 35vw"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <textarea
+                    id="user-input"
+                    ccols="30"
+                    rows="2"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  >
+                  </textarea>
+                </div>
+                <div v-else-if="field.dataType === 'Date'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    style="width: 35vw"
+                    v-model="dropdownProductVal[field.apiName]"
+                    id="user-input"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div v-else-if="field.dataType === 'DateTime'">
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    style="width: 35vw"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    v-model="dropdownProductVal[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}</p>
+                  <input
+                    id="user-input"
+                    style="width: 35vw"
+                    type="number"
+                    v-model="dropdownProductVal[field.apiName]"
+                    :placeholder="currentSelectedProduct[field.apiName]"
+                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                  />
+                </div>
+              </div>
+
+              <div class="current-products__footer">
+                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <p @click="cancelEditProduct">Cancel</p>
               </div>
             </div>
           </div>
@@ -1497,16 +1678,16 @@
                 v-model="dropdownVal['StageName']"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Stage
@@ -1524,16 +1705,16 @@
                 v-model="dropdownVal['ForecastCategoryName']"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Forecast Category
@@ -1606,12 +1787,12 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <Multiselect
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
-                    : referenceOpts[field.apiName]
+                    : stageReferenceOpts[field.apiName]
                 "
                 @select="
                   setUpdateValidationValues(
@@ -1623,8 +1804,9 @@
                 "
                 openDirection="below"
                 v-model="dropdownVal[field.apiName]"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
+                :multiple="field.dataType === 'MultiPicklist' ? true : false"
                 :track-by="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? 'value'
@@ -1636,10 +1818,10 @@
                     : 'name'
                 "
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
@@ -1654,24 +1836,24 @@
               </Multiselect>
             </div>
             <div v-else-if="field.apiName === 'AccountId'">
-              <p>{{ field.referenceDisplayLabel }}*</p>
+              <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
               <Multiselect
                 v-model="selectedAccount"
                 :options="allAccounts"
                 @search-change="getAccounts($event)"
                 @select="setUpdateValidationValues(field.apiName, $event.id)"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
                 track-by="integration_id"
                 label="name"
                 :loading="dropdownLoading || loadingAccounts"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
 
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentAccount }}
@@ -1680,7 +1862,7 @@
               </Multiselect>
             </div>
             <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <input
                 id="user-input"
                 type="text"
@@ -1697,13 +1879,13 @@
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
               "
             >
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <textarea
                 id="user-input"
                 ccols="30"
                 rows="2"
                 :placeholder="currentVals[field.apiName]"
-                style="width: 32vw; border-radius: 6px; padding: 7px"
+                style="width: 40.25vw; border-radius: 6px; padding: 7px"
                 v-model="currentVals[field.apiName]"
                 @input="
                   ;(value = $event.target.value), setUpdateValidationValues(field.apiName, value)
@@ -1712,7 +1894,7 @@
               </textarea>
             </div>
             <div v-else-if="field.dataType === 'Date'">
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <input
                 type="text"
                 onfocus="(this.type='date')"
@@ -1726,7 +1908,7 @@
               />
             </div>
             <div v-else-if="field.dataType === 'DateTime'">
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <input
                 type="datetime-local"
                 id="start"
@@ -1743,7 +1925,7 @@
                 field.dataType === 'Currency'
               "
             >
-              <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <input
                 id="user-input"
                 type="number"
@@ -1755,20 +1937,20 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <p class="form-label">{{ field.referenceDisplayLabel }}:</p>
+              <label class="form-label red-label">{{ field.referenceDisplayLabel }}:</label>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
                 @select="setUpdateValidationValues(field.apiName, $event)"
                 openDirection="below"
-                style="width: 16.5vw"
+                style="width: 40.25vw"
                 selectLabel="Enter"
               >
-                <template slot="noResult">
+                <template v-slot:noResult>
                   <p class="multi-slot">No results.</p>
                 </template>
-                <template slot="placeholder">
+                <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{ currentVals[field.apiName] }}
@@ -1786,7 +1968,7 @@
           <button
             v-else
             @click="updateStageForm()"
-            class="select-btn"
+            class="add-button"
             style="margin-bottom: 6px; margin-right: -6px"
           >
             Update
@@ -1862,7 +2044,7 @@
               createFormInstance(
                 workflow.id,
                 workflow.integration_id,
-                opp.secondary_data.Pricebook2Id,
+                workflow.secondary_data.Pricebook2Id,
               )
             "
             @get-notes="getNotes(workflow.id)"
@@ -1958,6 +2140,14 @@ export default {
   },
   data() {
     return {
+      stageGateCopy: {},
+      stageReferenceOpts: {},
+      currentSelectedProduct: null,
+      savingProduct: null,
+      productName: null,
+      editingProduct: false,
+      productId: null,
+      productIntegrationId: null,
       productRefCopy: {},
       pricebookId: null,
       noteTitle: null,
@@ -1978,6 +2168,7 @@ export default {
           salesforceObject: 'Opportunity',
         },
       }),
+      currentProducts: [],
       createProductForm: null,
       addingProduct: false,
       originalOppTotal: null,
@@ -2009,6 +2200,7 @@ export default {
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
+      dropdownProductVal: {},
       selectedAccount: null,
       selectedOwner: null,
       currentOwner: null,
@@ -2068,6 +2260,7 @@ export default {
       instanceId: null,
       contactInstanceId: null,
       formData: {},
+      updateProductData: {},
       noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
@@ -2101,6 +2294,10 @@ export default {
       allOppsForWorkflows: null,
       pricebooks: null,
       selectedPriceBook: null,
+      pricebookPage: 1,
+      savedPricebookEntryId: '',
+      showLoadMore: false,
+      savedProductedReferenceOps: [],
       booleans: ['true', 'false'],
       ladFilter: {
         apiName: 'LastActivityDate',
@@ -2209,6 +2406,17 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    cancelEditProduct() {
+      this.dropdownProductVal = {}
+      this.editingProduct = !this.editingProduct
+    },
+    editProduct(integrationId, id, name, secondaryData) {
+      this.editingProduct = true
+      this.productIntegrationId = integrationId
+      this.productId = id
+      this.productName = name
+      this.currentSelectedProduct = secondaryData
+    },
     async getTemplates() {
       try {
         const res = await User.api.getTemplates()
@@ -2231,6 +2439,34 @@ export default {
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
     },
+    async loadMore() {
+      if (!this.savedPricebookEntryId) {
+        return
+      }
+      try {
+        this.loadingProducts = true
+        this.savedProductedReferenceOps = [...this.productReferenceOpts['PricebookEntryId']]
+        const res = await SObjects.api.getObjects('PricebookEntry', this.pricebookPage, true, [
+          ['EQUALS', 'Pricebook2Id', this.savedPricebookEntryId],
+        ])
+        this.productReferenceOpts['PricebookEntryId'] = [
+          ...res.results,
+          ...this.savedProductedReferenceOps,
+        ]
+        if (res.next) {
+          this.pricebookPage++
+          this.showLoadMore = true
+        } else {
+          this.showLoadMore = false
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingProducts = false
+        }, 1000)
+      }
+    },
     async getPricebookEntries(id) {
       try {
         this.loadingProducts = true
@@ -2239,6 +2475,15 @@ export default {
         ])
 
         this.productReferenceOpts['PricebookEntryId'] = res.results
+        this.productList = res.results
+        if (res.next) {
+          this.pricebookPage++
+          this.showLoadMore = true
+        } else {
+          this.pricebookPage = 1
+          this.showLoadMore = false
+        }
+        this.savedPricebookEntryId = id
       } catch (e) {
         console.log(e)
       } finally {
@@ -2264,6 +2509,11 @@ export default {
         this.$refs.product ? this.$refs.product.scrollIntoView() : null
       }, 100)
     },
+    // scrollToFields() {
+    //   setTimeout(() => {
+    //     this.$refs.product ? this.$refs.product.scrollIntoView() : null
+    //   }, 100)
+    // },
     async getFilteredOpps() {
       this.currentPage = 1
       try {
@@ -2366,10 +2616,16 @@ export default {
           resourceId: id,
         })
         this.currentVals = res.current_values
-        this.currentOwner = this.allUsers.filter(
+
+        this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
-        this.allOppsForWorkflows.filter((opp) => opp.id === id)[0].account_ref
+        )
+          ? (this.currentOwner = this.allUsers.filter(
+              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+            )[0].full_name)
+          : (this.currentOwner = 'Owner')
+
+        this.allOpps.filter((opp) => opp.id === id)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
@@ -2403,11 +2659,16 @@ export default {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
           this.productReferenceOpts[key] = res
+        } else if (type === 'stage') {
+          this.stageReferenceOpts[key] = res
         } else {
           this.createReferenceOpts[key] = res
         }
       } catch (e) {
-        this.$toast('Error gathering reference fields', {
+        let message = e.response.data.error
+          ? e.response.data.error
+          : 'Error gathering reference fields'
+        this.$toast(message, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -2485,6 +2746,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        this.formData = {}
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
@@ -2971,16 +3233,29 @@ export default {
       this.noteTitle = null
       this.alertInstanceId = alertInstanceId
       this.oppId = id
+      this.currentProducts = []
+      this.updateProductData = {}
+      this.productId = null
+      this.productIntegrationId = null
+      this.dropdownProductVal = {}
+      this.editingProduct = false
       try {
         const res = await SObjects.api.getCurrentValues({
           resourceType: 'Opportunity',
           resourceId: id,
         })
         this.currentVals = res.current_values
-        this.currentOwner = this.allUsers.filter(
+        this.currentProducts = res.current_products
+
+        this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
-        this.allOppsForWorkflows.filter((opp) => opp.id === this.oppId)[0].account_ref
+        )
+          ? (this.currentOwner = this.allUsers.filter(
+              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+            )[0].full_name)
+          : (this.currentOwner = 'Owner')
+
+        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
@@ -2994,6 +3269,7 @@ export default {
     },
     async createOppInstance() {
       this.formData = {}
+      this.dropdownVal = {}
       this.createData = {}
       this.currentVals = []
       this.selectedAccount = null
@@ -3123,6 +3399,11 @@ export default {
     setCreateValues(key, val) {
       if (val) {
         this.createData[key] = val
+      }
+    },
+    setProductValues(key, val) {
+      if (val) {
+        this.updateProductData[key] = val
       }
     },
     async updateOpps() {
@@ -3310,6 +3591,48 @@ export default {
         return
       }
     },
+
+    async updateProduct() {
+      this.savingProduct = true
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: this.updateProductData,
+            from_workflow: this.selectedWorkflow ? true : false,
+            workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+            form_type: 'UPDATE',
+            integration_ids: [this.productIntegrationId],
+            resource_type: 'OpportunityLineItem',
+            resource_id: this.productId,
+            stage_name: null,
+          })
+          .then(async (res) => {
+            const res2 = await SObjects.api.getCurrentValues({
+              resourceType: 'Opportunity',
+              resourceId: this.oppId,
+            })
+            this.currentProducts = res2.current_products
+          })
+        this.$toast('Product updated successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error updating Product', {
+          timeout: 1500,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingProduct = false
+        this.savingProduct = false
+      }
+    },
     async updateResource() {
       this.updateList.push(this.oppId)
       this.editOpModalOpen = false
@@ -3481,6 +3804,14 @@ export default {
           }
         }
 
+        if (this.stageGateCopy) {
+          for (let i = 0; i < this.stageGateCopy.length; i++) {
+            if (this.stageGateCopy[i].dataType === 'Reference') {
+              this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+            }
+          }
+        }
+
         for (let i = 0; i < this.createOppForm.length; i++) {
           if (this.createOppForm[i].dataType === 'Reference') {
             this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
@@ -3499,6 +3830,16 @@ export default {
 
         for (let i in this.referenceOpts) {
           this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+
+        if (this.stageReferenceOpts) {
+          for (let i in this.stageReferenceOpts) {
+            this.stageReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.stageReferenceOpts[i],
+              'stage',
+            )
+          }
         }
 
         for (let i in this.createReferenceOpts) {
@@ -3551,6 +3892,7 @@ export default {
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
+
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -3567,35 +3909,19 @@ export default {
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
         )[0].fieldsRef
 
-        // this.updateAccountForm = res.filter(
-        //   (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
-        // )[0].fieldsRef
-
-        let stages = stageGateForms.map((field) => field.stage)
-        this.stagesWithForms = stages
-        this.oppFormCopy = this.updateOppForm[0].fieldsRef
-
-        for (const field of stageGateForms) {
-          this.stageValidationFields[field.stage] = field.fieldsRef
+        if (stageGateForms.length) {
+          this.stageGateCopy = stageGateForms[0].fieldsRef
+          let stages = stageGateForms.map((field) => field.stage)
+          this.stagesWithForms = stages
+          for (const field of stageGateForms) {
+            this.stageValidationFields[field.stage] = field.fieldsRef
+          }
         }
 
-        // let stageArrayOfArrays = stageGateForms.map((field) => field.fieldsRef)
-        // let allStageFields = [].concat.apply([], stageArrayOfArrays)
-        // let dupeStagesRemoved = [
-        //   ...new Map(allStageFields.map((v) => [v.referenceDisplayLabel, v])).values(),
-        // ]
-
-        // for (let i = 0; i < dupeStagesRemoved.length; i++) {
-        //   if (
-        //     dupeStagesRemoved[i].dataType === 'Picklist' ||
-        //     dupeStagesRemoved[i].dataType === 'MultiPicklist'
-        //   ) {
-        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].apiName] = dupeStagesRemoved[i].apiName
-        //   } else if (dupeStagesRemoved[i].dataType === 'Reference') {
-        //     this.stagePicklistQueryOpts[dupeStagesRemoved[i].referenceDisplayLabel] =
-        //       dupeStagesRemoved[i].referenceDisplayLabel
-        //   }
-        // }
+        // this.stageGateCopy = stageGateForms[0].fieldsRef
+        // let stages = stageGateForms.map((field) => field.stage)
+        // this.stagesWithForms = stages
+        this.oppFormCopy = this.updateOppForm[0].fieldsRef
       } catch (e) {
         console.log(e)
       }
@@ -3673,7 +3999,6 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         this.allOpps = res.results
-
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
         this.hasNextOriginal = this.hasNext
@@ -3858,6 +4183,68 @@ export default {
   }
 }
 
+.current-products {
+  font-size: 12px;
+  padding-left: 4px;
+  width: 40.25vw;
+  // border: 1px solid $soft-gray;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 16px;
+
+  h4 {
+    font-weight: bold;
+  }
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -6px;
+
+    p {
+      background-color: $white-green;
+      color: $dark-green;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    button {
+      border: 1px solid $dark-green;
+      color: $dark-green;
+      background-color: white;
+      border-radius: 4px;
+      padding: 5px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 4px;
+      margin-right: 4px;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 39vw;
+    padding: 8px;
+    margin-top: 1rem;
+    position: sticky;
+
+    p {
+      margin-left: 16px;
+      cursor: pointer;
+      color: $dark-green;
+    }
+  }
+
+  // button:hover {
+  //   background-color: $base-gray;
+  //   opacity: 0.8;
+  //   color: white;
+  // }
+}
+
 .tooltip {
   position: relative;
   display: flex;
@@ -3958,20 +4345,19 @@ export default {
 }
 
 // .form-label {
-//   background-color: $white-green;
 //   width: fit-content;
-//   color: $dark-green;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-//   padding: 6px 12px;
-//   margin-bottom: -1px;
-//   font-size: 16px;
 // }
+
 .col {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+
+  ::v-deep div {
+    display: none !important;
+  }
 }
+
 .light-green-bg {
   background-color: $white-green;
   color: $dark-green !important;
@@ -4000,15 +4386,16 @@ export default {
 }
 
 .adding-stage-gate2 {
-  border: 1px solid $coral;
+  // border: 1px solid $coral;
   // box-shadow: 1px 3px 5px $very-light-gray;
+  box-shadow: 1px 1px 2px 1px #c2c4ca;
   background-color: white;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 34vw;
+  width: 43vw;
   min-height: 50vh;
   left: 32vw;
-  top: 18vh;
+  top: 17vh;
   position: absolute;
   z-index: 12;
   &__header {
@@ -4018,14 +4405,15 @@ export default {
     justify-content: space-between;
     font-size: 16px;
     padding: 0.75rem 0.5rem;
-    color: $white;
+    color: black;
     width: 100%;
-    border-bottom: 1px solid $coral;
-    background-color: $coral;
+    // border-bottom: 1px solid $coral;
+    // background-color: $coral;
+    background-color: #fafafa;
     img {
       height: 1rem;
       margin-right: 0.5rem;
-      filter: invert(95%);
+      filter: invert(5%);
     }
 
     div {
@@ -4035,19 +4423,20 @@ export default {
   }
   &__body {
     padding: 0.25rem;
+    margin-left: 0.75rem;
     font-size: 11px !important;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+    min-height: 30vh;
     input {
-      width: 10vw !important;
+      width: 10vw;
       height: 1.5rem !important;
     }
     .multiselect {
-      width: 12vw !important;
+      width: 12vw;
       font-weight: 11px !important;
     }
     p {
@@ -4075,11 +4464,11 @@ export default {
   }
 }
 .adding-stage-gate {
-  border: 1px solid $coral;
+  // border: 1px solid $coral;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 34vw;
-  min-height: 30vh;
+  width: 40.25vw;
+  // min-height: 30vh;
   &__header {
     display: flex;
     flex-direction: row;
@@ -4088,8 +4477,8 @@ export default {
     padding: 0.5rem;
     color: $white;
     width: 100%;
-    border-bottom: 1px solid $coral;
-    background-color: $coral;
+    // border-bottom: 1px solid $coral;
+    // background-color: $coral;
     img {
       height: 1rem;
       margin-right: 0.5rem;
@@ -4103,20 +4492,20 @@ export default {
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+    // height: 30vh;
     input {
-      width: 10vw !important;
+      width: 10vw;
       height: 1.5rem !important;
     }
     .multiselect {
-      width: 12vw !important;
+      width: 12vw;
       font-weight: 11px !important;
     }
     p {
       margin-left: 0.25rem;
     }
     span {
-      color: $coral;
+      // color: $coral;
     }
   }
 
@@ -4142,7 +4531,7 @@ export default {
   border: 1px solid $dark-green;
   border-radius: 0.3rem;
   margin: 0.5rem 0rem;
-  width: 34vw;
+  width: 40.25vw;
   min-height: 30vh;
   &__header {
     display: flex;
@@ -4169,11 +4558,11 @@ export default {
     overflow: auto;
     height: 30vh;
     input {
-      width: 10vw !important;
+      width: 10vw;
       height: 1.5rem !important;
     }
     .multiselect {
-      width: 12vw !important;
+      width: 12vw;
       font-weight: 11px !important;
     }
     p {
@@ -4278,8 +4667,6 @@ export default {
     background-color: $very-light-gray;
     color: $white;
     padding: 3px 6px;
-  }
-  &-rotate {
   }
   button {
     margin-right: 8px;
@@ -4488,7 +4875,7 @@ h3 {
 .modal-container {
   background-color: $white;
   overflow: auto;
-  min-width: 32vw;
+  min-width: 36vw;
   max-width: 36vw;
   min-height: 44vh;
   max-height: 80vh;
@@ -4502,13 +4889,13 @@ h3 {
   flex-direction: column;
   overflow: hidden;
   background-color: white;
-  width: 38vw;
+  width: 44vw;
   border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid #e8e8e8;
 }
 .opp-modal {
-  width: 36vw;
+  width: 42vw;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -4521,7 +4908,7 @@ h3 {
   font-size: 16px;
   letter-spacing: 0.75px;
   div {
-    margin-right: 0.25rem;
+    margin-right: -1.25rem;
   }
 }
 .note-section {
@@ -4588,6 +4975,10 @@ input[type='text']:focus {
 input[type='checkbox'] {
   cursor: pointer;
 }
+div[id^='user-input'] {
+  // display: none;
+  outline: 1px solid yellow !important;
+}
 select {
   cursor: pointer;
 }
@@ -4607,7 +4998,7 @@ section {
   -webkit-appearance: textarea;
   resize: both;
   height: 30px;
-  width: 34vw;
+  width: 40.25vw;
   min-height: 20vh;
   margin-bottom: 4px;
   border: 1px solid #e8e8e8;
@@ -4744,8 +5135,11 @@ section {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 16.5vw;
+  width: 40.25vw;
   font-family: $base-font-family;
+}
+#user-input > div {
+  color: red !important;
 }
 #user-input:focus {
   outline: none;
@@ -4946,7 +5340,7 @@ a {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   cursor: pointer;
-  width: 34vw;
+  width: 40.25vw;
 
   &__content {
     display: flex;
@@ -4968,14 +5362,14 @@ a {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 24px;
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
   border: 1px solid $soft-gray;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  width: 34vw;
+  width: 40.25vw;
   height: 80px;
   overflow: scroll;
 
@@ -4994,7 +5388,7 @@ a {
 .close-template {
   position: absolute;
   bottom: 56px;
-  right: 8px;
+  right: 20px;
   z-index: 3;
   cursor: pointer;
   background-color: black;
@@ -5013,6 +5407,20 @@ a {
   margin-top: 12px;
   background-color: $white-green;
   color: $dark-green;
+  font-weight: bold;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+.red-label {
+  background-color: #fa646a;
+  color: white;
+  display: inline-block;
+  padding: 6px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 80px;
+  margin-top: 12px;
+  margin-left: 2px;
   font-weight: bold;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;

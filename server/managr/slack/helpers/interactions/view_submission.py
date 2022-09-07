@@ -72,14 +72,17 @@ logger = logging.getLogger("managr")
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    print(f"STAGE RELATED: {context}")
     view = payload["view"]
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
 
     state = view["state"]["values"]
+    task_selection = [
+        value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+    ][0]
+    task_type = task_selection.get("value") if task_selection is not None else "None"
     private_metadata = json.loads(view["private_metadata"])
-
+    private_metadata["task_type"] = task_type
     review_form = workflow.forms.filter(template__form_type=context.get("form_type")).first()
     review_form.save_form(state)
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).all()
@@ -118,6 +121,7 @@ def process_stage_next_page(payload, context):
 def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    private_metadata = json.loads(payload["view"]["private_metadata"])
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
@@ -148,6 +152,12 @@ def process_zoom_meeting_data(payload, context):
 
     # get state - state contains the values based on the block_id
     state = view["state"]["values"]
+    task_type = private_metadata.get("task_type", None)
+    if not task_type:
+        task_selection = [
+            value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+        ][0]
+        task_type = task_selection.get("value") if task_selection is not None else None
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
     current_form_ids = []
@@ -166,7 +176,7 @@ def process_zoom_meeting_data(payload, context):
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
         # create call log
-        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
+        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
         # save meeting data
     ]
     for form in contact_forms:
@@ -526,7 +536,6 @@ def process_submit_resource_data(payload, context):
             return logger.exception(
                 f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
             )
-
     else:
         form_id = current_form_ids[0]
         # update the channel message to clear it
@@ -546,6 +555,7 @@ def process_submit_resource_data(payload, context):
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
+        internal_update = main_form.resource_object.update_database_values(all_form_data)
         try:
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,
@@ -1287,16 +1297,16 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
-    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource_type=User"][
         "selected_options"
     ]:
         query_data = User.objects.filter(
             id__in=list(
                 map(
                     lambda val: val["value"],
-                    data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
-                        "selected_options"
-                    ],
+                    data["meeting_internals"][
+                        f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource_type=User"
+                    ]["selected_options"],
                 )
             )
         ).values("email", "first_name", "last_name")
@@ -1533,14 +1543,12 @@ def process_add_contacts_to_sequence(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_get_notes(payload, context):
-    meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
-    trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = payload["view"]["state"]["values"]["select_opp"][
-        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource=Opportunity"
+        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource_type=Opportunity"
     ]["selected_option"]["value"]
     opportunity = Opportunity.objects.get(id=resource_id)
     note_data = (
@@ -1615,13 +1623,13 @@ def process_send_recaps(payload, context):
     leadership = [
         option["value"]
         for option in values["__send_recap_to_leadership"][
-            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=e286d1d5-5447-47e6-ad55-5f54fdd2b00d"
+            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource_type=User&field_id=e286d1d5-5447-47e6-ad55-5f54fdd2b00d"
         ]["selected_options"]
     ]
     reps = [
         option["value"]
         for option in values["__send_recap_to_reps"][
-            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
+            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource_type=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
         ]["selected_options"]
     ]
     send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
@@ -2518,7 +2526,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
-    user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
+    # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
     return {"response_action": "clear"}
 

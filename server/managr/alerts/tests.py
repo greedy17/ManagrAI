@@ -284,7 +284,7 @@ class UserTestCase(TestCase):
                 template=self.template,
             )
         conf = self.config
-        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=2)).day
+        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=3)).day
         conf.save()
         f = alert_models.AlertConfig.objects.filter(
             Q(template__user__is_active=True, template__is_active=True)
@@ -1026,14 +1026,11 @@ class UserTestCase(TestCase):
         rep = core_factories.UserFactory(
             is_admin=False, user_level="REP", organization=self.admin_user.organization
         )
-        self.assertEquals(conf_1.target_users.count(), 2)
-        self.assertIn(rep.email, conf_1.target_users.values_list("email", flat=True))
+        self.assertEquals(conf_1.target_users.count(), 1)
 
         conf_1.alert_targets = [str(rep.id)]
         conf_1.save()
-
-        self.assertEquals(conf_1.target_users.count(), 1)
-        self.assertIn(rep.id, conf_1.target_users.values_list("id", flat=True))
+        self.assertEquals(conf_1.target_users.count(), 0)
 
         conf_1.alert_targets = ["MANAGERS", str(self.admin_user.id)]
         conf_1.save()

@@ -369,9 +369,11 @@ def process_stage_selected(payload, context):
 
         # delete all existing stage forms
         workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
-        stage_form = org.custom_slack_forms.filter(
-            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
-        ).first()
+        stage_form = (
+            org.custom_slack_forms.for_user(user)
+            .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
+            .first()
+        )
 
         if stage_form:
             workflow.add_form(
@@ -614,7 +616,7 @@ def process_meeting_selected_resource_option(payload, context):
     else:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
     select = payload["actions"][0]["selected_option"]["value"]
-    resource_type = context.get("resource")
+    resource_type = context.get("resource_type")
     action = None
     external_id = ""
     try:
@@ -880,7 +882,7 @@ def process_add_products_form(payload, context):
     product_form_id = context.get("product_form", None)
     if product_form_id is None:
         product_template = OrgCustomSlackForm.objects.filter(
-            Q(resource="OpportunityLineItem", form_type="CREATE", organization=user.organization)
+            Q(resource="OpportunityLineItem", form_type="CREATE", team=user.team)
         ).first()
         product_form = OrgCustomSlackFormInstance.objects.create(
             template=product_template, user=user
@@ -1048,9 +1050,11 @@ def process_stage_selected_command_form(payload, context):
         index, action_block = block_finder(action["block_id"], blocks)
 
         # find all stages previous to it
-        stage_form = org.custom_slack_forms.filter(
-            form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value
-        ).first()
+        stage_form = (
+            org.custom_slack_forms.for_user(user)
+            .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
+            .first()
+        )
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user, template=stage_form, resource_id=main_form.resource_id
@@ -1099,7 +1103,7 @@ def process_stage_selected_command_form(payload, context):
 
 
 @slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource", "u"])
+@processor(required_context=["resource_type", "u"])
 def process_show_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
@@ -1109,7 +1113,6 @@ def process_show_update_resource_form(payload, context):
     view_type = "update" if is_update else "open"
     view_id = is_update["id"] if is_update else None
     trigger_id = payload["trigger_id"]
-    type = context.get("type", None)
     loading_view_data = send_loading_screen(
         access_token,
         "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
@@ -1119,7 +1122,7 @@ def process_show_update_resource_form(payload, context):
         view_id,
     )
     resource_id = payload["actions"][0]["selected_option"]["value"]
-    resource_type = context.get("resource")
+    resource_type = context.get("resource_type")
     show_submit_button_if_fields_added = False
     stage_form = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
@@ -1137,7 +1140,7 @@ def process_show_update_resource_form(payload, context):
         if slack_form:
             current_stage = slack_form.resource_object.secondary_data.get("StageName")
             stage_template = (
-                OrgCustomSlackForm.objects.filter(stage=current_stage).first()
+                OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
                 if current_stage
                 else None
             )
@@ -1378,7 +1381,7 @@ def process_request_invite_from_home_tab(payload, context):
 
 
 @slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource", "u"])
+@processor(required_context=["resource_type", "u"])
 def process_check_is_owner(payload, context):
     # CHECK_IS_OWNER
     slack_id = payload.get("user", {}).get("id")
@@ -1702,14 +1705,6 @@ def process_show_engagement_modal(payload, context):
         trigger_id,
         view_id,
     )
-    resource_name = (
-        [value.get("selected_option") for value in state.get("selected_object_type", {}).values()][
-            0
-        ].get("value")
-        if state
-        else context.get("resource_name")
-    )
-
     resource_id = (
         [value.get("selected_option") for value in state.get("selected_object", {}).values()][
             0
@@ -1717,8 +1712,8 @@ def process_show_engagement_modal(payload, context):
         if state
         else context.get("resource_id")
     )
-    resource_type = context.get("resource") if state else context.get("resource_type")
-
+    resource_type = context.get("resource_type")
+    resource_name = routes[resource_type]["model"].objects.get(id=resource_id).name
     private_metadata = {
         "resource_name": resource_name,
         "resource_id": resource_id,
@@ -1789,20 +1784,13 @@ def process_get_notes(payload, context):
     )
     resource_type = context.get("resource_type", "Opportunity")
     resource_id = (
-        context.get("resource_id", None)
-        if type != "command"
-        else payload["view"]["state"]["values"]["select_opp"][
-            f"GET_NOTES?u={u.id}&resource=Opportunity&type=command"
+        context.get("resource_id")
+        if type in ["alert", "recap"]
+        else payload["view"]["state"]["values"]["selected_object"][
+            f"GET_NOTES?u={u.id}&resource_type={resource_type}"
         ]["selected_option"]["value"]
     )
-    if resource_type == "Opportunity":
-        resource = Opportunity.objects.get(id=resource_id)
-    elif resource_type == "Account":
-        resource = Account.objects.get(id=context.get("resource_id"))
-    elif resource_type == "Lead":
-        resource = Lead.objects.get(id=context.get("resource_id"))
-    elif resource_type == "Contact":
-        resource = Contact.objects.get(id=context.get("resource_id"))
+    resource = routes[resource_type]["model"].objects.get(id=resource_id)
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -2117,7 +2105,7 @@ def process_paginate_alerts(payload, context):
 
 
 @slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource", "u"])
+@processor(required_context=["resource_type", "u"])
 def process_show_alert_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
@@ -2133,7 +2121,7 @@ def process_show_alert_update_resource_form(payload, context):
     )
     resource_id = payload["actions"][0]["value"]
     alert_instance = AlertInstance.objects.get(id=context.get("alert_id"))
-    resource_type = context.get("resource")
+    resource_type = context.get("resource_type")
     show_submit_button_if_fields_added = False
     stage_form = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
@@ -2154,7 +2142,7 @@ def process_show_alert_update_resource_form(payload, context):
     if slack_form:
         current_stage = slack_form.resource_object.secondary_data.get("StageName")
         stage_template = (
-            OrgCustomSlackForm.objects.filter(stage=current_stage).first()
+            OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
             if current_stage
             else None
         )
@@ -2348,7 +2336,7 @@ def process_alert_actions(payload, context):
     state = payload["state"]["values"]
     selected = (
         state[context.get("alert_id")][
-            f"PROCESS_ALERT_ACTIONS?u={context.get('u')}&alert_id={context.get('alert_id')}&page={context.get('page')}&resource_id={context.get('resource_id')}&resource_name={context.get('resource_name')}&resource_type={context.get('resource_type')}"
+            f"PROCESS_ALERT_ACTIONS?u={context.get('u')}&alert_id={context.get('alert_id')}&page={context.get('page')}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
         ]
         .get("selected_option")
         .get("value")
@@ -2439,7 +2427,7 @@ def process_paginate_tasks(payload, context):
 
 
 @slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource", "u"])
+@processor(required_context=["resource_type", "u"])
 def process_show_digest_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
@@ -2454,7 +2442,7 @@ def process_show_digest_update_resource_form(payload, context):
         trigger_id,
     )
     resource_id = payload["actions"][0]["value"]
-    resource_type = context.get("resource")
+    resource_type = context.get("resource_type")
     show_submit_button_if_fields_added = False
     stage_form = None
     prep_instance = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
