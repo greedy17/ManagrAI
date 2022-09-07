@@ -68,7 +68,7 @@ class Organization(TimeStampModel):
 
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
-        templates = user.organization.custom_slack_forms.all()
+        templates = user.team.team_forms.all()
 
         if preserve_fields:
             for form in templates:
