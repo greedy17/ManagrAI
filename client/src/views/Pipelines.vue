@@ -1816,6 +1816,7 @@
                         ? 'label'
                         : 'name'
                     "
+                    :multiple="selectedOpp.dataType === 'MultiPicklist'"
                     class="sliding"
                   >
                     <template v-slot:noResult>
@@ -3525,6 +3526,9 @@ export default {
         }
         this.primaryCheckList = []
       }
+      this.selectedOpp = null
+      this.oppVal = null
+      this.oppNewValue = null
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
