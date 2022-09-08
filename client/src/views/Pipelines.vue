@@ -1643,7 +1643,7 @@
                   />
                 </button> -->
                 <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Bulk Update</button>
-                <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
+                <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -4857,6 +4857,25 @@ select {
 }
 .select-btn {
   border: 0.5px solid $dark-green;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    height: 1.05rem !important;
+  }
+}
+.select-btn2 {
+  border: 0.5px solid $very-light-gray;
   padding: 0.375rem 0.75rem;
   display: flex;
   align-items: center;
