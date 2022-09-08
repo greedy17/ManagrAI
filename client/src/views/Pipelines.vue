@@ -1816,6 +1816,11 @@
                         ? 'label'
                         : 'name'
                     "
+                    :track-by="
+                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
                     :multiple="selectedOpp.dataType === 'MultiPicklist'"
                     class="sliding"
                   >
