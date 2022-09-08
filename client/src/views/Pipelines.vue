@@ -1633,25 +1633,7 @@
           <div v-if="!updatingOpps" class="bulk-action">
             <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected && !changeFieldsSelected">
               <div class="flex-row">
-                <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
-                  Push Close Date
-                  <img
-                    src="@/assets/images/date.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
-                  Advance Stage
-                  <img
-                    src="@/assets/images/stairs.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-                <button @click="forecastSelected = !forecastSelected" class="select-btn1">
+                <!-- <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
                   <img
                     src="@/assets/images/monetary.svg"
@@ -1659,7 +1641,7 @@
                     style="margin-left: 0.25rem"
                     alt=""
                   />
-                </button>
+                </button> -->
                 <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Bulk Update</button>
                 <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
               </div>
@@ -1735,7 +1717,7 @@
                 v-model="selectedOpp"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 20vw"
+                style="width: 20vw; margin-right: 1rem;"
                 selectLabel="Enter"
                 label="label"
               >
@@ -1759,12 +1741,14 @@
                   "
                 >
                   <input
+                    class="sliding input"
                     @input="oppNewValue = $event.target.value"
                     type="text"
                   />
                 </div>
                 <div v-else-if="selectedOpp.dataType === 'Date'">
                   <input
+                    class="sliding"
                     type="date"
                     id="user-input"
                     @input="oppNewValue = $event.target.value"
@@ -1775,6 +1759,7 @@
                     type="datetime-local"
                     id="start"
                     @input="oppNewValue = $event.target.value"
+                    class="sliding"
                   />
                 </div>
                 <div
@@ -1787,6 +1772,7 @@
                   <input
                     type="number"
                     @input="oppNewValue = $event.target.value"
+                    class="sliding input"
                   />
                 </div>
                 <div
@@ -1817,6 +1803,7 @@
                         ? 'label'
                         : 'name'
                     "
+                    class="sliding"
                   >
                     <template v-slot:noResult>
                       <p class="multi-slot">No results. Try loading more</p>
@@ -5575,5 +5562,24 @@ a {
   font-weight: bold;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+}
+
+.sliding {
+  animation: slideOnOpen 1s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slideOnOpen {
+  from {width: 0;}
+  to {width: 15rem;}
+}
+.input{
+  min-height: 40px;
+  // display: block;
+  // padding: 8px 40px 0 8px;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  font-size: 14px;
 }
 </style>
