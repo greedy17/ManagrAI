@@ -1660,8 +1660,8 @@
                     alt=""
                   />
                 </button>
+                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Bulk Update</button>
                 <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
-                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Change Fields</button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -1731,6 +1731,7 @@
               <p style="font-size: 14px" @click="test(selectedOpp)">Change Field:</p>
               <Multiselect
                 :options="filteredSelectOppFields"
+                @select="selectedOppVal($event)"
                 v-model="selectedOpp"
                 openDirection="below"
                 :loading="dropdownLoading"
@@ -1778,8 +1779,8 @@
                 </div>
               </div>
 
-              <button @click="() => null" class="add-button">
-                Change Field Values
+              <button @click="bulkUpdate" class="add-button">
+                Save
               </button>
             </div>
           </div>
@@ -2073,6 +2074,8 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :BulkUpdateName="oppVal ? oppVal.apiName : null"
+            :BulkUpdateValue="oppNewValue"
             :currentInlineRow="currentInlineRow"
             :extraPipelineFields="extraPipelineFields"
           />
@@ -2120,6 +2123,8 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :BulkUpdateName="oppVal.apiName"
+            :BulkUpdateValue="oppNewValue"
             :currentInlineRow="currentInlineRow"
             :extraPipelineFields="extraPipelineFields"
           />
@@ -2282,6 +2287,7 @@ export default {
       oppNewValue: null,
       newStage: null,
       newForecast: null,
+      oppVal: null,
       originalList: null,
       daysForward: null,
       allOpps: null,
@@ -2405,7 +2411,8 @@ export default {
       },
     },
     filteredSelectOppFields() {
-      return this.oppFields.filter(f => f.label !== 'Stage' && f.label !== 'Close Date' && f.dataType !== 'Reference')
+      return this.oppFields
+      // return this.oppFields.filter(f => f.label !== 'Stage' && f.label !== 'Close Date' && f.dataType !== 'Reference')
     },
     currentMonth() {
       let date = new Date()
@@ -3175,6 +3182,10 @@ export default {
     setForecast(val) {
       this.newForecast = val
     },
+    selectedOppVal(val) {
+      console.log('val', val)
+      this.oppVal = val
+    },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
         for (let i = 0; i < this.allOpps.length; i++) {
@@ -3433,6 +3444,25 @@ export default {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
           if (this.$refs.pipelineTableChild[i].isSelected) {
             this.$refs.pipelineTableChild[i].onChangeForecast()
+            this.updateOpps()
+          }
+        }
+        this.primaryCheckList = []
+      }
+    },
+    bulkUpdate() {
+      if (this.selectedWorkflow) {
+        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onBulkUpdate()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+        }
+        this.workflowCheckList = []
+      } else {
+        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onBulkUpdate()
             this.updateOpps()
           }
         }
