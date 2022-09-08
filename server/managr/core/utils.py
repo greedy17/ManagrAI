@@ -205,3 +205,10 @@ def get_org_fields(org, first, last):
                     obj[form.user.email] = {}
                     obj[form.user.email][key] = 1
     return obj
+
+
+def pull_usage_data(month_only=False):
+    totals = get_totals_for_year(month_only)
+    orgs = get_organization_totals(month_only)
+    return {"totals": totals, "org": orgs}
+

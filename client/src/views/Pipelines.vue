@@ -2495,7 +2495,6 @@ export default {
       }
     },
     syncDay() {
-      console.log(this.$store.state.user)
       if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
         return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
           .substring(
@@ -2801,7 +2800,10 @@ export default {
           this.createReferenceOpts[key] = res
         }
       } catch (e) {
-        this.$toast('Error gathering reference fields', {
+        let message = e.response.data.error
+          ? e.response.data.error
+          : 'Error gathering reference fields'
+        this.$toast(message, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',

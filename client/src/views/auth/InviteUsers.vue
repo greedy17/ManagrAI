@@ -1,5 +1,114 @@
 <template>
   <div class="invite-users">
+    <!-- Change Admin Confirmation -->
+    <Modal
+      v-if="changeAdminConfirmModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleConfirmCancel()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Are you sure?</h3>
+          </div>
+          <div class="flex-row">
+            <h4 class="invite-form__subtitle">
+              By clicking Confirm, you will transferring the Admin role to
+              {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
+            </h4>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="changeAdminSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
+    <!-- Change Admin -->
+    <Modal
+      v-if="changeAdminModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleCancel()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Change Organization's Admin</h3>
+          </div>
+        </div>
+
+        <div
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+        >
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <Multiselect
+                  placeholder="Select New Admin"
+                  v-model="newAdmin"
+                  :options="team.list /* do not show the current admin */"
+                  openDirection="below"
+                  style="width: 26vw"
+                  selectLabel="Enter"
+                  label="email"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select New Admin
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <div
+                @click="handleConfirm"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
+              >
+                Confirm
+              </div>
+              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
     <!-- Create Team -->
     <Modal
       v-if="newTeam"
@@ -263,6 +372,9 @@
       <div class="invite-users__header">
         <h3 style="color: #4d4e4c">Manage Your Team</h3>
         <div>
+          <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
+            Change Admin
+          </button>
           <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
             Create New Team
           </button>
@@ -542,7 +654,10 @@ export default {
       inviteOpen: false,
       editTeam: false,
       newTeam: false,
+      changeAdminModal: false,
+      changeAdminConfirmModal: false,
       pulseLoading: false,
+      newAdmin: null,
       teamName: '',
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
@@ -691,6 +806,53 @@ export default {
         this.homeView()
       }
     },
+    async changeAdminSubmit() {
+      this.pulseLoading = true
+      if (!this.newAdmin || !this.newAdmin.id === this.getUser.id) {
+        setTimeout(() => {
+          console.log('Please choose a new admin')
+          this.$toast('Please choose a new admin', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const data = {
+            new_admin: this.newAdmin.id,
+          }
+          const teamRes = await Organization.api.changeAdmin(data)
+          this.refresh()
+          setTimeout(() => {
+            this.handleCancel()
+            this.$toast('Sucessfully submitted', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.pulseLoading = false
+            this.$router.go()
+          }, 1400)
+        } catch (e) {
+          console.log('Error: ', e)
+          this.$toast('Error changing admin', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false
+        }
+      }
+    },
     async createTeamSubmit() {
       this.pulseLoading = true
       if (!this.teamLead || !this.teamName) {
@@ -814,6 +976,9 @@ export default {
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
     },
+    showChangeAdmin() {
+      this.changeAdminModal = !this.changeAdminModal
+    },
     handleInvite() {
       this.inviteOpen = !this.inviteOpen
     },
@@ -823,10 +988,19 @@ export default {
     handleEdit() {
       this.editTeam = !this.editTeam
     },
+    handleConfirm() {
+      this.changeAdminConfirmModal = !this.changeAdminConfirmModal
+      this.changeAdminModal = !this.changeAdminModal
+    },
     handleCancel() {
       this.inviteOpen = false
       this.editTeam = false
       this.newTeam = false
+      this.changeAdminModal = false
+    },
+    handleConfirmCancel() {
+      this.changeAdminConfirmModal = false
+      this.changeAdminModal = !this.changeAdminModal
     },
     handleUpdate() {
       this.loading = true
@@ -869,13 +1043,9 @@ export default {
     this.refresh()
   },
   mounted() {
-    // console.log(this.getUser)
-    // setTimeout(() => {
-    //   console.log(this.team.list)
-    // }, 2000)
-  },
-  updated() {
-    // this.getTeams()
+    if (this.isAdmin) {
+      this.newAdmin = this.getUser
+    }
   },
   computed: {
     getUser() {
@@ -1374,6 +1544,11 @@ input[type='checkbox'] + label::before {
     text-align: left;
     font-size: 22px;
   }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
   &__actions {
     display: flex;
     justify-content: flex-end;
@@ -1439,7 +1614,7 @@ input[type='checkbox'] + label::before {
   margin: 0 auto;
   letter-spacing: 1px;
   h4 {
-    font-size: 20px;
+    // font-size: 20px;
   }
 }
 .logo {
@@ -1448,5 +1623,9 @@ input[type='checkbox'] + label::before {
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+.confirm-form {
+  width: 37vw;
+  height: 40vh;
 }
 </style>

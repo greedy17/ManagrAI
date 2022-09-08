@@ -68,7 +68,7 @@ class Organization(TimeStampModel):
 
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
-        templates = user.organization.custom_slack_forms.all()
+        templates = user.team.team_forms.all()
 
         if preserve_fields:
             for form in templates:
@@ -88,12 +88,15 @@ class Organization(TimeStampModel):
         else:
             for form in templates:
                 form.fields.filter(is_public=False).delete()
-
+        admin_team = current_admin.team
         current_admin.is_admin = False
         current_admin.save()
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
         new_admin.save()
+        admin_team.team_lead = new_admin
+        admin_team.save()
+        return new_admin
 
     def update_has_settings(self, type):
         if type == "products":
@@ -764,7 +767,7 @@ class Team(TimeStampModel):
     objects = TeamQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.name} under {self.organization.name} lead: {self.team_lead.email}"
+        return f"{self.name} - {self.team_lead.email}"
 
     def delete(self):
         if self.team_forms:
