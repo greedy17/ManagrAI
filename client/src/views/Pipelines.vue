@@ -1737,7 +1737,10 @@
                   v-if="
                     selectedOpp.dataType === 'String' ||
                     selectedOpp.dataType === 'TextArea' ||
-                    selectedOpp.dataType === 'Email'
+                    selectedOpp.dataType === 'Email' ||
+                    selectedOpp.dataType === 'Address' ||
+                    selectedOpp.dataType === 'Currency' ||
+                    selectedOpp.dataType === 'Url'
                   "
                 >
                   <input
@@ -1762,11 +1765,21 @@
                     class="sliding"
                   />
                 </div>
+                <div v-else-if="selectedOpp.dataType === 'Boolean'">
+                  <input
+                    type="checkbox"
+                    id="start"
+                    @input="oppNewValue = $event.target.value"
+                    class="sliding"
+                  />
+                </div>
                 <div
                   v-else-if="
                     selectedOpp.dataType === 'Phone' ||
                     selectedOpp.dataType === 'Double' ||
-                    selectedOpp.dataType === 'Currency'
+                    selectedOpp.dataType === 'Currency' ||
+                    selectedOpp.dataType === 'Int' ||
+                    selectedOpp.dataType === 'Percent'
                   "
                 >
                   <input
