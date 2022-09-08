@@ -1728,7 +1728,7 @@
               </button>
             </div>
             <div class="flex-row-pad" v-if="changeFieldsSelected">
-              <p style="font-size: 14px" @click="test(selectedOpp)">Change Field:</p>
+              <p style="font-size: 14px" @click="test(productReferenceOpts)">Change Field:</p>
               <Multiselect
                 :options="filteredSelectOppFields"
                 @select="selectedOppVal($event)"
@@ -1755,14 +1755,26 @@
                   v-if="
                     selectedOpp.dataType === 'String' ||
                     selectedOpp.dataType === 'TextArea' ||
-                    selectedOpp.dataType === 'Email' ||
-                    selectedOpp.dataType === 'Date' ||
-                    selectedOpp.dataType === 'DateTime'
+                    selectedOpp.dataType === 'Email'
                   "
                 >
                   <input
                     @input="oppNewValue = $event.target.value"
                     type="text"
+                  />
+                </div>
+                <div v-else-if="selectedOpp.dataType === 'Date'">
+                  <input
+                    type="date"
+                    id="user-input"
+                    @input="oppNewValue = $event.target.value"
+                  />
+                </div>
+                <div v-else-if="selectedOpp.dataType === 'DateTime'">
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    @input="oppNewValue = $event.target.value"
                   />
                 </div>
                 <div
@@ -1776,6 +1788,51 @@
                     type="number"
                     @input="oppNewValue = $event.target.value"
                   />
+                </div>
+                <div
+                  v-if="
+                    selectedOpp.dataType === 'Picklist' ||
+                    selectedOpp.dataType === 'MultiPicklist' ||
+                    (selectedOpp.dataType === 'Reference' && selectedOpp.apiName !== 'AccountId')
+                  "
+                >
+                  <Multiselect
+                    :options="
+                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[selectedOpp.id]
+                        : productReferenceOpts[selectedOpp.apiName] 
+                          ? productReferenceOpts[selectedOpp.apiName]
+                          : []
+                    "
+                    @select="
+                      oppNewValue = $event.value
+                    "
+                    openDirection="below"
+                    v-model="dropdownVal[selectedOpp.apiName]"
+                    style="width: 20vw"
+                    selectLabel="Enter"
+                    :loading="loadingProducts"
+                    :label="
+                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ selectedOpp.referenceDisplayLabel }}
+                      </p>
+                    </template>
+                  </Multiselect>
                 </div>
               </div>
 
