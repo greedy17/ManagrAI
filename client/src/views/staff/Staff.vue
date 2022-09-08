@@ -173,13 +173,19 @@
                 <span class="underline">Slack ID:</span>
                 {{ modalInfo.slackRef ? modalInfo.slackRef.slackId : 'None' }}
                 <span class="underline">Channel:</span>
-                {{ modalInfo.slackAccount && modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'None' }}
+                {{
+                  modalInfo.slackAccount && modalInfo.slackAccount.channel
+                    ? modalInfo.slackAccount.channel
+                    : 'None'
+                }}
                 <span class="underline">Organization Slack:</span>
                 {{ modalInfo.organizationRef.slackIntegration }}
                 <span class="underline">Is Onboarded:</span> {{ modalInfo.onboarding }}
                 <span class="underline">Recap Channel:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.recapChannel ? modalInfo.slackAccount.recapChannel : 'None'
+                  modalInfo.slackAccount && modalInfo.slackAccount.recapChannel
+                    ? modalInfo.slackAccount.recapChannel
+                    : 'None'
                 }}
                 <span class="underline">Recap Recievers:</span>
                 {{
@@ -191,7 +197,9 @@
             </section>
             <section class="note-section">
               <p class="note-section__title">
-                Salesforce ({{ modalInfo.salesforceAccountRef ? modalInfo.salesforceAccountRef.id : 'None' }})
+                Salesforce ({{
+                  modalInfo.salesforceAccountRef ? modalInfo.salesforceAccountRef.id : 'None'
+                }})
               </p>
               <p class="note-section__body">
                 <span class="underline">SFDC ID:</span>
@@ -221,49 +229,95 @@
               </p>
             </section>
             <section class="note-section">
-              <p class="note-section__title">Nylas ({{ modalInfo.nylasRef ? modalInfo.nylasRef.id : 'None' }})</p>
+              <p class="note-section__title">
+                Nylas ({{ modalInfo.nylasRef ? modalInfo.nylasRef.id : 'None' }})
+              </p>
               <p class="note-section__body">
                 <span class="underline">Access Token:</span>
-                {{ modalInfo.nylasRef && modalInfo.nylasRef.accessToken ? modalInfo.nylasRef.accessToken : 'None' }}
+                {{
+                  modalInfo.nylasRef && modalInfo.nylasRef.accessToken
+                    ? modalInfo.nylasRef.accessToken
+                    : 'None'
+                }}
                 <span class="underline">Email:</span>
-                {{ modalInfo.nylasRef && modalInfo.nylasRef.emailAddress ? modalInfo.nylasRef.emailAddress : 'None' }}
+                {{
+                  modalInfo.nylasRef && modalInfo.nylasRef.emailAddress
+                    ? modalInfo.nylasRef.emailAddress
+                    : 'None'
+                }}
                 <span class="underline">Event Calendar ID:</span>
                 {{
-                  modalInfo.nylasRef && modalInfo.nylasRef.eventCalendarId ? modalInfo.nylasRef.eventCalendarId : 'None'
+                  modalInfo.nylasRef && modalInfo.nylasRef.eventCalendarId
+                    ? modalInfo.nylasRef.eventCalendarId
+                    : 'None'
                 }}
                 <span class="underline">Provider:</span>
-                {{ modalInfo.nylasRef && modalInfo.nylasRef.provider ? modalInfo.nylasRef.provider : 'None' }}
-              </p>
-            </section>
-            <section class="note-section">
-              <p class="note-section__title">Zoom ({{ modalInfo.zoomRef ? modalInfo.zoomRef.id : 'None'}})</p>
-              <p class="note-section__body">
-                <span class="underline">Zoom ID:</span>
-                {{ modalInfo.zoomRef && modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'None' }}
-                <span class="underline">Timezone:</span>
-                {{ modalInfo.zoomRef && modalInfo.zoomRef.timezone ? modalInfo.zoomRef.timezone : 'None' }}
-                <span class="underline">Account ID:</span>
-                {{ modalInfo.zoomRef && modalInfo.zoomRef.accountId ? modalInfo.zoomRef.accountId : 'None' }}
-                <span class="underline">Access Token:</span>
-                {{ modalInfo.zoomRef && modalInfo.zoomRef.accessToken ? modalInfo.zoomRef.accessToken : 'None' }}
-                <span class="underline">Fake Meeting ID:</span>
                 {{
-                  modalInfo.zoomRef && modalInfo.zoomRef.fakeMeetingIdRef ? modalInfo.zoomRef.fakeMeetingIdRef : 'None'
+                  modalInfo.nylasRef && modalInfo.nylasRef.provider
+                    ? modalInfo.nylasRef.provider
+                    : 'None'
                 }}
               </p>
             </section>
             <section class="note-section">
               <p class="note-section__title">
-                Slack Account ({{ modalInfo.slackAccount ? modalInfo.slackAccount.slackId : 'None' }})
+                Zoom ({{ modalInfo.zoomRef ? modalInfo.zoomRef.id : 'None' }})
+              </p>
+              <p class="note-section__body">
+                <span class="underline">Zoom ID:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'None'
+                }}
+                <span class="underline">Timezone:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.timezone
+                    ? modalInfo.zoomRef.timezone
+                    : 'None'
+                }}
+                <span class="underline">Account ID:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.accountId
+                    ? modalInfo.zoomRef.accountId
+                    : 'None'
+                }}
+                <span class="underline">Access Token:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.accessToken
+                    ? modalInfo.zoomRef.accessToken
+                    : 'None'
+                }}
+                <span class="underline">Fake Meeting ID:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.fakeMeetingIdRef
+                    ? modalInfo.zoomRef.fakeMeetingIdRef
+                    : 'None'
+                }}
+              </p>
+            </section>
+            <section class="note-section">
+              <p class="note-section__title">
+                Slack Account ({{
+                  modalInfo.slackAccount ? modalInfo.slackAccount.slackId : 'None'
+                }})
               </p>
               <p class="note-section__body">
                 <span class="underline">Slack ID:</span>
-                {{ modalInfo.slackAccount && modalInfo.slackAccount.slackId ? modalInfo.slackAccount.slackId : 'None' }}
+                {{
+                  modalInfo.slackAccount && modalInfo.slackAccount.slackId
+                    ? modalInfo.slackAccount.slackId
+                    : 'None'
+                }}
                 <span class="underline">Channel:</span>
-                {{ modalInfo.slackAccount && modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'None' }}
+                {{
+                  modalInfo.slackAccount && modalInfo.slackAccount.channel
+                    ? modalInfo.slackAccount.channel
+                    : 'None'
+                }}
                 <span class="underline">Zoom Channel:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.zoomChannel ? modalInfo.slackAccount.zoomChannel : 'None'
+                  modalInfo.slackAccount && modalInfo.slackAccount.zoomChannel
+                    ? modalInfo.slackAccount.zoomChannel
+                    : 'None'
                 }}
                 <span class="underline">Recap Receivers:</span>
                 {{
@@ -534,8 +588,9 @@
           :key="slackFormInstance.id"
         >
           <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
-            {{ slackFormInstance.templateRef.resource }}
-            {{ slackFormInstance.templateRef.formType }} by
+            {{ slackFormInstance.templateRef ? slackFormInstance.templateRef.resource : '-' }}
+            {{ slackFormInstance.templateRef ? slackFormInstance.templateRef.formType : '-' }}
+            by
             {{ getUserName(slackFormInstance.user) }}
             {{
               slackFormInstance.submissionDate
@@ -645,7 +700,8 @@ export default {
       orgForms: null,
       orgMeetingWorkflows: null,
       //organizations: null,
-      organizations: CollectionManager.create({ // change to null, make this update in create with new endpoint
+      organizations: CollectionManager.create({
+        // change to null, make this update in create with new endpoint
         ModelClass: Organization,
         filters: { fromAdmin: true },
       }),
@@ -667,7 +723,7 @@ export default {
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
-      return `${user.firstName} ${user.lastName}`
+      return user ? `${user.firstName} ${user.lastName}` : '-'
     },
     async getAllForms() {
       try {
