@@ -1,6 +1,4 @@
 import json
-import pytz
-import requests
 from datetime import datetime
 import os.path
 import logging
@@ -597,8 +595,17 @@ class SalesforceAuthAccountAdapter:
             else sf_consts.SALESFORCE_RESOURCE_REFRENCE_QUERY_URI
         )
         filter_query_string = [f"AND ({filter_query})"] if len(filter_query) else []
+        add_fields = (
+            [
+                f"AND ({extra_field.replace(':','=')})"
+                for extra_field in kwargs.get("add_fields").split(",")
+            ]
+            if len(kwargs.get("add_fields", []))
+            else []
+        )
         # always retreive id
         fields.insert(0, "Id")
+        filter_query_string.extend(add_fields)
         url = f"{self.instance_url}{query(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )[0]}"
         with Client as client:
             res = client.get(
