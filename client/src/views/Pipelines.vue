@@ -2146,7 +2146,7 @@
       </section>
 
       <section
-        v-if="selectedWorkflow && currentWorkflow.length > 0 && !loadingWorkflows"
+        v-if="selectedWorkflow && (currentWorkflow && currentWorkflow.length > 0) && !loadingWorkflows"
         class="table-section"
       >
         <div v-outside-click="emitCloseEdit" class="table">
@@ -2186,7 +2186,7 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
-            :BulkUpdateName="oppVal.apiName"
+            :BulkUpdateName="oppVal ? oppVal.apiName : null"
             :BulkUpdateValue="oppNewValue"
             :currentInlineRow="currentInlineRow"
             :extraPipelineFields="extraPipelineFields"
@@ -2217,8 +2217,8 @@
       <div class="row between height-s">
         <div class="pagination">
           <span class="results-2">
-            Displaying {{ selectedWorkflow ? currentWorkflow.length : allOpps.length }} of
-            {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
+            Displaying {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
+            {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : oppTotal }}</span
           >
           <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
             Load More
