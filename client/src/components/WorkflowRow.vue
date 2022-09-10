@@ -375,6 +375,8 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
+    BulkUpdateName: {},
+    BulkUpdateValue: {},
     picklistOpts: {},
     inlineLoader: {},
     closeEdit: {},
@@ -512,6 +514,34 @@ export default {
         const res = await SObjects.api
           .updateResource({
             form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.workflow.id,
+            integration_ids: [this.workflow.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedWorkflowList = []
+      }
+    },
+    async onBulkUpdate() {
+      this.updatedWorkflowList.push(this.workflow.id)
+      try {
+        const formData = {}
+        formData[this.BulkUpdateName] = this.BulkUpdateValue
+        const res = await SObjects.api
+          .updateResource({
+            form_data: formData,
             resource_type: 'Opportunity',
             form_type: 'UPDATE',
             resource_id: this.workflow.id,

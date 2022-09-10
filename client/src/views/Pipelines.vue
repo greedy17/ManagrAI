@@ -1631,27 +1631,9 @@
         </div>
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
-            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected">
+            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected && !changeFieldsSelected">
               <div class="flex-row">
-                <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
-                  Push Close Date
-                  <img
-                    src="@/assets/images/date.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-                <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
-                  Advance Stage
-                  <img
-                    src="@/assets/images/stairs.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
-                </button>
-                <button @click="forecastSelected = !forecastSelected" class="select-btn1">
+                <!-- <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
                   <img
                     src="@/assets/images/monetary.svg"
@@ -1659,8 +1641,9 @@
                     style="margin-left: 0.25rem"
                     alt=""
                   />
-                </button>
-                <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
+                </button> -->
+                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Bulk Update</button>
+                <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button>
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -1724,6 +1707,143 @@
 
               <button @click="changeForecast(currentCheckList)" class="add-button">
                 Change Forecast
+              </button>
+            </div>
+            <div class="flex-row-pad" v-if="changeFieldsSelected">
+              <p style="font-size: 14px" @click="test(productReferenceOpts)">Change Field:</p>
+              <Multiselect
+                :options="filteredSelectOppFields"
+                @select="selectedOppVal($event)"
+                v-model="selectedOpp"
+                openDirection="below"
+                :loading="dropdownLoading"
+                style="width: 20vw; margin-right: 1rem;"
+                selectLabel="Enter"
+                label="label"
+              >
+                <template v-slot:noResult>
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template v-slot:placeholder>
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Fields
+                  </p>
+                </template>
+              </Multiselect>
+              <div v-if="selectedOpp">
+                <div
+                  v-if="
+                    selectedOpp.dataType === 'String' ||
+                    selectedOpp.dataType === 'TextArea' ||
+                    selectedOpp.dataType === 'Email' ||
+                    selectedOpp.dataType === 'Address' ||
+                    selectedOpp.dataType === 'Currency' ||
+                    selectedOpp.dataType === 'Url'
+                  "
+                >
+                  <input
+                    class="sliding input"
+                    @input="oppNewValue = $event.target.value"
+                    type="text"
+                  />
+                </div>
+                <div v-else-if="selectedOpp.dataType === 'Date'">
+                  <input
+                    class="sliding"
+                    type="date"
+                    id="user-input"
+                    @input="oppNewValue = $event.target.value"
+                  />
+                </div>
+                <div v-else-if="selectedOpp.dataType === 'DateTime'">
+                  <input
+                    type="datetime-local"
+                    id="start"
+                    @input="oppNewValue = $event.target.value"
+                    class="sliding"
+                  />
+                </div>
+                <div v-else-if="selectedOpp.dataType === 'Boolean'">
+                  <input
+                    type="checkbox"
+                    id="start"
+                    @input="oppNewValue = $event.target.value"
+                    class="sliding"
+                  />
+                </div>
+                <div
+                  v-else-if="
+                    selectedOpp.dataType === 'Phone' ||
+                    selectedOpp.dataType === 'Double' ||
+                    selectedOpp.dataType === 'Currency' ||
+                    selectedOpp.dataType === 'Int' ||
+                    selectedOpp.dataType === 'Percent'
+                  "
+                >
+                  <input
+                    type="number"
+                    @input="oppNewValue = $event.target.value"
+                    class="sliding input"
+                  />
+                </div>
+                <div
+                  v-if="
+                    selectedOpp.dataType === 'Picklist' ||
+                    selectedOpp.dataType === 'MultiPicklist' ||
+                    (selectedOpp.dataType === 'Reference' && selectedOpp.apiName !== 'AccountId')
+                  "
+                >
+                  <Multiselect
+                    :options="
+                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[selectedOpp.id]
+                        : productReferenceOpts[selectedOpp.apiName] 
+                          ? productReferenceOpts[selectedOpp.apiName]
+                          : []
+                    "
+                    @select="
+                      oppNewValue = $event.value
+                    "
+                    openDirection="below"
+                    v-model="dropdownVal[selectedOpp.apiName]"
+                    style="width: 20vw"
+                    selectLabel="Enter"
+                    :loading="loadingProducts"
+                    :label="
+                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                    :track-by="
+                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :multiple="selectedOpp.dataType === 'MultiPicklist'"
+                    class="sliding"
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template v-slot:afterList>
+                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template v-slot:placeholder>
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ selectedOpp.referenceDisplayLabel }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+              </div>
+
+              <button @click="bulkUpdate" class="add-button">
+                Save
               </button>
             </div>
           </div>
@@ -2017,6 +2137,8 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :BulkUpdateName="oppVal ? oppVal.apiName : null"
+            :BulkUpdateValue="oppNewValue"
             :currentInlineRow="currentInlineRow"
             :extraPipelineFields="extraPipelineFields"
           />
@@ -2024,7 +2146,7 @@
       </section>
 
       <section
-        v-if="selectedWorkflow && currentWorkflow.length > 0 && !loadingWorkflows"
+        v-if="selectedWorkflow && (currentWorkflow && currentWorkflow.length > 0) && !loadingWorkflows"
         class="table-section"
       >
         <div v-outside-click="emitCloseEdit" class="table">
@@ -2064,6 +2186,8 @@
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
+            :BulkUpdateName="oppVal ? oppVal.apiName : null"
+            :BulkUpdateValue="oppNewValue"
             :currentInlineRow="currentInlineRow"
             :extraPipelineFields="extraPipelineFields"
           />
@@ -2093,8 +2217,8 @@
       <div class="row between height-s">
         <div class="pagination">
           <span class="results-2">
-            Displaying {{ selectedWorkflow ? currentWorkflow.length : allOpps.length }} of
-            {{ selectedWorkflow ? currentWorkflow.length : oppTotal }}</span
+            Displaying {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
+            {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : oppTotal }}</span
           >
           <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
             Load More
@@ -2218,11 +2342,15 @@ export default {
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
+      changeFieldsSelected: false,
       selection: false,
       allStages: [],
       allForecasts: [],
+      selectedOpp: null,
+      oppNewValue: null,
       newStage: null,
       newForecast: null,
+      oppVal: null,
       originalList: null,
       daysForward: null,
       allOpps: null,
@@ -2345,6 +2473,10 @@ export default {
         this.currentWorkflow = newvalue
       },
     },
+    filteredSelectOppFields() {
+      return this.oppFields
+      // return this.oppFields.filter(f => f.label !== 'Stage' && f.label !== 'Close Date' && f.dataType !== 'Reference')
+    },
     currentMonth() {
       let date = new Date()
       return date.getMonth()
@@ -2406,6 +2538,9 @@ export default {
     accountSobjectId: 'getInitialAccounts',
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     cancelEditProduct() {
       this.dropdownProductVal = {}
       this.editingProduct = !this.editingProduct
@@ -3103,6 +3238,7 @@ export default {
         this.closeDateSelected = false
         this.advanceStageSelected = false
         this.forecastSelected = false
+        this.changeFieldsSelected = false
       }
     },
     setStage(val) {
@@ -3110,6 +3246,10 @@ export default {
     },
     setForecast(val) {
       this.newForecast = val
+    },
+    selectedOppVal(val) {
+      console.log('val', val)
+      this.oppVal = val
     },
     onCheckAll() {
       if (this.primaryCheckList.length < 1) {
@@ -3374,6 +3514,28 @@ export default {
         }
         this.primaryCheckList = []
       }
+    },
+    bulkUpdate() {
+      if (this.selectedWorkflow) {
+        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+          if (this.$refs.workflowTableChild[i].isSelected) {
+            this.$refs.workflowTableChild[i].onBulkUpdate()
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+        }
+        this.workflowCheckList = []
+      } else {
+        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+          if (this.$refs.pipelineTableChild[i].isSelected) {
+            this.$refs.pipelineTableChild[i].onBulkUpdate()
+            this.updateOpps()
+          }
+        }
+        this.primaryCheckList = []
+      }
+      this.selectedOpp = null
+      this.oppVal = null
+      this.oppNewValue = null
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
@@ -4736,6 +4898,25 @@ select {
     height: 1.05rem !important;
   }
 }
+.select-btn2 {
+  border: 0.5px solid $very-light-gray;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  letter-spacing: 0.2px;
+  margin-right: 0.5rem;
+  transition: all 0.25s;
+
+  img {
+    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    height: 1.05rem !important;
+  }
+}
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -5424,5 +5605,24 @@ a {
   font-weight: bold;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+}
+
+.sliding {
+  animation: slideOnOpen 1s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slideOnOpen {
+  from {width: 0;}
+  to {width: 15rem;}
+}
+.input{
+  min-height: 40px;
+  // display: block;
+  // padding: 8px 40px 0 8px;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  font-size: 14px;
 }
 </style>

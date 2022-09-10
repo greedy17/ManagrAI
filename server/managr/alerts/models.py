@@ -433,6 +433,8 @@ class AlertConfig(TimeStampModel):
                     is_active=True,
                     salesforce_account__isnull=False,
                 )
+            elif target == "TEAM":
+                query |= Q(team=self.template.user.team, is_active=True)
             else:
                 user_ids_to_include.append(target)
         if len(user_ids_to_include):
