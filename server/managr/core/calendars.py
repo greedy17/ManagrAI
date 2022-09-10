@@ -121,7 +121,8 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
     distances_str = ", ".join([str(d["distance"]) for d in distances])
     logger.info(f"    Meeting distances: {distances_str}")
     logger.info(f"    Found {len(best_events)} event/s within the threshold distance.")
-
+    if len(best_events) == 0:
+        logger.info(f"DISTANCES: {distances}")
     # Collect participants from ALL of the meeting/s we retrieved and return that list
     participants = []
     for event in best_events:

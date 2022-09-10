@@ -893,6 +893,7 @@ def process_add_products_form(payload, context):
     private_metadata.update({**context, "view_id": view["id"], "product_form": product_form_id})
     # currently only for update
     blocks = []
+    print(pricebook)
     if pricebook is None:
         blocks.append(
             block_builders.external_select(
@@ -907,7 +908,7 @@ def process_add_products_form(payload, context):
         )
         blocks.extend(product_form.generate_form())
     else:
-        blocks.extend(product_form.generate_form(Pricebook2Id=f"{pricebook}"))
+        blocks.extend(product_form.generate_form(fields=f"Pricebook2Id:'{pricebook}'"))
     if len(blocks):
         data = {
             "view_id": loading_view_data["view"]["id"],
@@ -1055,6 +1056,7 @@ def process_stage_selected_command_form(payload, context):
             .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
             .first()
         )
+        print(stage_form)
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user, template=stage_form, resource_id=main_form.resource_id

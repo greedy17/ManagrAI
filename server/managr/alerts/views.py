@@ -243,9 +243,7 @@ class AlertTemplateViewSet(
                 template.last_invocation_datetime = timezone.now()
                 template.save()
                 users = config.target_users
-                print(users)
                 user = str(template.user.id) if len(users) > 1 else str(users.first().id)
-                print(user)
                 run_time = datetime.now(pytz.utc)
                 _process_check_alert(
                     str(config.id),
