@@ -123,7 +123,7 @@ class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(organization=user.organization)
+                return self.filter(owner__team=user.team)
             else:
                 return self.filter(organization=user.organization, owner=user)
         else:
@@ -242,7 +242,7 @@ class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(owner__organization=user.organization)
+                return self.filter(owner__team=user.team)
             else:
                 return self.filter(owner=user)
         else:
@@ -631,6 +631,12 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
     @property
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.integration_id))
+
+    def get_current_values(self):
+        res = self.user.salesforce_account.adapter_class.get_resource_in_list(
+            "PricebookEntry", list(self.state.keys())
+        )
+        return res
 
 
 class OpportunityLineItemQuerySet(models.QuerySet):

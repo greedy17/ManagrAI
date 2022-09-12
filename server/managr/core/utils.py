@@ -68,6 +68,39 @@ def get_org_averages(user_obj):
     return {"session average": session_average, "average total sessions": session_total_average}
 
 
+def get_org_fields(org, first, last):
+    forms = OrgCustomSlackFormInstance.objects.filter(
+        user__organization=org, datetime_created__range=(first, last)
+    ).exclude(template__isnull=True)
+    if len(forms):
+        list(forms.first().__dict__.get("saved_data").keys())
+        obj = {}
+        for form in forms:
+            old_data = form.previous_data
+            new_data = form.saved_data
+            for key, new_value in new_data.items():
+                if key in old_data:
+                    if str(old_data.get(key)) != str(new_value):
+                        if form.user.email in obj.keys():
+                            if key in obj[form.user.email].keys():
+                                obj[form.user.email][key] += 1
+                            else:
+                                obj[form.user.email][key] = 1
+                        else:
+                            obj[form.user.email] = {}
+                            obj[form.user.email][key] = 1
+                else:
+                    if form.user.email in obj.keys():
+                        if key in obj[form.user.email].keys():
+                            obj[form.user.email][key] += 1
+                        else:
+                            obj[form.user.email][key] = 1
+                    else:
+                        obj[form.user.email] = {}
+                        obj[form.user.email][key] = 1
+        return obj
+
+
 def get_totals_for_year(month_only=False):
     # Base queries
     totals = {}
@@ -169,46 +202,17 @@ def get_organization_totals(month_only=False):
             org_obj["creates"] = org_totals_instances.filter(template__form_type="CREATE").count()
             org_averages = get_org_averages(users_obj)
             org_obj.update(org_averages)
+            org_obj["fields"] = get_org_fields(org, start, end)
             org_totals[org.name] = org_obj
 
         totals[date[1]] = org_totals
+
     return totals
-
-
-def get_org_fields(org, first, last):
-    forms = OrgCustomSlackFormInstance.objects.filter(
-        user__organization=org, datetime_created__range=(first, last)
-    ).exclude(template__isnull=True)
-    list(forms.first().__dict__.get("saved_data").keys())
-    obj = {}
-    for form in forms:
-        old_data = form.previous_data
-        new_data = form.saved_data
-        for key, new_value in new_data.items():
-            if key in old_data:
-                if str(old_data.get(key)) != str(new_value):
-                    if form.user.email in obj.keys():
-                        if key in obj[form.user.email].keys():
-                            obj[form.user.email][key] += 1
-                        else:
-                            obj[form.user.email][key] = 1
-                    else:
-                        obj[form.user.email] = {}
-                        obj[form.user.email][key] = 1
-            else:
-                if form.user.email in obj.keys():
-                    if key in obj[form.user.email].keys():
-                        obj[form.user.email][key] += 1
-                    else:
-                        obj[form.user.email][key] = 1
-                else:
-                    obj[form.user.email] = {}
-                    obj[form.user.email][key] = 1
-    return obj
 
 
 def pull_usage_data(month_only=False):
     totals = get_totals_for_year(month_only)
     orgs = get_organization_totals(month_only)
+    print(orgs)
     return {"totals": totals, "org": orgs}
 

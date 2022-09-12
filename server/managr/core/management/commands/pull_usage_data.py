@@ -58,15 +58,24 @@ class Command(BaseCommand):
             for org in orgs[date].keys():
                 print(f" {org}")
                 o = orgs[date][org]
-                print(
-                    f" Org: Session Avg: {o['session average']} | Avg Total Sessions: {o['average total sessions']} | Updates: {o['updates']} | Creates: {o['creates']}"
-                )
-                print(f" Users:")
-                for user in o["users"].keys():
-                    u = o["users"][user]
+                if o:
                     print(
-                        f"  {user} - Session Avg: {u['session average']} | Total Sessions: {u['total sessions']} | Updates: {u['updates']} | Creates: {u['creates']}"
+                        f" Org: Session Avg: {o['session average']} | Avg Total Sessions: {o['average total sessions']} | Updates: {o['updates']} | Creates: {o['creates']}"
                     )
+                    print(f" Users:")
+                    for user in o["users"].keys():
+                        u = o["users"][user]
+                        print(
+                            f"  {user} - Session Avg: {u['session average']} | Total Sessions: {u['total sessions']} | Updates: {u['updates']} | Creates: {u['creates']}"
+                        )
+                    print(f" Fields:")
+                    print(f" {o['fields']}")
+                else:
+                    print(
+                        f" Org: Session Avg: N/A | Avg Total Sessions: N/A | Updates: N/A | Creates: N/A"
+                    )
+                    print(" Users: N/A")
+                    print(" Fields: N/A")
 
                 print(" ---------------------------------------------------------------")
             print("---------------------------------------------------------------")

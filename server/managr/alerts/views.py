@@ -206,8 +206,10 @@ class AlertTemplateViewSet(
                             break
                     users = []
                     for config in obj.configs.all():
+                        config.target_users
                         users = [*users, *config.target_users]
                     res_data = []
+                    print(users)
                     for user in users:
                         if hasattr(user, "salesforce_account"):
                             res = sf.adapter_class.execute_alert_query(
@@ -241,9 +243,7 @@ class AlertTemplateViewSet(
                 template.last_invocation_datetime = timezone.now()
                 template.save()
                 users = config.target_users
-                print(users)
                 user = str(template.user.id) if len(users) > 1 else str(users.first().id)
-                print(user)
                 run_time = datetime.now(pytz.utc)
                 _process_check_alert(
                     str(config.id),
