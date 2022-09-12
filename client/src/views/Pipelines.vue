@@ -2373,6 +2373,7 @@ export default {
       refreshId: null,
       filterText: '',
       workflowFilterText: '',
+      storedFilters: [],
       currentList: 'All Opportunities',
       alertInstanceId: null,
       showList: false,
@@ -3096,6 +3097,7 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
+      this.storedFilters = [dT, field, apiName, {reversed: false}]
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3137,6 +3139,7 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
+      this.storedFilters = [dT, field, apiName, {reversed: true}]
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3178,6 +3181,7 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
+      this.storedFilters = [dT, field, apiName, {reversed: false}]
     },
     sortWorkflowsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3218,6 +3222,7 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
+      this.storedFilters = [dT, field, apiName, {reversed: true}]
     },
     selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
@@ -3585,6 +3590,11 @@ export default {
           this.stillThisMonth()
         } else if (this.currentList === 'Closing next month') {
           this.stillNextMonth()
+        }
+        if (this.storedFilters.length) {
+          this.storedFilters[3].reversed 
+          ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
+          : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
         }
       } catch (e) {
         this.$toast('Error updating Opporunity', {
@@ -3957,6 +3967,13 @@ export default {
         this.selectedWorkflow = true
         this.showList = false
         this.workList = false
+        if (this.storedFilters.length) {
+          if (this.storedFilters.length) {
+          this.storedFilters[3].reversed 
+          ? this.sortWorkflowsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
+          : this.sortWorkflows(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+        }
+        }
       }
     },
     setForms() {
