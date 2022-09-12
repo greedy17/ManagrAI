@@ -19,7 +19,7 @@ class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.is_admin:
-                return self.filter(organization=user.organization)
+                return self.filter(owner__organization=user.organization)
             elif user.user_level in ["SDR", "MANAGER"]:
                 return self.filter(owner__team=user.team)
             else:
@@ -105,7 +105,7 @@ class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.is_admin:
-                return self.filter(organization=user.organization)
+                return self.filter(owner__organization=user.organization)
             elif user.user_level in ["SDR", "MANAGER"]:
                 return self.filter(owner__team=user.team)
             else:
