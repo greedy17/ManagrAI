@@ -632,6 +632,12 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.integration_id))
 
+    def get_current_values(self):
+        res = self.user.salesforce_account.adapter_class.get_resource_in_list(
+            "PricebookEntry", list(self.state.keys())
+        )
+        return res
+
 
 class OpportunityLineItemQuerySet(models.QuerySet):
     def for_user(self, user):

@@ -64,6 +64,7 @@ from managr.slack.helpers.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
+from managr.salesforce.adapter.models import PricebookEntryAdapter
 
 logger = logging.getLogger("managr")
 
@@ -1870,9 +1871,18 @@ def process_submit_product(payload, context):
         sf = user.salesforce_account
         try:
             opp = Opportunity.objects.get(id=main_form.resource_id)
-            entry = PricebookEntry.objects.get(
-                integration_id=product_form.saved_data["PricebookEntryId"]
-            )
+            try:
+                entry = PricebookEntry.objects.get(
+                    integration_id=product_form.saved_data["PricebookEntryId"]
+                )
+            except PricebookEntry.DoesNotExist:
+                entry = PricebookEntryAdapter.get_current_values(
+                    product_form.saved_data["PricebookEntryId"],
+                    sf.access_token,
+                    sf.instance_url,
+                    str(user.id),
+                )
+                print(entry)
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
