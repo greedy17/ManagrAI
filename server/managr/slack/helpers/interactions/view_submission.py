@@ -1882,7 +1882,6 @@ def process_submit_product(payload, context):
                     sf.instance_url,
                     str(user.id),
                 )
-                print(entry)
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
