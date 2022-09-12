@@ -3524,6 +3524,7 @@ export default {
           }
         }
         this.workflowCheckList = []
+        this.workflowFilterText = ''
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
           if (this.$refs.pipelineTableChild[i].isSelected) {
@@ -3532,6 +3533,7 @@ export default {
           }
         }
         this.primaryCheckList = []
+        this.filterText = ''
       }
       this.selectedOpp = null
       this.oppVal = null
