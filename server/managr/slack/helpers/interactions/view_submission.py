@@ -556,6 +556,7 @@ def process_submit_resource_data(payload, context):
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
+        print(main_form.resource_object)
         internal_update = main_form.resource_object.update_database_values(all_form_data)
         try:
             slack_requests.send_ephemeral_message(
@@ -1882,7 +1883,6 @@ def process_submit_product(payload, context):
                     sf.instance_url,
                     str(user.id),
                 )
-                print(entry)
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
