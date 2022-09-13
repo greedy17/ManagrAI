@@ -2853,7 +2853,6 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             }
-
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
@@ -2864,6 +2863,11 @@ export default {
               this.stillThisMonth()
             } else if (this.currentList === 'Closing next month') {
               this.stillNextMonth()
+            }
+            if (this.storedFilters.length) {
+              this.storedFilters[3].reversed 
+              ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
             }
           })
         this.$toast('Salesforce Update Successful', {
@@ -3529,7 +3533,6 @@ export default {
           }
         }
         this.workflowCheckList = []
-        this.workflowFilterText = ''
       } else {
         for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
           if (this.$refs.pipelineTableChild[i].isSelected) {
@@ -3538,7 +3541,6 @@ export default {
           }
         }
         this.primaryCheckList = []
-        this.filterText = ''
       }
       this.selectedOpp = null
       this.oppVal = null
@@ -3577,19 +3579,22 @@ export default {
     },
     async updateOpps() {
       try {
-        let res = await SObjects.api.getObjects('Opportunity', 1)
-        this.allOpps = res.results
-        this.originalList = res.results
-        res.next ? (this.hasNext = true) : (this.hasNext = false)
-        this.hasNextOriginal = this.hasNext
-        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-        this.oppTotal = res.count
-        this.originalOppTotal = res.count
-
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
+        if (!this.filterText) {
+          let res = await SObjects.api.getObjects('Opportunity', 1)
+          this.allOpps = res.results
+          this.originalList = res.results
+          res.next ? (this.hasNext = true) : (this.hasNext = false)
+          this.hasNextOriginal = this.hasNext
+          res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = res.count
+          this.originalOppTotal = res.count
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+        } else {
+          await this.getFilteredOpps()
         }
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed 
@@ -3955,6 +3960,8 @@ export default {
         })
         this.currentWorkflow = res.data.results
         this.filteredWorkflows = this.currentWorkflow
+        this.workflowFilterText = this.workflowFilterText + ' '
+        this.workflowFilterText = this.workflowFilterText.trim()
       } catch (error) {
         this.$toast('Error updating workflow', {
           timeout: 2000,
