@@ -274,7 +274,7 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, Number($event.target.value), field.dataType)"
               id="user-input"
               type="number"
               :value="

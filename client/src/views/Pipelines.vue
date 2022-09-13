@@ -1784,7 +1784,7 @@
                 >
                   <input
                     type="number"
-                    @input="oppNewValue = $event.target.value"
+                    @input="oppNewValue = Number($event.target.value)"
                     class="sliding input"
                   />
                 </div>
@@ -2856,18 +2856,19 @@ export default {
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
-            if (this.activeFilters.length) {
+            console.log('storedFilters', this.storedFilters)
+            if (this.storedFilters.length && !this.selectedWorkflow) {
+              this.storedFilters[3].reversed 
+              ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+            }
+            else if (this.activeFilters.length) {
               this.getFilteredObjects(this.updateFilterValue)
             }
             if (this.currentList === 'Closing this month') {
               this.stillThisMonth()
             } else if (this.currentList === 'Closing next month') {
               this.stillNextMonth()
-            }
-            if (this.storedFilters.length) {
-              this.storedFilters[3].reversed 
-              ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
-              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
             }
           })
         this.$toast('Salesforce Update Successful', {
@@ -3061,6 +3062,7 @@ export default {
       })
     },
     sortOpps(dT, field, apiName) {
+      console.log('hit')
       let newField = this.capitalizeFirstLetter(this.camelize(field))
 
       if (field === 'Stage') {
@@ -3098,12 +3100,15 @@ export default {
         this.allOpps = this.allOpps.sort(function (a, b) {
           const nameA = a['secondary_data'][`${newField}`]
           const nameB = b['secondary_data'][`${newField}`]
+          console.log('nameA && nameB', nameA, typeof nameA, '||', nameB, typeof nameB)
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
+      console.log('this.allOpps in not reverse', this.allOpps)
       this.storedFilters = [dT, field, apiName, {reversed: false}]
     },
     sortOppsReverse(dT, field, apiName) {
+      console.log('hit reverse')
       let newField = this.capitalizeFirstLetter(this.camelize(field))
 
       if (field === 'Stage') {

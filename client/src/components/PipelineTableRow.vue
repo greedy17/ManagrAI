@@ -23,7 +23,7 @@
     </div>
 
     <div style="min-width: 26vw" class="table-cell cell-name">
-      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
+      <div @click="test(opp)" class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
             class="flex-column"
@@ -251,7 +251,7 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, Number($event.target.value), field.dataType)"
               id="user-input"
               type="number"
               :value="
@@ -421,6 +421,9 @@ export default {
     //     console.log(e)
     //   }
     // },
+    test(log) {
+      console.log('log', log)
+    },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
