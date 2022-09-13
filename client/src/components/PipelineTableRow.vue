@@ -33,8 +33,7 @@
               (inlineLoader && currentInlineRow === index)
             "
           >
-            <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
-            <SkeletonBox width="125px" height="9px" />
+            <SkeletonBox width="125px" height="14px" style="margin: 6px 8px" />
           </div>
 
           <PipelineNameSection
@@ -125,7 +124,7 @@
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
             <Multiselect
-              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px; z-index: 20"
               v-if="field.apiName !== 'StageName'"
               :options="picklistOpts[field.id]"
               openDirection="below"
@@ -169,7 +168,7 @@
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px; z-index: 20"
               optionHeight="20"
               track-by="value"
               label="label"

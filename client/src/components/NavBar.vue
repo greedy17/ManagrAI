@@ -41,7 +41,7 @@
           </div>
         </router-link>
 
-        <router-link v-if="isAdmin" exact-active-class="active" :to="{ name: 'Required' }">
+        <router-link v-if="isAdmin" exact-active-class="active" :to="{ name: 'UpdateOpportunity' }">
           <div class="tooltip">
             <img src="@/assets/images/list.svg" height="16px" alt="" />
             <span class="tooltiptext">Forms</span>

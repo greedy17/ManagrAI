@@ -11,11 +11,6 @@
         Complete Onboarding
       </button>
     </div>
-    <div v-else class="col">
-      <h3>Popular Workflow Automations</h3>
-      <p class="sub__">Activate the workflows that are relevant to you</p>
-    </div>
-
     <div>
       <div class="alert_cards" v-if="isOnboarding && userlevel !== 'MANAGER'">
         <div class="card">
@@ -737,7 +732,6 @@ export default {
 }
 
 .alerts-page {
-  margin-top: 3.5rem;
   color: $base-gray;
 }
 .alert_cards {

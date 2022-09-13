@@ -3,11 +3,11 @@
     <div>
       <section class="forecast">
         <div class="flex-end">
+          <p>Forecast</p>
           <img src="@/assets/images/settings.svg" alt="" />
         </div>
         <div class="header">
-          <h4>Forecast</h4>
-          <p>Deals lorem ipsum xoxo</p>
+          <p>Monthly Summmary</p>
         </div>
 
         <section class="review-section">
@@ -18,7 +18,7 @@
             <h4>$80,000</h4>
           </div>
 
-          <button class="green-button">Open Tracker</button>
+          <button class="green-button">Open</button>
         </section>
       </section>
     </div>
@@ -144,7 +144,7 @@ export default {
 }
 
 .overview {
-  padding: 20px;
+  padding: 0px 20px;
 }
 
 .header {
@@ -165,6 +165,7 @@ export default {
   align-items: flex-end;
   justify-content: space-between;
   margin-top: 16px;
+  height: 14vh;
 
   div {
     display: flex;
@@ -180,6 +181,7 @@ export default {
 
     h2 {
       color: $dark-green;
+      font-size: 32px;
     }
     h4 {
       color: $light-gray-blue;
@@ -190,7 +192,8 @@ export default {
 }
 .flex-end {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
 }
 .green-button {
   border: none;

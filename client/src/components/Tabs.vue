@@ -17,14 +17,9 @@
             <s>Best Case</s>
             <p>Discovery</p>
           </div>
-          <!-- <div>
-            <small>01/28/34</small>
-            <p>Stage</p>
-            <p>Booked</p>
-          </div> -->
         </div>
       </div>
-      <!-- <div class="tab">
+      <div class="tab">
         <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
         <label for="tab-2" class="tab-label">Factors</label>
         <div class="tab-content">
@@ -38,7 +33,7 @@
             <p>Factor 3</p>
           </div>
         </div>
-      </div> -->
+      </div>
       <div class="tab">
         <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
         <label for="tab-3" class="tab-label">Notes</label>

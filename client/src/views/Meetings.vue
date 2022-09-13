@@ -237,13 +237,14 @@
         </section>
       </div>
     </Modal>
-    <div ref="pipelines" v-if="!loading">
+    <div style="position: absolute" ref="pipelines" v-if="!loading">
       <div class="results">
-        <!-- <div class="results-title">
-          <p>Meetings</p>
-          <span>You have {{ meetings.length }} meetings today</span>
-        </div> -->
-        <div></div>
+        <div class="results-title">
+          <p>
+            Meetings to Review <span>{{ meetings.length }}</span>
+          </p>
+        </div>
+
         <div class="flex-row">
           <div v-if="hasZoomIntegration" class="tooltip">
             <button class="img-button" :disabled="!hasZoomIntegration">
@@ -1718,13 +1719,14 @@ export default {
 }
 
 .results {
-  margin: 0;
-  width: 100%;
+  width: 24.75vw;
+  position: sticky;
+  top: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 20;
-  padding: 0 12px;
+  padding: 0 12px 16px 12px;
   h4 {
     span {
       background-color: $yellow;
@@ -1745,12 +1747,15 @@ export default {
   p {
     font-size: 14px;
     font-weight: bold;
-    color: $base-gray;
-    padding: 0;
-    margin: 0;
+    margin-left: 2px;
 
     span {
-      color: $light-gray-blue !important;
+      background-color: $light-coral;
+      color: $coral;
+      border-radius: 6px;
+      padding: 2px 8px;
+      margin-left: 8px;
+      font-size: 12px;
     }
   }
 }

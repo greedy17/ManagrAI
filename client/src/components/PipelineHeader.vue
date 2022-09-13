@@ -411,12 +411,12 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: $base-gray;
+    color: $light-gray-blue;
     background-color: $off-white;
     letter-spacing: 0.4px;
     padding-left: 1rem;
     font-weight: bolder;
-    font-size: 14px;
+    font-size: 12px;
     width: 100%;
     height: 3rem;
   }
@@ -426,7 +426,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 12px;
   }
   &__footer {
     display: flex;
@@ -458,16 +458,15 @@ export default {
   padding: 1.25vh;
   min-width: 3rem;
   border: none;
-  border-bottom: 1px solid $soft-gray;
-  border-radius: 2px;
+  border-radius: 6px;
   z-index: 2;
   top: 0;
   position: sticky;
   background-color: white;
   font-weight: bolder;
-  font-size: 13.5px;
+  font-size: 12px;
   letter-spacing: 0.75px;
-  color: $base-gray;
+  color: $light-gray-blue;
 }
 .sort-img-visible {
   display: flex;
@@ -494,22 +493,22 @@ export default {
   left: 0;
   position: sticky;
   background-color: white;
-  border-bottom: 1px solid $soft-gray;
+
+  border-radius: 6px;
 }
 .table-cell-header-end {
   display: table-cell;
-  border-bottom: 1px solid $soft-gray !important;
   border: none;
-  border-radius: 2px;
+  border-radius: 6px;
   z-index: 3;
   right: 0;
   top: 0;
   position: sticky;
   background-color: white;
   font-weight: bolder;
-  font-size: 13.5px;
+  font-size: 12px;
   letter-spacing: 0.75px;
-  color: $base-gray;
+  color: $light-gray-blue;
   padding: 8px 16px;
 }
 .black {
@@ -526,17 +525,17 @@ export default {
   // padding: 3vh;
   padding: 1px 6px;
   border: none;
-  border-bottom: 1px solid $soft-gray;
-  border-radius: 2px;
+
+  border-radius: 6px;
   z-index: 3;
   left: 3.5vw;
   top: 0;
   position: sticky;
   background-color: white;
   font-weight: bolder;
-  font-size: 13.5px;
+  font-size: 12px;
   letter-spacing: 0.75px;
-  color: $base-gray;
+  color: $light-gray-blue;
 }
 .table-cell-header {
   display: table-cell;
@@ -544,16 +543,15 @@ export default {
   padding: 1px 6px;
   border: none;
 
-  border-bottom: 1px solid $soft-gray;
-  border-radius: 2px;
+  border-radius: 6px;
   z-index: 2;
   top: 0;
   position: sticky;
   background-color: white;
   font-weight: bolder;
-  font-size: 13.5px;
+  font-size: 12px;
   letter-spacing: 0.75px;
-  color: $base-gray;
+  color: $light-gray-blue;
 }
 .add-img {
   height: 18px;
@@ -598,7 +596,7 @@ input[type='checkbox'] + label::before {
   vertical-align: -22%;
   height: 1.75ex;
   width: 1.75ex;
-  background-color: white;
+  background-color: $off-white;
   border: 1px solid rgb(182, 180, 180);
   border-radius: 4px;
   margin-right: 0.5em;

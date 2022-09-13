@@ -18,21 +18,7 @@
       </div>
     </Modal>
 
-    <div class="center__">
-      <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Edit your Workflow Automation
-      </h3>
-      <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Active Workflow Automations
-      </h3>
-      <p
-        :class="templates.refreshing ? 'loading-title titles' : ''"
-        style="font-weight: bold; color: #aaaaaa; font-size: 13px"
-      >
-        Edit, Run, and Schedule your saved Automations
-      </p>
-    </div>
-    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
+    <!-- <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
       <h3
         class="bouncy"
         style="
@@ -46,11 +32,8 @@
         0
       </h3>
       <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-    </div>
-    <template
-      style="margin-top: -1rem"
-      v-if="!templates.refreshing && alertsCount(templates.list.length)"
-    >
+    </div> -->
+    <template v-if="!templates.refreshing && alertsCount(templates.list.length)">
       <transition name="fade">
         <div v-if="!editing" class="edit__modal">
           <AlertsEditPanel :alert="currentAlert" />
@@ -60,14 +43,44 @@
         </div>
       </transition>
 
-      <transition name="fade">
-        <div class="alert_cards" v-if="editing">
-          <div :key="i" v-for="(alert, i) in templates.list" class="added-collection">
-            <div class="added-collection__header" :data-key="alert.id">
+      <div class="alert_cards">
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection gray-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="36px" alt="" />
+            </div>
+
+            <div>
+              <p class="gray">Inactive Template</p>
+              <h3>Close Date Passed</h3>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Get notified when important close dates have passed</p>
+          </div>
+          <div class="added-collection__footer">
+            <button @click="goToRecap" class="gray_button">Activate</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert_cards" v-if="editing">
+        <div :key="i" v-for="(alert, i) in templates.list" class="added-collection green-shadow">
+          <div class="added-collection__header" :data-key="alert.id">
+            <img src="@/assets/images/logo.png" class="green-bg" height="36px" alt="" />
+            <div>
+              <p class="green">Managr Template</p>
               <h3>{{ alert.title }}</h3>
             </div>
-            <div class="added-collection__body">
+          </div>
+          <div class="added-collection__body">
+            <p>Lorem ipsum latin sorem. Lorem ipsum latin so...</p>
+          </div>
+          <div class="added-collection__footer">
+            <div class="row__">
               <button
+                style="margin-right: 8px"
                 :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="green_button"
@@ -75,123 +88,68 @@
                 Send to Slack
               </button>
             </div>
-            <div class="added-collection__footer">
-              <img
-                v-if="hasSlackIntegration"
-                style="margin-right: 0.25rem"
-                src="@/assets/images/slackLogo.png"
-                height="12px"
-                alt=""
+
+            <div v-if="hasSlackIntegration" class="row__">
+              <ToggleCheckBox
+                @input="onToggleAlert(alert.id, alert.isActive)"
+                v-model="alert.isActive"
+                offColor="#aaaaaa"
+                onColor="#41b883"
               />
-              <!-- <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p> -->
-              <div v-if="hasSlackIntegration" class="row__">
-                <p
-                  :class="!alert.isActive ? 'green' : ''"
-                  style="margin-right: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
-                >
-                  OFF
-                </p>
-                <ToggleCheckBox
-                  @input="onToggleAlert(alert.id, alert.isActive)"
-                  v-model="alert.isActive"
-                  offColor="#aaaaaa"
-                  onColor="#41b883"
-                />
-                <p
-                  :class="alert.isActive ? 'green' : ''"
-                  style="margin-left: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
-                >
-                  ON
-                </p>
-              </div>
-              <div style="width: 30vw" v-else>
-                <img
-                  style="margin-right: 0.2rem"
-                  src="@/assets/images/slackLogo.png"
-                  height="8px"
-                  alt=""
-                />
-                <small
-                  >Connect <span class="link" @click="goToConnect">Slack</span> for
-                  notifications</small
-                >
-              </div>
-
-              <div class="row__two">
-                <span class="img-border">
-                  <img
-                    @click="makeAlertCurrent(alert)"
-                    src="@/assets/images/edit.svg"
-                    class="invert"
-                  />
-                </span>
-
-                <span class="img-border">
-                  <img
-                    src="@/assets/images/trash.svg"
-                    class="invert"
-                    @click="deleteClosed(alert.id)"
-                  />
-                </span>
-              </div>
-            </div>
-
-            <template slot="panel-content">
-              <div>
-                <AlertsEditPanel :alert="alert" />
-              </div>
-            </template>
-          </div>
-          <div v-if="zoomChannel" class="added-collection">
-            <div class="added-collection__header">
-              <h3>Log Meetings</h3>
-              <p></p>
-            </div>
-
-            <div class="added-collection__body">
-              <button @click="goToLogZoom" class="green_button">Change Channel</button>
-            </div>
-            <div class="added-collection__footer">
-              <img
-                style="margin-right: 0.25rem"
-                src="@/assets/images/slackLogo.png"
-                height="15px"
-                alt=""
-              />
-              <p>
-                Current channel:
-                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
-                  currentZoomChannel
-                }}</span>
-              </p>
             </div>
           </div>
 
-          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection">
-            <div class="added-collection__header">
-              <h3>Meeting Recaps</h3>
+          <template slot="panel-content">
+            <div>
+              <AlertsEditPanel :alert="alert" />
+            </div>
+          </template>
+        </div>
+
+        <div v-if="zoomChannel" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="yellow">
+              <img src="@/assets/images/logo.png" height="36px" alt="" />
             </div>
 
-            <div class="added-collection__body">
-              <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
+            <div>
+              <p class="yellow">Meetings</p>
+              <h3>Log Meeting</h3>
             </div>
-            <div class="added-collection__footer">
-              <img
-                style="margin-right: 0.2rem"
-                src="@/assets/images/slackLogo.png"
-                height="15px"
-                alt=""
-              />
-              <p>
-                Current channel:
-                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
-                  currentRecapChannel
-                }}</span>
-              </p>
+          </div>
+
+          <div class="added-collection__body">
+            <p>{{ currentZoomChannel }}</p>
+          </div>
+          <div class="added-collection__footer">
+            <div class="row__">
+              <button @click="goToLogZoom" class="yellow_button">Change Channel</button>
             </div>
           </div>
         </div>
-      </transition>
+
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="yellow">
+              <img src="@/assets/images/logo.png" height="36px" alt="" />
+            </div>
+
+            <div>
+              <p class="yellow">Meetings</p>
+              <h3>Meeting Recaps</h3>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p>
+              {{ currentRecapChannel }}
+            </p>
+          </div>
+          <div class="added-collection__footer">
+            <button @click="goToRecap" class="yellow_button">Change Channel</button>
+          </div>
+        </div>
+      </div>
     </template>
     <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
@@ -451,6 +409,33 @@ export default {
   }
 }
 
+#yellow {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $light-yellow;
+  img {
+    filter: brightness(0%) invert(83%) sepia(28%) saturate(7222%) hue-rotate(6deg) brightness(103%)
+      contrast(104%);
+  }
+}
+#gray {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $soft-gray;
+  img {
+    filter: brightness(0%) invert(63%) sepia(13%) saturate(553%) hue-rotate(200deg) brightness(95%)
+      contrast(86%);
+  }
+}
+
+.yellow {
+  color: $yellow !important;
+}
+
 h2 {
   font-size: 1.4rem;
 }
@@ -555,55 +540,95 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
-  // margin-left: 75px;
-  margin-top: 3.5rem;
+  margin: 16px 8px;
   color: $base-gray;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  // justify-content: space-evenly;
 }
+
 .alert_cards {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
   justify-content: flex-start;
-  // align-items: flex-start;
-  margin-top: 1rem;
   flex-wrap: wrap;
-  padding: 0;
-  width: 86vw;
-}
-.added-collection:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-  transform: scale(1.015);
+  width: 100%;
+  border-radius: 6px;
+  overflow: scroll;
 }
 
+// .added-collection:hover {
+//   box-shadow: 1px 2px 2px $very-light-gray;
+//   transform: scale(1.015);
+// }
+
+.green-shadow {
+  box-shadow: 1px 2px 6px $very-light-gray;
+  border: 0.5px solid $soft-gray;
+}
+.yellow-shadow {
+  box-shadow: 1px 2px 6px $very-light-gray;
+  border: 0.5px solid $soft-gray;
+}
+.gray-shadow {
+  box-shadow: 2px 2px 6px $very-light-gray;
+  border: 0.5px solid $soft-gray;
+}
+.gray {
+  color: $light-gray-blue !important;
+}
 .added-collection {
   background-color: white;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  width: 20vw;
-  margin-right: 1rem;
+  border-radius: 9px;
+  // border: 1px solid #e8e8e8;
+  width: 20.5vw;
+  height: 175px;
   margin-bottom: 1rem;
+  margin-right: 1rem;
+  padding-bottom: 0;
   transition: all 0.25s;
   font-size: 12px;
   &__header {
     max-height: 50px;
-    padding: 1.75rem 1rem;
-    font-size: 13px;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    border-bottom: 2px solid $soft-gray;
+    margin-top: 8px;
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      margin-left: 8px;
+      p,
+      h3 {
+        margin: 0;
+        padding: 0;
+      }
+      p {
+        font-size: 10px;
+        color: $light-gray-blue;
+      }
+    }
   }
   &__body {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
+    align-items: flex-start;
+    margin-left: 16px;
+    padding-right: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    letter-spacing: 0.75px;
   }
   &__footer {
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     height: 50px;
-    padding: 1rem;
-    justify-content: space-evenly;
+    margin-left: 16px;
   }
 }
 a {
@@ -611,13 +636,19 @@ a {
   color: white;
   cursor: pointer;
 }
-
+.green-bg {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $white-green;
+}
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin: 0 0.5rem 0 0.5rem;
+  margin: 0 0.5rem 0 0;
   color: $base-gray;
   font-weight: bold;
 }
@@ -651,15 +682,46 @@ a {
 .green_button {
   color: white;
   background-color: $dark-green;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
+  border-radius: 6px;
+  padding: 4px 8px;
   font-size: 12px;
   border: none;
   cursor: pointer;
+  text-align: center;
+}
+.yellow_button {
+  color: $yellow;
+  background-color: white;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid $yellow;
+  cursor: pointer;
+  text-align: center;
+}
+.white_button {
+  color: $dark-green;
+  background-color: white;
+  border-radius: 6px;
+  outline: 1px solid $dark-green;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+.gray_button {
+  color: white;
+  background-color: $light-gray-blue;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  text-align: center;
 }
 .green {
-  color: $dark-green;
+  color: $dark-green !important;
 }
 .center__ {
   display: flex;

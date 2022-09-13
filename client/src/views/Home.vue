@@ -7,27 +7,19 @@
 
     <section class="command-center">
       <div class="command-center__section">
-        <p>
-          Meetings <span>{{ meetings.length }}</span>
-        </p>
         <section>
           <Meetings />
         </section>
       </div>
 
       <div class="command-center__section-pipeline">
-        <p>
-          Pipeline <span>{{ templates.list ? templates.list.length : 0 }}</span>
-        </p>
         <section>
           <PipelineOverview />
         </section>
       </div>
 
       <div>
-        <p>Activity</p>
         <div class="column-section-small neg-margin">
-          <!-- <img src="@/assets/images/settings.svg" height="20px" alt="" /> -->
           <section>
             <ForecastOverview />
           </section>
@@ -79,7 +71,7 @@ export default {
 @import '@/styles/variables';
 
 .home {
-  margin-left: 80px;
+  margin-left: 88px;
   letter-spacing: 0.75px;
 }
 .heading {
@@ -144,10 +136,9 @@ export default {
     // box-shadow: 1px 1px 2px 1px $very-light-gray;
     border: 1px solid $soft-gray;
     height: 100%;
-    margin-top: 8px;
-    height: 70vh;
+    height: 80vh;
     border-radius: 8px;
-    overflow-y: scroll;
+    overflow: scroll;
     background-color: white;
   }
 }
@@ -159,21 +150,19 @@ export default {
   section {
     border: 1px solid $soft-gray;
     width: 22vw;
-    height: 45vh;
+    height: 48vh;
   }
 }
 .column-section-small {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 12px;
 
   section {
     border: 1px solid $soft-gray;
     width: 22vw;
-    height: 24vh;
+    height: 30vh;
   }
-}
-.neg-margin {
-  margin-top: -12px;
 }
 </style>

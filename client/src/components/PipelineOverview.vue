@@ -1,11 +1,10 @@
 <template>
   <div class="overview">
     <div>
-      <!-- @click="goToWorkflow(alert.id)" -->
-      <!-- <div class="header">
-        <img src="@/assets/images/list.svg" height="16px" alt="" />
-        <img src="@/assets/images/plusOne.svg" height="16px" alt="" />
-      </div> -->
+      <div class="header">
+        <p>Your pipeline</p>
+        <p><span>You have 5 active workflows</span></p>
+      </div>
       <section class="workflow" :key="i" v-for="(alert, i) in templates.list">
         <div class="title">
           <img src="@/assets/images/logo.png" height="28px" alt="" />
@@ -16,7 +15,7 @@
             </h4>
 
             <p>
-              <!-- {{ owner(alert.user) !== 'Management' ? 'Owner:' : '' }} -->
+              {{ owner(alert.user) !== 'Management' ? 'Owner:' : 'Management' }}
               {{ users ? owner(alert.user) : '' }}
             </p>
           </div>
@@ -26,7 +25,7 @@
           <div>
             <button class="green-button">View List</button>
             <button class="white-button">
-              Send to Slack <img src="@/assets/images/slackLogo.png" height="12px" alt="" />
+              Send Slack <img src="@/assets/images/slackLogo.png" height="12px" alt="" />
             </button>
           </div>
 
@@ -260,15 +259,29 @@ export default {
 }
 .workflow {
   //   border-bottom: 2px solid $soft-gray;
-  padding: 24px 0px 0px 0px;
+  padding: 16px 0px 0px 0px;
   background-color: white;
 }
 .header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 8px;
-  margin-top: 16px;
+  justify-content: space-between;
+
+  position: sticky;
+  background-color: white;
+  top: 0;
+  p {
+    font-size: 14px;
+
+    span {
+      background-color: $white-green;
+      color: $dark-green;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-left: 4px;
+      font-size: 11px;
+    }
+  }
   img {
     margin-left: 8px;
   }

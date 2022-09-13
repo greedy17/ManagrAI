@@ -1,17 +1,32 @@
 <template>
-  <div>
-    <div v-if="userLevel == 'REP' && !isOnboarding" class="sidenav">
-      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div> -->
+  <div class="alerts">
+    <section class="wrapper">
+      <div class="tabs">
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
+          <label for="tab-1" class="tab-label" @click="goToActive">Workflows</label>
+          <div class="tab-content">
+            <router-view :key="$route.fullPath"></router-view>
+          </div>
+        </div>
 
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
+          <label for="tab-2" class="tab-label" @click="goToCustom">Workflow Builder</label>
+          <div class="tab-content">
+            <router-view :key="$route.fullPath"></router-view>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- <div v-if="userLevel == 'REP' && !isOnboarding" class="sidenav">
+      <h2>Workflows</h2>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div class="tooltip">
           <img
             src="@/assets/images/org.svg"
             class="invert"
-            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
+            style="height: 14px; margin-right: 8px; margin-left: 1rem"
             alt=""
           />
           <span class="tooltiptext">Popular Workflows</span>
@@ -22,8 +37,8 @@
           <img
             src="@/assets/images/star.svg"
             class="invert"
-            height="20px"
-            style="margin-right: 1rem; padding-left: 0.25rem"
+            height="14px"
+            style="margin-right: 8px; padding-left: 0.25rem"
             alt=""
           />
           <span class="tooltiptext">Active Workflows</span>
@@ -35,7 +50,7 @@
           <img
             class="invert"
             src="@/assets/images/build.svg"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 14px; margin-right: 8px; padding-left: 0.5rem"
             alt=""
           />
           <span class="tooltiptext">Custom Workflows</span>
@@ -47,17 +62,13 @@
       v-else-if="userLevel !== 'MANAGER' && userLevel !== 'REP'"
       class="sidenav sidenav__background"
     >
-      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div> -->
-
+      <h2>Workflows</h2>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
         <div class="tooltip">
           <img
             src="@/assets/images/org.svg"
             class="invert"
-            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
+            style="height: 14px; margin-right: 8px; margin-left: 1rem"
             alt=""
           />
           <span class="tooltiptext">Popular Workflows</span>
@@ -69,8 +80,8 @@
           <img
             src="@/assets/images/star.svg"
             class="invert"
-            height="20px"
-            style="margin-right: 1rem; padding-left: 0.25rem"
+            height="14px"
+            style="margin-right: 8px; padding-left: 0.25rem"
             alt=""
           />
           <span class="tooltiptext">Active Workflows</span>
@@ -82,7 +93,7 @@
           <img
             class="invert"
             src="@/assets/images/build.svg"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 14px; margin-right: 8px; padding-left: 0.5rem"
             alt=""
           />
           <span class="tooltiptext">Custom Workflows</span>
@@ -91,22 +102,27 @@
     </div>
 
     <div v-else-if="userLevel == 'MANAGER'" class="sidenav sidenav__background">
-      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div> -->
+      <div class="row">
+        <img
+          src="@/assets/images/workflows.svg"
+          height="16px"
+          style="filter: invert(20%); margin-right: 8px"
+          alt=""
+        />
+        <h2>Workflows</h2>
+      </div>
 
-      <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
+      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
         <div class="tooltip">
           <img
+            src="@/assets/images/star.svg"
             class="invert"
-            src="@/assets/images/bolt.svg"
-            style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
+            height="14px"
+            style="margin-right: 8px; padding-left: 0.25rem"
             alt=""
           />
-          <span class="tooltiptext">Instant Updates</span>
+          <span class="tooltiptext">Active Workflows</span>
         </div>
-        <!-- <h5>Instant Updates</h5> -->
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
@@ -114,41 +130,37 @@
           <img
             src="@/assets/images/org.svg"
             class="invert"
-            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
+            style="height: 14px; margin-right: 8px; margin-left: 1rem"
             alt=""
           />
           <span class="tooltiptext">Popular Workflows</span>
-          <!-- <h5>Popular Workflows</h5> -->
         </div>
       </router-link>
 
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
+      <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
         <div class="tooltip">
           <img
-            src="@/assets/images/star.svg"
             class="invert"
-            height="20px"
-            style="margin-right: 1rem; padding-left: 0.25rem"
+            src="@/assets/images/bolt.svg"
+            style="height: 14px; margin-right: 8px; margin-left: 1rem"
             alt=""
           />
-          <span class="tooltiptext">Active Workflows</span>
-          <!-- <h5>Active Workflows</h5> -->
+          <span class="tooltiptext">Instant Updates</span>
         </div>
       </router-link>
 
       <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div class="tooltip">
+        <div style="border-right: none" class="tooltip">
           <img
             class="invert"
             src="@/assets/images/build.svg"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
+            style="height: 14px; margin-right: 8px; padding-left: 0.5rem"
             alt=""
           />
           <span class="tooltiptext">Custom Workflows</span>
-          <!-- <h5>Custom</h5> -->
         </div>
       </router-link>
-    </div>
+    </div> -->
 
     <router-view :key="$route.fullPath"></router-view>
   </div>
@@ -176,6 +188,18 @@ export default {
     this.templates.refresh()
   },
   methods: {
+    goToPopular() {
+      this.$router.push({ name: 'CreateNew' })
+    },
+    goToActive() {
+      this.$router.push({ name: 'ListTemplates' })
+    },
+    goToInstant() {
+      this.$router.push({ name: 'RealTime' })
+    },
+    goToCustom() {
+      this.$router.push({ name: 'BuildYourOwn' })
+    },
     // alertsCount(num) {
     //   let int = num
     //   if (this.hasZoomChannel) {
@@ -252,17 +276,116 @@ img {
   color: $base-gray;
   margin-left: 1.5rem;
 }
-.sidenav {
-  height: 100%;
-  width: 200px;
+.alerts {
+  padding-left: 16px;
+}
+.wrapper {
+  width: 92.5vw;
+  margin: 0 auto;
   font-size: 14px;
-  position: fixed;
+  letter-spacing: 0.75px;
+}
+.tabs {
+  position: relative;
+  margin: 16px 0;
+  background: white;
+  border-radius: 6px;
+}
+.tabs::before,
+.tabs::after {
+  content: '';
+  display: table;
+}
+.tabs::after {
+  clear: both;
+}
+.tab {
+  float: left;
+  margin-left: 8px;
+}
+.tab-switch {
+  display: none;
+}
+.tab-label {
+  position: relative;
+  display: block;
+  line-height: 2.75em;
+  height: 3em;
+  padding: 0 1.618em;
+  color: $light-gray-blue;
+  cursor: pointer;
+  top: 0;
+  transition: all 0.25s;
+}
+.tab-label:hover {
+  top: -0.25rem;
+  transition: top 0.25s;
+}
+.tab-content {
+  width: 100%;
+  min-height: 92vh;
+  position: absolute;
+  z-index: 1;
+  top: 2.75em;
   left: 0;
-  background-color: #fafbfc;
-  border-right: 2px solid $soft-gray;
+  padding: 8px 24px;
+  background: #fff;
   color: $base-gray;
-  padding: 6px;
-  margin-top: -1rem;
+  opacity: 0;
+  transition: all 0.35s;
+  overflow: scroll;
+  border-radius: 6px;
+
+  section {
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    section {
+      border: 1px dashed $light-gray-blue;
+      background-color: $off-white;
+      border-radius: 6px;
+      min-height: 30vh;
+      margin-top: 16px;
+    }
+  }
+}
+.tab-switch:checked + .tab-label {
+  background: #fff;
+  color: $base-gray;
+  border-bottom: 0;
+  transition: all 0.35s;
+  z-index: 1;
+  top: -0.0625rem;
+}
+.tab-switch:checked + label + .tab-content {
+  z-index: 2;
+  opacity: 1;
+  transition: all 0.35s;
+}
+.tab-text {
+  color: $light-gray-blue;
+  font-size: 14px;
+  letter-spacing: 0.75px;
+}
+.sidenav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  height: 66px;
+  width: 100vw;
+  font-size: 12px;
+  position: fixed;
+  top: 0;
+  background-color: white;
+  border-bottom: 1px solid $soft-gray;
+  color: $base-gray;
+  padding: 4px 12px;
+  z-index: 20;
 }
 a {
   text-decoration: none;
@@ -273,35 +396,22 @@ a:hover {
   border-radius: 0.2rem;
   cursor: pointer;
 }
-.active div:hover {
-  color: white;
-  img {
-    filter: invert(99%);
-  }
-}
+
 .active div {
-  color: white;
-  background-color: $dark-green;
+  color: $dark-green;
   border-radius: 0.2rem;
   font-weight: bold;
   position: relative;
   img {
-    filter: invert(99%);
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
   }
   span {
-    color: white !important;
+    color: $dark-green !important;
     border: 1px solid white !important;
   }
 }
-.active div:after {
-  content: '';
-  background: $darker-green;
-  position: absolute;
-  bottom: 0.3rem;
-  left: 0;
-  height: 70%;
-  width: 3px;
-}
+
 a:hover div {
   color: $dark-green;
   border-radius: 0.2rem;
@@ -312,7 +422,6 @@ a:hover div {
 }
 .invert {
   filter: invert(40%);
-  height: 20px !important;
 }
 a:hover span {
   border-color: $dark-green;
@@ -329,49 +438,42 @@ a:hover span {
 .row {
   display: flex;
   flex-direction: row;
-  height: 2.25rem;
+  height: 16px;
   align-items: center;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding-right: 12px;
+  border-right: 2px solid $soft-gray;
 }
 .tooltip {
-  position: relative;
-  height: 2.25rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin: 16px 0px;
+  padding-right: 12px;
+  border-right: 2px solid $soft-gray;
 }
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 160px;
-  background-color: $base-gray;
-  color: white;
-  text-align: center;
-  border: none !important;
-  letter-spacing: 1px;
-  padding: 8px 0;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: bold !important;
-  position: absolute;
-  z-index: 1;
-  top: 8px;
-  left: 215%;
-  margin-left: -60px;
-  opacity: 70%;
-  transition: opacity 0.3s;
-}
+// .tooltip .tooltiptext {
+//   visibility: hidden;
+//   width: 160px;
+//   background-color: $base-gray;
+//   color: white;
+//   text-align: center;
+//   border: none !important;
+//   letter-spacing: 1px;
+//   padding: 8px 0;
+//   border-radius: 6px;
+//   font-size: 12px;
+//   font-weight: bold !important;
+//   position: absolute;
+//   z-index: 1;
+//   top: 8px;
+//   left: 215%;
+//   margin-left: -60px;
+//   opacity: 70%;
+//   transition: opacity 0.3s;
+// }
 
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
-}
-
-// [tooltiptext][flow^='left']:hover::before,
-// [tooltiptext][flow^='left']:hover::after,
-// [tooltiptext][flow^='right']:hover::before,
-// [tooltiptext][flow^='right']:hover::after {
-//   animation: tooltips-horz 300ms ease-out forwards;
+// .tooltip:hover .tooltiptext {
+//   visibility: visible;
+//   animation: bounce 300ms ease-out forwards;
 // }
 </style>

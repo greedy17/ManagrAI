@@ -41,7 +41,8 @@
     <div class="alert__row">
       <div v-show="pageNumber === 0" class="alert__column" style="margin-bottom: 1rem">
         <div class="workflow-header">
-          <h3>Create a Custom Workflow</h3>
+          <!-- <h3>Create a Custom Workflow</h3> -->
+          <div></div>
           <div class="button-space">
             <button class="plus_button" @click="onAddAlertGroup">
               <img src="@/assets/images/plusOne.svg" class="filtered" alt="" />
@@ -51,7 +52,15 @@
         </div>
 
         <div v-show="pageNumber === 0">
-          <h5
+          <Multiselect
+            placeholder="Opportunity"
+            :options="resources"
+            openDirection="below"
+            style="width: 14vw"
+            selectLabel="Enter"
+          >
+          </Multiselect>
+          <!-- <h5
             style="text-align: center; margin-top: -0.75rem; color: #4d4e4c; letter-spacing: 0.5px"
             class="title"
           >
@@ -92,8 +101,9 @@
               style="border-bottom: 2px solid #41b883; cursor: pointer"
               >Lead</span
             >
-          </h5>
+          </h5> -->
         </div>
+
         <div :key="index" v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups">
           <div class="sf__collection">
             <AlertGroup
@@ -625,6 +635,7 @@ export default {
   },
   data() {
     return {
+      resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
       dropdownLoading: false,
       selectedDay: null,
       selectedChannel: null,
@@ -1375,7 +1386,6 @@ textarea {
 .alerts-page {
   height: 88vh;
   color: $base-gray;
-  margin-top: 3.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;

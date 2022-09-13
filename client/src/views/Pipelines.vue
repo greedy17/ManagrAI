@@ -1642,30 +1642,12 @@
               <div class="flex-row">
                 <button @click="closeDateSelected = !closeDateSelected" class="select-btn1">
                   Push Close Date
-                  <img
-                    src="@/assets/images/date.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
                 </button>
                 <button @click="advanceStageSelected = !advanceStageSelected" class="select-btn1">
                   Advance Stage
-                  <img
-                    src="@/assets/images/stairs.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
                 </button>
                 <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
-                  <img
-                    src="@/assets/images/monetary.svg"
-                    height="14px"
-                    style="margin-left: 0.25rem"
-                    alt=""
-                  />
                 </button>
                 <button @click="modifyForecast('add')" class="select-btn">Start Tracking</button>
               </div>
@@ -2108,7 +2090,7 @@
             style="font-size: 11px"
             class="select-btn"
           >
-            Load More
+            Next
           </button>
         </div>
       </div>
@@ -4644,7 +4626,6 @@ export default {
   h6 {
     span {
       letter-spacing: 0.5px;
-      margin-right: 1rem;
       color: $gray;
     }
   }
@@ -5309,7 +5290,7 @@ a {
 }
 .results-2 {
   font-size: 11px;
-  margin-right: 8px;
+  margin-right: 16px;
   color: $gray;
 }
 .note-templates {

@@ -1,10 +1,130 @@
 <template>
   <div class="slack-form-builder">
-    <div class="opportunity__row">
-      <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
-        <div v-if="formType === 'STAGE_GATING'">
-          <p class="section-title">Add Stage Specific Fields</p>
+    <section class="wrapper">
+      <div class="tabs">
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
+          <label for="tab-1" class="tab-label">Opportunity</label>
+          <div class="tab-content">
+            <section>
+              <div>
+                <p class="form-type">
+                  Update Opportunity Form
+                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
+                </p>
+                <div>
+                  <span class="header-img">
+                    <img
+                      src="@/assets/images/table.svg"
+                      alt=""
+                      height="16px"
+                      style="filter: invert(40%)"
+                    />
+                  </span>
+                  <span class="header-img active">
+                    <img src="@/assets/images/list.svg" height="16px" alt="" />
+                  </span>
+
+                  <button class="save">Save</button>
+                </div>
+              </div>
+              <!-- <p class="tab-text">Select the Opportunity fields you'd like to update via Managr</p> -->
+              <div id="formSection">
+                <section>
+                  <input placeholder="Note Title" type="text" disabled />
+                  <textarea
+                    placeholder="Note"
+                    name=""
+                    id=""
+                    cols="30"
+                    rows="10"
+                    disabled
+                  ></textarea>
+                </section>
+                <div>
+                  <div>
+                    <img src="@/assets/images/trash.svg" height="20px" alt="" />
+                    <input placeholder="Opportunity Name" id="formField" type="text" disabled />
+                  </div>
+
+                  <div>
+                    <img src="@/assets/images/trash.svg" height="20px" alt="" />
+                    <input
+                      placeholder="Opportunity Close Date"
+                      id="formField"
+                      type="text"
+                      onfocus="(this.type='date')"
+                      onblur="(this.type='text')"
+                      disabled
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
+          <label for="tab-2" class="tab-label">Stage Related</label>
+          <div class="tab-content">
+            <p>Stage Gate</p>
+          </div>
+        </div>
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
+          <label for="tab-3" class="tab-label">Account</label>
+          <div class="tab-content">
+            <p>Account</p>
+          </div>
+        </div>
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
+          <label for="tab-4" class="tab-label">Contact</label>
+          <div class="tab-content">
+            <p>Contact</p>
+          </div>
+        </div>
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-5" class="tab-switch" />
+          <label for="tab-5" class="tab-label">Lead</label>
+          <div class="tab-content">
+            <p>Lead</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="field-section">
+      <div class="search-bar">
+        <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+        <input type="search" placeholder="Search Opportunity Fields" />
+      </div>
+
+      <div class="field-section__fields">
+        <div style="height: 80vh; overflow: scroll">
+          <!-- <section>
+            <p key="name"><input type="checkbox" /> Name <span>required</span></p>
+            <p><input type="checkbox" /> Stage <span>required</span></p>
+            <p>
+              <input type="checkbox" /> Close Date
+              <span>required</span>
+            </p>
+          </section> -->
+
+          <p v-for="(field, i) in formFields.list" :key="i">
+            <input type="checkbox" :id="i" :value="field.id" />
+            <label :for="i"></label>
+            {{ field.label }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div class="opportunity__row">
+      <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
+        <div class="sticky">
+          <p>{{ camelize(formType) + ' ' + resource }} Form</p>
+        </div>
+
         <div>
           <div v-if="formType === 'STAGE_GATING'">
             <div class="center">
@@ -22,79 +142,10 @@
               </button>
             </div>
           </div>
-
-          <div v-if="resource === 'OpportunityLineItem'">
-            <!-- <div v-if="!addedFieldNames.includes('PricebookEntryId')" class="centered">
-              <p style="margin-left: 0.5rem">
-                PricebookEntry <span style="color: #fa646a">*</span>
-              </p>
-              <Multiselect
-                placeholder="Select Pricebook field"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more.</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select Pricebook field
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-if="!addedFieldNames.includes('Quantity')" class="centered">
-              <p style="margin-left: 0.5rem">Quantity <span style="color: #fa646a">*</span></p>
-
-              <Multiselect
-                placeholder="Select Quantity field"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select Quantity field
-                  </p>
-                </template>
-              </Multiselect>
-            </div> -->
-          </div>
         </div>
 
         <div v-if="resource === 'Contact' || resource === 'Lead' || resource === 'Account'">
-          <p class="section-title">Select required form fields:</p>
+          <p>{{ formType + ' ' + resource }} Form</p>
           <div v-if="formType === 'CREATE'">
             <div
               v-if="
@@ -205,7 +256,6 @@
         </div>
 
         <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
-          <p class="section-title">Select required form fields:</p>
           <div v-if="!addedFieldLabels.includes('Name')" class="centered">
             <p style="margin-left: 0.5rem">Name: <span style="color: #fa646a">*</span></p>
             <Multiselect
@@ -527,40 +577,6 @@
             text="Save"
             :loading="savingForm"
           />
-          <button
-            v-if="
-              formType !== 'STAGE_GATING' &&
-              resource !== 'OpportunityLineItem' &&
-              !(
-                (formType === 'UPDATE' && resource === 'Opportunity') ||
-                (formType === 'CREATE' && resource === 'Contact')
-              )
-            "
-            style="margin-right: 0.5rem"
-            @click="goBack"
-            class="disabled__"
-          >
-            Back
-          </button>
-          <button
-            v-if="
-              (formType === 'UPDATE' && resource === 'Opportunity') ||
-              (formType === 'CREATE' && resource === 'Contact')
-            "
-            style="margin-right: 0.5rem"
-            @click="goBack"
-            class="disabled__"
-          >
-            Back
-          </button>
-          <button
-            v-if="resource === 'OpportunityLineItem'"
-            style="margin-right: 0.5rem"
-            @click="goToUpdateOpp"
-            class="disabled__"
-          >
-            Back
-          </button>
           <div class="row__" v-if="formType === 'STAGE_GATING'">
             <PulseLoadingSpinnerButton
               @click="onSave"
@@ -627,7 +643,7 @@
           </Multiselect>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -1055,6 +1071,9 @@ export default {
     test() {
       console.log(this.formFields.list)
     },
+    camelize(str) {
+      return str[0] + str.slice(1).toLowerCase()
+    },
     async goToProducts() {
       if (
         (this.resource == 'Opportunity' || this.resource == 'Account') &&
@@ -1247,10 +1266,319 @@ export default {
     transform: translateY(-6px);
   }
 }
+input[type='checkbox']:checked + label::after {
+  content: '';
+  position: absolute;
+  width: 1ex;
+  height: 0.3ex;
+  background: rgba(0, 0, 0, 0);
+  top: 0.9ex;
+  left: 0.4ex;
+  border: 2px solid $dark-green;
+  border-top: none;
+  border-right: none;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+input[type='checkbox'] {
+  line-height: 2.1ex;
+}
+
+input[type='checkbox'] {
+  position: absolute;
+  left: -999em;
+}
+
+input[type='checkbox'] + label {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+input[type='checkbox'] + label::before {
+  content: '';
+  display: inline-block;
+  vertical-align: -22%;
+  height: 1.75ex;
+  width: 1.75ex;
+  background-color: white;
+  border: 1px solid rgb(182, 180, 180);
+  border-radius: 4px;
+  margin-right: 0.5em;
+}
+.form-type {
+  padding: 6px 12px 6px 0px;
+  img {
+    padding-top: 2px;
+  }
+}
+.form-type:hover {
+  background-color: $off-white;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 12px 6px 0px;
+}
+.search-bar {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 25vw;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 4px;
+  margin: 0;
+}
+::placeholder {
+  color: $light-gray-blue;
+}
+input[type='search']:focus {
+  outline: none;
+}
+.field-section {
+  width: 40vw;
+  background-color: white;
+  height: 98vh;
+  margin-top: 16px;
+  margin-left: 16px;
+  padding: 0px 32px;
+  border-radius: 6px;
+  letter-spacing: 0.75px;
+  &__title {
+    letter-spacing: 0.75px;
+  }
+  &__fields {
+    h4 {
+      font-size: 13px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 12px;
+      letter-spacing: 0.75px;
+    }
+    div {
+      outline: 1px solid $soft-gray;
+      border-radius: 6px;
+      padding: 4px 16px;
+      margin-top: 16px;
+
+      section {
+        span {
+          color: $coral;
+          margin-left: 4px;
+        }
+      }
+    }
+  }
+}
+.wrapper {
+  width: 100%;
+  margin: 0 auto;
+  font-size: 14px;
+  letter-spacing: 0.75px;
+}
+.tabs {
+  position: relative;
+  margin: 16px 0;
+  background: white;
+  border-radius: 6px;
+}
+.tabs::before,
+.tabs::after {
+  content: '';
+  display: table;
+}
+.tabs::after {
+  clear: both;
+}
+.tab {
+  float: left;
+}
+.tab-switch {
+  display: none;
+}
+.tab-label {
+  position: relative;
+  display: block;
+  line-height: 2.75em;
+  height: 3em;
+  padding: 0 1.618em;
+  color: $light-gray-blue;
+  cursor: pointer;
+  top: 0;
+  transition: all 0.25s;
+}
+.tab-label:hover {
+  top: -0.25rem;
+  transition: top 0.25s;
+}
+.tab-content {
+  width: 100%;
+  height: 92vh;
+  position: absolute;
+  z-index: 1;
+  top: 2.75em;
+  left: 0;
+  padding: 8px 24px;
+  background: #fff;
+  color: $base-gray;
+  opacity: 0;
+  transition: all 0.35s;
+  overflow: scroll;
+  border-radius: 6px;
+
+  section {
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+}
+#formSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  border: 1px dashed $base-gray;
+  padding-bottom: 32px;
+  margin-top: 16px;
+  border-radius: 0.3rem;
+  min-height: 72vh;
+
+  section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: white;
+    border-radius: 6px;
+    min-height: 30vh;
+    margin-top: 16px;
+    width: 100%;
+    padding: 0px 16px;
+
+    input {
+      width: 100%;
+      border: 1px solid #e8e8e8;
+      border-radius: 0.3rem;
+      background-color: white;
+      min-height: 2.5rem;
+      font-family: $base-font-family;
+      margin-bottom: 16px;
+      padding-left: 8px;
+    }
+    textarea {
+      width: 100%;
+      border: 1px solid #e8e8e8;
+      border-radius: 0.3rem;
+      background-color: white;
+      min-height: 2.5rem;
+      font-family: $base-font-family;
+      resize: none;
+      padding-left: 8px;
+    }
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 99%;
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      img {
+        filter: invert(45%);
+        margin: 0px 8px 8px 12px;
+      }
+    }
+  }
+}
+#formField {
+  width: 100%;
+  border: 1px solid $soft-gray;
+  border-radius: 0.3rem;
+  background-color: white;
+  min-height: 2.5rem;
+  font-family: $base-font-family;
+  margin-top: 16px;
+  margin-left: 8px;
+  padding-left: 8px;
+  cursor: grab;
+}
+.tab-switch:checked + .tab-label {
+  background: #fff;
+  color: $base-gray;
+  border-bottom: 0;
+  transition: all 0.35s;
+  z-index: 1;
+  top: -0.0625rem;
+}
+.tab-switch:checked + label + .tab-content {
+  z-index: 2;
+  opacity: 1;
+  transition: all 0.35s;
+}
+.tab-text {
+  color: $light-gray-blue;
+  font-size: 14px;
+  letter-spacing: 0.75px;
+}
+//////END TAB STYLE//////
+
+.sticky {
+  top: 0;
+  position: sticky;
+  background-color: red;
+  padding-top: 0px;
+  margin-top: 0;
+}
+
+.card {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+      margin: 0;
+      padding: 0;
+    }
+  }
+  &__img {
+    background-color: white;
+    border-radius: 100%;
+    padding: 6px 8px 2px 4px;
+    box-shadow: 1px 1px 1px $very-light-gray;
+  }
+}
+.overlap {
+  z-index: 2;
+  margin-left: -12px;
+  box-shadow: 1px 1px 0.5px 0.5px $very-light-gray;
+  // background-color: white;
+}
+.extra-padding {
+  padding: 5px 4px 3px 4px;
+}
 .section-title {
   letter-spacing: 0.5px;
-  border-bottom: 2px solid #e8e8e8;
-  padding-bottom: 0.2rem;
 }
 .multi-slot {
   display: flex;
@@ -1393,7 +1721,6 @@ export default {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  font-size: 0.85rem;
 }
 .centered {
   display: flex;
@@ -1401,9 +1728,24 @@ export default {
   justify-content: space-between;
   flex-direction: row;
 }
-
+.header-img {
+  padding: 5px 8px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+.active {
+  background-color: $white-green;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
 .slack-form-builder {
-  padding: 0rem 3rem;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0rem;
+  margin: 0;
   color: $base-gray;
 }
 .slot-icon {
@@ -1438,7 +1780,8 @@ img:hover {
   opacity: 0.8;
 }
 .save {
-  padding: 0.6rem 1.5rem;
+  padding: 7px 24px;
+  font-size: 12px;
   background-color: $dark-green;
   color: white;
   border: none;
@@ -1447,10 +1790,9 @@ img:hover {
   cursor: pointer;
 }
 .disabled {
-  padding: 0.5rem 1rem;
-  min-width: 6rem;
+  padding: 8px 24px;
   background-color: $soft-gray;
-  color: $base-gray;
+  color: $light-gray-blue;
   border: none;
   border-radius: 0.25rem;
   margin-left: 0.5rem;
@@ -1473,7 +1815,6 @@ img:hover {
   justify-content: flex-end;
   margin-top: auto;
   bottom: 0;
-  padding: 1rem 0rem;
   background-color: white;
   outline: 1px solid white;
   z-index: 2;
@@ -1489,21 +1830,18 @@ img:hover {
 }
 .collection_fields {
   background-color: $white;
-  padding: 2rem 2rem 0rem 2rem;
-  margin: 0.5rem 1rem;
+  padding: 4px 16px 0px 16px;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
   overflow: auto;
-  height: 72vh;
-  width: 42vw;
+  height: 260px;
+  width: 300px;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 .stage_fields {
   background-color: $white;
-  padding: 3rem 1rem;
-  margin: -1.5rem 1rem 0rem 0rem;
   border-radius: 0.5rem;
   height: 74vh;
   width: 36vw;

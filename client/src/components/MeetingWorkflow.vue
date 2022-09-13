@@ -745,11 +745,11 @@ export default {
   width: 100%;
   height: 100%;
   margin-top: 16px;
-  min-height: 70vh;
+  // min-height: 70vh;
   border-radius: 4px;
   background-color: white;
   padding: 0px 16px;
-  overflow: hidden;
+  overflow: auto;
   margin-top: auto;
   // box-shadow: 1px 1px 2px 1px $very-light-gray;
 

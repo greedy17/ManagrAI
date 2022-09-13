@@ -398,17 +398,17 @@ export default {
   border-radius: 8px;
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
   width: 380px;
   min-height: 140px;
-  transition: all 0.25s;
   &__header {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px 16px;
-    border-radius: 6px;
-    background-color: $off-white;
-    border: 1px solid $soft-gray;
+    align-items: flex-start;
+    justify-content: flex-start;
+    // border-radius: 6px;
+    // padding: 4px 8px;
+    // background-color: $off-white;
+    // border: 1px solid $soft-gray;
     img {
       margin: 0;
       padding: 0;
