@@ -3,7 +3,7 @@
     <div>
       <section class="forecast">
         <div class="flex-end">
-          <p>Forecast</p>
+          <p class="light-blue">Forecast</p>
           <img src="@/assets/images/settings.svg" alt="" />
         </div>
         <div class="header">
@@ -155,7 +155,6 @@ export default {
   }
 
   p {
-    color: $light-gray-blue;
     font-size: 13px;
   }
 }
@@ -208,5 +207,8 @@ export default {
 .green-filter {
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+.light-blue {
+  color: $light-gray-blue;
 }
 </style>

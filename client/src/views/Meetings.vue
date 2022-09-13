@@ -241,7 +241,7 @@
       <div class="results">
         <div class="results-title">
           <p>
-            Meetings to Review <span>{{ meetings.length }}</span>
+            Meetings<span>{{ meetings.length }}</span>
           </p>
         </div>
 
@@ -1748,7 +1748,7 @@ export default {
     font-size: 14px;
     font-weight: bold;
     margin-left: 2px;
-
+    color: $light-gray-blue;
     span {
       background-color: $light-coral;
       color: $coral;

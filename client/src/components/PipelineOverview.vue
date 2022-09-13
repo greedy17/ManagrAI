@@ -2,8 +2,8 @@
   <div class="overview">
     <div>
       <div class="header">
-        <p>Your pipeline</p>
-        <p><span>You have 5 active workflows</span></p>
+        <p class="light-blue">Pipeline</p>
+        <p>You have <span>5</span> active workflows</p>
       </div>
       <section class="workflow" :key="i" v-for="(alert, i) in templates.list">
         <div class="title">
@@ -278,12 +278,15 @@ export default {
       color: $dark-green;
       padding: 4px 8px;
       border-radius: 6px;
-      margin-left: 4px;
+
       font-size: 11px;
     }
   }
   img {
     margin-left: 8px;
   }
+}
+.light-blue {
+  color: $light-gray-blue;
 }
 </style>
