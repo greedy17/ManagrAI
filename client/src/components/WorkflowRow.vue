@@ -425,6 +425,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
+        this.dropdownVal = {}
         this.$emit('inline-edit', this.formData, this.workflow.id, dataType)
       }, 500)
     },

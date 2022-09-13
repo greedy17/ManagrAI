@@ -448,6 +448,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
+        this.dropdownVal = {}
         this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
