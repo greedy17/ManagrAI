@@ -292,11 +292,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
             )
 
         elif self.data_type == "Boolean":
+            initial_value = (
+                [block_builders.option(self.reference_display_label, "true")]
+                if value is True
+                else None
+            )
             return block_builders.checkbox_block(
                 " ",
                 [block_builders.option(self.reference_display_label, "true")],
                 action_id=self.api_name,
                 block_id=self.api_name,
+                initial_options=initial_value,
             )
         elif self.data_type == "MultiChannelsSelect":
             return [
