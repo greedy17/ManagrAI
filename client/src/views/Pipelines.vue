@@ -2927,7 +2927,16 @@ export default {
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
       try {
-        const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+        let res
+        if (this.filterText) {
+          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()],]
+          res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
+        } else if (this.workflowFilterText) {
+          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],]
+          res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
+        } else {
+          res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+        }
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3416,7 +3425,9 @@ export default {
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
+        
         if (this.activeFilters.length) {
+          console.log('hit', this.activeFilters)
           this.getFilteredObjects()
         }
       } catch (e) {
