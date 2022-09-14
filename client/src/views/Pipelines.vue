@@ -3101,7 +3101,8 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
-      this.storedFilters = [dT, field, apiName, {reversed: false}]
+      let custom = false
+      this.storedFilters = [dT, field, apiName, {reversed: false}, custom]
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3143,7 +3144,8 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
-      this.storedFilters = [dT, field, apiName, {reversed: true}]
+      let custom = false
+      this.storedFilters = [dT, field, apiName, {reversed: true}, custom]
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3185,7 +3187,8 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
-      this.storedFilters = [dT, field, apiName, {reversed: false}]
+      let custom = false
+      this.storedFilters = [dT, field, apiName, {reversed: false}, custom]
     },
     sortWorkflowsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3226,7 +3229,8 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
-      this.storedFilters = [dT, field, apiName, {reversed: true}]
+      let custom = false
+      this.storedFilters = [dT, field, apiName, {reversed: true}, custom]
     },
     selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
@@ -3902,6 +3906,11 @@ export default {
             let updatedRes = await SObjects.api.getObjects('Opportunity')
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
+            if (this.storedFilters.length) {
+              this.storedFilters[3].reversed 
+              ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+            }
           })
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
@@ -3974,11 +3983,9 @@ export default {
         this.showList = false
         this.workList = false
         if (this.storedFilters.length) {
-          if (this.storedFilters.length) {
           this.storedFilters[3].reversed 
           ? this.sortWorkflowsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
           : this.sortWorkflows(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-        }
         }
       }
     },
