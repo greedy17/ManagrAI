@@ -2653,7 +2653,10 @@ export default {
     async getFilteredOpps() {
       this.currentPage = 1
       try {
+        // work here
+        console.log('this.filters', this.filters)
         const res = await SObjects.api.getObjects('Opportunity', 1, true, [
+          ...this.filters,
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
         ])
 
@@ -2832,7 +2835,8 @@ export default {
           .then(async () => {
             if (this.filterText) {
               let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ['CONTAINS', 'Name', this.filterText],
+                ...this.filters,
+                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
               ])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
@@ -2861,9 +2865,9 @@ export default {
               ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
               : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
             }
-            if (this.activeFilters.length) {
-              this.getFilteredObjects(this.updateFilterValue)
-            }
+            // if (this.activeFilters.length) {
+            //   this.getFilteredObjects(this.updateFilterValue)
+            // }
             if (this.currentList === 'Closing this month') {
               this.stillThisMonth()
             } else if (this.currentList === 'Closing next month') {
@@ -3412,6 +3416,9 @@ export default {
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
+        if (this.activeFilters.length) {
+          this.getFilteredObjects()
+        }
       } catch (e) {
         console.log(e)
       } finally {
@@ -3687,7 +3694,8 @@ export default {
           .then(async () => {
             if (this.filterText) {
               let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ['CONTAINS', 'Name', this.filterText],
+                ...this.filters,
+                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
               ])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
@@ -3837,7 +3845,8 @@ export default {
           .then(async () => {
             if (this.filterText) {
               let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ['CONTAINS', 'Name', this.filterText],
+                ...this.filters,
+                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
               ])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
@@ -4218,6 +4227,7 @@ export default {
       try {
         const res = await SObjects.api.getObjects('Opportunity', page)
         let filtRes = await SObjects.api.getObjects('Opportunity', page, true, [
+          ...this.filters,
           ['CONTAINS', 'Name', this.filterText],
         ])
 
