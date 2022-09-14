@@ -251,7 +251,7 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, Number($event.target.value), field.dataType)"
               id="user-input"
               type="number"
               :value="
@@ -421,6 +421,9 @@ export default {
     //     console.log(e)
     //   }
     // },
+    test(log) {
+      console.log('log', log)
+    },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -448,6 +451,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
+        this.dropdownVal = {}
         this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
