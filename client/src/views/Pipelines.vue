@@ -3909,7 +3909,7 @@ export default {
       } finally {
         this.updateList = []
         this.formData = {}
-        this.closeFilterSelection()
+        // this.closeFilterSelection()
       }
     },
     async createResource(product) {
