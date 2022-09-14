@@ -1500,7 +1500,7 @@
     </Modal>
 
     <div ref="pipelines" v-if="!loading">
-      <section class="flex-row-spread" @click="test(filters)">
+      <section class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
           <button @click.stop="showList = !showList" class="select-btn1">
             {{ currentList }}
@@ -2916,7 +2916,6 @@ export default {
       this.workList = false
     },
     async getFilteredObjects(value) {
-      console.log('value', value)
       this.loadingWorkflows = true
       this.currentPage = 1
       if (value) {
@@ -2924,7 +2923,6 @@ export default {
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
       try {
-        console.log('this.filters', this.filters)
         const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
         if (this.selectedWorkflow) {
           this.allOpps = res.results
