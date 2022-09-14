@@ -1631,7 +1631,14 @@
         </div>
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
-            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected && !changeFieldsSelected">
+            <div
+              v-if="
+                !closeDateSelected &&
+                !advanceStageSelected &&
+                !forecastSelected &&
+                !changeFieldsSelected
+              "
+            >
               <div class="flex-row">
                 <!-- <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
@@ -1642,7 +1649,9 @@
                     alt=""
                   />
                 </button> -->
-                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Bulk Update</button>
+                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">
+                  Bulk Update
+                </button>
                 <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button>
               </div>
             </div>
@@ -1717,7 +1726,7 @@
                 v-model="selectedOpp"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 20vw; margin-right: 1rem;"
+                style="width: 20vw; margin-right: 1rem"
                 selectLabel="Enter"
                 label="label"
               >
@@ -1797,27 +1806,28 @@
                 >
                   <Multiselect
                     :options="
-                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                      selectedOpp.dataType === 'Picklist' ||
+                      selectedOpp.dataType === 'MultiPicklist'
                         ? allPicklistOptions[selectedOpp.id]
-                        : productReferenceOpts[selectedOpp.apiName] 
-                          ? productReferenceOpts[selectedOpp.apiName]
-                          : []
+                        : productReferenceOpts[selectedOpp.apiName]
+                        ? productReferenceOpts[selectedOpp.apiName]
+                        : []
                     "
-                    @select="
-                      oppNewValue = $event.value
-                    "
+                    @select="oppNewValue = $event.value"
                     openDirection="below"
                     v-model="dropdownVal[selectedOpp.apiName]"
                     style="width: 20vw"
                     selectLabel="Enter"
                     :loading="loadingProducts"
                     :label="
-                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                      selectedOpp.dataType === 'Picklist' ||
+                      selectedOpp.dataType === 'MultiPicklist'
                         ? 'label'
                         : 'name'
                     "
                     :track-by="
-                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                      selectedOpp.dataType === 'Picklist' ||
+                      selectedOpp.dataType === 'MultiPicklist'
                         ? 'value'
                         : 'id'
                     "
@@ -1842,9 +1852,7 @@
                 </div>
               </div>
 
-              <button @click="bulkUpdate" class="add-button">
-                Save
-              </button>
+              <button @click="bulkUpdate" class="add-button">Save</button>
             </div>
           </div>
           <div class="bulk-action" v-else>
@@ -2146,7 +2154,9 @@
       </section>
 
       <section
-        v-if="selectedWorkflow && (currentWorkflow && currentWorkflow.length > 0) && !loadingWorkflows"
+        v-if="
+          selectedWorkflow && currentWorkflow && currentWorkflow.length > 0 && !loadingWorkflows
+        "
         class="table-section"
       >
         <div v-outside-click="emitCloseEdit" class="table">
@@ -2217,7 +2227,8 @@
       <div class="row between height-s">
         <div class="pagination">
           <span class="results-2">
-            Displaying {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
+            Displaying
+            {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
             {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : oppTotal }}</span
           >
           <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
@@ -2654,7 +2665,6 @@ export default {
       this.currentPage = 1
       try {
         // work here
-        console.log('this.filters', this.filters)
         const res = await SObjects.api.getObjects('Opportunity', 1, true, [
           ...this.filters,
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
@@ -2861,9 +2871,13 @@ export default {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
             if (this.storedFilters.length && !this.selectedWorkflow) {
-              this.storedFilters[3].reversed 
-              ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
-              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+              this.storedFilters[3].reversed
+                ? this.sortOppsReverse(
+                    this.storedFilters[0],
+                    this.storedFilters[1],
+                    this.storedFilters[2],
+                  )
+                : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
             }
             // if (this.activeFilters.length) {
             //   this.getFilteredObjects(this.updateFilterValue)
@@ -2929,10 +2943,13 @@ export default {
       try {
         let res
         if (this.filterText) {
-          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()],]
+          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
           res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
         } else if (this.workflowFilterText) {
-          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],]
+          const textFilters = [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],
+          ]
           res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
         } else {
           res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
@@ -3115,7 +3132,7 @@ export default {
         })
       }
       let custom = false
-      this.storedFilters = [dT, field, apiName, {reversed: false}, custom]
+      this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3158,7 +3175,7 @@ export default {
         })
       }
       let custom = false
-      this.storedFilters = [dT, field, apiName, {reversed: true}, custom]
+      this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3201,7 +3218,7 @@ export default {
         })
       }
       let custom = false
-      this.storedFilters = [dT, field, apiName, {reversed: false}, custom]
+      this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortWorkflowsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3243,7 +3260,7 @@ export default {
         })
       }
       let custom = false
-      this.storedFilters = [dT, field, apiName, {reversed: true}, custom]
+      this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
     },
     selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
@@ -3425,9 +3442,8 @@ export default {
               (opp) => opp.id === this.oppId,
             )[0].account_ref.name)
           : (this.currentAccount = 'Account')
-        
+
         if (this.activeFilters.length) {
-          console.log('hit', this.activeFilters)
           this.getFilteredObjects()
         }
       } catch (e) {
@@ -3618,9 +3634,13 @@ export default {
           await this.getFilteredOpps()
         }
         if (this.storedFilters.length) {
-          this.storedFilters[3].reversed 
-          ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
-          : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          this.storedFilters[3].reversed
+            ? this.sortOppsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
         }
         if (this.activeFilters.length) {
           this.getFilteredObjects()
@@ -3930,9 +3950,13 @@ export default {
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
             if (this.storedFilters.length) {
-              this.storedFilters[3].reversed 
-              ? this.sortOppsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
-              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+              this.storedFilters[3].reversed
+                ? this.sortOppsReverse(
+                    this.storedFilters[0],
+                    this.storedFilters[1],
+                    this.storedFilters[2],
+                  )
+                : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
             }
           })
         this.$toast('Opportunity created successfully.', {
@@ -4006,9 +4030,17 @@ export default {
         this.showList = false
         this.workList = false
         if (this.storedFilters.length) {
-          this.storedFilters[3].reversed 
-          ? this.sortWorkflowsReverse(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2]) 
-          : this.sortWorkflows(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          this.storedFilters[3].reversed
+            ? this.sortWorkflowsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+            : this.sortWorkflows(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
         }
       }
     },
@@ -5669,10 +5701,14 @@ a {
 }
 
 @keyframes slideOnOpen {
-  from {width: 0;}
-  to {width: 15rem;}
+  from {
+    width: 0;
+  }
+  to {
+    width: 15rem;
+  }
 }
-.input{
+.input {
   min-height: 40px;
   // display: block;
   // padding: 8px 40px 0 8px;

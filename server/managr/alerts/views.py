@@ -209,7 +209,6 @@ class AlertTemplateViewSet(
                         config.target_users
                         users = [*users, *config.target_users]
                     res_data = []
-                    print(users)
                     for user in users:
                         if hasattr(user, "salesforce_account"):
                             res = sf.adapter_class.execute_alert_query(
