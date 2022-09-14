@@ -23,7 +23,7 @@
     </div>
 
     <div style="min-width: 26vw" class="table-cell cell-name">
-      <div @click="test(opp)" class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
+      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
             class="flex-column"
