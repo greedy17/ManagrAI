@@ -224,7 +224,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_option=initial_option,
                 )
-
             return block
 
         elif self.data_type == "Reference":
@@ -292,11 +291,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
             )
 
         elif self.data_type == "Boolean":
+            initial_value = (
+                [block_builders.option(self.reference_display_label, "true")]
+                if value is True
+                else None
+            )
             return block_builders.checkbox_block(
                 " ",
                 [block_builders.option(self.reference_display_label, "true")],
                 action_id=self.api_name,
                 block_id=self.api_name,
+                initial_options=initial_value,
             )
         elif self.data_type == "MultiChannelsSelect":
             return [
@@ -431,6 +436,11 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     @property
     def as_slack_options(self):
         values = self.values
+        print(values)
+        for value in values:
+            if len(value["label"]) > 75:
+                value["label"] = f"{value['label'][:50]}..."
+
         if values and len(values):
             return list(
                 map(lambda option: block_builders.option(option["label"], option["value"]), values)
