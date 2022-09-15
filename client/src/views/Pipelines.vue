@@ -2125,6 +2125,8 @@
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
+            @set-dropdown-value="setDropdownValue"
+            :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -2174,6 +2176,8 @@
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
+            @set-dropdown-value="setDropdownValue"
+            :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -2387,6 +2391,7 @@ export default {
       oppFields: [],
       instanceId: null,
       contactInstanceId: null,
+      dropdownValue: {},
       formData: {},
       updateProductData: {},
       noteInfo: '',
@@ -2536,10 +2541,32 @@ export default {
     updateOppForm: ['setForms', 'filtersAndOppFields'],
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
+    dropdownValue: {
+      handler(val) {
+        if (this.stagesWithForms.includes(val.val)) {
+          this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
+        } else {
+          this.setUpdateValuesHandler('StageName', val.val, val.oppId, val.oppIntegrationId)
+        }
+      },
+    },
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    setUpdateValuesHandler(key, val, oppId, oppIntId, multi) {
+      let formData = {}
+      if (multi) {
+        formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
+        formData[key] = val
+      }
+      setTimeout(() => {
+        this.inlineUpdate(formData, oppId, oppIntId)
+      }, 500)
     },
     cancelEditProduct() {
       this.dropdownProductVal = {}
@@ -3248,7 +3275,6 @@ export default {
       this.newForecast = val
     },
     selectedOppVal(val) {
-      console.log('val', val)
       this.oppVal = val
     },
     onCheckAll() {
@@ -4022,6 +4048,10 @@ export default {
           }
         }
       }
+    },
+    setDropdownValue(val) {
+      // this.dropdownValue = {}
+      this.dropdownValue = val
     },
     filtersAndOppFields() {
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(

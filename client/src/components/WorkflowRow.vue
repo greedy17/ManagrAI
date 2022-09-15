@@ -221,7 +221,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              @select="setDropdownValue($event)"
+              @select="emitDropdown($event, opp)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -355,7 +355,6 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
-      dropdownValue: null,
       dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
@@ -388,15 +387,6 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     workflowCheckList: 'checkSelect',
-    dropdownValue: {
-      handler(val) {
-        if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.workflow.id, this.workflow.integration_id)
-        } else {
-          this.setUpdateValues('StageName', val)
-        }
-      },
-    },
   },
   methods: {
     checkSelect() {
@@ -404,8 +394,9 @@ export default {
         ? (this.isSelected = true)
         : (this.isSelected = false)
     },
-    setDropdownValue(val) {
-      this.dropdownValue = val.value
+    emitDropdown(val, opp) {
+      const item = {val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id}
+      this.$emit('set-dropdown-value', item)
     },
     closeInline() {
       this.editing = false
