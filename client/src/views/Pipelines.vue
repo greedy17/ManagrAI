@@ -1631,7 +1631,14 @@
         </div>
         <div v-else>
           <div v-if="!updatingOpps" class="bulk-action">
-            <div v-if="!closeDateSelected && !advanceStageSelected && !forecastSelected && !changeFieldsSelected">
+            <div
+              v-if="
+                !closeDateSelected &&
+                !advanceStageSelected &&
+                !forecastSelected &&
+                !changeFieldsSelected
+              "
+            >
               <div class="flex-row">
                 <!-- <button @click="forecastSelected = !forecastSelected" class="select-btn1">
                   Change Forecast
@@ -1642,7 +1649,9 @@
                     alt=""
                   />
                 </button> -->
-                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">Bulk Update</button>
+                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">
+                  Bulk Update
+                </button>
                 <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button>
               </div>
             </div>
@@ -1710,14 +1719,14 @@
               </button>
             </div>
             <div class="flex-row-pad" v-if="changeFieldsSelected">
-              <p style="font-size: 14px" @click="test(productReferenceOpts)">Change Field:</p>
+              <p style="font-size: 14px">Change Field:</p>
               <Multiselect
                 :options="filteredSelectOppFields"
                 @select="selectedOppVal($event)"
                 v-model="selectedOpp"
                 openDirection="below"
                 :loading="dropdownLoading"
-                style="width: 20vw; margin-right: 1rem;"
+                style="width: 20vw; margin-right: 1rem"
                 selectLabel="Enter"
                 label="label"
               >
@@ -1784,7 +1793,7 @@
                 >
                   <input
                     type="number"
-                    @input="oppNewValue = $event.target.value"
+                    @input="oppNewValue = Number($event.target.value)"
                     class="sliding input"
                   />
                 </div>
@@ -1797,27 +1806,28 @@
                 >
                   <Multiselect
                     :options="
-                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                      selectedOpp.dataType === 'Picklist' ||
+                      selectedOpp.dataType === 'MultiPicklist'
                         ? allPicklistOptions[selectedOpp.id]
-                        : productReferenceOpts[selectedOpp.apiName] 
-                          ? productReferenceOpts[selectedOpp.apiName]
-                          : []
+                        : productReferenceOpts[selectedOpp.apiName]
+                        ? productReferenceOpts[selectedOpp.apiName]
+                        : []
                     "
-                    @select="
-                      oppNewValue = $event.value
-                    "
+                    @select="oppNewValue = $event.value"
                     openDirection="below"
                     v-model="dropdownVal[selectedOpp.apiName]"
                     style="width: 20vw"
                     selectLabel="Enter"
                     :loading="loadingProducts"
                     :label="
-                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                      selectedOpp.dataType === 'Picklist' ||
+                      selectedOpp.dataType === 'MultiPicklist'
                         ? 'label'
                         : 'name'
                     "
                     :track-by="
-                      selectedOpp.dataType === 'Picklist' || selectedOpp.dataType === 'MultiPicklist'
+                      selectedOpp.dataType === 'Picklist' ||
+                      selectedOpp.dataType === 'MultiPicklist'
                         ? 'value'
                         : 'id'
                     "
@@ -1842,9 +1852,7 @@
                 </div>
               </div>
 
-              <button @click="bulkUpdate" class="add-button">
-                Save
-              </button>
+              <button @click="bulkUpdate" class="add-button">Save</button>
             </div>
           </div>
           <div class="bulk-action" v-else>
@@ -2125,6 +2133,8 @@
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
+            @set-dropdown-value="setDropdownValue"
+            :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -2146,7 +2156,9 @@
       </section>
 
       <section
-        v-if="selectedWorkflow && (currentWorkflow && currentWorkflow.length > 0) && !loadingWorkflows"
+        v-if="
+          selectedWorkflow && currentWorkflow && currentWorkflow.length > 0 && !loadingWorkflows
+        "
         class="table-section"
       >
         <div v-outside-click="emitCloseEdit" class="table">
@@ -2174,6 +2186,8 @@
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
+            @set-dropdown-value="setDropdownValue"
+            :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -2217,7 +2231,8 @@
       <div class="row between height-s">
         <div class="pagination">
           <span class="results-2">
-            Displaying {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
+            Displaying
+            {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
             {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : oppTotal }}</span
           >
           <button v-if="hasNext && !selectedWorkflow" @click="nextPage" class="select-btn">
@@ -2373,6 +2388,7 @@ export default {
       refreshId: null,
       filterText: '',
       workflowFilterText: '',
+      storedFilters: [],
       currentList: 'All Opportunities',
       alertInstanceId: null,
       showList: false,
@@ -2387,6 +2403,7 @@ export default {
       oppFields: [],
       instanceId: null,
       contactInstanceId: null,
+      dropdownValue: {},
       formData: {},
       updateProductData: {},
       noteInfo: '',
@@ -2536,10 +2553,32 @@ export default {
     updateOppForm: ['setForms', 'filtersAndOppFields'],
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
+    dropdownValue: {
+      handler(val) {
+        if (this.stagesWithForms.includes(val.val)) {
+          this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
+        } else {
+          this.setUpdateValuesHandler('StageName', val.val, val.oppId, val.oppIntegrationId)
+        }
+      },
+    },
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    setUpdateValuesHandler(key, val, oppId, oppIntId, multi) {
+      let formData = {}
+      if (multi) {
+        formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
+        formData[key] = val
+      }
+      setTimeout(() => {
+        this.inlineUpdate(formData, oppId, oppIntId)
+      }, 500)
     },
     cancelEditProduct() {
       this.dropdownProductVal = {}
@@ -2653,6 +2692,7 @@ export default {
       this.currentPage = 1
       try {
         const res = await SObjects.api.getObjects('Opportunity', 1, true, [
+          ...this.filters,
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
         ])
 
@@ -2752,16 +2792,16 @@ export default {
         })
         this.currentVals = res.current_values
 
-        this.allUsers.filter(
+        const usersForCurrentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )
-          ? (this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name)
+        usersForCurrentOwner
+          ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        this.allOpps.filter((opp) => opp.id === id)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
+        const firstOpp = this.allOpps.filter((opp) => opp.id === id)[0]
+        firstOpp && firstOpp.account_ref
+          ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
         console.log(e)
@@ -2831,7 +2871,8 @@ export default {
           .then(async () => {
             if (this.filterText) {
               let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ['CONTAINS', 'Name', this.filterText],
+                ...this.filters,
+                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
               ])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
@@ -2842,7 +2883,12 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             } else {
-              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let updatedRes
+              if (this.filters.length) {
+                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+              } else {
+                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              }
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
               this.allOpps = updatedRes.results
@@ -2852,13 +2898,21 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             }
-
             if (this.selectedWorkflow) {
               this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
             }
-            if (this.activeFilters.length) {
-              this.getFilteredObjects(this.updateFilterValue)
+            if (this.storedFilters.length && !this.selectedWorkflow) {
+              this.storedFilters[3].reversed
+                ? this.sortOppsReverse(
+                    this.storedFilters[0],
+                    this.storedFilters[1],
+                    this.storedFilters[2],
+                  )
+                : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
             }
+            // if (this.activeFilters.length) {
+            //   this.getFilteredObjects(this.updateFilterValue)
+            // }
             if (this.currentList === 'Closing this month') {
               this.stillThisMonth()
             } else if (this.currentList === 'Closing next month') {
@@ -2918,7 +2972,19 @@ export default {
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
       try {
-        const res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+        let res
+        if (this.filterText) {
+          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
+          res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
+        } else if (this.workflowFilterText) {
+          const textFilters = [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],
+          ]
+          res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
+        } else {
+          res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+        }
         if (this.selectedWorkflow) {
           this.allOpps = res.results
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3096,6 +3162,8 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
+      let custom = false
+      this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3137,6 +3205,8 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
+      let custom = false
+      this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
     },
     sortWorkflows(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3178,6 +3248,8 @@ export default {
           return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
         })
       }
+      let custom = false
+      this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortWorkflowsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3218,6 +3290,8 @@ export default {
           return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
         })
       }
+      let custom = false
+      this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
     },
     selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
@@ -3248,7 +3322,6 @@ export default {
       this.newForecast = val
     },
     selectedOppVal(val) {
-      console.log('val', val)
       this.oppVal = val
     },
     onCheckAll() {
@@ -3387,19 +3460,21 @@ export default {
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
 
-        this.allUsers.filter(
+        const usersForCurrentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )
-          ? (this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name)
+        usersForCurrentOwner
+          ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter(
-              (opp) => opp.id === this.oppId,
-            )[0].account_ref.name)
+        const firstOpp = this.allOpps.filter((opp) => opp.id === this.oppId)[0]
+        firstOpp && firstOpp.account_ref
+          ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
+
+        // if (this.activeFilters.length) {
+        //   this.getFilteredObjects()
+        // }
       } catch (e) {
         console.log(e)
       } finally {
@@ -3570,19 +3645,39 @@ export default {
     },
     async updateOpps() {
       try {
-        let res = await SObjects.api.getObjects('Opportunity', 1)
-        this.allOpps = res.results
-        this.originalList = res.results
-        res.next ? (this.hasNext = true) : (this.hasNext = false)
-        this.hasNextOriginal = this.hasNext
-        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-        this.oppTotal = res.count
-        this.originalOppTotal = res.count
-
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
+        if (!this.filterText) {
+          let res
+          if (this.filters.length) {
+            res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+          } else {
+            res = await SObjects.api.getObjects('Opportunity', 1)
+          }
+          this.allOpps = res.results
+          this.originalList = res.results
+          res.next ? (this.hasNext = true) : (this.hasNext = false)
+          this.hasNextOriginal = this.hasNext
+          res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = res.count
+          this.originalOppTotal = res.count
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+        } else {
+          await this.getFilteredOpps()
+        }
+        if (this.storedFilters.length) {
+          this.storedFilters[3].reversed
+            ? this.sortOppsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+        }
+        if (this.activeFilters.length) {
+          this.getFilteredObjects()
         }
       } catch (e) {
         this.$toast('Error updating Opporunity', {
@@ -3664,7 +3759,8 @@ export default {
           .then(async () => {
             if (this.filterText) {
               let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ['CONTAINS', 'Name', this.filterText],
+                ...this.filters,
+                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
               ])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
@@ -3675,7 +3771,12 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             } else {
-              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let updatedRes
+              if (this.filters.length) {
+                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+              } else {
+                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              }
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
               this.allOpps = updatedRes.results
@@ -3814,7 +3915,8 @@ export default {
           .then(async () => {
             if (this.filterText) {
               let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ['CONTAINS', 'Name', this.filterText],
+                ...this.filters,
+                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
               ])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
@@ -3825,7 +3927,14 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             } else {
-              let updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              let updatedRes
+              if (this.filters.length) {
+                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+                  ...this.filters,
+                ])
+              } else {
+                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
+              }
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
               this.allOpps = updatedRes.results
@@ -3866,7 +3975,7 @@ export default {
       } finally {
         this.updateList = []
         this.formData = {}
-        this.closeFilterSelection()
+        // this.closeFilterSelection()
       }
     },
     async createResource(product) {
@@ -3883,9 +3992,29 @@ export default {
             if (product) {
               this.createProduct(res.integration_id)
             }
-            let updatedRes = await SObjects.api.getObjects('Opportunity')
+            let filter
+            if (this.filters.length) {
+              filter = this.filterText
+                ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
+                : this.filters
+            }
+            let updatedRes
+            if (filter.length) {
+              updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, filter)
+            } else {
+              updatedRes = await SObjects.api.getObjects('Opportunity')
+            }
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
+            if (this.storedFilters.length) {
+              this.storedFilters[3].reversed
+                ? this.sortOppsReverse(
+                    this.storedFilters[0],
+                    this.storedFilters[1],
+                    this.storedFilters[2],
+                  )
+                : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+            }
           })
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
@@ -3943,6 +4072,8 @@ export default {
         })
         this.currentWorkflow = res.data.results
         this.filteredWorkflows = this.currentWorkflow
+        this.workflowFilterText = this.workflowFilterText + ' '
+        this.workflowFilterText = this.workflowFilterText.trim()
       } catch (error) {
         this.$toast('Error updating workflow', {
           timeout: 2000,
@@ -3955,6 +4086,19 @@ export default {
         this.selectedWorkflow = true
         this.showList = false
         this.workList = false
+        if (this.storedFilters.length) {
+          this.storedFilters[3].reversed
+            ? this.sortWorkflowsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+            : this.sortWorkflows(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+        }
       }
     },
     setForms() {
@@ -4022,6 +4166,10 @@ export default {
           }
         }
       }
+    },
+    setDropdownValue(val) {
+      // this.dropdownValue = {}
+      this.dropdownValue = val
     },
     filtersAndOppFields() {
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
@@ -4181,22 +4329,14 @@ export default {
     },
     async addMore(page) {
       try {
-        const res = await SObjects.api.getObjects('Opportunity', page)
-        let filtRes = await SObjects.api.getObjects('Opportunity', page, true, [
-          ['CONTAINS', 'Name', this.filterText],
-        ])
+        const filter = this.filterText
+          ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
+          : this.filters
+        let response = await SObjects.api.getObjects('Opportunity', page, true, filter)
+        const allOppsSpread = [...response.results, ...this.allOpps]
 
-        if (this.filterText) {
-          this.allOpps = [...filtRes.results, ...this.allOpps]
-          filtRes.next ? (this.hasNext = true) : (this.hasNext = false)
-        } else if (this.activeFilters.length) {
-          let filteredRes = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
-          this.allOpps = [...filteredRes.results, ...this.allOpps]
-          filteredRes.next ? (this.hasNext = true) : (this.hasNext = false)
-        } else {
-          this.allOpps = [...res.results, ...this.allOpps]
-          res.next ? (this.hasNext = true) : (this.hasNext = false)
-        }
+        this.allOpps = allOppsSpread
+        response.next ? (this.hasNext = true) : (this.hasNext = false)
       } catch (e) {
         this.$toast('Error gathering Opportunities!', {
           timeout: 2000,
@@ -5613,10 +5753,14 @@ a {
 }
 
 @keyframes slideOnOpen {
-  from {width: 0;}
-  to {width: 15rem;}
+  from {
+    width: 0;
+  }
+  to {
+    width: 15rem;
+  }
 }
-.input{
+.input {
   min-height: 40px;
   // display: block;
   // padding: 8px 40px 0 8px;

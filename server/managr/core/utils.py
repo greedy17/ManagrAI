@@ -213,6 +213,5 @@ def get_organization_totals(month_only=False):
 def pull_usage_data(month_only=False):
     totals = get_totals_for_year(month_only)
     orgs = get_organization_totals(month_only)
-    print(orgs)
     return {"totals": totals, "org": orgs}
 
