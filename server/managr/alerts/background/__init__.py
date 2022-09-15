@@ -238,6 +238,7 @@ def _process_send_alert(invocation, channel, config_id):
     template = alert_instances.first().template
     channel_id = None
     instance_user = alert_instances.first().user
+    alert_instance = alert_instances.first()
     if hasattr(instance_user, "slack_integration"):
         channel_id = (
             alert_instances.first().channel

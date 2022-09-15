@@ -1568,6 +1568,18 @@ class PricebookEntryAdapter:
 
         return PricebookEntryAdapter(**formatted_data)
 
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = PricebookEntryAdapter.from_api(r, user_id)
+            return r
+
 
 class OpportunityLineItemAdapter:
     def __init__(self, **kwargs):

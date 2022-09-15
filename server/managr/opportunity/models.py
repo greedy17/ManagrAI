@@ -3,7 +3,7 @@ import json
 
 from django.db import models
 from django.contrib.postgres.fields import JSONField, ArrayField
-
+from django.db.models import Q
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
@@ -18,7 +18,9 @@ from managr.core.models import User
 class LeadQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
+            if user.is_admin:
+                return self.filter(owner__organization=user.organization)
+            elif user.user_level in ["SDR", "MANAGER"]:
                 return self.filter(owner__team=user.team)
             else:
                 return self.filter(owner=user)
@@ -102,10 +104,17 @@ class Lead(TimeStampModel, IntegrationModel):
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(owner__team=user.team)
+            if user.is_admin:
+                return self.filter(
+                    Q(owner__organization=user.organization)
+                    & ~Q(stage__in=["Closed Lost", "Closed Won"])
+                )
+            elif user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(
+                    Q(owner__team=user.team) & ~Q(stage__in=["Closed Lost", "Closed Won"])
+                )
             else:
-                return self.filter(owner=user)
+                return self.filter(Q(owner=user) & ~Q(stage__in=["Closed Lost", "Closed Won"]))
         else:
             return None
 
