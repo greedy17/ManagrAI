@@ -3472,9 +3472,9 @@ export default {
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
 
-        if (this.activeFilters.length) {
-          this.getFilteredObjects()
-        }
+        // if (this.activeFilters.length) {
+        //   this.getFilteredObjects()
+        // }
       } catch (e) {
         console.log(e)
       } finally {
