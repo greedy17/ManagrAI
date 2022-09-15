@@ -224,7 +224,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_option=initial_option,
                 )
-
             return block
 
         elif self.data_type == "Reference":
@@ -437,6 +436,11 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     @property
     def as_slack_options(self):
         values = self.values
+        print(values)
+        for value in values:
+            if len(value["label"]) > 75:
+                value["label"] = f"{value['label'][:50]}..."
+
         if values and len(values):
             return list(
                 map(lambda option: block_builders.option(option["label"], option["value"]), values)
