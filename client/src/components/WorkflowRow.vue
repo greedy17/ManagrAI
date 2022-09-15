@@ -221,7 +221,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              @select="emitDropdown($event, opp)"
+              @select="emitDropdown($event, workflow)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
