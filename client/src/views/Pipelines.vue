@@ -2779,17 +2779,11 @@ export default {
         })
         this.currentVals = res.current_values
 
-        this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )
-          ? (this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name)
-          : (this.currentOwner = 'Owner')
+        const usersForCurrentOwner = this.allUsers.filter(user => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'])
+        usersForCurrentOwner ? this.currentOwner = usersForCurrentOwner[0].full_name : this.currentOwner = 'Owner'
 
-        this.allOpps.filter((opp) => opp.id === id)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
-          : (this.currentAccount = 'Account')
+        const firstOpp = this.allOpps.filter((opp) => opp.id === id)[0]
+        firstOpp && firstOpp.account_ref ? this.currentAccount = firstOpp.account_ref.name : this.currentAccount = 'Account'
       } catch (e) {
         console.log(e)
       } finally {
@@ -3381,6 +3375,7 @@ export default {
       this.addOppModalOpen = !this.addOppModalOpen
     },
     async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
+      console.log('allOpps before', this.allOpps)
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.addingProduct = false
       this.formData = {}
@@ -3413,24 +3408,17 @@ export default {
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
 
-        this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )
-          ? (this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name)
-          : (this.currentOwner = 'Owner')
+        const usersForCurrentOwner = this.allUsers.filter(user => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'])
+        usersForCurrentOwner ? this.currentOwner = usersForCurrentOwner[0].full_name : this.currentOwner = 'Owner'
 
-        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter(
-              (opp) => opp.id === this.oppId,
-            )[0].account_ref.name)
-          : (this.currentAccount = 'Account')
+        const firstOpp = this.allOpps.filter((opp) => opp.id === this.oppId)[0]
+        firstOpp && firstOpp.account_ref ? this.currentAccount = firstOpp.account_ref.name : this.currentAccount = 'Account'
       } catch (e) {
         console.log(e)
       } finally {
         pricebookId ? this.getPricebookEntries(pricebookId) : null
         this.dropdownLoading = false
+        console.log('allOpps end', this.allOpps)
       }
     },
     async createOppInstance() {
