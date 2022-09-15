@@ -3375,7 +3375,6 @@ export default {
       this.addOppModalOpen = !this.addOppModalOpen
     },
     async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
-      console.log('allOpps before', this.allOpps)
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.addingProduct = false
       this.formData = {}
@@ -3418,7 +3417,6 @@ export default {
       } finally {
         pricebookId ? this.getPricebookEntries(pricebookId) : null
         this.dropdownLoading = false
-        console.log('allOpps end', this.allOpps)
       }
     },
     async createOppInstance() {
