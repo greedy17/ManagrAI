@@ -2133,6 +2133,8 @@
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
+            @set-dropdown-value="setDropdownValue"
+            :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -2184,6 +2186,8 @@
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
+            @set-dropdown-value="setDropdownValue"
+            :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
@@ -2399,6 +2403,7 @@ export default {
       oppFields: [],
       instanceId: null,
       contactInstanceId: null,
+      dropdownValue: {},
       formData: {},
       updateProductData: {},
       noteInfo: '',
@@ -2548,10 +2553,32 @@ export default {
     updateOppForm: ['setForms', 'filtersAndOppFields'],
     currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
+    dropdownValue: {
+      handler(val) {
+        if (this.stagesWithForms.includes(val.val)) {
+          this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
+        } else {
+          this.setUpdateValuesHandler('StageName', val.val, val.oppId, val.oppIntegrationId)
+        }
+      },
+    },
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    setUpdateValuesHandler(key, val, oppId, oppIntId, multi) {
+      let formData = {}
+      if (multi) {
+        formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
+      }
+
+      if (val && !multi) {
+        formData[key] = val
+      }
+      setTimeout(() => {
+        this.inlineUpdate(formData, oppId, oppIntId)
+      }, 500)
     },
     cancelEditProduct() {
       this.dropdownProductVal = {}
@@ -2765,16 +2792,16 @@ export default {
         })
         this.currentVals = res.current_values
 
-        this.allUsers.filter(
+        const usersForCurrentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )
-          ? (this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name)
+        usersForCurrentOwner
+          ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        this.allOpps.filter((opp) => opp.id === id)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter((opp) => opp.id === id)[0].account_ref.name)
+        const firstOpp = this.allOpps.filter((opp) => opp.id === id)[0]
+        firstOpp && firstOpp.account_ref
+          ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
       } catch (e) {
         console.log(e)
@@ -3433,23 +3460,21 @@ export default {
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
 
-        this.allUsers.filter(
+        const usersForCurrentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )
-          ? (this.currentOwner = this.allUsers.filter(
-              (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-            )[0].full_name)
+        usersForCurrentOwner
+          ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
-          ? (this.currentAccount = this.allOpps.filter(
-              (opp) => opp.id === this.oppId,
-            )[0].account_ref.name)
+        const firstOpp = this.allOpps.filter((opp) => opp.id === this.oppId)[0]
+        firstOpp && firstOpp.account_ref
+          ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
 
-        if (this.activeFilters.length) {
-          this.getFilteredObjects()
-        }
+        // if (this.activeFilters.length) {
+        //   this.getFilteredObjects()
+        // }
       } catch (e) {
         console.log(e)
       } finally {
@@ -4141,6 +4166,10 @@ export default {
           }
         }
       }
+    },
+    setDropdownValue(val) {
+      // this.dropdownValue = {}
+      this.dropdownValue = val
     },
     filtersAndOppFields() {
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(

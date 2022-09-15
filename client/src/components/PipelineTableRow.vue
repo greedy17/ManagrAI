@@ -198,7 +198,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              @select="setDropdownValue($event)"
+              @select="emitDropdown($event, opp)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -359,7 +359,6 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
-      dropdownValue: {},
       dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
@@ -380,15 +379,6 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     primaryCheckList: 'checkSelect',
-    dropdownValue: {
-      handler(val) {
-        if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.opp.id, this.opp.integration_id)
-        } else {
-          this.setUpdateValues('StageName', val)
-        }
-      },
-    },
   },
   props: {
     index: {},
@@ -432,8 +422,9 @@ export default {
     closeInline() {
       this.editing = false
     },
-    setDropdownValue(val) {
-      this.dropdownValue = val.value
+    emitDropdown(val, opp) {
+      const item = {val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id}
+      this.$emit('set-dropdown-value', item)
     },
     editInline(index) {
       this.editing = true
