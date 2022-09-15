@@ -3430,7 +3430,6 @@ export default {
           : (this.currentAccount = 'Account')
         
         if (this.activeFilters.length) {
-          console.log('hit', this.activeFilters)
           this.getFilteredObjects()
         }
       } catch (e) {
