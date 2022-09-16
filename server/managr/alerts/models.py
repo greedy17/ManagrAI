@@ -407,6 +407,8 @@ class AlertConfig(TimeStampModel):
                 query |= Q(is_active=True)
             elif target == "SDR":
                 query |= Q(user_level=core_consts.USER_LEVEL_SDR, is_active=True)
+            elif target == "TEAM":
+                query |= Q(team=self.template.user.team, is_active=True)
             else:
                 user_ids_to_include.append(target)
         if len(user_ids_to_include):
