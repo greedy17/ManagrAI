@@ -144,6 +144,8 @@ class AlertTemplateViewSet(
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == "POST":
             return alert_serializers.AlertTemplateWriteSerializer
+        if self.request.GET.get("for_pipeline", None):
+            return alert_serializers.AlertTemplateRunNowSerializer
         return self.serializer_class
 
     def create(self, request, *args, **kwargs):
