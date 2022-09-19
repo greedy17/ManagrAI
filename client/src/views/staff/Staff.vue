@@ -382,31 +382,47 @@
               </button>
             </div>
             <p class="note-section__body">
+              <!-- work here -->
               <span class="underline">Users:</span>
-              {{ content.users !== null ? content.users : 'None' }}
+              {{ content.total && content.total.users !== null ? content.total.users : 'None' }}
               <span class="underline">Workflows:</span>
-              {{ content.workflows !== null ? content.workflows : 'None' }}
+              {{ content.total && content.total.workflows !== null ? content.total.workflows : 'None' }}
               <span class="underline">Accounts Created:</span>
-              {{ content.creates.accounts !== null ? content.creates.accounts : 'None' }}
+              {{ content.total && content.total.creates.accounts !== null ? content.total.creates.accounts : 'None' }}
               <span class="underline">Contacts Created:</span>
-              {{ content.creates.contacts !== null ? content.creates.contacts : 'None' }}
+              {{ content.total && content.total.creates.contacts !== null ? content.total.creates.contacts : 'None' }}
               <span class="underline">Opportunities Created:</span>
-              {{ content.creates.opportunities !== null ? content.creates.opportunities : 'null' }}
+              {{ content.total && content.total.creates.opportunities !== null ? content.total.creates.opportunities : 'null' }}
               <span class="underline">Products Created:</span>
-              {{ content.creates.products !== null ? content.creates.products : 'None' }}
+              {{ content.total && content.total.creates.products !== null ? content.total.creates.products : 'None' }}
               <span class="underline">Total Created:</span>
-              {{ content.creates.total !== null ? content.creates.total : 'None' }}
+              {{ content.total && content.total.creates.total !== null ? content.total.creates.total : 'None' }}
               <span class="underline">Alert Updates:</span>
-              {{ content.updates.alert !== null ? content.updates.alert : 'None' }}
+              {{ content.total && content.total.updates.alert !== null ? content.total.updates.alert : 'None' }}
               <span class="underline">Command Updates:</span>
-              {{ content.updates.command !== null ? content.updates.command : 'None' }}
+              {{ content.total && content.total.updates.command !== null ? content.total.updates.command : 'None' }}
               <span class="underline">Meeting Updates:</span>
-              {{ content.updates.meeting !== null ? content.updates.meeting : 'None' }}
+              {{ content.total && content.total.updates.meeting !== null ? content.total.updates.meeting : 'None' }}
               <span class="underline">Pipeline Updates:</span>
-              {{ content.updates.pipeline !== null ? content.updates.pipeline : 'None' }}
+              {{ content.total && content.total.updates.pipeline !== null ? content.total.updates.pipeline : 'None' }}
               <span class="underline">Total Updates:</span>
-              {{ content.updates.total !== null ? content.updates.total : 'None' }}
+              {{ content.total && content.total.updates.total !== null ? content.total.updates.total : 'None' }}
             </p>
+            <h2 class="note-section__title">
+              Per Organization:
+            </h2>
+            <div v-for="(orgItem, j) in content.orgs" :key="`item${j}`">
+              <div>Name: {{orgItem.name}}</div>
+              <div>
+                Org: Session Avg: {{orgItem['session average']}} | Avg Total Sessions: {{orgItem['average total sessions']}} | Updates: {{orgItem['updates']}} | Creates: {{orgItem['creates']}}
+              </div>
+              <div>
+                <p>Users:</p>
+                <div v-for="(user, k) in orgItem.users" :key="`users${k}`">
+                  <div>{{user.userName}} - Session Avg: {{user['session average']}} | Total Sessions: {{user['total sessions']}} | Updates: {{user['updates']}} | Creates: {{user['creates']}}</div>
+                </div>
+              </div>
+            </div>
           </section>
         </div>
       </div>
@@ -764,17 +780,40 @@ export default {
         const res = await User.api.callCommand(this.selectedCommand.value)
         console.log('res', res)
         if (res.data) {
+          // work here
           const newResContent = []
+          const newResObjects = {}
           // console.log('res.data.totals', res.data.totals)
           for (let key in res.data.totals) {
             const item = res.data.totals[key]
             // console.log('res.data.totals[key]', res.data.totals[key])
+            // item['date'] = key
+            newResObjects[key] = {}
+            // console.log('item', item)
+            newResObjects[key].total = item
+            // newResContent.unshift(item)
+          }
+          for (let key in res.data.org) {
+            const item = res.data.org[key]
+            console.log('res.data.org[key]', res.data.org[key])
+            for (let key2 in item) {
+              item[key2].name = key2
+              for (let key3 in item[key2].users) {
+                item[key2].users[key3].userName = key3
+              }
+            }
+            newResObjects[key].orgs = item
+            // newResContent.unshift(item)
+          }
+          for (let key in newResObjects) {
+            const item = newResObjects[key]
             item['date'] = key
             newResContent.unshift(item)
           }
           this.contentModalInfo = newResContent
           this.displayCommandModal = true
           this.contentType = 'PullUsageData'
+          console.log('newResContent', newResContent)
         } else {
           if (res.success) {
             this.$toast(res['message'], {
@@ -967,22 +1006,22 @@ export default {
       const stringObj = `
       ${i}: {
         creates: {
-            accounts: ${obj.creates.accounts}
-            contacts: ${obj.creates.contacts}
-            opportunities: ${obj.creates.opportunities}
-            products: ${obj.creates.products}
-            total: ${obj.creates.total}
+            accounts: ${obj.total.creates.accounts}
+            contacts: ${obj.total.creates.contacts}
+            opportunities: ${obj.total.creates.opportunities}
+            products: ${obj.total.creates.products}
+            total: ${obj.total.creates.total}
           }
           date: ${obj.date}
           updates: {
-            alert: ${obj.updates.alert}
-            command: ${obj.updates.command}
-            meeting: ${obj.updates.meeting}
-            pipeline: ${obj.updates.pipeline}
-            total: ${obj.updates.total}
+            alert: ${obj.total.updates.alert}
+            command: ${obj.total.updates.command}
+            meeting: ${obj.total.updates.meeting}
+            pipeline: ${obj.total.updates.pipeline}
+            total: ${obj.total.updates.total}
           }
-          users: ${obj.users}
-          workflows: ${obj.workflows}
+          users: ${obj.total.users}
+          workflows: ${obj.total.workflows}
         }
       }
       `
