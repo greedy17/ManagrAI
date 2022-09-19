@@ -19,14 +19,16 @@
       </div>
 
       <div>
-        <div class="column-section-small neg-margin">
+        <div class="column-section-small">
           <section>
             <ForecastOverview />
           </section>
         </div>
         <div class="column-section">
           <!-- <img src="@/assets/images/settings.svg" height="20px" alt="" /> -->
-          <section></section>
+          <section>
+            <RecentActivity />
+          </section>
         </div>
       </div>
     </section>
@@ -37,6 +39,7 @@
 import Meetings from '@/views/Meetings'
 import PipelineOverview from '@/components/PipelineOverview'
 import ForecastOverview from '@/components/ForecastOverview'
+import RecentActivity from '@/components/RecentActivity'
 import { CollectionManager } from '@thinknimble/tn-models'
 import AlertTemplate from '@/services/alerts/'
 
@@ -46,6 +49,7 @@ export default {
     Meetings,
     PipelineOverview,
     ForecastOverview,
+    RecentActivity,
   },
   data() {
     return {
@@ -150,7 +154,7 @@ export default {
   section {
     border: 1px solid $soft-gray;
     width: 22vw;
-    height: 48vh;
+    height: 54vh;
   }
 }
 .column-section-small {
@@ -162,7 +166,7 @@ export default {
   section {
     border: 1px solid $soft-gray;
     width: 22vw;
-    height: 30vh;
+    height: 24vh;
   }
 }
 </style>

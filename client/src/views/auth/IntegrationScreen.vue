@@ -614,7 +614,7 @@ export default {
   border-radius: 8px;
   display: flex;
   flex-direction: row;
-  width: 400px;
+  width: 420px;
   min-height: 144px;
   transition: all 0.25s;
 
@@ -743,7 +743,7 @@ a {
   justify-content: space-between;
   width: 92vw;
   margin-left: -64px;
-  padding: 0px 56px 0px 0px;
+  padding: 0px 12px 0px 12px;
   overflow: hidden;
   h3 {
     font-size: 19px;

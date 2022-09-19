@@ -320,15 +320,14 @@
         <SkeletonBox width="15px" height="14px" />
         <SkeletonBox width="15px" height="14px" />
         <SkeletonBox width="15px" height="14px" />
-        <SkeletonBox width="15px" height="14px" />
       </div>
       <div v-else class="flex-row action-buttons">
-        <div class="tooltip mar-right">
+        <div @click="emitCreateForm" class="tooltip mar-right">
           <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
           <span class="tooltiptext">Update</span>
         </div>
 
-        <div class="tooltip mar-right">
+        <div @click="emitGetNotes" class="tooltip mar-right">
           <img src="@/assets/images/note.svg" height="16px" alt="" />
           <span class="tooltiptext">View Notes</span>
         </div>
@@ -338,10 +337,10 @@
           <span class="tooltiptext">Add to Tracker</span>
         </div>
 
-        <div class="tooltip mar-right">
+        <!-- <div class="tooltip mar-right">
           <img src="@/assets/images/more.svg" height="16px" alt="" />
           <span class="tooltiptext">More</span>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -587,7 +586,7 @@ export default {
 
 .action-buttons {
   background-color: white;
-  padding: 8px;
+  padding: 8px 16px 8px 8px;
   border-radius: 6px;
   // box-shadow: 1px 1px 1px $very-light-gray;
 }
@@ -636,7 +635,7 @@ export default {
   background-color: transparent;
   color: $dark-green;
   letter-spacing: 0.75px;
-  font-weight: bold;
+
   font-size: 10px;
   z-index: 2;
   // opacity: 0.5;
@@ -732,7 +731,7 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+
     border-top: 1px solid #e8e8e8;
     width: 100%;
     padding: 0.75rem 0rem;
@@ -861,7 +860,7 @@ input {
   top: 0;
   position: sticky;
   background-color: $white;
-  font-weight: bold;
+
   font-size: 13px;
   letter-spacing: 0.5px;
   color: $base-gray;

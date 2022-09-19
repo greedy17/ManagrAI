@@ -112,7 +112,6 @@ export default {
     },
   },
   async created() {
-    this.templates.refresh()
     this.users.refresh()
   },
 }
@@ -163,9 +162,7 @@ export default {
   flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: 16px;
-  height: 14vh;
-
+  height: 10vh;
   div {
     display: flex;
     flex-direction: column;

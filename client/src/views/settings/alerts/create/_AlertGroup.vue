@@ -16,12 +16,20 @@
     </div>
 
     <div>
-      <div :key="i" v-for="(alertOperand, i) in form.field.alertOperands.groups">
+      <small class="small-gray-text">Condition 1</small>
+      <div
+        style="margin-top: 8px"
+        :key="i"
+        v-for="(alertOperand, i) in form.field.alertOperands.groups"
+      >
         <AlertOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
           :form="alertOperand"
         />
+        <div class="column">
+          <small>|</small>
+        </div>
         <div class="row__buttons">
           <button
             class="plus_button"
@@ -33,9 +41,9 @@
             <img src="@/assets/images/trash.svg" class="filtered" alt="" />
           </button>
 
-          <button class="plus_button" @click="addOperandForm">
-            <img src="@/assets/images/plusOne.svg" class="filtered" alt="" />
-          </button>
+          <span class="plus_button" @click="addOperandForm">
+            <button>+</button>
+          </span>
         </div>
       </div>
     </div>
@@ -80,10 +88,10 @@ export default {
     addOperandForm() {
       const order = this.form.field.alertOperands.groups.length
       if (order >= 3) {
-        this.$toast('You can only add 3 items per group', {
-          timeout: 2000,
+        this.$toast('You can only add 3 conditions per group', {
+          timeout: 2200,
           position: 'top-left',
-          type: 'error',
+          type: 'default',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -129,7 +137,7 @@ export default {
 @import '@/styles/buttons';
 
 .plus_button {
-  border: 1px solid #e8e8e8;
+  border: none;
   background-color: transparent;
   border-radius: 0.3rem;
   padding: 0.1rem;
@@ -137,6 +145,14 @@ export default {
   align-items: center;
   cursor: pointer;
   color: $dark-green;
+
+  button {
+    background-color: $dark-green;
+    border: none;
+    border-radius: 100%;
+    color: white;
+    font-size: 18px;
+  }
 }
 .filtered {
   filter: invert(20%);
@@ -152,6 +168,7 @@ export default {
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
+  margin-left: 4px;
 }
 .toggle__switch {
   display: flex;
@@ -159,5 +176,20 @@ export default {
   margin-bottom: 2rem;
   font-size: 12px;
   letter-spacing: 1px;
+}
+.small-gray-text {
+  font-size: 10px;
+  color: $light-gray-blue;
+  background-color: $off-white;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 14px;
+  margin-top: -20px;
+  color: $very-light-gray;
 }
 </style>

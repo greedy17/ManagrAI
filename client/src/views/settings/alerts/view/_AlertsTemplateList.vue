@@ -47,7 +47,7 @@
         <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection gray-shadow">
           <div class="added-collection__header">
             <div id="gray">
-              <img src="@/assets/images/logo.png" height="36px" alt="" />
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
             </div>
 
             <div>
@@ -57,10 +57,32 @@
           </div>
 
           <div class="added-collection__body">
-            <p class="gray">Get notified when important close dates have passed</p>
+            <p class="gray">Recieve notifications when important close dates have passed</p>
           </div>
           <div class="added-collection__footer">
-            <button @click="goToRecap" class="gray_button">Activate</button>
+            <button @click="goToRecap" class="green_button">Activate</button>
+            <!-- <p class="red">Inactive</p> -->
+          </div>
+        </div>
+
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection gray-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
+            </div>
+
+            <div>
+              <p class="gray">Inactive Template</p>
+              <h3>90 Day Pipeline</h3>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Recieve notifications with a 90 day pipeline review</p>
+          </div>
+          <div class="added-collection__footer">
+            <button @click="goToRecap" class="green_button">Activate</button>
+            <!-- <p class="red">Inactive</p> -->
           </div>
         </div>
       </div>
@@ -83,7 +105,7 @@
                 style="margin-right: 8px"
                 :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
                 @click.stop="onRunAlertTemplateNow(alert.id)"
-                class="green_button"
+                class="white_button"
               >
                 Send to Slack
               </button>
@@ -151,9 +173,9 @@
         </div>
       </div>
     </template>
-    <div class="center-loader" v-if="templates.refreshing">
+    <!-- <div class="center-loader" v-if="templates.refreshing">
       <Loader loaderText="Gathering your workflows" />
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -434,8 +456,15 @@ export default {
 
 .yellow {
   color: $yellow !important;
+  background-color: white;
 }
-
+.red {
+  background-color: $light-red;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  color: $coral;
+  padding: 4px 6px;
+}
 h2 {
   font-size: 1.4rem;
 }
@@ -540,12 +569,14 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
+  height: 88vh;
+  overflow: scroll;
   margin: 16px 8px;
   color: $base-gray;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  // justify-content: space-evenly;
+  margin-left: 24px;
 }
 
 .alert_cards {
@@ -556,7 +587,6 @@ button:disabled {
   flex-wrap: wrap;
   width: 100%;
   border-radius: 6px;
-  overflow: scroll;
 }
 
 // .added-collection:hover {
@@ -683,7 +713,7 @@ a {
   color: white;
   background-color: $dark-green;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 8px 12px;
   font-size: 12px;
   border: none;
   cursor: pointer;
@@ -691,9 +721,10 @@ a {
 }
 .yellow_button {
   color: $yellow;
+  opacity: 0.85;
   background-color: white;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 8px 12px;
   font-size: 12px;
   border: 1px solid $yellow;
   cursor: pointer;
@@ -704,7 +735,7 @@ a {
   background-color: white;
   border-radius: 6px;
   outline: 1px solid $dark-green;
-  padding: 4px 8px;
+  padding: 8px 12px;
   font-size: 12px;
   border: none;
   cursor: pointer;
@@ -714,7 +745,7 @@ a {
   color: white;
   background-color: $light-gray-blue;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 8px 12px;
   font-size: 12px;
   border: none;
   cursor: pointer;

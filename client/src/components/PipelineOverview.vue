@@ -3,15 +3,17 @@
     <div>
       <div class="header">
         <p class="light-blue">Pipeline</p>
-        <p>You have <span>5</span> active workflows</p>
+        <p>
+          You have <span>{{ templates.list.length }}</span> active workflows
+        </p>
       </div>
       <section class="workflow" :key="i" v-for="(alert, i) in templates.list">
         <div class="title">
-          <img src="@/assets/images/logo.png" height="28px" alt="" />
+          <!-- <img class="filtered" src="@/assets/images/logo.png" height="28px" alt="" /> -->
           <div>
             <h4>
               {{ alert.title }}
-              <span>{{ workflows[i] ? workflows[i] : '0' }}</span>
+              <span>{{ alert.configsRef.length }}</span>
             </h4>
 
             <p>
@@ -23,7 +25,7 @@
 
         <section class="button-section">
           <div>
-            <button class="green-button">View List</button>
+            <button @click="setCurrentAlert(alert)" class="green-button">View List</button>
             <button class="white-button">
               Send Slack <img src="@/assets/images/slackLogo.png" height="12px" alt="" />
             </button>
@@ -65,6 +67,9 @@ export default {
     meetings: 'needsAction',
   },
   methods: {
+    setCurrentAlert(alert) {
+      console.log(alert)
+    },
     needsAction() {
       let NA = 0
       if (this.meetings.length) {
@@ -134,6 +139,9 @@ export default {
     this.templates.refresh()
     this.users.refresh()
   },
+  mounted() {
+    console.log(this.templates)
+  },
 }
 </script>
 
@@ -185,7 +193,7 @@ export default {
       font-size: 14px;
       margin: 0;
       padding: 0;
-      width: 34vw;
+      width: 36vw;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -244,7 +252,7 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-left: 44px;
+  margin-left: 16px;
   border-bottom: 2px solid $soft-gray;
   padding-bottom: 16px;
   div {
@@ -253,7 +261,7 @@ export default {
     align-items: center;
 
     img {
-      margin-right: 8px;
+      margin-left: 8px;
     }
   }
 }
@@ -261,12 +269,13 @@ export default {
   //   border-bottom: 2px solid $soft-gray;
   padding: 16px 0px 0px 0px;
   background-color: white;
+  z-index: -1;
 }
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  padding-left: 14px;
   position: sticky;
   background-color: white;
   top: 0;
@@ -288,5 +297,9 @@ export default {
 }
 .light-blue {
   color: $light-gray-blue;
+}
+.filtered {
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
 </style>

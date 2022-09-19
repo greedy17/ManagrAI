@@ -16,17 +16,15 @@
     </div>
 
     <div class="alert-operand-row__options">
-      <div class="centered" style="flex-direction: column">
-        <p>Select CRM Field:</p>
-
+      <div>
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <Multiselect
-              placeholder="Select Field"
+              placeholder="Field"
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="width: 16vw"
+              style="width: 8.5vw"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -44,7 +42,7 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.svg" alt="" />
-                  Select Field
+                  Field
                 </p>
               </template>
             </Multiselect>
@@ -52,20 +50,15 @@
         </FormField>
       </div>
 
-      <div
-        v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
-        class="centered"
-        style="flex-direction: column"
-      >
-        <p>Select an operator:</p>
+      <div v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')">
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <Multiselect
-              placeholder="Select Operator"
+              placeholder="Operator"
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="width: 16vw"
+              style="width: 8.5vw"
               selectLabel="Enter"
               label="label"
             >
@@ -75,7 +68,7 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.svg" alt="" />
-                  Select Operator
+                  Operator
                 </p>
               </template>
             </Multiselect>
@@ -84,21 +77,15 @@
       </div>
 
       <div class="alert-operand-row__value">
-        <div
-          class="centered"
-          style="flex-direction: column"
-          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
-        >
-          <p>Select a value:</p>
-
+        <div v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'">
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
               <Multiselect
-                placeholder="Select Value"
+                placeholder="Value"
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="width: 16vw"
+                style="width: 8.5vw"
                 selectLabel="Enter"
                 label="label"
               >
@@ -108,7 +95,7 @@
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
-                    Select Value
+                    Value
                   </p>
                 </template>
               </Multiselect>
@@ -117,21 +104,15 @@
         </div>
 
         <template v-else>
-          <div
-            class="centered"
-            style="flex-direction: column"
-            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
-          >
-            <p>Select a value:</p>
-
+          <div v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'">
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
                 <Multiselect
-                  placeholder="Select value"
+                  placeholder="Value"
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="width: 16vw"
+                  style="width: 8.5vw"
                   selectLabel="Enter"
                   label="label"
                 >
@@ -141,7 +122,7 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      Select Value
+                      Value
                     </p>
                   </template>
                 </Multiselect>
@@ -160,16 +141,15 @@
               "
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
-              <div style="text-align: center">
-                <p>Select an operator:</p>
+              <div>
                 <FormField :errors="form.field.operandOperator.errors">
                   <template v-slot:input>
                     <Multiselect
-                      placeholder="Select Operator"
+                      placeholder="Operator"
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 16vw"
+                      style="width: 8.5vw"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -179,7 +159,7 @@
                       <template slot="placeholder">
                         <p class="slot-icon">
                           <img src="@/assets/images/search.svg" alt="" />
-                          Select Operator
+                          Operator
                         </p>
                       </template>
                     </Multiselect>
@@ -231,8 +211,7 @@
               </div>
             </div>
 
-            <div class="centered" style="flex-direction: column" v-else>
-              <p>Enter value:</p>
+            <div v-else>
               <FormField
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
@@ -588,17 +567,25 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 13vw;
+  width: 8.5vw;
   border: 1px solid #e8e8e8 !important;
   border-radius: 0.3rem;
   background-color: white;
   box-shadow: none !important;
 }
 ::v-deep .input-form {
-  width: 13vw;
+  width: 8.5vw;
 }
 ::v-deep .input-form__active {
   border: none;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 8px;
+  margin-top: -16px;
+  color: $very-light-gray;
 }
 .multi-slot {
   display: flex;
@@ -675,8 +662,8 @@ img {
 }
 .alert-operand-row__options {
   display: flex;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   justify-content: space-evenly;
-  margin-top: -1rem;
 }
 </style>

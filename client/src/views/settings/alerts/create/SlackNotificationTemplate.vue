@@ -8,18 +8,14 @@
         <!-- horizontal stacked divs -->
         <div class="slack-notif__container-content__heading">
           <!--Horizontal spans -->
-          <span class="slack-notif__container-content__heading-title">
-            Managr
-          </span>
-          <span class="slack-notif__container-content__heading-type">
-            APP
-          </span>
+          <span class="slack-notif__container-content__heading-title"> Managr </span>
+          <span class="slack-notif__container-content__heading-type"> APP </span>
           <span class="slack-notif__container-content__heading-time">
-            {{ new Date() | timeOnlyShort }}
+            {{ timeOnlyShort }}
           </span>
         </div>
         <div class="slack-notif__container-content__body">
-          {{ msg }}
+          <p v-html="msg"></p>
         </div>
       </div>
     </div>
@@ -27,6 +23,7 @@
 </template>
 
 <script>
+import moment from 'moment/src/moment'
 export default {
   name: 'SlackNotificationTemplate',
   props: {
@@ -36,6 +33,12 @@ export default {
       default: true,
     },
   },
+  computed: {
+    timeOnlyShort() {
+      let date = new Date()
+      return moment(date).format('HH:MM a')
+    },
+  },
 }
 </script>
 
@@ -43,11 +46,13 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/mixins/utils';
 .slack-notif {
-  box-shadow: 0.2rem 0.5rem 0.5rem 0.2rem whitesmoke, -0.2rem 0.5rem 0.5rem 0.2rem whitesmoke;
+  // box-shadow: 1px 1px 1px 2px whitesmoke, -1px 1px 1px whitesmoke;
+  border: 1px solid $soft-gray;
   height: 5rem;
-  padding: 0.8rem 2rem;
-  border-radius: 1rem;
-  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  width: 40vw;
+  min-height: 30vh;
 }
 .slack-notif__container {
   display: flex;
@@ -56,16 +61,20 @@ export default {
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
-    height: 3rem;
-    width: 5rem;
+    height: 24px;
+    width: 40px;
   }
   &-content {
     display: flex;
     flex: 1 0 auto;
     flex-direction: column;
     &__body {
-      font-size: 20px;
-      margin: 0rem 1rem;
+      font-size: 14px;
+      margin: 1rem 0.5rem;
+      width: 30vw;
+      height: 20vh;
+      padding: 8px;
+      overflow: scroll;
     }
     &__heading {
       display: flex;
@@ -73,6 +82,7 @@ export default {
       &-title {
         font-weight: bold;
         font-size: 20px;
+        margin-top: -4px;
         margin: 0rem 1rem;
       }
       &-type {
@@ -80,6 +90,8 @@ export default {
         color: gray;
         font-size: 15px;
         margin: 0rem 1rem;
+        padding: 4px;
+        border-radius: 4px;
       }
       &-time {
         @include muted-font();

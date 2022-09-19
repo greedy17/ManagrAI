@@ -14,8 +14,13 @@
 
     <section class="cards__header">
       <img src="@/assets/images/people.svg" height="16px" alt="" />
-      <div class="cards__attendees">
+      <div v-if="!showingAttendees" @click="showAttendees" class="cards__attendees">
         <p>{{ meeting.participants.length }} <span>Attendees</span></p>
+      </div>
+      <div v-else class="attendees">
+        <p v-for="(participant, participantIndex) in participants" :key="participantIndex">
+          {{ meeting.participants[participantIndex].email }}
+        </p>
       </div>
     </section>
 
@@ -397,13 +402,18 @@
           <p v-if="!resourceType || !mapType">Select Record</p>
           <p
             v-else-if="resourceType && resourceId"
-            style="cursor: pointer"
+            style="cursor: pointer; color: #4d4e4c; font-size: 14px"
             @click="changeMapType(null)"
           >
-            Select {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
+            Select
+            {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
             <img src="@/assets/images/swap.svg" height="14px" alt="" />
           </p>
-          <p v-else style="cursor: pointer" @click="changeMapType(null)">
+          <p
+            v-else
+            style="cursor: pointer; color: #4d4e4c; font-size: 14px"
+            @click="changeMapType(null)"
+          >
             Select {{ mapType ? mapType : 'Record' }}
             <img src="@/assets/images/swap.svg" height="14px" alt="" />
           </p>
@@ -418,7 +428,6 @@
         <div class="add-field-section__body">
           <Multiselect
             v-if="selectingResource || !mapType"
-            style="width: 20vw"
             v-model="selectedResourceType"
             @select="changeResource($event)"
             placeholder="Select Record Type"
@@ -433,7 +442,6 @@
           <!-- @search-change="mapType === 'Account' ? getAccounts($event) : null" -->
           <Multiselect
             v-else
-            style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
             @search-change="getFilteredList($event)"
@@ -530,6 +538,7 @@ export default {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      showingAttendees: false,
       dropdownVal: {},
       selectedResourceType: null,
       selectingResource: false,
@@ -595,6 +604,9 @@ export default {
     this.getObjects()
   },
   methods: {
+    showAttendees() {
+      this.showingAttendees = !this.showingAttendees
+    },
     async getAccounts(val) {
       this.loadingAccounts = true
       try {
@@ -761,6 +773,7 @@ export default {
     padding: 6px 10px;
     p {
       color: $base-gray !important;
+      cursor: pointer;
     }
     span {
       color: $light-gray-blue;
@@ -813,6 +826,24 @@ export default {
       padding: 8px;
       margin-left: 16px;
     }
+  }
+}
+.attendees {
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  max-width: 18vw;
+  overflow-x: scroll;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 12px 0px 0px 40px !important;
+  border-radius: 8px;
+  p {
+    background-color: $off-white;
+    padding: 8px !important;
+    border-radius: 4px;
+    color: $base-gray !important;
+    cursor: pointer;
   }
 }
 .header-text {
@@ -901,8 +932,6 @@ a {
 .invert {
   filter: invert(30%);
   cursor: pointer;
-}
-.inverted {
 }
 .add-button {
   border: none;
@@ -1165,44 +1194,53 @@ a {
 }
 .add-field-section {
   position: absolute;
-  z-index: 7;
-  top: 10vh;
-  right: 0.5rem;
+  z-index: 20;
+  top: 48px;
+  left: 24px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: $white;
-  min-width: 28vw;
+  width: 22vw;
   height: auto;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
+  margin-left: 0px !important;
   &__title {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem;
-    color: $base-gray;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 4px 16px 12px;
+    color: $base-gray !important;
     background-color: $off-white;
-    letter-spacing: 0.4px;
-    padding-left: 1rem;
+    letter-spacing: 0.75px;
     font-weight: bold;
-    font-size: 16px;
     width: 100%;
+    margin-left: 0px !important;
+    p {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
   }
   &__body {
-    min-height: 8rem;
+    height: 26vh;
     padding-left: 1rem;
-    margin-top: 1rem;
-  }
-  &__footer {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  &__footer {
+    display: flex;
+    align-items: center !important;
+    justify-content: center !important;
     margin-top: 1rem;
     width: 100%;
     min-height: 2rem;
     border-top: 1px solid $soft-gray;
+    margin-left: 0px !important;
     p {
       cursor: pointer;
       color: $dark-green;

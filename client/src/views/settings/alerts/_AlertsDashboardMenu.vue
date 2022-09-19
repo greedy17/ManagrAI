@@ -257,6 +257,7 @@ export default {
     transform: translate(10%, 0%);
   }
 }
+
 .onboarding {
   filter: blur(10px);
 }
@@ -328,7 +329,8 @@ img {
   z-index: 1;
   top: 2.75em;
   left: 0;
-  padding: 8px 24px;
+
+  margin-left: 0px 12px;
   background: #fff;
   color: $base-gray;
   opacity: 0;

@@ -84,7 +84,7 @@
                 (field.dataType === 'String' && field.apiName === 'NextStep')
               "
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <textarea
                 id="user-input"
                 ccols="30"
@@ -96,7 +96,7 @@
               </textarea>
             </div>
             <div class="col" v-else-if="field.dataType === 'String'">
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 :disabled="savingCreateForm"
                 id="user-input"
@@ -137,7 +137,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
 
               <Multiselect
                 v-model="currentVals[field.apiName]"
@@ -392,7 +392,7 @@
               </div>
             </div>
             <div class="col" v-else-if="field.dataType === 'Date'">
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 type="date"
                 id="user-input"
@@ -419,7 +419,7 @@
               "
               class="col"
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 id="user-input"
                 type="number"
@@ -428,7 +428,7 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
 
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
@@ -654,7 +654,10 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <span class="logo">
+              <img src="@/assets/images/logo.png" height="24px" alt="" />
+            </span>
+
             <h3>Update Opportunity</h3>
           </div>
           <img
@@ -667,13 +670,16 @@
         <div class="opp-modal">
           <section :key="i" v-for="(field, i) in oppFormCopy">
             <div
-              style="margin-left: -0.5rem; margin-top: -1rem"
+              style="margin-left: -0.5rem; margin-top: -2rem"
               v-if="field.apiName === 'meeting_type'"
             >
               <span class="input-container">
-                <label class="label">Title</label>
+                <!-- <label class="label">Title</label> -->
                 <input
+                  class="input-field"
+                  placeholder="Note Title"
                   style="width: 40.25vw"
+                  autofocus
                   id="user-input"
                   type="text"
                   v-model="noteTitle"
@@ -686,7 +692,7 @@
               v-else-if="field.apiName === 'meeting_comments'"
             >
               <span style="margin-left: 0px; margin-top: -4px" class="input-container">
-                <label class="label">Note</label>
+                <!-- <label class="label">Note</label> -->
                 <div
                   @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
                   class="divArea"
@@ -700,7 +706,20 @@
                   @click="addingTemplate = !addingTemplate"
                   class="note-templates__content"
                 >
-                  Insert Template <img src="@/assets/images/note.svg" alt="" />
+                  <img
+                    src="@/assets/images/note.svg"
+                    height="18px"
+                    style="margin-left: 8px; padding-bottom: 2px"
+                    alt=""
+                  />
+                </span>
+                <span class="note-templates__content" v-if="noteTemplates.length">
+                  <img
+                    src="@/assets/images/expand.svg"
+                    height="16px"
+                    style="margin-left: 14px; padding-bottom: 1px"
+                    alt=""
+                  />
                 </span>
                 <span @click="goToProfile" class="note-templates__content" v-else>
                   Create a template <img src="@/assets/images/note.svg" alt=""
@@ -732,7 +751,7 @@
               "
               class="col"
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <textarea
                 id="user-input"
                 ccols="30"
@@ -752,7 +771,7 @@
               "
               class="col"
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 id="user-input"
                 type="text"
@@ -762,7 +781,7 @@
               />
             </div>
             <div v-else-if="field.dataType === 'Boolean'">
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="booleans"
@@ -823,7 +842,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -1085,7 +1104,7 @@
               </div>
             </div>
             <div class="col" v-else-if="field.dataType === 'Date'">
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 type="text"
                 onfocus="(this.type='date')"
@@ -1097,7 +1116,7 @@
               />
             </div>
             <div class="col" v-else-if="field.dataType === 'DateTime'">
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 type="datetime-local"
                 id="start"
@@ -1113,7 +1132,7 @@
                 field.dataType === 'Currency'
               "
             >
-              <label class="label">{{ field.referenceDisplayLabel }}:</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 id="user-input"
                 type="number"
@@ -1467,12 +1486,7 @@
 
         <div class="flex-end-opp">
           <div v-if="hasProducts">
-            <button
-              v-if="!addingProduct"
-              @click="addProduct"
-              style="margin-bottom: 0.75rem"
-              class="select-btn1"
-            >
+            <button v-if="!addingProduct" @click="addProduct" class="select-btn1">
               Add Product
             </button>
 
@@ -1492,7 +1506,7 @@
             >
               Update
             </button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
+            <!-- <p @click="resetEdit" class="cancel">Cancel</p> -->
           </div>
         </div>
       </div>
@@ -2646,6 +2660,7 @@ export default {
       }
     },
     async getReferenceFieldList(key, val, type, eventVal, filter) {
+      console.log(key, val, type)
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
@@ -2658,6 +2673,7 @@ export default {
           this.productReferenceOpts[key] = res
         } else if (type === 'stage') {
           this.stageReferenceOpts[key] = res
+          // console.log('here', this.stageReferenceOpts)
         } else {
           this.createReferenceOpts[key] = res
         }
@@ -3790,63 +3806,60 @@ export default {
       }
     },
     setForms() {
-      this.countSets += 1
-      if (this.countSets < 2) {
-        for (let i = 0; i < this.oppFormCopy.length; i++) {
-          if (this.oppFormCopy[i].dataType === 'Reference') {
-            this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+      for (let i = 0; i < this.oppFormCopy.length; i++) {
+        if (this.oppFormCopy[i].dataType === 'Reference') {
+          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+        }
+      }
+      for (let i = 0; i < this.stageGateCopy.length; i++) {
+        if (this.stageGateCopy[i].dataType === 'Reference') {
+          this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+        }
+      }
+
+      for (let i = 0; i < this.createOppForm.length; i++) {
+        if (this.createOppForm[i].dataType === 'Reference') {
+          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
+        }
+      }
+
+      if (this.hasProducts) {
+        for (let i = 0; i < this.createProductForm.length; i++) {
+          if (this.createProductForm[i].dataType === 'Reference') {
+            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
+            this.productReferenceOpts[this.createProductForm[i].apiName] =
+              this.createProductForm[i].id
           }
         }
-        for (let i = 0; i < this.stageGateCopy.length; i++) {
-          if (this.stageGateCopy[i].dataType === 'Reference') {
-            this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
-          }
-        }
+      }
 
-        for (let i = 0; i < this.createOppForm.length; i++) {
-          if (this.createOppForm[i].dataType === 'Reference') {
-            this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
-          }
-        }
+      for (let i in this.referenceOpts) {
+        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+      }
 
-        if (this.hasProducts) {
-          for (let i = 0; i < this.createProductForm.length; i++) {
-            if (this.createProductForm[i].dataType === 'Reference') {
-              this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
-              this.productReferenceOpts[this.createProductForm[i].apiName] =
-                this.createProductForm[i].id
-            }
-          }
-        }
+      for (let i in this.stageReferenceOpts) {
+        this.stageReferenceOpts[i] = this.getReferenceFieldList(
+          i,
+          this.stageReferenceOpts[i],
+          'stage',
+        )
+      }
 
-        for (let i in this.referenceOpts) {
-          this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
-        }
+      for (let i in this.createReferenceOpts) {
+        this.createReferenceOpts[i] = this.getReferenceFieldList(
+          i,
+          this.createReferenceOpts[i],
+          'create',
+        )
+      }
 
-        for (let i in this.stageReferenceOpts) {
-          this.stageReferenceOpts[i] = this.getReferenceFieldList(
+      if (this.hasProducts) {
+        for (let i in this.productReferenceOpts) {
+          this.productReferenceOpts[i] = this.getReferenceFieldList(
             i,
-            this.stageReferenceOpts[i],
-            'stage',
+            this.productReferenceOpts[i],
+            'createProduct',
           )
-        }
-
-        for (let i in this.createReferenceOpts) {
-          this.createReferenceOpts[i] = this.getReferenceFieldList(
-            i,
-            this.createReferenceOpts[i],
-            'create',
-          )
-        }
-
-        if (this.hasProducts) {
-          for (let i in this.productReferenceOpts) {
-            this.productReferenceOpts[i] = this.getReferenceFieldList(
-              i,
-              this.productReferenceOpts[i],
-              'createProduct',
-            )
-          }
         }
       }
     },
@@ -3882,7 +3895,6 @@ export default {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
-        console.log(res)
         this.updateOppForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
         )
@@ -4168,6 +4180,16 @@ export default {
   }
 }
 
+.input-field {
+  border: none !important;
+  letter-spacing: 0.8px;
+  padding: 8px;
+  color: $base-gray;
+}
+.input-field,
+.input-field::placeholder {
+  font: 18px $base-font-family;
+}
 .current-products {
   font-size: 12px;
   padding-left: 4px;
@@ -4923,7 +4945,7 @@ h3 {
   appearance: none;
 }
 input[type='search'] {
-  width: 60px;
+  // width: 60px;
   cursor: pointer;
   border: none;
   padding: 4px;
@@ -4962,14 +4984,16 @@ section {
   width: 40.25vw;
   min-height: 20vh;
   margin-bottom: 4px;
-  border: 1px solid #e8e8e8;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  border: none;
   overflow-y: scroll;
   font-family: inherit;
   font-style: inherit;
   font-size: 13px;
   padding: 12px;
+}
+.divArea:hover {
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
 }
 .flex-row {
   display: flex;
@@ -5282,11 +5306,14 @@ a {
   text-decoration: none;
 }
 .logo {
-  height: 24px;
-  margin-left: 0.5rem;
-  margin-right: 0.25rem;
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
+  margin: 0px 8px 0px 16px;
+  background-color: $white-green;
+  border-radius: 4px;
+  padding: 4px 6px;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
 }
 .results-2 {
   font-size: 11px;
@@ -5299,9 +5326,9 @@ a {
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
-  border: 1px solid $soft-gray;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border: none;
+  // border-bottom-left-radius: 4px;
+  // border-bottom-right-radius: 4px;
   cursor: pointer;
   width: 40.25vw;
 
@@ -5312,7 +5339,6 @@ a {
   }
   img {
     filter: invert(50%);
-    height: 12px;
   }
   &__content:hover {
     opacity: 0.6;
@@ -5329,16 +5355,16 @@ a {
   font-size: 12px;
   padding: 12px 6px;
   margin-top: -34px;
-  border: 1px solid $soft-gray;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border: none;
+  // border-bottom-left-radius: 4px;
+  // border-bottom-right-radius: 4px;
   width: 40.25vw;
   height: 80px;
   overflow: scroll;
 
   &__content {
     border-radius: 4px;
-    border: 0.5px solid $base-gray;
+    border: none;
     color: $base-gray;
     padding: 8px 6px;
     margin-bottom: 8px;
@@ -5363,14 +5389,16 @@ a {
 }
 .label {
   display: inline-block;
-  padding: 6px;
-  font-size: 14px;
+  padding: 6px 0px;
+  font-size: 18px;
   text-align: center;
   min-width: 80px;
   margin-top: 12px;
-  background-color: $white-green;
-  color: $dark-green;
+  margin-left: -12px;
+  letter-spacing: 0.75px;
+  color: $base-gray;
   font-weight: bold;
+  border: none;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }
