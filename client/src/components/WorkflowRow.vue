@@ -287,6 +287,28 @@
               <p>Press "Enter" to save</p>
             </div>
           </div>
+          <div v-else-if="field.dataType === 'Reference'">
+            <Multiselect
+              style="width: 14vw; padding-bottom: 8rem"
+              v-model="dropdownVal[field.apiName]"
+              @select="() => null"
+              :options="referenceOptions"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="value"
+              label="label"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ field.apiName }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
         </div>
         <PipelineField
           style="direction: ltr"
@@ -355,6 +377,7 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
+      referenceOptions: [],
       dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,

@@ -2830,6 +2830,7 @@ export default {
           value: eventVal ? eventVal : '',
           for_filter: filter ? [filter] : null,
         })
+        // console.log('res in getReferenceFieldList', res)
         if (type === 'update') {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
