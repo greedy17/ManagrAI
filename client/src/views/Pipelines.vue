@@ -2430,7 +2430,7 @@ export default {
       filterFields: [],
       filterApiName: null,
       filterValues: [],
-      filters: [],
+      filters: [["NOT_EQUALS", "StageName", "Closed Won"], ["NOT_EQUALS", "StageName", "Closed Lost"]],
       operatorsLength: 0,
       stageGateId: null,
       forecastList: [],
@@ -2884,12 +2884,7 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             } else {
-              let updatedRes
-              if (this.filters.length) {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-              } else {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
-              }
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
               this.allOpps = updatedRes.results
@@ -2957,7 +2952,7 @@ export default {
       this.operatorValue = null
       this.currentOperator = []
       this.filterValues = []
-      this.filters = []
+      this.filters = [["NOT_EQUALS", "StageName", "Closed Won"], ["NOT_EQUALS", "StageName", "Closed Lost"]]
     },
     closeListSelect() {
       this.showList = false
@@ -3647,12 +3642,7 @@ export default {
     async updateOpps() {
       try {
         if (!this.filterText) {
-          let res
-          if (this.filters.length) {
-            res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-          } else {
-            res = await SObjects.api.getObjects('Opportunity', 1)
-          }
+          let res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
           this.allOpps = res.results
           this.originalList = res.results
           res.next ? (this.hasNext = true) : (this.hasNext = false)
@@ -3772,12 +3762,7 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             } else {
-              let updatedRes
-              if (this.filters.length) {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-              } else {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
-              }
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
               this.allOpps = updatedRes.results
@@ -3928,14 +3913,7 @@ export default {
               this.oppTotal = updatedRes.count
               this.currentPage = 1
             } else {
-              let updatedRes
-              if (this.filters.length) {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                  ...this.filters,
-                ])
-              } else {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
-              }
+              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [...this.filters,])
               let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
               this.allOppsForWorkflows = wfr.results
               this.allOpps = updatedRes.results
@@ -3993,18 +3971,13 @@ export default {
             if (product) {
               this.createProduct(res.integration_id)
             }
-            let filter
+            let filter = []
             if (this.filters.length) {
               filter = this.filterText
                 ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
                 : this.filters
             }
-            let updatedRes
-            if (filter.length) {
-              updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, filter)
-            } else {
-              updatedRes = await SObjects.api.getObjects('Opportunity')
-            }
+            let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, filter)
             this.allOpps = updatedRes.results
             this.originalList = updatedRes.results
             if (this.storedFilters.length) {
@@ -4308,7 +4281,7 @@ export default {
       this.currentPage = page
       this.loading = true
       try {
-        const res = await SObjects.api.getObjects('Opportunity', page)
+        const res = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
         this.allOpps = res.results
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)
