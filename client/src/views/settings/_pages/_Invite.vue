@@ -256,12 +256,19 @@
             <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
           </span>
         </div>
+        <div
+          style="position: relative; width: 1rem; right: 1rem; visibility: none;"
+          class=""
+          >
+             
+        </div>
       </div>
       <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
         <template v-if="member.id !== user.id && member.team === $store.state.user.team">
           <div
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item col"
+            @click="test(member)"
           >
             {{ member.firstName ? member.firstName : 'Pending' }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
@@ -311,6 +318,13 @@
             <span :class="member.nylasRef ? 'active' : 'inactive'">
               <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
             </span>
+          </div>
+          <div 
+            v-if="!member.isAdmin"
+            style="position: relative; right: 7.5%; "
+            class=""
+            @click="handleUninvite(member.id)">
+            X
           </div>
         </template>
       </div>
@@ -478,6 +492,32 @@ export default {
       } finally {
         this.loading = false
         this.inviteOpen = !this.inviteOpen
+      }
+    },
+    async handleUninvite(id) {
+      // this.loading = true
+      try {
+        const res = await User.api.uninvite(id)
+        // this.$toast('Invitation Sent', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+        // await this.refresh()
+        // this.resetData()
+      } catch (e) {
+        console.log(e)
+        this.$toast('Something went wrong', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        // this.loading = false
       }
     },
     async handleInviteNonSlack() {

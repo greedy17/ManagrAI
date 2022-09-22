@@ -11,6 +11,7 @@ const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
+const UNINVITE_ENDPOINT = '/users/uninvite/'
 const STAFF_ENDPOINT = '/users/staff/'
 const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
 const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
@@ -112,12 +113,26 @@ export default class UserAPI {
 
   invite(userDetails) {
     const data = userDetails
-
     const promise = apiClient()
       .post(INVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.invite',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
+  uninvite(id) {
+    console.log('uninvite', id)
+    const data = id
+    const promise = apiClient()
+      .post(INVITE_ENDPOINT, this.cls.toAPI(data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.uninvite',
           enable400Alert: false,
           enable500Alert: false,
         }),

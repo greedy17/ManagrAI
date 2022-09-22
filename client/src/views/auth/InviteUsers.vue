@@ -688,13 +688,6 @@ export default {
     selectTemplate(template) {
       this.selectedTemplate = template
     },
-    // truncateText(text, length) {
-    //   if (text.length <= length) {
-    //     return text.replace(/(<([^>]+)>)/gi, '')
-    //   }
-
-    //   return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
-    // },
     async updateTemplate() {
       try {
         const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
