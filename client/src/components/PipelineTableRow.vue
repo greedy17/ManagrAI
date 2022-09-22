@@ -288,12 +288,11 @@
             <Multiselect
               style="width: 14vw; padding-bottom: 8rem"
               v-model="dropdownVal[field.apiName]"
-              @select="() => null"
-              :options="referenceOptions"
+              @select="setUpdateValues(field.apiName, $event.id, field.dataType)"
+              :options="referenceOpts[field.apiName] ? referenceOpts[field.apiName] : []"
               openDirection="below"
               selectLabel="Enter"
-              track-by="value"
-              label="label"
+              label="name"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -318,6 +317,7 @@
               ? opp['secondary_data'][field.apiName]
               : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
+          :referenceOpts="referenceOpts"
           :lastStageUpdate="opp['last_stage_update']"
         />
       </div>
@@ -353,6 +353,7 @@
               : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
           :lastStageUpdate="opp['last_stage_update']"
+          :referenceOpts="referenceOpts"
         />
       </div>
     </div>
@@ -415,6 +416,7 @@ export default {
     BulkUpdateValue: {},
     updateList: {},
     picklistOpts: {},
+    referenceOpts: {},
     inlineLoader: {},
     closeEdit: {},
     stages: {},

@@ -2139,6 +2139,7 @@
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
             :picklistOpts="allPicklistOptions"
+            :referenceOpts="referenceOpts"
             :opp="opp"
             :index="i"
             :oppFields="oppFields"
@@ -2192,6 +2193,7 @@
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
             :picklistOpts="allPicklistOptions"
+            :referenceOpts="referenceOpts"
             :workflow="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
@@ -2830,7 +2832,6 @@ export default {
           value: eventVal ? eventVal : '',
           for_filter: filter ? [filter] : null,
         })
-        // console.log('res in getReferenceFieldList', res)
         if (type === 'update') {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
