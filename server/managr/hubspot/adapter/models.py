@@ -85,9 +85,7 @@ class HubspotAuthAccountAdapter:
         self, hubspot_account_id, user_id, resource, res_data=[],
     ):
         fields = res_data["results"]
-        custom_additions = dict(
-            hubspot_account=hubspot_account_id, hubspot_object=resource, imported_by=user_id,
-        )
+        custom_additions = dict(user=user_id, crm_object=resource, imported_by=user_id,)
         data = [HObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields]
 
         return data
@@ -368,23 +366,19 @@ class HubspotAuthAccountAdapter:
 
 class HObjectFieldAdapter:
     def __init__(self, data):
-        self.hubspot_account = data.get("hubspot_account", None)
-        self.hubspot_object = data.get("hubspot_object", None)
-        self.name = data.get("name", None)
+        self.user = data.get("user", None)
+        self.crm_object = data.get("crm_object", None)
+        self.api_name = data.get("name", None)
         self.label = data.get("label", None)
-        self.type = data.get("type", None)
-        self.field_type = data.get("field_type", None)
-        self.calculated = data.get("calculated", None)
-        self.external_options = data.get("external_options", None)
-        self.has_unique_value = data.get("has_unique_value", None)
-        self.hidden = data.get("hidden", None)
-        self.display_value = data.get("display_value", None)
-        self.group_name = data.get("group_name", None)
+        self.data_type = data.get("field_type", None)
+        self.display_value = data.get("label", None)
         self.options = data.get("options", None)
-        self.display_order = data.get("display_order", None)
-        self.hubspot_defined = data.get("hubspot_defined", None)
-        self.modification_metadata = data.get("modification_metadata", None)
-        self.form_field = data.get("form_field", None)
+        self.createable = data.get("createable", True)
+        self.reference = data.get("reference", False)
+        self.reference_to_infos = data.get("reference_to_infos", [])
+        self.relationship_name = data.get("relationship_name", None)
+        self.updateable = data.get("updateable", True)
+        self.filterable = data.get("filterable", True)
         self.integration_source = data.get("integration_source", "")
         self.integration_id = data.get("integration_id", "")
         self.imported_by = data.get("imported_by", None)
@@ -515,7 +509,6 @@ class DealAdapter:
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)
         with Client as client:
             res = client.get(url, headers=headers,)
-            print(res.json())
             return HubspotAuthAccountAdapter._handle_response(res)
 
 

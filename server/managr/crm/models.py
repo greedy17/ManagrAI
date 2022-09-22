@@ -153,3 +153,51 @@ class BaseContact(TimeStampModel, IntegrationModel):
         data["owner"] = str(self.owner.id)
         return adapters[self.integration_source]["Contact"](**data)
 
+
+class ObjectFieldQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.organization and user.is_active:
+            if user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(user=user)
+            else:
+                return self.filter(user=user)
+        else:
+            return None
+
+
+class ObjectField(TimeStampModel, IntegrationModel):
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="object_fields")
+    crm_object = models.CharField(max_length=255, null=True)
+    api_name = models.CharField(max_length=255)
+    createable = models.BooleanField(default=False)
+    updateable = models.BooleanField(default=False)
+    required = models.BooleanField(default=False)
+    data_type = models.CharField(max_length=255)
+    display_value = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="if this is a reference field we save the display value as well",
+    )
+    label = models.CharField(max_length=255)
+    reference = models.BooleanField(default=False)
+    relationship_name = models.CharField(max_length=255, null=True)
+    reference_to_infos = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        help_text="An of objects containing the API Name references",
+    )
+    options = ArrayField(
+        JSONField(max_length=255, blank=True, null=True, default=dict),
+        default=list,
+        blank=True,
+        help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
+    )
+    is_public = models.BooleanField(
+        default=False,
+        help_text="Indicates whether or not this is a managr_created field that is not part of the user's object fields",
+    )
+    filterable = models.BooleanField(
+        default=False, help_text="Indicates if we can filter queries against this field"
+    )
+    objects = ObjectFieldQuerySet.as_manager()

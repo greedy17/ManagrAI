@@ -11,6 +11,8 @@ from managr.core.models import User
 
 from managr.hubspot.models import HSObjectFieldsOperation, HObjectField, HSResourceSync
 from managr.hubspot.serializers import HObjectFieldSerializer
+from managr.crm.models import ObjectField
+from managr.crm.serializers import ObjectFieldSerializer
 from managr.hubspot.routes import routes as routes
 from managr.hubspot import constants as hs_consts
 from managr.hubspot.adapter.exceptions import (
@@ -90,13 +92,13 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
         except CannotRetreiveObjectType:
             hs.hobjects[resource] = False
     for field in fields:
-        existing = HObjectField.objects.filter(
-            name=field.name, hubspot_account=field.hubspot_account, hubspot_object=resource,
+        existing = ObjectField.objects.filter(
+            api_name=field.api_name, user=user, crm_object=resource,
         ).first()
         if existing:
-            serializer = HObjectFieldSerializer(data=field.as_dict, instance=existing)
+            serializer = ObjectFieldSerializer(data=field.as_dict, instance=existing)
         else:
-            serializer = HObjectFieldSerializer(data=field.as_dict)
+            serializer = ObjectFieldSerializer(data=field.as_dict)
         serializer.is_valid(raise_exception=True)
         serializer.save()
     return

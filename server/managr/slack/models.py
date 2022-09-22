@@ -491,3 +491,11 @@ class FormField(TimeStampModel):
     order = models.IntegerField(default=0)
     include_in_recap = models.BooleanField(default=True)
 
+
+class CustomFormField(TimeStampModel):
+    field = models.ForeignKey(
+        "crm.ObjectField", on_delete=models.CASCADE, related_name="forms", null=True, blank=True,
+    )
+    form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
+    order = models.IntegerField(default=0)
+    include_in_recap = models.BooleanField(default=True)

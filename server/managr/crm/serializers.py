@@ -2,7 +2,7 @@ import datetime
 from dateutil import parser
 from rest_framework import serializers
 
-from .models import BaseOpportunity, BaseAccount, BaseContact
+from .models import BaseOpportunity, BaseAccount, BaseContact, ObjectField
 from managr.organization.models import Organization
 
 
@@ -40,9 +40,9 @@ class BaseAccountSerializer(serializers.ModelSerializer):
         return internal_data
 
 
-class HubspotContactSerializer(serializers.ModelSerializer):
+class BaseContactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HubspotContact
+        model = BaseContact
         fields = (
             "id",
             "email",
@@ -146,3 +146,27 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
         internal_data = super().to_internal_value(data)
         return internal_data
 
+
+class ObjectFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ObjectField
+        fields = (
+            "id",
+            "user",
+            "crm_object",
+            "api_name",
+            "createable",
+            "updateable",
+            "data_type",
+            "display_value",
+            "label",
+            "reference",
+            "reference_to_infos",
+            "relationship_name",
+            "options",
+            "integration_source",
+            "integration_id",
+            "is_public",
+            "imported_by",
+            "filterable",
+        )

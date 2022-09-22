@@ -16,7 +16,7 @@ routes = {
         "model": crm_models.BaseOpportunity,
         "serializer": hs_ser.DealSerializer,
     },
-    hs_consts.RESOURCE_SYNC_HUBSPOTCONTACT: {
+    hs_consts.RESOURCE_SYNC_CONTACT: {
         "model": crm_models.BaseContact,
         "serializer": hs_ser.HubspotContactSerializer,
     },

@@ -38,7 +38,7 @@ logger = logging.getLogger("managr")
 def getHobjectDefaults():
     return {
         hs_consts.RESOURCE_SYNC_COMPANY: True,
-        hs_consts.RESOURCE_SYNC_HUBSPOTCONTACT: True,
+        hs_consts.RESOURCE_SYNC_CONTACT: True,
         hs_consts.RESOURCE_SYNC_DEAL: True,
     }
 
