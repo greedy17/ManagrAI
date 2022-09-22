@@ -11,7 +11,7 @@ const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
-const UNINVITE_ENDPOINT = '/users/uninvite/'
+const UNINVITE_ENDPOINT = '/users/remove-user/'
 const STAFF_ENDPOINT = '/users/staff/'
 const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
 const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
@@ -127,9 +127,9 @@ export default class UserAPI {
 
   uninvite(id) {
     console.log('uninvite', id)
-    const data = id
+    const data = {remove_id: id}
     const promise = apiClient()
-      .post(INVITE_ENDPOINT, this.cls.toAPI(data))
+      .post(UNINVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.uninvite',

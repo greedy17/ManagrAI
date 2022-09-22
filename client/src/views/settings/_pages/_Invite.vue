@@ -270,7 +270,7 @@
             class="invite-list__section__item col"
             @click="test(member)"
           >
-            {{ member.firstName ? member.firstName : 'Pending' }}
+            {{ !member.firstName ? 'Pending' : (member.isActive ? member.firstName : '[REMOVED]') }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
               {{ member.email }}
             </p>
@@ -320,7 +320,7 @@
             </span>
           </div>
           <div 
-            v-if="!member.isAdmin"
+            v-if="!member.isAdmin && member.isActive"
             style="position: relative; right: 7.5%; "
             class=""
             @click="handleUninvite(member.id)">
