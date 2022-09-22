@@ -2818,13 +2818,6 @@ export default {
       this.stageId = null
       this.stageIntegrationId = null
     },
-    async getAllReferencePicklists() {
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues()
-      } catch (e) {
-        console.log(e)
-      }
-    },
     async getReferenceFieldList(key, val, type, eventVal, filter) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
