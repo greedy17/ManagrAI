@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div class="table-cell cell-name">
+    <div class="cell-name">
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
@@ -42,6 +42,22 @@
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
+        </div>
+        <div class="row">
+          <div @click="emitGetNotes" class="tooltip mar-right mar-left">
+            <div class="img-border">
+              <img src="@/assets/images/note.svg" height="14px" alt="" />
+            </div>
+
+            <span class="tooltiptext">Notes</span>
+          </div>
+          <div @click="emitCreateForm" class="tooltip mar-right">
+            <div class="img-border">
+              <img src="@/assets/images/edit-note.svg" height="14px" alt="" />
+            </div>
+
+            <span class="tooltiptext">Update</span>
+          </div>
         </div>
       </div>
     </div>
@@ -95,7 +111,7 @@
             />
 
             <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
+              <p>Press <span>"Enter"</span> to save</p>
             </div>
           </div>
           <div
@@ -118,13 +134,13 @@
               "
             />
             <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
+              <p>Press <span>"Enter"</span> to save</p>
             </div>
           </div>
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
             <Multiselect
-              style="width: 14vw; padding-bottom: 200px; font-size: 12px; z-index: 20"
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
               v-if="field.apiName !== 'StageName'"
               :options="picklistOpts[field.id]"
               openDirection="below"
@@ -168,7 +184,7 @@
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 200px; font-size: 12px; z-index: 20"
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
               optionHeight="20"
               track-by="value"
               label="label"
@@ -198,7 +214,7 @@
               "
             />
             <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
+              <p>Press <span>"Enter"</span> to save</p>
             </div>
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
@@ -213,7 +229,7 @@
               "
             />
             <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
+              <p>Press <span>"Enter"</span> to save</p>
             </div>
           </div>
           <div
@@ -235,7 +251,7 @@
               "
             />
             <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
+              <p>Press <span>"Enter"</span> to save</p>
             </div>
           </div>
           <div v-else-if="field.dataType === 'Boolean'">
@@ -308,7 +324,7 @@
         />
       </div>
     </div>
-    <div class="cell-end left-border">
+    <div class="cell-end left-border light-gray">
       <div
         v-if="
           updateList.includes(opp.id) ||
@@ -318,10 +334,8 @@
         class="flex-row"
       >
         <SkeletonBox width="15px" height="14px" />
-        <SkeletonBox width="15px" height="14px" />
-        <SkeletonBox width="15px" height="14px" />
       </div>
-      <div v-else class="flex-row action-buttons">
+      <!-- <div v-else class="flex-row action-buttons">
         <div @click="emitCreateForm" class="tooltip mar-right">
           <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
           <span class="tooltiptext">Update</span>
@@ -329,7 +343,7 @@
 
         <div @click="emitGetNotes" class="tooltip mar-right">
           <img src="@/assets/images/note.svg" height="16px" alt="" />
-          <span class="tooltiptext">View Notes</span>
+          <span class="tooltiptext">Add + View</span>
         </div>
 
         <div class="tooltip mar-right">
@@ -337,11 +351,11 @@
           <span class="tooltiptext">Add to Tracker</span>
         </div>
 
-        <!-- <div class="tooltip mar-right">
+        <div class="tooltip mar-right">
           <img src="@/assets/images/more.svg" height="16px" alt="" />
           <span class="tooltiptext">More</span>
-        </div> -->
-      </div>
+        </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -583,11 +597,31 @@ export default {
     transform: translate(0%, 50%);
   }
 }
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.light-gray {
+  background-color: $off-white !important;
+  opacity: 0.5;
+}
+
+.img-border {
+  border: 1px solid $very-light-gray;
+  padding: 4px 6px 3px 6px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 6px 1px $off-white;
+}
 
 .action-buttons {
   background-color: white;
-  padding: 8px 16px 8px 8px;
+  padding: 8px 8px 8px 24px;
   border-radius: 6px;
+  box-shadow: 1px 1px 2px 1px $off-white;
+  display: flex;
+  flex-direction: row;
+  align-items: space-evenly;
   // box-shadow: 1px 1px 1px $very-light-gray;
 }
 // .left-border {
@@ -617,7 +651,7 @@ export default {
 
   /* Position the tooltip text */
   position: absolute;
-  z-index: 1;
+  z-index: 20 !important;
   width: 100px;
   top: 100%;
   left: 50%;
@@ -633,9 +667,8 @@ export default {
 }
 .save {
   background-color: transparent;
-  color: $dark-green;
+  color: $base-gray;
   letter-spacing: 0.75px;
-
   font-size: 10px;
   z-index: 2;
   // opacity: 0.5;
@@ -644,9 +677,12 @@ export default {
   justify-content: center;
   align-items: center;
   p {
-    background-color: $white-green;
-    padding: 2px 6px;
-    border-radius: 6px;
+    span {
+      background-color: $white-green;
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: $dark-green;
+    }
   }
 }
 #user-input {
@@ -681,8 +717,8 @@ textarea {
   margin-top: -1rem;
 }
 input[type='date'] {
-  background-color: $soft-gray !important;
   color: $base-gray !important;
+  font-family: $base-font-family;
 }
 input[type='date']::-webkit-calendar-picker-indicator {
   background-color: white;
@@ -785,6 +821,8 @@ input {
   padding: 1px 6px;
 }
 .cell-name {
+  min-width: 18vw;
+  display: table-cell;
   background-color: white;
   color: $base-gray;
   letter-spacing: 0.25px;
@@ -792,6 +830,9 @@ input {
   left: 3.5vw;
   z-index: 2;
   padding: 1px 4px;
+  font-size: 13px;
+  border: none;
+  border-bottom: 1px solid $soft-gray;
 }
 .cell-end {
   display: table-cell;
@@ -849,22 +890,7 @@ input {
   border-bottom: 1px solid $soft-gray;
   background-color: $white;
 }
-.cell-name-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 3;
-  left: 3.5vw;
-  top: 0;
-  position: sticky;
-  background-color: $white;
 
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
 .flex-row-spread {
   display: flex;
   flex-direction: row;
@@ -928,7 +954,7 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 8rem;
+  // max-height: 8rem;
   background-color: white;
   padding: 0;
   overflow: auto;
@@ -976,6 +1002,9 @@ input[type='checkbox'] + label::before {
   }
 }
 .mar-right {
-  margin-right: 16px;
+  margin-right: 8px;
+}
+.mar-left {
+  margin-left: 8px;
 }
 </style>

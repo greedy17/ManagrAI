@@ -1,18 +1,15 @@
 <template>
   <div class="alert-operand-row">
-    <div
-      style="margin: 2rem 0.25rem"
-      class="toggle__switch"
-      v-if="form.field.operandOrder.value != 0"
-    >
-      <label>AND</label>
+    <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
+      <!-- <label>AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label>OR</label>
+      <label>OR</label> -->
+      <small class="andOr">AND <span class="l-gray">|</span> OR</small>
     </div>
 
     <div class="alert-operand-row__options">
@@ -578,6 +575,14 @@ export default {
 }
 ::v-deep .input-form__active {
   border: none;
+}
+.andOr {
+  border: 1px solid $soft-gray;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.l-gray {
+  color: $soft-gray;
 }
 .column {
   display: flex;

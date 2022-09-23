@@ -41,14 +41,16 @@
     <section class="row">
       <div class="workflow-content">
         <div :key="i" v-for="(form, i) in alertTemplateForm.field.alertConfig.groups">
-          <div class="title">
+          <div style="padding-bottom: 16px" class="title">
             <h4 class="title__head">Workflow Conditions</h4>
 
             <section class="title__body">
+              <p>We'll alert you when these conditions are met.</p>
               <!-- Send this workflow to {{ selectedUsers ? getUsers(selectedUsers) : '' }}
               {{ getFrequency(form.field.recurrenceFrequency.value) }}
               {{ selectedDay ? getDays(selectedDay) : '' }} -->
-              <p>
+              <!-- SEPERATORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR-->
+              <!-- <p>
                 For all Opportunities with a
                 <span>
                   {{
@@ -74,32 +76,28 @@
                         .field.operandValue.value
                     : ''
                 }}
-              </p>
+              </p> -->
             </section>
-          </div>
-
-          <div class="column">
-            <small>|</small>
-            <small>|</small>
-          </div>
-
-          <div
-            class="container"
-            :key="index"
-            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-          >
-            <AlertGroup
-              :form="alertGroup"
-              :resourceType="alertTemplateForm.field.resourceType.value"
-            />
-            <div class="fixed__right" v-if="alertTemplateForm.field.alertGroups.groups.length > 1">
-              <button class="remove__group" @click="onRemoveAlertGroup(index)">
-                <img
-                  src="@/assets/images/trash.svg"
-                  style="height: 0.85rem; filter: invert(50%)"
-                  alt=""
-                />
-              </button>
+            <div
+              :key="index"
+              v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+            >
+              <AlertGroup
+                :form="alertGroup"
+                :resourceType="alertTemplateForm.field.resourceType.value"
+              />
+              <div
+                class="fixed__right"
+                v-if="alertTemplateForm.field.alertGroups.groups.length > 1"
+              >
+                <button class="remove__group" @click="onRemoveAlertGroup(index)">
+                  <img
+                    src="@/assets/images/trash.svg"
+                    style="height: 0.85rem; filter: invert(50%)"
+                    alt=""
+                  />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -134,8 +132,11 @@
               </section>
               <section class="title__body">
                 <div v-if="user.userLevel == 'MANAGER'">
-                  <FormField :errors="form.field.alertTargets.errors">
-                    <!-- :closeOnSelect="false" -->
+                  <div class="selector-row">
+                    <p v-for="(user, i) in userTargetsOpts" :key="i">{{ user.fullName }}</p>
+                  </div>
+                  <!-- <FormField :errors="form.field.alertTargets.errors">
+                    
                     <template v-slot:input>
                       <Multiselect
                         placeholder="Users"
@@ -167,7 +168,7 @@
                         </template>
                       </Multiselect>
                     </template>
-                  </FormField>
+                  </FormField> -->
                 </div>
               </section>
             </div>
@@ -175,17 +176,17 @@
 
           <div class="column">
             <small>|</small>
-            <small>|</small>
           </div>
 
-          <div style="margin-top: -16px" class="title">
-            <h4 class="title__head">Delivery Options</h4>
+          <div style="margin-top: -18px; padding-bottom: 16px" class="title">
+            <h4 class="title__head">Delivery Days</h4>
             <section class="title__body">
-              <p>When and where are we sending your alert ?</p>
+              <p>When would you like to be notified ?</p>
             </section>
             <div class="title__body">
               <div>
-                <FormField>
+                <p class="andOr">Weekly <span class="l-gray">|</span> Monthly</p>
+                <!-- <FormField>
                   <template v-slot:input>
                     <Multiselect
                       placeholder="Weekly or monthly"
@@ -198,13 +199,16 @@
                     >
                     </Multiselect>
                   </template>
-                </FormField>
+                </FormField> -->
               </div>
 
               <div>
                 <div>
                   <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
-                    <FormField>
+                    <div class="selector-row">
+                      <p v-for="(day, i) in weeklyOpts" :key="i">{{ day.key }}</p>
+                    </div>
+                    <!-- <FormField>
                       <template v-slot:input>
                         <Multiselect
                           placeholder="Select a Day"
@@ -229,7 +233,7 @@
                           </template>
                         </Multiselect>
                       </template>
-                    </FormField>
+                    </FormField> -->
                   </div>
 
                   <FormField
@@ -243,7 +247,7 @@
                 </div>
               </div>
 
-              <div>
+              <!-- <div>
                 <div v-if="!channelName && !directToUsers" class="row__">
                   <label :class="!create ? 'green' : ''">Select #channel</label>
                   <ToggleCheckBox
@@ -331,6 +335,111 @@
                     <label for="allUsers">Send to primary channel</label>
                   </div>
                 </div>
+              </div> -->
+            </div>
+          </div>
+
+          <div class="column">
+            <small>|</small>
+          </div>
+
+          <div class="title" style="margin-top: -18px; padding-bottom: 16px">
+            <h4 class="title__head">Delivery Options</h4>
+            <section class="title__body">
+              <p>Where would you like to be notified ?</p>
+            </section>
+
+            <div style="margin-top: -8px" class="title__body">
+              <div v-if="user.userLevel !== 'REP'">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send directly to users</label>
+              </div>
+
+              <div v-else>
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send to primary channel</label>
+              </div>
+              <div v-if="!channelName && !directToUsers" class="row__">
+                <!-- <label :class="!create ? 'green' : ''">Select #channel</label>
+                <ToggleCheckBox
+                  style="margin: 0.25rem"
+                  @input="changeCreate"
+                  :value="create"
+                  offColor="#41b883"
+                  onColor="#41b883"
+                />
+                <label :class="create ? 'green' : ''">Create #channel</label> -->
+
+                <!-- <small class="andOr"
+                  >Select Channel <span class="l-gray">|</span> Create Channel</small
+                > -->
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: flex-start;
+                "
+                v-if="create"
+              >
+                <input
+                  v-model="channelName"
+                  class="search__input"
+                  type="text"
+                  name="channel"
+                  id="channel"
+                  placeholder="Name your channel"
+                  @input="logNewName(channelName)"
+                />
+
+                <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+                  <button
+                    v-if="channelName"
+                    @click="createChannel(channelName)"
+                    class="gold__button bouncy"
+                  >
+                    Create Channel
+                  </button>
+                  <button v-else class="disabled__button">Create Channel</button>
+                </div>
+              </div>
+
+              <div v-else>
+                <template>
+                  <Multiselect
+                    v-if="!directToUsers"
+                    placeholder="Search Channels"
+                    v-model="selectedChannel"
+                    @input="setRecipient"
+                    :options="userChannelOpts.channels"
+                    openDirection="below"
+                    style="width: 25vw; margin-top: 12px"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="name"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template slot="afterList">
+                      <p
+                        class="multi-slot__more"
+                        @click="listUserChannels(userChannelOpts.nextCursor)"
+                      >
+                        Load More
+                        <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        Search Channels
+                      </p>
+                    </template>
+                  </Multiselect>
+                </template>
               </div>
             </div>
           </div>
@@ -962,8 +1071,41 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.selector-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center !important;
+  width: 25vw;
+  overflow-x: scroll;
+  outline: 1px solid $soft-gray;
+  padding: 20px 4px 0px 4px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background-color: $off-white;
+
+  p {
+    background-color: $white;
+    color: $base-gray;
+    margin-right: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  p:hover {
+    transform: scale(1.15);
+    color: $dark-green;
+    cursor: pointer;
+  }
+}
 .negative-left {
   margin-left: -68px !important;
+}
+.andOr {
+  border: 1px solid $soft-gray;
+  padding: 6px 8px;
+  border-radius: 6px;
+  width: fit-content;
 }
 .arrow-div {
   border-radius: 100%;
@@ -1010,7 +1152,7 @@ export default {
   border-radius: 6px;
   margin-top: 0;
   width: 28vw;
-  height: 40vh;
+  height: 44vh;
   overflow: scroll;
   letter-spacing: 0.75px;
 }
@@ -1501,7 +1643,7 @@ textarea {
   padding: 20px 0px;
 }
 .message__box {
-  height: 26vh;
+  height: 30vh;
   width: 26vw;
   background-color: transparent;
 }

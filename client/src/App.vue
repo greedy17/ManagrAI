@@ -59,6 +59,7 @@ export default {
       this.refreshCurrentUser()
     }
     this.$store.dispatch('loadMeetings')
+    // this.$store.dispatch('loadWorkflows')
   },
 
   methods: {

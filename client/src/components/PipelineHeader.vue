@@ -193,8 +193,8 @@
 
     <div class="table-cell-header-end">
       <div class="direction-row" @click="addField">
-        <p>Quick Actions</p>
-        <img src="@/assets/images/plusOne.svg" class="add-img" alt="" />
+        <img src="@/assets/images/plusOne.svg" height="20px" style="filter: invert(30%)" alt="" />
+        <p>View Only</p>
       </div>
 
       <div v-if="addingField" class="add-field-section">
@@ -493,7 +493,6 @@ export default {
   left: 0;
   position: sticky;
   background-color: white;
-
   border-radius: 6px;
 }
 .table-cell-header-end {
@@ -504,21 +503,25 @@ export default {
   right: 0;
   top: 0;
   position: sticky;
-  background-color: white;
   font-weight: bolder;
   font-size: 12px;
   letter-spacing: 0.75px;
-  color: $light-gray-blue;
-  padding: 8px 16px;
+  color: $base-gray;
+  padding: 8px 24px;
+  background-color: white;
+
+  // box-shadow: 1px 1px 2px 1px $very-light-gray;
 }
 .black {
   color: $base-gray;
 }
 .direction-row {
+  width: 100px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
 }
 .cell-name-header {
   display: table-cell;
@@ -552,10 +555,6 @@ export default {
   font-size: 12px;
   letter-spacing: 0.75px;
   color: $light-gray-blue;
-}
-.add-img {
-  height: 18px;
-  filter: invert(36%) sepia(81%) saturate(5047%) hue-rotate(139deg) brightness(77%) contrast(80%);
 }
 .invert {
   filter: invert(80%);

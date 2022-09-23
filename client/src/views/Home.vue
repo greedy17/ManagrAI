@@ -19,11 +19,11 @@
       </div>
 
       <div>
-        <div class="column-section-small">
+        <!-- <div class="column-section-small">
           <section>
             <ForecastOverview />
           </section>
-        </div>
+        </div> -->
         <div class="column-section">
           <!-- <img src="@/assets/images/settings.svg" height="20px" alt="" /> -->
           <section>
@@ -155,7 +155,7 @@ export default {
   section {
     border: 1px solid $soft-gray;
     width: 22vw;
-    height: 54vh;
+    height: 80vh;
   }
 }
 .column-section-small {

@@ -30,11 +30,6 @@
                 :inviteOpen="inviteOpen"
                 @cancel="handleCancel"
               />
-              <div class="wide">
-                <button @click="homeView" class="invite_button">
-                  <img src="@/assets/images/back.svg" height="12px" alt="" />
-                </button>
-              </div>
             </section>
           </div>
         </div>
@@ -44,7 +39,7 @@
           <div class="tab-content">
             <section>
               <header class="invite-users__header">
-                <h3 style="color: #4d4e4c">Update your Info</h3>
+                <!-- <h3 style="color: #4d4e4c">Update your Info</h3> -->
 
                 <button class="invite_button" type="submit" @click="handleUpdate">
                   Update
@@ -57,6 +52,7 @@
               </header>
 
               <form class="update-container">
+                <h3 style="color: #4d4e4c">Update your Info</h3>
                 <input
                   v-model="profileForm.field.firstName.value"
                   placeholder="First Name"
@@ -72,7 +68,7 @@
 
                 <Multiselect
                   placeholder="Select Timezone"
-                  style="width: 16rem"
+                  style="width: 20vw"
                   v-model="selectedTimezone"
                   @input="setTime"
                   :options="timezones"
@@ -82,11 +78,6 @@
                   track-by="value"
                 />
               </form>
-              <div class="wide">
-                <button @click="homeView" class="invite_button">
-                  <img src="@/assets/images/back.svg" height="12px" alt="" />
-                </button>
-              </div>
             </section>
           </div>
         </div>
@@ -593,8 +584,9 @@ export default {
   width: 60vw;
   min-height: 40vh;
   overflow: visible;
+  margin-top: 2rem;
   padding: 1.5rem 0rem 1.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 8px;
   display: flex;
   align-items: flex-start;
   flex-direction: column;
@@ -604,7 +596,7 @@ export default {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 16rem;
+  width: 20vw;
   margin-bottom: 1rem;
   font-family: $base-font-family;
 }
@@ -618,7 +610,6 @@ export default {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding-bottom: 1rem;
   margin-left: 88px;
   &__header {
     display: flex;
@@ -642,18 +633,18 @@ h2 {
 }
 
 .invite_button {
-  color: $dark-green;
+  color: $base-gray;
   background-color: white;
-  border-radius: 0.25rem;
+  border-radius: 8px;
   transition: all 0.25s;
   padding: 8px 12px;
-
   font-size: 14px;
   border: 1px solid #e8e8e8;
+  margin-left: -4px;
 }
 .invite_button2 {
   background-color: white;
-  border-radius: 0.25rem;
+  border-radius: 8px;
   transition: all 0.25s;
   padding: 6px 12px;
   border: 1px solid #e8e8e8;
@@ -661,7 +652,7 @@ h2 {
 .invite_button:disabled {
   color: $base-gray;
   background-color: $soft-gray;
-  border-radius: 0.25rem;
+  border-radius: 8px;
   transition: all 0.25s;
   padding: 8px 12px;
   font-weight: 400px;

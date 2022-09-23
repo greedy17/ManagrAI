@@ -15,13 +15,21 @@
     <section class="cards__header">
       <img src="@/assets/images/people.svg" height="16px" alt="" />
       <div v-if="!showingAttendees" @click="showAttendees" class="cards__attendees">
-        <p>{{ meeting.participants.length }} <span>Attendees</span></p>
+        <p>{{ meeting.participants.length }} Attendees</p>
       </div>
       <div v-else class="attendees">
         <p v-for="(participant, participantIndex) in participants" :key="participantIndex">
           {{ meeting.participants[participantIndex].email }}
         </p>
       </div>
+      <img
+        v-if="showingAttendees"
+        @click="showAttendees"
+        src="@/assets/images/left.svg"
+        height="11px"
+        alt=""
+        style="margin-left: 8px"
+      />
     </section>
 
     <!-- <div class="cards__scroll">
@@ -747,6 +755,10 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+// ::v-deep .multiselect__content-wrapper {
+//   width: 40vw;
+// }
+
 @keyframes tooltips-horz {
   to {
     opacity: 0.95;
@@ -984,12 +996,12 @@ a {
 }
 .success {
   color: $dark-green !important;
-  background-color: $white-green;
-  padding: 4px 8px !important;
-  border-radius: 4px;
-  max-width: 140px;
-  display: flex;
-  align-items: center;
+  // background-color: $white-green;
+  // padding: 4px 8px !important;
+  // border-radius: 4px;
+  // max-width: 140px;
+  // display: flex;
+  // align-items: center;
 }
 .red-text {
   color: $coral !important;
@@ -1194,17 +1206,17 @@ a {
 }
 .add-field-section {
   position: absolute;
-  z-index: 20;
+  // z-index: 20;
   top: 48px;
-  left: 24px;
+  left: 4px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: $white;
-  width: 22vw;
-  height: auto;
-  overflow: scroll;
+  width: 24vw;
+  height: 220px;
+  overflow: visible;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
   margin-left: 0px !important;
   &__title {
@@ -1238,7 +1250,7 @@ a {
     justify-content: center !important;
     margin-top: 1rem;
     width: 100%;
-    min-height: 2rem;
+    height: 80px;
     border-top: 1px solid $soft-gray;
     margin-left: 0px !important;
     p {

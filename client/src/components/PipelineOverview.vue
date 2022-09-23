@@ -2,41 +2,79 @@
   <div class="overview">
     <div>
       <div class="header">
-        <p class="light-blue">Pipeline</p>
-        <p>
-          You have <span>{{ templates.list.length }}</span> active workflows
+        <p v-if="!activeWorkflow" class="light-blue">
+          Active Workflows: {{ templates.list.length }}
+        </p>
+
+        <p v-else>
+          {{ activeWorkflowTitle }}
+        </p>
+
+        <p style="margin-right: 8px" v-if="activeWorkflow">
+          <img
+            src="@/assets/images/left.svg"
+            height="12px"
+            alt=""
+            style="margin-right: 4px; padding-top: 2px"
+            @click="deactivateWorkflow"
+          />
+          {{ activeWorkflow.length }}
         </p>
       </div>
-      <section class="workflow" :key="i" v-for="(alert, i) in templates.list">
-        <div class="title">
-          <!-- <img class="filtered" src="@/assets/images/logo.png" height="28px" alt="" /> -->
-          <div>
-            <h4>
-              {{ alert.title }}
-              <span>{{ alert.configsRef.length }}</span>
-            </h4>
+      <div v-if="!activeWorkflow">
+        <section class="workflow" :key="i" v-for="(alert, i) in templates.list">
+          <div class="title">
+            <!-- <img class="filtered" src="@/assets/images/logo.png" height="28px" alt="" /> -->
+            <div>
+              <h4>
+                {{ alert.title }}
+                <span>{{ alert.sobjectInstances.length }}</span>
+              </h4>
 
-            <p>
-              {{ owner(alert.user) !== 'Management' ? 'Owner:' : 'Management' }}
-              {{ users ? owner(alert.user) : '' }}
-            </p>
-          </div>
-        </div>
-
-        <section class="button-section">
-          <div>
-            <button @click="setCurrentAlert(alert)" class="green-button">View List</button>
-            <button class="white-button">
-              Send Slack <img src="@/assets/images/slackLogo.png" height="12px" alt="" />
-            </button>
+              <p>
+                {{ owner(alert.user) !== 'Management' ? 'Owner:' : 'Management' }}
+                {{ users ? owner(alert.user) : '' }}
+              </p>
+            </div>
           </div>
 
-          <div>
-            <img src="@/assets/images/pencil.svg" height="14px" alt="" />
-            <img src="@/assets/images/trash.svg" height="14px" alt="" />
-          </div>
+          <section class="button-section">
+            <div>
+              <button @click="setCurrentAlert(alert)" class="green-button">View List</button>
+              <button class="white-button">
+                Send Slack <img src="@/assets/images/slackLogo.png" height="12px" alt="" />
+              </button>
+            </div>
+
+            <div>
+              <!-- <img src="@/assets/images/pencil.svg" height="14px" alt="" /> -->
+              <img src="@/assets/images/trash.svg" height="14px" alt="" />
+            </div>
+          </section>
         </section>
-      </section>
+      </div>
+
+      <div v-else>
+        <section class="workflow" :key="i" v-for="(opp, i) in activeWorkflow">
+          <div class="title">
+            <div>
+              <h4>
+                {{ opp.Name }}
+                <span>{{ activeWorkflowType }}</span>
+              </h4>
+              <p>Stage: {{ opp.StageName }}</p>
+              <p>Close Date: {{ opp.CloseDate }}</p>
+            </div>
+          </div>
+          <section class="button-section">
+            <div>
+              <button class="green-button">Update Record</button>
+              <img src="@/assets/images/note.svg" height="14px" alt="" />
+              <img src="@/assets/images/pipeline.svg" height="14px" alt="" />
+            </div>
+          </section>
+        </section>
+      </div>
     </div>
   </div>
 </template>
@@ -51,10 +89,11 @@ export default {
   name: 'PipelineOverview',
   data() {
     return {
-      meetings: null,
+      activeWorkflowType: null,
+      activeWorkflow: null,
+      activeWorkflowTitle: null,
       activeNotis: false,
       today: null,
-      day: null,
       workflows: [],
       templates: CollectionManager.create({
         ModelClass: AlertTemplate,
@@ -67,8 +106,13 @@ export default {
     meetings: 'needsAction',
   },
   methods: {
+    deactivateWorkflow() {
+      this.activeWorkflow = null
+    },
     setCurrentAlert(alert) {
-      console.log(alert)
+      this.activeWorkflow = alert.sobjectInstances
+      this.activeWorkflowTitle = alert.title
+      this.activeWorkflowType = alert.resourceType
     },
     needsAction() {
       let NA = 0
@@ -135,6 +179,7 @@ export default {
       }
     },
   },
+
   async created() {
     this.templates.refresh()
     this.users.refresh()
@@ -200,12 +245,13 @@ export default {
       justify-content: space-between;
 
       span {
-        background-color: $off-white;
+        // background-color: $off-white;
         color: $light-gray-blue;
-        padding: 2px 6px;
+        padding: 4px 8px;
         border-radius: 4px;
         margin-left: 12px;
-        font-size: 11px;
+        font-size: 13px;
+        opacity: 0.9;
       }
     }
 
@@ -278,21 +324,20 @@ export default {
   padding-left: 14px;
   position: sticky;
   background-color: white;
+  z-index: 2;
   top: 0;
   p {
     font-size: 14px;
 
     span {
-      background-color: $white-green;
       color: $dark-green;
-      padding: 4px 8px;
-      border-radius: 6px;
+      // background-color: $white-green;
 
-      font-size: 11px;
+      padding: 2px 4px;
+      // border-radius: 6px;
+
+      // font-size: 11px;
     }
-  }
-  img {
-    margin-left: 8px;
   }
 }
 .light-blue {

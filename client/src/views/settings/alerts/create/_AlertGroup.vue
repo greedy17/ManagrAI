@@ -16,7 +16,7 @@
     </div>
 
     <div>
-      <small class="small-gray-text">Condition 1</small>
+      <!-- <small class="small-gray-text">Condition 1</small> -->
       <div
         style="margin-top: 8px"
         :key="i"
@@ -31,19 +31,25 @@
           <small>|</small>
         </div>
         <div class="row__buttons">
-          <button
+          <span class="plus_button" @click="addOperandForm">
+            <button>+</button>
+          </span>
+
+          <!-- <button
             class="plus_button"
-            style="margin-right: 0.5rem"
             @click.stop="onRemoveOperand(i)"
             v-if="form.field.alertOperands.groups.length > 1"
             :disabled="form.field.alertOperands.groups.length - 1 <= 0"
           >
             <img src="@/assets/images/trash.svg" class="filtered" alt="" />
-          </button>
-
-          <span class="plus_button" @click="addOperandForm">
-            <button>+</button>
-          </span>
+          </button> -->
+          <small
+            @click.stop="onRemoveOperand(i)"
+            v-if="form.field.alertOperands.groups.length > 1"
+            class="small-gray-text"
+          >
+            <img src="@/assets/images/remove.svg" height="20px" alt="" />
+          </small>
         </div>
       </div>
     </div>
@@ -145,6 +151,7 @@ export default {
   align-items: center;
   cursor: pointer;
   color: $dark-green;
+  margin-right: 8px;
 
   button {
     background-color: $dark-green;
@@ -166,7 +173,7 @@ export default {
 .row__buttons {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   margin-left: 4px;
 }
@@ -179,10 +186,16 @@ export default {
 }
 .small-gray-text {
   font-size: 10px;
-  color: $light-gray-blue;
+  color: $coral;
   background-color: $off-white;
-  padding: 6px 8px;
+  padding: 2px;
   border-radius: 4px;
+  margin-right: 8px;
+  cursor: pointer;
+
+  img {
+    filter: invert(48%) sepia(24%) saturate(1368%) hue-rotate(309deg) brightness(105%) contrast(96%);
+  }
 }
 .column {
   display: flex;

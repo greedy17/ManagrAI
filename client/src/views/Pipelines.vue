@@ -1,57 +1,119 @@
 <template>
   <div @click="test" class="pipelines">
-    <Modal
-      v-if="modalOpen"
-      dimmed
-      @close-modal="
-        () => {
-          $emit('cancel'), resetNotes()
-        }
-      "
-    >
-      <div v-if="notes.length" class="modal-container rel">
+    <Modal v-if="modalOpen" dimmed>
+      <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h4>Notes</h4>
+            <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
+            <h4>Opp's Name Notes</h4>
+
+            <!-- <p style="margin-left: 4px; color: #c2c4ca">Opp's Name</p> -->
           </div>
 
           <div class="flex-row">
-            <small class="note-border">Total: {{ notesLength }}</small>
-            <small class="note-border light-green-bg"
+            <img
+              @click="resetNotes"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="margin-right: 16px; filter: invert(30%)"
+            />
+            <!-- <small class="note-border">Total: {{ notesLength }}</small> -->
+            <!-- <small class="note-border light-green-bg"
               >Most recent: {{ formatMostRecent(notes[0].submission_date) }} days</small
             >
             <small class="note-border"
               >Oldest: {{ formatMostRecent(notes[notes.length - 1].submission_date) }} days</small
-            >
+            > -->
           </div>
         </div>
-        <section class="note-section" :key="i" v-for="(note, i) in notes">
-          <p class="note-section__title">
-            {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
-          </p>
-          <p class="note-section__date">
-            {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
-          </p>
-          <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
-        </section>
-      </div>
-      <div v-else class="modal-container">
-        <div class="flex-row-spread">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h4>Notes</h4>
+
+        <div class="flex-row-spread-start">
+          <div style="margin-top: 8px">
+            <span class="input-container">
+              <input
+                class="input-field"
+                placeholder="Note Title"
+                autofocus
+                type="text"
+                v-model="noteTitle"
+                @input=";(value = $event.target.value), setUpdateValues('meeting_type', value)"
+              />
+            </span>
+
+            <span class="input-container">
+              <div
+                @input="setUpdateValues('meeting_comments', $event.target.innerHTML)"
+                class="divArea"
+                v-html="noteValue"
+                contenteditable="true"
+              ></div>
+              <span v-if="!noteValue" class="div-placeholder">Type your note here</span>
+            </span>
+            <section v-if="!addingTemplate" class="note-templates">
+              <span
+                v-if="noteTemplates.length"
+                @click="addingTemplate = !addingTemplate"
+                class="note-templates__content"
+              >
+                <img
+                  src="@/assets/images/add-document.svg"
+                  height="18px"
+                  style="margin-right: 2px"
+                  alt=""
+                />
+              </span>
+
+              <span @click="goToProfile" class="note-templates__content" v-else>
+                Create a template <img src="@/assets/images/note.svg" alt=""
+              /></span>
+            </section>
+
+            <section class="note-templates2" v-else>
+              <div
+                v-for="(template, i) in noteTemplates"
+                :key="i"
+                @click="setTemplate(template.body, field.apiName, template.subject)"
+                class="note-templates2__content"
+              >
+                {{ template.subject }}
+              </div>
+            </section>
+
+            <div
+              v-if="addingTemplate"
+              @click="addingTemplate = !addingTemplate"
+              class="close-template"
+            >
+              <img src="@/assets/images/close.svg" height="20px" alt="" />
+            </div>
           </div>
 
-          <div class="flex-row">
-            <small class="note-border">Total: 0</small>
-            <small class="note-border light-green-bg">Most recent: 0 days</small>
-            <small class="note-border">Oldest: 0 days</small>
+          <div class="note-container" v-if="notes.length">
+            <section class="note-section" :key="i" v-for="(note, i) in notes">
+              <p class="note-section__title">
+                {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
+              </p>
+              <p class="note-section__date">
+                {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
+              </p>
+              <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
+            </section>
+          </div>
+
+          <div v-else class="note-container">
+            <div class="empty-list">
+              <section class="bg-img"></section>
+              <h4>Nothing here</h4>
+              <p>Start taking your notes in Managr.</p>
+            </div>
           </div>
         </div>
-        <section class="note-section">
-          <p class="note-section__body">No notes for this opportunity</p>
-        </section>
+
+        <footer class="modal-container__footer">
+          <!-- <p>Total: {{ notesLength }}</p> -->
+          <button class="add-button">Save note</button>
+        </footer>
       </div>
     </Modal>
     <Modal
@@ -66,7 +128,7 @@
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
           <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
             <h3>Create Opportunity</h3>
           </div>
           <img
@@ -1735,8 +1797,14 @@
           </div>
         </div>
         <div class="flex-row">
+          <div class="tooltip">
+            <button @click="manualSync" class="select-btn">
+              <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
+            </button>
+            <span class="tooltiptext">Sync Fields</span>
+          </div>
           <div v-if="!selectedWorkflow" class="search-bar">
-            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input
               type="search"
               placeholder="search"
@@ -1745,24 +1813,15 @@
             />
           </div>
           <div v-else class="search-bar">
-            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input type="search" placeholder="search" v-model="workflowFilterText" />
           </div>
-          <div class="tooltip">
-            <button @click="manualSync" class="select-btn">
-              <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
-            </button>
-            <span class="tooltiptext">Sync Fields</span>
-          </div>
-          <button @click="createOppInstance()" class="add-button">
-            <!-- <img
-              src="@/assets/images/plusOne.svg"
-              class="fullInvert"
-              style="height: 0.8rem"
-              alt=""
-            /> -->
+
+          <!-- <button @click="createOppInstance()" class="add-button">
+       
+            
             Create Opportunity
-          </button>
+          </button> -->
         </div>
       </section>
 
@@ -4180,15 +4239,50 @@ export default {
   }
 }
 
+.empty-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $light-gray-blue;
+  letter-spacing: 0.76px !important;
+  margin-top: 20vh;
+
+  .bg-img {
+    background-image: url(../assets/images/logo.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    height: 60px;
+    width: 92px;
+    opacity: 0.5;
+  }
+  h4 {
+    color: $base-gray;
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
+  p {
+    font-size: 14px;
+  }
+}
+
 .input-field {
-  border: none !important;
+  border: 1px solid #e8e8e8;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  width: 36vw !important;
+  // border-bottom: none !important;
   letter-spacing: 0.8px;
   padding: 8px;
-  color: $base-gray;
+  // color: $base-gray;
 }
 .input-field,
 .input-field::placeholder {
   font: 18px $base-font-family;
+}
+::placeholder {
+  color: $very-light-gray;
 }
 .current-products {
   font-size: 12px;
@@ -4290,7 +4384,7 @@ export default {
 .input-container {
   position: relative;
   display: inline-block;
-  margin: 30px 10px;
+  margin: 10px;
   @include epic-sides() {
     background: inherit;
   }
@@ -4872,20 +4966,42 @@ h3 {
 }
 .modal-container {
   background-color: $white;
-  overflow: auto;
-  min-width: 36vw;
-  max-width: 36vw;
-  min-height: 44vh;
-  max-height: 80vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 80vw;
+  // min-height: 50vh;
+  height: 80vh;
   align-items: center;
   border-radius: 0.5rem;
   border: 1px solid $very-light-gray;
   padding: 0px 4px;
+
+  &__footer {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    bottom: 0;
+    right: 16px;
+    padding: 0px 8px;
+    background-color: white;
+
+    p {
+      font-size: 12px;
+      color: $light-gray-blue;
+    }
+
+    button {
+      margin-right: 0px;
+      margin-left: 60vw;
+      margin-bottom: 12px;
+    }
+  }
 }
 .opp-modal-container {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: scroll;
   background-color: white;
   width: 44vw;
   border-radius: 0.5rem;
@@ -4909,16 +5025,38 @@ h3 {
     margin-right: -1.25rem;
   }
 }
+.note-container {
+  height: 60vh;
+  overflow: scroll !important;
+  width: 80vw;
+  padding: 0px 16px 8px 8px;
+  margin: 0;
+}
+.note-container::-webkit-scrollbar {
+  width: 6px; /* Mostly for vertical scrollbars */
+  height: 0px; /* Mostly for horizontal scrollbars */
+}
+.note-container::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.note-container::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.note-container::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
+}
 .note-section {
-  padding: 0.25rem 1rem;
-  margin-bottom: 0.25rem;
   background-color: white;
   border-bottom: 1px solid $soft-gray;
-  overflow: scroll;
+  margin-top: -8px;
+  letter-spacing: 0.75px !important;
+  font-family: $base-font-family;
   &__title {
     font-size: 19px;
-    font-weight: bolder;
-    letter-spacing: 0.6px;
+    // letter-spacing: 0.75px;
     color: $base-gray;
     padding: 0;
   }
@@ -4927,8 +5065,6 @@ h3 {
     font-family: $base-font-family;
     word-wrap: break-word;
     white-space: pre-wrap;
-    border-left: 2px solid $dark-green;
-    padding-left: 8px;
     font-size: 14px;
   }
   &__date {
@@ -4946,7 +5082,6 @@ h3 {
 }
 input[type='search'] {
   // width: 60px;
-  cursor: pointer;
   border: none;
   padding: 4px;
   margin: 0;
@@ -4980,21 +5115,32 @@ section {
   -moz-appearance: textfield-multiline;
   -webkit-appearance: textarea;
   resize: both;
-  height: 30px;
-  width: 40.25vw;
+  height: 50vh;
+  width: 36vw;
   min-height: 20vh;
-  margin-bottom: 4px;
-  border: none;
+  margin-top: -20px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border: 1px solid #e8e8e8;
+  border-top: none;
   overflow-y: scroll;
   font-family: inherit;
   font-style: inherit;
   font-size: 13px;
   padding: 12px;
 }
-.divArea:hover {
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+.div-placeholder {
+  position: absolute;
+  top: -12px;
+  left: 10px;
+  z-index: -1;
+  color: $very-light-gray;
+  opacity: 0.8;
 }
+// .divArea:hover {
+//   border: 1px solid #e8e8e8;
+//   border-radius: 4px;
+// }
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -5034,6 +5180,13 @@ section {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+.flex-row-spread-start {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start !important;
 }
 .pipelines {
   padding: 32px 0px 0px 72px;
@@ -5220,8 +5373,8 @@ main:hover > span {
 .list-section {
   z-index: 4;
   position: absolute;
-  top: 18vh;
-  left: 3rem;
+  top: 10vh;
+  left: 88px;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -5325,12 +5478,12 @@ a {
   justify-content: flex-end;
   font-size: 12px;
   padding: 12px 6px;
-  margin-top: -34px;
+  margin-top: -18px;
   border: none;
   // border-bottom-left-radius: 4px;
   // border-bottom-right-radius: 4px;
   cursor: pointer;
-  width: 40.25vw;
+  width: 37vw;
 
   &__content {
     display: flex;
@@ -5354,11 +5507,11 @@ a {
   gap: 24px;
   font-size: 12px;
   padding: 12px 6px;
-  margin-top: -34px;
+  margin-top: -18px;
   border: none;
   // border-bottom-left-radius: 4px;
   // border-bottom-right-radius: 4px;
-  width: 40.25vw;
+  width: 37vw;
   height: 80px;
   overflow: scroll;
 
@@ -5376,8 +5529,8 @@ a {
 }
 .close-template {
   position: absolute;
-  bottom: 56px;
-  right: 20px;
+  bottom: 50px;
+  left: 35.5vw;
   z-index: 3;
   cursor: pointer;
   background-color: black;
@@ -5388,13 +5541,12 @@ a {
   }
 }
 .label {
-  display: inline-block;
+  display: flex;
+  align-items: flex-start;
   padding: 6px 0px;
-  font-size: 18px;
-  text-align: center;
+  font-size: 14px;
   min-width: 80px;
   margin-top: 12px;
-  margin-left: -12px;
   letter-spacing: 0.75px;
   color: $base-gray;
   font-weight: bold;

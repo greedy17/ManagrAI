@@ -240,9 +240,7 @@
     <div style="position: absolute" ref="pipelines" v-if="!loading">
       <div class="results">
         <div class="results-title">
-          <p>
-            Meetings<span>{{ meetings.length }}</span>
-          </p>
+          <p>Meetings: {{ meetings.length }}</p>
         </div>
 
         <div class="flex-row">
@@ -250,7 +248,7 @@
             <button class="img-button" :disabled="!hasZoomIntegration">
               <img src="@/assets/images/calendar.svg" alt="" style="height: 1rem" />
             </button>
-            <span class="tooltiptext">Connect Zoom</span>
+            <span class="tooltiptext">Schedule Zoom</span>
           </div>
           <div v-else>
             <button @click="resetMeeting()" class="img-button" :disabled="!hasZoomIntegration">
@@ -267,36 +265,44 @@
         </div>
       </div>
 
-      <MeetingWorkflow
-        v-for="(meeting, i) in meetings"
-        :key="i"
-        @map-opp="mapOpp"
-        @update-Opportunity="updateMeeting"
-        @no-update="NoMeetingUpdate"
-        @remove-participant="removeParticipant"
-        @add-participant="addParticipant"
-        @get-notes="getNotes"
-        @filter-accounts="getAccounts"
-        @change-resource="changeResource"
-        :dropdowns="picklistQueryOptsContacts"
-        :contactFields="createContactForm"
-        :meeting="meeting.meeting_ref"
-        :participants="meeting.meeting_ref.participants"
-        :workflowId="meeting.id"
-        :resourceId="meeting.resource_id"
-        :resourceRef="meeting.resource_ref"
-        :resourceType="meeting.resource_type ? meeting.resource_type : resourceType"
-        :meetingUpdated="meeting.is_completed"
-        :owners="allUsers"
-        :accounts="allAccounts"
-        :meetingLoading="meetingLoading"
-        :allOpps="allOpps"
-        :allPicklistOptions="allPicklistOptions"
-        :referenceOpts="contactCreateReferenceOpts"
-        :dropdownLoading="dropdownLoading"
-        :accountSobjectId="accountSobjectId"
-        :index="i"
-      />
+      <div v-if="meetings.length">
+        <MeetingWorkflow
+          v-for="(meeting, i) in meetings"
+          :key="i"
+          @map-opp="mapOpp"
+          @update-Opportunity="updateMeeting"
+          @no-update="NoMeetingUpdate"
+          @remove-participant="removeParticipant"
+          @add-participant="addParticipant"
+          @get-notes="getNotes"
+          @filter-accounts="getAccounts"
+          @change-resource="changeResource"
+          :dropdowns="picklistQueryOptsContacts"
+          :contactFields="createContactForm"
+          :meeting="meeting.meeting_ref"
+          :participants="meeting.meeting_ref.participants"
+          :workflowId="meeting.id"
+          :resourceId="meeting.resource_id"
+          :resourceRef="meeting.resource_ref"
+          :resourceType="meeting.resource_type ? meeting.resource_type : resourceType"
+          :meetingUpdated="meeting.is_completed"
+          :owners="allUsers"
+          :accounts="allAccounts"
+          :meetingLoading="meetingLoading"
+          :allOpps="allOpps"
+          :allPicklistOptions="allPicklistOptions"
+          :referenceOpts="contactCreateReferenceOpts"
+          :dropdownLoading="dropdownLoading"
+          :accountSobjectId="accountSobjectId"
+          :index="i"
+        />
+      </div>
+      <div v-else class="empty-list">
+        <section class="bg-img"></section>
+        <h3>No meetings found.</h3>
+        <p>You may need to sync your calendar</p>
+        <button @click="refreshCalEvents" class="green_button">Sync calendar</button>
+      </div>
     </div>
     <div v-if="loading">
       <Loader :loaderText="loaderText" />
@@ -464,6 +470,10 @@ export default {
     }
   },
   computed: {
+    allMeetingsUpdated() {
+      // return this.$store.state.meetings.every((meeting) => meeting.is_completed)
+      console.log(this.$store.state.meetings.every((meeting) => meeting.is_completed))
+    },
     user() {
       return this.$store.state.user
     },
@@ -1533,6 +1543,33 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.empty-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $light-gray-blue;
+  letter-spacing: 0.76px !important;
+
+  .bg-img {
+    background-image: url(../assets/images/logo.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    height: 48px;
+    width: 80px;
+    opacity: 0.5;
+  }
+  h3 {
+    color: $base-gray;
+    margin-bottom: 0;
+    margin-top: 12px;
+  }
+  p {
+    font-size: 13px;
+  }
+}
+
 @mixin epic-sides() {
   position: relative;
   z-index: 1;
@@ -1558,7 +1595,10 @@ export default {
     background: inherit;
   }
 }
-
+.greenBackground {
+  background-color: $white-green;
+  color: $dark-green;
+}
 .basic-slide {
   display: inline-block;
   width: 36vw;
@@ -1746,14 +1786,13 @@ export default {
 
   p {
     font-size: 14px;
-    font-weight: bold;
     margin-left: 2px;
     color: $light-gray-blue;
     span {
-      background-color: $light-coral;
-      color: $coral;
+      // background-color: $white-green;
+      color: $dark-green;
       border-radius: 6px;
-      padding: 2px 8px;
+      padding: 2px;
       margin-left: 8px;
       font-size: 12px;
     }

@@ -170,12 +170,12 @@
     <div class="invite-list__container">
       <div class="key">
         <div class="left-key">
-          <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
+          <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
         </div>
-        <div class="right-key">
+        <!-- <div class="right-key">
           <p class="complete">Complete</p>
           <p class="incomplete">Incomplete</p>
-        </div>
+        </div> -->
       </div>
 
       <div class="invite-list__section__container" style="margin-bottom: 2rem">
@@ -208,20 +208,20 @@
       <div class="invite-list__section__container">
         <img class="back-logo" src="@/assets/images/logo.png" />
         <div
-          style="display: flex; align-items: flex-start; color: #199e54; font-size: 13px"
+          style="display: flex; align-items: flex-start; color: #41b883; font-size: 13px"
           class="invite-list__section__item col"
         >
           {{ user.fullName }}
           <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 13px; color: #41b883"
           class="invite-list__section__item"
         >
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 13px; color: #41b883"
           class="invite-list__section__item"
         >
           Registered
@@ -611,6 +611,7 @@ input:focus {
   justify-content: flex-start;
 }
 .left-key {
+  color: $base-gray;
   display: flex;
   width: 100%;
   flex-direction: row;
@@ -708,18 +709,20 @@ button {
   }
 }
 .invite-list {
+  letter-spacing: 0.75px;
   &__container {
     background-color: $white;
     border: 1px solid #e8e8e8;
     color: $base-gray;
-    width: 60vw;
-    height: 60vh;
+    width: 100vw;
+    height: 70vh;
     overflow: scroll;
     padding: 1.5rem 0rem 1.5rem 1rem;
-    border-radius: 5px;
+    border-radius: 8px;
     display: flex;
-    align-items: flex-start;
+    align-items: space-evenly;
     flex-direction: column;
+    justify-content: flex-start;
   }
   &__section {
     &__container {
@@ -728,7 +731,7 @@ button {
       margin-bottom: 0.5rem;
     }
     &__item {
-      width: 33%;
+      width: 100%;
       overflow-wrap: break-word;
     }
   }

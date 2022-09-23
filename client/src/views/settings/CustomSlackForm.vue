@@ -9,7 +9,87 @@
             <section>
               <div>
                 <p class="form-type">
-                  Update Opportunity Form
+                  Update Form Builder
+                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
+                </p>
+                <div>
+                  <!-- <span class="header-img">
+                    <img
+                      src="@/assets/images/table.svg"
+                      alt=""
+                      height="16px"
+                      style="filter: invert(40%)"
+                    />
+                  </span>
+                  <span class="header-img active">
+                    <img src="@/assets/images/list.svg" height="16px" alt="" />
+                  </span> -->
+
+                  <button @click="onSave" class="save">Save</button>
+                </div>
+              </div>
+              <!-- <p class="tab-text">Select the Opportunity fields you'd like to update via Managr</p> -->
+              <div id="formSection">
+                <!-- <section>
+                  <input placeholder="Note Title" type="text" disabled />
+                  <textarea
+                    placeholder="Note"
+                    name=""
+                    id=""
+                    cols="30"
+                    rows="10"
+                    disabled
+                  ></textarea>
+                </section> -->
+
+                <draggable
+                  v-model="addedFields"
+                  group="fields"
+                  @start="drag = true"
+                  @end="drag = false"
+                  class="drag-section"
+                >
+                  <div v-for="field in addedFields" :key="field.id">
+                    <div v-if="!unshownIds.includes(field.id)">
+                      <div class="drag-item">
+                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                          <img src="@/assets/images/drag.svg" alt="" />
+                          {{ field.label }}
+                        </p>
+                        <img
+                          src="@/assets/images/trash.svg"
+                          alt=""
+                          id="remove"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          @click="
+                            () => {
+                              onRemoveField(field)
+                            }
+                          "
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </draggable>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
+          <label for="tab-2" class="tab-label">Stage Related</label>
+          <div class="tab-content">
+            <p>Stage Gate</p>
+          </div>
+        </div>
+        <div class="tab">
+          <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
+          <label @click="resource = ACCOUNT" for="tab-3" class="tab-label">Account</label>
+          <div class="tab-content">
+            <section>
+              <div>
+                <p class="form-type">
+                  Update Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -25,12 +105,12 @@
                     <img src="@/assets/images/list.svg" height="16px" alt="" />
                   </span>
 
-                  <button class="save">Save</button>
+                  <button @click="onSave" class="save">Save</button>
                 </div>
               </div>
               <!-- <p class="tab-text">Select the Opportunity fields you'd like to update via Managr</p> -->
               <div id="formSection">
-                <section>
+                <!-- <section>
                   <input placeholder="Note Title" type="text" disabled />
                   <textarea
                     placeholder="Note"
@@ -40,41 +120,39 @@
                     rows="10"
                     disabled
                   ></textarea>
-                </section>
-                <div>
-                  <div>
-                    <img src="@/assets/images/trash.svg" height="20px" alt="" />
-                    <input placeholder="Opportunity Name" id="formField" type="text" disabled />
-                  </div>
+                </section> -->
 
-                  <div>
-                    <img src="@/assets/images/trash.svg" height="20px" alt="" />
-                    <input
-                      placeholder="Opportunity Close Date"
-                      id="formField"
-                      type="text"
-                      onfocus="(this.type='date')"
-                      onblur="(this.type='text')"
-                      disabled
-                    />
+                <draggable
+                  v-model="addedFields"
+                  group="fields"
+                  @start="drag = true"
+                  @end="drag = false"
+                  class="drag-section"
+                >
+                  <div v-for="field in addedFields" :key="field.id">
+                    <div v-if="!unshownIds.includes(field.id)">
+                      <div class="drag-item">
+                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                          <img src="@/assets/images/drag.svg" alt="" />
+                          {{ field.label }}
+                        </p>
+                        <img
+                          src="@/assets/images/trash.svg"
+                          alt=""
+                          id="remove"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          @click="
+                            () => {
+                              onRemoveField(field)
+                            }
+                          "
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </draggable>
               </div>
             </section>
-          </div>
-        </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label">Stage Related</label>
-          <div class="tab-content">
-            <p>Stage Gate</p>
-          </div>
-        </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
-          <label for="tab-3" class="tab-label">Account</label>
-          <div class="tab-content">
-            <p>Account</p>
           </div>
         </div>
         <div class="tab">
@@ -96,7 +174,7 @@
     <div class="field-section">
       <div class="search-bar">
         <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-        <input type="search" placeholder="Search Opportunity Fields" />
+        <input type="search" placeholder="Search Opportunity Fields" v-model="filterText" />
       </div>
 
       <div class="field-section__fields">
@@ -110,8 +188,8 @@
             </p>
           </section> -->
 
-          <p v-for="(field, i) in formFields.list" :key="i">
-            <input type="checkbox" :id="i" :value="field.id" />
+          <p v-for="(field, i) in filteredFields" :key="i">
+            <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
             {{ field.label }}
           </p>
@@ -708,6 +786,7 @@ export default {
   },
   data() {
     return {
+      filterText: '',
       dropdownLoading: false,
       currentStageForm: null,
       formFields: CollectionManager.create({
@@ -1031,6 +1110,11 @@ export default {
     },
   },
   computed: {
+    filteredFields() {
+      return this.formFields.list.filter((field) =>
+        field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
+      )
+    },
     currentFields() {
       return this.customForm ? this.customForm.fields : []
     },
@@ -1068,6 +1152,11 @@ export default {
     this.getActionChoices()
   },
   methods: {
+    // filterFields() {
+    //   this.formFields.list.filter((field) =>
+    //     field.referenceDisplayLabel.includes(this.filterText.toLowerCase()),
+    //   )
+    // },
     test() {
       console.log(this.formFields.list)
     },
@@ -1237,11 +1326,11 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
-          if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
-            this.$router.push({ name: 'Required' })
-          } else {
-            this.$router.go()
-          }
+          // if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
+          //   this.$router.push({ name: 'Required' })
+          // } else {
+          //   this.$router.go()
+          // }
         })
     },
   },
@@ -1265,6 +1354,12 @@ export default {
   100% {
     transform: translateY(-6px);
   }
+}
+::v-deep .sortable-ghost {
+  // outline: 1px solid red;
+  border: 1px dashed $very-light-gray;
+  border-radius: 6px;
+  padding-left: 8px;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -1344,7 +1439,7 @@ input[type='search'] {
   margin: 0;
 }
 ::placeholder {
-  color: $light-gray-blue;
+  color: $very-light-gray;
 }
 input[type='search']:focus {
   outline: none;
@@ -1456,11 +1551,12 @@ input[type='search']:focus {
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  border: 1px dashed $base-gray;
+  // border: 1px dashed $base-gray;
   padding-bottom: 32px;
   margin-top: 16px;
   border-radius: 0.3rem;
-  min-height: 72vh;
+  height: 72vh;
+  overflow: scroll;
 
   section {
     display: flex;
@@ -1468,14 +1564,14 @@ input[type='search']:focus {
     align-items: flex-start;
     background-color: white;
     border-radius: 6px;
-    min-height: 30vh;
+    min-height: 24vh;
     margin-top: 16px;
     width: 100%;
-    padding: 0px 16px;
+    padding: 0px 40px 0px 0px;
 
     input {
       width: 100%;
-      border: 1px solid #e8e8e8;
+      border: 1px solid $soft-gray;
       border-radius: 0.3rem;
       background-color: white;
       min-height: 2.5rem;
@@ -1485,7 +1581,7 @@ input[type='search']:focus {
     }
     textarea {
       width: 100%;
-      border: 1px solid #e8e8e8;
+      border: 1px solid $soft-gray;
       border-radius: 0.3rem;
       background-color: white;
       min-height: 2.5rem;
@@ -1511,17 +1607,39 @@ input[type='search']:focus {
     }
   }
 }
+
+#formSection::-webkit-scrollbar {
+  width: 4px; /* Mostly for vertical scrollbars */
+  height: 0px; /* Mostly for horizontal scrollbars */
+}
+#formSection::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+#formSection::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $off-white;
+  border-radius: 0.3rem;
+}
+#formSection::-webkit-scrollbar-track-piece {
+  margin-top: 12px;
+}
+
 #formField {
   width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
   border: 1px solid $soft-gray;
   border-radius: 0.3rem;
   background-color: white;
-  min-height: 2.5rem;
   font-family: $base-font-family;
-  margin-top: 16px;
-  margin-left: 8px;
-  padding-left: 8px;
+  margin-top: 8px;
   cursor: grab;
+  img {
+    padding-top: 8px;
+    cursor: grab;
+  }
 }
 .tab-switch:checked + .tab-label {
   background: #fff;
@@ -1694,7 +1812,7 @@ input[type='search']:focus {
   max-height: 2rem;
 }
 .invisible {
-  display: none;
+  visibility: hidden;
 }
 .white-background {
   background-color: white;
@@ -1711,9 +1829,8 @@ input[type='search']:focus {
 }
 .drag-item {
   display: flex;
-  align-items: center;
   flex-direction: row;
-  padding: 0.2rem 0rem;
+  align-items: center !important;
   border-radius: 0.2rem;
 }
 .center {
@@ -1728,16 +1845,17 @@ input[type='search']:focus {
   justify-content: space-between;
   flex-direction: row;
 }
+.drag-section {
+}
 .header-img {
   padding: 5px 8px;
   border-radius: 4px;
   margin-left: 4px;
 }
 .active {
-  background-color: $white-green;
+  background-color: $off-white;
   img {
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
+    filter: invert(50%);
   }
 }
 .slack-form-builder {
@@ -1780,13 +1898,13 @@ img:hover {
   opacity: 0.8;
 }
 .save {
-  padding: 7px 24px;
+  padding: 6px 20px;
   font-size: 12px;
   background-color: $dark-green;
   color: white;
   border: none;
   border-radius: 0.25rem;
-  margin-left: 0.5rem;
+  margin-right: 8px;
   cursor: pointer;
 }
 .disabled {

@@ -3,8 +3,8 @@
     <div class="welcome">
       <h3>Integrations</h3>
       <div>
-        <p class="active">All</p>
-        <p class="inactive">Required</p>
+        <p class="active"><img src="@/assets/images/logo.png" height="16px" alt="" /></p>
+        <p class="inactive">Connect Managr to your favorite Apps</p>
       </div>
     </div>
 
@@ -728,12 +728,10 @@ a {
   color: $dark-green;
   padding: 4px 8px;
   border-radius: 4px;
-  cursor: pointer;
 }
 .inactive {
   color: $light-gray-blue;
   padding: 4px 8px;
-  cursor: pointer;
 }
 .welcome {
   margin-top: -8px;
@@ -742,7 +740,7 @@ a {
   align-items: center;
   justify-content: space-between;
   width: 92vw;
-  margin-left: -64px;
+  margin-left: -88px;
   padding: 0px 12px 0px 12px;
   overflow: hidden;
   h3 {
@@ -762,9 +760,9 @@ a {
     flex-direction: row;
     align-items: center;
 
-    p {
-      margin-right: 16px;
-    }
+    // p {
+    //   margin-right: 16px;
+    // }
   }
 }
 .orange_button {
