@@ -1112,11 +1112,10 @@ export default {
   },
   computed: {
     filteredFields() {
-      return this.formFields.list
-        .filter((field) =>
-          field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
-        )
-        .filter((field) => !this.addedFieldNames.includes(field.apiName))
+      return this.formFields.list.filter((field) =>
+        field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
+      )
+      // .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     currentFields() {
       return this.customForm ? this.customForm.fields : []

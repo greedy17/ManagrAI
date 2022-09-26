@@ -635,10 +635,12 @@ export default {
 }
 
 .img-border {
-  border: 1px solid $very-light-gray;
+  border: none;
+  box-shadow: 1px 1px 2px 1px $off-white;
   padding: 4px 6px 3px 6px;
   border-radius: 6px;
   box-shadow: 1px 1px 6px 1px $off-white;
+  background-color: white;
 }
 
 .action-buttons {
