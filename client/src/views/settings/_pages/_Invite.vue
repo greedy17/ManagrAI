@@ -305,7 +305,7 @@
         </div>
       </div>
       <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
-        <template v-if="member.id !== user.id && member.team === $store.state.user.team">
+        <template v-if="member.id !== user.id && member.team === $store.state.user.team && !(member.firstName && !member.isActive)">
           <div
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item col"
