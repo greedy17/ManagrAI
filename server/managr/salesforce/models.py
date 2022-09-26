@@ -255,6 +255,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
             #         "*Products*", action_query, block_id=self.api_name, initial_option=None,
             #     )
             else:
+                if self.api_name == "PricebookEntryId":
+                    display_name = "Products"
                 additional_fields = kwargs.get("fields", "")
                 user_id = str(self.salesforce_account.user.id)
                 action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}&add={additional_fields}"
@@ -436,7 +438,6 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     @property
     def as_slack_options(self):
         values = self.values
-        print(values)
         for value in values:
             if len(value["label"]) > 75:
                 value["label"] = f"{value['label'][:50]}..."

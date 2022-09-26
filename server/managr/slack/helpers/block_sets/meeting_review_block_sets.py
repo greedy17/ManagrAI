@@ -176,7 +176,7 @@ def meeting_contacts_block_set(context):
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":exclamation: *Attendees below will be saved as Contacts*", "mrkdwn",
+                    ":busts_in_silhouette: *Attendees below will be saved as Contacts*", "mrkdwn",
                 )
             ]
         )
@@ -240,7 +240,7 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":dart: *Attendees below are already saved as Contacts*", "mrkdwn",
+                    ":cloud: *Attendees below are already saved as Contacts*", "mrkdwn",
                 ),
             ]
         )
