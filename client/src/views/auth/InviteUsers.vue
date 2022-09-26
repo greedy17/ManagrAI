@@ -18,7 +18,7 @@
           </div>
           <div class="flex-row">
             <h4 class="invite-form__subtitle">
-              By clicking Confirm, you will transferring the Admin role to
+              By clicking Confirm, you will be transferring the Admin role to 
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
             </h4>
           </div>
