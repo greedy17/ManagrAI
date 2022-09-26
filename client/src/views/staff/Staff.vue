@@ -381,34 +381,21 @@
                 Copy
               </button>
             </div>
-            <p class="note-section__body">
-              <!-- work here -->
-              <span class="underline">Users:</span>
-              {{ content.total && content.total.users !== null ? content.total.users : 'None' }}
-              <span class="underline">Workflows:</span>
-              {{ content.total && content.total.workflows !== null ? content.total.workflows : 'None' }}
-              <span class="underline">Accounts Created:</span>
-              {{ content.total && content.total.creates.accounts !== null ? content.total.creates.accounts : 'None' }}
-              <span class="underline">Contacts Created:</span>
-              {{ content.total && content.total.creates.contacts !== null ? content.total.creates.contacts : 'None' }}
-              <span class="underline">Opportunities Created:</span>
-              {{ content.total && content.total.creates.opportunities !== null ? content.total.creates.opportunities : 'null' }}
-              <span class="underline">Products Created:</span>
-              {{ content.total && content.total.creates.products !== null ? content.total.creates.products : 'None' }}
-              <span class="underline">Total Created:</span>
-              {{ content.total && content.total.creates.total !== null ? content.total.creates.total : 'None' }}
-              <span class="underline">Alert Updates:</span>
-              {{ content.total && content.total.updates.alert !== null ? content.total.updates.alert : 'None' }}
-              <span class="underline">Command Updates:</span>
-              {{ content.total && content.total.updates.command !== null ? content.total.updates.command : 'None' }}
-              <span class="underline">Meeting Updates:</span>
-              {{ content.total && content.total.updates.meeting !== null ? content.total.updates.meeting : 'None' }}
-              <span class="underline">Pipeline Updates:</span>
-              {{ content.total && content.total.updates.pipeline !== null ? content.total.updates.pipeline : 'None' }}
-              <span class="underline">Total Updates:</span>
-              {{ content.total && content.total.updates.total !== null ? content.total.updates.total : 'None' }}
-            </p>
-            <h2 class="note-section__title">
+            <div>
+              <div class="">Users: {{ content.total && content.total.users !== null ? content.total.users : 'None' }}</div>
+              <div class="">Workflows: {{ content.total && content.total.workflows !== null ? content.total.workflows : 'None' }}</div>
+              <div class="">Accounts Created: {{ content.total && content.total.creates.accounts !== null ? content.total.creates.accounts : 'None' }}</div>
+              <div class="">Contacts Created: {{ content.total && content.total.creates.contacts !== null ? content.total.creates.contacts : 'None' }}</div>
+              <div class="">Opportunities Created: {{ content.total && content.total.creates.opportunities !== null ? content.total.creates.opportunities : 'null' }}</div>
+              <div class="">Products Created: {{ content.total && content.total.creates.products !== null ? content.total.creates.products : 'None' }}</div>
+              <div class="">Total Created: {{ content.total && content.total.creates.total !== null ? content.total.creates.total : 'None' }}</div>
+              <div class="">Alert Updates: {{ content.total && content.total.updates.alert !== null ? content.total.updates.alert : 'None' }}</div>
+              <div class="">Command Updates: {{ content.total && content.total.updates.command !== null ? content.total.updates.command : 'None' }}</div>
+              <div class="">Meeting Updates: {{ content.total && content.total.updates.meeting !== null ? content.total.updates.meeting : 'None' }}</div>
+              <div class="">Pipeline Updates: {{ content.total && content.total.updates.pipeline !== null ? content.total.updates.pipeline : 'None' }}</div>
+              <div class="">Total Updates: {{ content.total && content.total.updates.total !== null ? content.total.updates.total : 'None' }}</div>
+            </div>
+            <h2 class="note-section__small_title">
               Per Organization:
             </h2>
             <div v-for="(orgItem, j) in content.orgs" :key="`item${j}`">
@@ -422,6 +409,7 @@
                   <div>{{user.userName}} - Session Avg: {{user['session average']}} | Total Sessions: {{user['total sessions']}} | Updates: {{user['updates']}} | Creates: {{user['creates']}}</div>
                 </div>
               </div>
+              <div class="separator"></div>
             </div>
           </section>
         </div>
@@ -1299,6 +1287,13 @@ input[type='search']:focus {
     color: $base-gray;
     padding: 0;
   }
+  &__small_title {
+    font-size: 17px;
+    font-weight: bolder;
+    letter-spacing: 0.6px;
+    color: $base-gray;
+    padding: 0;
+  }
   &__body {
     color: $base-gray;
     font-family: $base-font-family;
@@ -1408,5 +1403,10 @@ input[type='search']:focus {
 .added-collection:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
   transform: scale(1.015);
+}
+.separator {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid black;
 }
 </style>
