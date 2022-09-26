@@ -369,7 +369,6 @@
             @click="openUninviteModal(member.id)">
             X
           </div>
-          <!-- Work here -->
           <div v-else
           style="position: relative; width: 1rem; right: 1rem; visibility: none;"
           class=""
