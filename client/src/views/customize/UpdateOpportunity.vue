@@ -29,6 +29,7 @@ import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -55,7 +56,7 @@ export default {
       search: '',
       fieldParam: null,
       loading: false,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFields: CollectionManager.create({ ModelClass: ObjectField }),
       stageDropDownOpen: false,
       isVisible: false,
       validations: CollectionManager.create({
@@ -93,6 +94,7 @@ export default {
       try {
         this.formFields.filters = query_params
         this.formFields.refresh()
+        console.log(this.formFields)
       } catch {
         this.$toast('Error gathering fields', {
           timeout: 2000,

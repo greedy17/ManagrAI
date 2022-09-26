@@ -14,6 +14,7 @@ from managr.salesloft import views as salesloft_views
 from managr.gong import views as gong_views
 from managr.outreach import views as outreach_views
 from managr.hubspot import views as hubspot_views
+from managr.crm import views as crm_views
 
 # from . import views
 
@@ -184,6 +185,7 @@ router.register("organizations", organization_views.OrganizationViewSet, "organi
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
+router.register("crm/fields", crm_views.ObjectFieldViewSet, "crm-fields")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
 router.register("salesforce/sobject", sf_views.SalesforceSObjectViewSet, "salesforce-sobject")
 router.register(
