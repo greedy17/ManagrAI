@@ -193,8 +193,8 @@
 
     <div class="table-cell-header-end">
       <div class="direction-row" @click="addField">
+        <p>Actions</p>
         <img src="@/assets/images/plusOne.svg" height="20px" style="filter: invert(30%)" alt="" />
-        <p>View Only</p>
       </div>
 
       <div v-if="addingField" class="add-field-section">
@@ -508,7 +508,7 @@ export default {
   letter-spacing: 0.75px;
   color: $base-gray;
   padding: 8px 24px;
-  background-color: white;
+  background-color: $off-white;
 
   // box-shadow: 1px 1px 2px 1px $very-light-gray;
 }

@@ -102,6 +102,15 @@ body {
   background-color: $off-white;
 }
 
+div[id^='user-input'] {
+  // display: none;
+  outline: 1px solid yellow !important;
+}
+
+input {
+  background-image: none !important;
+}
+
 #app {
   @include base-font-styles;
   height: inherit;

@@ -1,11 +1,7 @@
-import jwt
 import pytz
 import math
 import logging
-import json
 from collections import OrderedDict
-from functools import reduce
-
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
@@ -14,7 +10,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 
-from background_task.models import CompletedTask, Task
+from background_task.models import CompletedTask
 
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
@@ -94,8 +90,7 @@ class SObjectValidationQuerySet(models.QuerySet):
 class SObjectPicklistQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            admin = user.organization.users.filter(is_admin=True).first()
-            return self.filter(salesforce_account__user__id=admin.id)
+            return self.filter(salesforce_account__user__id=user.team.team_lead.id)
         else:
             return self.none()
 
@@ -163,6 +158,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
             and self.relationship_name
             and not self.is_public
         ):
+            if "__r" in self.relationship_name:
+                return self.label
             return self.relationship_name
         return self.label
 
@@ -227,7 +224,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_option=initial_option,
                 )
-
             return block
 
         elif self.data_type == "Reference":
@@ -237,32 +233,31 @@ class SObjectField(TimeStampModel, IntegrationModel):
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = (
-                    f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}"
-                )
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}"
             elif self.is_public and self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
                 resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
+                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
                     f"_{self.reference_display_label}_",
                     action_query,
                     block_id=self.api_name,
                     initial_options=None,
                 )
-            elif (
-                self.api_name == "PricebookEntryId"
-                and self.salesforce_object == "OpportunityLineItem"
-            ):
-                user_id = str(kwargs.get("user").id)
-                resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
-                return block_builders.external_select(
-                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
-                )
+            # elif (
+            #     self.api_name == "PricebookEntryId"
+            #     and self.salesforce_object == "OpportunityLineItem"
+            # ):
+            #     user_id = str(kwargs.get("user").id)
+            #     resource = self.relationship_name
+            #     action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
+            #     return block_builders.external_select(
+            #         "*Products*", action_query, block_id=self.api_name, initial_option=None,
+            #     )
             else:
+                additional_fields = kwargs.get("fields", "")
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}"
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}&add={additional_fields}"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
@@ -296,11 +291,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
             )
 
         elif self.data_type == "Boolean":
+            initial_value = (
+                [block_builders.option(self.reference_display_label, "true")]
+                if value is True
+                else None
+            )
             return block_builders.checkbox_block(
                 " ",
                 [block_builders.option(self.reference_display_label, "true")],
                 action_id=self.api_name,
                 block_id=self.api_name,
+                initial_options=initial_value,
             )
         elif self.data_type == "MultiChannelsSelect":
             return [
@@ -435,6 +436,11 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     @property
     def as_slack_options(self):
         values = self.values
+        print(values)
+        for value in values:
+            if len(value["label"]) > 75:
+                value["label"] = f"{value['label'][:50]}..."
+
         if values and len(values):
             return list(
                 map(lambda option: block_builders.option(option["label"], option["value"]), values)
@@ -802,7 +808,7 @@ class MeetingWorkflow(SFSyncOperation):
                 return logger.exception(
                     f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
                 )
-            self.user.activity.add_meeting_activity(self.id)
+            # self.user.activity.add_meeting_activity(self.id)
             self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 

@@ -1075,6 +1075,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  ::v-deep div {
+    display: none !important;
+  }
 }
 .label {
   display: inline-block;

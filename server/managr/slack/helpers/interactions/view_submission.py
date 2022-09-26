@@ -64,6 +64,7 @@ from managr.slack.helpers.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
+from managr.salesforce.adapter.models import PricebookEntryAdapter
 
 logger = logging.getLogger("managr")
 
@@ -536,7 +537,6 @@ def process_submit_resource_data(payload, context):
             return logger.exception(
                 f"Failed To Update the view for the workflow {str(user.id)} email {user.email} {e}"
             )
-
     else:
         form_id = current_form_ids[0]
         # update the channel message to clear it
@@ -556,6 +556,7 @@ def process_submit_resource_data(payload, context):
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
+        internal_update = main_form.resource_object.update_database_values(all_form_data)
         try:
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,
@@ -1297,16 +1298,16 @@ def process_schedule_meeting(payload, context):
                     "status": "noreply",
                 }
             )
-    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
+    if data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource_type=User"][
         "selected_options"
     ]:
         query_data = User.objects.filter(
             id__in=list(
                 map(
                     lambda val: val["value"],
-                    data["meeting_internals"][f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource=User"][
-                        "selected_options"
-                    ],
+                    data["meeting_internals"][
+                        f"GET_LOCAL_RESOURCE_OPTIONS?u={u.id}&resource_type=User"
+                    ]["selected_options"],
                 )
             )
         ).values("email", "first_name", "last_name")
@@ -1543,14 +1544,12 @@ def process_add_contacts_to_sequence(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_get_notes(payload, context):
-    meta_data = json.loads(payload["view"]["private_metadata"])
     u = User.objects.get(id=context.get("u"))
-    trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     org = u.organization
     access_token = org.slack_integration.access_token
     resource_id = payload["view"]["state"]["values"]["select_opp"][
-        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource=Opportunity"
+        f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={u.id}&resource_type=Opportunity"
     ]["selected_option"]["value"]
     opportunity = Opportunity.objects.get(id=resource_id)
     note_data = (
@@ -1625,13 +1624,13 @@ def process_send_recaps(payload, context):
     leadership = [
         option["value"]
         for option in values["__send_recap_to_leadership"][
-            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=e286d1d5-5447-47e6-ad55-5f54fdd2b00d"
+            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource_type=User&field_id=e286d1d5-5447-47e6-ad55-5f54fdd2b00d"
         ]["selected_options"]
     ]
     reps = [
         option["value"]
         for option in values["__send_recap_to_reps"][
-            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
+            f"GET_LOCAL_RESOURCE_OPTIONS?u={context.get('u')}&resource_type=User&field_id=fae88a10-53cc-470e-86ec-32376c041893"
         ]["selected_options"]
     ]
     send_to_recaps = {"channels": channels, "leadership": leadership, "reps": reps}
@@ -1872,9 +1871,17 @@ def process_submit_product(payload, context):
         sf = user.salesforce_account
         try:
             opp = Opportunity.objects.get(id=main_form.resource_id)
-            entry = PricebookEntry.objects.get(
-                integration_id=product_form.saved_data["PricebookEntryId"]
-            )
+            try:
+                entry = PricebookEntry.objects.get(
+                    integration_id=product_form.saved_data["PricebookEntryId"]
+                )
+            except PricebookEntry.DoesNotExist:
+                entry = PricebookEntryAdapter.get_current_values(
+                    product_form.saved_data["PricebookEntryId"],
+                    sf.access_token,
+                    sf.instance_url,
+                    str(user.id),
+                )
             product_data = {
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
@@ -2528,7 +2535,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
-    user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
+    # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
     return {"response_action": "clear"}
 

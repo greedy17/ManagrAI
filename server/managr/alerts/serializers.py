@@ -25,6 +25,10 @@ def create_configs_for_target(target, template_user, config):
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
         return [config]
+    elif target == "TEAM":
+        users = User.objects.filter(team=template_user.team, is_active=True).exclude(
+            email=template_user.email
+        )
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
     else:

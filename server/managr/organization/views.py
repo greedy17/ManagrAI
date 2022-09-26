@@ -41,8 +41,9 @@ from managr.core.permissions import (
     IsExternalIntegrationAccount,
 )
 
+from managr.core.models import User
 
-from .models import Organization, Account, Contact, Stage, ActionChoice
+from .models import Organization, Account, Contact, Stage, ActionChoice, Team
 from . import constants as org_consts
 from .serializers import (
     OrganizationSerializer,
@@ -50,6 +51,7 @@ from .serializers import (
     ContactSerializer,
     StageSerializer,
     ActionChoiceSerializer,
+    TeamSerializer,
 )
 
 
@@ -117,6 +119,24 @@ class OrganizationViewSet(
         organization.ignore_emails = split_emails
         organization.save()
         return Response(data=status.HTTP_200_OK)
+
+    @action(
+        methods=["POST"],
+        # permission_classes=(IsSalesPerson,),
+        detail=False,
+        url_path="change-admin",
+    )
+    def change_admin(self, request, *args, **kwargs):
+        """endpoint to update the State, Ignore Emails, and Has Products sections"""
+        data = request.data
+        new_admin_id = data.get("new_admin")
+        new_admin = User.objects.get(id=new_admin_id)
+        org = request.user.organization
+        changed_admin = org.change_admin_user(new_admin, preserve_fields=True)
+        if changed_admin.is_admin:
+            return Response(data=status.HTTP_200_OK)
+        else:
+            return Response(data=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AccountViewSet(
@@ -395,3 +415,61 @@ class ActionChoiceViewSet(
 
     def get_queryset(self):
         return ActionChoice.objects.for_user(self.request.user)
+
+
+class TeamViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = TeamSerializer
+
+    def get_queryset(self):
+        return Team.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            emit_generate_team_form_templates(request.data.get("team_lead"))
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["POST"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify-membership",
+    )
+    def modify_membership(self, request, *args, **kwargs):
+        """special method to remove a contact from a leads linked contacts list, expects array of contacts and lead"""
+        request_data = request.data
+        to_add_users = User.objects.filter(id__in=request_data.get("users"))
+        team = Team.objects.get(id=request.data.get("team_id"))
+        try:
+            to_add_users.update(team=team)
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)

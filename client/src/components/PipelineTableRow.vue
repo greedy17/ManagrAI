@@ -43,22 +43,6 @@
             :owner="opp.owner_ref.first_name"
           />
         </div>
-        <div class="row">
-          <div @click="emitGetNotes" class="tooltip mar-right mar-left">
-            <div class="img-border">
-              <img src="@/assets/images/note.svg" height="14px" alt="" />
-            </div>
-
-            <span class="tooltiptext">Notes</span>
-          </div>
-          <div @click="emitCreateForm" class="tooltip mar-right">
-            <div class="img-border">
-              <img src="@/assets/images/edit-note.svg" height="14px" alt="" />
-            </div>
-
-            <span class="tooltiptext">Update</span>
-          </div>
-        </div>
       </div>
     </div>
     <div
@@ -188,7 +172,7 @@
               optionHeight="20"
               track-by="value"
               label="label"
-              @select="setDropdownValue($event)"
+              @select="emitDropdown($event, opp)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -241,7 +225,9 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
+              v-on:keyup.enter="
+                setUpdateValues(field.apiName, Number($event.target.value), field.dataType)
+              "
               id="user-input"
               type="number"
               :value="
@@ -335,6 +321,22 @@
       >
         <SkeletonBox width="15px" height="14px" />
       </div>
+      <div class="row">
+        <div @click="emitGetNotes" class="tooltip mar-right mar-left">
+          <div class="img-border">
+            <img src="@/assets/images/note.svg" height="14px" alt="" />
+          </div>
+
+          <span class="tooltiptext">Notes</span>
+        </div>
+        <div @click="emitCreateForm" class="tooltip mar-right">
+          <div class="img-border">
+            <img src="@/assets/images/edit-note.svg" height="14px" alt="" />
+          </div>
+
+          <span class="tooltiptext">Update</span>
+        </div>
+      </div>
       <!-- <div v-else class="flex-row action-buttons">
         <div @click="emitCreateForm" class="tooltip mar-right">
           <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
@@ -381,7 +383,6 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
-      dropdownValue: {},
       dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
@@ -402,15 +403,6 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     primaryCheckList: 'checkSelect',
-    dropdownValue: {
-      handler(val) {
-        if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.opp.id, this.opp.integration_id)
-        } else {
-          this.setUpdateValues('StageName', val)
-        }
-      },
-    },
   },
   props: {
     index: {},
@@ -420,6 +412,8 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
+    BulkUpdateName: {},
+    BulkUpdateValue: {},
     updateList: {},
     picklistOpts: {},
     inlineLoader: {},
@@ -441,6 +435,9 @@ export default {
     //     console.log(e)
     //   }
     // },
+    test(log) {
+      console.log('log', log)
+    },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -449,8 +446,9 @@ export default {
     closeInline() {
       this.editing = false
     },
-    setDropdownValue(val) {
-      this.dropdownValue = val.value
+    emitDropdown(val, opp) {
+      const item = { val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id }
+      this.$emit('set-dropdown-value', item)
     },
     editInline(index) {
       this.editing = true
@@ -468,6 +466,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
+        this.dropdownVal = {}
         this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
@@ -583,6 +582,34 @@ export default {
         }, 2000)
       }
     },
+    async onBulkUpdate() {
+      this.updatedList.push(this.opp.id)
+      try {
+        const formData = {}
+        formData[this.BulkUpdateName] = this.BulkUpdateValue
+        const res = await SObjects.api
+          .updateResource({
+            form_data: formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedList = []
+      }
+    },
   },
 }
 </script>
@@ -604,7 +631,7 @@ export default {
 }
 .light-gray {
   background-color: $off-white !important;
-  opacity: 0.5;
+  // opacity: 0.5;
 }
 
 .img-border {

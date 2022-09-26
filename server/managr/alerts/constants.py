@@ -6,6 +6,7 @@ ALERT_TARGET_GROUPS = [
     {"key": "All Reps", "value": "REPS"},
     {"key": "Everyone", "value": "ALL"},
     {"key": "SDR", "value": "SDR"},
+    {"key": "My Team", "value": "TEAM"},
 ]
 
 ALERT_RECIPIENT_GROUPS = [

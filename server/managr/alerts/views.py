@@ -51,7 +51,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True,)
+            Q(organization=template_user.organization, user_level=target, is_active=True)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -66,23 +66,28 @@ def create_configs_for_target(target, template_user, config):
         return [config]
     elif target == "ALL":
         users = User.objects.filter(organization=template_user.organization, is_active=True)
+    elif target == "TEAM":
+        users = User.objects.filter(team=template_user.team, is_active=True).exclude(
+            email=template_user.email
+        )
     else:
         users = User.objects.filter(id=target)
     new_configs = []
     for user in users:
-        config_copy = copy(config)
-        config_copy["alert_targets"] = [str(user.id)]
-        if user.has_slack_integration:
-            config_copy["recipients"] = [
-                user.slack_integration.zoom_channel
-                if user.slack_integration.zoom_channel
-                else user.slack_integration.channel
-            ]
-            config_copy["recipient_type"] = "SLACK_CHANNEL"
-        else:
-            config_copy["recipients"] = ["default"]
-            config_copy["recipient_type"] = "default"
-        new_configs.append(config_copy)
+        if user.has_salesforce_integration:
+            config_copy = copy(config)
+            config_copy["alert_targets"] = [str(user.id)]
+            if user.has_slack_integration:
+                config_copy["recipients"] = [
+                    user.slack_integration.zoom_channel
+                    if user.slack_integration.zoom_channel
+                    else user.slack_integration.channel
+                ]
+                config_copy["recipient_type"] = "SLACK_CHANNEL"
+            else:
+                config_copy["recipients"] = ["default"]
+                config_copy["recipient_type"] = "default"
+            new_configs.append(config_copy)
     return new_configs
 
 
@@ -203,6 +208,7 @@ class AlertTemplateViewSet(
                             break
                     users = []
                     for config in obj.configs.all():
+                        config.target_users
                         users = [*users, *config.target_users]
                     res_data = []
                     for user in users:
@@ -238,14 +244,14 @@ class AlertTemplateViewSet(
                 template.last_invocation_datetime = timezone.now()
                 template.save()
                 users = config.target_users
-                for user in users:
-                    run_time = datetime.now(pytz.utc)
-                    _process_check_alert(
-                        str(config.id),
-                        str(user.id),
-                        template.invocation,
-                        run_time.strftime("%Y-%m-%dT%H:%M%z"),
-                    )
+                user = str(template.user.id) if len(users) > 1 else str(users.first().id)
+                run_time = datetime.now(pytz.utc)
+                _process_check_alert(
+                    str(config.id),
+                    user,
+                    template.invocation,
+                    run_time.strftime("%Y-%m-%dT%H:%M%z"),
+                )
             return Response()
 
 

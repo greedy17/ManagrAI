@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.UPDATE_FORECAST" />
+  <PopularWorkflows :config="allConfigs.NINETY_DAY_PIPELINE" />
 </template>
 
 <script>

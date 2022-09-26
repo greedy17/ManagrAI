@@ -171,19 +171,25 @@
               <p class="note-section__title">User Slack Integrations</p>
               <p class="note-section__body">
                 <span class="underline">Slack ID:</span>
-                {{ modalInfo.slackRef.slackId ? modalInfo.slackRef.slackId : 'None' }}
+                {{ modalInfo.slackRef ? modalInfo.slackRef.slackId : 'None' }}
                 <span class="underline">Channel:</span>
-                {{ modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'None' }}
+                {{
+                  modalInfo.slackAccount && modalInfo.slackAccount.channel
+                    ? modalInfo.slackAccount.channel
+                    : 'None'
+                }}
                 <span class="underline">Organization Slack:</span>
                 {{ modalInfo.organizationRef.slackIntegration }}
                 <span class="underline">Is Onboarded:</span> {{ modalInfo.onboarding }}
                 <span class="underline">Recap Channel:</span>
                 {{
-                  modalInfo.slackAccount.recapChannel ? modalInfo.slackAccount.recapChannel : 'None'
+                  modalInfo.slackAccount && modalInfo.slackAccount.recapChannel
+                    ? modalInfo.slackAccount.recapChannel
+                    : 'None'
                 }}
                 <span class="underline">Recap Recievers:</span>
                 {{
-                  modalInfo.slackAccount.recapReceivers
+                  modalInfo.slackAccount && modalInfo.slackAccount.recapReceivers
                     ? modalInfo.slackAccount.recapReceivers
                     : 'None'
                 }}
@@ -191,89 +197,137 @@
             </section>
             <section class="note-section">
               <p class="note-section__title">
-                Salesforce ({{ modalInfo.salesforceAccountRef.id }})
+                Salesforce ({{
+                  modalInfo.salesforceAccountRef ? modalInfo.salesforceAccountRef.id : 'None'
+                }})
               </p>
               <p class="note-section__body">
                 <span class="underline">SFDC ID:</span>
                 {{
-                  modalInfo.salesforceAccountRef.salesforceId
+                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.salesforceId
                     ? modalInfo.salesforceAccountRef.salesforceId
                     : 'None'
                 }}
                 <span class="underline">sobjects:</span>
                 {{
-                  modalInfo.salesforceAccountRef.sobjects
+                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.sobjects
                     ? modalInfo.salesforceAccountRef.sobjects
                     : 'None'
                 }}
                 <span class="underline">Instance URL:</span>
                 {{
-                  modalInfo.salesforceAccountRef.instanceUrl
+                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.instanceUrl
                     ? modalInfo.salesforceAccountRef.instanceUrl
                     : 'None'
                 }}
                 <span class="underline">Access Token:</span>
                 {{
-                  modalInfo.salesforceAccountRef.accessToken
+                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.accessToken
                     ? modalInfo.salesforceAccountRef.accessToken
                     : 'None'
                 }}
               </p>
             </section>
             <section class="note-section">
-              <p class="note-section__title">Nylas ({{ modalInfo.nylasRef.id }})</p>
+              <p class="note-section__title">
+                Nylas ({{ modalInfo.nylasRef ? modalInfo.nylasRef.id : 'None' }})
+              </p>
               <p class="note-section__body">
                 <span class="underline">Access Token:</span>
-                {{ modalInfo.nylasRef.accessToken ? modalInfo.nylasRef.accessToken : 'None' }}
+                {{
+                  modalInfo.nylasRef && modalInfo.nylasRef.accessToken
+                    ? modalInfo.nylasRef.accessToken
+                    : 'None'
+                }}
                 <span class="underline">Email:</span>
-                {{ modalInfo.nylasRef.emailAddress ? modalInfo.nylasRef.emailAddress : 'None' }}
+                {{
+                  modalInfo.nylasRef && modalInfo.nylasRef.emailAddress
+                    ? modalInfo.nylasRef.emailAddress
+                    : 'None'
+                }}
                 <span class="underline">Event Calendar ID:</span>
                 {{
-                  modalInfo.nylasRef.eventCalendarId ? modalInfo.nylasRef.eventCalendarId : 'None'
+                  modalInfo.nylasRef && modalInfo.nylasRef.eventCalendarId
+                    ? modalInfo.nylasRef.eventCalendarId
+                    : 'None'
                 }}
                 <span class="underline">Provider:</span>
-                {{ modalInfo.nylasRef.provider ? modalInfo.nylasRef.provider : 'None' }}
-              </p>
-            </section>
-            <section class="note-section">
-              <p class="note-section__title">Zoom ({{ modalInfo.zoomRef.id }})</p>
-              <p class="note-section__body">
-                <span class="underline">Zoom ID:</span>
-                {{ modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'None' }}
-                <span class="underline">Timezone:</span>
-                {{ modalInfo.zoomRef.timezone ? modalInfo.zoomRef.timezone : 'None' }}
-                <span class="underline">Account ID:</span>
-                {{ modalInfo.zoomRef.accountId ? modalInfo.zoomRef.accountId : 'None' }}
-                <span class="underline">Access Token:</span>
-                {{ modalInfo.zoomRef.accessToken ? modalInfo.zoomRef.accessToken : 'None' }}
-                <span class="underline">Fake Meeting ID:</span>
                 {{
-                  modalInfo.zoomRef.fakeMeetingIdRef ? modalInfo.zoomRef.fakeMeetingIdRef : 'None'
+                  modalInfo.nylasRef && modalInfo.nylasRef.provider
+                    ? modalInfo.nylasRef.provider
+                    : 'None'
                 }}
               </p>
             </section>
             <section class="note-section">
               <p class="note-section__title">
-                Slack Account ({{ modalInfo.slackAccount.slackId }})
+                Zoom ({{ modalInfo.zoomRef ? modalInfo.zoomRef.id : 'None' }})
+              </p>
+              <p class="note-section__body">
+                <span class="underline">Zoom ID:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'None'
+                }}
+                <span class="underline">Timezone:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.timezone
+                    ? modalInfo.zoomRef.timezone
+                    : 'None'
+                }}
+                <span class="underline">Account ID:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.accountId
+                    ? modalInfo.zoomRef.accountId
+                    : 'None'
+                }}
+                <span class="underline">Access Token:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.accessToken
+                    ? modalInfo.zoomRef.accessToken
+                    : 'None'
+                }}
+                <span class="underline">Fake Meeting ID:</span>
+                {{
+                  modalInfo.zoomRef && modalInfo.zoomRef.fakeMeetingIdRef
+                    ? modalInfo.zoomRef.fakeMeetingIdRef
+                    : 'None'
+                }}
+              </p>
+            </section>
+            <section class="note-section">
+              <p class="note-section__title">
+                Slack Account ({{
+                  modalInfo.slackAccount ? modalInfo.slackAccount.slackId : 'None'
+                }})
               </p>
               <p class="note-section__body">
                 <span class="underline">Slack ID:</span>
-                {{ modalInfo.slackAccount.slackId ? modalInfo.slackAccount.slackId : 'None' }}
+                {{
+                  modalInfo.slackAccount && modalInfo.slackAccount.slackId
+                    ? modalInfo.slackAccount.slackId
+                    : 'None'
+                }}
                 <span class="underline">Channel:</span>
-                {{ modalInfo.slackAccount.channel ? modalInfo.slackAccount.channel : 'None' }}
+                {{
+                  modalInfo.slackAccount && modalInfo.slackAccount.channel
+                    ? modalInfo.slackAccount.channel
+                    : 'None'
+                }}
                 <span class="underline">Zoom Channel:</span>
                 {{
-                  modalInfo.slackAccount.zoomChannel ? modalInfo.slackAccount.zoomChannel : 'None'
+                  modalInfo.slackAccount && modalInfo.slackAccount.zoomChannel
+                    ? modalInfo.slackAccount.zoomChannel
+                    : 'None'
                 }}
                 <span class="underline">Recap Receivers:</span>
                 {{
-                  modalInfo.slackAccount.recapReceivers
+                  modalInfo.slackAccount && modalInfo.slackAccount.recapReceivers
                     ? modalInfo.slackAccount.recapReceivers
                     : 'None'
                 }}
                 <span class="underline">Real Time Alert Configs:</span>
                 {{
-                  modalInfo.slackAccount.realtimeAlertConfigs
+                  modalInfo.slackAccount && modalInfo.slackAccount.realtimeAlertConfigs
                     ? modalInfo.slackAccount.realtimeAlertConfigs
                     : 'None'
                 }}
@@ -385,7 +439,6 @@
         :options="organizations.list"
         openDirection="below"
         selectLabel="Enter"
-        track-by="value"
         label="name"
       >
         <template slot="noResult">
@@ -465,7 +518,7 @@
                   openDirection="below"
                   selectLabel="Enter"
                   track-by="id"
-                  label="fullName"
+                  :custom-label="customUserLabel"
                   :multiple="false"
                 >
                   <template slot="noResult">
@@ -535,8 +588,9 @@
           :key="slackFormInstance.id"
         >
           <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
-            {{ slackFormInstance.templateRef.resource }}
-            {{ slackFormInstance.templateRef.formType }} by
+            {{ slackFormInstance.templateRef ? slackFormInstance.templateRef.resource : '-' }}
+            {{ slackFormInstance.templateRef ? slackFormInstance.templateRef.formType : '-' }}
+            by
             {{ getUserName(slackFormInstance.user) }}
             {{
               slackFormInstance.submissionDate
@@ -552,7 +606,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(meetingWorkflow, i) in orgMeetingWorkflows"
+          v-for="(meetingWorkflow, i) in orgMeetingWorkflows /* here */"
           :key="meetingWorkflow.id"
         >
           <h4 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
@@ -645,7 +699,9 @@ export default {
       page: null,
       orgForms: null,
       orgMeetingWorkflows: null,
+      //organizations: null,
       organizations: CollectionManager.create({
+        // change to null, make this update in create with new endpoint
         ModelClass: Organization,
         filters: { fromAdmin: true },
       }),
@@ -667,11 +723,12 @@ export default {
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
-      return `${user.firstName} ${user.lastName}`
+      return user ? `${user.firstName} ${user.lastName}` : '-'
     },
     async getAllForms() {
       try {
-        let res = await SlackOAuth.api.getOrgCustomForm(null, true)
+        let res = await SlackOAuth.api.getOrgCustomForm(null, true) // change to new users staff endpoint
+        // let res = await User.api.getStaffForms()
         this.allForms = res
       } catch (e) {
         console.log(e)
@@ -679,8 +736,18 @@ export default {
     },
     async getAllMeetingWorkflows() {
       try {
-        let res = await MeetingWorkflows.api.getMeetingList(true)
+        let res = await MeetingWorkflows.api.getMeetingList(true) // change to new users meeting workflows endpoint
+        // let res = await User.api.getStaffWorkflows()
         this.allMeetingWorkflows = res.results
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getStaffOrgs() {
+      try {
+        console.log('getStaffOrgs')
+        // let res = await User.api.getStaffOrganizations()
+        // this.organizations = res.results
       } catch (e) {
         console.log(e)
       }
@@ -694,26 +761,40 @@ export default {
         return
       }
       try {
-        const res = await User.api.callCommand(this.selectedCommand.value).then((res) => {
-          if (res.data) {
-            const newResContent = []
-            for (let key in res.data) {
-              const item = res.data[key]
-              item['date'] = key
-              newResContent.push(item)
-            }
-            this.contentModalInfo = newResContent
-            this.displayCommandModal = true
-            this.contentType = 'PullUsageData'
-          } else {
+        const res = await User.api.callCommand(this.selectedCommand.value)
+        console.log('res', res)
+        if (res.data) {
+          const newResContent = []
+          // console.log('res.data.totals', res.data.totals)
+          for (let key in res.data.totals) {
+            const item = res.data.totals[key]
+            // console.log('res.data.totals[key]', res.data.totals[key])
+            item['date'] = key
+            newResContent.unshift(item)
+          }
+          this.contentModalInfo = newResContent
+          this.displayCommandModal = true
+          this.contentType = 'PullUsageData'
+        } else {
+          if (res.success) {
             this.$toast(res['message'], {
               type: 'success',
               timeout: 3000,
             })
+          } else {
+            console.log(res['message'])
+            this.$toast('Something went wrong. Please try again.', {
+              type: 'error',
+              timeout: 3000,
+            })
           }
-        })
+        }
       } catch (e) {
         console.log(e)
+        this.$toast('Something went wrong. Please try again.', {
+          type: 'error',
+          timeout: 3000,
+        })
       }
     },
     async getSlackFormInstance() {
@@ -798,6 +879,9 @@ export default {
       } else {
         return `${hours}:${minutes} AM`
       }
+    },
+    customUserLabel(user) {
+      return user.fullName.trim() ? user.fullName : user.email
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -943,6 +1027,7 @@ export default {
   created() {
     this.getAllForms()
     this.getAllMeetingWorkflows()
+    this.getStaffOrgs()
     this.organizations.refresh()
     this.allUsers.refresh()
   },
@@ -1011,22 +1096,6 @@ ul {
   margin: 0;
   padding: 0;
 }
-.form__list_item {
-  padding: 0 2rem 2rem 2rem;
-  border: 1px solid black;
-  border-radius: 0.4rem;
-  width: 30vw;
-  margin: 1rem;
-}
-.sub_text {
-  font-size: 12px;
-  padding-left: 1rem;
-}
-
-.field__list_item {
-  display: flex;
-  flex-direction: column;
-}
 
 .command_dropdown {
   // margin: 2rem;
@@ -1071,42 +1140,6 @@ input[type='search']:focus {
   border: 1px solid #e8e8e8;
   border-radius: 5px;
 }
-.user_title {
-  margin-left: 1rem;
-}
-.user_item_container {
-  border: 1px solid black;
-  margin: 1rem;
-  padding: 0.25rem 1rem;
-  border-radius: 0.4rem;
-
-  h3 {
-    margin: 0;
-  }
-
-  h4 {
-    margin: 0.25rem 0.5rem;
-    overflow-wrap: break-word;
-  }
-}
-.form_field {
-  border: 1px dashed black;
-  border-radius: 0.4rem;
-  margin: 1rem 0;
-  padding: 0.25rem 1rem;
-}
-.form_field_item {
-  margin: 0.5rem 0;
-
-  h3 {
-    margin: 0;
-  }
-
-  h4 {
-    margin: 0.25rem 0.5rem;
-    overflow-wrap: break-word;
-  }
-}
 .back {
   margin: 1rem 0;
   text-decoration: underline;
@@ -1121,19 +1154,19 @@ input[type='search']:focus {
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
 
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    padding-left: 0.75rem;
-    border-bottom: 1px solid #e8e8e8;
-    img {
-      filter: invert(80%);
-      height: 1.25rem;
-      margin-top: 0.75rem;
-      margin-right: 0.5rem;
-      cursor: pointer;
-    }
-  }
+  // &__header {
+  //   display: flex;
+  //   justify-content: space-between;
+  //   padding-left: 0.75rem;
+  //   border-bottom: 1px solid #e8e8e8;
+  //   img {
+  //     filter: invert(80%);
+  //     height: 1.25rem;
+  //     margin-top: 0.75rem;
+  //     margin-right: 0.5rem;
+  //     cursor: pointer;
+  //   }
+  // }
   &__body {
     display: flex;
     flex-direction: column;
@@ -1142,49 +1175,20 @@ input[type='search']:focus {
     padding: 0 1rem;
     min-height: 28vh;
   }
-  &__footer {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    position: sticky;
-    height: 8vh;
-    padding: 0.5rem;
-  }
-}
-
-.email_text_container {
-  display: flex;
-  div {
-    margin: 0.5rem 0.5rem 0.5rem 0;
-  }
-}
-.removed_email {
-  text-decoration: line-through;
-  color: $very-light-gray;
+  // &__footer {
+  //   display: flex;
+  //   align-items: flex-end;
+  //   justify-content: flex-end;
+  //   position: sticky;
+  //   height: 8vh;
+  //   padding: 0.5rem;
+  // }
 }
 .light-back {
   background-color: $white-green;
 }
 .pure-white {
   background-color: #ffffff;
-}
-.big_card_container {
-  border: 1px solid black;
-  border-radius: 0.4rem;
-  box-shadow: 1px 1px 3px black;
-  margin: 1rem;
-  padding: 0.25rem;
-}
-.border-break {
-  border-bottom: 1px solid $very-light-gray;
-}
-.tiny-spacing {
-  h3 {
-    margin: 0.25rem 0;
-  }
-  h4 {
-    margin: 0.25rem 0;
-  }
 }
 .click {
   cursor: pointer;
@@ -1200,9 +1204,6 @@ input[type='search']:focus {
 }
 .padding {
   padding: 0.25rem 1rem;
-}
-.rel {
-  position: relative;
 }
 .flex-row-spread {
   display: flex;
@@ -1239,18 +1240,6 @@ input[type='search']:focus {
   margin-right: 0.25rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
-}
-.note-border {
-  border: 1px solid $very-light-gray;
-  border-radius: 6px;
-  padding: 4px;
-  margin: 0px 6px;
-  font-size: 12px;
-}
-.light-green-bg {
-  background-color: $white-green;
-  color: $dark-green !important;
-  border: 1px solid $dark-green !important;
 }
 .note-section {
   padding: 0.25rem 1rem;

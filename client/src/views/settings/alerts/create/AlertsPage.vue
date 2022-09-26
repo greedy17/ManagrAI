@@ -262,7 +262,7 @@
           "
         >
           <div class="card__header">
-            <h3>Update Forecast</h3>
+            <h3>90 Day Pipeline</h3>
           </div>
 
           <div class="card__body">
@@ -287,7 +287,7 @@
           <div class="card__footer">
             <button
               v-if="
-                hasSalesforceIntegration && !user.activatedTemplateRef.includes('Update Forecast')
+                hasSalesforceIntegration && !user.activatedTemplateRef.includes('90 Day Pipeline')
               "
               @click="goToUpdateForecast"
               class="orange_button"
@@ -297,7 +297,7 @@
             <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
             <h4
               class="active-workflow"
-              v-else-if="user.activatedTemplateRef.includes('Update Forecast')"
+              v-else-if="user.activatedTemplateRef.includes('90 Day Pipeline')"
             >
               Active <img src="@/assets/images/configCheck.svg" alt="" />
             </h4>
@@ -315,7 +315,7 @@
           "
         >
           <div class="card__header">
-            <h3>Deal Rotting</h3>
+            <h3>Deal Review</h3>
           </div>
 
           <div class="card__body">
@@ -338,7 +338,7 @@
 
           <div class="card__footer">
             <button
-              v-if="hasSalesforceIntegration && !user.activatedTemplateRef.includes('Deal Rotting')"
+              v-if="hasSalesforceIntegration && !user.activatedTemplateRef.includes('Deal Review')"
               @click="goToDealRotting"
               class="orange_button"
             >
@@ -347,7 +347,7 @@
             <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
             <h4
               class="active-workflow"
-              v-else-if="user.activatedTemplateRef.includes('Deal Rotting')"
+              v-else-if="user.activatedTemplateRef.includes('Deal Review')"
             >
               Active <img src="@/assets/images/configCheck.svg" alt="" />
             </h4>

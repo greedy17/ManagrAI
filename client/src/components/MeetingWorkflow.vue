@@ -32,7 +32,7 @@
       />
     </section>
 
-    <!-- <div class="cards__scroll">
+    <div class="cards__scroll">
       <div
         v-for="(participant, participantIndex) in participants"
         :key="participantIndex"
@@ -112,7 +112,7 @@
                   @search-change="$emit('filter-accounts', $event)"
                   @select="setUpdateValues(field.apiName, $event.id)"
                   v-model="selectedAccount"
-                  style="width: 14vw"
+                  style="width: 42vw"
                   :options="accounts"
                   openDirection="below"
                   selectLabel="Enter"
@@ -120,14 +120,14 @@
                   track-by="id"
                 >
                   <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
+                    <small class="multi-slot">No results.</small>
                   </template>
                 </Multiselect>
 
                 <Multiselect
                   v-if="field.apiName === 'OwnerId'"
                   placeholder="Select Owner"
-                  style="width: 14vw"
+                  style="width: 42vw"
                   v-model="selectedOwner"
                   @select="
                     setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
@@ -139,7 +139,7 @@
                   track-by="id"
                 >
                   <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
+                    <small class="multi-slot">No results.</small>
                   </template>
                 </Multiselect>
               </div>
@@ -151,7 +151,7 @@
                   (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                 "
               >
-                <p>{{ field.dataType }}:</p>
+                <p>{{ field.referenceDisplayLabel }}:</p>
                 <Multiselect
                   v-model="dropdownVal[field.apiName]"
                   :options="
@@ -162,10 +162,7 @@
                   @select="
                     setUpdateValues(
                       field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                        ? $event.value
-                        : $event.id,
-                      field.dataType === 'MultiPicklist' ? true : false,
+                      $event.id ? $event.id : $event.value,
                     )
                   "
                   @search-change="
@@ -175,7 +172,7 @@
                   "
                   :loading="dropdownLoading"
                   openDirection="below"
-                  style="width: 14vw"
+                  style="width: 42vw"
                   selectLabel="Enter"
                   :multiple="field.dataType === 'MultiPicklist' ? true : false"
                   :track-by="
@@ -190,13 +187,24 @@
                   "
                 >
                   <template v-slot:noResult>
-                    <p class="multi-slot">No results. Try loading more</p>
+                    <small class="multi-slot">No results. Try loading more</small>
                   </template>
                   <template v-slot:placeholder>
-                    <p class="slot-icon">
+                    <small class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      {{ field.referenceDisplayLabel }}
-                    </p>
+                      {{
+                        `${
+                          meeting.participants[participantIndex].secondary_data[field.apiName]
+                        }` === 'null' ||
+                        `${
+                          meeting.participants[participantIndex].secondary_data[field.apiName]
+                        }` === 'undefined'
+                          ? `${field.referenceDisplayLabel}`
+                          : `${
+                              meeting.participants[participantIndex].secondary_data[field.apiName]
+                            }`
+                      }}
+                    </small>
                   </template>
                 </Multiselect>
               </div>
@@ -212,7 +220,7 @@
                   @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                   ccols="30"
                   rows="4"
-                  style="width: 26.25vw; border-radius: 0.4rem; padding: 7px"
+                  style="width: 42vw; border-radius: 0.4rem; padding: 7px"
                 >
                 </textarea>
 
@@ -367,7 +375,8 @@
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
+    -->
 
     <div class="cards__header">
       <img src="@/assets/images/link.svg" height="15px" alt="" />
@@ -650,7 +659,7 @@ export default {
       this.loadingAccounts = true
       try {
         const res = await SObjects.api.getObjects(this.mapType, 1, true, [
-          ['CONTAINS', 'Name', name],
+          ['CONTAINS', this.mapType === 'Contact' ? 'Email' : 'Name', name],
         ])
         this.allOpps = res.results
       } catch (e) {
@@ -694,6 +703,7 @@ export default {
       }
     },
     setUpdateValues(key, val) {
+      console.log(key, val)
       if (val) {
         this.formData[key] = val
       }
@@ -711,7 +721,6 @@ export default {
       this.selectedIndex = index
     },
     selectOpp(val) {
-      console.log(val)
       this.resource = val.id
       // this.$emit('change-resource', this.resourceType)
       this.mappedOpp = null
@@ -926,7 +935,7 @@ input {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 14vw;
+  width: 42vw;
 }
 .link {
   border-bottom: 2px solid $dark-green;
@@ -1043,9 +1052,10 @@ a {
   top: 0;
   border-radius: 8px;
   background-color: $white;
-  width: 46vw;
+  min-width: 46vw;
   overflow: scroll;
-  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  box-shadow: 2px 2px 3px 2px $very-light-gray;
+  max-height: 50vh;
   &__title {
     display: flex;
     justify-content: space-between;
@@ -1055,23 +1065,38 @@ a {
     background-color: $off-white;
     letter-spacing: 0.4px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
     width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 2;
   }
   &__body {
+    p {
+      background-color: $white-green;
+      color: $dark-green;
+      width: fit-content;
+      padding: 4px 8px;
+      margin: 16px 0px 0px 0px;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      margin-left: 1px;
+    }
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin: 0.5rem;
-    gap: 0.5rem;
-    flex-direction: row;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    margin: 8px;
+    flex-direction: column;
     overflow: scroll;
   }
   &__footer {
     display: flex;
     align-items: center;
     justify-content: space-around;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background-color: white;
     margin-top: 0.5rem;
     padding: 0.75rem 0.5rem;
     width: 100%;

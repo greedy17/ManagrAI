@@ -900,6 +900,7 @@ export default {
       }
     },
     async addParticipant(workflow, participant, data) {
+      console.log(data)
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api

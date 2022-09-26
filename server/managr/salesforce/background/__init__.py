@@ -1,5 +1,6 @@
 import logging
 import re
+import sched
 import pytz
 import time
 import random
@@ -163,8 +164,12 @@ def emit_add_products_to_sf(workflow_id, *args):
     return _process_add_products_to_sf(workflow_id, *args)
 
 
-def emit_generate_form_template(user_id):
-    return _generate_form_template(user_id)
+def emit_generate_form_template(user_id, delete_forms=False, schedule=timezone.now()):
+    return _generate_form_template(user_id, delete_forms, schedule=schedule)
+
+
+def emit_generate_team_form_templates(user_id):
+    return _generate_team_form_templates(user_id)
 
 
 def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):
@@ -224,31 +229,60 @@ def _process_gen_next_object_field_sync(user_id, operations_list, for_dev):
     ).begin_tasks(for_dev)
 
 
-@background()
+@background(schedule=0)
 @log_all_exceptions
-def _generate_form_template(user_id):
+def _generate_form_template(user_id, delete_forms):
     user = User.objects.get(id=user_id)
     org = user.organization
     # delete all existing forms
-
-    org.custom_slack_forms.all().delete()
+    if delete_forms:
+        org.custom_slack_forms.all().delete()
+    form_check = user.team.team_forms.all()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
+        if len(form_check) > 0:
+            f = form_check.filter(resource=resource, form_type=form_type).first()
+            f.recreate_form()
+        else:
+            f = OrgCustomSlackForm.objects.create(
+                form_type=form_type, resource=resource, organization=org, team=user.team
+            )
+            public_fields = SObjectField.objects.filter(
+                is_public=True,
+                id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
+            )
+            note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5035").first()
+            note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af1").first()
+            for i, field in enumerate(public_fields):
+                if i == 0 and note_subject is not None:
+                    f.fields.add(note_subject, through_defaults={"order": i})
+                elif i == 1 and note is not None:
+                    f.fields.add(note, through_defaults={"order": i})
+            f.save()
+
+
+@background()
+@log_all_exceptions
+def _generate_team_form_templates(user_id):
+    from managr.organization.models import Team
+
+    user = User.objects.get(id=user_id)
+    org = user.organization
+    team_ref = (
+        Team.objects.filter(organization=user.organization).order_by("datetime_created").first()
+    )
+    forms = team_ref.team_forms.all()
+    for form in forms:
         f = OrgCustomSlackForm.objects.create(
-            form_type=form_type, resource=resource, organization=org
+            form_type=form.form_type,
+            resource=form.resource,
+            organization=org,
+            team=user.team,
+            config=form.config,
+            stage=form.stage,
         )
-        public_fields = SObjectField.objects.filter(
-            is_public=True,
-            id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
-        )
-        note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5035").first()
-        note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af1").first()
-        for i, field in enumerate(public_fields):
-            if i == 0 and note_subject is not None:
-                f.fields.add(note_subject, through_defaults={"order": i})
-            elif i == 1 and note is not None:
-                f.fields.add(note, through_defaults={"order": i})
-        f.save()
+        if len(f.config):
+            f.recreate_form()
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
@@ -552,7 +586,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             if len(user.slack_integration.recap_receivers):
                 _send_recap(update_form_ids, None, True)
             raise e
-
+    value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
     # push to sf
@@ -772,6 +806,7 @@ def _process_add_update_to_sf(form_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
+
     return
 
 
@@ -851,11 +886,11 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
             _send_instant_alert(form_ids)
         forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        from_workflow = data.get("from_workflow")
-        title = data.get("workflow_title", None)
-        if from_workflow:
-            user.activity.increment_untouched_count("workflows")
-            user.activity.add_workflow_activity(str(main_form.id), title)
+        # from_workflow = data.get("from_workflow")
+        # title = data.get("workflow_title", None)
+        # if from_workflow:
+        #     user.activity.increment_untouched_count("workflows")
+        #     user.activity.add_workflow_activity(str(main_form.id), title)
     return
 
 

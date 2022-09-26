@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.DEAL_ROTTING" />
+  <PopularWorkflows :config="allConfigs.DEAL_REVIEW" />
 </template>
 
 <script>

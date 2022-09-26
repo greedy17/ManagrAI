@@ -8,8 +8,8 @@
           <div class="tab-content">
             <section>
               <div>
-                <p class="form-type">
-                  Update Form Builder
+                <p @click="switchFormType" class="form-type">
+                  {{ camelize(formType) }} Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -786,6 +786,7 @@ export default {
   },
   data() {
     return {
+      allForms: null,
       filterText: '',
       dropdownLoading: false,
       currentStageForm: null,
@@ -1111,9 +1112,11 @@ export default {
   },
   computed: {
     filteredFields() {
-      return this.formFields.list.filter((field) =>
-        field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
-      )
+      return this.formFields.list
+        .filter((field) =>
+          field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
+        )
+        .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     currentFields() {
       return this.customForm ? this.customForm.fields : []
@@ -1148,17 +1151,15 @@ export default {
       return this.$store.state.user.organizationRef.hasProducts
     },
   },
-  created() {
+  async created() {
     this.getActionChoices()
+    this.allForms = await SlackOAuth.api.getOrgCustomForm()
   },
   methods: {
-    // filterFields() {
-    //   this.formFields.list.filter((field) =>
-    //     field.referenceDisplayLabel.includes(this.filterText.toLowerCase()),
-    //   )
-    // },
-    test() {
-      console.log(this.formFields.list)
+    switchFormType() {
+      this.customForm = this.allForms.find(
+        (f) => f.resource == this.OPPORTUNITY && f.formType == this.CREATE,
+      )
     },
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
