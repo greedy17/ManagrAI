@@ -2077,6 +2077,15 @@ def process_paginate_alerts(payload, context):
     alert_text = alert_template.title
     blocks = [
         block_builders.header_block(f"{len(alert_instances)} results for workflow {alert_text}"),
+        block_builders.section_with_button_block(
+            "Choose CRM Field",
+            "bulk_update",
+            "Update in Bulk",
+            action_id=action_with_params(
+                slack_const.PROCESS_BULK_UPDATE,
+                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}"],
+            ),
+        ),
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
     for alert_instance in alert_instances.get("results", []):
@@ -2356,6 +2365,104 @@ def process_alert_actions(payload, context):
     else:
         context["type"] = "alert"
     return alert_action_switcher[selected](payload, context)
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_show_bulk_update_form(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    config_id = context.get("config_id")
+    invocation = context.get("invocation")
+    config_list = list(
+        AlertInstance.objects.filter(config_id=config_id, invocation=invocation).values_list(
+            "resource_id", flat=True
+        )
+    )
+    opps_list = Opportunity.objects.filter(id__in=config_list).values_list("name", "id")
+    opp_options = [block_builders.option(opp[0], str(opp[1])) for opp in opps_list]
+    form = user.team.team_forms.filter(form_type="UPDATE", resource="Opportunity").first()
+    fields = form.to_slack_options()
+    blocks = [
+        block_builders.static_select(
+            "Fields",
+            options=fields,
+            action_id=action_with_params(
+                slack_const.CHOOSE_CRM_FIELD, params=[f"u={str(user.id)}",],
+            ),
+            block_id="CRM_FIELDS",
+        ),
+        block_builders.multi_static_select(
+            label="Opportunities",
+            options=opp_options,
+            initial_options=opp_options,
+            block_id="OPPS",
+            action_id="SELECTED_OPPS",
+        ),
+    ]
+    data = {
+        "message_ts": payload["container"]["message_ts"],
+        "channel_id": payload["container"]["channel_id"],
+    }
+    loading_view_data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Bulk Update"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(data),
+        },
+    }
+
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+        loading_view_data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_select_crm_field(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload["view"]["private_metadata"])
+    view_id = payload["view"]["id"]
+    action = payload["actions"][0]
+    blocks = payload["view"]["blocks"]
+    selected_value = action["selected_option"]["value"]
+    field = user.salesforce_account.object_fields.filter(api_name=selected_value).first()
+    try:
+        f_index, f_block = block_finder("CRM_FIELD", blocks)
+    except ValueError:
+        # did not find the block
+        f_block = None
+        pass
+    index, block = block_finder("CRM_FIELDS", blocks)
+    slack_field = field.to_slack_field()
+    slack_field["block_id"] = "CRM_FIELD"
+    if f_block:
+        blocks = [*blocks[:f_index], slack_field, *blocks[f_index + 1 :]]
+    else:
+        blocks.insert(index + 1, slack_field)
+    pm.update(**context)
+    print(pm)
+    loading_view_data = {
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Bulk Update"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Bulk Update", "emoji": True},
+            "private_metadata": json.dumps(pm),
+            "callback_id": slack_const.PROCESS_SUBMIT_BULK_UPDATE,
+        },
+    }
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        loading_view_data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
 
 
 #########################################################
@@ -3017,6 +3124,8 @@ def handle_block_actions(payload):
         slack_const.COMMAND_LOG_NEW_ACTIVITY: process_log_activity,
         slack_const.PROCESS_ALERT_ACTIONS: process_alert_actions,
         slack_const.SHOW_INITIAL_MEETING_INTERACTION: show_initial_meeting_interaction,
+        slack_const.PROCESS_BULK_UPDATE: process_show_bulk_update_form,
+        slack_const.CHOOSE_CRM_FIELD: process_select_crm_field,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
@@ -3025,5 +3134,4 @@ def handle_block_actions(payload):
     # added special key __block_action to allow us to override the defaults since the action_id is used for both the suggestions and the actions
     if action_params.get("__block_action", None):
         action_id = action_params.get("__block_action")
-
     return switcher.get(action_id, NO_OP)(payload, action_params)
