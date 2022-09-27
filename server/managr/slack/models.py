@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
-
+from managr.slack.helpers import block_builders
 from managr.salesforce.models import SObjectField
 from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
 
@@ -232,6 +232,11 @@ class OrgCustomSlackForm(TimeStampModel):
                     through_defaults={"order": field[0], "include_in_recap": True,},
                 )
         return self.save()
+
+    def to_slack_options(self):
+        filtered_fields = self.fields.filter(is_public=False)
+        options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
+        return options
 
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):

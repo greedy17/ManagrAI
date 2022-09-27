@@ -1,7 +1,4 @@
-import pdb
-from time import strftime
 import pytz
-import uuid
 import json
 import logging
 
@@ -31,9 +28,9 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 logger = logging.getLogger("managr")
 
 
-def _initial_interaction_message(resource_name=None, resource_type=None):
+def _initial_interaction_message(resource_name=None, resource_type=None, meeting_title=None):
     if not resource_type:
-        return f"*New Task:* Log your meeting"
+        return f"*New Task:* Log your meeting :calendar: *{meeting_title}*"
 
     return f"*New Task:* Log your meeting {resource_type} *{resource_name}*"
 
@@ -179,7 +176,7 @@ def meeting_contacts_block_set(context):
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":exclamation: *Attendees below will be saved as Contacts*", "mrkdwn",
+                    ":busts_in_silhouette: *Attendees below will be saved as Contacts*", "mrkdwn",
                 )
             ]
         )
@@ -243,7 +240,7 @@ def meeting_contacts_block_set(context):
         block_sets.extend(
             [
                 block_builders.simple_section(
-                    ":dart: *Attendees below are already saved as Contacts*", "mrkdwn",
+                    ":cloud: *Attendees below are already saved as Contacts*", "mrkdwn",
                 ),
             ]
         )
@@ -409,7 +406,7 @@ def initial_meeting_interaction_block_set(context):
     title_section_text = (
         _initial_interaction_message(resource.name, workflow.resource_type)
         if workflow.resource_type
-        else _initial_interaction_message()
+        else _initial_interaction_message(meeting_title=meeting.topic)
     )
     title_section = block_builders.simple_section(title_section_text, "mrkdwn")
 

@@ -2139,6 +2139,7 @@
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
             :picklistOpts="allPicklistOptions"
+            :referenceOpts="referenceOpts"
             :opp="opp"
             :index="i"
             :oppFields="oppFields"
@@ -2192,6 +2193,7 @@
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
             :picklistOpts="allPicklistOptions"
+            :referenceOpts="referenceOpts"
             :workflow="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
@@ -2430,7 +2432,7 @@ export default {
       filterFields: [],
       filterApiName: null,
       filterValues: [],
-      filters: [],
+      filters: [["NOT_EQUALS", "StageName", "Closed Won"], ["NOT_EQUALS", "StageName", "Closed Lost"]],
       operatorsLength: 0,
       stageGateId: null,
       forecastList: [],
@@ -2816,13 +2818,6 @@ export default {
       this.stageId = null
       this.stageIntegrationId = null
     },
-    async getAllReferencePicklists() {
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues()
-      } catch (e) {
-        console.log(e)
-      }
-    },
     async getReferenceFieldList(key, val, type, eventVal, filter) {
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
@@ -2868,57 +2863,47 @@ export default {
             from_workflow: this.selectedWorkflow ? true : false,
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           })
-          .then(async () => {
-            if (this.filterText) {
-              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ...this.filters,
-                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-              ])
-              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-              this.allOppsForWorkflows = wfr.results
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-              this.oppTotal = updatedRes.count
-              this.currentPage = 1
-            } else {
-              let updatedRes
-              if (this.filters.length) {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-              } else {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
-              }
-              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-              this.allOppsForWorkflows = wfr.results
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-              this.oppTotal = updatedRes.count
-              this.currentPage = 1
-            }
-            if (this.selectedWorkflow) {
-              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-            }
-            if (this.storedFilters.length && !this.selectedWorkflow) {
-              this.storedFilters[3].reversed
-                ? this.sortOppsReverse(
-                    this.storedFilters[0],
-                    this.storedFilters[1],
-                    this.storedFilters[2],
-                  )
-                : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-            }
-            // if (this.activeFilters.length) {
-            //   this.getFilteredObjects(this.updateFilterValue)
-            // }
-            if (this.currentList === 'Closing this month') {
-              this.stillThisMonth()
-            } else if (this.currentList === 'Closing next month') {
-              this.stillNextMonth()
-            }
-          })
+        if (this.filterText) {
+          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+          this.allOppsForWorkflows = wfr.results
+          this.allOpps = updatedRes.results
+          this.originalList = updatedRes.results
+          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = updatedRes.count
+          this.currentPage = 1
+        } else {
+          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+          this.allOppsForWorkflows = wfr.results
+          this.allOpps = updatedRes.results
+          this.originalList = updatedRes.results
+          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = updatedRes.count
+          this.currentPage = 1
+        }
+        if (this.selectedWorkflow) {
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+        }
+        if (this.storedFilters.length && !this.selectedWorkflow) {
+          this.storedFilters[3].reversed
+            ? this.sortOppsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+        }
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -2956,7 +2941,7 @@ export default {
       this.operatorValue = null
       this.currentOperator = []
       this.filterValues = []
-      this.filters = []
+      this.filters = [["NOT_EQUALS", "StageName", "Closed Won"], ["NOT_EQUALS", "StageName", "Closed Lost"]]
     },
     closeListSelect() {
       this.showList = false
@@ -3646,12 +3631,7 @@ export default {
     async updateOpps() {
       try {
         if (!this.filterText) {
-          let res
-          if (this.filters.length) {
-            res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-          } else {
-            res = await SObjects.api.getObjects('Opportunity', 1)
-          }
+          let res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
           this.allOpps = res.results
           this.originalList = res.results
           res.next ? (this.hasNext = true) : (this.hasNext = false)
@@ -3756,49 +3736,42 @@ export default {
             integration_ids: [this.stageIntegrationId],
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
-          .then(async () => {
-            if (this.filterText) {
-              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ...this.filters,
-                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-              ])
-              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-              this.allOppsForWorkflows = wfr.results
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-              this.oppTotal = updatedRes.count
-              this.currentPage = 1
-            } else {
-              let updatedRes
-              if (this.filters.length) {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-              } else {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
-              }
-              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-              this.allOppsForWorkflows = wfr.results
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-              this.oppTotal = updatedRes.count
-              this.currentPage = 1
-            }
+        if (this.filterText) {
+          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+          this.allOppsForWorkflows = wfr.results
+          this.allOpps = updatedRes.results
+          this.originalList = updatedRes.results
+          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = updatedRes.count
+          this.currentPage = 1
+        } else {
+          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+          this.allOppsForWorkflows = wfr.results
+          this.allOpps = updatedRes.results
+          this.originalList = updatedRes.results
+          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = updatedRes.count
+          this.currentPage = 1
+        }
 
-            if (this.selectedWorkflow) {
-              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-            }
-            if (this.activeFilters.length) {
-              this.getFilteredObjects(this.updateFilterValue)
-            }
-            if (this.currentList === 'Closing this month') {
-              this.stillThisMonth()
-            } else if (this.currentList === 'Closing next month') {
-              this.stillNextMonth()
-            }
-          })
+        if (this.selectedWorkflow) {
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+        }
+        if (this.activeFilters.length) {
+          this.getFilteredObjects(this.updateFilterValue)
+        }
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -3869,13 +3842,11 @@ export default {
             resource_id: this.productId,
             stage_name: null,
           })
-          .then(async (res) => {
-            const res2 = await SObjects.api.getCurrentValues({
-              resourceType: 'Opportunity',
-              resourceId: this.oppId,
-            })
-            this.currentProducts = res2.current_products
-          })
+        const res2 = await SObjects.api.getCurrentValues({
+          resourceType: 'Opportunity',
+          resourceId: this.oppId,
+        })
+        this.currentProducts = res2.current_products
         this.$toast('Product updated successfully', {
           timeout: 2000,
           position: 'top-left',
@@ -3912,51 +3883,42 @@ export default {
             resource_id: this.oppId,
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
-          .then(async () => {
-            if (this.filterText) {
-              let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                ...this.filters,
-                ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-              ])
-              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-              this.allOppsForWorkflows = wfr.results
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-              this.oppTotal = updatedRes.count
-              this.currentPage = 1
-            } else {
-              let updatedRes
-              if (this.filters.length) {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
-                  ...this.filters,
-                ])
-              } else {
-                updatedRes = await SObjects.api.getObjects('Opportunity', 1)
-              }
-              let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-              this.allOppsForWorkflows = wfr.results
-              this.allOpps = updatedRes.results
-              this.originalList = updatedRes.results
-              updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-              updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
-              this.oppTotal = updatedRes.count
-              this.currentPage = 1
-            }
+        if (this.filterText) {
+          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+          this.allOppsForWorkflows = wfr.results
+          this.allOpps = updatedRes.results
+          this.originalList = updatedRes.results
+          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = updatedRes.count
+          this.currentPage = 1
+        } else {
+          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [...this.filters,])
+          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
+          this.allOppsForWorkflows = wfr.results
+          this.allOpps = updatedRes.results
+          this.originalList = updatedRes.results
+          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
+          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+          this.oppTotal = updatedRes.count
+          this.currentPage = 1
+        }
 
-            if (this.selectedWorkflow) {
-              this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-            }
-            if (this.activeFilters.length) {
-              this.getFilteredObjects(this.updateFilterValue)
-            }
-            if (this.currentList === 'Closing this month') {
-              this.stillThisMonth()
-            } else if (this.currentList === 'Closing next month') {
-              this.stillNextMonth()
-            }
-          })
+        if (this.selectedWorkflow) {
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+        }
+        if (this.activeFilters.length) {
+          this.getFilteredObjects(this.updateFilterValue)
+        }
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
+        }
         this.$toast('Salesforce Update Successful', {
           timeout: 2000,
           position: 'top-left',
@@ -3988,34 +3950,27 @@ export default {
             resource_type: 'Opportunity',
             stage_name: this.stageGateField ? this.stageGateField : null,
           })
-          .then(async (res) => {
-            if (product) {
-              this.createProduct(res.integration_id)
-            }
-            let filter
-            if (this.filters.length) {
-              filter = this.filterText
-                ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
-                : this.filters
-            }
-            let updatedRes
-            if (filter.length) {
-              updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, filter)
-            } else {
-              updatedRes = await SObjects.api.getObjects('Opportunity')
-            }
-            this.allOpps = updatedRes.results
-            this.originalList = updatedRes.results
-            if (this.storedFilters.length) {
-              this.storedFilters[3].reversed
-                ? this.sortOppsReverse(
-                    this.storedFilters[0],
-                    this.storedFilters[1],
-                    this.storedFilters[2],
-                  )
-                : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-            }
-          })
+        if (product) {
+          this.createProduct(res.integration_id)
+        }
+        let filter = []
+        if (this.filters.length) {
+          filter = this.filterText
+            ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
+            : this.filters
+        }
+        let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, filter)
+        this.allOpps = updatedRes.results
+        this.originalList = updatedRes.results
+        if (this.storedFilters.length) {
+          this.storedFilters[3].reversed
+            ? this.sortOppsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
+            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+        }
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
           position: 'top-left',
@@ -4307,7 +4262,7 @@ export default {
       this.currentPage = page
       this.loading = true
       try {
-        const res = await SObjects.api.getObjects('Opportunity', page)
+        const res = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
         this.allOpps = res.results
         this.originalList = res.results
         res.next ? (this.hasNext = true) : (this.hasNext = false)

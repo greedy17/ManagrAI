@@ -192,6 +192,10 @@ def emit_process_update_resources_in_salesforce(
     )
 
 
+def emit_process_slack_bulk_update(user, resource_ids, data, message_ts, channel_id):
+    return _process_slack_bulk_update(user, resource_ids, data, message_ts, channel_id)
+
+
 # SF Resource Sync Tasks
 
 
@@ -1796,3 +1800,118 @@ def _update_current_db_values(user_id, resource_type, integration_id):
         logger.info(f"Successfully {resource} in the Database for user {user.email}")
     return
 
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_id):
+    user = User.objects.get(id=user_id)
+    instance_data = {
+        "resource_type": "Opportunity",
+        "form_type": "UPDATE",
+        "user": user,
+        "stage_name": None,
+    }
+
+    bulk_form_ids = []
+    for id in resource_ids:
+        instance_data["resource_id"] = id
+        form_id = create_form_instance(**instance_data)
+        bulk_form_ids.extend(form_id)
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=bulk_form_ids)
+    success_opps = 0
+    error = False
+    error_message = None
+    for form in forms:
+        form.save_form(data, False)
+        all_form_data = form.saved_data
+        formatted_saved_data = process_text_field_format(
+            str(user.id), form.template.resource, all_form_data
+        )
+        attempts = 1
+
+        while True:
+            sf = user.salesforce_account
+            try:
+                resource = form.resource_object.update_in_salesforce(all_form_data)
+                form.is_submitted = True
+                form.update_source = "slack-bulk"
+                form.submission_date = timezone.now()
+                form.save()
+                value_update = form.resource_object.update_database_values(all_form_data)
+                success_opps += 1
+                break
+            except FieldValidationError as e:
+                logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+
+            except RequiredFieldError as e:
+                logger.info(f"UPDATE REQUIRED FIELD ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+            except UnhandledSalesforceError as e:
+                logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+
+            except SFNotFoundError as e:
+                logger.info(f"UPDATE SF NOT FOUND ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+
+            except TokenExpired as e:
+                if attempts >= 5:
+                    logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
+                    error = True
+                    error_message = str(e)
+                    break
+                else:
+                    if form.resource_object.owner == user:
+                        sf.regenerate_token()
+                    else:
+                        form.resource_object.owner.salesforce_account.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError as e:
+                if attempts >= 5:
+                    logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
+                    error = True
+                    error_message = str(e)
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+
+            except Exception as e:
+                logger.info(f"UPDATE ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+    if error:
+        block_set = [
+            block_builders.simple_section(
+                f":no_entry: Ugh-Ohhhh.. We've hit an error: {error_message}"
+            )
+        ]
+    else:
+        logger.info(
+            f"Successfully updated {success_opps}/{len(forms)} Opportunties for user {user.email}"
+        )
+        block_set = [
+            block_builders.simple_section(
+                ":white_check_mark: Successfully bulk updated your Opportunties", "mrkdwn"
+            )
+        ]
+    try:
+        res = slack_requests.update_channel_message(
+            channel_id,
+            message_ts,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+    except Exception as e:
+        logger.exception(f"Failed To Bulk Update Salesforce Data {e}")
