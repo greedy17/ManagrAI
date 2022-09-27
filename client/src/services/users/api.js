@@ -127,7 +127,7 @@ export default class UserAPI {
 
   uninvite(id) {
     console.log('uninvite', id)
-    const data = {remove_id: id}
+    const data = { remove_id: id }
     const promise = apiClient()
       .post(UNINVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
@@ -299,7 +299,6 @@ export default class UserAPI {
     }
     try {
       let res = await this.client.post(url, data)
-      console.log(res)
       return res.data
     } catch (e) {
       console.log(e)
@@ -356,7 +355,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_ORGANIZATIONS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffOrganizations' })
     }
   }
@@ -364,7 +363,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_WORKFLOWS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffWorkflows' })
     }
   }
@@ -372,7 +371,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_FORMS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffForms' })
     }
   }
@@ -380,7 +379,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_SOBJECTS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffSObjects' })
     }
   }
