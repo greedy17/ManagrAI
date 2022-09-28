@@ -401,12 +401,12 @@
             <div v-for="(orgItem, j) in content.orgs" :key="`item${j}`">
               <div>Name: {{orgItem.name}}</div>
               <div>
-                Org: Session Avg: {{orgItem['session average']}} | Avg Total Sessions: {{orgItem['average total sessions']}} | Updates: {{orgItem['updates']}} | Creates: {{orgItem['creates']}}
+                Org: Avg Updates per Session: {{Number(orgItem['session average']).toFixed(2)}} | Avg Total Sessions: {{orgItem['average total sessions']}} | Updates: {{orgItem['updates']}} | Creates: {{orgItem['creates']}}
               </div>
               <div>
                 <h4 style="margin-top: 1rem; margin-bottom: 0.25rem;">Users:</h4>
                 <div v-for="(user, k) in orgItem.users" :key="`users${k}`">
-                  <div>{{user.userName}} - Session Avg: {{user['session average']}} | Total Sessions: {{user['total sessions']}} | Updates: {{user['updates']}} | Creates: {{user['creates']}}</div>
+                  <div>{{user.userName}} - Avg Updates per Session: {{Number(user['session average']).toFixed(2)}} | Total Sessions: {{user['total sessions']}} | Updates: {{user['updates']}} | Creates: {{user['creates']}}</div>
                 </div>
               </div>
               <div class="separator"></div>
@@ -991,16 +991,48 @@ export default {
       })
     },
     getObjString(obj, i) {
+      console.log('obj', obj)
+      const orgs = obj.orgs
+      let orgsString = ''
+      for (let key in orgs) {
+        const org = orgs[key]
+        const users = org.users
+        let usersStr = '{'
+        for (let key2 in users) {
+          const user = users[key2]
+          usersStr += `
+          ${key2}: {
+            creates: ${user['creates']},
+            session average: ${user['session average']},
+            total sessions: ${user['total sessions']},
+            updates: ${user['updates']},
+            userName: ${user['userName']},
+          },`
+        }
+        usersStr = usersStr.slice(0, usersStr.length-1)
+        usersStr += `
+          }`
+        orgsString += `
+        ${key}: {
+          average total sessions: ${org['average total sessions']},
+          creates: ${org['creates']},
+          name: ${org['name']},
+          session average: ${org['session average']},
+          updates: ${org['updates']},
+          users: ${usersStr},
+        },`
+      }
       const stringObj = `
       ${i}: {
-        creates: {
+        date: ${obj.date},
+        total: {
+          creates: {
             accounts: ${obj.total.creates.accounts}
             contacts: ${obj.total.creates.contacts}
             opportunities: ${obj.total.creates.opportunities}
             products: ${obj.total.creates.products}
             total: ${obj.total.creates.total}
           }
-          date: ${obj.date}
           updates: {
             alert: ${obj.total.updates.alert}
             command: ${obj.total.updates.command}
@@ -1010,8 +1042,10 @@ export default {
           }
           users: ${obj.total.users}
           workflows: ${obj.total.workflows}
-        }
-      }
+        },
+        orgs: {${orgsString}
+        },
+      },
       `
       return stringObj
     },
