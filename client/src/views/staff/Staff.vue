@@ -382,18 +382,18 @@
               </button>
             </div>
             <div>
-              <div class="">Users: {{ content.total && content.total.users !== null ? content.total.users : 'None' }}</div>
-              <div class="">Workflows: {{ content.total && content.total.workflows !== null ? content.total.workflows : 'None' }}</div>
-              <div class="">Accounts Created: {{ content.total && content.total.creates.accounts !== null ? content.total.creates.accounts : 'None' }}</div>
-              <div class="">Contacts Created: {{ content.total && content.total.creates.contacts !== null ? content.total.creates.contacts : 'None' }}</div>
-              <div class="">Opportunities Created: {{ content.total && content.total.creates.opportunities !== null ? content.total.creates.opportunities : 'null' }}</div>
-              <div class="">Products Created: {{ content.total && content.total.creates.products !== null ? content.total.creates.products : 'None' }}</div>
-              <div class="">Total Created: {{ content.total && content.total.creates.total !== null ? content.total.creates.total : 'None' }}</div>
-              <div class="">Alert Updates: {{ content.total && content.total.updates.alert !== null ? content.total.updates.alert : 'None' }}</div>
-              <div class="">Command Updates: {{ content.total && content.total.updates.command !== null ? content.total.updates.command : 'None' }}</div>
-              <div class="">Meeting Updates: {{ content.total && content.total.updates.meeting !== null ? content.total.updates.meeting : 'None' }}</div>
-              <div class="">Pipeline Updates: {{ content.total && content.total.updates.pipeline !== null ? content.total.updates.pipeline : 'None' }}</div>
-              <div class="">Total Updates: {{ content.total && content.total.updates.total !== null ? content.total.updates.total : 'None' }}</div>
+              <div style="margin-bottom: 0.5rem;"><span class="">Users:</span> {{ content.total && content.total.users !== null ? content.total.users : 'None' }} |
+                <span class="">Workflows:</span> {{ content.total && content.total.workflows !== null ? content.total.workflows : 'None' }} </div>
+              <div><span class="">Accounts Created:</span> {{ content.total && content.total.creates.accounts !== null ? content.total.creates.accounts : 'None' }} |
+                <span class="">Contacts Created:</span> {{ content.total && content.total.creates.contacts !== null ? content.total.creates.contacts : 'None' }} | </div>
+              <div style="margin-bottom: 0.5rem;"><span class="">Opportunities Created:</span> {{ content.total && content.total.creates.opportunities !== null ? content.total.creates.opportunities : 'null' }} |
+                <span class="">Products Created:</span> {{ content.total && content.total.creates.products !== null ? content.total.creates.products : 'None' }} |
+                <span class="">Total Created:</span> {{ content.total && content.total.creates.total !== null ? content.total.creates.total : 'None' }}</div>
+              <div><span class="">Alert Updates:</span> {{ content.total && content.total.updates.alert !== null ? content.total.updates.alert : 'None' }} |
+                <span class="">Command Updates:</span> {{ content.total && content.total.updates.command !== null ? content.total.updates.command : 'None' }} | </div>
+              <div style="margin-bottom: 0.5rem;"><span class="">Meeting Updates:</span> {{ content.total && content.total.updates.meeting !== null ? content.total.updates.meeting : 'None' }} |
+                <span class="">Pipeline Updates:</span> {{ content.total && content.total.updates.pipeline !== null ? content.total.updates.pipeline : 'None' }} |
+                <span class="">Total Updates:</span> {{ content.total && content.total.updates.total !== null ? content.total.updates.total : 'None' }}</div>
             </div>
             <h2 class="note-section__small_title">
               Per Organization:
@@ -404,7 +404,7 @@
                 Org: Session Avg: {{orgItem['session average']}} | Avg Total Sessions: {{orgItem['average total sessions']}} | Updates: {{orgItem['updates']}} | Creates: {{orgItem['creates']}}
               </div>
               <div>
-                <p>Users:</p>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.25rem;">Users:</h4>
                 <div v-for="(user, k) in orgItem.users" :key="`users${k}`">
                   <div>{{user.userName}} - Session Avg: {{user['session average']}} | Total Sessions: {{user['total sessions']}} | Updates: {{user['updates']}} | Creates: {{user['creates']}}</div>
                 </div>
@@ -1314,7 +1314,7 @@ input[type='search']:focus {
 }
 .underline {
   text-decoration: underline;
-  font-weight: 900;
+  // font-weight: 900;
   font-size: 1.05rem;
 }
 .invite-list {
