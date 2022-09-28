@@ -412,7 +412,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                             params=[f"w={str(workflow.id)}"],
                         ),
                         "managr": f"{slack_consts.MANAGR_URL}/meetings",
-                        "title": f"*New Task:* Log your meeting {workflow.meeting.topic}",
+                        "title": f"*New Task:* Log your meeting :calendar: {workflow.meeting.topic}",
                     },
                 ),
                 block_builders.context_block(f"Owned by {user.full_name}"),

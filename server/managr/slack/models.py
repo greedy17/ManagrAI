@@ -393,6 +393,17 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
+                if str(field.id) == "0bb152b5-aac1-4ee0-9c25-51ae98d55af1":
+                    form_blocks.append(
+                        block_builders.section_with_button_block(
+                            "Insert",
+                            "note_templates",
+                            "*Note Templates*",
+                            block_id="note_templates",
+                            action_id=slack_consts.INSERT_NOTE_TEMPLATE_DROPDOWN,
+                        )
+                    )
+                    form_blocks.append({"type": "divider"})
             else:
                 generated_field = field.to_slack_field(
                     val, user=self.user, resource=self.resource_type, *args, **kwargs
@@ -401,7 +412,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
-
         return form_blocks
 
     def get_values(self, state):
