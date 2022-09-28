@@ -32,7 +32,7 @@ def _initial_interaction_message(resource_name=None, resource_type=None, meeting
     if not resource_type:
         return f"*New Task:* Log your meeting :calendar: *{meeting_title}*"
 
-    return f"*New Task:* Log your meeting {resource_type} *{resource_name}*"
+    return f"*New Task:* Log your meeting :calendar: {resource_type} *{resource_name}*"
 
 
 def generate_edit_contact_form(field, id, value, optional=True):

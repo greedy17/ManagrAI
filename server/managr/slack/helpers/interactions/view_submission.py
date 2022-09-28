@@ -70,6 +70,16 @@ from managr.salesforce.adapter.models import PricebookEntryAdapter
 logger = logging.getLogger("managr")
 
 
+def swap_public_fields(state):
+    if "meeting_comment" in state.keys():
+        state["meeting_comments"] = state["meeting_comment"]
+        state.pop("meeting_comment")
+    if "meeting_title" in state.keys():
+        state["meeting_type"] = state["meeting_title"]
+        state.pop("meeting_title")
+    return state
+
+
 @log_all_exceptions
 @processor(required_context=["w", "form_type"])
 def process_stage_next_page(payload, context):
@@ -78,7 +88,7 @@ def process_stage_next_page(payload, context):
     # if there are additional stage gating forms aggregate them and push them in 1 view
     # save current data to its form we will close all views at the end
 
-    state = view["state"]["values"]
+    state = swap_public_fields(view["state"]["values"])
     task_selection = [
         value.get("selected_option") for value in state.get("managr_task_type", {}).values()
     ][0]
@@ -153,7 +163,7 @@ def process_zoom_meeting_data(payload, context):
         )
 
     # get state - state contains the values based on the block_id
-    state = view["state"]["values"]
+    state = swap_public_fields(view["state"]["values"])
     task_type = private_metadata.get("task_type", None)
     if not task_type:
         task_selection = [
@@ -244,7 +254,7 @@ def process_next_page_slack_commands_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     current_form_ids = context.get("f").split(",")
     view = payload["view"]
-    state = view["state"]["values"]
+    state = swap_public_fields(view["state"]["values"])
     alert_check = context.get("alert_id", None)
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     # save the main form
@@ -328,7 +338,7 @@ def process_add_products_form(payload, context):
 def process_submit_resource_data(payload, context):
     # get context
     has_error = False
-    state = payload["view"]["state"]["values"]
+    state = swap_public_fields(payload["view"]["state"]["values"])
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
@@ -2360,7 +2370,7 @@ def process_convert_lead(payload, context):
 def process_submit_alert_resource_data(payload, context):
     # get context
     has_error = False
-    state = payload["view"]["state"]["values"]
+    state = swap_public_fields(payload["view"]["state"]["values"])
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
@@ -2547,7 +2557,7 @@ def process_submit_alert_resource_data(payload, context):
 def process_submit_digest_resource_data(payload, context):
     # get context
     has_error = False
-    state = payload["view"]["state"]["values"]
+    state = swap_public_fields(payload["view"]["state"]["values"])
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
@@ -2719,12 +2729,11 @@ def process_submit_digest_resource_data(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_submit_bulk_update(payload, context):
-    print(payload)
     user = User.objects.get(id=context.get("u"))
     state = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])
-    selected_opps = [
-        option["value"] for option in state["OPPS"]["SELECTED_OPPS"]["selected_options"]
+    selected_resources = [
+        option["value"] for option in state["RESOURCES"]["SELECTED_RESOURCES"]["selected_options"]
     ]
     selected_field = state["CRM_FIELDS"][f"CHOOSE_CRM_FIELD?u={str(user.id)}"]["selected_option"][
         "value"
@@ -2733,7 +2742,10 @@ def process_submit_bulk_update(payload, context):
     data = {selected_field: bulk_update_value}
     channel = pm.get("channel_id")
     ts = pm.get("message_ts")
-    emit_process_slack_bulk_update(str(user.id), selected_opps, data, ts, channel)
+    resource_type = context.get("resource_type")
+    emit_process_slack_bulk_update(
+        str(user.id), selected_resources, data, ts, channel, resource_type
+    )
 
     block_set = [
         *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),

@@ -192,8 +192,10 @@ def emit_process_update_resources_in_salesforce(
     )
 
 
-def emit_process_slack_bulk_update(user, resource_ids, data, message_ts, channel_id):
-    return _process_slack_bulk_update(user, resource_ids, data, message_ts, channel_id)
+def emit_process_slack_bulk_update(user, resource_ids, data, message_ts, channel_id, resource_type):
+    return _process_slack_bulk_update(
+        user, resource_ids, data, message_ts, channel_id, resource_type
+    )
 
 
 # SF Resource Sync Tasks
@@ -1803,10 +1805,10 @@ def _update_current_db_values(user_id, resource_type, integration_id):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=0)
-def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_id):
+def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_id, resource_type):
     user = User.objects.get(id=user_id)
     instance_data = {
-        "resource_type": "Opportunity",
+        "resource_type": resource_type,
         "form_type": "UPDATE",
         "user": user,
         "stage_name": None,
@@ -1898,12 +1900,14 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
             )
         ]
     else:
+        plural = f"Opportunities" if resource_type == "Opportunity" else f"{resource_type}s"
         logger.info(
-            f"Successfully updated {success_opps}/{len(forms)} Opportunties for user {user.email}"
+            f"Successfully updated {success_opps}/{len(forms)} {plural} for user {user.email}"
         )
         block_set = [
             block_builders.simple_section(
-                ":white_check_mark: Successfully bulk updated your Opportunties", "mrkdwn"
+                f":white_check_mark: Successfully bulk updated {success_opps}/{len(forms)} {plural}",
+                "mrkdwn",
             )
         ]
     try:
