@@ -138,13 +138,13 @@ export default new Router({
     },
     {
       path: '/next-step',
-      name: 'NextStep',
+      name: 'UpcomingNextStep',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/NextStepDate')
     },
     {
       path: '/large-opps',
-      name: 'LargeOpps',
+      name: 'LargeOpportunities',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
     },
@@ -162,13 +162,13 @@ export default new Router({
     },
     {
       path: '/deal-rotting',
-      name: 'DealRotting',
+      name: 'DealReview',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/DealRotting')
     },
     {
       path: '/update-forecast',
-      name: 'UpdateForecast',
+      name: '90DayPipeline',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/UpdateForecast')
     },

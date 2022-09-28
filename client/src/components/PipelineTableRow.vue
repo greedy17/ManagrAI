@@ -636,7 +636,7 @@ export default {
 
 .img-border {
   border: none;
-  box-shadow: 1px 1px 2px 1px $off-white;
+  box-shadow: 1px 1px 2px 1px $very-light-gray !important;
   padding: 4px 6px 3px 6px;
   border-radius: 6px;
   box-shadow: 1px 1px 6px 1px $off-white;

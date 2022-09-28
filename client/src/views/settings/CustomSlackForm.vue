@@ -13,35 +13,10 @@
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
-                  <!-- <span class="header-img">
-                    <img
-                      src="@/assets/images/table.svg"
-                      alt=""
-                      height="16px"
-                      style="filter: invert(40%)"
-                    />
-                  </span>
-                  <span class="header-img active">
-                    <img src="@/assets/images/list.svg" height="16px" alt="" />
-                  </span> -->
-
-                  <button @click="onSave" class="save">Save</button>
+                  <button @click="onSave" class="save">Save Form</button>
                 </div>
               </div>
-              <!-- <p class="tab-text">Select the Opportunity fields you'd like to update via Managr</p> -->
               <div id="formSection">
-                <!-- <section>
-                  <input placeholder="Note Title" type="text" disabled />
-                  <textarea
-                    placeholder="Note"
-                    name=""
-                    id=""
-                    cols="30"
-                    rows="10"
-                    disabled
-                  ></textarea>
-                </section> -->
-
                 <draggable
                   v-model="addedFields"
                   group="fields"
@@ -84,44 +59,19 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
-          <label @click="resource = ACCOUNT" for="tab-3" class="tab-label">Account</label>
+          <label for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
           <div class="tab-content">
             <section>
               <div>
-                <p class="form-type">
-                  Update Form Builder
+                <p @click="switchFormType" class="form-type">
+                  {{ camelize(formType) }} Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
-                  <span class="header-img">
-                    <img
-                      src="@/assets/images/table.svg"
-                      alt=""
-                      height="16px"
-                      style="filter: invert(40%)"
-                    />
-                  </span>
-                  <span class="header-img active">
-                    <img src="@/assets/images/list.svg" height="16px" alt="" />
-                  </span>
-
-                  <button @click="onSave" class="save">Save</button>
+                  <button @click="onSave" class="save">Save Form</button>
                 </div>
               </div>
-              <!-- <p class="tab-text">Select the Opportunity fields you'd like to update via Managr</p> -->
               <div id="formSection">
-                <!-- <section>
-                  <input placeholder="Note Title" type="text" disabled />
-                  <textarea
-                    placeholder="Note"
-                    name=""
-                    id=""
-                    cols="30"
-                    rows="10"
-                    disabled
-                  ></textarea>
-                </section> -->
-
                 <draggable
                   v-model="addedFields"
                   group="fields"
@@ -159,14 +109,96 @@
           <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
           <label for="tab-4" class="tab-label">Contact</label>
           <div class="tab-content">
-            <p>Contact</p>
+            <section>
+              <div>
+                <p @click="switchFormType" class="form-type">
+                  {{ camelize(formType) }} Form Builder
+                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
+                </p>
+                <div>
+                  <button @click="onSave" class="save">Save Form</button>
+                </div>
+              </div>
+              <div id="formSection">
+                <draggable
+                  v-model="addedFields"
+                  group="fields"
+                  @start="drag = true"
+                  @end="drag = false"
+                  class="drag-section"
+                >
+                  <div v-for="field in addedFields" :key="field.id">
+                    <div v-if="!unshownIds.includes(field.id)">
+                      <div class="drag-item">
+                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                          <img src="@/assets/images/drag.svg" alt="" />
+                          {{ field.label }}
+                        </p>
+                        <img
+                          src="@/assets/images/trash.svg"
+                          alt=""
+                          id="remove"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          @click="
+                            () => {
+                              onRemoveField(field)
+                            }
+                          "
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </draggable>
+              </div>
+            </section>
           </div>
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-5" class="tab-switch" />
           <label for="tab-5" class="tab-label">Lead</label>
           <div class="tab-content">
-            <p>Lead</p>
+            <section>
+              <div>
+                <p @click="switchFormType" class="form-type">
+                  {{ camelize(formType) }} Form Builder
+                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
+                </p>
+                <div>
+                  <button @click="onSave" class="save">Save Form</button>
+                </div>
+              </div>
+              <div id="formSection">
+                <draggable
+                  v-model="addedFields"
+                  group="fields"
+                  @start="drag = true"
+                  @end="drag = false"
+                  class="drag-section"
+                >
+                  <div v-for="field in addedFields" :key="field.id">
+                    <div v-if="!unshownIds.includes(field.id)">
+                      <div class="drag-item">
+                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                          <img src="@/assets/images/drag.svg" alt="" />
+                          {{ field.label }}
+                        </p>
+                        <img
+                          src="@/assets/images/trash.svg"
+                          alt=""
+                          id="remove"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          @click="
+                            () => {
+                              onRemoveField(field)
+                            }
+                          "
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </draggable>
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -178,7 +210,7 @@
       </div>
 
       <div class="field-section__fields">
-        <div style="height: 80vh; overflow: scroll">
+        <div style="height: 85vh; overflow: scroll">
           <!-- <section>
             <p key="name"><input type="checkbox" /> Name <span>required</span></p>
             <p><input type="checkbox" /> Stage <span>required</span></p>
@@ -188,10 +220,11 @@
             </p>
           </section> -->
 
-          <p v-for="(field, i) in filteredFields" :key="i">
+          <p v-for="(field, i) in filteredFields" :key="field">
             <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
             {{ field.label }}
+            <span v-if="field.required" class="red-text">required</span>
           </p>
         </div>
       </div>
@@ -758,10 +791,12 @@ export default {
     formType: {
       type: String,
       required: true,
+      default: 'UPDATE',
     },
     resource: {
       type: String,
       required: true,
+      default: 'Opportunity',
     },
     fields: {
       type: Array,
@@ -1112,10 +1147,11 @@ export default {
   },
   computed: {
     filteredFields() {
-      return this.formFields.list.filter((field) =>
-        field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
-      )
-      // .filter((field) => !this.addedFieldNames.includes(field.apiName))
+      return this.formFields.list
+        .filter((field) =>
+          field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
+        )
+        .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     currentFields() {
       return this.customForm ? this.customForm.fields : []
@@ -1155,6 +1191,13 @@ export default {
     this.allForms = await SlackOAuth.api.getOrgCustomForm()
   },
   methods: {
+    changeToAccount() {
+      this.resource = 'Account'
+      this.formType = 'UPDATE'
+      this.customForm = this.allForms.find((f) => f.resource == 'Account' && f.formType == 'UPDATE')
+
+      console.log(this.allForms)
+    },
     switchFormType() {
       this.customForm = this.allForms.find(
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.CREATE,
@@ -1356,10 +1399,12 @@ export default {
   }
 }
 ::v-deep .sortable-ghost {
-  // outline: 1px solid red;
   border: 1px dashed $very-light-gray;
   border-radius: 6px;
   padding-left: 8px;
+}
+.red-text {
+  color: $coral;
 }
 input[type='checkbox']:checked + label::after {
   content: '';

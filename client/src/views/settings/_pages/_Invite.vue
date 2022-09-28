@@ -651,7 +651,7 @@ input:focus {
   color: $base-gray;
 }
 .incomplete {
-  border-bottom: 2px solid $coral;
+  // border-bottom: 2px solid $coral;
   color: $base-gray;
 }
 .back-logo {
@@ -671,7 +671,7 @@ input:focus {
   margin-right: 0.25rem;
 }
 .inactive {
-  border-bottom: 2px solid $coral;
+  // border-bottom: 2px solid $coral;
   padding: 0.2rem;
 
   margin-right: 0.25rem;

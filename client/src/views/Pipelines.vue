@@ -65,7 +65,8 @@
               </span>
 
               <span @click="goToProfile" class="note-templates__content" v-else>
-                Create a template <img src="@/assets/images/note.svg" alt=""
+                Create a template
+                <img src="@/assets/images/note.svg" style="margin-left: 4px" height="18px" alt=""
               /></span>
             </section>
 
@@ -5056,7 +5057,6 @@ export default {
   align-items: center;
   font-size: 18px;
   letter-spacing: 0.5px;
-  // outline: 1px solid red;
   height: 24px;
 }
 .pagination {

@@ -18,22 +18,7 @@
       </div>
     </Modal>
 
-    <!-- <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
-      <h3
-        class="bouncy"
-        style="
-          color: #5d5e5e;
-          font-weight: bold;
-          text-align: center;
-          margin-top: 16vh;
-          font-size: 3rem;
-        "
-      >
-        0
-      </h3>
-      <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-    </div> -->
-    <template v-if="!templates.refreshing && alertsCount(templates.list.length)">
+    <template v-if="!templates.refreshing">
       <transition name="fade">
         <div v-if="!editing" class="edit__modal">
           <AlertsEditPanel :alert="currentAlert" />
@@ -43,61 +28,86 @@
         </div>
       </transition>
 
-      <div class="alert_cards">
-        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection gray-shadow">
+      <div v-if="editing" class="alert_cards">
+        <div
+          v-for="(config, i) in allConfigs"
+          :key="i"
+          class="added-collection gray-shadow"
+          v-show="!templateTitles.includes(config.title)"
+        >
           <div class="added-collection__header">
             <div id="gray">
               <img src="@/assets/images/logo.png" height="28px" alt="" />
             </div>
 
             <div>
-              <p class="gray">Inactive Template</p>
-              <h3>Close Date Passed</h3>
+              <p class="gray">Managr Template</p>
+              <h3>{{ config.title }}</h3>
             </div>
           </div>
 
           <div class="added-collection__body">
-            <p class="gray">Recieve notifications when important close dates have passed</p>
+            <p class="gray">{{ config.subtitle }}</p>
           </div>
           <div class="added-collection__footer">
-            <button @click="goToRecap" class="green_button">Activate</button>
-            <!-- <p class="red">Inactive</p> -->
+            <button @click="goToWorkflow(config.title)" class="green_button pulse">Activate</button>
           </div>
         </div>
-
-        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection gray-shadow">
+        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="gray">
               <img src="@/assets/images/logo.png" height="28px" alt="" />
             </div>
 
             <div>
-              <p class="gray">Inactive Template</p>
-              <h3>90 Day Pipeline</h3>
+              <p class="gray">Meeting Template</p>
+              <h3>Log Meeting</h3>
             </div>
           </div>
 
           <div class="added-collection__body">
-            <p class="gray">Recieve notifications with a 90 day pipeline review</p>
+            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
           </div>
           <div class="added-collection__footer">
-            <button @click="goToRecap" class="green_button">Activate</button>
-            <!-- <p class="red">Inactive</p> -->
+            <div class="row__">
+              <button @click="goToLogZoom" class="green_button pulse">Activate</button>
+            </div>
           </div>
         </div>
-      </div>
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
+            </div>
 
-      <div class="alert_cards" v-if="editing">
+            <div>
+              <p class="gray">Meeting Template</p>
+              <h3>Meeting Recaps</h3>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
+          </div>
+          <div class="added-collection__footer">
+            <button @click="goToRecap" class="green_button pulse">Activate</button>
+          </div>
+        </div>
+
         <div :key="i" v-for="(alert, i) in templates.list" class="added-collection green-shadow">
           <div class="added-collection__header" :data-key="alert.id">
             <img src="@/assets/images/logo.png" class="green-bg" height="36px" alt="" />
             <div>
               <p class="green">Managr Template</p>
-              <h3>{{ alert.title }}</h3>
+              <h3>
+                {{ alert.title }}
+              </h3>
             </div>
+            <!-- <span>{{ alert.sobjectInstances.length }}</span> -->
+            <span>7</span>
           </div>
           <div class="added-collection__body">
-            <p>Lorem ipsum latin sorem. Lorem ipsum latin so...</p>
+            <p>Recieve notifications when important close dates have passed</p>
           </div>
           <div class="added-collection__footer">
             <div class="row__">
@@ -107,7 +117,23 @@
                 @click.stop="onRunAlertTemplateNow(alert.id)"
                 class="white_button"
               >
-                Send to Slack
+                <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+              </button>
+              <button style="margin-right: 8px" class="white_button">
+                <img
+                  src="@/assets/images/listed.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+              <button class="white_button" @click="makeAlertCurrent(alert)">
+                <img
+                  src="@/assets/images/build.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
               </button>
             </div>
 
@@ -131,7 +157,7 @@
         <div v-if="zoomChannel" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="yellow">
-              <img src="@/assets/images/logo.png" height="36px" alt="" />
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
             </div>
 
             <div>
@@ -142,10 +168,11 @@
 
           <div class="added-collection__body">
             <p>{{ currentZoomChannel }}</p>
+            <p></p>
           </div>
           <div class="added-collection__footer">
             <div class="row__">
-              <button @click="goToLogZoom" class="yellow_button">Change Channel</button>
+              <button @click="goToLogZoom" class="yellow_button_full">Change Channel</button>
             </div>
           </div>
         </div>
@@ -153,7 +180,7 @@
         <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="yellow">
-              <img src="@/assets/images/logo.png" height="36px" alt="" />
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
             </div>
 
             <div>
@@ -166,16 +193,20 @@
             <p>
               {{ currentRecapChannel }}
             </p>
+            <p></p>
           </div>
           <div class="added-collection__footer">
             <button @click="goToRecap" class="yellow_button">Change Channel</button>
           </div>
         </div>
       </div>
+
+      <div class="alert_cards" v-if="editing"></div>
     </template>
-    <!-- <div class="center-loader" v-if="templates.refreshing">
+
+    <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />
-    </div> -->
+    </div>
   </div>
 </template>
 
@@ -198,6 +229,7 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import User from '@/services/users'
 
 import AlertTemplate from '@/services/alerts/'
+import allConfigs from '../configs'
 
 export default {
   name: 'AlertsTemplateList',
@@ -209,9 +241,11 @@ export default {
   },
   data() {
     return {
+      allConfigs,
       userChannelOpts: new SlackListResponse(),
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       users: CollectionManager.create({ ModelClass: User }),
+      templateTitles: null,
       deleteOpen: false,
       deleteId: '',
       deleteTitle: '',
@@ -237,7 +271,22 @@ export default {
     }
     await this.listUserChannels()
   },
+  mounted() {
+    setTimeout(() => {
+      this.templateTitles = this.templates.list.map((template) => template.title)
+      console.log(this.templateTitles)
+      console.log(this.templates.list)
+    }, 1000)
+  },
   methods: {
+    goToWorkflow(name) {
+      let newName = name.replace(/\s/g, '')
+      this.$router.push({ name: newName })
+    },
+    getActiveTemplateTitles() {
+      this.templateTitles = this.templates.list.map((template) => template.title)
+      console.log(this.templateTitles)
+    },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -429,6 +478,50 @@ export default {
   100% {
     background-color: $lighter-green;
   }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+@keyframes pulseYellow {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $yellow;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 1.25s infinite;
+}
+.yellow_pulse {
+  box-shadow: 0 0 0 0 $yellow;
+  transform: scale(1);
+  animation: pulseYellow 1.25s infinite;
 }
 
 #yellow {
@@ -626,6 +719,12 @@ button:disabled {
     flex-direction: row;
     align-items: center;
     margin-top: 8px;
+    span {
+      margin-left: auto;
+      margin-right: 16px;
+      font-size: 14px;
+      color: $light-gray-blue !important;
+    }
     div {
       display: flex;
       flex-direction: column;
@@ -730,14 +829,26 @@ a {
   cursor: pointer;
   text-align: center;
 }
-.white_button {
-  color: $dark-green;
-  background-color: white;
+.yellow_button_full {
+  color: white;
+  opacity: 0.85;
+  background-color: $yellow;
   border-radius: 6px;
-  outline: 1px solid $dark-green;
   padding: 8px 12px;
   font-size: 12px;
-  border: none;
+  border: 1px solid $yellow;
+  cursor: pointer;
+  text-align: center;
+}
+.white_button {
+  color: $base-gray;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid $soft-gray;
+  box-shadow: 1px 1px 1px $very-light-gray;
+  padding: 6px 8px;
+  font-size: 12px;
+
   cursor: pointer;
   text-align: center;
 }
@@ -765,6 +876,7 @@ a {
   justify-content: center;
   align-items: center;
   height: 60vh;
+  width: 100%;
 }
 .loading-title {
   display: none;

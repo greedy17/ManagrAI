@@ -675,7 +675,6 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value =
         this.selectedChannel
       this.config.newConfigs[0].recipients = [this.selectedChannel.id]
-
     },
     setDay(n) {
       this.config.newConfigs[0].recurrenceDay = 0
@@ -758,7 +757,7 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          this.$router.push({ name: 'CreateNew' })
+          this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
           this.$toast('One or more of these users do not have Slack.', {
             timeout: 2000,
