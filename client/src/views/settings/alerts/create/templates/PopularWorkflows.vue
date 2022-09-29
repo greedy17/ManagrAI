@@ -699,7 +699,6 @@ export default {
           user: this.$store.state.user.id,
           directToUsers: true,
         })
-        console.log(res)
 
         this.handleUpdate()
 
@@ -747,7 +746,6 @@ export default {
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
-          console.log(res)
 
           this.handleUpdate()
 

@@ -1,6 +1,47 @@
 <template>
   <div class="invite-container">
     <Modal
+      v-if="uninviteModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleConfirmCancel()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Are you sure?</h3>
+          </div>
+          <div class="flex-row">
+            <h4 class="invite-form__subtitle">
+              By clicking Confirm, you will be removing this user from your organization.
+            </h4>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="handleUninvite(uninviteId)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                text="Confirm"
+                :loading="loading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
+    <Modal
       v-if="inviteOpen"
       dimmed
       @close-modal="
@@ -256,16 +297,24 @@
             <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
           </span>
         </div>
+        <div
+          style="position: relative; width: 1rem; right: 1rem; visibility: none;"
+          class=""
+          >
+             
+        </div>
       </div>
       <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
-        <template v-if="member.id !== user.id && member.team === $store.state.user.team">
+        <template v-if="member.id !== user.id && member.team === $store.state.user.team && !(member.firstName && !member.isActive)">
           <div
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item col"
+            @click="test(member)"
           >
-            {{ member.firstName ? member.firstName : 'Pending' }}
+            <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
+            {{ !member.firstName ? 'Pending' : (member.isActive ? member.firstName : '[REMOVED]') }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
-              {{ member.email }}
+              {{ !member.firstName ? member.email : (member.isActive ? member.email : '[REMOVED]') }}
             </p>
           </div>
           <div
@@ -293,7 +342,8 @@
             style="display: flex; align-items: flex-start; font-size: 13px"
             class="invite-list__section__item"
           >
-            {{ member.isActive ? 'Registered' : 'Pending...' }}
+            <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
+            {{ !member.firstName ? 'Pending...' : (member.isActive ? 'Registered' : '[REMOVED]') }}
           </div>
           <div
             style="display: flex; align-items: flex-start"
@@ -311,6 +361,19 @@
             <span :class="member.nylasRef ? 'active' : 'inactive'">
               <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
             </span>
+          </div>
+          <div 
+            v-if="!member.isAdmin && member.isActive"
+            style="position: relative; right: 7.5%; cursor: pointer;"
+            class=""
+            @click="openUninviteModal(member.id)">
+            X
+          </div>
+          <div v-else
+          style="position: relative; width: 1rem; right: 1rem; visibility: none;"
+          class=""
+          >
+             
           </div>
         </template>
       </div>
@@ -354,6 +417,8 @@ export default {
       organizationRef: null,
       slackMembers: new SlackUserList(),
       inviteRecipient: '',
+      uninviteId: '',
+      uninviteModal: false,
       selectedUserType: User.types.REP,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
@@ -478,6 +543,41 @@ export default {
       } finally {
         this.loading = false
         this.inviteOpen = !this.inviteOpen
+      }
+    },
+    handleConfirmCancel() {
+      this.uninviteModal = false
+      this.uninviteId = ''
+    },
+    openUninviteModal(memberId) {
+      this.uninviteModal = true
+      this.uninviteId = memberId
+    },
+    async handleUninvite(id) {
+      this.loading = true
+      try {
+        const res = await User.api.uninvite(id)
+        this.$toast('User Removed Successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        await this.refresh()
+        // this.resetData()
+        this.uninviteModal = false
+      } catch (e) {
+        console.log(e)
+        this.$toast('Something went wrong', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loading = false
       }
     },
     async handleInviteNonSlack() {
