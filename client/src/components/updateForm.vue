@@ -410,6 +410,28 @@
                         </template>
                       </Multiselect>
                     </div>
+                    <div v-else-if="field.dataType === 'Reference'">
+                      <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
+                      <Multiselect
+                        style="width: 14vw; padding-bottom: 8rem"
+                        v-model="dropdownVal[field.apiName]"
+                        @select="setUpdateValidationValues(field.apiName, $event.id)"
+                        :options="referenceOpts[field.apiName] ? referenceOpts[field.apiName] : []"
+                        openDirection="below"
+                        selectLabel="Enter"
+                        label="name"
+                      >
+                        <template slot="noResult">
+                          <p class="multi-slot">No results.</p>
+                        </template>
+                        <template slot="placeholder">
+                          <p class="slot-icon">
+                            <img src="@/assets/images/search.svg" alt="" />
+                            {{ field.apiName }}
+                          </p>
+                        </template>
+                      </Multiselect>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -875,6 +897,9 @@ export default {
     }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     goToProfile() {
       this.$emit('go-to-profile')
     },

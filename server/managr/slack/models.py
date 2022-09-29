@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
-
+from managr.slack.helpers import block_builders
 from managr.salesforce.models import SObjectField
 from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
 
@@ -236,6 +236,11 @@ class OrgCustomSlackForm(TimeStampModel):
                 )
         return self.save()
 
+    def to_slack_options(self):
+        filtered_fields = self.fields.filter(is_public=False)
+        options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
+        return options
+
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -391,6 +396,17 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
+                if str(field.id) == "0bb152b5-aac1-4ee0-9c25-51ae98d55af1":
+                    form_blocks.append(
+                        block_builders.section_with_button_block(
+                            "Insert",
+                            "note_templates",
+                            "*Note Templates*",
+                            block_id="note_templates",
+                            action_id=slack_consts.INSERT_NOTE_TEMPLATE_DROPDOWN,
+                        )
+                    )
+                    form_blocks.append({"type": "divider"})
             else:
                 generated_field = field.to_slack_field(
                     val, user=self.user, resource=self.resource_type, *args, **kwargs
@@ -399,7 +415,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
-
         return form_blocks
 
     def get_values(self, state):

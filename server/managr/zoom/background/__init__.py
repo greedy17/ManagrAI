@@ -227,7 +227,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         # Combine the sets of participants. Filter out empty emails, meeting owner, and any
         # emails with domains that match the owner, which are teammates of the owner.
         logger.info(f"    Got list of participants: {participants}")
-
         for p in calendar_participants:
             if not re.search(
                 remove_users_with_these_domains_regex, p.get("user_email", "")
@@ -413,7 +412,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                             params=[f"w={str(workflow.id)}"],
                         ),
                         "managr": f"{slack_consts.MANAGR_URL}/meetings",
-                        "title": f"*New Task:* Log your meeting",
+                        "title": f"*New Task:* Log your meeting :calendar: {workflow.meeting.topic}",
                     },
                 ),
                 block_builders.context_block(f"Owned by {user.full_name}"),

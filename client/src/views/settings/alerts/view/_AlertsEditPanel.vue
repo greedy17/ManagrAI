@@ -281,7 +281,6 @@ export default {
       fields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 200 },
-        filters: { forAlerts: true, filterable: true },
       }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },

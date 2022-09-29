@@ -82,7 +82,6 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
     template = config.template
     user_list = config.target_users
     owners_list = [user.salesforce_account.salesforce_id for user in user_list]
-    logger.info(f"Owners list: {owners_list}")
     alert_id = str(template.id)
     resource = template.resource_type
     route = model_routes[resource]
@@ -97,7 +96,6 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
             if len(user_list) > 1
             else template.url_str(user, config_id)
         )
-        logger.info(f"Alert URL sent: {url}")
         try:
             res = sf.adapter_class.execute_alert_query(url, template.resource_type)
             logger.info(f"Pulled total {len(res)} from request for {resource} matching alert query")
@@ -238,6 +236,7 @@ def _process_send_alert(invocation, channel, config_id):
     template = alert_instances.first().template
     channel_id = None
     instance_user = alert_instances.first().user
+    alert_instance = alert_instances.first()
     if hasattr(instance_user, "slack_integration"):
         channel_id = (
             alert_instances.first().channel

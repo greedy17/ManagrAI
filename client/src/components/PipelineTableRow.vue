@@ -198,7 +198,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              @select="setDropdownValue($event)"
+              @select="emitDropdown($event, opp)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -251,7 +251,7 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
+              v-on:keyup.enter="setUpdateValues(field.apiName, Number($event.target.value), field.dataType)"
               id="user-input"
               type="number"
               :value="
@@ -284,6 +284,27 @@
               </template>
             </Multiselect>
           </div>
+          <div v-else-if="field.dataType === 'Reference'">
+            <Multiselect
+              style="width: 14vw; padding-bottom: 8rem"
+              v-model="dropdownVal[field.apiName]"
+              @select="setUpdateValues(field.apiName, $event.id, field.dataType)"
+              :options="referenceOpts[field.apiName] ? referenceOpts[field.apiName] : []"
+              openDirection="below"
+              selectLabel="Enter"
+              label="name"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ field.apiName }}
+                </p>
+              </template>
+            </Multiselect>
+          </div>
         </div>
         <PipelineField
           :index="i"
@@ -296,6 +317,7 @@
               ? opp['secondary_data'][field.apiName]
               : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
+          :referenceOpts="referenceOpts"
           :lastStageUpdate="opp['last_stage_update']"
         />
       </div>
@@ -331,6 +353,7 @@
               : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
           :lastStageUpdate="opp['last_stage_update']"
+          :referenceOpts="referenceOpts"
         />
       </div>
     </div>
@@ -359,7 +382,7 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
-      dropdownValue: {},
+      referenceOptions: [],
       dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
@@ -380,15 +403,6 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     primaryCheckList: 'checkSelect',
-    dropdownValue: {
-      handler(val) {
-        if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.opp.id, this.opp.integration_id)
-        } else {
-          this.setUpdateValues('StageName', val)
-        }
-      },
-    },
   },
   props: {
     index: {},
@@ -398,8 +412,11 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
+    BulkUpdateName: {},
+    BulkUpdateValue: {},
     updateList: {},
     picklistOpts: {},
+    referenceOpts: {},
     inlineLoader: {},
     closeEdit: {},
     stages: {},
@@ -419,6 +436,9 @@ export default {
     //     console.log(e)
     //   }
     // },
+    test(log) {
+      console.log('log', log)
+    },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -427,8 +447,9 @@ export default {
     closeInline() {
       this.editing = false
     },
-    setDropdownValue(val) {
-      this.dropdownValue = val.value
+    emitDropdown(val, opp) {
+      const item = {val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id}
+      this.$emit('set-dropdown-value', item)
     },
     editInline(index) {
       this.editing = true
@@ -446,6 +467,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
+        this.dropdownVal = {}
         this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
@@ -456,6 +478,7 @@ export default {
       this.$emit('get-notes')
     },
     emitCheckedBox(i) {
+      console.log('this.opp', this.opp)
       this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {
@@ -559,6 +582,34 @@ export default {
         setTimeout(() => {
           this.updatedList = []
         }, 2000)
+      }
+    },
+    async onBulkUpdate() {
+      this.updatedList.push(this.opp.id)
+      try {
+        const formData = {}
+        formData[this.BulkUpdateName] = this.BulkUpdateValue
+        const res = await SObjects.api
+          .updateResource({
+            form_data: formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedList = []
       }
     },
   },

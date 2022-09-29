@@ -68,7 +68,7 @@ class Organization(TimeStampModel):
 
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
-        templates = user.organization.custom_slack_forms.all()
+        templates = user.team.team_forms.all()
 
         if preserve_fields:
             for form in templates:
@@ -122,10 +122,12 @@ class Organization(TimeStampModel):
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(organization=user.organization)
+            if user.is_admin:
+                return self.filter(owner__organization=user.organization)
+            elif user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__team=user.team)
             else:
-                return self.filter(organization=user.organization, owner=user)
+                return self.filter(owner=user)
         else:
             return None
 
@@ -241,8 +243,10 @@ class Account(TimeStampModel, IntegrationModel):
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
+            if user.is_admin:
                 return self.filter(owner__organization=user.organization)
+            elif user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__team=user.team)
             else:
                 return self.filter(owner=user)
         else:
@@ -631,6 +635,12 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
     @property
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.integration_id))
+
+    def get_current_values(self):
+        res = self.user.salesforce_account.adapter_class.get_resource_in_list(
+            "PricebookEntry", list(self.state.keys())
+        )
+        return res
 
 
 class OpportunityLineItemQuerySet(models.QuerySet):

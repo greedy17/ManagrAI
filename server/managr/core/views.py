@@ -58,14 +58,14 @@ logger = logging.getLogger("managr")
 
 
 def GET_COMMAND_OBJECTS():
-    from managr.salesforce.background import (
-        emit_gen_next_sync,
-        emit_gen_next_object_field_sync,
+    from managr.salesforce.cron import (
+        queue_users_sf_resource,
+        queue_users_sf_fields,
     )
 
     commands = {
-        "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
-        "SALESFORCE_RESOURCES": emit_gen_next_sync,
+        "SALESFORCE_FIELDS": queue_users_sf_fields,
+        "SALESFORCE_RESOURCES": queue_users_sf_resource,
         "PULL_USAGE_DATA": pull_usage_data,
     }
     return commands
@@ -315,25 +315,17 @@ class UserViewSet(
     )
     def launch_command(self, request, *args, **kwargs):
         COMMANDS = GET_COMMAND_OBJECTS()
-        user = request.user
         data = request.data
         command = data.get("command")
         command_function = COMMANDS[command]
-        scheduled_time = timezone.now()
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         if command == "SALESFORCE_FIELDS":
-            operations = [
-                *user.salesforce_account.field_sync_opts,
-                *user.salesforce_account.validation_sync_opts,
-            ]
-            command_function(str(user.id), operations, False, formatted_time)
+            command_function()
             response_data = {
                 "success": True,
                 "message": "Successfully started field sync for users",
             }
         elif command == "SALESFORCE_RESOURCES":
-            operations = user.salesforce_account.resource_sync_opts
-            command_function(str(user.id), operations, formatted_time)
+            command_function()
             response_data = {
                 "success": True,
                 "message": "Successfully started resource sync for users",
@@ -429,6 +421,23 @@ class UserViewSet(
             str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
         )
         return Response(data={"success": True})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-user",
+    )
+    def remove_user(self, request, *args, **kwargs):
+        remove_id = request.data.get("remove_id")
+        try:
+            remove_user = User.objects.get(id=remove_id)
+            remove_user.is_active = False
+            remove_user.save()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(f"Remove user error: {e}")
+            return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ActivationLinkView(APIView):

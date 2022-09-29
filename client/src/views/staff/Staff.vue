@@ -382,31 +382,104 @@
               </button>
             </div>
             <div>
-              <div style="margin-bottom: 0.5rem;"><span class="">Users:</span> {{ content.total && content.total.users !== null ? content.total.users : 'None' }} |
-                <span class="">Workflows:</span> {{ content.total && content.total.workflows !== null ? content.total.workflows : 'None' }} </div>
-              <div><span class="">Accounts Created:</span> {{ content.total && content.total.creates.accounts !== null ? content.total.creates.accounts : 'None' }} |
-                <span class="">Contacts Created:</span> {{ content.total && content.total.creates.contacts !== null ? content.total.creates.contacts : 'None' }} | </div>
-              <div style="margin-bottom: 0.5rem;"><span class="">Opportunities Created:</span> {{ content.total && content.total.creates.opportunities !== null ? content.total.creates.opportunities : 'null' }} |
-                <span class="">Products Created:</span> {{ content.total && content.total.creates.products !== null ? content.total.creates.products : 'None' }} |
-                <span class="">Total Created:</span> {{ content.total && content.total.creates.total !== null ? content.total.creates.total : 'None' }}</div>
-              <div><span class="">Alert Updates:</span> {{ content.total && content.total.updates.alert !== null ? content.total.updates.alert : 'None' }} |
-                <span class="">Command Updates:</span> {{ content.total && content.total.updates.command !== null ? content.total.updates.command : 'None' }} | </div>
-              <div style="margin-bottom: 0.5rem;"><span class="">Meeting Updates:</span> {{ content.total && content.total.updates.meeting !== null ? content.total.updates.meeting : 'None' }} |
-                <span class="">Pipeline Updates:</span> {{ content.total && content.total.updates.pipeline !== null ? content.total.updates.pipeline : 'None' }} |
-                <span class="">Total Updates:</span> {{ content.total && content.total.updates.total !== null ? content.total.updates.total : 'None' }}</div>
-            </div>
-            <h2 class="note-section__small_title">
-              Per Organization:
-            </h2>
-            <div v-for="(orgItem, j) in content.orgs" :key="`item${j}`">
-              <div>Name: {{orgItem.name}}</div>
-              <div>
-                Org: Avg Updates per Session: {{Number(orgItem['session average']).toFixed(2)}} | Avg Total Sessions: {{orgItem['average total sessions']}} | Updates: {{orgItem['updates']}} | Creates: {{orgItem['creates']}}
+              <div style="margin-bottom: 0.5rem">
+                <span class="">Users:</span>
+                {{ content.total && content.total.users !== null ? content.total.users : 'None' }} |
+                <span class="">Workflows:</span>
+                {{
+                  content.total && content.total.workflows !== null
+                    ? content.total.workflows
+                    : 'None'
+                }}
               </div>
               <div>
-                <h4 style="margin-top: 1rem; margin-bottom: 0.25rem;">Users:</h4>
+                <span class="">Accounts Created:</span>
+                {{
+                  content.total && content.total.creates.accounts !== null
+                    ? content.total.creates.accounts
+                    : 'None'
+                }}
+                | <span class="">Contacts Created:</span>
+                {{
+                  content.total && content.total.creates.contacts !== null
+                    ? content.total.creates.contacts
+                    : 'None'
+                }}
+                |
+              </div>
+              <div style="margin-bottom: 0.5rem">
+                <span class="">Opportunities Created:</span>
+                {{
+                  content.total && content.total.creates.opportunities !== null
+                    ? content.total.creates.opportunities
+                    : 'null'
+                }}
+                | <span class="">Products Created:</span>
+                {{
+                  content.total && content.total.creates.products !== null
+                    ? content.total.creates.products
+                    : 'None'
+                }}
+                | <span class="">Total Created:</span>
+                {{
+                  content.total && content.total.creates.total !== null
+                    ? content.total.creates.total
+                    : 'None'
+                }}
+              </div>
+              <div>
+                <span class="">Alert Updates:</span>
+                {{
+                  content.total && content.total.updates.alert !== null
+                    ? content.total.updates.alert
+                    : 'None'
+                }}
+                | <span class="">Command Updates:</span>
+                {{
+                  content.total && content.total.updates.command !== null
+                    ? content.total.updates.command
+                    : 'None'
+                }}
+                |
+              </div>
+              <div style="margin-bottom: 0.5rem">
+                <span class="">Meeting Updates:</span>
+                {{
+                  content.total && content.total.updates.meeting !== null
+                    ? content.total.updates.meeting
+                    : 'None'
+                }}
+                | <span class="">Pipeline Updates:</span>
+                {{
+                  content.total && content.total.updates.pipeline !== null
+                    ? content.total.updates.pipeline
+                    : 'None'
+                }}
+                | <span class="">Total Updates:</span>
+                {{
+                  content.total && content.total.updates.total !== null
+                    ? content.total.updates.total
+                    : 'None'
+                }}
+              </div>
+            </div>
+            <h2 class="note-section__small_title">Per Organization:</h2>
+            <div v-for="(orgItem, j) in content.orgs" :key="`item${j}`">
+              <div>Name: {{ orgItem.name }}</div>
+              <div>
+                Org: Avg Updates per Session: {{ Number(orgItem['session average']).toFixed(2) }} |
+                Avg Total Sessions: {{ orgItem['average total sessions'] }} | Updates:
+                {{ orgItem['updates'] }} | Creates: {{ orgItem['creates'] }}
+              </div>
+              <div>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.25rem">Users:</h4>
                 <div v-for="(user, k) in orgItem.users" :key="`users${k}`">
-                  <div>{{user.userName}} - Avg Updates per Session: {{Number(user['session average']).toFixed(2)}} | Total Sessions: {{user['total sessions']}} | Updates: {{user['updates']}} | Creates: {{user['creates']}}</div>
+                  <div>
+                    {{ user.userName }} - Avg Updates per Session:
+                    {{ Number(user['session average']).toFixed(2) }} | Total Sessions:
+                    {{ user['total sessions'] }} | Updates: {{ user['updates'] }} | Creates:
+                    {{ user['creates'] }}
+                  </div>
                 </div>
               </div>
               <div class="separator"></div>
@@ -440,7 +513,7 @@
         placeholder="Select Organization"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
         v-model="selected_org"
-        :options="organizations/*.list*/"
+        :options="organizations /*.list*/"
         openDirection="below"
         selectLabel="Enter"
         label="name"
@@ -582,10 +655,10 @@
             :goBackAdmin="goBack"
           /> -->
           <button class="green_button back" @click="goBack">Back</button>
-          <h2>{{selectedSlackForms.form_type}} {{selectedSlackForms.resource}}</h2>
+          <h2>{{ selectedSlackForms.form_type }} {{ selectedSlackForms.resource }}</h2>
           <div v-for="(field, i) in selectedSlackForms.fields_ref" :key="field.field">
-            <div @click="test(selectedSlackForms)" style="margin-bottom: 1rem;">
-              {{i + 1}} | {{field.field_ref.label}} ({{field.field_ref.api_name}})
+            <div @click="test(selectedSlackForms)" style="margin-bottom: 1rem">
+              {{ i + 1 }} | {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
             </div>
           </div>
         </div>
@@ -598,8 +671,8 @@
           :key="slackFormInstance.id"
         >
           <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
-            {{ slackFormInstance.template_ref.resource }}
-            {{ slackFormInstance.template_ref.form_type }} by
+            {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.resource : '-' }}
+            {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.form_type : '-' }} by
             {{ getUserName(slackFormInstance.user) }}
             {{
               slackFormInstance.submissionDate
@@ -728,7 +801,7 @@ export default {
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
-      return `${user.firstName} ${user.lastName}`
+      return user ? `${user.firstName} ${user.lastName}` : '-'
     },
     async getAllForms() {
       try {
@@ -999,7 +1072,7 @@ export default {
             "userName": "${user['userName']}"
           },`
         }
-        usersStr = usersStr.slice(0, usersStr.length-1)
+        usersStr = usersStr.slice(0, usersStr.length - 1)
         usersStr += `
           }`
         orgsString += `
@@ -1012,7 +1085,7 @@ export default {
           "users": ${usersStr}
         },`
       }
-      orgsString = orgsString.slice(0, orgsString.length-1)
+      orgsString = orgsString.slice(0, orgsString.length - 1)
       const stringObj = `
       "${i}": {
         "date": "${obj.date}",
@@ -1047,7 +1120,7 @@ export default {
           string += this.getObjString(obj[i], i + 1)
           string += ','
         }
-        string = string.slice(0, string.length-1)
+        string = string.slice(0, string.length - 1)
       } else {
         string += this.getObjString(obj, 1)
       }
@@ -1083,7 +1156,9 @@ export default {
         this.orgUsers = this.filterUsers(this.selected_org.id)
         this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
         this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
-        this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(this.selected_org.id)
+        this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
+          this.selected_org.id,
+        )
       }
     },
   },

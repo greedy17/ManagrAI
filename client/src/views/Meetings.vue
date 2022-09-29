@@ -458,6 +458,8 @@ export default {
       notes: [],
       notesLength: 0,
       addingProduct: false,
+      stageGateCopy: null,
+      stageReferenceOpts: {},
       days: {
         0: 'Sunday',
         1: 'Monday',
@@ -850,7 +852,6 @@ export default {
       }
     },
     async mapOpp(workflow, resource, resourceType) {
-      console.log(workflow, resource, resourceType)
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
@@ -893,7 +894,6 @@ export default {
       }
     },
     async addParticipant(workflow, participant, data) {
-      console.log(data)
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
@@ -1281,6 +1281,14 @@ export default {
           }
         }
 
+        if (this.stageGateCopy) {
+          for (let i = 0; i < this.stageGateCopy.length; i++) {
+            if (this.stageGateCopy[i].dataType === 'Reference') {
+              this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+            }
+          }
+        }
+
         for (let i = 0; i < this.updateAccountForm.length; i++) {
           if (this.updateAccountForm[i].dataType === 'Reference') {
             this.accountReferenceOpts[this.updateAccountForm[i].apiName] =
@@ -1306,6 +1314,15 @@ export default {
 
         for (let i in this.referenceOpts) {
           this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+        if (this.stageReferenceOpts) {
+          for (let i in this.stageReferenceOpts) {
+            this.stageReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.stageReferenceOpts[i],
+              'stage',
+            )
+          }
         }
         for (let i in this.accountReferenceOpts) {
           this.accountReferenceOpts[i] = this.getReferenceFieldList(
@@ -1386,6 +1403,7 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.resourceFields = this.updateOppForm[0].fieldsRef
+        this.stageGateCopy = stageGateForms[0].fieldsRef
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef

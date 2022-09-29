@@ -907,7 +907,7 @@ def process_add_products_form(payload, context):
         )
         blocks.extend(product_form.generate_form())
     else:
-        blocks.extend(product_form.generate_form(Pricebook2Id=f"{pricebook}"))
+        blocks.extend(product_form.generate_form(fields=f"Pricebook2Id:'{pricebook}'"))
     if len(blocks):
         data = {
             "view_id": loading_view_data["view"]["id"],
@@ -2077,6 +2077,16 @@ def process_paginate_alerts(payload, context):
     alert_text = alert_template.title
     blocks = [
         block_builders.header_block(f"{len(alert_instances)} results for workflow {alert_text}"),
+        block_builders.section_with_button_block(
+            "Choose CRM Field",
+            "bulk_update",
+            ":file_cabinet: *Update in Bulk*",
+            action_id=action_with_params(
+                slack_const.PROCESS_BULK_UPDATE,
+                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}"],
+            ),
+        ),
+        {"type": "divider"},
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
     for alert_instance in alert_instances.get("results", []):
@@ -2356,6 +2366,108 @@ def process_alert_actions(payload, context):
     else:
         context["type"] = "alert"
     return alert_action_switcher[selected](payload, context)
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_show_bulk_update_form(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    config_id = context.get("config_id")
+    invocation = context.get("invocation")
+    config = AlertConfig.objects.get(id=config_id)
+    config_list = list(
+        AlertInstance.objects.filter(config_id=config_id, invocation=invocation).values_list(
+            "resource_id", flat=True
+        )
+    )
+    model_object = routes[config.template.resource_type]["model"]
+    resource_list = model_object.objects.filter(id__in=config_list)
+    resource_options = [resource.as_slack_option for resource in resource_list]
+    form = user.team.team_forms.filter(
+        form_type="UPDATE", resource=config.template.resource_type
+    ).first()
+    fields = form.to_slack_options()
+    blocks = [
+        block_builders.static_select(
+            "Fields",
+            options=fields,
+            action_id=action_with_params(
+                slack_const.CHOOSE_CRM_FIELD, params=[f"u={str(user.id)}",],
+            ),
+            block_id="CRM_FIELDS",
+        ),
+        block_builders.multi_static_select(
+            label=config.template.resource_type,
+            options=resource_options,
+            initial_options=resource_options,
+            block_id="RESOURCES",
+            action_id="SELECTED_RESOURCES",
+        ),
+    ]
+    data = {
+        "message_ts": payload["container"]["message_ts"],
+        "channel_id": payload["container"]["channel_id"],
+        "resource_type": config.template.resource_type,
+    }
+    loading_view_data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Bulk Update"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(data),
+        },
+    }
+
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+        loading_view_data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_select_crm_field(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload["view"]["private_metadata"])
+    view_id = payload["view"]["id"]
+    action = payload["actions"][0]
+    blocks = payload["view"]["blocks"]
+    selected_value = action["selected_option"]["value"]
+    field = user.salesforce_account.object_fields.filter(api_name=selected_value).first()
+    try:
+        f_index, f_block = block_finder("CRM_FIELD", blocks)
+    except ValueError:
+        # did not find the block
+        f_block = None
+        pass
+    index, block = block_finder("CRM_FIELDS", blocks)
+    slack_field = field.to_slack_field()
+    slack_field["block_id"] = "CRM_FIELD"
+    if f_block:
+        blocks = [*blocks[:f_index], slack_field, *blocks[f_index + 1 :]]
+    else:
+        blocks.insert(index + 1, slack_field)
+    pm.update(**context)
+    loading_view_data = {
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Bulk Update"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Bulk Update", "emoji": True},
+            "private_metadata": json.dumps(pm),
+            "callback_id": slack_const.PROCESS_SUBMIT_BULK_UPDATE,
+        },
+    }
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        loading_view_data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
 
 
 #########################################################
@@ -2969,6 +3081,204 @@ def process_log_activity(payload, context):
     return
 
 
+def process_insert_note_templates_dropdown(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    view_id = payload["view"]["id"]
+    blocks = payload["view"]["blocks"]
+    pm = json.loads(payload["view"]["private_metadata"])
+    current_form_ids = pm.get("f").split(",")
+    pm.update({"u": str(user.id)})
+    try:
+        index, block = block_finder("note_templates", blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if block:
+        template_options = [template.as_slack_option for template in user.note_templates]
+        template_dropdown = block_builders.static_select(
+            "*Note Template*",
+            options=template_options,
+            action_id=slack_const.INSERT_NOTE_TEMPLATE,
+            block_id="note_templates",
+        )
+        blocks = [*blocks[:index], template_dropdown, *blocks[index + 1 :]]
+    current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
+    current_stage = current_forms.first().resource_object.secondary_data.get("StageName")
+    stage_template = (
+        OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
+        if current_stage
+        else None
+    )
+    data = {
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": payload["view"]["title"],
+            "blocks": blocks,
+            "private_metadata": json.dumps(pm),
+            "external_id": payload["view"]["external_id"],
+        },
+    }
+    if stage_template:
+        submit_button_text = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    else:
+        submit_button_text = "Update"
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+
+    data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
+    data["view"]["callback_id"] = callback_id
+
+    try:
+        res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except Exception as e:
+        return logger.exception(f"Failed to send message for {e}")
+    return
+
+
+def process_insert_note_template(payload, context):
+    from managr.salesforce.background import replace_tags
+
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    view_id = payload["view"]["id"]
+    blocks = payload["view"]["blocks"]
+    pm = json.loads(payload["view"]["private_metadata"])
+    type = pm.get("type", None)
+    pm.update({"u": str(user.id)})
+    current_form_ids = pm.get("f").split(",")
+    state = payload["view"]["state"]["values"]
+    selected_template = state["note_templates"]["INSERT_NOTE_TEMPLATE"]["selected_option"]["text"][
+        "text"
+    ]
+    template = user.note_templates.filter(subject=selected_template).first()
+    try:
+        index, block = block_finder("note_templates", blocks)
+
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if block:
+        template_section = block_builders.section_with_button_block(
+            "Insert",
+            "note_templates",
+            "*Note Templates*",
+            block_id="note_templates",
+            action_id=slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN,
+        )
+        blocks = [*blocks[:index], template_section, *blocks[index + 1 :]]
+    try:
+        s_index, s_block = block_finder("meeting_type", blocks)
+        m_index, m_block = block_finder("meeting_comments", blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if m_block:
+        m_block["element"]["initial_value"] = replace_tags(template.body)
+        m_block["block_id"] = "meeting_comment"
+        s_block["element"]["initial_value"] = template.subject
+        s_block["block_id"] = "meeting_title"
+        blocks = [*blocks[:s_index], s_block, *blocks[s_index + 1 :]]
+        blocks = [*blocks[:m_index], m_block, *blocks[m_index + 1 :]]
+    current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
+    main_form = current_forms.first()
+    current_stage = main_form.resource_object.secondary_data.get("StageName")
+    stage_template = (
+        OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
+        if current_stage
+        else None
+    )
+    if stage_template:
+        if type == "meeting":
+            workflow = MeetingWorkflow.objects.filter(id=pm.get("w")).first()
+            workflow.add_form(
+                slack_const.FORM_RESOURCE_OPPORTUNITY,
+                slack_const.FORM_TYPE_STAGE_GATING,
+                stage=current_stage,
+            )
+        else:
+            stage_form = OrgCustomSlackFormInstance.objects.create(
+                template=stage_template, resource_id=main_form.resource_id, user=user,
+            )
+            current_form_ids.append(str(stage_form.id))
+    pm.update({"f": ",".join(current_form_ids)})
+    if stage_template:
+        submit_button_text = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    else:
+        submit_button_text = "Submit"
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    if type == "meeting":
+        callback_id = (
+            slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
+            if stage_template
+            else slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        )
+        pm.update({"form_type": main_form.template.form_type})
+    data = {
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "title": payload["view"]["title"],
+            "blocks": blocks,
+            "private_metadata": json.dumps(pm),
+            "external_id": payload["view"]["external_id"],
+        },
+    }
+    data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
+    data["view"]["callback_id"] = callback_id
+
+    try:
+        res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Insert Note Template Dropdown for user {user.email} {e}"
+        )
+    except Exception as e:
+        return logger.exception(f"Failed to send message for {e}")
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -3017,6 +3327,10 @@ def handle_block_actions(payload):
         slack_const.COMMAND_LOG_NEW_ACTIVITY: process_log_activity,
         slack_const.PROCESS_ALERT_ACTIONS: process_alert_actions,
         slack_const.SHOW_INITIAL_MEETING_INTERACTION: show_initial_meeting_interaction,
+        slack_const.PROCESS_BULK_UPDATE: process_show_bulk_update_form,
+        slack_const.CHOOSE_CRM_FIELD: process_select_crm_field,
+        slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
+        slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
@@ -3025,5 +3339,4 @@ def handle_block_actions(payload):
     # added special key __block_action to allow us to override the defaults since the action_id is used for both the suggestions and the actions
     if action_params.get("__block_action", None):
         action_id = action_params.get("__block_action")
-
     return switcher.get(action_id, NO_OP)(payload, action_params)

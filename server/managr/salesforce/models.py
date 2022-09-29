@@ -158,6 +158,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
             and self.relationship_name
             and not self.is_public
         ):
+            if "__r" in self.relationship_name:
+                return self.label
             return self.relationship_name
         return self.label
 
@@ -222,7 +224,6 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_option=initial_option,
                 )
-
             return block
 
         elif self.data_type == "Reference":
@@ -243,19 +244,22 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_options=None,
                 )
-            elif (
-                self.api_name == "PricebookEntryId"
-                and self.salesforce_object == "OpportunityLineItem"
-            ):
-                user_id = str(kwargs.get("user").id)
-                resource = self.relationship_name
-                action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
-                return block_builders.external_select(
-                    "*Products*", action_query, block_id=self.api_name, initial_option=None,
-                )
+            # elif (
+            #     self.api_name == "PricebookEntryId"
+            #     and self.salesforce_object == "OpportunityLineItem"
+            # ):
+            #     user_id = str(kwargs.get("user").id)
+            #     resource = self.relationship_name
+            #     action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
+            #     return block_builders.external_select(
+            #         "*Products*", action_query, block_id=self.api_name, initial_option=None,
+            #     )
             else:
+                if self.api_name == "PricebookEntryId":
+                    display_name = "Products"
+                additional_fields = kwargs.get("fields", "")
                 user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}"
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}&add={additional_fields}"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
@@ -289,11 +293,17 @@ class SObjectField(TimeStampModel, IntegrationModel):
             )
 
         elif self.data_type == "Boolean":
+            initial_value = (
+                [block_builders.option(self.reference_display_label, "true")]
+                if value is True
+                else None
+            )
             return block_builders.checkbox_block(
                 " ",
                 [block_builders.option(self.reference_display_label, "true")],
                 action_id=self.api_name,
                 block_id=self.api_name,
+                initial_options=initial_value,
             )
         elif self.data_type == "MultiChannelsSelect":
             return [
@@ -428,6 +438,10 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     @property
     def as_slack_options(self):
         values = self.values
+        for value in values:
+            if len(value["label"]) > 75:
+                value["label"] = f"{value['label'][:50]}..."
+
         if values and len(values):
             return list(
                 map(lambda option: block_builders.option(option["label"], option["value"]), values)

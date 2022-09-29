@@ -6,6 +6,7 @@
           apiName !== 'Amount' &&
           dataType !== 'Date' &&
           dataType !== 'DateTime' &&
+          dataType !== 'Reference' &&
           apiName !== 'StageName'
         "
         v-html="fieldData ? fieldData : ''"
@@ -20,6 +21,10 @@
 
       <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'DateTime'">
         {{ fieldData ? formatDateTime(fieldData) : '' }}
+      </p>
+
+      <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'Reference'">
+        {{ fieldData && apiName ? referenceName : '' }}
       </p>
 
       <p :class="fieldData ? 'flex-columned' : 'blank'" v-else-if="apiName === 'StageName'">
@@ -46,9 +51,25 @@
 export default {
   name: 'PipelineField',
   data() {
-    return {}
+    return {
+      referenceName: null
+    }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
+    getReferenceName() {
+      setTimeout(() => {
+        const list = this.referenceOpts[this.apiName]
+        for (let i = 0; i < list.length; i++) {
+          if (list[i].id === this.fieldData) {
+            this.referenceName = list[i].name
+            return
+          }
+        }
+      }, 1000)
+    },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -86,6 +107,11 @@ export default {
       return date
     },
   },
+  mounted() {
+    if (this.referenceOpts && this.dataType === 'Reference') {
+      this.getReferenceName()
+    }
+  },
   props: {
     apiName: {
       type: String,
@@ -96,6 +122,7 @@ export default {
     fieldData: {},
     lastStageUpdate: {},
     index: {},
+    referenceOpts: {},
   },
 }
 </script>
