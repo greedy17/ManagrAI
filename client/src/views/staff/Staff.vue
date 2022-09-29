@@ -767,7 +767,6 @@ export default {
       try {
         const res = await User.api.callCommand(this.selectedCommand.value)
         if (res.data) {
-          // work here
           const newResContent = []
           const newResObjects = {}
           for (let key in res.data.totals) {
@@ -991,63 +990,67 @@ export default {
         for (let key2 in users) {
           const user = users[key2]
           usersStr += `
-          ${key2}: {
-            creates: ${user['creates']},
-            session average: ${user['session average']},
-            total sessions: ${user['total sessions']},
-            updates: ${user['updates']},
-            userName: ${user['userName']},
+          "${key2}": {
+            "creates": "${user['creates']}",
+            "session average": "${user['session average']}",
+            "total sessions": "${user['total sessions']}",
+            "updates": "${user['updates']}",
+            "userName": "${user['userName']}"
           },`
         }
         usersStr = usersStr.slice(0, usersStr.length-1)
         usersStr += `
           }`
         orgsString += `
-        ${key}: {
-          average total sessions: ${org['average total sessions']},
-          creates: ${org['creates']},
-          name: ${org['name']},
-          session average: ${org['session average']},
-          updates: ${org['updates']},
-          users: ${usersStr},
+        "${key}": {
+          "average total sessions": "${org['average total sessions']}",
+          "creates": "${org['creates']}",
+          "name": "${org['name']}",
+          "session average": "${org['session average']}",
+          "updates": "${org['updates']}",
+          "users": ${usersStr}
         },`
       }
+      orgsString = orgsString.slice(0, orgsString.length-1)
       const stringObj = `
-      ${i}: {
-        date: ${obj.date},
-        total: {
-          creates: {
-            accounts: ${obj.total.creates.accounts}
-            contacts: ${obj.total.creates.contacts}
-            opportunities: ${obj.total.creates.opportunities}
-            products: ${obj.total.creates.products}
-            total: ${obj.total.creates.total}
-          }
-          updates: {
-            alert: ${obj.total.updates.alert}
-            command: ${obj.total.updates.command}
-            meeting: ${obj.total.updates.meeting}
-            pipeline: ${obj.total.updates.pipeline}
-            total: ${obj.total.updates.total}
-          }
-          users: ${obj.total.users}
-          workflows: ${obj.total.workflows}
+      "${i}": {
+        "date": "${obj.date}",
+        "total": {
+          "creates": {
+            "accounts": "${obj.total.creates.accounts}",
+            "contacts": "${obj.total.creates.contacts}",
+            "opportunities": "${obj.total.creates.opportunities}",
+            "products": "${obj.total.creates.products}",
+            "total": "${obj.total.creates.total}"
+          },
+          "updates": {
+            "alert": "${obj.total.updates.alert}",
+            "command": "${obj.total.updates.command}",
+            "meeting": "${obj.total.updates.meeting}",
+            "pipeline": "${obj.total.updates.pipeline}",
+            "total": "${obj.total.updates.total}"
+          },
+          "users": "${obj.total.users}",
+          "workflows": "${obj.total.workflows}"
         },
-        orgs: {${orgsString}
-        },
-      },
+        "orgs": {${orgsString}
+        }
+      }
       `
       return stringObj
     },
     formatCopyObject(obj) {
-      let string = ''
+      let string = '{'
       if (obj.length) {
         for (let i = 0; i < obj.length; i++) {
           string += this.getObjString(obj[i], i + 1)
+          string += ','
         }
+        string = string.slice(0, string.length-1)
       } else {
         string += this.getObjString(obj, 1)
       }
+      string += '}'
       return string
     },
     slackFormLabel({ formType, resource }) {
