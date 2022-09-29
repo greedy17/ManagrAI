@@ -574,13 +574,20 @@
       </template>
       <template v-else-if="page === 'SlackForm'">
         <div>
-          <CustomSlackForm
+          <!-- <CustomSlackForm
             :formType="selectedSlackForms.formType"
             :customForm="selectedSlackForms"
             :resource="selectedSlackForms.resource"
             :fromAdmin="true"
             :goBackAdmin="goBack"
-          />
+          /> -->
+          <button class="green_button back" @click="goBack">Back</button>
+          <h2>{{selectedSlackForms.form_type}} {{selectedSlackForms.resource}}</h2>
+          <div v-for="(field, i) in selectedSlackForms.fields_ref" :key="field.field">
+            <div @click="test(selectedSlackForms)" style="margin-bottom: 1rem;">
+              {{i + 1}} | {{field.field_ref.label}} ({{field.field_ref.api_name}})
+            </div>
+          </div>
         </div>
       </template>
       <template v-else-if="page === 'SlackFormInstance'">
