@@ -378,13 +378,15 @@ def process_submit_resource_data(payload, context):
         sf = user.salesforce_account
         try:
             if main_form.template.form_type == "UPDATE":
-                resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                main_form.resource_object.update_in_salesforce(all_form_data)
+                resource = main_form.resource_object
                 break
             else:
                 resource = _process_create_new_resource.now(current_form_ids)
                 new_resource = model_routes[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )
+
                 main_form.resource_id = str(new_resource.id)
                 main_form.save()
                 break

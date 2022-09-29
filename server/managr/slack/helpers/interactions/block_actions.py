@@ -3204,12 +3204,19 @@ def process_insert_note_template(payload, context):
         blocks = [*blocks[:s_index], s_block, *blocks[s_index + 1 :]]
         blocks = [*blocks[:m_index], m_block, *blocks[m_index + 1 :]]
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
-    current_stage = current_forms.first().resource_object.secondary_data.get("StageName")
+    main_form = current_forms.first()
+    current_stage = main_form.resource_object.secondary_data.get("StageName")
     stage_template = (
         OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
         if current_stage
         else None
     )
+    if stage_template:
+        stage_form = OrgCustomSlackFormInstance.objects.create(
+            template=stage_template, resource_id=main_form.resource_id, user=user,
+        )
+        current_form_ids.append(str(stage_form.id))
+    pm.update({"f": ",".join(current_form_ids)})
     data = {
         "view_id": view_id,
         "view": {
@@ -3226,6 +3233,9 @@ def process_insert_note_template(payload, context):
     else:
         submit_button_text = "Update"
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    type = pm.get("type", None)
+    if type == "meeting":
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
 
     data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
     data["view"]["callback_id"] = callback_id
