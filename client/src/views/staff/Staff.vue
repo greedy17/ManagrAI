@@ -766,24 +766,17 @@ export default {
       }
       try {
         const res = await User.api.callCommand(this.selectedCommand.value)
-        console.log('res', res)
         if (res.data) {
           // work here
           const newResContent = []
           const newResObjects = {}
-          // console.log('res.data.totals', res.data.totals)
           for (let key in res.data.totals) {
             const item = res.data.totals[key]
-            // console.log('res.data.totals[key]', res.data.totals[key])
-            // item['date'] = key
             newResObjects[key] = {}
-            // console.log('item', item)
             newResObjects[key].total = item
-            // newResContent.unshift(item)
           }
           for (let key in res.data.org) {
             const item = res.data.org[key]
-            console.log('res.data.org[key]', res.data.org[key])
             for (let key2 in item) {
               item[key2].name = key2
               for (let key3 in item[key2].users) {
@@ -791,7 +784,6 @@ export default {
               }
             }
             newResObjects[key].orgs = item
-            // newResContent.unshift(item)
           }
           for (let key in newResObjects) {
             const item = newResObjects[key]
@@ -801,7 +793,6 @@ export default {
           this.contentModalInfo = newResContent
           this.displayCommandModal = true
           this.contentType = 'PullUsageData'
-          console.log('newResContent', newResContent)
         } else {
           if (res.success) {
             this.$toast(res['message'], {
@@ -857,7 +848,7 @@ export default {
         )
       } catch (e) {
         console.log('error: ', e)
-        this.$toast('Something went wrong. Check the console for full error report.', {
+        this.$toast('Something went wrong.', {
           type: 'error',
           timeout: 3000,
         })
@@ -991,7 +982,6 @@ export default {
       })
     },
     getObjString(obj, i) {
-      console.log('obj', obj)
       const orgs = obj.orgs
       let orgsString = ''
       for (let key in orgs) {
