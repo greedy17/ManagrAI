@@ -18,6 +18,8 @@ const SLACK_LIST_INSTANCES = '/slack/instances/'
 const SLACK_ZOOM_CHANNEL_UPDATE = '/slack/update-zoom-channel/'
 const ZOOM_RECAP_CHANNEL_UPDATE = '/slack/update-recap-channel/'
 const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
+const ADMIN_FORMS = '/slack/forms/admin/'
+const ADMIN_FORM_INSTANCES = '/slack/instances/admin/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -167,5 +169,22 @@ export default class SlackAPI {
       .post(ZOOM_RECAP_CHANNEL_UPDATE, { slack_id: slack_id, recap_channel: recap_channel, users: users })
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'SlackApi.updateRecapChannel' }))
+  }
+
+  async getStaffForms(org_id) {
+    try {
+      const response = await this.client.get(ADMIN_FORMS, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'SlackApi.getStaffForms' })
+    }
+  }
+  async getStaffFormInstances(org_id) {
+    try {
+      const response = await this.client.get(ADMIN_FORM_INSTANCES, { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'SlackApi.getStaffFormInstances' })
+    }
   }
 }

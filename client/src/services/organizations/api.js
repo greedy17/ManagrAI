@@ -49,9 +49,9 @@ export default class OrganizationAPI {
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.changeAdmin' }))
   }
-  async getStaffOrganizations(org) {
+  async getStaffOrganizations(org_id) {
     try {
-      const response = await this.client.get(ADMIN_ORGS, { params: { org } })
+      const response = await this.client.get(ADMIN_ORGS, { params: { org_id } })
       return response.data
     } catch(e) {
       apiErrorHandler({ apiName: 'Organization.getStaffOrganizations' })
@@ -61,10 +61,6 @@ export default class OrganizationAPI {
     try {
       const res = await this.client.get(TEAM_ENDPOINT, { params: { user: id } })
       return res.data
-      // return {
-      //   ...res.data,
-      //   results: res.data.results.map(this.cls.fromAPI)
-      // }
     } catch {
       apiErrorHandler({ apiName: 'Organization.listTeams' })
     }

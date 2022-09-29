@@ -1052,7 +1052,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     @action(
         methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
     )
-    def admin_forms(self, request, *args, **kwargs):
+    def admin_meetings(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""
         org_param = request.query_params.get("org_id", None)
         meetings = MeetingWorkflow.objects.filter(user__organization=org_param)[:100]

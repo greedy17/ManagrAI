@@ -16,37 +16,37 @@
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
                 <h4>
-                  {{ modalInfo.templateRef.resource }} {{ modalInfo.templateRef.formType }} by
+                  {{ modalInfo.template_ref.resource }} {{ modalInfo.template_ref.form_type }} by
                   {{ getUserName(modalInfo.user) }}
                 </h4>
               </div>
             </div>
             <section class="note-section">
               <p class="note-section__title">
-                Resource: {{ modalInfo.resourceId ? modalInfo.resourceId : 'N/A' }}
+                Resource: {{ modalInfo.resource_id ? modalInfo.resource_id : 'N/A' }}
               </p>
               <p class="note-section__date">
                 {{
                   modalInfo.submissionDate
-                    ? `Submitted on ${weekDay(modalInfo.submissionDate)} ${formatDateTime(
-                        modalInfo.submissionDate,
+                    ? `Submitted on ${weekDay(modalInfo.submission_date)} ${formatDateTime(
+                        modalInfo.submission_date,
                       )}`
                     : 'Not Submitted'
                 }}
               </p>
               <p class="note-section__body">
                 <span class="underline">Workflow ID:</span>
-                {{ modalInfo.workflowId ? modalInfo.workflowId : 'None' }}
+                {{ modalInfo.workflow ? modalInfo.workflow : 'None' }}
                 <span class="underline">Update Source:</span>
-                {{ modalInfo.updateSource ? modalInfo.updateSource : 'None' }}
+                {{ modalInfo.update_source ? modalInfo.update_source : 'None' }}
                 <span class="underline">User ID:</span>
                 {{ modalInfo.user ? modalInfo.user : 'None' }}
                 <span class="underline">Template ID:</span>
                 {{ modalInfo.template ? modalInfo.template : 'None' }}
                 <span class="underline">Saved Data:</span>
-                {{ modalInfo.savedData ? modalInfo.savedData : 'None' }}
+                {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }}
                 <span class="underline">Previous Data:</span>
-                {{ modalInfo.previousData ? modalInfo.previousData : 'None' }}
+                {{ modalInfo.previous_data ? modalInfo.previous_data : 'None' }}
               </p>
             </section>
           </div>
@@ -585,15 +585,14 @@
       </template>
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
-        <!-- {{slackFormInstances[0]}} -->
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
           v-for="(slackFormInstance, i) in orgSlackFormInstances"
           :key="slackFormInstance.id"
         >
           <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
-            {{ slackFormInstance.templateRef.resource }}
-            {{ slackFormInstance.templateRef.formType }} by
+            {{ slackFormInstance.template_ref.resource }}
+            {{ slackFormInstance.template_ref.form_type }} by
             {{ getUserName(slackFormInstance.user) }}
             {{
               slackFormInstance.submissionDate
@@ -676,7 +675,7 @@ export default {
       selectedUsers: null,
       selectedSlackForms: null,
       orgUsers: null,
-      orgSlackForms: null,
+      orgSlackForms: [],
       orgSlackFormInstances: null,
       selectedCommand: '',
       loading: true,
@@ -704,11 +703,6 @@ export default {
       page: null,
       orgForms: null,
       organizations: [],
-      // organizations: CollectionManager.create({
-      //   // change to null, make this update in create with new endpoint
-      //   ModelClass: Organization,
-      //   filters: { fromAdmin: true },
-      // }),
     }
   },
   computed: {
@@ -1053,59 +1047,36 @@ export default {
       string += '}'
       return string
     },
-    slackFormLabel({ formType, resource }) {
-      let formattedFormType = formType[0]
-      for (let i = 1; i < formType.length; i++) {
-        formattedFormType += formType[i].toLowerCase()
+    slackFormLabel({ form_type, resource }) {
+      let formattedFormType = form_type[0]
+      for (let i = 1; i < form_type.length; i++) {
+        formattedFormType += form_type[i].toLowerCase()
       }
       return `${formattedFormType} ${resource}`
-    },
-    filterOrgForms(org_id) {
-      return this.allForms.filter((form) => form.organization == org_id)
-    },
-    filterMeetingWorkflow(org_id) {
-      return this.allMeetingWorkflows.filter((workflow) => workflow.org_ref.id == org_id)
-    },
-    showOrgData(org_id) {
-      this.orgForms = this.filterOrgForms(org_id)
-      this.orgMeetingWorkflows = this.filterMeetingWorkflow(org_id)
     },
     filterUsers(org_id) {
       return this.allUsers.list.filter((user) => user.organization == org_id)
     },
-    filterSlackForms(org_id) {
-      return this.allForms.filter((form) => form.organization == org_id)
-    },
-    filterSlackFormInstances(org_id) {
-      return this.slackFormInstances.filter(
-        (instance) => instance.templateRef.organization == org_id,
-      )
-    },
   },
   created() {
-    this.getAllForms()
-    this.getAllMeetingWorkflows()
     this.getStaffOrgs()
-    this.getSlackFormInstance()
-    // this.organizations.refresh()
     this.allUsers.refresh()
   },
   watch: {
-    organizations() {
+    async organizations() {
       if (this.selected_org) {
-        this.selected_org.id = this.organizations[0].id
         this.orgUsers = this.filterUsers(this.selected_org.id)
-        this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
-        this.orgMeetingWorkflows = this.filterMeetingWorkflow(this.selected_org.id)
+        this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
+        this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
       }
     },
-    selected_org() {
+    async selected_org() {
       if (this.selected_org) {
-        this.showOrgData(this.selected_org.id)
         this.loading = false
         this.orgUsers = this.filterUsers(this.selected_org.id)
-        this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
-        this.orgSlackFormInstances = this.filterSlackFormInstances(this.selected_org.id)
+        this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
+        this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
+        this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(this.selected_org.id)
       }
     },
   },

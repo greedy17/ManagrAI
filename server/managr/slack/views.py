@@ -1256,3 +1256,12 @@ class SlackFormInstanceViewSet(
             user__organization=self.request.user.organization
         )
 
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+    )
+    def admin_form_instances(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        param = request.query_params.get("org_id", None)
+        orgs = OrgCustomSlackFormInstance.objects.filter(user__organization=param)[:50]
+        serialized = self.get_serializer(orgs, many=True).data
+        return Response(serialized)
