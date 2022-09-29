@@ -4,6 +4,7 @@ const ORGANIZATIONS_ENDPOINT = '/organizations/'
 const TEAM_ENDPOINT = '/organization/teams/'
 const CHANGE_ADMIN = '/organizations/change-admin/'
 const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
+const ADMIN_ORGS = '/organizations/admin/'
 
 export default class OrganizationAPI {
   constructor(cls) {
@@ -47,6 +48,14 @@ export default class OrganizationAPI {
       .post(CHANGE_ADMIN, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.changeAdmin' }))
+  }
+  async getStaffOrganizations(org) {
+    try {
+      const response = await this.client.get(ADMIN_ORGS, { params: { org } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'Organization.getStaffOrganizations' })
+    }
   }
   async listTeams(id) {
     try {

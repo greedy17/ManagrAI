@@ -435,12 +435,12 @@
         </Multiselect>
         <button class="green_button sized" @click="runCommand">></button>
       </div>
-      <h3 @click="test">Organizations</h3>
+      <h3>Organizations</h3>
       <Multiselect
         placeholder="Select Organization"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
         v-model="selected_org"
-        :options="organizations.list"
+        :options="organizations/*.list*/"
         openDirection="below"
         selectLabel="Enter"
         label="name"
@@ -703,12 +703,12 @@ export default {
       modalName: '',
       page: null,
       orgForms: null,
-      //organizations: null,
-      organizations: CollectionManager.create({
-        // change to null, make this update in create with new endpoint
-        ModelClass: Organization,
-        filters: { fromAdmin: true },
-      }),
+      organizations: [],
+      // organizations: CollectionManager.create({
+      //   // change to null, make this update in create with new endpoint
+      //   ModelClass: Organization,
+      //   filters: { fromAdmin: true },
+      // }),
     }
   },
   computed: {
@@ -722,8 +722,8 @@ export default {
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
-    test() {
-      console.log('test', this.eventCalendarIDObj)
+    test(log) {
+      console.log('log', log)
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
@@ -749,9 +749,8 @@ export default {
     },
     async getStaffOrgs() {
       try {
-        console.log('getStaffOrgs')
-        // let res = await User.api.getStaffOrganizations()
-        // this.organizations = res.results
+        let res = await Organization.api.getStaffOrganizations()
+        this.organizations = res
       } catch (e) {
         console.log(e)
       }
@@ -837,7 +836,8 @@ export default {
       }
       try {
         const res = await Organization.api.orgUpdate(orgUpdates)
-        const refresh = await this.organizations.refresh()
+        this.getStaffOrgs()
+        // const refresh = await this.organizations.refresh()
         this.$toast(
           'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
           {
@@ -1087,7 +1087,7 @@ export default {
     this.getAllMeetingWorkflows()
     this.getStaffOrgs()
     this.getSlackFormInstance()
-    this.organizations.refresh()
+    // this.organizations.refresh()
     this.allUsers.refresh()
   },
   watch: {
