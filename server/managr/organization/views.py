@@ -39,10 +39,10 @@ from managr.core.permissions import (
     CanEditResourceOrReadOnly,
     SuperUserCreateOnly,
     IsExternalIntegrationAccount,
+    IsStaff,
 )
 
 from managr.core.models import User
-
 from .models import Organization, Account, Contact, Stage, ActionChoice, Team
 from . import constants as org_consts
 from .serializers import (
@@ -69,9 +69,6 @@ class OrganizationViewSet(
     )
 
     def get_queryset(self):
-        fromAdmin = self.request.GET.get("fromAdmin", False)
-        if fromAdmin and self.request.user.is_staff and json.loads(fromAdmin):
-            return Organization.objects.all()
         return Organization.objects.for_user(self.request.user)
 
     def get_serializer_class(self):
@@ -137,6 +134,18 @@ class OrganizationViewSet(
             return Response(data=status.HTTP_200_OK)
         else:
             return Response(data=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+    )
+    def admin_orgs(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        param = request.query_params.get("org", None)
+        orgs = Organization.objects.all()
+        if param:
+            orgs = orgs.filter(id=param)
+        serialized = self.get_serializer(orgs, many=True).data
+        return Response(serialized)
 
 
 class AccountViewSet(
