@@ -3166,6 +3166,7 @@ def process_insert_note_template(payload, context):
     view_id = payload["view"]["id"]
     blocks = payload["view"]["blocks"]
     pm = json.loads(payload["view"]["private_metadata"])
+    type = pm.get("type", None)
     pm.update({"u": str(user.id)})
     current_form_ids = pm.get("f").split(",")
     state = payload["view"]["state"]["values"]
@@ -3212,11 +3213,32 @@ def process_insert_note_template(payload, context):
         else None
     )
     if stage_template:
-        stage_form = OrgCustomSlackFormInstance.objects.create(
-            template=stage_template, resource_id=main_form.resource_id, user=user,
-        )
-        current_form_ids.append(str(stage_form.id))
+        if type == "meeting":
+            workflow = MeetingWorkflow.objects.filter(id=pm.get("w")).first()
+            workflow.add_form(
+                slack_const.FORM_RESOURCE_OPPORTUNITY,
+                slack_const.FORM_TYPE_STAGE_GATING,
+                stage=current_stage,
+            )
+        else:
+            stage_form = OrgCustomSlackFormInstance.objects.create(
+                template=stage_template, resource_id=main_form.resource_id, user=user,
+            )
+            current_form_ids.append(str(stage_form.id))
     pm.update({"f": ",".join(current_form_ids)})
+    if stage_template:
+        submit_button_text = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    else:
+        submit_button_text = "Submit"
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    if type == "meeting":
+        callback_id = (
+            slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
+            if stage_template
+            else slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        )
+        pm.update({"form_type": main_form.template.form_type})
     data = {
         "view_id": view_id,
         "view": {
@@ -3227,16 +3249,6 @@ def process_insert_note_template(payload, context):
             "external_id": payload["view"]["external_id"],
         },
     }
-    if stage_template:
-        submit_button_text = "Next"
-        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-    else:
-        submit_button_text = "Update"
-        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
-    type = pm.get("type", None)
-    if type == "meeting":
-        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
-
     data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
     data["view"]["callback_id"] = callback_id
 
