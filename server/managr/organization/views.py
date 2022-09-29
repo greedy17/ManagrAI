@@ -140,7 +140,7 @@ class OrganizationViewSet(
     )
     def admin_orgs(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""
-        param = request.query_params.get("org", None)
+        param = request.query_params.get("org_id", None)
         orgs = Organization.objects.all()
         if param:
             orgs = orgs.filter(id=param)
