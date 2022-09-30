@@ -20,7 +20,9 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization, user_level=target, is_active=True,
+            organization=template_user.organization,
+            user_level=target,
+            is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -468,7 +470,9 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs, many=True, context=self.context,
+                data=new_configs,
+                many=True,
+                context=self.context,
             )
             try:
                 _new_configs.is_valid(raise_exception=True)
@@ -541,6 +545,7 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                 return logger.warning(
                     f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                 )
+        print(res_data)
         model = model_routes[template.resource_type]["model"]
         queryset = model.objects.filter(integration_id__in=res_data)
         serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)

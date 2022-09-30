@@ -179,10 +179,15 @@
     <div class="invite-list__container">
       <div class="key">
         <div class="left-key">
-          <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
-          <button v-if="$store.state.user.isTeamLead" class="invite_button" @click="handleEdit">
-            Edit Team
-          </button>
+          <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
+          <img
+            v-if="$store.state.user.isTeamLead"
+            @click="handleEdit"
+            src="@/assets/images/edit.svg"
+            height="18px"
+            style="margin-left: 8px; filter: invert(40%)"
+            alt=""
+          />
         </div>
         <!-- <div class="right-key">
           <p class="complete">Complete</p>
@@ -218,22 +223,22 @@
       </div>
 
       <div class="invite-list__section__container">
-        <img class="back-logo" src="@/assets/images/logo.png" />
+        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div
-          style="display: flex; align-items: flex-start; color: #41b883; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 13px"
           class="invite-list__section__item col"
         >
           {{ user.fullName }}
           <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px; color: #41b883"
+          style="display: flex; align-items: flex-start; font-size: 13px"
           class="invite-list__section__item"
         >
           {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px; color: #41b883"
+          style="display: flex; align-items: flex-start; font-size: 13px"
           class="invite-list__section__item"
         >
           Registered
@@ -244,16 +249,16 @@
           class="invite-list__section__item invite-list__status"
         >
           <span :class="user.slackRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
+            <img src="@/assets/images/slackLogo.png" style="height: 18px" alt="" />
           </span>
           <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
+            <img src="@/assets/images/salesforce.png" style="height: 18px" alt="" />
           </span>
           <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
+            <img src="@/assets/images/zoom.png" alt="" style="height: 18px" />
           </span>
           <span :class="user.nylasRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
+            <img src="@/assets/images/gmailCal.png" alt="" style="height: 18px" />
           </span>
         </div>
       </div>
@@ -300,16 +305,16 @@
             class="invite-list__section__item invite-list__status"
           >
             <span :class="member.slackRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
+              <img src="@/assets/images/slackLogo.png" style="height: 18px" alt="" />
             </span>
             <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
+              <img src="@/assets/images/salesforce.png" style="height: 18px" alt="" />
             </span>
             <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
+              <img src="@/assets/images/zoom.png" alt="" style="height: 18px" />
             </span>
             <span :class="member.nylasRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
+              <img src="@/assets/images/gmailCal.png" alt="" style="height: 18px" />
             </span>
           </div>
         </template>
@@ -594,7 +599,7 @@ input:focus {
     cursor: pointer;
 
     img {
-      height: 0.8rem;
+      height: 18px;
       margin-left: 0.25rem;
       filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
         brightness(93%) contrast(89%);
@@ -619,6 +624,8 @@ input:focus {
 .section-header {
   font-size: 15px;
   font-weight: bold;
+  letter-spacing: 1px;
+  color: $light-gray-blue;
 }
 .key {
   display: flex;
@@ -639,6 +646,7 @@ input:focus {
   width: 100%;
   flex-direction: row;
   justify-self: flex-start;
+  align-items: center;
 }
 .header {
   margin-top: -1rem;
@@ -651,7 +659,7 @@ input:focus {
   color: $base-gray;
 }
 .incomplete {
-  // border-bottom: 2px solid $coral;
+  border-bottom: 2px solid $coral;
   color: $base-gray;
 }
 .back-logo {
@@ -665,16 +673,14 @@ input:focus {
 }
 
 .active {
-  border-bottom: 2px solid $dark-green;
   padding: 0.2rem;
 
   margin-right: 0.25rem;
 }
 .inactive {
-  // border-bottom: 2px solid $coral;
   padding: 0.2rem;
-
   margin-right: 0.25rem;
+  filter: grayscale(100%);
 }
 .invite-container {
   display: flex;

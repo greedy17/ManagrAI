@@ -1,103 +1,384 @@
 <template>
   <div class="alerts-page">
-    <Modal style="margin-top: 8rem" ref="templateModal">
-      <template v-slot:header>
-        <h2 style="color: #4d4e4c">Popular Message Template</h2>
-      </template>
+    <div class="title">
+      <h4 class="title__head">General</h4>
 
-      <template v-slot:body>
-        <div>
-          <div style="display: flex; flex-direction: row">
-            <textarea
-              style="
-                height: 3rem;
-                width: 90%;
-                font-size: 0.75rem;
-                margin-right: 0.25rem;
-                border: none;
-                box-shadow: 3px 4px 7px #c2c4ca;
-              "
-              name=""
-              id=""
-              cols="20"
-              rows="10"
+      <section class="title__body">
+        <p>What type of workflow are you building ?</p>
+      </section>
+
+      <label class="label" for="name">Name your Workflow </label>
+      <input
+        id="name"
+        type="text"
+        class="input-field"
+        placeholder="Name"
+        v-model="alertTemplateForm.field.title.value"
+        :errors="alertTemplateForm.field.title.errors"
+        autofocus
+      />
+
+      <div style="margin-top: 16px">
+        <label class="label" for="type">Resource type </label>
+        <Multiselect
+          placeholder="Resources"
+          :options="resources"
+          openDirection="below"
+          style="width: 94%; margin-left: 12px; margin-top: 8px"
+          v-model="selectedResourceType"
+          selectLabel="Enter"
+        >
+        </Multiselect>
+      </div>
+    </div>
+
+    <div class="title">
+      <h4 class="title__head">Delivery Day</h4>
+      <section class="title__body">
+        <p>When would you like to be notified ?</p>
+      </section>
+
+      <div
+        class="title__body"
+        :key="i"
+        v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
+      >
+        <p @click="changeFrequency" class="andOr">
+          <span :class="alertFrequency !== 'WEEKLY' ? 'inactive' : ''">Weekly</span>
+          <span class="space-s">|</span>
+          <span :class="alertFrequency !== 'MONTHLY' ? 'inactive' : ''">Monthly</span>
+        </p>
+
+        <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
+          <div class="week-row">
+            <span
+              v-for="(day, i) in weeklyOpts"
+              :key="i"
+              :class="form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''"
             >
-          Hey { __Recipient.full_name }, your deal { Opportunity.Name } ...continue writing here
-          </textarea
-            >
-            <button
-              style="border: none; border: none; cursor: pointer; background: transparent"
-              v-clipboard:copy="message"
-              v-clipboard:success="onCopy"
-              v-clipboard:error="onError"
-            >
-              <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" />
-            </button>
+              <input
+                type="checkbox"
+                :id="day.value"
+                :value="day.value"
+                v-model="form.field.recurrenceDays.value"
+              />
+              <label :for="day.value">{{ day.key.charAt(0) }}</label>
+            </span>
           </div>
         </div>
-      </template>
-    </Modal>
 
+        <FormField
+          v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+          placeholder="Day of month"
+          :errors="form.field.recurrenceDay.errors"
+          @blur="form.field.recurrenceDay.validate()"
+          v-model="form.field.recurrenceDay.value"
+          small
+        />
+      </div>
+    </div>
+
+    <div class="title">
+      <h4 class="title__head">Delivery Method</h4>
+      <section class="title__body">
+        <p>Where would you like to be notified ?</p>
+      </section>
+
+      <div style="margin-top: -8px" class="title__body">
+        <div class="custom-checkbox" v-if="user.userLevel !== 'REP'">
+          <input type="checkbox" id="allUsers" v-model="directToUsers" />
+          <label for="allUsers">Send directly to users</label>
+        </div>
+
+        <div v-else>
+          <input type="checkbox" id="allUsers" v-model="directToUsers" />
+          <label for="allUsers">Send to primary channel</label>
+        </div>
+        <div v-if="!channelName && !directToUsers" class="row__">
+          <label :class="!create ? 'green' : ''">Select #channel</label>
+          <ToggleCheckBox
+            style="margin: 0.25rem"
+            @input="changeCreate"
+            :value="create"
+            offColor="#41b883"
+            onColor="#41b883"
+          />
+          <label :class="create ? 'green' : ''">Create #channel</label>
+
+          <small class="andOr">Select Channel <span class="l-gray">|</span> Create Channel</small>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+          "
+          v-if="create"
+        >
+          <input
+            v-model="channelName"
+            class="search__input"
+            type="text"
+            name="channel"
+            id="channel"
+            placeholder="Name your channel"
+            @input="logNewName(channelName)"
+          />
+
+          <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+            <button
+              v-if="channelName"
+              @click="createChannel(channelName)"
+              class="gold__button bouncy"
+            >
+              Create Channel
+            </button>
+            <button v-else class="disabled__button">Create Channel</button>
+          </div>
+        </div>
+
+        <div v-else>
+          <template>
+            <Multiselect
+              v-if="!directToUsers"
+              placeholder="Search Channels"
+              v-model="selectedChannel"
+              @input="setRecipient"
+              :options="userChannelOpts.channels"
+              openDirection="below"
+              style="width: 25vw; margin-top: 12px"
+              selectLabel="Enter"
+              track-by="id"
+              label="name"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results. Try loading more</p>
+              </template>
+              <template slot="afterList">
+                <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                  Load More
+                  <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                </p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  Search Channels
+                </p>
+              </template>
+            </Multiselect>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <div class="title">
+      <h4 class="title__head">Conditions</h4>
+      <section class="title__body">
+        <p>We'll alert you when these conditions are met</p>
+      </section>
+
+      <div :key="i" v-for="(form, i) in alertTemplateForm.field.alertConfig.groups">
+        <div
+          :key="index"
+          v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+          :class="index > 0 ? 'margin-top border-top' : ''"
+          class="title__body"
+        >
+          <div>
+            <div
+              style="margin-top: 16px"
+              class="end"
+              v-show="index !== 0"
+              v-if="alertTemplateForm.field.alertGroups.groups.length > 1"
+            >
+              <small class="remove__group" @click="onRemoveAlertGroup(index), scrollToTop()">
+                <!-- Group {{ index + 1 }} -->
+                <img
+                  src="@/assets/images/close.svg"
+                  height="16px"
+                  style="margin-left: 4px"
+                  alt=""
+                />
+              </small>
+            </div>
+            <AlertGroup
+              :form="alertGroup"
+              :resourceType="alertTemplateForm.field.resourceType.value"
+              @scroll-to-view="scrollToElement"
+            />
+          </div>
+        </div>
+
+        <div class="flex-end">
+          <button
+            v-if="alertTemplateForm.field.alertGroups.groups.length < 3"
+            class="group_button"
+            @click="onAddAlertGroup(), scrollToElement()"
+          >
+            Add group
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="title">
+      <h4 class="title__head">Slack Message</h4>
+      <section class="title__body">
+        <p>This is the message you'll recieve in slack with your workflow.</p>
+      </section>
+
+      <!-- <label class="label" for="message">Message </label> -->
+      <FormField id="message">
+        <template v-slot:input>
+          <quill-editor
+            @blur="alertTemplateForm.field.alertMessages.groups[0].field.body.validate()"
+            ref="message-body"
+            v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
+            :options="{
+              modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
+              placeholder: 'Write your message.',
+              theme: 'snow',
+            }"
+            class="message__box"
+          />
+        </template>
+      </FormField>
+      <div style="margin-right: 8px" class="end">
+        <Multiselect
+          placeholder="Select field"
+          v-model="crmValue"
+          @input="bindText(`${selectedResourceType}.${$event.apiName}`, `${$event.label}`)"
+          :options="fields.list"
+          openDirection="above"
+          style="width: 18vw; margin-right: 4px"
+          selectLabel="Enter"
+          track-by="apiName"
+          label="referenceDisplayLabel"
+        >
+          <template slot="noResult">
+            <p class="multi-slot">No results.</p>
+          </template>
+          <template slot="afterList">
+            <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+          </template>
+          <template slot="placeholder">
+            <p class="slot-icon">
+              <img src="@/assets/images/search.svg" alt="" />
+              Insert Value { }
+            </p>
+          </template>
+        </Multiselect>
+      </div>
+    </div>
+
+    <div v-if="alertTemplateForm.isValid || savingTemplate" class="end" style="width: 50vw">
+      <PulseLoadingSpinnerButton
+        :loading="savingTemplate"
+        class="gold__button pulse"
+        text="Create Workflow"
+        style="margin: 16px 0px"
+        @click.stop="onSave"
+      />
+    </div>
+
+    <!-- <section
+      style="margin-top: 26px; margin-left: 4px"
+      class="container-large"
+      :class="addingFields ? 'increase-height' : ''"
+    >
+      <div>
+        <FormField id="message">
+          <template v-slot:input>
+            <quill-editor
+              @blur="alertTemplateForm.field.alertMessages.groups[0].field.body.validate()"
+              ref="message-body"
+              v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
+              :options="{
+                modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
+                placeholder: 'Create a custom Slack message.',
+                theme: 'snow',
+              }"
+              class="message__box"
+            />
+          </template>
+        </FormField>
+        <div class="end">
+          <small v-if="!addingFields" @click="addingFields = true" class="gray neg-mar"
+            >Insert Value +</small
+          >
+          <Multiselect
+            v-else
+            placeholder="Select field"
+            v-model="crmValue"
+            @input="bindText(`${selectedResourceType}.${$event.apiName}`, `${$event.label}`)"
+            :options="fields.list"
+            openDirection="below"
+            style="width: 18vw"
+            selectLabel="Enter"
+            track-by="apiName"
+            label="referenceDisplayLabel"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+            <template slot="afterList">
+              <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+            </template>
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.svg" alt="" />
+                Select Field
+              </p>
+            </template>
+          </Multiselect>
+        </div>
+      </div>
+    </section> -->
+
+    <!-- <div ref="top">
+      <div v-if="alertTemplateForm.isValid || savingTemplate" class="auto-left">
+        <PulseLoadingSpinnerButton
+          :loading="savingTemplate"
+          class="gold__button pulse"
+          text="Create Workflow"
+          @click.stop="onSave"
+        />
+      </div>
+    </div>
     <section class="row">
       <div class="workflow-content">
         <div :key="i" v-for="(form, i) in alertTemplateForm.field.alertConfig.groups">
-          <div style="padding-bottom: 16px" class="title">
-            <h4 class="title__head">Workflow Conditions</h4>
+          <div
+            :key="index"
+            v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
+            style="padding-bottom: 16px"
+            class="title"
+            :class="index > 0 ? 'margin-top' : ''"
+          >
+            <h4 v-show="index === 0" class="title__head">Workflow Conditions</h4>
 
             <section class="title__body">
-              <p>We'll alert you when these conditions are met.</p>
-              <!-- Send this workflow to {{ selectedUsers ? getUsers(selectedUsers) : '' }}
-              {{ getFrequency(form.field.recurrenceFrequency.value) }}
-              {{ selectedDay ? getDays(selectedDay) : '' }} -->
-              <!-- SEPERATORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR-->
-              <!-- <p>
-                For all Opportunities with a
-                <span>
-                  {{
-                    alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
-                      .field.operandIdentifier.value
-                      ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
-                          .field.operandIdentifier.value
-                      : ''
-                  }}
-                </span>
-
-                {{
-                  alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-                    .operandOperator.value
-                    ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
-                        .field._operandOperator.value.label
-                    : ''
-                }}
-                {{
-                  alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-                    .operandValue.value
-                    ? alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0]
-                        .field.operandValue.value
-                    : ''
-                }}
-              </p> -->
+              <p v-show="index === 0">We'll alert you when these conditions are met.</p>
             </section>
-            <div
-              :key="index"
-              v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
-            >
+
+            <div>
+              <div
+                class="end"
+                v-show="index !== 0"
+                v-if="alertTemplateForm.field.alertGroups.groups.length > 1"
+              >
+                <small class="remove__group" @click="onRemoveAlertGroup(index), scrollToTop()">
+                  <img src="@/assets/images/close.svg" height="16px" alt="" />
+                </small>
+              </div>
               <AlertGroup
                 :form="alertGroup"
                 :resourceType="alertTemplateForm.field.resourceType.value"
+                @scroll-to-view="scrollToElement"
               />
-              <div
-                class="fixed__right"
-                v-if="alertTemplateForm.field.alertGroups.groups.length > 1"
-              >
-                <button class="remove__group" @click="onRemoveAlertGroup(index)">
-                  <img
-                    src="@/assets/images/trash.svg"
-                    style="height: 0.85rem; filter: invert(50%)"
-                    alt=""
-                  />
-                </button>
-              </div>
             </div>
           </div>
 
@@ -106,7 +387,7 @@
           </div>
 
           <div class="center">
-            <button class="plus_button" @click="onAddAlertGroup">+</button>
+            <button class="plus_button" @click="onAddAlertGroup(), scrollToElement()">+</button>
           </div>
         </div>
       </div>
@@ -126,17 +407,30 @@
         <section>
           <div>
             <div class="title">
-              <h4 class="title__head">User Pipelines</h4>
+              <h4 @click="mapIds" class="title__head">User Pipelines</h4>
               <section class="title__body">
                 <p>Who's Opps are we checking ?</p>
               </section>
               <section class="title__body">
                 <div v-if="user.userLevel == 'MANAGER'">
                   <div class="selector-row">
-                    <p v-for="(user, i) in userTargetsOpts" :key="i">{{ user.fullName }}</p>
+                    <span
+                      v-for="(user, i) in userTargetsOpts"
+                      :key="i"
+                      :class="
+                        form.field.alertTargets.value.includes(user.id) ? 'active-option' : ''
+                      "
+                    >
+                      <input
+                        type="checkbox"
+                        :id="user.id"
+                        :value="user.id"
+                        v-model="form.field.alertTargets.value"
+                      />
+                      <label :for="user.id">{{ user.fullName }}</label>
+                    </span>
                   </div>
-                  <!-- <FormField :errors="form.field.alertTargets.errors">
-                    
+                  <FormField :errors="form.field.alertTargets.errors">
                     <template v-slot:input>
                       <Multiselect
                         placeholder="Users"
@@ -168,7 +462,7 @@
                         </template>
                       </Multiselect>
                     </template>
-                  </FormField> -->
+                  </FormField>
                 </div>
               </section>
             </div>
@@ -185,8 +479,12 @@
             </section>
             <div class="title__body">
               <div>
-                <p class="andOr">Weekly <span class="l-gray">|</span> Monthly</p>
-                <!-- <FormField>
+                <p @click="changeFrequency" class="andOr">
+                  <span :class="alertFrequency !== 'WEEKLY' ? 'inactive' : ''">Weekly</span>
+                  <span class="space-s">|</span>
+                  <span :class="alertFrequency !== 'MONTHLY' ? 'inactive' : ''">Monthly</span>
+                </p>
+                <FormField>
                   <template v-slot:input>
                     <Multiselect
                       placeholder="Weekly or monthly"
@@ -199,41 +497,29 @@
                     >
                     </Multiselect>
                   </template>
-                </FormField> -->
+                </FormField>
               </div>
 
               <div>
                 <div>
                   <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
                     <div class="selector-row">
-                      <p v-for="(day, i) in weeklyOpts" :key="i">{{ day.key }}</p>
+                      <span
+                        v-for="(day, i) in weeklyOpts"
+                        :key="i"
+                        :class="
+                          form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''
+                        "
+                      >
+                        <input
+                          type="checkbox"
+                          :id="day.value"
+                          :value="day.value"
+                          v-model="form.field.recurrenceDays.value"
+                        />
+                        <label :for="day.value">{{ day.key }}</label>
+                      </span>
                     </div>
-                    <!-- <FormField>
-                      <template v-slot:input>
-                        <Multiselect
-                          placeholder="Select a Day"
-                          v-model="selectedDay"
-                          @input="setDay($event)"
-                          :options="weeklyOpts"
-                          openDirection="below"
-                          style="width: 20vw"
-                          selectLabel="Enter"
-                          track-by="value"
-                          label="key"
-                          :multiple="true"
-                        >
-                          <template slot="noResult">
-                            <p class="multi-slot">No results.</p>
-                          </template>
-                          <template slot="placeholder">
-                            <p class="slot-icon">
-                              <img src="@/assets/images/search.svg" alt="" />
-                              Select a Day
-                            </p>
-                          </template>
-                        </Multiselect>
-                      </template>
-                    </FormField> -->
                   </div>
 
                   <FormField
@@ -246,96 +532,6 @@
                   />
                 </div>
               </div>
-
-              <!-- <div>
-                <div v-if="!channelName && !directToUsers" class="row__">
-                  <label :class="!create ? 'green' : ''">Select #channel</label>
-                  <ToggleCheckBox
-                    style="margin: 0.25rem"
-                    @input="changeCreate"
-                    :value="create"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label :class="create ? 'green' : ''">Create #channel</label>
-                </div>
-
-                <div
-                  style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: flex-start;
-                  "
-                  v-if="create"
-                >
-                  <input
-                    v-model="channelName"
-                    class="search__input"
-                    type="text"
-                    name="channel"
-                    id="channel"
-                    placeholder="Name your channel"
-                    @input="logNewName(channelName)"
-                  />
-
-                  <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-                    <button
-                      v-if="channelName"
-                      @click="createChannel(channelName)"
-                      class="gold__button bouncy"
-                    >
-                      Create Channel
-                    </button>
-                    <button v-else class="disabled__button">Create Channel</button>
-                  </div>
-                </div>
-
-                <div v-else>
-                  <template>
-                    <Multiselect
-                      v-if="!directToUsers"
-                      placeholder="Select Channel"
-                      v-model="selectedChannel"
-                      @input="setRecipient"
-                      :options="userChannelOpts.channels"
-                      openDirection="below"
-                      style="width: 20vw"
-                      selectLabel="Enter"
-                      track-by="id"
-                      label="name"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results. Try loading more</p>
-                      </template>
-                      <template slot="afterList">
-                        <p
-                          class="multi-slot__more"
-                          @click="listUserChannels(userChannelOpts.nextCursor)"
-                        >
-                          Load More
-                          <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                        </p>
-                      </template>
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          Select Channel
-                        </p>
-                      </template>
-                    </Multiselect>
-                  </template>
-                  <div v-if="user.userLevel !== 'REP'">
-                    <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                    <label for="allUsers">Send directly to users</label>
-                  </div>
-
-                  <div v-else>
-                    <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                    <label for="allUsers">Send to primary channel</label>
-                  </div>
-                </div>
-              </div> -->
             </div>
           </div>
 
@@ -350,7 +546,7 @@
             </section>
 
             <div style="margin-top: -8px" class="title__body">
-              <div v-if="user.userLevel !== 'REP'">
+              <div class="custom-checkbox" v-if="user.userLevel !== 'REP'">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
                 <label for="allUsers">Send directly to users</label>
               </div>
@@ -360,7 +556,7 @@
                 <label for="allUsers">Send to primary channel</label>
               </div>
               <div v-if="!channelName && !directToUsers" class="row__">
-                <!-- <label :class="!create ? 'green' : ''">Select #channel</label>
+                <label :class="!create ? 'green' : ''">Select #channel</label>
                 <ToggleCheckBox
                   style="margin: 0.25rem"
                   @input="changeCreate"
@@ -368,11 +564,11 @@
                   offColor="#41b883"
                   onColor="#41b883"
                 />
-                <label :class="create ? 'green' : ''">Create #channel</label> -->
+                <label :class="create ? 'green' : ''">Create #channel</label>
 
-                <!-- <small class="andOr"
+                <small class="andOr"
                   >Select Channel <span class="l-gray">|</span> Create Channel</small
-                > -->
+                >
               </div>
 
               <div
@@ -450,93 +646,9 @@
         <small class="rotated">|</small>
         <small class="rotated">|</small>
       </div>
-
-      <section style="margin-top: 26px; margin-left: 4px" class="container-large">
-        <div class="workflow-content__header">
-          <input
-            type="text"
-            class="input-field"
-            placeholder="Name your workflow"
-            :errors="alertTemplateForm.field.title.errors"
-            autofocus
-          />
-        </div>
-
-        <div>
-          <FormField id="message">
-            <template v-slot:input>
-              <quill-editor
-                @blur="alertTemplateForm.field.alertMessages.groups[0].field.body.validate()"
-                ref="message-body"
-                v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
-                :options="{
-                  modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                  placeholder: 'Create a custom Slack message.',
-                  theme: 'snow',
-                }"
-                class="message__box"
-              />
-            </template>
-          </FormField>
-          <div class="end">
-            <p class="gray neg-mar">+</p>
-
-            <!-- <Multiselect
-              placeholder="Select field"
-              v-model="crmValue"
-              @input="bindText(`${selectedResourceType}.${$event.apiName}`)"
-              :options="fields.list"
-              openDirection="below"
-              style="width: 14vw"
-              selectLabel="Enter"
-              track-by="apiName"
-              label="referenceDisplayLabel"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-              <template slot="afterList">
-                <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  Select Field
-                </p>
-              </template>
-            </Multiselect> -->
-          </div>
-        </div>
-      </section>
     </section>
-    <!-- <h3 class="summary-pill">Summary</h3>
-    <div class="bottom_locked">
-      <p
-        v-show="
-          alertTemplateForm.field.alertGroups.groups[0].field.alertOperands.groups[0].field
-            .operandValue.value
-        "
-        class="large-font auto-left"
-      >
-        Send <span class="green">Edward Roberson</span> an alert every
-        <span class="green">Monday</span> for all Opportunities with an
-        <span class="green">amount </span>
-        <span class="green">greater than </span>
-        <span class="green"> $475,000</span>
-      </p>
-      <div class="auto-left">
-       
-        <PulseLoadingSpinnerButton
-           v-if="alertTemplateForm.isValid || savingTemplate"
-          :loading="savingTemplate"
-          class="gold__button"
-          text="Create"
-          @click.stop="onSave"
-        />
 
-        <button v-else class="disabled__button">Create</button>
-      </div>
-    </div> -->
+    <div style="height: 25vh" ref="bottom"></div> -->
   </div>
 </template>
 
@@ -581,6 +693,7 @@ export default {
   },
   data() {
     return {
+      addingFields: false,
       frequencies: ['WEEKLY', 'MONTHLY'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
       dropdownLoading: false,
@@ -674,8 +787,20 @@ export default {
     },
   },
   methods: {
-    setFrequency(val) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = val
+    scrollToTop() {
+      this.$refs.top ? this.$refs.top.scrollIntoView({ behavior: 'smooth' }) : null
+    },
+    scrollToElement() {
+      this.$refs.bottom ? this.$refs.bottom.scrollIntoView({ behavior: 'smooth' }) : null
+    },
+    changeFrequency() {
+      this.alertFrequency == 'WEEKLY'
+        ? (this.alertFrequency = 'MONTHLY')
+        : (this.alertFrequency = 'WEEKLY')
+
+      this.alertFrequency == 'MONTHLY'
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0])
+        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [])
     },
     getFrequency(val) {
       let newVal = ''
@@ -697,8 +822,10 @@ export default {
       return arr.map((user) => user.fullName).toString()
     },
     mapIds() {
-      let mappedIds = this.selectedUsers.map((user) => user.id)
-      this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
+      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value)
+      console.log(this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value)
+      // let mappedIds = this.selectedUsers.map((user) => user.id)
+      // this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
     },
     setDefaultChannel() {
       this.directToUsers
@@ -925,13 +1052,13 @@ export default {
         }
       }
     },
-    bindText(val) {
+    bindText(val, title) {
       this.$refs['message-body'].quill.focus()
       let start = 0
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `{ ${val} }`)
+      this.editor.insertText(start, `${title}: { ${val} }`)
     },
     onNextPage() {
       this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
@@ -1032,6 +1159,14 @@ export default {
     user() {
       return this.$store.state.user
     },
+    alertFrequency: {
+      get() {
+        return this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value
+      },
+      set(val) {
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = val
+      },
+    },
     selectedResourceType: {
       get() {
         return this.alertTemplateForm.field.resourceType.value
@@ -1046,10 +1181,9 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = ''
+    // this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = ''
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.repsPipeline()
-    this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0]
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
   },
   updated() {
@@ -1071,6 +1205,43 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 1.25s infinite;
+}
+::v-deep .multiselect__content-wrapper {
+  min-width: 18vw;
+}
+::v-deep .multiselect__single {
+  white-space: nowrap;
+  overflow: hidden;
+  color: $base-gray;
+  font-size: 12px;
+}
+.gray-bottom {
+  border-bottom: 1px solid $soft-gray;
+  padding-bottom: 8px;
+}
+.red {
+  color: $coral;
+}
 .selector-row {
   display: flex;
   flex-direction: row;
@@ -1083,6 +1254,20 @@ export default {
   margin-bottom: 8px;
   background-color: $off-white;
 
+  span {
+    background-color: $white;
+    cursor: pointer;
+    color: $base-gray;
+    margin-right: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    input {
+      display: none;
+    }
+  }
+
   p {
     background-color: $white;
     color: $base-gray;
@@ -1092,11 +1277,15 @@ export default {
     white-space: nowrap;
     transition: all 0.2s;
   }
+  span:hover,
   p:hover {
     transform: scale(1.15);
-    color: $dark-green;
-    cursor: pointer;
+    opacity: 0.5;
   }
+}
+.active-option {
+  color: $base-gray !important;
+  border: 1px solid $base-gray !important;
 }
 .negative-left {
   margin-left: -68px !important;
@@ -1105,7 +1294,17 @@ export default {
   border: 1px solid $soft-gray;
   padding: 6px 8px;
   border-radius: 6px;
+  cursor: pointer;
   width: fit-content;
+  color: $base-gray;
+}
+.inactive {
+  color: $very-light-gray;
+  font-size: 9px;
+  border-radius: 4px;
+}
+.space-s {
+  margin: 0 4px;
 }
 .arrow-div {
   border-radius: 100%;
@@ -1120,7 +1319,10 @@ export default {
   }
 }
 .auto-left {
-  margin-left: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-right: 16px;
 }
 .margin-left {
   margin-left: 16px;
@@ -1152,28 +1354,35 @@ export default {
   border-radius: 6px;
   margin-top: 0;
   width: 28vw;
-  height: 44vh;
+  min-height: 44vh;
   overflow: scroll;
   letter-spacing: 0.75px;
 }
+.increase-height {
+  min-height: 84vh;
+}
 .title {
   background-color: white;
-  // box-shadow: 0 6px 20px rgba($soft-gray, 50%);
-  outline: 1px solid $soft-gray;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  border: 1px solid $soft-gray;
   color: $base-gray;
   border-radius: 6px;
-  width: 28vw;
+  width: 50vw;
+  // min-height: 25vh;
   letter-spacing: 0.75px;
+  padding: 0px 0px 32px 0px;
+  margin-top: 16px;
   &__head {
     padding: 8px 12px;
     background-color: white;
     margin-bottom: 0;
-    color: $very-light-gray;
+    // color: $very-light-gray;
   }
   &__body {
     padding: 6px 12px;
     background-color: white;
     font-size: 11px;
+    color: $light-gray-blue;
     p {
       margin-top: 0;
     }
@@ -1187,6 +1396,7 @@ export default {
   border-radius: 6px;
   width: 22vw;
   letter-spacing: 0.75px;
+
   &__head {
     padding: 8px 12px;
     background-color: white;
@@ -1202,12 +1412,21 @@ export default {
     }
   }
 }
+.label {
+  color: $base-gray;
+  font-size: 12px;
+  margin-left: 12px;
+}
 .input-field {
   border: none;
   letter-spacing: 0.8px;
   padding: 8px;
   color: $base-gray;
-  margin-left: 6px;
+  margin-left: 12px;
+  width: 94%;
+  border: 1px solid $soft-gray;
+  border-radius: 4px;
+  margin-top: 8px;
 }
 input,
 input::placeholder {
@@ -1221,30 +1440,20 @@ input::placeholder {
   margin: 0px 16px 16px 0px;
   padding: 8px 12px;
   width: 32%;
-  height: 88vh;
   overflow: scroll;
+  min-height: 80vh;
   // border-right: 1px solid $soft-gray;
-}
-.workflow-content::-webkit-scrollbar {
-  width: 0px; /* Mostly for vertical scrollbars */
-  height: 2px; /* Mostly for horizontal scrollbars */
-}
-.workflow-content::-webkit-scrollbar-thumb {
-  background-color: $coral;
-  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 0.3rem;
-}
-.workflow-content::-webkit-scrollbar-track-piece {
-  margin-top: 0.25rem;
 }
 
 ::v-deep .ql-toolbar.ql-snow {
   display: none;
 }
 ::v-deep .ql-container.ql-snow {
-  // outline: 1px solid $soft-gray;
+  outline: 1px solid $soft-gray;
   border: none;
   border-radius: 4px;
+  margin-left: 12px;
+  width: 48vw;
 }
 ::v-deep .ql-editor p {
   color: $base-gray;
@@ -1261,17 +1470,22 @@ input::placeholder {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  margin-top: -16px;
+}
+.flex-end {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  margin-right: 8px;
 }
 .gray {
-  color: $very-light-gray;
-  font-size: 18px;
+  color: $base-gray;
+  font-size: 11px;
   cursor: pointer;
   padding: 4px 8px;
 }
 .gray:hover {
-  background-color: $off-white;
-  color: $very-light-gray;
+  opacity: 0.5;
   border-radius: 4px;
 }
 .neg-mar {
@@ -1281,7 +1495,11 @@ input::placeholder {
   margin-top: -20px;
 }
 
-input[type='checkbox']:checked + label::after {
+.border-top {
+  border-top: 1px solid $soft-gray;
+}
+
+.custom-checkbox > input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
   width: 1ex;
@@ -1298,19 +1516,19 @@ input[type='checkbox']:checked + label::after {
   -ms-transform: rotate(-45deg);
   transform: rotate(-45deg);
 }
-input[type='checkbox'] {
+.custom-checkbox > input[type='checkbox'] {
   line-height: 2.1ex;
 }
-input[type='checkbox'] {
+.custom-checkbox > input[type='checkbox'] {
   position: absolute;
   left: -999em;
 }
-input[type='checkbox'] + label {
+.custom-checkbox > input[type='checkbox'] + label {
   position: relative;
   overflow: hidden;
   cursor: pointer;
 }
-input[type='checkbox'] + label::before {
+.custom-checkbox > input[type='checkbox'] + label::before {
   content: '';
   display: inline-block;
   vertical-align: -22%;
@@ -1366,6 +1584,7 @@ input:focus {
     align-items: center;
   }
 }
+
 .multi-slot {
   display: flex;
   align-items: center;
@@ -1473,14 +1692,22 @@ input:focus {
   text-align: center;
   letter-spacing: 0.75px;
 }
+.margin-top {
+  margin-top: 16px;
+}
 .remove__group {
-  padding: 0.25rem;
-  border: 1px solid #e8e8e8;
-  background-color: transparent;
-  border-radius: 0.25rem;
+  background-color: $off-white;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 3px 6px;
+  margin-left: 8px;
   display: flex;
   align-items: center;
-  cursor: pointer;
+  width: fit-content;
+  color: $base-gray;
+  // img {
+  //   filter: invert(48%) sepia(24%) saturate(1368%) hue-rotate(309deg) brightness(105%) contrast(96%);
+  // }
 }
 button img {
   filter: invert(90%);
@@ -1524,7 +1751,7 @@ button img {
 .center {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
 }
 .invert {
@@ -1596,16 +1823,55 @@ button img {
   color: white;
   font-size: 18px;
 }
-
+.group_button {
+  font-size: 13px;
+  margin-right: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: none;
+  background-color: $dark-green;
+  color: white;
+  margin-top: 24px;
+}
+.group_button2 {
+  font-size: 13px;
+  margin-right: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: none;
+  background-color: $dark-green;
+  color: white;
+}
 textarea {
   @extend .textarea;
 }
 .alerts-page {
-  height: 90vh;
+  height: 94vh;
   overflow: scroll;
   color: $base-gray;
   padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
+// ::-webkit-scrollbar {
+//   width: 3px;
+//   height: 0px;
+//   margin-right: 8px;
+// }
+// ::-webkit-scrollbar-thumb {
+//   background-color: $off-white;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// ::-webkit-scrollbar-track {
+//   box-shadow: inset 2px 2px 4px 0 $very-light-gray;
+//   border-radius: 0.3rem;
+// }
+// ::-webkit-scrollbar-track-piece {
+//   margin-top: 24px;
+// }
 .green {
   // color: $dark-green;
   font-weight: bold;
@@ -1634,6 +1900,32 @@ textarea {
   align-items: flex-start;
   justify-content: flex-start;
 }
+.week-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center !important;
+  width: 25vw;
+  overflow-x: scroll;
+  margin-top: 16px;
+
+  span {
+    cursor: pointer;
+    color: $light-gray-blue;
+    margin-right: 8px;
+    padding: 6px 8px;
+    border-radius: 100%;
+    border: 1px solid $soft-gray;
+    transition: all 0.2s;
+    input {
+      display: none;
+    }
+  }
+
+  span:hover {
+    transform: scale(1.15);
+    color: $base-gray;
+  }
+}
 .dash-row {
   display: flex;
   flex-direction: row;
@@ -1652,27 +1944,29 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
   letter-spacing: 0.75px;
   border: none;
   color: white;
   background-color: $dark-green;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
+  margin-top: 8px;
+  margin-bottom: -8px;
 }
 .disabled__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid $soft-gray;
   letter-spacing: 0.75px;
   background-color: white;
-  color: $base-gray;
+  color: $very-light-gray;
   cursor: text;
-  font-size: 16px;
+  font-size: 14px;
 }
 .tooltip {
   position: relative;

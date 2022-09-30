@@ -33,11 +33,7 @@
     </section>
 
     <div class="cards__scroll">
-      <div
-        v-for="(participant, participantIndex) in participants"
-        :key="participantIndex"
-        class="column"
-      >
+      <div v-for="(participant, participantIndex) in participants" :key="participantIndex">
         <div v-if="!meeting.participants[participantIndex].id">
           <p class="add-contact">
             {{ meeting.participants[participantIndex].email }}
@@ -376,7 +372,6 @@
         </div>
       </div>
     </div>
-    -->
 
     <div class="cards__header">
       <img src="@/assets/images/link.svg" height="15px" alt="" />
@@ -803,7 +798,7 @@ export default {
 
   &__scroll {
     width: 100%;
-    visibility: hidden;
+    display: none;
   }
 
   &__header {
@@ -813,7 +808,6 @@ export default {
     justify-content: flex-start;
     margin-bottom: 16px;
     width: 100%;
-
     div {
       display: flex;
       flex-direction: column;

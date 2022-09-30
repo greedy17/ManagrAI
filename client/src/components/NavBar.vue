@@ -28,6 +28,13 @@
           </div>
         </router-link>
 
+        <!-- <router-link exact-active-class="active" :to="{ name: 'Meetings' }">
+          <div class="tooltip">
+            <img src="@/assets/images/calendar.svg" height="16px" alt="" />
+            <span class="tooltiptext">Meetings</span>
+          </div>
+        </router-link> -->
+
         <router-link
           v-if="isTeamLead || isAdmin"
           exact-active-class="active"

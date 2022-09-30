@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="centered">
-      <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
+      <!-- <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
         <label>AND</label>
         <ToggleCheckBox
           @input="
@@ -12,7 +12,12 @@
           onColor="#41b883"
         />
         <label>OR</label>
-      </div>
+      </div> -->
+      <small v-if="form.field.groupOrder.value != 0" @click="toggleSelectedCondition" class="andOr">
+        <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
+        <span class="space-s">|</span>
+        <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
+      >
     </div>
 
     <div>
@@ -27,22 +32,28 @@
           :resourceType="resourceType"
           :form="alertOperand"
         />
-        <div class="column">
+        <div
+          v-if="
+            form.field.alertOperands.groups.length === i + 1 &&
+            form.field.alertOperands.groups.length < 3
+          "
+          class="column"
+        >
           <small>|</small>
         </div>
         <div class="row__buttons">
-          <span class="plus_button" @click="addOperandForm">
+          <span
+            v-if="
+              form.field.alertOperands.groups.length === i + 1 &&
+              form.field.alertOperands.groups.length < 3
+            "
+            class="plus_button"
+            @click="emitAddOperandForm"
+          >
             <button>+</button>
           </span>
+          <span v-else></span>
 
-          <!-- <button
-            class="plus_button"
-            @click.stop="onRemoveOperand(i)"
-            v-if="form.field.alertOperands.groups.length > 1"
-            :disabled="form.field.alertOperands.groups.length - 1 <= 0"
-          >
-            <img src="@/assets/images/trash.svg" class="filtered" alt="" />
-          </button> -->
           <small
             @click.stop="onRemoveOperand(i)"
             v-if="form.field.alertOperands.groups.length > 1"
@@ -91,7 +102,12 @@ export default {
   },
   async created() {},
   methods: {
-    addOperandForm() {
+    toggleSelectedCondition() {
+      this.selectedCondition == 'AND'
+        ? (this.selectedCondition = 'OR')
+        : (this.selectedCondition = 'AND')
+    },
+    emitAddOperandForm() {
       const order = this.form.field.alertOperands.groups.length
       if (order >= 3) {
         this.$toast('You can only add 3 conditions per group', {
@@ -105,6 +121,7 @@ export default {
       }
       this.form.addToArray('alertOperands', new AlertOperandForm())
       this.form.field.alertOperands.groups[order].field.operandOrder.value = order
+      this.$emit('scroll-to-view')
     },
     onRemoveOperand(i) {
       if (this.form.field.alertOperands.groups.length - 1 <= 0) {
@@ -142,6 +159,21 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.andOr {
+  border: 1px solid $soft-gray;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: $base-gray;
+}
+.inactive {
+  color: $very-light-gray;
+  font-size: 9px;
+  border-radius: 4px;
+}
+.space-s {
+  margin: 0 4px;
+}
 .plus_button {
   border: none;
   background-color: transparent;
@@ -169,6 +201,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 16px;
 }
 .row__buttons {
   display: flex;
@@ -202,7 +235,7 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   margin-left: 14px;
-  margin-top: -20px;
+  margin-top: -22px;
   color: $very-light-gray;
 }
 </style>

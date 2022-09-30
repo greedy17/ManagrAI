@@ -237,7 +237,7 @@
         </section>
       </div>
     </Modal>
-    <div style="position: absolute" ref="pipelines" v-if="!loading">
+    <div style="position: absolute" class="container" ref="pipelines" v-if="!loading">
       <div class="results">
         <div class="results-title">
           <p>Meetings: {{ meetings.length }}</p>
@@ -457,6 +457,8 @@ export default {
       notes: [],
       notesLength: 0,
       addingProduct: false,
+      stageGateCopy: null,
+      stageReferenceOpts: {},
       days: {
         0: 'Sunday',
         1: 'Monday',
@@ -857,7 +859,6 @@ export default {
       }
     },
     async mapOpp(workflow, resource, resourceType) {
-      console.log(workflow, resource, resourceType)
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
@@ -900,7 +901,6 @@ export default {
       }
     },
     async addParticipant(workflow, participant, data) {
-      console.log(data)
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
@@ -1288,6 +1288,14 @@ export default {
           }
         }
 
+        if (this.stageGateCopy) {
+          for (let i = 0; i < this.stageGateCopy.length; i++) {
+            if (this.stageGateCopy[i].dataType === 'Reference') {
+              this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+            }
+          }
+        }
+
         for (let i = 0; i < this.updateAccountForm.length; i++) {
           if (this.updateAccountForm[i].dataType === 'Reference') {
             this.accountReferenceOpts[this.updateAccountForm[i].apiName] =
@@ -1313,6 +1321,15 @@ export default {
 
         for (let i in this.referenceOpts) {
           this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
+        }
+        if (this.stageReferenceOpts) {
+          for (let i in this.stageReferenceOpts) {
+            this.stageReferenceOpts[i] = this.getReferenceFieldList(
+              i,
+              this.stageReferenceOpts[i],
+              'stage',
+            )
+          }
         }
         for (let i in this.accountReferenceOpts) {
           this.accountReferenceOpts[i] = this.getReferenceFieldList(
@@ -1393,6 +1410,7 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.resourceFields = this.updateOppForm[0].fieldsRef
+        this.stageGateCopy = stageGateForms[0].fieldsRef
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
@@ -1544,6 +1562,12 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.container {
+  min-height: 96vh;
+  outline: 1px solid $soft-gray;
+  border-radius: 8px;
+  background-color: white;
+}
 .empty-list {
   display: flex;
   flex-direction: column;
@@ -1557,8 +1581,8 @@ export default {
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
-    height: 48px;
-    width: 80px;
+    height: 72px;
+    width: 120px;
     opacity: 0.5;
   }
   h3 {
@@ -1760,7 +1784,7 @@ export default {
 }
 
 .results {
-  width: 24.75vw;
+  width: 34vw;
   position: sticky;
   top: 0;
   display: flex;
@@ -1963,8 +1987,9 @@ section {
   justify-content: space-between;
 }
 .pipelines {
-  width: 24vw;
   color: $base-gray;
+  margin-left: 88px;
+  margin-top: 12px;
 }
 .invert {
   filter: invert(85%);

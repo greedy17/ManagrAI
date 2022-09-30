@@ -1,5 +1,4 @@
 import json
-from lib2to3.pytree import convert
 import logging
 import uuid
 import time
@@ -36,6 +35,7 @@ from managr.slack.helpers.utils import (
     block_finder,
     check_contact_last_name,
     send_loading_screen,
+    get_crm_value,
 )
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.routes import routes as model_routes
@@ -49,6 +49,7 @@ from managr.salesforce.background import (
     _send_recap,
     _send_instant_alert,
     _send_convert_recap,
+    emit_process_slack_bulk_update,
 )
 from managr.salesforce.utils import process_text_field_format
 from managr.slack.helpers.block_sets import get_block_set
@@ -198,7 +199,7 @@ def process_zoom_meeting_data(payload, context):
 
     ts, channel = workflow.slack_interaction.split("|")
     block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to salesforce..."}),
+        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
     ]
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
@@ -2714,6 +2715,39 @@ def process_submit_digest_resource_data(payload, context):
     return {"response_action": "clear"}
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
+def process_submit_bulk_update(payload, context):
+    print(payload)
+    user = User.objects.get(id=context.get("u"))
+    state = payload["view"]["state"]["values"]
+    pm = json.loads(payload["view"]["private_metadata"])
+    selected_opps = [
+        option["value"] for option in state["OPPS"]["SELECTED_OPPS"]["selected_options"]
+    ]
+    selected_field = state["CRM_FIELDS"][f"CHOOSE_CRM_FIELD?u={str(user.id)}"]["selected_option"][
+        "value"
+    ]
+    bulk_update_value = get_crm_value(state)
+    data = {selected_field: bulk_update_value}
+    channel = pm.get("channel_id")
+    ts = pm.get("message_ts")
+    emit_process_slack_bulk_update(str(user.id), selected_opps, data, ts, channel)
+
+    block_set = [
+        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+    ]
+    try:
+        res = slack_requests.update_channel_message(
+            channel, ts, user.organization.slack_integration.access_token, block_set=block_set
+        )
+    except Exception as e:
+        logger.exception(f"Failed To Bulk Update Salesforce Data {e}")
+        return {"response_action": "clear"}
+    return {"response_action": "clear"}
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2741,6 +2775,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_UPDATE_PRODUCT: process_update_product,
         slack_const.PROCESS_SUBMIT_PRODUCT: process_submit_product,
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_convert_lead,
+        slack_const.PROCESS_SUBMIT_BULK_UPDATE: process_submit_bulk_update,
     }
 
     callback_id = payload["view"]["callback_id"]

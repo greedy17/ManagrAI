@@ -4,12 +4,12 @@
       <div class="tabs">
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
-          <label for="tab-1" class="tab-label">Opportunity</label>
+          <label for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
           <div class="tab-content">
             <section>
               <div>
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} Form Builder
+                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -64,7 +64,7 @@
             <section>
               <div>
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} Form Builder
+                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -107,12 +107,12 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
-          <label for="tab-4" class="tab-label">Contact</label>
+          <label for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
           <div class="tab-content">
             <section>
               <div>
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} Form Builder
+                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -155,12 +155,12 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-5" class="tab-switch" />
-          <label for="tab-5" class="tab-label">Lead</label>
+          <label for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
           <div class="tab-content">
             <section>
               <div>
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} Form Builder
+                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -233,7 +233,7 @@
     <!-- <div class="opportunity__row">
       <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
         <div class="sticky">
-          <p>{{ camelize(formType) + ' ' + resource }} Form</p>
+          <p>{{ camelize(formType)  + {{camelize(resource)}} ' ' + resource }} Form</p>
         </div>
 
         <div>
@@ -1108,7 +1108,7 @@ export default {
               }
               this.formFields.refresh()
               if (this.formType == 'UPDATE') {
-                this.onSave()
+                // this.onSave()
               }
             } catch (e) {
               console.log(e)
@@ -1194,13 +1194,36 @@ export default {
     changeToAccount() {
       this.resource = 'Account'
       this.formType = 'UPDATE'
-      this.customForm = this.allForms.find((f) => f.resource == 'Account' && f.formType == 'UPDATE')
-
-      console.log(this.allForms)
+      this.customForm = this.allForms.find(
+        (f) => f.resource == this.ACCOUNT && f.formType == this.UPDATE,
+      )
+    },
+    changeToOpportunity() {
+      this.resource = 'Opportunity'
+      this.formType = 'UPDATE'
+      this.customForm = this.allForms.find(
+        (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
+      )
+    },
+    changeToContact() {
+      this.resource = 'Contact'
+      this.formType = 'UPDATE'
+      this.customForm = this.allForms.find(
+        (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
+      )
+    },
+    changeToLead() {
+      this.resource = 'Lead'
+      this.formType = 'UPDATE'
+      this.customForm = this.allForms.find(
+        (f) => f.resource == this.LEAD && f.formType == this.UPDATE,
+      )
     },
     switchFormType() {
+      this.formType === 'CREATE' ? (this.formType = 'UPDATE') : (this.formType = 'CREATE')
+
       this.customForm = this.allForms.find(
-        (f) => f.resource == this.OPPORTUNITY && f.formType == this.CREATE,
+        (f) => f.resource == this.resource && f.formType == this.formType,
       )
     },
     camelize(str) {
@@ -1358,7 +1381,7 @@ export default {
           fields_ref: fields_ref,
         })
         .then((res) => {
-          this.$emit('update:selectedForm', res)
+          // this.$emit('update:selectedForm', res)
           this.$toast('Form added successfully', {
             timeout: 2000,
             position: 'top-left',

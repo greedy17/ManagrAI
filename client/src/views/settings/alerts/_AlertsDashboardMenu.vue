@@ -324,12 +324,10 @@ img {
 }
 .tab-content {
   width: 100%;
-  min-height: 92vh;
   position: absolute;
   z-index: 1;
   top: 2.75em;
   left: 0;
-
   margin-left: 0px 12px;
   background: #fff;
   color: $base-gray;

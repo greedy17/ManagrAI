@@ -447,3 +447,13 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
         logger.exception(f"Failed To Show Loading Screen for user {user_id} {e}")
         return e
 
+
+def get_crm_value(slack_state):
+    field_state = slack_state["CRM_FIELD"][list(slack_state["CRM_FIELD"].keys())[0]]
+    if field_state["type"] == "datepicker":
+        value = field_state["selected_date"]
+    elif field_state["type"] == "static_select" or field_state["type"] == "external_select":
+        value = field_state["selected_option"]["value"]
+    elif field_state["type"] == "plain_text_input":
+        return field_state["value"]
+    return value

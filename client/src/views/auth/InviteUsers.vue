@@ -303,157 +303,50 @@
           <label for="tab-1" class="tab-label" @click="goToActive">Manage your Team</label>
           <div class="tab-content">
             <section>
-              <div class="invite-users__header">
-                <button class="invite_button" type="submit" @click="handleInvite">
-                  Invite Member
-                  <img
-                    v-if="hasSlack"
-                    style="height: 0.8rem; margin-left: 0.25rem"
-                    src="@/assets/images/slackLogo.png"
-                    alt=""
-                  />
-                  <img
-                    v-else
-                    style="height: 0.8rem; margin-left: 0.25rem"
-                    src="@/assets/images/logo.png"
-                    alt=""
-                  />
-                </button>
-              </div>
               <!-- Change Admin Confirmation -->
 
-              <div v-if="noSelection">
-                <figure
-                  @click="
-                    manageTeamSelected = true
-                    noSelection = false
-                    getTeams()
-                  "
-                  class="hover-img"
-                >
-                  <img src="@/assets/images/managrTeam.png" />
-                  <figcaption>
-                    <h5>Manage <br />Team</h5>
-                  </figcaption>
-
-                  <div class="figure-title">
-                    <p>
-                      Manage your team <img src="@/assets/images/team.svg" height="16px" alt="" />
-                    </p>
-                    <small>Invite others to join you on Managr</small>
-                  </div>
-                </figure>
-
-                <figure
-                  @click="
-                    updateInfoSelected = true
-                    noSelection = false
-                  "
-                  class="hover-img"
-                >
-                  <img src="@/assets/images/updateInfo.png" />
-                  <figcaption>
-                    <h5>Update<br />Info</h5>
-                  </figcaption>
-                  <div style="margin-top: 12px" class="figure-title">
-                    <p>
-                      Update Info <img src="@/assets/images/profile.svg" height="16px" alt="" />
-                    </p>
-                    <small>Update your profile information</small>
-                  </div>
-                </figure>
-                <figure
-                  @click="
-                    createNoteSelected = true
-                    noSelection = false
-                  "
-                  class="hover-img"
-                >
-                  <img src="@/assets/images/createTemplate.png" />
-                  <figcaption>
-                    <h5>Create<br />Template</h5>
-                  </figcaption>
-                  <div style="margin-top: 8px" class="figure-title">
-                    <p>
-                      Create Template <img src="@/assets/images/list.svg" height="18px" alt="" />
-                    </p>
-                    <small>Create a template for your notes</small>
-                  </div>
-                </figure>
-                <figure
-                  @click="
-                    editNoteSelected = true
-                    noSelection = false
-                    getTemplates()
-                  "
-                  class="hover-img"
-                >
-                  <img src="@/assets/images/editTemplate.png" />
-                  <figcaption>
-                    <h5>Edit <br />Templates</h5>
-                  </figcaption>
-                  <div style="margin-top: 16px" class="figure-title">
-                    <p>
-                      Edit Templates <img src="@/assets/images/pencil.svg" height="12px" alt="" />
-                    </p>
-                    <small>Edit your note templates</small>
-                  </div>
-                </figure>
-              </div>
-
-              <section v-if="manageTeamSelected">
-                <div class="invite-users__header">
-                  <h3 style="color: #4d4e4c">Manage Your Team</h3>
-                  <div>
-                    <button
-                      v-if="isAdmin"
-                      class="invite_button"
-                      type="submit"
-                      @click="showChangeAdmin"
-                    >
-                      Change Admin
-                    </button>
-                    <button
-                      v-if="isAdmin"
-                      class="invite_button"
-                      type="submit"
-                      @click="handleNewTeam"
-                    >
-                      Create New Team
-                    </button>
-                    <button class="invite_button" type="submit" @click="handleInvite">
-                      Invite Member
-                      <img
-                        v-if="hasSlack"
-                        style="height: 0.8rem; margin-left: 0.25rem"
-                        src="@/assets/images/slackLogo.png"
-                        alt=""
-                      />
-                      <img
-                        v-else
-                        style="height: 0.8rem; margin-left: 0.25rem"
-                        src="@/assets/images/logo.png"
-                        alt=""
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <Invite
-                  class="invite-users__inviter"
-                  :handleEdit="handleEdit"
-                  :inviteOpen="inviteOpen"
-                  @cancel="handleCancel"
-                />
-                <div class="wide">
-                  <button @click="homeView" class="invite_button">
-                    <img src="@/assets/images/back.svg" height="12px" alt="" />
+              <div class="invite-users__header">
+                <div></div>
+                <div>
+                  <button
+                    v-if="isAdmin"
+                    class="invite_button"
+                    type="submit"
+                    @click="showChangeAdmin"
+                    style="margin-right: 16px"
+                  >
+                    Change Admin
+                  </button>
+                  <button
+                    style="margin-right: 16px"
+                    v-if="isAdmin"
+                    class="invite_button"
+                    type="submit"
+                    @click="handleNewTeam"
+                  >
+                    Create New Team
+                  </button>
+                  <button class="invite_button" type="submit" @click="handleInvite">
+                    Invite Member
+                    <img
+                      v-if="hasSlack"
+                      style="height: 0.8rem; margin-left: 0.25rem"
+                      src="@/assets/images/slackLogo.png"
+                      alt=""
+                    />
+                    <img
+                      v-else
+                      style="height: 0.8rem; margin-left: 0.25rem"
+                      src="@/assets/images/logo.png"
+                      alt=""
+                    />
                   </button>
                 </div>
-              </section>
+              </div>
 
               <Invite
                 class="invite-users__inviter"
+                :handleEdit="handleEdit"
                 :inviteOpen="inviteOpen"
                 @cancel="handleCancel"
               />
@@ -1290,12 +1183,12 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 60vw;
+    width: 100%;
     padding: 0.25rem;
   }
 
   &__inviter {
-    margin-top: 2rem;
+    margin-top: 16px;
   }
 }
 

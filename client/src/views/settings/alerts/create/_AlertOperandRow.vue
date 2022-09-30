@@ -9,7 +9,11 @@
         onColor="#41b883"
       />
       <label>OR</label> -->
-      <small class="andOr">AND <span class="l-gray">|</span> OR</small>
+      <small @click="toggleSelectedCondition" class="andOr">
+        <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
+        <span class="space-s">|</span>
+        <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
+      >
     </div>
 
     <div class="alert-operand-row__options">
@@ -21,7 +25,7 @@
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="width: 8.5vw"
+              style="width: 15vw"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -55,7 +59,7 @@
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="width: 8.5vw"
+              style="width: 15vw"
               selectLabel="Enter"
               label="label"
             >
@@ -82,7 +86,7 @@
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="width: 8.5vw"
+                style="width: 15vw"
                 selectLabel="Enter"
                 label="label"
               >
@@ -109,7 +113,7 @@
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="width: 8.5vw"
+                  style="width: 15vw"
                   selectLabel="Enter"
                   label="label"
                 >
@@ -146,7 +150,7 @@
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 8.5vw"
+                      style="width: 15vw"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -564,14 +568,17 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 8.5vw;
+  width: 15vw;
   border: 1px solid #e8e8e8 !important;
   border-radius: 0.3rem;
   background-color: white;
   box-shadow: none !important;
+  color: $base-gray;
+  font-size: 12px;
 }
+
 ::v-deep .input-form {
-  width: 8.5vw;
+  width: 15vw;
 }
 ::v-deep .input-form__active {
   border: none;
@@ -580,6 +587,16 @@ export default {
   border: 1px solid $soft-gray;
   padding: 6px 8px;
   border-radius: 6px;
+  cursor: pointer;
+  color: $base-gray;
+}
+.inactive {
+  color: $very-light-gray;
+  font-size: 9px;
+  border-radius: 4px;
+}
+.space-s {
+  margin: 0 4px;
 }
 .l-gray {
   color: $soft-gray;
