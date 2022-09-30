@@ -8,7 +8,6 @@ from datetime import datetime
 
 from .routes import routes
 import time
-from background_task.models import CompletedTask
 from django.db.models import Q
 from django.utils import timezone
 from django.conf import settings
@@ -66,6 +65,7 @@ from .background import (
     _process_pipeline_sync,
     emit_meeting_workflow_tracker,
     create_form_instance,
+    emit_process_bulk_update,
 )
 from managr.salesforce import constants as sf_consts
 from managr.salesforce.adapter.exceptions import (
@@ -396,40 +396,12 @@ class SalesforceSObjectViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="create-bulk-form-instance",
+        url_path="bulk-update",
     )
-    def create_bulk_form_instance(self, request, *args, **kwargs):
-        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
-
-        user = self.request.user
-        resource_id = self.request.GET.get("resource_id", None)
-        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
-            Q(resource="Opportunity", form_type="UPDATE")
-        )
-        template = template_list.first()
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, resource_id=resource_id
-        )
-        attempts = 1
-        while True:
-            try:
-
-                data = {
-                    "form_id": str(slack_form.id),
-                    "success": True,
-                }
-                break
-            except TokenExpired:
-                if attempts >= 5:
-                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
-                    break
-                else:
-                    user.salesforce_account.regenerate_token()
-                    attempts += 1
-            except Exception as e:
-                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
-                data = {"error": str(e), "success": False}
-                break
+    def bulk_update_sobjects(self, request, *args, **kwargs):
+        verbose_name = f"bulk_update-{request.user.email}-{str(uuid.uuid4())}"
+        task = emit_process_bulk_update(request)
+        data = {"verbose_name": verbose_name}
         return Response(data=data)
 
     @action(
