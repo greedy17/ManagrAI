@@ -808,6 +808,7 @@ export default {
       selected_org: null,
       old_selected_org: null,
       slackFormInstances: null,
+      adminTasks: null,
       modalName: '',
       page: null,
       orgForms: null,
@@ -847,6 +848,15 @@ export default {
         // let res = await User.api.getStaffWorkflows()
         this.allMeetingWorkflows = res.results
       } catch (e) {
+        console.log(e)
+      }
+    },
+    async getTasks() {
+      try {
+        let res = await User.api.getTasks()
+        console.log('res in getTasks', res)
+        this.adminTasks = res
+      } catch(e) {
         console.log(e)
       }
     },
@@ -1168,6 +1178,7 @@ export default {
     },
   },
   created() {
+    this.getTasks()
     this.getStaffOrgs()
     this.allUsers.refresh()
   },
