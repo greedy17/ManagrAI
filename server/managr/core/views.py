@@ -439,6 +439,14 @@ class UserViewSet(
             logger.exception(f"Remove user error: {e}")
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
+    )
+    def admin_tasks(self, request, *args, **kwargs):
+        tasks = CompletedTask.objects.all()[:100]
+        dict_tasks = [vars(task) for task in tasks]
+        return Response(data={"tasks": dict_tasks})
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
