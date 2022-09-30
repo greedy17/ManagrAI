@@ -1,7 +1,8 @@
+import json
 import logging
 import requests
 import textwrap
-from django.utils import timezone
+from django.core import serializers
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
@@ -444,7 +445,7 @@ class UserViewSet(
     )
     def admin_tasks(self, request, *args, **kwargs):
         tasks = CompletedTask.objects.all()[:100]
-        dict_tasks = [vars(task) for task in tasks]
+        dict_tasks = serializers.serialize("json", tasks)
         return Response(data={"tasks": dict_tasks})
 
 
