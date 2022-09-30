@@ -16,37 +16,37 @@
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
                 <h4>
-                  {{ modalInfo.templateRef.resource }} {{ modalInfo.templateRef.formType }} by
+                  {{ modalInfo.template_ref.resource }} {{ modalInfo.template_ref.form_type }} by
                   {{ getUserName(modalInfo.user) }}
                 </h4>
               </div>
             </div>
             <section class="note-section">
               <p class="note-section__title">
-                Resource: {{ modalInfo.resourceId ? modalInfo.resourceId : 'N/A' }}
+                Resource: {{ modalInfo.resource_id ? modalInfo.resource_id : 'N/A' }}
               </p>
               <p class="note-section__date">
                 {{
                   modalInfo.submissionDate
-                    ? `Submitted on ${weekDay(modalInfo.submissionDate)} ${formatDateTime(
-                        modalInfo.submissionDate,
+                    ? `Submitted on ${weekDay(modalInfo.submission_date)} ${formatDateTime(
+                        modalInfo.submission_date,
                       )}`
                     : 'Not Submitted'
                 }}
               </p>
               <p class="note-section__body">
                 <span class="underline">Workflow ID:</span>
-                {{ modalInfo.workflowId ? modalInfo.workflowId : 'None' }}
+                {{ modalInfo.workflow ? modalInfo.workflow : 'None' }}
                 <span class="underline">Update Source:</span>
-                {{ modalInfo.updateSource ? modalInfo.updateSource : 'None' }}
+                {{ modalInfo.update_source ? modalInfo.update_source : 'None' }}
                 <span class="underline">User ID:</span>
                 {{ modalInfo.user ? modalInfo.user : 'None' }}
                 <span class="underline">Template ID:</span>
                 {{ modalInfo.template ? modalInfo.template : 'None' }}
                 <span class="underline">Saved Data:</span>
-                {{ modalInfo.savedData ? modalInfo.savedData : 'None' }}
+                {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }}
                 <span class="underline">Previous Data:</span>
-                {{ modalInfo.previousData ? modalInfo.previousData : 'None' }}
+                {{ modalInfo.previous_data ? modalInfo.previous_data : 'None' }}
               </p>
             </section>
           </div>
@@ -381,32 +381,109 @@
                 Copy
               </button>
             </div>
-            <p class="note-section__body">
-              <span class="underline">Users:</span>
-              {{ content.users !== null ? content.users : 'None' }}
-              <span class="underline">Workflows:</span>
-              {{ content.workflows !== null ? content.workflows : 'None' }}
-              <span class="underline">Accounts Created:</span>
-              {{ content.creates.accounts !== null ? content.creates.accounts : 'None' }}
-              <span class="underline">Contacts Created:</span>
-              {{ content.creates.contacts !== null ? content.creates.contacts : 'None' }}
-              <span class="underline">Opportunities Created:</span>
-              {{ content.creates.opportunities !== null ? content.creates.opportunities : 'null' }}
-              <span class="underline">Products Created:</span>
-              {{ content.creates.products !== null ? content.creates.products : 'None' }}
-              <span class="underline">Total Created:</span>
-              {{ content.creates.total !== null ? content.creates.total : 'None' }}
-              <span class="underline">Alert Updates:</span>
-              {{ content.updates.alert !== null ? content.updates.alert : 'None' }}
-              <span class="underline">Command Updates:</span>
-              {{ content.updates.command !== null ? content.updates.command : 'None' }}
-              <span class="underline">Meeting Updates:</span>
-              {{ content.updates.meeting !== null ? content.updates.meeting : 'None' }}
-              <span class="underline">Pipeline Updates:</span>
-              {{ content.updates.pipeline !== null ? content.updates.pipeline : 'None' }}
-              <span class="underline">Total Updates:</span>
-              {{ content.updates.total !== null ? content.updates.total : 'None' }}
-            </p>
+            <div>
+              <div style="margin-bottom: 0.5rem">
+                <span class="">Users:</span>
+                {{ content.total && content.total.users !== null ? content.total.users : 'None' }} |
+                <span class="">Workflows:</span>
+                {{
+                  content.total && content.total.workflows !== null
+                    ? content.total.workflows
+                    : 'None'
+                }}
+              </div>
+              <div>
+                <span class="">Accounts Created:</span>
+                {{
+                  content.total && content.total.creates.accounts !== null
+                    ? content.total.creates.accounts
+                    : 'None'
+                }}
+                | <span class="">Contacts Created:</span>
+                {{
+                  content.total && content.total.creates.contacts !== null
+                    ? content.total.creates.contacts
+                    : 'None'
+                }}
+                |
+              </div>
+              <div style="margin-bottom: 0.5rem">
+                <span class="">Opportunities Created:</span>
+                {{
+                  content.total && content.total.creates.opportunities !== null
+                    ? content.total.creates.opportunities
+                    : 'null'
+                }}
+                | <span class="">Products Created:</span>
+                {{
+                  content.total && content.total.creates.products !== null
+                    ? content.total.creates.products
+                    : 'None'
+                }}
+                | <span class="">Total Created:</span>
+                {{
+                  content.total && content.total.creates.total !== null
+                    ? content.total.creates.total
+                    : 'None'
+                }}
+              </div>
+              <div>
+                <span class="">Alert Updates:</span>
+                {{
+                  content.total && content.total.updates.alert !== null
+                    ? content.total.updates.alert
+                    : 'None'
+                }}
+                | <span class="">Command Updates:</span>
+                {{
+                  content.total && content.total.updates.command !== null
+                    ? content.total.updates.command
+                    : 'None'
+                }}
+                |
+              </div>
+              <div style="margin-bottom: 0.5rem">
+                <span class="">Meeting Updates:</span>
+                {{
+                  content.total && content.total.updates.meeting !== null
+                    ? content.total.updates.meeting
+                    : 'None'
+                }}
+                | <span class="">Pipeline Updates:</span>
+                {{
+                  content.total && content.total.updates.pipeline !== null
+                    ? content.total.updates.pipeline
+                    : 'None'
+                }}
+                | <span class="">Total Updates:</span>
+                {{
+                  content.total && content.total.updates.total !== null
+                    ? content.total.updates.total
+                    : 'None'
+                }}
+              </div>
+            </div>
+            <h2 class="note-section__small_title">Per Organization:</h2>
+            <div v-for="(orgItem, j) in content.orgs" :key="`item${j}`">
+              <div>Name: {{ orgItem.name }}</div>
+              <div>
+                Org: Avg Updates per Session: {{ Number(orgItem['session average']).toFixed(2) }} |
+                Avg Total Sessions: {{ orgItem['average total sessions'] }} | Updates:
+                {{ orgItem['updates'] }} | Creates: {{ orgItem['creates'] }}
+              </div>
+              <div>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.25rem">Users:</h4>
+                <div v-for="(user, k) in orgItem.users" :key="`users${k}`">
+                  <div>
+                    {{ user.userName }} - Avg Updates per Session:
+                    {{ Number(user['session average']).toFixed(2) }} | Total Sessions:
+                    {{ user['total sessions'] }} | Updates: {{ user['updates'] }} | Creates:
+                    {{ user['creates'] }}
+                  </div>
+                </div>
+              </div>
+              <div class="separator"></div>
+            </div>
           </section>
         </div>
       </div>
@@ -431,12 +508,12 @@
         </Multiselect>
         <button class="green_button sized" @click="runCommand">></button>
       </div>
-      <h3 @click="test">Organizations</h3>
+      <h3>Organizations</h3>
       <Multiselect
         placeholder="Select Organization"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
         v-model="selected_org"
-        :options="organizations.list"
+        :options="organizations /*.list*/"
         openDirection="below"
         selectLabel="Enter"
         label="name"
@@ -570,27 +647,32 @@
       </template>
       <template v-else-if="page === 'SlackForm'">
         <div>
-          <CustomSlackForm
+          <!-- <CustomSlackForm
             :formType="selectedSlackForms.formType"
             :customForm="selectedSlackForms"
             :resource="selectedSlackForms.resource"
             :fromAdmin="true"
             :goBackAdmin="goBack"
-          />
+          /> -->
+          <button class="green_button back" @click="goBack">Back</button>
+          <h2>{{ selectedSlackForms.form_type }} {{ selectedSlackForms.resource }}</h2>
+          <div v-for="(field, i) in selectedSlackForms.fields_ref" :key="field.field">
+            <div @click="test(selectedSlackForms)" style="margin-bottom: 1rem">
+              {{ i + 1 }} | {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
+            </div>
+          </div>
         </div>
       </template>
       <template v-else-if="page === 'SlackFormInstance'">
         <button class="green_button back" @click="goBack">Back</button>
-        <!-- {{slackFormInstances[0]}} -->
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(slackFormInstance, i) in slackFormInstances"
+          v-for="(slackFormInstance, i) in orgSlackFormInstances"
           :key="slackFormInstance.id"
         >
           <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
-            {{ slackFormInstance.templateRef ? slackFormInstance.templateRef.resource : '-' }}
-            {{ slackFormInstance.templateRef ? slackFormInstance.templateRef.formType : '-' }}
-            by
+            {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.resource : '-' }}
+            {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.form_type : '-' }} by
             {{ getUserName(slackFormInstance.user) }}
             {{
               slackFormInstance.submissionDate
@@ -673,7 +755,8 @@ export default {
       selectedUsers: null,
       selectedSlackForms: null,
       orgUsers: null,
-      orgSlackForms: null,
+      orgSlackForms: [],
+      orgSlackFormInstances: null,
       selectedCommand: '',
       loading: true,
       editOpModalOpen: false,
@@ -692,19 +775,14 @@ export default {
       hasProducts: false,
       allForms: null,
       allMeetingWorkflows: null,
+      orgMeetingWorkflows: null,
       selected_org: null,
       old_selected_org: null,
       slackFormInstances: null,
       modalName: '',
       page: null,
       orgForms: null,
-      orgMeetingWorkflows: null,
-      //organizations: null,
-      organizations: CollectionManager.create({
-        // change to null, make this update in create with new endpoint
-        ModelClass: Organization,
-        filters: { fromAdmin: true },
-      }),
+      organizations: [],
     }
   },
   computed: {
@@ -718,8 +796,8 @@ export default {
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
-    test() {
-      console.log('test', this.eventCalendarIDObj)
+    test(log) {
+      console.log('log', log)
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
@@ -745,9 +823,8 @@ export default {
     },
     async getStaffOrgs() {
       try {
-        console.log('getStaffOrgs')
-        // let res = await User.api.getStaffOrganizations()
-        // this.organizations = res.results
+        let res = await Organization.api.getStaffOrganizations()
+        this.organizations = res
       } catch (e) {
         console.log(e)
       }
@@ -762,13 +839,26 @@ export default {
       }
       try {
         const res = await User.api.callCommand(this.selectedCommand.value)
-        console.log('res', res)
         if (res.data) {
           const newResContent = []
-          // console.log('res.data.totals', res.data.totals)
+          const newResObjects = {}
           for (let key in res.data.totals) {
             const item = res.data.totals[key]
-            // console.log('res.data.totals[key]', res.data.totals[key])
+            newResObjects[key] = {}
+            newResObjects[key].total = item
+          }
+          for (let key in res.data.org) {
+            const item = res.data.org[key]
+            for (let key2 in item) {
+              item[key2].name = key2
+              for (let key3 in item[key2].users) {
+                item[key2].users[key3].userName = key3
+              }
+            }
+            newResObjects[key].orgs = item
+          }
+          for (let key in newResObjects) {
+            const item = newResObjects[key]
             item['date'] = key
             newResContent.unshift(item)
           }
@@ -820,7 +910,8 @@ export default {
       }
       try {
         const res = await Organization.api.orgUpdate(orgUpdates)
-        const refresh = await this.organizations.refresh()
+        this.getStaffOrgs()
+        // const refresh = await this.organizations.refresh()
         this.$toast(
           'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
           {
@@ -830,7 +921,7 @@ export default {
         )
       } catch (e) {
         console.log('error: ', e)
-        this.$toast('Something went wrong. Check the console for full error report.', {
+        this.$toast('Something went wrong.', {
           type: 'error',
           timeout: 3000,
         })
@@ -921,7 +1012,6 @@ export default {
       this.page = 'SlackForm'
     },
     goToSlackFormInstace() {
-      this.getSlackFormInstance()
       this.old_selected_org = this.selected_org
       this.selected_org = null
       this.page = 'SlackFormInstance'
@@ -965,87 +1055,110 @@ export default {
       })
     },
     getObjString(obj, i) {
+      const orgs = obj.orgs
+      let orgsString = ''
+      for (let key in orgs) {
+        const org = orgs[key]
+        const users = org.users
+        let usersStr = '{'
+        for (let key2 in users) {
+          const user = users[key2]
+          usersStr += `
+          "${key2}": {
+            "creates": "${user['creates']}",
+            "session average": "${user['session average']}",
+            "total sessions": "${user['total sessions']}",
+            "updates": "${user['updates']}",
+            "userName": "${user['userName']}"
+          },`
+        }
+        usersStr = usersStr.slice(0, usersStr.length - 1)
+        usersStr += `
+          }`
+        orgsString += `
+        "${key}": {
+          "average total sessions": "${org['average total sessions']}",
+          "creates": "${org['creates']}",
+          "name": "${org['name']}",
+          "session average": "${org['session average']}",
+          "updates": "${org['updates']}",
+          "users": ${usersStr}
+        },`
+      }
+      orgsString = orgsString.slice(0, orgsString.length - 1)
       const stringObj = `
-      ${i}: {
-        creates: {
-            accounts: ${obj.creates.accounts}
-            contacts: ${obj.creates.contacts}
-            opportunities: ${obj.creates.opportunities}
-            products: ${obj.creates.products}
-            total: ${obj.creates.total}
-          }
-          date: ${obj.date}
-          updates: {
-            alert: ${obj.updates.alert}
-            command: ${obj.updates.command}
-            meeting: ${obj.updates.meeting}
-            pipeline: ${obj.updates.pipeline}
-            total: ${obj.updates.total}
-          }
-          users: ${obj.users}
-          workflows: ${obj.workflows}
+      "${i}": {
+        "date": "${obj.date}",
+        "total": {
+          "creates": {
+            "accounts": "${obj.total.creates.accounts}",
+            "contacts": "${obj.total.creates.contacts}",
+            "opportunities": "${obj.total.creates.opportunities}",
+            "products": "${obj.total.creates.products}",
+            "total": "${obj.total.creates.total}"
+          },
+          "updates": {
+            "alert": "${obj.total.updates.alert}",
+            "command": "${obj.total.updates.command}",
+            "meeting": "${obj.total.updates.meeting}",
+            "pipeline": "${obj.total.updates.pipeline}",
+            "total": "${obj.total.updates.total}"
+          },
+          "users": "${obj.total.users}",
+          "workflows": "${obj.total.workflows}"
+        },
+        "orgs": {${orgsString}
         }
       }
       `
       return stringObj
     },
     formatCopyObject(obj) {
-      let string = ''
+      let string = '{'
       if (obj.length) {
         for (let i = 0; i < obj.length; i++) {
           string += this.getObjString(obj[i], i + 1)
+          string += ','
         }
+        string = string.slice(0, string.length - 1)
       } else {
         string += this.getObjString(obj, 1)
       }
+      string += '}'
       return string
     },
-    slackFormLabel({ formType, resource }) {
-      let formattedFormType = formType[0]
-      for (let i = 1; i < formType.length; i++) {
-        formattedFormType += formType[i].toLowerCase()
+    slackFormLabel({ form_type, resource }) {
+      let formattedFormType = form_type[0]
+      for (let i = 1; i < form_type.length; i++) {
+        formattedFormType += form_type[i].toLowerCase()
       }
       return `${formattedFormType} ${resource}`
-    },
-    filterOrgForms(org_id) {
-      return this.allForms.filter((form) => form.organization == org_id)
-    },
-    filterMeetingWorkflow(org_id) {
-      return this.allMeetingWorkflows.filter((workflow) => workflow.org_ref.id == org_id)
-    },
-    showOrgData(org_id) {
-      this.orgForms = this.filterOrgForms(org_id)
-      this.orgMeetingWorkflows = this.filterMeetingWorkflow(org_id)
     },
     filterUsers(org_id) {
       return this.allUsers.list.filter((user) => user.organization == org_id)
     },
-    filterSlackForms(org_id) {
-      return this.allForms.filter((form) => form.organization == org_id)
-    },
   },
   created() {
-    this.getAllForms()
-    this.getAllMeetingWorkflows()
     this.getStaffOrgs()
-    this.organizations.refresh()
     this.allUsers.refresh()
   },
   watch: {
-    organizations() {
+    async organizations() {
       if (this.selected_org) {
-        this.selected_org.id = this.organizations[0].id
         this.orgUsers = this.filterUsers(this.selected_org.id)
-        this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
-        this.orgMeetingWorkflows = this.filterMeetingWorkflow(this.selected_org.id)
+        this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
+        this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
       }
     },
-    selected_org() {
+    async selected_org() {
       if (this.selected_org) {
-        this.showOrgData(this.selected_org.id)
         this.loading = false
         this.orgUsers = this.filterUsers(this.selected_org.id)
-        this.orgSlackForms = this.filterSlackForms(this.selected_org.id)
+        this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
+        this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
+        this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
+          this.selected_org.id,
+        )
       }
     },
   },
@@ -1254,6 +1367,13 @@ input[type='search']:focus {
     color: $base-gray;
     padding: 0;
   }
+  &__small_title {
+    font-size: 17px;
+    font-weight: bolder;
+    letter-spacing: 0.6px;
+    color: $base-gray;
+    padding: 0;
+  }
   &__body {
     color: $base-gray;
     font-family: $base-font-family;
@@ -1274,7 +1394,7 @@ input[type='search']:focus {
 }
 .underline {
   text-decoration: underline;
-  font-weight: 900;
+  // font-weight: 900;
   font-size: 1.05rem;
 }
 .invite-list {
@@ -1363,5 +1483,10 @@ input[type='search']:focus {
 .added-collection:hover {
   box-shadow: 1px 2px 2px $very-light-gray;
   transform: scale(1.015);
+}
+.separator {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid black;
 }
 </style>

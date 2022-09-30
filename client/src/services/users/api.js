@@ -11,8 +11,9 @@ const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
+const UNINVITE_ENDPOINT = '/users/remove-user/'
 const STAFF_ENDPOINT = '/users/staff/'
-const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
+// const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
 const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
 const STAFF_FORMS = '/users/staff/slack-forms/'
 const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
@@ -112,12 +113,26 @@ export default class UserAPI {
 
   invite(userDetails) {
     const data = userDetails
-
     const promise = apiClient()
       .post(INVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.invite',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
+  uninvite(id) {
+    console.log('uninvite', id)
+    const data = { remove_id: id }
+    const promise = apiClient()
+      .post(UNINVITE_ENDPOINT, this.cls.toAPI(data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.uninvite',
           enable400Alert: false,
           enable500Alert: false,
         }),
@@ -284,7 +299,6 @@ export default class UserAPI {
     }
     try {
       let res = await this.client.post(url, data)
-      console.log(res)
       return res.data
     } catch (e) {
       console.log(e)
@@ -337,19 +351,19 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
-  async getStaffOrganizations(org_id) {
-    try {
-      const response = await this.client.get(STAFF_ORGANIZATIONS, { params: { org_id } })
-      return response.data
-    } catch(e) {
-      apiErrorHandler({ apiName: 'UsersAPI.getStaffOrganizations' })
-    }
-  }
+  // async getStaffOrganizations(org_id) {
+  //   try {
+  //     const response = await this.client.get(STAFF_ORGANIZATIONS, { params: { org_id } })
+  //     return response.data
+  //   } catch(e) {
+  //     apiErrorHandler({ apiName: 'UsersAPI.getStaffOrganizations' })
+  //   }
+  // }
   async getStaffWorkflows(org_id) {
     try {
       const response = await this.client.get(STAFF_WORKFLOWS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffWorkflows' })
     }
   }
@@ -357,7 +371,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_FORMS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffForms' })
     }
   }
@@ -365,7 +379,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_SOBJECTS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffSObjects' })
     }
   }

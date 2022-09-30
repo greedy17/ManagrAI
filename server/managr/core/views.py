@@ -422,6 +422,23 @@ class UserViewSet(
         )
         return Response(data={"success": True})
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-user",
+    )
+    def remove_user(self, request, *args, **kwargs):
+        remove_id = request.data.get("remove_id")
+        try:
+            remove_user = User.objects.get(id=remove_id)
+            remove_user.is_active = False
+            remove_user.save()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(f"Remove user error: {e}")
+            return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)

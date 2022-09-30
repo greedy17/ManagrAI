@@ -18,7 +18,7 @@
           </div>
           <div class="flex-row">
             <h4 class="invite-form__subtitle">
-              By clicking Confirm, you will transferring the Admin role to
+              By clicking Confirm, you will be transferring the Admin role to
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
             </h4>
           </div>
@@ -688,13 +688,6 @@ export default {
     selectTemplate(template) {
       this.selectedTemplate = template
     },
-    // truncateText(text, length) {
-    //   if (text.length <= length) {
-    //     return text.replace(/(<([^>]+)>)/gi, '')
-    //   }
-
-    //   return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
-    // },
     async updateTemplate() {
       try {
         const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
@@ -959,7 +952,6 @@ export default {
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)
       const teamList = [res.results[0]]
-      console.log(res)
       for (let i = 1; i < res.results.length; i++) {
         if (res.results[i].team_lead === this.getUser.id) {
           teamList.push(res.results[i])
