@@ -10,6 +10,32 @@
       "
     >
       <div class="modal-container" v-if="modalInfo">
+        <div v-if="modalName === 'slackForm'">
+          <div class="modal-container__body">
+            <div class="flex-row-spread sticky border-bottom">
+              <div class="flex-row">
+                <img src="@/assets/images/logo.png" class="logo" alt="" />
+                <h4>
+                  {{ modalInfo.form_type }} {{ modalInfo.resource }}
+                </h4>
+              </div>
+            </div>
+            <section class="note-section__body" style="margin-top: 1rem; margin-bottom: 1rem; white-space: normal; padding-left: 20px;">
+              <!-- <div>{{modalInfo}}</div> -->
+              <div v-for="(field, i) in modalInfo.fields_ref" :key="field.field">
+                <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                  {{ i + 1 }}.) {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
+                </div>
+              </div>
+            </section>
+            <!-- <h2>{{ selectedSlackForms.form_type }} {{ selectedSlackForms.resource }}</h2> -->
+            <!-- <div class="note-section" v-for="(field, i) in selectedSlackForms.fields_ref" :key="field.field">
+              <div style="margin-bottom: 1rem">
+                {{ i + 1 }} | {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
+              </div>
+            </div> -->
+          </div>
+        </div>
         <div v-if="modalName === 'slackFormInstance'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
@@ -627,7 +653,7 @@
                 </Multiselect>
               </div>
               <div class="added-collection__body">
-                <button class="green_button" @click="goToSlackForm()">Go</button>
+                <button class="green_button" @click="openModal('slackForm', selectedSlackForms)">Go</button>
               </div>
             </div>
             <div class="added-collection">
@@ -699,6 +725,9 @@
             }}
           </h4>
         </div>
+      </template>
+      <template v-else>
+        <div>Insert Completed Tasks Here</div>
       </template>
     </div>
   </div>
