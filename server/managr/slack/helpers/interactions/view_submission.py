@@ -2434,13 +2434,11 @@ def process_submit_alert_resource_data(payload, context):
             break
         except FieldValidationError as e:
             has_error = True
-            blocks = (
-                get_block_set(
-                    "error_modal",
-                    {
-                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
-                    },
-                ),
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                },
             )
             break
 
@@ -2524,17 +2522,17 @@ def process_submit_alert_resource_data(payload, context):
                     ]
                 ),
             ]
+
         new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
-            "trigger_id": loading_view_data["trigger_id"],
             "view_id": loading_view_data["view"]["id"],
             "view": {
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
                 "private_metadata": json.dumps(new_context),
-                "external_id": f"{view_type}.{str(uuid.uuid4())}",
+                "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
             },
         }
         try:
