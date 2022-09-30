@@ -2057,6 +2057,23 @@ def process_submit_product(payload, context):
             },
         )
     )
+    try:
+        index, block = block_finder("StageName", blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+
+    if block:
+        block = {
+            **block,
+            "accessory": {
+                **block["accessory"],
+                "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(main_form.id)}",
+            },
+        }
+        blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+
     params = [
         f"f={str(main_form.id)}",
         f"product_form={str(product_form.id)}",
