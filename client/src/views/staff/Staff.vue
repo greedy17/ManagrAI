@@ -10,6 +10,71 @@
       "
     >
       <div class="modal-container" v-if="modalInfo">
+        <div v-if="modalName === 'task'">
+          <h2 @click="test(modalInfo)">{{modalInfo.fields.task_name}}</h2>
+          <div>
+            <div>Task Params:</div>
+            <div>{{modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Task Hash:</div>
+            <div>{{modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Verbose Name:</div>
+            <div>{{modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Priority:</div>
+            <div>{{modalInfo.fields.priority || modalInfo.fields.priority === 0 ? modalInfo.fields.priority : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Run At:</div>
+            <div>{{modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Repeat:</div>
+            <div>{{modalInfo.fields.repeat || modalInfo.fields.repeat === 0 ? modalInfo.fields.repeat : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Repeat Until:</div>
+            <div>{{modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Queue:</div>
+            <div>{{modalInfo.fields.queue ? modalInfo.fields.queue : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Attempts:</div>
+            <div>{{modalInfo.fields.attempts}}</div>
+          </div>
+          <div v-if="modalInfo.fields.failed_at">
+            <div>
+              <div>Failed At:</div>
+              <div>{{modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null'}}</div>
+            </div>
+            <div>
+              <div>Last Error:</div>
+              <div>{{modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null'}}</div>
+            </div>
+          </div>
+          <div>
+            <div>Locked By:</div>
+            <div>{{modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Locked At:</div>
+            <div>{{modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Creator Content Type:</div>
+            <div>{{modalInfo.fields.creator_content_type ? modalInfo.fields.creator_content_type : 'Null'}}</div>
+          </div>
+          <div>
+            <div>Creator Object ID:</div>
+            <div>{{modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'}}</div>
+          </div>
+        </div>
         <div v-if="modalName === 'slackForm'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
@@ -727,7 +792,12 @@
         </div>
       </template>
       <template v-else>
-        <div>Insert Completed Tasks Here</div>
+        <h2>Completed Tasks</h2>
+        <div v-for="(task, i) in adminTasks" :key="task.pk">
+          <div :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'" @click="openModal('task', task)">
+            <h4 class="click click_width">Task {{task.fields.task_name}} ({{formatDateTime(task.fields.run_at)}}, {{getTime(task.fields.run_at)}}) <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{task.fields.last_error ? '[ERROR]' : '[SUCCESS]'}}</span></h4>
+          </div>
+        </div>
       </template>
     </div>
   </div>
@@ -854,8 +924,10 @@ export default {
     async getTasks() {
       try {
         let res = await User.api.getTasks()
-        console.log('res in getTasks', res)
-        this.adminTasks = res
+        // console.log('res in getTasks', res.tasks, typeof res.tasks)
+        const tasks = JSON.parse(res.tasks)
+        console.log('tasks', tasks)
+        this.adminTasks = tasks
       } catch(e) {
         console.log(e)
       }
