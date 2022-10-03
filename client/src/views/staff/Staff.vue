@@ -11,7 +11,7 @@
     >
       <div class="modal-container" v-if="modalInfo">
         <div v-if="modalName === 'task'">
-          <h2 class="modal-container__header" @click="test(modalInfo)">{{modalInfo.fields.task_name}}</h2>
+          <h2 class="modal-container__header">{{modalInfo.fields.task_name}}</h2>
           <div class="modal-container__body">
             <div class="note-section__body" style="margin-bottom: 1rem;">
               <div>
@@ -752,7 +752,7 @@
           <button class="green_button back" @click="goBack">Back</button>
           <h2>{{ selectedSlackForms.form_type }} {{ selectedSlackForms.resource }}</h2>
           <div v-for="(field, i) in selectedSlackForms.fields_ref" :key="field.field">
-            <div @click="test(selectedSlackForms)" style="margin-bottom: 1rem">
+            <div style="margin-bottom: 1rem">
               {{ i + 1 }} | {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
             </div>
           </div>
@@ -928,9 +928,7 @@ export default {
     async getTasks() {
       try {
         let res = await User.api.getTasks()
-        // console.log('res in getTasks', res.tasks, typeof res.tasks)
         const tasks = JSON.parse(res.tasks)
-        console.log('tasks', tasks)
         this.adminTasks = tasks
       } catch(e) {
         console.log(e)

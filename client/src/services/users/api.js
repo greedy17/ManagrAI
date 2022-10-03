@@ -142,7 +142,6 @@ export default class UserAPI {
   async getTasks() {
     try {
       const response = await this.client.get(TASKS_ENDPOINT)
-      console.log('response in getTasks', response)
       return response.data
     } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getTasks' })
