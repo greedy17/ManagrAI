@@ -358,6 +358,7 @@ def process_submit_resource_data(payload, context):
     except ValueError:
         view_type = external_id
         pass
+
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
@@ -479,23 +480,23 @@ def process_submit_resource_data(payload, context):
                 attempts += 1
 
     if has_error:
-
-        if not len(stage_forms):
-            # add a special button to return the user back to edit their form
-            # this is only required for single page forms
-            blocks = [
-                *blocks,
-                block_builders.actions_block(
-                    [
-                        block_builders.simple_button_block(
-                            "return to form",
-                            str(main_form.id),
-                            style="primary",
-                            action_id=slack_const.RETURN_TO_FORM_MODAL,
-                        )
-                    ]
-                ),
-            ]
+        form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
+        # if not len(stage_forms):
+        # add a special button to return the user back to edit their form
+        # this is only required for single page forms
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
         new_context = {**context, "type": "command"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
@@ -2177,7 +2178,7 @@ def process_submit_product(payload, context):
 @log_all_exceptions
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["w"])
-def process_convert_lead(payload, context):
+def process_meeting_convert_lead(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     pm = json.loads(payload["view"]["private_metadata"])
     user = workflow.user
@@ -2385,12 +2386,201 @@ def process_convert_lead(payload, context):
         }
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["resource_id"])
+def process_convert_lead(payload, context):
+    pm = payload["view"]["private_metadata"]
+    user = User.objects.get(id=context.get("u"))
+    state = payload["view"]["state"]["values"]
+    loading_view_data = send_loading_screen(
+        user.organization.slack_integration.access_token,
+        "Converting your Lead :rocket:",
+        "update",
+        str(user.id),
+        payload["trigger_id"],
+        payload["view"]["id"],
+    )
+    convert_data = {}
+    sobjects = ["Opportunity", "Account", "Contact"]
+    for object in sobjects:
+        if f"{object}_NAME_INPUT" in state:
+            if "plain_input" in state[f"{object}_NAME_INPUT"]:
+                value = state[f"{object}_NAME_INPUT"]["plain_input"]["value"]
+            elif (
+                state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]
+                is None
+            ):
+                value = None
+            else:
+                internal_value = state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]["value"]
+                model = model_routes[object]["model"].objects.get(id=internal_value)
+                value = model.integration_id
+            if value is not None:
+                datakey = (
+                    f"{object.lower()}Name"
+                    if "plain_input" in state[f"{object}_NAME_INPUT"]
+                    else f"{object.lower()}Id"
+                )
+                convert_data[datakey] = value
+
+    convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
+    owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
+    assigned_owner = User.objects.get(id=owner_id)
+    convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
+    lead = Lead.objects.get(id=context.get("resource_id"))
+    convert_data["leadId"] = lead.integration_id
+    attempts = 1
+    blocks = None
+    has_error = False
+    while True:
+        try:
+            res = lead.convert_in_salesforce(convert_data)
+            break
+        except FieldValidationError as e:
+            has_error = True
+            blocks = (
+                get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
+            )
+            break
+
+        except RequiredFieldError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                },
+            )
+            break
+        except UnhandledSalesforceError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except SFNotFoundError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except TokenExpired:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
+                    },
+                )
+                break
+            else:
+                user.salesforce_account.regenerate_token()
+                attempts += 1
+
+        except ConnectionResetError:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                has_error = True
+                logger.exception(f"CONVERT LEAD EXCEPTION: {e}")
+                blocks = [
+                    block_builders.simple_section(
+                        f":exclamation: There was an error converting your lead", "mrkdwn",
+                    )
+                ]
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+
+    if has_error:
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                "blocks": blocks,
+            },
+        }
+    if res["success"]:
+        success_data = {
+            "view_id": loading_view_data["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Converted"},
+                "blocks": [
+                    block_builders.simple_section(
+                        ":white_check_mark: Your Lead was successfully converted :clap:", "mrkdwn",
+                    )
+                ],
+            },
+        }
+        success_res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            success_data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    else:
+        error = res["error"]
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Lead Convert Failed"},
+                "blocks": [
+                    block_builders.simple_section(
+                        f":exclamation: There was an error converting your lead:\n{error}",
+                        "mrkdwn",
+                    )
+                ],
+            },
+        }
+
+
 @processor(required_context=["f"])
 def process_submit_alert_resource_data(payload, context):
     # get context
     has_error = False
     state = swap_public_fields(payload["view"]["state"]["values"])
+    print(state)
     current_form_ids = context.get("f").split(",")
+    print(current_form_ids)
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -2407,10 +2597,12 @@ def process_submit_alert_resource_data(payload, context):
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE"])
     stage_form_data_collector = {}
     for form in stage_forms:
+        form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+    print(all_form_data)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = send_loading_screen(
@@ -2523,22 +2715,23 @@ def process_submit_alert_resource_data(payload, context):
                 attempts += 1
 
     if has_error:
-        if not len(stage_forms):
-            # add a special button to return the user back to edit their form
-            # this is only required for single page forms
-            blocks = [
-                *blocks,
-                block_builders.actions_block(
-                    [
-                        block_builders.simple_button_block(
-                            "return to form",
-                            str(main_form.id),
-                            style="primary",
-                            action_id=slack_const.RETURN_TO_FORM_MODAL,
-                        )
-                    ]
-                ),
-            ]
+        form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
+        # if not len(stage_forms):
+        # add a special button to return the user back to edit their form
+        # this is only required for single page forms
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
 
         new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -2549,7 +2742,7 @@ def process_submit_alert_resource_data(payload, context):
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
                 "private_metadata": json.dumps(new_context),
-                "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+                "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
         try:
@@ -2803,7 +2996,8 @@ def handle_view_submission(payload):
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
         slack_const.PROCESS_UPDATE_PRODUCT: process_update_product,
         slack_const.PROCESS_SUBMIT_PRODUCT: process_submit_product,
-        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_convert_lead,
+        slack_const.ZOOM_MEETING__CONVERT_LEAD: process_meeting_convert_lead,
+        slack_const.COMMAND_FORMS__CONVERT_LEAD: process_convert_lead,
         slack_const.PROCESS_SUBMIT_BULK_UPDATE: process_submit_bulk_update,
     }
 
