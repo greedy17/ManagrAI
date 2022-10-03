@@ -903,7 +903,7 @@ def send_recap_block_set(context):
 
 
 @block_set(required_context=["u"])
-def convert_lead_block_set(context):
+def convert_meeting_lead_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_option = user.as_slack_option
     status = SObjectField.objects.filter(Q(salesforce_object="Lead") & Q(api_name="Status")).first()
@@ -990,3 +990,99 @@ def convert_lead_block_set(context):
     ]
     return blocks
 
+
+@block_set(required_context=["u"])
+def convert_lead_block_set(context):
+    user = User.objects.get(id=context.get("u"))
+    user_option = user.as_slack_option
+    status = SObjectField.objects.filter(Q(salesforce_object="Lead") & Q(api_name="Status")).first()
+    if status:
+        status_options = status.to_slack_field()
+    blocks = [
+        block_builders.input_block(
+            "Create New", block_id="Opportunity_NAME_INPUT", placeholder="New Opportunity Name"
+        ),
+        block_builders.actions_block(
+            [
+                block_builders.checkbox_input(
+                    [
+                        block_builders.checkbox_option(
+                            "Choose existing Opportunity", "EXISTING_OPPORTUNITY",
+                        )
+                    ],
+                    action_id=action_with_params(
+                        slack_const.PROCESS_LEAD_INPUT_SWITCH,
+                        params=[
+                            f"u={context.get('u')}",
+                            "input=Opportunity",
+                            f"resource_id={context.get('resource_id')}",
+                        ],
+                    ),
+                )
+            ],
+            "LEAD_CHECKBOX_OPPORTUNITY",
+        ),
+        block_builders.divider_block(),
+        block_builders.simple_section(
+            "Create new Account based off your Lead's company", block_id="Account_NAME_INPUT"
+        ),
+        block_builders.actions_block(
+            [
+                block_builders.checkbox_input(
+                    [
+                        block_builders.checkbox_option(
+                            "Choose existing Account", "EXISTING_ACCOUNT",
+                        )
+                    ],
+                    action_id=action_with_params(
+                        slack_const.PROCESS_LEAD_INPUT_SWITCH,
+                        params=[
+                            f"u={context.get('u')}",
+                            "input=Account",
+                            f"resource_id={context.get('resource_id')}",
+                        ],
+                    ),
+                )
+            ],
+            "LEAD_CHECKBOX_ACCOUNT",
+        ),
+        block_builders.divider_block(),
+        block_builders.simple_section(
+            "Create new Contact based off your Lead information", block_id="Contact_NAME_INPUT"
+        ),
+        block_builders.actions_block(
+            [
+                block_builders.checkbox_input(
+                    [
+                        block_builders.checkbox_option(
+                            "Choose existing Contact", "EXISTING_CONTACT",
+                        )
+                    ],
+                    action_id=action_with_params(
+                        slack_const.PROCESS_LEAD_INPUT_SWITCH,
+                        params=[
+                            f"u={context.get('u')}",
+                            "input=Contact",
+                            f"resource_id={context.get('resource_id')}",
+                        ],
+                    ),
+                )
+            ],
+            "LEAD_CHECKBOX_CONTACT",
+        ),
+        block_builders.divider_block(),
+        status_options,
+        block_builders.external_select(
+            "Record Owner",
+            action_with_params(
+                slack_const.GET_LOCAL_RESOURCE_OPTIONS,
+                params=[
+                    f"u={context.get('u')}",
+                    f"resource_type={slack_const.SLACK_ACTION_RESOURCE_USER}",
+                ],
+            ),
+            block_id="RECORD_OWNER",
+            initial_option=user_option,
+        ),
+    ]
+    return blocks
