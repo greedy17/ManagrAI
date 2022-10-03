@@ -400,7 +400,7 @@ class SalesforceSObjectViewSet(
     )
     def bulk_update_sobjects(self, request, *args, **kwargs):
         verbose_name = f"bulk_update-{request.user.email}-{str(uuid.uuid4())}"
-        task = emit_process_bulk_update(request, verbose_name)
+        task = emit_process_bulk_update(request.data, str(request.user.id), verbose_name)
         data = {"verbose_name": verbose_name}
         return Response(data)
 
@@ -889,8 +889,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
