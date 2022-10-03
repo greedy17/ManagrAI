@@ -909,8 +909,7 @@ export default {
     },
     async getAllForms() {
       try {
-        let res = await SlackOAuth.api.getOrgCustomForm(null, true) // change to new users staff endpoint
-        // let res = await User.api.getStaffForms()
+        let res = await SlackOAuth.api.getOrgCustomForm(null, true)
         this.allForms = res
       } catch (e) {
         console.log(e)
@@ -918,8 +917,7 @@ export default {
     },
     async getAllMeetingWorkflows() {
       try {
-        let res = await MeetingWorkflows.api.getMeetingList(true) // change to new users meeting workflows endpoint
-        // let res = await User.api.getStaffWorkflows()
+        let res = await MeetingWorkflows.api.getMeetingList(true)
         this.allMeetingWorkflows = res.results
       } catch (e) {
         console.log(e)
@@ -1024,7 +1022,6 @@ export default {
       try {
         const res = await Organization.api.orgUpdate(orgUpdates)
         this.getStaffOrgs()
-        // const refresh = await this.organizations.refresh()
         this.$toast(
           'Organization Updated. Please wait a few seconds and then hard refresh (ctrl + shift + r)',
           {
@@ -1329,7 +1326,6 @@ ul {
 }
 
 .command_dropdown {
-  // margin: 2rem;
   display: flex;
 }
 
@@ -1350,7 +1346,6 @@ ul {
 }
 
 input[type='search'] {
-  // border: none;
   margin: 0 1rem 0 0;
   background-color: white;
   padding: 4px;
@@ -1427,7 +1422,6 @@ input[type='search']:focus {
 }
 .click:hover {
   text-shadow: 1px 1px 0px lightgray;
-  // padding: 2px 2px 0 0 ;
   transform: scale(1.015);
 }
 .click_width {
@@ -1512,7 +1506,6 @@ input[type='search']:focus {
 }
 .underline {
   text-decoration: underline;
-  // font-weight: 900;
   font-size: 1.05rem;
 }
 .invite-list {
@@ -1540,8 +1533,6 @@ input[type='search']:focus {
       height: 6vh;
     }
     &__item {
-      // width: 33%;
-      // overflow-wrap: break-word;
       margin-right: 1rem;
     }
   }
@@ -1574,7 +1565,6 @@ input[type='search']:focus {
   &__header {
     max-height: 3rem;
     margin: 0;
-    // margin-bottom: 0;
     padding: 1.75rem 1rem;
     font-size: 20px;
     display: flex;
