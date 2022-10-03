@@ -1071,6 +1071,10 @@ export default {
       let newer = new Date(input)
       let hours = newer.getHours()
       let minutes = newer.getMinutes()
+      if (minutes < 10) {
+        let newMinutes = '0' + minutes
+        minutes = newMinutes
+      }
       let afternoon = false
       if (hours === 0) {
         hours = 12
