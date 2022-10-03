@@ -33,7 +33,7 @@
             <!-- <span> {{ activeWorkflow.sobjectInstances.length }}</span> -->
           </p>
 
-          <button class="green_button">Open in Pipeline</button>
+          <button style="margin-left: 16px" class="green_button">Open in Pipeline</button>
         </div>
 
         <section
@@ -70,7 +70,26 @@
       "
     >
       <div class="workflow__modal">
-        <p>test</p>
+        <div class="workflow__modal__header">
+          <p>Meetings</p>
+
+          <button class="green_button">Open in Meetings</button>
+        </div>
+        <div class="workflow__modal__body" v-for="(meeting, i) in meetings" :key="i">
+          <div class="title">
+            <div>
+              <h4>{{ meeting.meeting_ref.topic ? meeting.meeting_ref.topic : 'Meeting' }}</h4>
+              <p>Participants: {{ meeting.meeting_ref.participants.length }}</p>
+              <p>
+                {{
+                  meeting.meeting_ref.start_time
+                    ? formatDateTimeToTime(meeting.meeting_ref.start_time)
+                    : ''
+                }}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </Modal>
 
@@ -225,6 +244,8 @@
               <p class="yellow">Meetings</p>
               <h3>Log Meeting</h3>
             </div>
+
+            <span>{{ meetings.length }}</span>
           </div>
 
           <div class="added-collection__body">
@@ -256,6 +277,8 @@
               <p class="yellow">Meetings</p>
               <h3>Meeting Recaps</h3>
             </div>
+
+            <span>{{ meetings.length }}</span>
           </div>
 
           <div class="added-collection__body">
@@ -369,12 +392,33 @@ export default {
     this.getActiveTemplateTitles()
   },
   methods: {
+    formatDateTimeToTime(input) {
+      let preDate = new Date(input)
+      let newTime = preDate.toLocaleTimeString('en-US')
+      let amPm = newTime.split(' ')[1]
+      let hour = newTime.split(':')[0]
+      let noSeconds = newTime.replace(':', ' ')
+      let noAmPm = newTime.replace(amPm, '')
+      let noAmPmSeconds = noAmPm.replace(':', ' ')
+
+      if (parseInt(hour) < 10) {
+        newTime = '0' + newTime
+        noAmPm = '0' + noAmPm
+        noSeconds = '0' + noSeconds
+        noAmPmSeconds = '0' + noAmPmSeconds
+      }
+      noSeconds = noSeconds.replace(' ', ':')
+      noSeconds = noSeconds.split(':')
+      noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
+      return noSeconds
+    },
     openList(alert) {
       this.activeWorkflow = alert
       this.workflowListOpen = true
     },
     openMeetings() {
       this.meetingListOpen = true
+      console.log(this.meetings)
     },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
@@ -539,6 +583,9 @@ export default {
     userLevel() {
       return this.$store.state.user.userLevel
     },
+    meetings() {
+      return this.$store.state.meetings
+    },
   },
 }
 </script>
@@ -670,7 +717,8 @@ button:disabled {
   background-color: $white;
   color: $base-gray;
   border-radius: 6px;
-  height: 60vh;
+  min-height: 25vh;
+  max-height: 70vh;
   padding: 0 1rem;
   overflow: scroll;
   &__header {

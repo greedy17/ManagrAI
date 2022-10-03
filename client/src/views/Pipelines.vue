@@ -5392,7 +5392,6 @@ h3 {
   height: 80vh;
   align-items: center;
   border-radius: 0.5rem;
-  border: 1px solid $very-light-gray;
   padding: 0px 4px;
 
   &__footer {
@@ -5426,7 +5425,7 @@ h3 {
   height: 90vh;
   border-radius: 0.5rem;
   padding: 1rem;
-  border: 1px solid #e8e8e8;
+  // border: 1px solid #e8e8e8;
 }
 .opp-modal {
   width: 42vw;

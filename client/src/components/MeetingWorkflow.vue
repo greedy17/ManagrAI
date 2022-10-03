@@ -759,9 +759,9 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-// ::v-deep .multiselect__content-wrapper {
-//   width: 40vw;
-// }
+::v-deep .multiselect__content-wrapper {
+  margin-top: 30vh;
+}
 
 @keyframes tooltips-horz {
   to {
@@ -1226,14 +1226,14 @@ a {
 .add-field-section {
   position: absolute;
   // z-index: 20;
-  top: 48px;
-  left: 4px;
+  // top: 48px;
+  // left: 4px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: $white;
-  width: 24vw;
+  width: 30vw;
   height: 220px;
   overflow: visible;
   box-shadow: 1px 1px 2px 1px $very-light-gray;

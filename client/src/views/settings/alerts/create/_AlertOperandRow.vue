@@ -136,9 +136,8 @@
               style="
                 display: flex;
                 flex-direction: row;
-                min-width: 34vw;
-                justify-content: space-between;
-                align-items: flex-start;
+                justify-content: space-evenly;
+                align-items: center;
               "
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
@@ -150,7 +149,7 @@
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 15vw"
+                      style="width: 15vw; margin-right: 12px"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -169,19 +168,11 @@
               </div>
 
               <div>
-                <div
-                  class="centered"
-                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1rem"
-                >
-                  <label>In the past</label>
-                  <ToggleCheckBox
-                    @input="toggleSelectedOperand"
-                    :value="MyOperand !== 'Negative'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label>In the future</label>
-                </div>
+                <small @click="toggleSelectedOperand" class="andOr">
+                  <span :class="MyOperand !== 'Negative' ? 'inactive' : ''">In the past</span>
+                  <span class="space-s">|</span>
+                  <span :class="MyOperand === 'Negative' ? 'inactive' : ''">In the future</span>
+                </small>
 
                 <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
                   <template v-slot:input>
@@ -606,7 +597,7 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   margin-left: 8px;
-  margin-top: -16px;
+  // margin-top: -16px;
   color: $very-light-gray;
 }
 .multi-slot {

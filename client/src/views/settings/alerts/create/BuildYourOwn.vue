@@ -1,7 +1,7 @@
 <template>
   <div class="alerts-page">
     <div class="title">
-      <h4 class="title__head">General</h4>
+      <h4 @click="test" class="title__head">General</h4>
 
       <section class="title__body">
         <p>What type of workflow are you building ?</p>
@@ -95,29 +95,16 @@
           <label for="allUsers">Send to primary channel</label>
         </div>
         <div v-if="!channelName && !directToUsers" class="row__">
-          <label :class="!create ? 'green' : ''">Select #channel</label>
-          <ToggleCheckBox
-            style="margin: 0.25rem"
-            @input="changeCreate"
-            :value="create"
-            offColor="#41b883"
-            onColor="#41b883"
-          />
-          <label :class="create ? 'green' : ''">Create #channel</label>
-
-          <small class="andOr">Select Channel <span class="l-gray">|</span> Create Channel</small>
+          <small @click="changeCreate" style="margin-top: 12px" class="andOr">
+            <span :class="create ? 'inactive' : ''">Select Channel</span>
+            <span class="space-s">|</span>
+            <span :class="!create ? 'inactive' : ''">Create Channel</span>
+          </small>
         </div>
 
-        <div
-          style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-          "
-          v-if="create"
-        >
+        <div v-if="create && !directToUsers">
           <input
+            style="margin-top: 8px"
             v-model="channelName"
             class="search__input"
             type="text"
@@ -127,15 +114,15 @@
             @input="logNewName(channelName)"
           />
 
-          <div v-if="!channelCreated" v style="margin-top: 1.25rem">
+          <div v-if="!channelCreated">
             <button
-              v-if="channelName"
               @click="createChannel(channelName)"
-              class="gold__button bouncy"
+              class="gold__button"
+              :class="channelName ? 'pulse' : ''"
+              :disabled="!channelName"
             >
               Create Channel
             </button>
-            <button v-else class="disabled__button">Create Channel</button>
           </div>
         </div>
 
@@ -147,7 +134,7 @@
               v-model="selectedChannel"
               @input="setRecipient"
               :options="userChannelOpts.channels"
-              openDirection="below"
+              openDirection="above"
               style="width: 25vw; margin-top: 12px"
               selectLabel="Enter"
               track-by="id"
@@ -174,7 +161,7 @@
       </div>
     </div>
 
-    <div class="title">
+    <div ref="top" class="title">
       <h4 class="title__head">Conditions</h4>
       <section class="title__body">
         <p>We'll alert you when these conditions are met</p>
@@ -222,9 +209,10 @@
           </button>
         </div>
       </div>
+      <div ref="bottom"></div>
     </div>
 
-    <div class="title">
+    <div style="margin-bottom: 8px" class="title">
       <h4 class="title__head">Slack Message</h4>
       <section class="title__body">
         <p>This is the message you'll recieve in slack with your workflow.</p>
@@ -274,12 +262,16 @@
       </div>
     </div>
 
-    <div v-if="alertTemplateForm.isValid || savingTemplate" class="end" style="width: 50vw">
+    <div
+      v-if="alertTemplateForm.field.alertMessages.groups[0].field.body.value || savingTemplate"
+      class="end"
+      style="width: 50vw"
+    >
       <PulseLoadingSpinnerButton
         :loading="savingTemplate"
         class="gold__button pulse"
         text="Create Workflow"
-        style="margin: 16px 0px"
+        style="margin: 8px 0px"
         @click.stop="onSave"
       />
     </div>
@@ -787,6 +779,9 @@ export default {
     },
   },
   methods: {
+    test() {
+      console.log(this.alertTemplateForm.isValid)
+    },
     scrollToTop() {
       this.$refs.top ? this.$refs.top.scrollIntoView({ behavior: 'smooth' }) : null
     },
@@ -1944,8 +1939,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 8px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 4px;
   letter-spacing: 0.75px;
   border: none;
   color: white;
@@ -1953,7 +1948,7 @@ textarea {
   cursor: pointer;
   font-size: 14px;
   margin-top: 8px;
-  margin-bottom: -8px;
+  // margin-bottom: -8px;
 }
 .disabled__button {
   display: flex;

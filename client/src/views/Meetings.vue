@@ -237,7 +237,7 @@
         </section>
       </div>
     </Modal>
-    <div style="position: absolute" class="container" ref="pipelines" v-if="!loading">
+    <div class="container" ref="pipelines" v-if="!loading">
       <div class="results">
         <div class="results-title">
           <p>Meetings: {{ meetings.length }}</p>
@@ -1563,7 +1563,8 @@ export default {
 @import '@/styles/buttons';
 
 .container {
-  min-height: 96vh;
+  min-height: 92vh;
+  width: 40vw;
   outline: 1px solid $soft-gray;
   border-radius: 8px;
   background-color: white;
@@ -1784,7 +1785,7 @@ export default {
 }
 
 .results {
-  width: 34vw;
+  width: 100%;
   position: sticky;
   top: 0;
   display: flex;
@@ -1988,8 +1989,10 @@ section {
 }
 .pipelines {
   color: $base-gray;
-  margin-left: 88px;
-  margin-top: 12px;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .invert {
   filter: invert(85%);
