@@ -1,80 +1,41 @@
 <template>
   <div class="overview">
-    <div>
-      <div class="header">
-        <p v-if="!activeWorkflow" class="light-blue">
-          Active Workflows: {{ templates.list.length }}
-        </p>
+    <div class="header">
+      <p>
+        {{ activeWorkflow.title }}
+      </p>
 
-        <p v-else>
-          {{ activeWorkflowTitle }}
-        </p>
+      <p style="margin-right: 8px">
+        <img
+          src="@/assets/images/left.svg"
+          height="12px"
+          alt=""
+          style="margin-right: 4px; padding-top: 2px"
+        />
+        {{ activeWorkflow.length }}
+      </p>
+    </div>
 
-        <p style="margin-right: 8px" v-if="activeWorkflow">
-          <img
-            src="@/assets/images/left.svg"
-            height="12px"
-            alt=""
-            style="margin-right: 4px; padding-top: 2px"
-            @click="deactivateWorkflow"
-          />
-          {{ activeWorkflow.length }}
-        </p>
-      </div>
-      <div v-if="!activeWorkflow">
-        <section class="workflow" :key="i" v-for="(alert, i) in templates.list">
-          <div class="title">
-            <!-- <img class="filtered" src="@/assets/images/logo.png" height="28px" alt="" /> -->
-            <div>
-              <h4>
-                {{ alert.title }}
-                <span>{{ alert.sobjectInstances.length }}</span>
-              </h4>
-
-              <p>
-                {{ owner(alert.user) !== 'Management' ? 'Owner:' : 'Management' }}
-                {{ users ? owner(alert.user) : '' }}
-              </p>
-            </div>
+    <div v-if="activeWorkflow">
+      <section class="workflow" :key="i" v-for="(opp, i) in activeWorkflow">
+        <div class="title">
+          <div>
+            <h4>
+              {{ opp.Name }}
+              <!-- <span>{{ activeWorkflowType }}</span> -->
+            </h4>
+            <p>Stage: {{ opp.StageName }}</p>
+            <p>Close Date: {{ opp.CloseDate }}</p>
           </div>
-
-          <section class="button-section">
-            <div>
-              <button @click="setCurrentAlert(alert)" class="green-button">View List</button>
-              <button class="white-button">
-                Send Slack <img src="@/assets/images/slackLogo.png" height="12px" alt="" />
-              </button>
-            </div>
-
-            <div>
-              <!-- <img src="@/assets/images/pencil.svg" height="14px" alt="" /> -->
-              <img src="@/assets/images/trash.svg" height="14px" alt="" />
-            </div>
-          </section>
-        </section>
-      </div>
-
-      <div v-else>
-        <section class="workflow" :key="i" v-for="(opp, i) in activeWorkflow">
-          <div class="title">
-            <div>
-              <h4>
-                {{ opp.Name }}
-                <span>{{ activeWorkflowType }}</span>
-              </h4>
-              <p>Stage: {{ opp.StageName }}</p>
-              <p>Close Date: {{ opp.CloseDate }}</p>
-            </div>
+        </div>
+        <section class="button-section">
+          <div>
+            <button class="green-button">Update Record</button>
+            <img src="@/assets/images/note.svg" height="14px" alt="" />
+            <img src="@/assets/images/pipeline.svg" height="14px" alt="" />
           </div>
-          <section class="button-section">
-            <div>
-              <button class="green-button">Update Record</button>
-              <img src="@/assets/images/note.svg" height="14px" alt="" />
-              <img src="@/assets/images/pipeline.svg" height="14px" alt="" />
-            </div>
-          </section>
         </section>
-      </div>
+      </section>
     </div>
   </div>
 </template>
@@ -89,30 +50,21 @@ export default {
   name: 'PipelineOverview',
   data() {
     return {
-      activeWorkflowType: null,
-      activeWorkflow: null,
-      activeWorkflowTitle: null,
       activeNotis: false,
       today: null,
       workflows: [],
-      templates: CollectionManager.create({
-        ModelClass: AlertTemplate,
-        filters: { forPipeline: true },
-      }),
       users: CollectionManager.create({ ModelClass: User }),
     }
   },
   watch: {
     meetings: 'needsAction',
   },
+  props: {
+    activeWorkflow: {},
+  },
   methods: {
-    deactivateWorkflow() {
-      this.activeWorkflow = null
-    },
-    setCurrentAlert(alert) {
-      this.activeWorkflow = alert.sobjectInstances
-      this.activeWorkflowTitle = alert.title
-      this.activeWorkflowType = alert.resourceType
+    test(i) {
+      console.log(i)
     },
     needsAction() {
       let NA = 0
@@ -178,14 +130,6 @@ export default {
       } finally {
       }
     },
-  },
-
-  async created() {
-    this.templates.refresh()
-    this.users.refresh()
-  },
-  mounted() {
-    console.log(this.templates)
   },
 }
 </script>
@@ -328,15 +272,9 @@ export default {
   top: 0;
   p {
     font-size: 14px;
-
     span {
       color: $dark-green;
-      // background-color: $white-green;
-
       padding: 2px 4px;
-      // border-radius: 6px;
-
-      // font-size: 11px;
     }
   }
 }

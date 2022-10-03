@@ -59,6 +59,9 @@ export default {
       this.refreshCurrentUser()
     }
     this.$store.dispatch('loadMeetings')
+    this.$store.dispatch('loadAllPicklists')
+    this.$store.dispatch('loadApiPicklists')
+    this.$store.dispatch('loadPricebooks')
     // this.$store.dispatch('loadWorkflows')
   },
 

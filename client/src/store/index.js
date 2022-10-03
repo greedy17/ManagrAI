@@ -4,7 +4,7 @@ import createPersistedState from 'vuex-persistedstate'
 import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
-import { MeetingWorkflows } from '@/services/salesforce'
+import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce'
 
 Vue.use(Vuex)
 
@@ -22,6 +22,9 @@ const state = {
     lastCheck: null,
   },
   pollingItems: [],
+  pricebooks: null,
+  allPicklistOptions: null,
+  apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
 }
@@ -45,6 +48,16 @@ const mutations = {
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
   },
+  SAVE_PRICEBOOKS(state, pricebooks) {
+    state.pricebooks = pricebooks
+  },
+  SAVE_ALL_PICKLISTS(state, allPicklistOptions) {
+    state.allPicklistOptions = allPicklistOptions;
+  },
+  SAVE_API_PICKLISTS(state, apiPicklistOptions) {
+    state.apiPicklistOptions = apiPicklistOptions;
+  }
+
 }
 
 const actions = {
@@ -68,6 +81,44 @@ const actions = {
       //   toastClassName: 'custom',
       //   bodyClassName: ['custom'],
       // })
+    }
+  },
+  async loadPricebooks({ commit }) {
+    try {
+      const res = await SObjects.api.getObjects('Pricebook2')
+      commit('SAVE_PRICEBOOKS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllPicklists({ commit }) {
+    let obj = {}
+
+    try {
+      const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+      for (let i = 0; i < res.length; i++) {
+        obj[res[i].fieldRef.id] = res[i].values
+      }
+    } catch (e) {
+      console.log(e)
+    } finally {
+
+      commit('SAVE_ALL_PICKLISTS', obj)
+    }
+  },
+  async loadApiPicklists({ commit }) {
+    let obj = {}
+
+    try {
+      const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+      for (let i = 0; i < res.length; i++) {
+        obj[res[i].fieldRef.apiName] = res[i].values
+      }
+    } catch (e) {
+      console.log(e)
+    } finally {
+
+      commit('SAVE_API_PICKLISTS', obj)
     }
   },
   updateUser({ commit }, payload) {

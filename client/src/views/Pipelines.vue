@@ -5,7 +5,7 @@
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
-            <h4>Opp's Name Notes</h4>
+            <h4>{{ selectedresourceName }} Notes</h4>
 
             <!-- <p style="margin-left: 4px; color: #c2c4ca">Opp's Name</p> -->
           </div>
@@ -113,7 +113,7 @@
 
         <footer class="modal-container__footer">
           <!-- <p>Total: {{ notesLength }}</p> -->
-          <button class="add-button">Save note</button>
+          <button @click="updateResource()" class="add-button">Save note</button>
         </footer>
       </div>
     </Modal>
@@ -218,6 +218,11 @@
                     field.dataType === 'MultiPicklist' ? true : false,
                   )
                 "
+                @open="
+                  field.dataType === 'Reference'
+                    ? getCreateReferenceOpts(field.apiName, field.id)
+                    : null
+                "
                 @search-change="
                   field.dataType === 'Reference'
                     ? getReferenceFieldList(field.apiName, field.id, 'create1', $event)
@@ -278,6 +283,11 @@
                               ? $event.value
                               : $event.id,
                           )
+                        "
+                        @open="
+                          field.dataType === 'Reference'
+                            ? getStageReferenceOpts(field.apiName, field.id)
+                            : null
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
@@ -570,6 +580,11 @@
                           ? $event.integration_id
                           : $event.id,
                       )
+                    "
+                    @open="
+                      field.dataType === 'Reference'
+                        ? getProductReferenceOpts(field.apiName, field.id)
+                        : null
                     "
                     :loading="loadingProducts"
                     openDirection="below"
@@ -928,6 +943,9 @@
                     ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
                     : null
                 "
+                @open="
+                  field.dataType === 'Reference' ? getReferenceOpts(field.apiName, field.id) : null
+                "
                 :loading="dropdownLoading"
                 openDirection="below"
                 style="width: 40.25vw"
@@ -992,6 +1010,11 @@
                               ? $event.value
                               : $event.id,
                           )
+                        "
+                        @open="
+                          field.dataType === 'Reference'
+                            ? getStageReferenceOpts(field.apiName, field.id)
+                            : null
                         "
                         openDirection="below"
                         v-model="dropdownVal[field.apiName]"
@@ -1265,6 +1288,11 @@
                           : $event.id,
                       )
                     "
+                    @open="
+                      field.dataType === 'Reference'
+                        ? getProductReferenceOpts(field.apiName, field.id)
+                        : null
+                    "
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
                     style="width: 35vw"
@@ -1434,6 +1462,11 @@
                           : $event.id,
                       )
                     "
+                    @open="
+                      field.dataType === 'Reference'
+                        ? getProductReferenceOpts(field.apiName, field.id)
+                        : null
+                    "
                     openDirection="below"
                     v-model="dropdownProductVal[field.apiName]"
                     style="width: 35vw"
@@ -1563,7 +1596,7 @@
               Cancel <img src="@/assets/images/remove.svg" alt="" />
             </p>
             <button
-              v-if="!viewingProducts"
+              v-if="!viewingProducts && currentProducts.length"
               @click="toggleViewingProducts()"
               style="margin-left: 8px"
               class="select-btn1"
@@ -1571,7 +1604,7 @@
               View products <span>{{ currentProducts.length }}</span>
             </button>
             <button
-              v-else
+              v-else-if="viewingProducts"
               @click="toggleViewingProducts()"
               style="padding: 10px"
               class="select-btn1"
@@ -1769,7 +1802,7 @@
                 <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">
                   Bulk Update
                 </button>
-                <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button>
+                <!-- <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button> -->
               </div>
             </div>
             <div class="flex-row-pad" v-if="closeDateSelected">
@@ -1836,7 +1869,7 @@
               </button>
             </div>
             <div class="flex-row-pad" v-if="changeFieldsSelected">
-              <p style="font-size: 14px">Change Field:</p>
+              <!-- <p style="font-size: 14px">Change Field:</p> -->
               <Multiselect
                 :options="filteredSelectOppFields"
                 @select="selectedOppVal($event)"
@@ -1854,7 +1887,7 @@
                 <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
-                    Fields
+                    Select field to update
                   </p>
                 </template>
               </Multiselect>
@@ -1926,11 +1959,14 @@
                       selectedOpp.dataType === 'Picklist' ||
                       selectedOpp.dataType === 'MultiPicklist'
                         ? allPicklistOptions[selectedOpp.id]
-                        : productReferenceOpts[selectedOpp.apiName]
-                        ? productReferenceOpts[selectedOpp.apiName]
-                        : []
+                        : referenceOpts[selectedOpp.apiName]
                     "
                     @select="oppNewValue = $event.value"
+                    @open="
+                      selectedOpp.dataType === 'Reference'
+                        ? getReferenceOpts(selectedOpp.apiName, selectedOpp.id)
+                        : null
+                    "
                     openDirection="below"
                     v-model="dropdownVal[selectedOpp.apiName]"
                     style="width: 20vw"
@@ -1969,7 +2005,7 @@
                 </div>
               </div>
 
-              <button @click="bulkUpdate" class="add-button">Save</button>
+              <button @click="bulkUpdate" class="add-button">Update</button>
             </div>
           </div>
           <div class="bulk-action" v-else>
@@ -2043,6 +2079,11 @@
                       ? $event.value
                       : $event.id,
                   )
+                "
+                @open="
+                  field.dataType === 'Reference'
+                    ? getStageReferenceOpts(field.apiName, field.id)
+                    : null
                 "
                 openDirection="below"
                 v-model="dropdownVal[field.apiName]"
@@ -2238,12 +2279,14 @@
             @create-form="
               createFormInstance(opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
             "
-            @get-notes="getNotes(opp.id)"
+            @get-notes="getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name)"
             @checked-box="selectPrimaryCheckbox"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
             @current-inline-row="changeCurrentRow"
             @set-dropdown-value="setDropdownValue"
+            @get-reference-opts="getReferenceOpts"
+            :dropdownLoading="dropdownLoading"
             :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
             :stages="stagesWithForms"
@@ -2355,6 +2398,7 @@
             @click="nextPage"
             style="font-size: 11px"
             class="select-btn"
+            :disabled="loadingNext"
           >
             Next
           </button>
@@ -2399,6 +2443,7 @@ export default {
   },
   data() {
     return {
+      loadingNext: false,
       viewingProducts: false,
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
       stageGateCopy: {},
@@ -2419,8 +2464,6 @@ export default {
       updateAccountForm: {},
       createData: {},
       savingCreateForm: false,
-      allPicklistOptions: {},
-      apiPicklistOptions: {},
       productQueryOpts: {},
       objectFields: CollectionManager.create({
         ModelClass: SObjectField,
@@ -2484,6 +2527,7 @@ export default {
       allStages: [],
       allForecasts: [],
       selectedOpp: null,
+      selectedresourceName: null,
       oppNewValue: null,
       newStage: null,
       newForecast: null,
@@ -2562,7 +2606,6 @@ export default {
       stageIntegrationId: null,
       stageId: null,
       allOppsForWorkflows: null,
-      pricebooks: null,
       selectedPriceBook: null,
       pricebookPage: 1,
       savedPricebookEntryId: '',
@@ -2592,6 +2635,15 @@ export default {
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
+    },
+    allPicklistOptions() {
+      return this.$store.state.allPicklistOptions
+    },
+    apiPicklistOptions() {
+      return this.$store.state.apiPicklistOptions
+    },
+    pricebooks() {
+      return this.$store.state.pricebooks
     },
     currentCheckList() {
       if (this.primaryCheckList.length > 0) {
@@ -2631,6 +2683,7 @@ export default {
         .substring(0, date.toLocaleDateString().indexOf('/') + 1)
       if (date.includes('/')) {
         date = date.slice(0, -1)
+
         return '0' + date
       } else {
         return date
@@ -2658,9 +2711,7 @@ export default {
   async created() {
     this.getObjects()
     this.getAllForms()
-    this.getAllPicklist()
     this.getUsers()
-    this.getPricebooks()
     this.templates.refresh()
   },
   beforeMount() {
@@ -2794,17 +2845,17 @@ export default {
         }, 1000)
       }
     },
-    async getAllPicklist() {
-      try {
-        const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
-        for (let i = 0; i < res.length; i++) {
-          this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
-          this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
+    // async getAllPicklist() {
+    //   try {
+    //     const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+    //     for (let i = 0; i < res.length; i++) {
+    //       this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
+    //       this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
+    //     }
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
     addProduct() {
       this.addingProduct = !this.addingProduct
       setTimeout(() => {
@@ -2844,10 +2895,6 @@ export default {
           bodyClassName: ['custom'],
         })
       }
-    },
-    async getPricebooks() {
-      const res = await SObjects.api.getObjects('Pricebook2')
-      this.pricebooks = res.results
     },
     pricebookLabel({ name }) {
       return name
@@ -2945,7 +2992,6 @@ export default {
       this.stageIntegrationId = null
     },
     async getReferenceFieldList(key, val, type, eventVal, filter) {
-      console.log(key, val, type)
       try {
         const res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
@@ -2973,6 +3019,10 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        setTimeout(() => {
+          this.dropdownLoading = false
+        }, 300)
       }
     },
     emitCloseEdit() {
@@ -3542,8 +3592,24 @@ export default {
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
     },
+    async createFormInstanceForNotes(id, name) {
+      this.formData = {}
+      this.selectedresourceName = name
+      this.oppId = id
+      this.noteValue = null
+      this.noteTitle = null
+      try {
+        const res = await SObjects.api.getCurrentValues({
+          resourceType: 'Opportunity',
+          resourceId: id,
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
+      this.viewingProducts = false
       this.addingProduct = false
       this.formData = {}
       this.createData = {}
@@ -3800,7 +3866,7 @@ export default {
       }
     },
     async resourceSync() {
-      if (this.currentDay !== this.syncDay) {
+      if (this.currentDay !== this.syncDay + '/') {
         setTimeout(() => {
           this.loading = true
         }, 300)
@@ -3823,9 +3889,7 @@ export default {
           })
         } finally {
           this.$store.dispatch('refreshCurrentUser')
-          setTimeout(() => {
-            this.loading = false
-          }, 100)
+          this.loading = false
         }
       }
     },
@@ -3997,7 +4061,11 @@ export default {
     },
     async updateResource() {
       this.updateList.push(this.oppId)
+
       this.editOpModalOpen = false
+      this.modalOpen = false
+
+      this.ModalOpen = false
       try {
         const res = await SObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
@@ -4185,18 +4253,18 @@ export default {
     setForms() {
       for (let i = 0; i < this.oppFormCopy.length; i++) {
         if (this.oppFormCopy[i].dataType === 'Reference') {
-          this.referenceOpts[this.oppFormCopy[i].apiName] = this.oppFormCopy[i].id
+          this.referenceOpts[this.oppFormCopy[i].apiName] = []
         }
       }
       for (let i = 0; i < this.stageGateCopy.length; i++) {
         if (this.stageGateCopy[i].dataType === 'Reference') {
-          this.stageReferenceOpts[this.stageGateCopy[i].apiName] = this.stageGateCopy[i].id
+          this.stageReferenceOpts[this.stageGateCopy[i].apiName] = []
         }
       }
 
       for (let i = 0; i < this.createOppForm.length; i++) {
         if (this.createOppForm[i].dataType === 'Reference') {
-          this.createReferenceOpts[this.createOppForm[i].apiName] = this.createOppForm[i].id
+          this.createReferenceOpts[this.createOppForm[i].apiName] = []
         }
       }
 
@@ -4204,42 +4272,28 @@ export default {
         for (let i = 0; i < this.createProductForm.length; i++) {
           if (this.createProductForm[i].dataType === 'Reference') {
             this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
-            this.productReferenceOpts[this.createProductForm[i].apiName] =
-              this.createProductForm[i].id
+            this.productReferenceOpts[this.createProductForm[i].apiName] = []
           }
         }
       }
-
-      for (let i in this.referenceOpts) {
-        this.referenceOpts[i] = this.getReferenceFieldList(i, this.referenceOpts[i], 'update')
-      }
-
-      for (let i in this.stageReferenceOpts) {
-        this.stageReferenceOpts[i] = this.getReferenceFieldList(
-          i,
-          this.stageReferenceOpts[i],
-          'stage',
-        )
-      }
-
-      for (let i in this.createReferenceOpts) {
-        this.createReferenceOpts[i] = this.getReferenceFieldList(
-          i,
-          this.createReferenceOpts[i],
-          'create',
-        )
-      }
-
-      if (this.hasProducts) {
-        for (let i in this.productReferenceOpts) {
-          this.productReferenceOpts[i] = this.getReferenceFieldList(
-            i,
-            this.productReferenceOpts[i],
-            'createProduct',
-          )
-        }
-      }
     },
+    getReferenceOpts(name, id) {
+      this.dropdownLoading = true
+      this.referenceOpts[name] = this.getReferenceFieldList(name, id, 'update')
+    },
+    getStageReferenceOpts(name, id) {
+      this.dropdownLoading = true
+      this.stageReferenceOpts[name] = this.getReferenceFieldList(name, id, 'stage')
+    },
+    getCreateReferenceOpts(name, id) {
+      this.dropdownLoading = true
+      this.createReferenceOpts[name] = this.getReferenceFieldList(name, id, 'create')
+    },
+    getProductReferenceOpts(name, id) {
+      this.dropdownLoading = true
+      this.productReferenceOpts[name] = this.getReferenceFieldList(name, id, 'createProduct')
+    },
+
     setDropdownValue(val) {
       // this.dropdownValue = {}
       this.dropdownValue = val
@@ -4300,7 +4354,6 @@ export default {
             this.stageValidationFields[field.stage] = field.fieldsRef
           }
         }
-
         // this.stageGateCopy = stageGateForms[0].fieldsRef
         // let stages = stageGateForms.map((field) => field.stage)
         // this.stagesWithForms = stages
@@ -4378,7 +4431,9 @@ export default {
     // },
     async getObjects(page = 1) {
       this.currentPage = page
+
       this.loading = true
+
       try {
         const res = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
         this.allOpps = res.results
@@ -4401,6 +4456,7 @@ export default {
       }
     },
     async addMore(page) {
+      this.loadingNext = true
       try {
         const filter = this.filterText
           ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
@@ -4418,6 +4474,10 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        setTimeout(() => {
+          this.loadingNext = false
+        }, 200)
       }
     },
     async getNotes(id) {

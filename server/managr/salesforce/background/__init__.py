@@ -539,7 +539,8 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
 
 
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
@@ -602,7 +603,8 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
@@ -993,7 +995,10 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
+                *filter(
+                    lambda contact: contact.get("_form") == str(form.id),
+                    meeting.participants,
+                )
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -1756,7 +1761,10 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
         for channel in send_summ_to_channels:
             try:
                 r = slack_requests.send_channel_message(
-                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
+                    channel,
+                    slack_access_token,
+                    text=f"Recap Lead",
+                    block_set=blocks,
                 )
                 logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:
@@ -1924,6 +1932,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
 @background(schedule=0)
 def _processs_bulk_update(request):
     data = request.data
+    print("DATA", data)
     logger.info(f"UPDATE START ---- {data}")
     user = User.objects.get(id=request.user.id)
     integration_ids = data.get("integration_ids")

@@ -168,8 +168,7 @@
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
-              optionHeight="20"
+              style="width: 14vw; padding-bottom: 200px; font-size: 13px"
               track-by="value"
               label="label"
               @select="emitDropdown($event, opp)"
@@ -262,10 +261,16 @@
           </div>
           <div v-else-if="field.dataType === 'Reference'">
             <Multiselect
-              style="width: 14vw; padding-bottom: 8rem"
+              style="width: 14vw; padding-bottom: 200px; font-size: 13px"
               v-model="dropdownVal[field.apiName]"
               @select="setUpdateValues(field.apiName, $event.id, field.dataType)"
-              :options="referenceOpts[field.apiName] ? referenceOpts[field.apiName] : []"
+              :options="referenceOpts[field.apiName]"
+              @open="
+                field.dataType === 'Reference'
+                  ? $emit('get-reference-opts', field.apiName, field.id)
+                  : null
+              "
+              :loading="dropdownLoading"
               openDirection="below"
               selectLabel="Enter"
               label="name"
@@ -446,6 +451,7 @@ export default {
     stages: {},
     currentInlineRow: {},
     extraPipelineFields: {},
+    dropdownLoading: {},
   },
   methods: {
     // async setForm() {
@@ -614,22 +620,23 @@ export default {
         const formData = {}
         formData[this.BulkUpdateName] = this.BulkUpdateValue
         const res = await SObjects.api
-          .updateResource({
+          .bulkUpdate({
             form_data: formData,
             resource_type: 'Opportunity',
             form_type: 'UPDATE',
             resource_id: this.opp.id,
             integration_ids: [this.opp.integration_id],
           })
-          .then(
+          .then((res) => {
+            console.log(res)
             this.$toast('Salesforce Update Successful', {
               timeout: 1000,
               position: 'top-left',
               type: 'success',
               toastClassName: 'custom',
               bodyClassName: ['custom'],
-            }),
-          )
+            })
+          })
       } catch (e) {
         console.log(e)
       } finally {

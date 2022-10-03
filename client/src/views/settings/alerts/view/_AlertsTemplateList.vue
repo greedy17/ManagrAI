@@ -18,6 +18,62 @@
       </div>
     </Modal>
 
+    <Modal
+      v-if="workflowListOpen"
+      @close-modal="
+        () => {
+          $emit('cancel'), (workflowListOpen = false)
+        }
+      "
+    >
+      <div class="workflow__modal">
+        <div class="workflow__modal__header">
+          <p>
+            {{ activeWorkflow.title }}
+            <!-- <span> {{ activeWorkflow.sobjectInstances.length }}</span> -->
+          </p>
+
+          <button class="green_button">Open in Pipeline</button>
+        </div>
+
+        <section
+          class="workflow__modal__body"
+          :key="i"
+          v-for="(opp, i) in activeWorkflow.sobjectInstances"
+        >
+          <div class="title">
+            <div>
+              <h4>
+                {{ opp.Name }}
+              </h4>
+              <p>Stage: {{ opp.StageName }}</p>
+              <p>Close Date: {{ opp.CloseDate }}</p>
+            </div>
+          </div>
+          <!-- <section class="button-section">
+            <div>
+              <button class="green-button">Update Record</button>
+              <img src="@/assets/images/note.svg" height="14px" alt="" />
+              <img src="@/assets/images/pipeline.svg" height="14px" alt="" />
+            </div>
+          </section> -->
+        </section>
+      </div>
+    </Modal>
+
+    <Modal
+      v-if="meetingListOpen"
+      @close-modal="
+        () => {
+          $emit('cancel'), (meetingListOpen = false)
+        }
+      "
+    >
+      <div class="workflow__modal">
+        <p>test</p>
+      </div>
+    </Modal>
+
     <template v-if="!templates.refreshing">
       <transition name="fade">
         <div v-if="!editing" class="edit__modal">
@@ -124,7 +180,7 @@
               >
                 <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
               </button>
-              <button style="margin-right: 8px" class="white_button">
+              <button @click="openList(alert)" style="margin-right: 8px" class="white_button">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -178,7 +234,7 @@
           <div class="added-collection__footer">
             <div class="row__">
               <button @click="goToLogZoom" class="yellow_button_full">Change Channel</button>
-              <button style="margin-left: 8px" class="white_button">
+              <button @click="openMeetings" style="margin-left: 8px" class="white_button">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -211,7 +267,7 @@
           <div class="added-collection__footer">
             <div class="row__">
               <button @click="goToRecap" class="yellow_button_full">Change Channel</button>
-              <button style="margin-left: 8px" class="white_button">
+              <button @click="openMeetings" style="margin-left: 8px" class="white_button">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -273,6 +329,8 @@ export default {
         'Deal Review',
         'Close Date Approaching',
       ],
+      meetingListOpen: false,
+      activeWorkflow: null,
       allConfigs,
       userChannelOpts: new SlackListResponse(),
       templates: CollectionManager.create({
@@ -282,6 +340,7 @@ export default {
       users: CollectionManager.create({ ModelClass: User }),
       templateTitles: [],
       deleteOpen: false,
+      workflowListOpen: false,
       deleteId: '',
       deleteTitle: '',
       currentAlert: {},
@@ -310,6 +369,13 @@ export default {
     this.getActiveTemplateTitles()
   },
   methods: {
+    openList(alert) {
+      this.activeWorkflow = alert
+      this.workflowListOpen = true
+    },
+    openMeetings() {
+      this.meetingListOpen = true
+    },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
       this.$router.push({ name: newName })
@@ -599,6 +665,72 @@ button:disabled {
 .titles {
   color: $base-gray;
   font-weight: bold;
+}
+.workflow__modal {
+  background-color: $white;
+  color: $base-gray;
+  border-radius: 6px;
+  height: 60vh;
+  padding: 0 1rem;
+  overflow: scroll;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    background-color: white;
+    z-index: 2;
+    top: 0;
+    p {
+      font-size: 16px;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+    width: 100%;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      h4 {
+        font-weight: 900;
+        font-size: 13px;
+        margin: 0;
+        padding: 0;
+        min-width: 32vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+
+        span {
+          // background-color: $off-white;
+          color: $light-gray-blue;
+          padding: 4px 8px;
+          border-radius: 4px;
+          margin-left: 12px;
+          font-size: 13px;
+          opacity: 0.9;
+        }
+      }
+
+      p {
+        font-weight: bold;
+        font-size: 13px;
+        color: $light-gray-blue;
+        padding: 0;
+        margin: 0;
+        margin-top: 4px;
+      }
+    }
+  }
 }
 .delete_modal {
   background-color: $white;
