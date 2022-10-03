@@ -11,68 +11,72 @@
     >
       <div class="modal-container" v-if="modalInfo">
         <div v-if="modalName === 'task'">
-          <h2 @click="test(modalInfo)">{{modalInfo.fields.task_name}}</h2>
-          <div>
-            <div>Task Params:</div>
-            <div>{{modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Task Hash:</div>
-            <div>{{modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Verbose Name:</div>
-            <div>{{modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Priority:</div>
-            <div>{{modalInfo.fields.priority || modalInfo.fields.priority === 0 ? modalInfo.fields.priority : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Run At:</div>
-            <div>{{modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Repeat:</div>
-            <div>{{modalInfo.fields.repeat || modalInfo.fields.repeat === 0 ? modalInfo.fields.repeat : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Repeat Until:</div>
-            <div>{{modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Queue:</div>
-            <div>{{modalInfo.fields.queue ? modalInfo.fields.queue : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Attempts:</div>
-            <div>{{modalInfo.fields.attempts}}</div>
-          </div>
-          <div v-if="modalInfo.fields.failed_at">
-            <div>
-              <div>Failed At:</div>
-              <div>{{modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null'}}</div>
+          <h2 class="modal-container__header" @click="test(modalInfo)">{{modalInfo.fields.task_name}}</h2>
+          <div class="modal-container__body">
+            <div class="note-section__body" style="margin-bottom: 1rem;">
+              <div>
+                <div class="underline">Task Params:</div>
+                <div class="bottom-margin">{{modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Task Hash:</div>
+                <div class="bottom-margin">{{modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Verbose Name:</div>
+                <div class="bottom-margin">{{modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Priority:</div>
+                <div class="bottom-margin">{{modalInfo.fields.priority || modalInfo.fields.priority === 0 ? modalInfo.fields.priority : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Run At:</div>
+                <div class="bottom-margin">{{modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Repeat:</div>
+                <div class="bottom-margin">{{modalInfo.fields.repeat || modalInfo.fields.repeat === 0 ? modalInfo.fields.repeat : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Repeat Until:</div>
+                <div class="bottom-margin">{{modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Queue:</div>
+                <div class="bottom-margin">{{modalInfo.fields.queue ? modalInfo.fields.queue : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Attempts:</div>
+                <div class="bottom-margin">{{modalInfo.fields.attempts}}</div>
+              </div>
+              <div v-if="modalInfo.fields.failed_at">
+                <div>
+                  <div class="underline">Failed At:</div>
+                  <div class="bottom-margin">{{modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null'}}</div>
+                </div>
+                <div>
+                  <div class="underline">Last Error:</div>
+                  <div class="bottom-margin">{{modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null'}}</div>
+                </div>
+              </div>
+              <div>
+                <div class="underline">Locked By:</div>
+                <div class="bottom-margin">{{modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Locked At:</div>
+                <div class="bottom-margin">{{modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Creator Content Type:</div>
+                <div class="bottom-margin">{{modalInfo.fields.creator_content_type ? modalInfo.fields.creator_content_type : 'Null'}}</div>
+              </div>
+              <div>
+                <div class="underline">Creator Object ID:</div>
+                <div>{{modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'}}</div>
+              </div>
             </div>
-            <div>
-              <div>Last Error:</div>
-              <div>{{modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null'}}</div>
-            </div>
-          </div>
-          <div>
-            <div>Locked By:</div>
-            <div>{{modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Locked At:</div>
-            <div>{{modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Creator Content Type:</div>
-            <div>{{modalInfo.fields.creator_content_type ? modalInfo.fields.creator_content_type : 'Null'}}</div>
-          </div>
-          <div>
-            <div>Creator Object ID:</div>
-            <div>{{modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'}}</div>
           </div>
         </div>
         <div v-if="modalName === 'slackForm'">
@@ -230,7 +234,7 @@
               </p>
             </section>
             <section v-else>
-              <p>No Info To display</p>
+              <p>No Info to Display</p>
             </section>
           </div>
         </div>
@@ -795,7 +799,7 @@
         <h2>Completed Tasks</h2>
         <div v-for="(task, i) in adminTasks" :key="task.pk">
           <div :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'" @click="openModal('task', task)">
-            <h4 class="click click_width">Task {{task.fields.task_name}} ({{formatDateTime(task.fields.run_at)}}, {{getTime(task.fields.run_at)}}) <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{task.fields.last_error ? '[ERROR]' : '[SUCCESS]'}}</span></h4>
+            <h4 class="click click_width">{{task.fields.task_name}} ({{formatDateTime(task.fields.run_at)}}, {{getTime(task.fields.run_at)}}) <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{task.fields.last_error ? '[ERROR]' : '[SUCCESS]'}}</span></h4>
           </div>
         </div>
       </template>
@@ -1379,19 +1383,19 @@ input[type='search']:focus {
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
 
-  // &__header {
-  //   display: flex;
-  //   justify-content: space-between;
-  //   padding-left: 0.75rem;
-  //   border-bottom: 1px solid #e8e8e8;
-  //   img {
-  //     filter: invert(80%);
-  //     height: 1.25rem;
-  //     margin-top: 0.75rem;
-  //     margin-right: 0.5rem;
-  //     cursor: pointer;
-  //   }
-  // }
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 0.75rem;
+    border-bottom: 1px solid #e8e8e8;
+    img {
+      filter: invert(80%);
+      height: 1.25rem;
+      margin-top: 0.75rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+  }
   &__body {
     display: flex;
     flex-direction: column;
@@ -1600,5 +1604,8 @@ input[type='search']:focus {
   margin-top: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid black;
+}
+.bottom-margin {
+  margin-bottom: 1rem;
 }
 </style>
