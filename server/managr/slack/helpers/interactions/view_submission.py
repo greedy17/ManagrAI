@@ -358,6 +358,7 @@ def process_submit_resource_data(payload, context):
     except ValueError:
         view_type = external_id
         pass
+
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
@@ -479,23 +480,23 @@ def process_submit_resource_data(payload, context):
                 attempts += 1
 
     if has_error:
-
-        if not len(stage_forms):
-            # add a special button to return the user back to edit their form
-            # this is only required for single page forms
-            blocks = [
-                *blocks,
-                block_builders.actions_block(
-                    [
-                        block_builders.simple_button_block(
-                            "return to form",
-                            str(main_form.id),
-                            style="primary",
-                            action_id=slack_const.RETURN_TO_FORM_MODAL,
-                        )
-                    ]
-                ),
-            ]
+        form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
+        # if not len(stage_forms):
+        # add a special button to return the user back to edit their form
+        # this is only required for single page forms
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
         new_context = {**context, "type": "command"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         error_view_data = {
@@ -2390,7 +2391,9 @@ def process_submit_alert_resource_data(payload, context):
     # get context
     has_error = False
     state = swap_public_fields(payload["view"]["state"]["values"])
+    print(state)
     current_form_ids = context.get("f").split(",")
+    print(current_form_ids)
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -2407,10 +2410,12 @@ def process_submit_alert_resource_data(payload, context):
     stage_forms = current_forms.exclude(template__form_type__in=["UPDATE"])
     stage_form_data_collector = {}
     for form in stage_forms:
+        form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+    print(all_form_data)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = send_loading_screen(
@@ -2523,22 +2528,23 @@ def process_submit_alert_resource_data(payload, context):
                 attempts += 1
 
     if has_error:
-        if not len(stage_forms):
-            # add a special button to return the user back to edit their form
-            # this is only required for single page forms
-            blocks = [
-                *blocks,
-                block_builders.actions_block(
-                    [
-                        block_builders.simple_button_block(
-                            "return to form",
-                            str(main_form.id),
-                            style="primary",
-                            action_id=slack_const.RETURN_TO_FORM_MODAL,
-                        )
-                    ]
-                ),
-            ]
+        form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
+        # if not len(stage_forms):
+        # add a special button to return the user back to edit their form
+        # this is only required for single page forms
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
 
         new_context = {**context, "type": "alert"}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -2549,7 +2555,7 @@ def process_submit_alert_resource_data(payload, context):
                 "title": {"type": "plain_text", "text": "Error"},
                 "blocks": blocks,
                 "private_metadata": json.dumps(new_context),
-                "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+                "external_id": f"{view_type}.{str(uuid.uuid4())}",
             },
         }
         try:

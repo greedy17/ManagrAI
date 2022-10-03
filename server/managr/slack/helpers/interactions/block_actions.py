@@ -1548,7 +1548,7 @@ def process_return_to_form_modal(payload, context):
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
     actions = payload["actions"]
-
+    type = pm.get("type", None)
     if len(actions) and actions[0]["type"] == "button":
         selected_option = actions[0]["value"]
     else:
@@ -1557,6 +1557,7 @@ def process_return_to_form_modal(payload, context):
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:
+        view_type = None
         pass
     main_form = OrgCustomSlackFormInstance.objects.filter(id=selected_option).first()
     resource_id = None
@@ -1571,7 +1572,7 @@ def process_return_to_form_modal(payload, context):
         **context,
         "resource_type": resource_type,
         "resource_id": resource_id,
-        "f": selected_option,
+        "f": pm.get("f", selected_option),
         "u": str(user.id),
     }
     if from_workflow:
@@ -1614,7 +1615,11 @@ def process_return_to_form_modal(payload, context):
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
         return
-    form_blocks = get_block_set(view_type, view_context)
+    form_blocks = (
+        get_block_set(view_type, view_context)
+        if view_type
+        else main_form.generate_form(main_form.saved_data)
+    )
     if main_form and not from_workflow:
         try:
             index, stage_block = block_finder("StageName", form_blocks)
@@ -1641,16 +1646,19 @@ def process_return_to_form_modal(payload, context):
 
     title_text = (
         f"Update {resource_type}"
-        if view_type == "update_modal_block_set"
+        if (view_type == "update_modal_block_set" or not view_type)
         else f"Create {resource_type}"
     )
     if type == "alert":
         callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
+        submit_text = "Update"
     elif type == "digest":
         callback_id = slack_const.PROCESS_SUBMIT_DIGEST_RESOURCE_DATA
     else:
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
-    submit_text = "Update" if view_type == "update_modal_block_set" else "Create"
+        submit_text = (
+            "Update" if (view_type == "update_modal_block_set" or not view_type) else "Create"
+        )
 
     private_metadata.update(view_context)
     data = {
