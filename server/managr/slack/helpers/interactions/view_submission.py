@@ -2571,6 +2571,28 @@ def process_convert_lead(payload, context):
                 ],
             },
         }
+    update_blocks = [
+        block_builders.section_with_button_block(
+            "Send Recap",
+            "SEND_RECAP",
+            f":white_check_mark: Successfully converted your Lead {lead.name}",
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[
+                    f"u={str(user.id)}",
+                    f"account={res['Account']}",
+                    f"opportunity={res['Opportunity']}",
+                    f"contact={res['Contact']}",
+                ],
+            ),
+        )
+    ]
+    slack_requests.send_channel_message(
+        user.slack_integration.channel,
+        user.organization.slack_integration.access_token,
+        block_set=update_blocks,
+    )
+    return
 
 
 @processor(required_context=["f"])
