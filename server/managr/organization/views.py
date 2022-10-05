@@ -22,6 +22,8 @@ from rest_framework import (
     viewsets,
 )
 
+from managr.salesforce.background import emit_generate_team_form_templates
+
 from rest_framework import viewsets, mixins, generics, status, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError

@@ -2425,6 +2425,54 @@ def process_select_crm_field(payload, context):
     return
 
 
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_get_summary_fields(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    config_id = context.get("config_id")
+    config = AlertConfig.objects.get(id=config_id)
+    form = user.team.team_forms.filter(
+        form_type="UPDATE", resource=config.template.resource_type
+    ).first()
+    fields = form.fields.all().exclude(data_type__in=["Reference", "String"])
+    fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
+    blocks = [
+        block_builders.multi_static_select(
+            "Fields to Summarize",
+            options=fields_options,
+            action_id=action_with_params(
+                slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+            ),
+            block_id="CRM_FIELDS",
+        ),
+        block_builders.context_block("*Amount total will be auto calculated"),
+    ]
+    data = {
+        **context,
+        "message_ts": payload["container"]["message_ts"],
+        "channel_id": payload["container"]["channel_id"],
+        "trigger_id": payload["trigger_id"],
+    }
+    loading_view_data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Workflow Summary"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(data),
+            "submit": {"type": "plain_text", "text": "Get Summary", "emoji": True},
+            "callback_id": slack_const.GET_SUMMARY,
+        },
+    }
+
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+        loading_view_data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
+
+
 #########################################################
 # MORNING/AFTERNOON DIGEST ACTIONS
 #########################################################
@@ -3342,6 +3390,7 @@ def handle_block_actions(payload):
         slack_const.CHOOSE_CRM_FIELD: process_select_crm_field,
         slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
+        slack_const.GET_SUMMARY: process_get_summary_fields,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
