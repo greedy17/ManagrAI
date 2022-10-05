@@ -251,6 +251,9 @@ def process_get_external_relationship_options(payload, context):
     value = payload["value"]
     resource = context.get("resource")
     add_fields = context.get("add", None)
+    if relationship == "Group":
+        relationship = "User"
+        fields = ["FirstName", "LastName", "Name"]
     attempts = 1
     while True:
         sf_account = user.salesforce_account

@@ -2989,10 +2989,11 @@ def process_submit_bulk_update(payload, context):
     return {"response_action": "clear"}
 
 
-def create_summary_object(api_names, resources):
+def create_summary_object(api_names, resources, resource_type):
     object = {}
-    amounts = [(resource.amount if resource.amount else 0) for resource in resources]
-    object["Amount"] = round(sum(amounts), 2)
+    if resource_type == "Opportunity":
+        amounts = [(resource.amount if resource.amount else 0) for resource in resources]
+        object["Amount"] = round(sum(amounts), 2)
     for resource in resources:
         for api_name in api_names:
             value = resource.secondary_data[api_name]
@@ -3029,18 +3030,20 @@ def process_get_summary(payload, context):
     resources = model_routes[config.template.resource_type]["model"].objects.filter(
         id__in=instances
     )
-    summary_object = create_summary_object(value_list, resources)
-    summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['Amount'])}"
+    summary_object = create_summary_object(value_list, resources, config.template.resource_type)
+
     blocks = [
         block_builders.header_block(
             f"Workflow Summary for {len(instances)} {config.template.title}"
         ),
-        block_builders.simple_section(summary_amount, "mrkdwn"),
         {"type": "divider"},
-        # block_builders.simple_section(summary_text, "mrkdwn"),
     ]
+    if config.template.resource_type == "Opportunity":
+        summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['Amount'])}"
+        blocks.insert(1, block_builders.simple_section(summary_amount, "mrkdwn"))
+        summary_object.pop("Amount")
     summary_text = ""
-    summary_object.pop("Amount")
+
     for field in summary_object.keys():
         summary_text += f"\n\n*{api_name_obj[field]}:*\n"
         for key in summary_object[field]:
