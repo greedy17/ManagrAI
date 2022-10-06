@@ -1,5 +1,6 @@
 <template>
   <div class="invite-users">
+    <!-- Change Admin Confirmation -->
     <Modal
       v-if="changeAdminConfirmModal"
       dimmed
@@ -17,7 +18,7 @@
           </div>
           <div class="flex-row">
             <h4 class="invite-form__subtitle">
-              By clicking Confirm, you will transferring the Admin role to
+              By clicking Confirm, you will be transferring the Admin role to
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
             </h4>
           </div>
@@ -296,270 +297,317 @@
         </div>
       </form>
     </Modal>
-    <section class="wrapper">
-      <div class="tabs">
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
-          <label for="tab-1" class="tab-label" @click="goToActive">Manage your Team</label>
-          <div class="tab-content">
-            <section>
-              <!-- Change Admin Confirmation -->
+    <div v-if="noSelection">
+      <figure
+        @click="
+          manageTeamSelected = true
+          noSelection = false
+          getTeams()
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/managrTeam.png" />
+        <figcaption>
+          <h5>Manage <br />Team</h5>
+        </figcaption>
 
-              <div class="invite-users__header">
-                <div></div>
-                <div>
-                  <button
-                    v-if="isAdmin"
-                    class="invite_button"
-                    type="submit"
-                    @click="showChangeAdmin"
-                    style="margin-right: 16px"
-                  >
-                    Change Admin
-                  </button>
-                  <button
-                    style="margin-right: 16px"
-                    v-if="isAdmin"
-                    class="invite_button"
-                    type="submit"
-                    @click="handleNewTeam"
-                  >
-                    Create New Team
-                  </button>
-                  <button class="invite_button" type="submit" @click="handleInvite">
-                    Invite Member
-                    <img
-                      v-if="hasSlack"
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/slackLogo.png"
-                      alt=""
-                    />
-                    <img
-                      v-else
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/logo.png"
-                      alt=""
-                    />
-                  </button>
-                </div>
-              </div>
-
-              <Invite
-                class="invite-users__inviter"
-                :handleEdit="handleEdit"
-                :inviteOpen="inviteOpen"
-                @cancel="handleCancel"
-              />
-            </section>
-          </div>
+        <div class="figure-title">
+          <p>Manage your team <img src="@/assets/images/team.svg" height="16px" alt="" /></p>
+          <small>Invite others to join you on Managr</small>
         </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label">Update Info</label>
-          <div class="tab-content">
-            <section>
-              <header class="invite-users__header">
-                <!-- <h3 style="color: #4d4e4c">Update your Info</h3> -->
+      </figure>
 
-                <button class="invite_button" type="submit" @click="handleUpdate">
-                  Update
-                  <img
-                    style="height: 0.8rem; margin-left: 0.25rem"
-                    src="@/assets/images/logo.png"
-                    alt=""
-                  />
-                </button>
-              </header>
-
-              <form class="update-container">
-                <h3 style="color: #4d4e4c">Update your Info</h3>
-                <input
-                  v-model="profileForm.field.firstName.value"
-                  placeholder="First Name"
-                  :errors="profileForm.field.firstName.errors"
-                  id="user-input"
-                />
-                <input
-                  v-model="profileForm.field.lastName.value"
-                  placeholder="Last Name"
-                  :errors="profileForm.field.lastName.errors"
-                  id="user-input"
-                />
-
-                <Multiselect
-                  placeholder="Select Timezone"
-                  style="width: 20vw"
-                  v-model="selectedTimezone"
-                  @input="setTime"
-                  :options="timezones"
-                  openDirection="below"
-                  selectLabel="Enter"
-                  label="key"
-                  track-by="value"
-                />
-              </form>
-            </section>
-          </div>
+      <figure
+        @click="
+          updateInfoSelected = true
+          noSelection = false
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/updateInfo.png" />
+        <figcaption>
+          <h5>Update<br />Info</h5>
+        </figcaption>
+        <div style="margin-top: 12px" class="figure-title">
+          <p>Update Info <img src="@/assets/images/profile.svg" height="16px" alt="" /></p>
+          <small>Update your profile information</small>
         </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
-          <label for="tab-3" class="tab-label" @click="goToCustom">Create Note Template</label>
-          <div class="tab-content">
-            <section>
-              <header class="invite-users__header">
-                <h3 style="color: #4d4e4c">Create Template</h3>
-
-                <button
-                  :disabled="!noteSubject || !noteBody"
-                  class="invite_button"
-                  type="submit"
-                  @click="createTemplate"
-                  v-if="!savingTemplate"
-                >
-                  Save Template
-                  <!-- <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" /> -->
-                </button>
-
-                <div v-else>
-                  <PipelineLoader />
-                </div>
-              </header>
-
-              <div class="update-container">
-                <input
-                  v-model="noteSubject"
-                  class="template-input"
-                  type="text"
-                  name=""
-                  id=""
-                  :disabled="savingTemplate"
-                  placeholder="Template Title"
-                />
-
-                <quill-editor
-                  :disabled="savingTemplate"
-                  ref="message-body"
-                  :options="{
-                    modules: {
-                      toolbar: [
-                        [{ header: 1 }, { header: 2 }],
-                        ['bold', 'italic', 'underline'],
-                        [{ list: 'ordered' }, { list: 'bullet' }],
-                      ],
-                    },
-                    theme: 'snow',
-                    placeholder: 'Type out your template here.',
-                  }"
-                  v-model="noteBody"
-                  class="message__box"
-                />
-
-                <div class="tooltip" style="margin-top: 1rem; display: flex; align-items: center">
-                  <input type="checkbox" id="shared" v-model="isShared" />
-                  <label class="small" for="shared">Share Template</label>
-                  <span class="tooltiptext">Share template with your team</span>
-                </div>
-              </div>
-              <div class="wide">
-                <button @click="homeView" class="invite_button">
-                  <img src="@/assets/images/back.svg" height="12px" alt="" />
-                </button>
-              </div>
-            </section>
-          </div>
+      </figure>
+      <figure
+        @click="
+          createNoteSelected = true
+          noSelection = false
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/createTemplate.png" />
+        <figcaption>
+          <h5>Create<br />Template</h5>
+        </figcaption>
+        <div style="margin-top: 8px" class="figure-title">
+          <p>Create Template <img src="@/assets/images/list.svg" height="18px" alt="" /></p>
+          <small>Create a template for your notes</small>
         </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
-          <label for="tab-4" class="tab-label" @click="goToCustom">Edit Note Templates</label>
-          <div class="tab-content">
-            <section>
-              <header class="invite-users__header">
-                <h3 style="color: #4d4e4c">Edit Templates</h3>
+      </figure>
+      <figure
+        @click="
+          editNoteSelected = true
+          noSelection = false
+          getTemplates()
+        "
+        class="hover-img"
+      >
+        <img src="@/assets/images/editTemplate.png" />
+        <figcaption>
+          <h5>Edit <br />Templates</h5>
+        </figcaption>
+        <div style="margin-top: 16px" class="figure-title">
+          <p>Edit Templates <img src="@/assets/images/pencil.svg" height="12px" alt="" /></p>
+          <small>Edit your note templates</small>
+        </div>
+      </figure>
+    </div>
 
-                <div class="row">
-                  <button class="invite_button" type="submit" @click="updateTemplate">
-                    Update Template
-                  </button>
-
-                  <button @click="removeTemplate" class="invite_button2">
-                    <img src="@/assets/images/trash.svg" height="18px" alt="" />
-                  </button>
-                </div>
-              </header>
-
-              <div class="update-container">
-                <div class="centered" v-if="!noteTemplates.length">
-                  <p>Nothing here yet... \_("/)_/</p>
-                </div>
-
-                <div class="row" v-else>
-                  <template v-if="!selectedTemplate">
-                    <div
-                      @click="selectTemplate(template)"
-                      class="small-container"
-                      v-for="(template, i) in noteTemplates"
-                      :key="i"
-                    >
-                      <div class="small-container__head">
-                        <p>{{ template.subject }}</p>
-                      </div>
-                      <div class="small-container__body">
-                        <p v-html="template.body"></p>
-                      </div>
-                    </div>
-                  </template>
-
-                  <div v-else>
-                    <input
-                      v-model="selectedTemplate.subject"
-                      class="template-input"
-                      type="text"
-                      name=""
-                      id=""
-                      :disabled="savingTemplate"
-                      placeholder="Template Title"
-                    />
-                    <quill-editor
-                      :disabled="savingTemplate"
-                      ref="message-body"
-                      :options="{
-                        modules: {
-                          toolbar: [
-                            [{ header: 1 }, { header: 2 }],
-                            ['bold', 'italic', 'underline'],
-                            [{ list: 'ordered' }, { list: 'bullet' }],
-                          ],
-                        },
-                        theme: 'snow',
-                        placeholder: 'Type out your template here.',
-                      }"
-                      v-model="selectedTemplate.body"
-                      class="message__box"
-                    />
-                    <div class="align-start">
-                      <input type="checkbox" id="editShared" v-model="selectedTemplate.is_shared" />
-                      <label class="small" for="editShared">Share Template</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="wide">
-                <button
-                  v-if="selectedTemplate"
-                  @click="selectedTemplate = !selectedTemplate"
-                  class="invite_button"
-                >
-                  <img src="@/assets/images/back.svg" height="12px" alt="" />
-                </button>
-                <button v-else @click="homeView" class="invite_button">
-                  <img src="@/assets/images/back.svg" height="12px" alt="" />
-                </button>
-              </div>
-            </section>
-          </div>
+    <section v-if="manageTeamSelected">
+      <div class="invite-users__header">
+        <h3 style="color: #4d4e4c">Manage Your Team</h3>
+        <div>
+          <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
+            Change Admin
+          </button>
+          <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
+            Create New Team
+          </button>
+          <button class="invite_button" type="submit" @click="handleInvite">
+            Invite Member
+            <img
+              v-if="hasSlack"
+              style="height: 0.8rem; margin-left: 0.25rem"
+              src="@/assets/images/slackLogo.png"
+              alt=""
+            />
+            <img
+              v-else
+              style="height: 0.8rem; margin-left: 0.25rem"
+              src="@/assets/images/logo.png"
+              alt=""
+            />
+          </button>
         </div>
       </div>
+
+      <Invite
+        class="invite-users__inviter"
+        :handleEdit="handleEdit"
+        :inviteOpen="inviteOpen"
+        @cancel="handleCancel"
+      />
+      <div class="wide">
+        <button @click="homeView" class="invite_button">
+          <img src="@/assets/images/back.svg" height="12px" alt="" />
+        </button>
+      </div>
     </section>
+
+    <div v-if="updateInfoSelected">
+      <section>
+        <header class="invite-users__header">
+          <h3 style="color: #4d4e4c">Update your Info</h3>
+
+          <button class="invite_button" type="submit" @click="handleUpdate">
+            Update
+            <img
+              style="height: 0.8rem; margin-left: 0.25rem"
+              src="@/assets/images/logo.png"
+              alt=""
+            />
+          </button>
+        </header>
+
+        <form class="update-container">
+          <input
+            v-model="profileForm.field.firstName.value"
+            placeholder="First Name"
+            :errors="profileForm.field.firstName.errors"
+            id="user-input"
+          />
+          <input
+            v-model="profileForm.field.lastName.value"
+            placeholder="Last Name"
+            :errors="profileForm.field.lastName.errors"
+            id="user-input"
+          />
+
+          <Multiselect
+            placeholder="Select Timezone"
+            style="width: 16rem"
+            v-model="selectedTimezone"
+            @input="setTime"
+            :options="timezones"
+            openDirection="below"
+            selectLabel="Enter"
+            label="key"
+            track-by="value"
+          />
+        </form>
+        <div class="wide">
+          <button @click="homeView" class="invite_button">
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div v-if="createNoteSelected">
+      <section>
+        <header class="invite-users__header">
+          <h3 style="color: #4d4e4c">Create Template</h3>
+
+          <button
+            :disabled="!noteSubject || !noteBody"
+            class="invite_button"
+            type="submit"
+            @click="createTemplate"
+            v-if="!savingTemplate"
+          >
+            Save Template
+            <!-- <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" /> -->
+          </button>
+
+          <div v-else>
+            <PipelineLoader />
+          </div>
+        </header>
+
+        <div class="update-container">
+          <input
+            v-model="noteSubject"
+            class="template-input"
+            type="text"
+            name=""
+            id=""
+            :disabled="savingTemplate"
+            placeholder="Template Title"
+          />
+
+          <quill-editor
+            :disabled="savingTemplate"
+            ref="message-body"
+            :options="{
+              modules: {
+                toolbar: [
+                  [{ header: 1 }, { header: 2 }],
+                  ['bold', 'italic', 'underline'],
+                  [{ list: 'ordered' }, { list: 'bullet' }],
+                ],
+              },
+              theme: 'snow',
+              placeholder: 'Type out your template here.',
+            }"
+            v-model="noteBody"
+            class="message__box"
+          />
+
+          <div class="tooltip" style="margin-top: 1rem; display: flex; align-items: center">
+            <input type="checkbox" id="shared" v-model="isShared" />
+            <label class="small" for="shared">Share Template</label>
+            <span class="tooltiptext">Share template with your team</span>
+          </div>
+        </div>
+        <div class="wide">
+          <button @click="homeView" class="invite_button">
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div v-if="editNoteSelected">
+      <section>
+        <header class="invite-users__header">
+          <h3 style="color: #4d4e4c">Edit Templates</h3>
+
+          <div v-if="selectedTemplate" class="row">
+            <button class="invite_button" type="submit" @click="updateTemplate">
+              Update Template
+            </button>
+
+            <button @click="removeTemplate" class="invite_button2">
+              <img src="@/assets/images/trash.svg" height="18px" alt="" />
+            </button>
+          </div>
+        </header>
+
+        <div v-if="noteTemplates" class="update-container">
+          <div class="centered" v-if="!noteTemplates.length">
+            <p>Nothing here yet... \_("/)_/</p>
+          </div>
+
+          <div class="row" v-else>
+            <template v-if="!selectedTemplate">
+              <div
+                @click="selectTemplate(template)"
+                class="small-container"
+                v-for="(template, i) in noteTemplates"
+                :key="i"
+              >
+                <div class="small-container__head">
+                  <p>{{ template.subject }}</p>
+                </div>
+                <div class="small-container__body">
+                  <p v-html="template.body"></p>
+                </div>
+              </div>
+            </template>
+
+            <div v-else>
+              <input
+                v-model="selectedTemplate.subject"
+                class="template-input"
+                type="text"
+                name=""
+                id=""
+                :disabled="savingTemplate"
+                placeholder="Template Title"
+              />
+              <quill-editor
+                :disabled="savingTemplate"
+                ref="message-body"
+                :options="{
+                  modules: {
+                    toolbar: [
+                      [{ header: 1 }, { header: 2 }],
+                      ['bold', 'italic', 'underline'],
+                      [{ list: 'ordered' }, { list: 'bullet' }],
+                    ],
+                  },
+                  theme: 'snow',
+                  placeholder: 'Type out your template here.',
+                }"
+                v-model="selectedTemplate.body"
+                class="message__box"
+              />
+              <div class="align-start">
+                <input type="checkbox" id="editShared" v-model="selectedTemplate.is_shared" />
+                <label class="small" for="editShared">Share Template</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wide">
+          <button
+            v-if="selectedTemplate"
+            @click="selectedTemplate = !selectedTemplate"
+            class="invite_button"
+          >
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+          <button v-else @click="homeView" class="invite_button">
+            <img src="@/assets/images/back.svg" height="12px" alt="" />
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -640,13 +688,6 @@ export default {
     selectTemplate(template) {
       this.selectedTemplate = template
     },
-    // truncateText(text, length) {
-    //   if (text.length <= length) {
-    //     return text.replace(/(<([^>]+)>)/gi, '')
-    //   }
-
-    //   return text.replace(/(<([^>]+)>)/gi, '').substr(0, length) + '\u2026'
-    // },
     async updateTemplate() {
       try {
         const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
@@ -911,7 +952,6 @@ export default {
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)
       const teamList = [res.results[0]]
-      console.log(res)
       for (let i = 1; i < res.results.length; i++) {
         if (res.results[i].team_lead === this.getUser.id) {
           teamList.push(res.results[i])
@@ -1030,98 +1070,7 @@ export default {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 }
-.wrapper {
-  width: 92.5vw;
-  margin: 0 auto;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-}
-.tabs {
-  position: relative;
-  margin: 16px 0;
-  background: white;
-  border-radius: 6px;
-}
-.tabs::before,
-.tabs::after {
-  content: '';
-  display: table;
-}
-.tabs::after {
-  clear: both;
-}
-.tab {
-  float: left;
-  margin-left: 8px;
-}
-.tab-switch {
-  display: none;
-}
-.tab-label {
-  position: relative;
-  display: block;
-  line-height: 2.75em;
-  height: 3em;
-  padding: 0 1.618em;
-  color: $light-gray-blue;
-  cursor: pointer;
-  top: 0;
-  transition: all 0.25s;
-}
-.tab-label:hover {
-  top: -0.25rem;
-  transition: top 0.25s;
-}
-.tab-content {
-  width: 100%;
-  min-height: 92vh;
-  position: absolute;
-  z-index: 1;
-  top: 2.75em;
-  left: 0;
-  padding: 8px 24px;
-  background: #fff;
-  color: $base-gray;
-  opacity: 0;
-  transition: all 0.35s;
-  overflow: scroll;
-  border-radius: 6px;
 
-  section {
-    div {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    section {
-      border: 1px dashed $light-gray-blue;
-      background-color: $off-white;
-      border-radius: 6px;
-      min-height: 30vh;
-      margin-top: 16px;
-    }
-  }
-}
-.tab-switch:checked + .tab-label {
-  background: #fff;
-  color: $base-gray;
-  border-bottom: 0;
-  transition: all 0.35s;
-  z-index: 1;
-  top: -0.0625rem;
-}
-.tab-switch:checked + label + .tab-content {
-  z-index: 2;
-  opacity: 1;
-  transition: all 0.35s;
-}
-.tab-text {
-  color: $light-gray-blue;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-}
 .message__box {
   margin-bottom: 2rem;
   height: 24vh;
@@ -1148,9 +1097,8 @@ export default {
   width: 60vw;
   min-height: 40vh;
   overflow: visible;
-  margin-top: 2rem;
   padding: 1.5rem 0rem 1.5rem 1rem;
-  border-radius: 8px;
+  border-radius: 5px;
   display: flex;
   align-items: flex-start;
   flex-direction: column;
@@ -1164,7 +1112,7 @@ export default {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 20vw;
+  width: 16rem;
   margin-bottom: 1rem;
   font-family: $base-font-family;
 }
@@ -1178,17 +1126,18 @@ export default {
   justify-content: center;
   align-items: center;
   text-align: center;
-  margin-left: 88px;
+  margin-top: 4rem;
+  padding-bottom: 1rem;
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
+    width: 60vw;
     padding: 0.25rem;
   }
 
   &__inviter {
-    margin-top: 16px;
+    margin-top: 2rem;
   }
 }
 
@@ -1201,19 +1150,18 @@ h2 {
 }
 
 .invite_button {
-  color: $base-gray;
+  color: $dark-green;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 0.25rem;
   transition: all 0.25s;
   padding: 8px 12px;
   margin-left: 0.5rem;
   font-size: 14px;
   border: 1px solid #e8e8e8;
-  margin-left: -4px;
 }
 .invite_button2 {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 0.25rem;
   transition: all 0.25s;
   padding: 6px 12px;
   border: 1px solid #e8e8e8;
@@ -1221,7 +1169,7 @@ h2 {
 .invite_button:disabled {
   color: $base-gray;
   background-color: $soft-gray;
-  border-radius: 8px;
+  border-radius: 0.25rem;
   transition: all 0.25s;
   padding: 8px 12px;
   font-weight: 400px;

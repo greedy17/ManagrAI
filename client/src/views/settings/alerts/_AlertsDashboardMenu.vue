@@ -1,24 +1,33 @@
 <template>
   <div class="alerts">
-    <section class="wrapper">
-      <div class="tabs">
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
-          <label for="tab-1" class="tab-label" @click="goToActive">Workflows</label>
-          <div class="tab-content">
-            <router-view :key="$route.fullPath"></router-view>
-          </div>
-        </div>
+    <div class="header">
+      <h3
+        @click="buildingCustom = !buildingCustom"
+        class="left-margin"
+        :class="buildingCustom ? 'inactive' : ''"
+      >
+        Workflows
+      </h3>
+      <!-- <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
+          <h3 class="inactive">Workflow Builder</h3>
+      </router-link> -->
+      <h3 @click="buildingCustom = !buildingCustom" :class="!buildingCustom ? 'inactive' : ''">
+        Workflow Builder
+      </h3>
+    </div>
 
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label" @click="goToCustom">Workflow Builder</label>
-          <div class="tab-content">
-            <router-view :key="$route.fullPath"></router-view>
-          </div>
-        </div>
+    <div v-show="buildingCustom">
+      <BuildYourOwn @close-builder="buildingCustom = !buildingCustom" />
+    </div>
+
+    <!-- <div class="tab">
+      <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
+      <label for="tab-2" class="tab-label" @click="goToCustom">Workflow Builder</label>
+      <div class="tab-content">
+        <router-view :key="$route.fullPath"></router-view>
       </div>
-    </section>
+    </div> -->
+
     <!-- <div v-if="userLevel == 'REP' && !isOnboarding" class="sidenav">
       <h2>Workflows</h2>
       <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
@@ -162,7 +171,7 @@
       </router-link>
     </div> -->
 
-    <router-view :key="$route.fullPath"></router-view>
+    <router-view v-show="!buildingCustom" :key="$route.fullPath"></router-view>
   </div>
 </template>
 
@@ -170,11 +179,13 @@
 import { CollectionManager } from '@thinknimble/tn-models'
 import { UserOnboardingForm } from '@/services/users/forms'
 import AlertTemplate from '@/services/alerts/'
+import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 
 export default {
   name: 'AlertsDashboardMenu',
   components: {
     CollectionManager,
+    BuildYourOwn,
   },
   data() {
     return {
@@ -182,11 +193,10 @@ export default {
       userOnboardingForm: new UserOnboardingForm({}),
       test: true,
       popular: true,
+      buildingCustom: false,
     }
   },
-  async created() {
-    this.templates.refresh()
-  },
+
   methods: {
     goToPopular() {
       this.$router.push({ name: 'CreateNew' })
@@ -200,6 +210,7 @@ export default {
     goToCustom() {
       this.$router.push({ name: 'BuildYourOwn' })
     },
+    closeBuilder() {},
     // alertsCount(num) {
     //   let int = num
     //   if (this.hasZoomChannel) {
@@ -278,8 +289,15 @@ img {
   margin-left: 1.5rem;
 }
 .alerts {
-  padding-left: 16px;
+  margin-left: 16px;
+  height: 96vh;
+  width: 92vw;
+  overflow: scroll;
+  margin-top: 48px;
+  background-color: white;
+  border-radius: 6px;
 }
+
 .wrapper {
   width: 92.5vw;
   margin: 0 auto;
@@ -431,9 +449,37 @@ a:hover span {
   border-color: white;
   color: $white;
 }
-.title {
+.inactive {
+  color: $light-gray-blue;
+  transition: all 0.2s;
+}
+.inactive:hover {
   color: $base-gray;
-  font-weight: bold;
+  transform: translateY(-10%);
+}
+.header {
+  position: fixed;
+  z-index: 100;
+  top: 8px;
+  background-color: white;
+  width: 92vw;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+}
+.left-margin {
+  margin-left: 30px;
 }
 .row {
   display: flex;

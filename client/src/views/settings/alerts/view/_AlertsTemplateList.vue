@@ -1,19 +1,24 @@
 <template>
   <div class="alerts-template-list">
-    <Modal v-if="deleteOpen" dimmed>
+    <Modal v-if="deleteOpen">
       <div class="delete_modal">
         <div class="delete_modal__header">
-          <h2>Delete Workflow</h2>
-          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.svg" alt="" />
+          <h3>Delete Workflow</h3>
+          <img
+            @click="deleteOpen = !deleteOpen"
+            src="@/assets/images/close.svg"
+            height="22px"
+            alt=""
+          />
         </div>
 
         <div class="delete_modal__body">
-          <p>This action cannot be undone, are you sure ?</p>
+          <p>This can't be reversed. Are you sure ?</p>
         </div>
 
         <div class="delete_modal__footer">
           <button class="no__button" @click="deleteClose">No</button>
-          <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
+          <button class="delete" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
         </div>
       </div>
     </Modal>
@@ -28,12 +33,18 @@
     >
       <div class="workflow__modal">
         <div class="workflow__modal__header">
-          <p>
+          <h3>
             {{ activeWorkflow.title }}
             <!-- <span> {{ activeWorkflow.sobjectInstances.length }}</span> -->
-          </p>
+          </h3>
 
-          <button style="margin-left: 16px" class="green_button">Open in Pipeline</button>
+          <button
+            style="margin-left: 16px"
+            class="green_button"
+            @click="goToPipeline(activeWorkflow.id)"
+          >
+            Open in Pipeline
+          </button>
         </div>
 
         <section
@@ -71,9 +82,11 @@
     >
       <div class="workflow__modal">
         <div class="workflow__modal__header">
-          <p>Meetings</p>
+          <h3>Meetings</h3>
 
-          <button class="green_button">Open in Meetings</button>
+          <button style="margin-left: 16px" class="yellow_button_full" @click="goToMeetings">
+            Open in Meetings
+          </button>
         </div>
         <div class="workflow__modal__body" v-for="(meeting, i) in meetings" :key="i">
           <div class="title">
@@ -96,10 +109,15 @@
     <template v-if="!templates.refreshing">
       <transition name="fade">
         <div v-if="!editing" class="edit__modal">
-          <AlertsEditPanel :alert="currentAlert" />
           <div class="edit__modal__button">
-            <button @click="closeEdit">Done</button>
+            <p>Editing {{ currentAlert.title }}</p>
+
+            <div>
+              <button class="delete" @click="deleteClosed(currentAlert.id)">Delete</button>
+              <button @click="closeEdit">Close Editor</button>
+            </div>
           </div>
+          <AlertsEditPanel :alert="currentAlert" />
         </div>
       </transition>
 
@@ -191,14 +209,18 @@
           </div>
           <div class="added-collection__footer">
             <div class="row__">
-              <button
-                style="margin-right: 8px"
-                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                @click.stop="onRunAlertTemplateNow(alert.id)"
-                class="white_button"
-              >
-                <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
-              </button>
+              <div class="tooltip">
+                <button
+                  style="margin-right: 8px"
+                  :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
+                  @click.stop="onRunAlertTemplateNow(alert.id)"
+                  class="white_button"
+                >
+                  <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                </button>
+                <span class="tooltiptext">Send to Slack</span>
+              </div>
+
               <button @click="openList(alert)" style="margin-right: 8px" class="white_button">
                 <img
                   src="@/assets/images/listed.svg"
@@ -389,7 +411,9 @@ export default {
     await this.listUserChannels()
   },
   beforeUpdate() {
-    this.getActiveTemplateTitles()
+    if (this.templates.list.length) {
+      this.getActiveTemplateTitles()
+    }
   },
   methods: {
     formatDateTimeToTime(input) {
@@ -418,7 +442,13 @@ export default {
     },
     openMeetings() {
       this.meetingListOpen = true
-      console.log(this.meetings)
+    },
+    goToMeetings() {
+      this.$router.push({ name: 'Meetings' })
+    },
+    goToPipeline(id) {
+      // this.$router.push({ path: `pipelines/${id}` })
+      this.$router.push({ name: 'Pipelines', params: { id: id } })
     },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
@@ -426,7 +456,6 @@ export default {
     },
     getActiveTemplateTitles() {
       this.templateTitles = this.templates.list.map((template) => template.title)
-      console.log(this.templates.list)
     },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
@@ -496,12 +525,11 @@ export default {
     },
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
+      this.deleteOpen = !this.deleteOpen
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
         this.handleUpdate()
-
-        this.deleteOpen = !this.deleteOpen
         this.$toast('Workflow removed', {
           timeout: 2000,
           position: 'top-left',
@@ -517,6 +545,8 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        this.editing = true
       }
     },
     async onToggleAlert(id, value) {
@@ -706,8 +736,38 @@ h2 {
   font-size: 1.4rem;
 }
 button:disabled {
-  background-color: $very-light-gray;
+  background-color: $soft-gray;
   cursor: not-allowed;
+  img {
+    filter: grayscale(98%);
+  }
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
 }
 .titles {
   color: $base-gray;
@@ -784,42 +844,39 @@ button:disabled {
   background-color: $white;
   color: $base-gray;
   border-radius: 0.3rem;
-  width: 40vw;
-  padding: 1rem;
+  width: 30vw;
+  letter-spacing: 0.75px;
   &__header {
-    height: 3rem;
-    padding: 1rem 0rem;
+    padding: 0px 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-weight: 400;
-    border-bottom: 1px solid $soft-gray;
     img {
-      height: 1rem;
       margin-top: -1rem;
       cursor: pointer;
     }
   }
   &__body {
-    height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0px 8px 8px 0px;
   }
   &__footer {
-    height: 3rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    padding: 8px 0px;
   }
 }
 .edit__modal {
   background-color: white;
-  border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   color: $base-gray;
-  width: 84vw;
-  height: 74vh;
+  width: 88vw;
+  height: 92vh;
+  margin-top: -16px;
   overflow: scroll;
   display: flex;
   align-items: center;
@@ -829,10 +886,25 @@ button:disabled {
 
   &__button {
     display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 0rem 2rem 1rem 0rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0px 8px;
     width: 100%;
+    border-radius: 4px;
+    background: white;
+
+    p {
+      color: $coral;
+      background-color: $light-coral;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 13px;
+      margin-left: -4px;
+    }
 
     button {
       background-color: $dark-green;
@@ -840,21 +912,45 @@ button:disabled {
       border-radius: 0.25rem;
       color: white;
       cursor: pointer;
-      padding: 0.5rem 2rem;
+      padding: 8px 12px;
     }
   }
 }
+.delete {
+  background-color: white !important;
+  border: 1px solid $coral !important;
+  border-radius: 0.25rem;
+  color: $coral !important;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-right: 8px;
+}
+
+// .edit__modal::-webkit-scrollbar {
+//   width: 2px; /* Mostly for vertical scrollbars */
+//   height: 0px; /* Mostly for horizontal scrollbars */
+// }
+// .edit__modal::-webkit-scrollbar-thumb {
+//   background-color: $coral;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// .edit__modal::-webkit-scrollbar-track {
+//   box-shadow: inset 2px 2px 4px 0 $soft-gray;
+//   border-radius: 0.3rem;
+// }
+// .edit__modal::-webkit-scrollbar-track-piece {
+//   margin-top: 0.25rem;
+// }
 
 .no__button {
-  background-color: $soft-gray;
-  outline: 1px solid $soft-gray;
-  border: none;
-  font-size: 16px;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  padding: 0.4rem 2rem;
-  margin-right: 0.5rem;
+  background-color: white;
+  border: 1px solid $soft-gray;
+  border-radius: 0.25rem;
   color: $base-gray;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-right: 8px;
 }
 .yes__button {
   display: flex;
@@ -873,8 +969,6 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
-  height: 88vh;
-  overflow: scroll;
   margin: 16px 8px;
   color: $base-gray;
   display: flex;
@@ -891,6 +985,7 @@ button:disabled {
   flex-wrap: wrap;
   width: 100%;
   border-radius: 6px;
+  margin-top: 8px;
 }
 
 // .added-collection:hover {
@@ -1099,7 +1194,7 @@ a {
 .center-loader {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   height: 60vh;
   width: 100%;
 }

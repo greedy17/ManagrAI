@@ -394,6 +394,7 @@
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { SObjects } from '@/services/salesforce'
+import User from '@/services/users'
 import debounce from 'lodash.debounce'
 
 export default {
@@ -409,6 +410,9 @@ export default {
     return {
       booleans: ['true', 'false'],
       isSelected: false,
+      task: false,
+      checker: null,
+      verboseName: null,
       currentRow: null,
       formData: {},
       referenceOptions: [],
@@ -432,6 +436,7 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     primaryCheckList: 'checkSelect',
+    task: 'checkAndClearInterval',
   },
   props: {
     index: {},
@@ -466,6 +471,15 @@ export default {
     //     console.log(e)
     //   }
     // },
+    checkAndClearInterval() {
+      if (this.task.completed == true) {
+        this.stopChecker()
+        this.updatedList = []
+        this.$emit('updated-values')
+      } else {
+        return
+      }
+    },
     test(log) {
       console.log('log', log)
     },
@@ -614,6 +628,16 @@ export default {
         }, 2000)
       }
     },
+    async checkTask() {
+      try {
+        this.task = await User.api.checkTasks(this.verboseName)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    stopChecker() {
+      clearInterval(this.checker)
+    },
     async onBulkUpdate() {
       this.updatedList.push(this.opp.id)
       try {
@@ -628,19 +652,13 @@ export default {
             integration_ids: [this.opp.integration_id],
           })
           .then((res) => {
-            console.log(res)
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            this.verboseName = res.verbose_name
+            this.checker = setInterval(() => {
+              this.checkTask()
+            }, 1000)
           })
       } catch (e) {
         console.log(e)
-      } finally {
-        this.updatedList = []
       }
     },
   },

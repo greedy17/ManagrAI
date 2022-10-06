@@ -52,60 +52,6 @@
         </section>
       </div>
     </Modal>
-    <div v-if="editOpModalOpen">
-      <UpdateForm
-        @reset-edit="resetEdit"
-        @add-product="addProduct"
-        @set-update-values="setUpdateValues"
-        @set-template="setTemplate"
-        @update-resource="updateResource"
-        @update-meeting="onMakeMeetingUpdate"
-        @create-product="createProduct"
-        @set-create-values="setCreateValues"
-        @set-validation-values="setUpdateValidationValues"
-        @get-pricebooks="getPricebookEntries"
-        @get-accounts="getAccounts"
-        @load-more="loadMore"
-        @edit-product="editProduct"
-        @update-product="updateProduct"
-        @cancel-edit-product="cancelEditProduct"
-        @set-product-values="setProductValues"
-        @go-to-profile="goToProfile"
-        :resource="resourceType"
-        :productReferenceOpts="productReferenceOpts"
-        :fields="resourceFields"
-        :currentVals="currentVals"
-        :noteTitle="noteTitle"
-        :allAccounts="allAccounts"
-        :selectedAccount="selectedAccount"
-        :hasProducts="hasProducts"
-        :allPicklistOptions="apiPicklistOptions"
-        :pricebooks="pricebooks"
-        :noteValue="noteValue"
-        :noteTemplates="noteTemplates"
-        :dropdownLoading="dropdownLoading"
-        :stageGateField="stageGateField"
-        :stagePicklistQueryOpts="stagePicklistQueryOpts"
-        :stageValidationFields="stageValidationFields"
-        :currentAccount="currentAccount"
-        :referenceOpts="currentRefList"
-        :loadingAccounts="loadingAccounts"
-        :addingProduct="addingProduct"
-        :pricebookId="pricebookId"
-        :createProductForm="createProductForm"
-        :loadingProducts="loadingProducts"
-        :savingCreateForm="savingCreateForm"
-        :showLoadMore="showLoadMore"
-        :currentProducts="currentProducts"
-        :editingProduct="editingProduct"
-        :productName="productName"
-        :savingProduct="savingProduct"
-        :currentSelectedProduct="currentSelectedProduct"
-        :dropdownProductVal="dropdownProductVal"
-        :dropdownVal="dropdownVal"
-      />
-    </div>
-
     <Modal
       v-if="meetingOpen"
       dimmed
@@ -237,10 +183,67 @@
         </section>
       </div>
     </Modal>
+
+    <div v-if="editOpModalOpen">
+      <UpdateForm
+        @reset-edit="resetEdit"
+        @add-product="addProduct"
+        @set-update-values="setUpdateValues"
+        @set-template="setTemplate"
+        @update-resource="updateResource"
+        @update-meeting="onMakeMeetingUpdate"
+        @create-product="createProduct"
+        @set-create-values="setCreateValues"
+        @set-validation-values="setUpdateValidationValues"
+        @get-pricebooks="getPricebookEntries"
+        @get-accounts="getAccounts"
+        @load-more="loadMore"
+        @edit-product="editProduct"
+        @update-product="updateProduct"
+        @cancel-edit-product="cancelEditProduct"
+        @set-product-values="setProductValues"
+        @go-to-profile="goToProfile"
+        :resource="resourceType"
+        :productReferenceOpts="productReferenceOpts"
+        :fields="resourceFields"
+        :currentVals="currentVals"
+        :noteTitle="noteTitle"
+        :allAccounts="allAccounts"
+        :selectedAccount="selectedAccount"
+        :hasProducts="hasProducts"
+        :allPicklistOptions="apiPicklistOptions"
+        :pricebooks="pricebooks"
+        :noteValue="noteValue"
+        :noteTemplates="noteTemplates"
+        :dropdownLoading="dropdownLoading"
+        :stageGateField="stageGateField"
+        :stagePicklistQueryOpts="stagePicklistQueryOpts"
+        :stageValidationFields="stageValidationFields"
+        :currentAccount="currentAccount"
+        :referenceOpts="currentRefList"
+        :loadingAccounts="loadingAccounts"
+        :addingProduct="addingProduct"
+        :pricebookId="pricebookId"
+        :createProductForm="createProductForm"
+        :loadingProducts="loadingProducts"
+        :savingCreateForm="savingCreateForm"
+        :showLoadMore="showLoadMore"
+        :currentProducts="currentProducts"
+        :editingProduct="editingProduct"
+        :productName="productName"
+        :savingProduct="savingProduct"
+        :currentSelectedProduct="currentSelectedProduct"
+        :dropdownProductVal="dropdownProductVal"
+        :dropdownVal="dropdownVal"
+      />
+    </div>
+
     <div class="container" ref="pipelines" v-if="!loading">
       <div class="results">
         <div class="results-title">
-          <p>Meetings: {{ meetings.length }}</p>
+          <p>
+            Meetings : <span>{{ meetings.length }}</span>
+          </p>
         </div>
 
         <div class="flex-row">
@@ -252,13 +255,13 @@
           </div>
           <div v-else>
             <button @click="resetMeeting()" class="img-button" :disabled="!hasZoomIntegration">
-              <img src="@/assets/images/calendar.svg" alt="" style="height: 1rem" />
+              <img src="@/assets/images/calendar.svg" alt="" style="height: 24px" />
             </button>
           </div>
 
           <div class="tooltip">
             <button @click="refreshCalEvents" class="img-button">
-              <img src="@/assets/images/refresh.svg" style="height: 22px" alt="" />
+              <img src="@/assets/images/refresh.svg" style="height: 24px" alt="" />
             </button>
             <span class="tooltiptext">Sync Calendar</span>
           </div>
@@ -304,6 +307,7 @@
         <button @click="refreshCalEvents" class="green_button">Sync calendar</button>
       </div>
     </div>
+
     <div v-if="loading">
       <Loader :loaderText="loaderText" />
     </div>
@@ -1564,7 +1568,7 @@ export default {
 
 .container {
   min-height: 92vh;
-  width: 40vw;
+  width: 38vw;
   outline: 1px solid $soft-gray;
   border-radius: 8px;
   background-color: white;
@@ -1621,6 +1625,7 @@ export default {
     background: inherit;
   }
 }
+
 .greenBackground {
   background-color: $white-green;
   color: $dark-green;
@@ -1811,16 +1816,16 @@ export default {
   margin-left: 4px;
 
   p {
-    font-size: 14px;
+    font-size: 16px;
     margin-left: 2px;
-    color: $light-gray-blue;
+    color: $base-gray;
     span {
       // background-color: $white-green;
-      color: $dark-green;
+      color: $light-gray-blue;
       border-radius: 6px;
       padding: 2px;
-      margin-left: 8px;
-      font-size: 12px;
+      margin-left: 4px;
+      font-size: 14px;
     }
   }
 }
@@ -1992,7 +1997,8 @@ section {
   margin-top: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-left: 88px;
 }
 .invert {
   filter: invert(85%);
@@ -2503,9 +2509,9 @@ label {
   background-color: $base-gray;
   color: white;
   text-align: center;
-  border: 1px solid $soft-gray;
+  // border: 1px solid $soft-gray;
   letter-spacing: 0.5px;
-  padding: 4px 0px;
+  padding: 8px 4px;
   border-radius: 6px;
   font-size: 12px;
 

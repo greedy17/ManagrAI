@@ -1,11 +1,8 @@
 <template>
   <div class="integrations">
     <div class="welcome">
-      <h3>Integrations</h3>
-      <div>
-        <p class="active"><img src="@/assets/images/logo.png" height="16px" alt="" /></p>
-        <p class="inactive">Connect Managr to your favorite Apps</p>
-      </div>
+      <!-- <img src="@/assets/images/logo.png" height="16px" alt="" /> -->
+      <p class="inactive">Connect Managr to your favorite Apps</p>
     </div>
 
     <div>
@@ -734,14 +731,14 @@ a {
   padding: 4px 8px;
 }
 .welcome {
-  margin-top: -8px;
+  margin-top: -4px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 92vw;
-  margin-left: -88px;
-  padding: 0px 12px 0px 12px;
+  width: 100vw;
+  margin-left: 88px;
+  padding: 0px 4px;
   overflow: hidden;
   h3 {
     font-size: 19px;

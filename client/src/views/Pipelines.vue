@@ -48,7 +48,9 @@
                 v-html="noteValue"
                 contenteditable="true"
               ></div>
-              <span v-if="!noteValue" class="div-placeholder">Type your note here</span>
+              <span v-if="!formData['meeting_comments']" class="div-placeholder"
+                >Type your note here</span
+              >
             </span>
             <section v-if="!addingTemplate" class="note-templates">
               <span
@@ -446,7 +448,7 @@
                         :options="booleans"
                         @select="setUpdateValidationValues(field.apiName, $event)"
                         openDirection="below"
-                        style="width: 35vw"
+                        style="width: 38vw"
                         selectLabel="Enter"
                       >
                         <template v-slot:noResult>
@@ -524,10 +526,9 @@
             </div>
           </section>
           <div ref="product" class="adding-product" v-if="addingProduct">
-            <div class="adding-product__header">
-              <img class="fullInvert" src="@/assets/images/tag.svg" alt="" />
-              <p>Add Product</p>
-            </div>
+            <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
+            <h3>Add Product</h3>
+
             <div class="adding-product__body">
               <div>
                 <p class="form-label">Pricebook:</p>
@@ -536,7 +537,7 @@
                   :options="pricebooks"
                   openDirection="below"
                   v-model="selectedPriceBook"
-                  style="width: 35vw"
+                  style="width: 38vw"
                   selectLabel="Enter"
                   label="name"
                 >
@@ -589,7 +590,7 @@
                     :loading="loadingProducts"
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -624,7 +625,7 @@
                   <input
                     id="user-input"
                     type="text"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
@@ -657,7 +658,7 @@
                     type="text"
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :disabled="savingCreateForm"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
@@ -670,7 +671,7 @@
                   <input
                     type="datetime-local"
                     id="start"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -688,7 +689,7 @@
                   <input
                     id="user-input"
                     type="number"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :disabled="savingCreateForm"
                     v-model="currentVals[field.apiName]"
                     :placeholder="currentVals[field.apiName]"
@@ -1231,10 +1232,9 @@
           </section>
 
           <div ref="product" class="adding-product" v-if="addingProduct">
-            <div class="adding-product__header">
-              <img class="fullInvert" src="@/assets/images/tag.svg" alt="" />
-              <p>Add Product</p>
-            </div>
+            <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
+            <h4 style="margin-left: 4px">Add Product</h4>
+
             <div class="adding-product__body">
               <div v-if="!pricebookId">
                 <p class="form-label">Pricebook:</p>
@@ -1243,7 +1243,7 @@
                   :options="pricebooks"
                   openDirection="below"
                   v-model="selectedPriceBook"
-                  style="width: 35vw"
+                  style="width: 38vw"
                   selectLabel="Enter"
                   label="name"
                 >
@@ -1295,7 +1295,7 @@
                     "
                     openDirection="below"
                     v-model="dropdownVal[field.apiName]"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1331,7 +1331,7 @@
                   <input
                     id="user-input"
                     type="text"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :placeholder="currentVals[field.apiName]"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -1363,7 +1363,7 @@
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
                     :placeholder="currentVals[field.apiName]"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     v-model="currentVals[field.apiName]"
                     id="user-input"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
@@ -1374,7 +1374,7 @@
                   <input
                     type="datetime-local"
                     id="start"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     v-model="currentVals[field.apiName]"
                     @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
                   />
@@ -1389,7 +1389,7 @@
                   <p>{{ field.referenceDisplayLabel }} <span>*</span></p>
                   <input
                     id="user-input"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     type="number"
                     v-model="currentVals[field.apiName]"
                     :placeholder="currentVals[field.apiName]"
@@ -1469,7 +1469,7 @@
                     "
                     openDirection="below"
                     v-model="dropdownProductVal[field.apiName]"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1505,7 +1505,7 @@
                   <input
                     id="user-input"
                     type="text"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :placeholder="currentSelectedProduct[field.apiName]"
                     v-model="dropdownProductVal[field.apiName]"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
@@ -1537,7 +1537,7 @@
                     onfocus="(this.type='date')"
                     onblur="(this.type='text')"
                     :placeholder="currentSelectedProduct[field.apiName]"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     v-model="dropdownProductVal[field.apiName]"
                     id="user-input"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
@@ -1548,7 +1548,7 @@
                   <input
                     type="datetime-local"
                     id="start"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     :placeholder="currentSelectedProduct[field.apiName]"
                     v-model="dropdownProductVal[field.apiName]"
                     @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
@@ -1564,7 +1564,7 @@
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
-                    style="width: 35vw"
+                    style="width: 38vw"
                     type="number"
                     v-model="dropdownProductVal[field.apiName]"
                     :placeholder="currentSelectedProduct[field.apiName]"
@@ -1592,7 +1592,7 @@
               Add Product
             </button>
 
-            <p @click="addProduct" v-else class="product-text" style="margin-right: 4px">
+            <p @click="addProduct" v-else class="select-btn1" style="margin-right: 4px">
               Cancel <img src="@/assets/images/remove.svg" alt="" />
             </p>
             <button
@@ -1606,7 +1606,6 @@
             <button
               v-else-if="viewingProducts"
               @click="toggleViewingProducts()"
-              style="padding: 10px"
               class="select-btn1"
             >
               Close products
@@ -1672,7 +1671,7 @@
                 />
               </p>
             </div>
-            <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
+            <!-- <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
               <img
                 v-if="showPopularList"
@@ -1680,9 +1679,9 @@
                 src="@/assets/images/downArrow.svg"
                 alt=""
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
-            </p>
+            </p> -->
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button v-if="showPopularList" @click="allOpportunities" class="list-button">
+              <button @click="allOpportunities" class="list-button">
                 All Opportunities
                 <span
                   class="filter"
@@ -1692,11 +1691,7 @@
                 >
               </button>
             </router-link>
-            <button
-              v-if="showPopularList && !selectedWorkflow"
-              @click="closeDatesThisMonth"
-              class="list-button"
-            >
+            <button v-if="!selectedWorkflow" @click="closeDatesThisMonth" class="list-button">
               Closing this month
               <span
                 class="filter"
@@ -1705,11 +1700,7 @@
                 active</span
               >
             </button>
-            <button
-              v-if="showPopularList && !selectedWorkflow"
-              @click="closeDatesNextMonth"
-              class="list-button"
-            >
+            <button v-if="!selectedWorkflow" @click="closeDatesNextMonth" class="list-button">
               Closing next month
               <span
                 class="filter"
@@ -1717,6 +1708,14 @@
               >
                 active</span
               >
+            </button>
+            <button
+              @click="goToWorkflow(template.id)"
+              class="list-button"
+              v-for="template in templates.list"
+              :key="template.id"
+            >
+              {{ template.title }}
             </button>
           </div>
 
@@ -2286,6 +2285,7 @@
             @current-inline-row="changeCurrentRow"
             @set-dropdown-value="setDropdownValue"
             @get-reference-opts="getReferenceOpts"
+            @updated-values="updateOpps"
             :dropdownLoading="dropdownLoading"
             :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
@@ -2310,13 +2310,13 @@
       </section>
 
       <section
-        v-if="
+        v-else-if="
           selectedWorkflow && currentWorkflow && currentWorkflow.length > 0 && !loadingWorkflows
         "
         class="table-section"
       >
         <div v-outside-click="emitCloseEdit" class="table">
-          <WorkflowHeader
+          <PipelineHeader
             :oppFields="oppFields"
             @check-all="onCheckAllWorkflows"
             :allWorkflowsSelected="allWorkflowsSelected"
@@ -2324,7 +2324,7 @@
             @sort-opps-workflows="sortWorkflows"
             @sort-opps-reverse-workflows="sortWorkflowsReverse"
           />
-          <WorkflowRow
+          <PipelineTableRow
             :key="i"
             ref="workflowTableChild"
             v-for="(workflow, i) in filteredWorkflows"
@@ -2335,7 +2335,7 @@
                 workflow.secondary_data.Pricebook2Id,
               )
             "
-            @get-notes="getNotes(workflow.id)"
+            @get-notes="getNotes(workflow.id), createFormInstanceForNotes(opp.id, opp.name)"
             @checked-box="selectWorkflowCheckbox(workflow.id)"
             @inline-edit="inlineUpdate"
             @open-stage-form="openStageForm"
@@ -2347,11 +2347,11 @@
             :inlineLoader="inlineLoader"
             :picklistOpts="allPicklistOptions"
             :referenceOpts="referenceOpts"
-            :workflow="workflow"
+            :opp="workflow"
             :index="i + 1 * 1000"
             :oppFields="oppFields"
-            :workflowCheckList="workflowCheckList"
-            :updateWorkflowList="updateList"
+            :primaryCheckList="workflowCheckList"
+            :updateList="updateList"
             :stageData="newStage"
             :closeDateData="daysForward"
             :ForecastCategoryNameData="newForecast"
@@ -2362,12 +2362,7 @@
           />
         </div>
       </section>
-      <section
-        v-if="
-          currentWorkflow && currentWorkflow.length < 1 && selectedWorkflow && !loadingWorkflows
-        "
-        class="empty-table-section"
-      >
+      <section v-else class="empty-table-section">
         <div v-if="loadingWorkflows">
           <PipelineLoader />
         </div>
@@ -2727,7 +2722,7 @@ export default {
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
     updateOppForm: ['setForms', 'filtersAndOppFields'],
-    currentCheckList: 'addToForecastList',
+    // currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
     dropdownValue: {
       handler(val) {
@@ -2740,6 +2735,9 @@ export default {
     },
   },
   methods: {
+    goToWorkflow(id) {
+      this.$router.push({ name: 'Pipelines', params: { id: id } })
+    },
     toggleViewingProducts() {
       this.viewingProducts == true ? (this.viewingProducts = false) : (this.viewingProducts = true)
       setTimeout(() => {
@@ -4690,7 +4688,8 @@ export default {
     }
 
     button {
-      border: 1px solid $soft-gray;
+      border: none;
+      box-shadow: 1px 1px 1px $very-light-gray;
       color: $dark-green;
       background-color: white;
       border-radius: 4px;
@@ -4749,7 +4748,7 @@ export default {
 
   /* Position the tooltip text */
   position: absolute;
-  z-index: 1;
+  z-index: 1000;
   width: 100px;
   top: 100%;
   left: 50%;
@@ -5019,25 +5018,14 @@ export default {
 }
 
 .adding-product {
-  border: 1px solid $dark-green;
   border-radius: 8px;
-  margin: 0.5rem 0rem;
+  margin: 8px 0px;
   width: 40.25vw;
-  min-height: 30vh;
+
   &__header {
     display: flex;
     flex-direction: row;
     align-items: center;
-    font-size: 14px;
-    padding: 0.5rem;
-    color: $white;
-    width: 100%;
-    border-bottom: 1px solid $dark-green;
-    background-color: $dark-green;
-    img {
-      height: 1rem;
-      margin-right: 0.5rem;
-    }
   }
   &__body {
     padding: 0.25rem;
@@ -5047,7 +5035,7 @@ export default {
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+
     input {
       width: 10vw;
       height: 1.5rem !important;
@@ -5186,15 +5174,16 @@ select {
   border-radius: 0;
 }
 .select-btn1 {
-  box-shadow: 1px 1px 1px $very-light-gray;
+  // box-shadow: 1px 1px 1px $very-light-gray;
   border: 1px solid $soft-gray;
   letter-spacing: 1px;
+  font-weight: 400 !important;
   padding: 8px 12px;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 8px;
   background-color: white;
   cursor: pointer;
   margin-right: 0.5rem;
@@ -5822,15 +5811,15 @@ main:hover > span {
   overflow: scroll;
   margin-right: 0.5rem;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
+  letter-spacing: 0.75px;
   &__title {
     position: sticky;
     top: 0;
     z-index: 5;
     color: $base-gray;
-    background-color: $off-white;
-    letter-spacing: 0.25px;
+    background-color: $white;
+    letter-spacing: 0.75px;
     padding-left: 0.75rem;
-    font-weight: bold;
     font-size: 16px;
     width: 100%;
     display: flex;
@@ -5844,7 +5833,6 @@ main:hover > span {
   &__sub-title {
     font-size: 12px;
     letter-spacing: 0.3px;
-    font-weight: bold;
     display: flex;
     align-items: center;
     margin-left: 0.75rem;
@@ -5868,10 +5856,10 @@ main:hover > span {
   border: none;
   padding: 0.75rem;
   border-radius: 6px;
-  color: $mid-gray;
+  color: $base-gray;
   cursor: pointer;
-  font-size: 11px;
-  font-weight: bolder;
+  font-size: 13px;
+  letter-spacing: 0.75px;
 }
 .list-button:hover {
   color: $dark-green;

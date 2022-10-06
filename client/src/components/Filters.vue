@@ -76,6 +76,7 @@ input[type='search']:focus {
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
   padding: 0rem 1rem;
+  letter-spacing: 0.75px;
   &__title {
     position: sticky;
     z-index: 5;
@@ -108,9 +109,10 @@ input[type='search']:focus {
   border: none;
   padding: 0.75 0rem;
   border-radius: 0.2rem;
-  color: #7a7777;
+  color: $base-gray;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.75px;
 }
 .filter-button:hover {
   color: $base-gray;

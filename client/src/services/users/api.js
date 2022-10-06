@@ -18,6 +18,7 @@ const STAFF_FORMS = '/users/staff/slack-forms/'
 const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
+const CHECK_TASKS_ENDPOINT = '/task-status/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
@@ -337,11 +338,22 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
+  async checkTasks(verbose_name) {
+    const url = CHECK_TASKS_ENDPOINT
+
+    try {
+      const res = await this.client.get(url, { params: { verbose_name } })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Get Tasks error' })
+    }
+  }
+
   async getStaffOrganizations(org_id) {
     try {
       const response = await this.client.get(STAFF_ORGANIZATIONS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffOrganizations' })
     }
   }
@@ -349,7 +361,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_WORKFLOWS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffWorkflows' })
     }
   }
@@ -357,7 +369,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_FORMS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffForms' })
     }
   }
@@ -365,7 +377,7 @@ export default class UserAPI {
     try {
       const response = await this.client.get(STAFF_SOBJECTS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffSObjects' })
     }
   }

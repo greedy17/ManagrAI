@@ -7,9 +7,9 @@
           <label for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
           <div class="tab-content">
             <section>
-              <div>
+              <div class="tab-content__div">
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
+                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -52,9 +52,116 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label">Stage Related</label>
+          <label for="tab-2" class="tab-label" @click="changeToStage">Stage Related</label>
           <div class="tab-content">
-            <p>Stage Gate</p>
+            <section class="space-between">
+              <h3 v-if="!selectedForm && !currentlySelectedForm" class="form-type">
+                Add/edit your stage related forms
+              </h3>
+              <h3 v-else-if="selectedForm">
+                {{ selectedForm.stage + ' Form' }}
+              </h3>
+              <h3 v-else>{{ currentlySelectedForm }}</h3>
+              <div>
+                <img
+                  @click="selectedForm = null"
+                  v-if="selectedForm"
+                  style="margin-right: 16px"
+                  src="@/assets/images/left.svg"
+                  height="13px"
+                  alt=""
+                />
+                <button
+                  v-if="selectedForm && selectedForm.fields.length"
+                  @click.prevent="deleteForm(activeForm)"
+                  class="delete"
+                >
+                  Delete Form
+                </button>
+                <button @click="onSave" class="save">Save Form</button>
+              </div>
+            </section>
+
+            <div>
+              <!-- <Multiselect
+                v-if="!formLength && !addingForm"
+                @input="selectForm('Opportunity', 'STAGE_GATING', $event.stage)"
+                :options="formStages"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="stage"
+                label="stage"
+                v-model="currentlySelectedForm"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Edit Stage form
+                  </p>
+                </template>
+              </Multiselect> -->
+
+              <div class="row__">
+                <Multiselect
+                  v-if="!selectedForm"
+                  @input="setStage($event)"
+                  :options="stages"
+                  openDirection="below"
+                  style="width: 20vw"
+                  selectLabel="Enter"
+                  track-by="value"
+                  label="label"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ selectedStage ? selectedStage : 'Select stage' }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+            </div>
+
+            <div v-if="selectedForm" id="formSection">
+              <draggable
+                v-model="addedFields"
+                group="fields"
+                @start="drag = true"
+                @end="drag = false"
+                class="drag-section"
+              >
+                <div v-for="field in addedFields" :key="field.id">
+                  <div v-if="!unshownIds.includes(field.id)">
+                    <div class="drag-item">
+                      <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                        <img src="@/assets/images/drag.svg" alt="" />
+                        {{ field.label }}
+                      </p>
+                      <img
+                        src="@/assets/images/trash.svg"
+                        alt=""
+                        id="remove"
+                        :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                        @click="
+                          () => {
+                            onRemoveField(field)
+                          }
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
+              </draggable>
+            </div>
           </div>
         </div>
         <div class="tab">
@@ -62,9 +169,9 @@
           <label for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
           <div class="tab-content">
             <section>
-              <div>
+              <div class="tab-content__div">
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
+                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -110,9 +217,9 @@
           <label for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
           <div class="tab-content">
             <section>
-              <div>
+              <div class="tab-content__div">
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
+                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -158,9 +265,9 @@
           <label for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
           <div class="tab-content">
             <section>
-              <div>
+              <div class="tab-content__div">
                 <p @click="switchFormType" class="form-type">
-                  {{ camelize(formType) }} {{ camelize(resource) }} Form Builder
+                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
                   <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
                 </p>
                 <div>
@@ -220,7 +327,7 @@
             </p>
           </section> -->
 
-          <p v-for="(field, i) in filteredFields" :key="field">
+          <p v-for="(field, i) in filteredFields" :key="field.id">
             <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
             {{ field.label }}
@@ -766,9 +873,10 @@ import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
+import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
-import { SObjectField } from '@/services/salesforce'
+import { SObjectField, SObjectPicklist } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -821,6 +929,11 @@ export default {
   },
   data() {
     return {
+      activeForm: null,
+      addingForm: false,
+      currentlySelectedForm: null,
+      selectedForm: null,
+      selectedStage: null,
       allForms: null,
       filterText: '',
       dropdownLoading: false,
@@ -828,12 +941,21 @@ export default {
       formFields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.resource,
+        },
       }),
       formFieldList: [],
+      newFormType: this.formType,
+      newResource: this.resource,
+      newCustomForm: this.customForm,
       customSlackFormConfig: [],
       formHasChanges: false,
       savingForm: false,
       addedFields: [],
+      formChanges: false,
+      typeChanges: false,
+      resourceChanges: false,
       removedFields: [],
       ...FORM_CONSTS,
       Pagination,
@@ -841,6 +963,7 @@ export default {
       actionChoices: [],
       loadingMeetingTypes: false,
       requiredFields: [],
+      formsByType: [],
       // requiredProductFields: ['PricebookEntryId', 'Quantity'],
       requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
       requiredLeadFields: ['LastName', 'Company', 'Status'],
@@ -860,6 +983,8 @@ export default {
       addingFields: false,
       productSelected: false,
       addingProducts: false,
+      formStages: [],
+      stages: [],
       noteTitle: {
         _fields: {
           length: {
@@ -1051,6 +1176,8 @@ export default {
     }
   },
   watch: {
+    selectedStage: 'setNewForm',
+    selectedForm: 'setCustomForm',
     customForm: {
       immediate: true,
       deep: true,
@@ -1086,9 +1213,53 @@ export default {
               )
             })
           }
+        } else if (val && val.formType == 'STAGE_GATING' && !val.fields.length) {
+          this.addedFields = []
         }
       },
     },
+
+    newCustomForm: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val && val.fields.length) {
+          this.addedFields = [...val.fieldsRef]
+          if (this.newFormType == 'UPDATE') {
+            let currentFormFields = this.addedFields.map((field) => {
+              return field.id
+            })
+            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+              let fieldsToAdd = [this.noteTitle, this.noteSubject]
+              let copyArray = this.addedFields
+              fieldsToAdd = fieldsToAdd.concat(copyArray)
+              this.addedFields = fieldsToAdd.map((field, i) => {
+                let altField = { ...field }
+                altField.order = i
+                if (
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                ) {
+                  altField.includeInRecap = true
+                }
+                return altField
+              })
+            }
+          }
+          if (this.newNormType !== 'UPDATE') {
+            this.addedFields = this.addedFields.filter((field) => {
+              return (
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+              )
+            })
+          }
+        } else if (val && !val.fields.length) {
+          this.addedFields = []
+        }
+      },
+    },
+
     resource: {
       async handler(val) {
         if (val) {
@@ -1117,6 +1288,36 @@ export default {
         }
       },
     },
+
+    newResource: {
+      async handler(val) {
+        if (val) {
+          let searchParams = this.formType
+          if (searchParams.length) {
+            let fieldParam = {}
+            if (searchParams == this.CREATE) {
+              fieldParam['createable'] = true
+            } else {
+              fieldParam['updateable'] = true
+            }
+            try {
+              this.formFields.filters = {
+                salesforceObject: val,
+
+                ...fieldParam,
+              }
+              this.formFields.refresh()
+              if (this.formType == 'UPDATE') {
+                // this.onSave()
+              }
+            } catch (e) {
+              console.log(e)
+            }
+          }
+        }
+      },
+    },
+
     formType: {
       immediate: true,
 
@@ -1144,8 +1345,43 @@ export default {
         }
       },
     },
+
+    newFormType: {
+      immediate: true,
+
+      async handler(val) {
+        if (val) {
+          let searchParams = val
+          if (searchParams.length) {
+            let fieldParam = {}
+            if (searchParams == this.CREATE) {
+              fieldParam['createable'] = true
+            } else {
+              fieldParam['updateable'] = true
+            }
+            try {
+              this.formFields.filters = {
+                salesforceObject: this.newResource,
+
+                ...fieldParam,
+              }
+              this.formFields.refresh()
+            } catch (e) {
+              console.log(e)
+            }
+          }
+        }
+      },
+    },
   },
   computed: {
+    ...mapState(['user']),
+    currentStagesWithForms() {
+      return this.formStages.map((sf) => sf.stage)
+    },
+    formLength() {
+      return this.formStages.length
+    },
     filteredFields() {
       return this.formFields.list
         .filter((field) =>
@@ -1187,43 +1423,189 @@ export default {
     },
   },
   async created() {
-    this.getActionChoices()
-    this.allForms = await SlackOAuth.api.getOrgCustomForm()
+    try {
+      this.getActionChoices()
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      await this.listPicklists({
+        salesforceObject: this.Opportunity,
+        picklistFor: 'StageName',
+      })
+    } catch (e) {
+      console.log(e)
+    }
+
+    this.getStageForms()
   },
   methods: {
+    async deleteForm(form) {
+      if (form.id && form.id.length) {
+        const id = form.id
+
+        SlackOAuth.api
+          .delete(id)
+          .then(async (res) => {
+            this.$router.go()
+            this.$toast('Form removed', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          })
+          .catch((e) => {
+            this.$toast('Error, please try again', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          })
+          .finally(() => {})
+      } else {
+        const forms = this.allForms.filter((f) => {
+          return f.id !== form.id
+        })
+        this.allForms = [...forms]
+      }
+    },
+    setNewForm() {
+      this.addForm(this.selectedStage)
+      this.addingForm = false
+    },
+    async selectForm(resource, formType, stage = '') {
+      this.selectedForm = this.allForms.find(
+        (f) => f.resource == resource && f.formType == formType && f.stage == stage,
+      )
+      this.newFormType = formType
+      this.selectedStage = stage
+    },
+    setCustomForm() {
+      this.newCustomForm = this.selectedForm
+    },
+    setStage(n) {
+      this.selectedStage = n.value
+    },
+    updateForm(event) {
+      this.selectedForm = event
+      let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
+
+      if (~index) {
+        this.allForms[index] = this.selectedForm
+        this.allForms = [...this.allForms]
+      }
+    },
+    addForm(stage) {
+      /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
+
+      if (this.currentStagesWithForms.includes(stage)) {
+        this.activeForm = this.formStages.find((form) => form.stage == stage)
+        // this.$toast('This stage has a form', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'default',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+      }
+      let newForm = SlackOAuth.customSlackForm.create({
+        resource: this.OPPORTUNITY,
+        formType: this.STAGE_GATING,
+        stage: stage,
+      })
+      newForm.fieldsRef = this.formStages.reduce((acc, curr) => {
+        let fields = curr.fieldsRef.filter((f) => !acc.map((af) => af.id).includes(f.id))
+        acc = [...acc, ...fields]
+        return acc
+      }, [])
+      this.allForms = [...this.allForms, newForm]
+      this.selectForm('Opportunity', 'STAGE_GATING', stage)
+      this.getStageForms()
+    },
+    async listPicklists(query_params = {}) {
+      try {
+        const res = await SObjectPicklist.api.listPicklists(query_params)
+
+        this.stages = res.length ? res[0]['values'] : []
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async onAddForm() {
+      this.selectingStage = !this.selectingStage
+      this.loadingStages = true
+      try {
+        await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
+      } catch (e) {
+        this.$modal.close('add-stage-modal')
+        this.$toast('Failed to retreive stages', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loadingStages = false
+      }
+    },
+    getStageForms() {
+      // users can only create one form for the stage orderd by stage
+      let forms = []
+      this.stages.forEach((s) => {
+        this.allForms
+          .filter((f) => f.formType == this.STAGE_GATING)
+          .forEach((sf) => {
+            if (sf.stage == s.value) {
+              forms.push(sf)
+            }
+          })
+      })
+
+      this.formStages = [...forms]
+    },
     changeToAccount() {
-      this.resource = 'Account'
-      this.formType = 'UPDATE'
-      this.customForm = this.allForms.find(
+      this.newResource = 'Account'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.ACCOUNT && f.formType == this.UPDATE,
       )
     },
     changeToOpportunity() {
-      this.resource = 'Opportunity'
-      this.formType = 'UPDATE'
-      this.customForm = this.allForms.find(
+      this.newResource = 'Opportunity'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
       )
     },
+    changeToStage(stage = '') {
+      this.newResource = 'Opportunity'
+      this.newFormType = 'STAGE_GATING'
+      this.newCustomForm = this.allForms.find(
+        (f) =>
+          f.resource == this.OPPORTUNITY && f.formType == this.STAGE_GATING && f.stage == stage,
+      )
+    },
     changeToContact() {
-      this.resource = 'Contact'
-      this.formType = 'UPDATE'
-      this.customForm = this.allForms.find(
+      this.newResource = 'Contact'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
       )
     },
     changeToLead() {
-      this.resource = 'Lead'
-      this.formType = 'UPDATE'
-      this.customForm = this.allForms.find(
+      this.newResource = 'Lead'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.LEAD && f.formType == this.UPDATE,
       )
     },
     switchFormType() {
-      this.formType === 'CREATE' ? (this.formType = 'UPDATE') : (this.formType = 'CREATE')
+      this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
 
-      this.customForm = this.allForms.find(
-        (f) => f.resource == this.resource && f.formType == this.formType,
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.newResource && f.formType == this.newFormType,
       )
     },
     camelize(str) {
@@ -1353,8 +1735,8 @@ export default {
     },
     async onSave() {
       if (
-        (this.resource == 'Opportunity' || this.resource == 'Account') &&
-        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+        (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
+        this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
       ) {
         if (!this.meetingType.length && !this.actionChoices.length) {
           this.$toast('Please enter a meeting type', {
@@ -1375,14 +1757,15 @@ export default {
 
       SlackOAuth.api
         .postOrgCustomForm({
-          ...this.customForm,
+          ...this.newCustomForm,
           fields: fields,
           removedFields: this.removedFields,
           fields_ref: fields_ref,
         })
         .then((res) => {
           // this.$emit('update:selectedForm', res)
-          this.$toast('Form added successfully', {
+          this.$router.go()
+          this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -1425,6 +1808,16 @@ export default {
   border: 1px dashed $very-light-gray;
   border-radius: 6px;
   padding-left: 8px;
+}
+
+.delete {
+  background-color: white !important;
+  border: 1px solid $coral !important;
+  border-radius: 0.25rem;
+  color: $coral !important;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-right: 8px;
 }
 .red-text {
   color: $coral;
@@ -1474,16 +1867,17 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .form-type {
-  padding: 6px 12px 6px 0px;
+  padding: 6px 12px 6px 4px;
   img {
     padding-top: 2px;
   }
+  transition: all 0.2s;
 }
 .form-type:hover {
-  background-color: $off-white;
+  opacity: 0.8;
   cursor: pointer;
   border-radius: 6px;
-  padding: 6px 12px 6px 0px;
+  transform: translateY(-10%);
 }
 .search-bar {
   background-color: white;
@@ -1606,13 +2000,19 @@ input[type='search']:focus {
   border-radius: 6px;
 
   section {
-    div {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
   }
+  &__div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+.space-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 #formSection {
   display: flex;
@@ -1676,22 +2076,22 @@ input[type='search']:focus {
   }
 }
 
-#formSection::-webkit-scrollbar {
-  width: 4px; /* Mostly for vertical scrollbars */
-  height: 0px; /* Mostly for horizontal scrollbars */
-}
-#formSection::-webkit-scrollbar-thumb {
-  background-color: $soft-gray;
-  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 0.3rem;
-}
-#formSection::-webkit-scrollbar-track {
-  box-shadow: inset 2px 2px 4px 0 $off-white;
-  border-radius: 0.3rem;
-}
-#formSection::-webkit-scrollbar-track-piece {
-  margin-top: 12px;
-}
+// #formSection::-webkit-scrollbar {
+//   width: 4px;
+//   height: 0px;
+// }
+// #formSection::-webkit-scrollbar-thumb {
+//   background-color: $soft-gray;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// #formSection::-webkit-scrollbar-track {
+//   box-shadow: inset 2px 2px 4px 0 $off-white;
+//   border-radius: 0.3rem;
+// }
+// #formSection::-webkit-scrollbar-track-piece {
+//   margin-top: 12px;
+// }
 
 #formField {
   width: 100%;
@@ -1807,7 +2207,7 @@ input[type='search']:focus {
 .img-border {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border: 1px solid #e8e8e8;
   border-radius: 0.2rem;
   cursor: pointer;
@@ -1966,21 +2366,33 @@ img:hover {
   opacity: 0.8;
 }
 .save {
-  padding: 6px 20px;
-  font-size: 12px;
+  padding: 8px 20px;
+  font-size: 13px;
   background-color: $dark-green;
   color: white;
   border: none;
   border-radius: 0.25rem;
-  margin-right: 8px;
+  margin-right: 3vw;
   cursor: pointer;
 }
-.disabled {
-  padding: 8px 24px;
+.white_button {
+  padding: 8px 20px;
+  font-size: 14px;
+  background-color: white;
+  color: $base-gray;
+  border: none;
+  border-radius: 0.25rem;
+  margin-right: 3vw;
+  border: 1px solid $soft-gray;
+  cursor: pointer;
+}
+:disabled {
+  padding: 12px 20px;
   background-color: $soft-gray;
   color: $light-gray-blue;
   border: none;
   border-radius: 0.25rem;
+  font-size: 13px;
   margin-left: 0.5rem;
   opacity: 0.8;
   cursor: text;
@@ -2046,7 +2458,7 @@ img:hover {
 .row__ {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 .drop-row {
