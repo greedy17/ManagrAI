@@ -55,14 +55,14 @@
                   </template>
                 </Multiselect>
                 <div v-if="selectedCustomObject" class="field-section">
-                  <div class="search-bar">
+                  <div @click="test(customFields)" class="search-bar">
                     <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
                     <input type="search" placeholder="Search Custom Object Fields" v-model="COfilterText" />
                   </div>
   
                   <div class="field-section__fields">
                     <div style="height: 45vh; overflow: scroll">
-                      <p v-for="(field, i) in COfilteredFields" :key="field.id">
+                      <p v-for="(field, i) in customFields.list" :key="field.id">
                         <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                         <label :for="i"></label>
                         {{ field.label }}
@@ -1033,6 +1033,7 @@ export default {
       oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...',],
       selectedCustomObject: null,
+      selectedCustomObjectName: null,
       selectedForm: null,
       selectedStage: null,
       allForms: null,
@@ -1049,13 +1050,13 @@ export default {
           salesforceObject: this.resource,
         },
       }),
-      // COformFields: CollectionManager.create({
-      //   ModelClass: SObjectField,
-      //   pagination: { size: 200 },
-      //   filters: {
-      //     salesforceObject: this.resource,
-      //   },
-      // }),
+      customFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.selectedCustomObjectName,
+        },
+      }),
       formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
@@ -1578,6 +1579,7 @@ export default {
       if (!this.selectedCustomObject) {
         return
       }
+      this.selectedCustomObjectName = this.selectedCustomObject.name
       // function getTime(total, timeouts) {
       //   const waitArr = []
       //   let decay = total
@@ -1652,7 +1654,8 @@ export default {
       this.modalLoading = false
     },
     updateCustomFields() {
-      console.log('updateCustomFields')
+      this.customFields.refresh()
+      console.log('updateCustomFields', this.customFields)
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
