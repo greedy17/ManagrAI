@@ -1,5 +1,90 @@
 <template>
   <div class="slack-form-builder">
+    <Modal
+      v-if="customObjectModal"
+      dimmed
+    >
+      <div class="opp-modal-container">
+        <div v-if="modalLoading">
+          <Loader :loaderText="loaderText" />
+        </div>
+        <div v-else>
+          <div class="flex-row-spread header">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
+              <h3>Add Custom Object</h3>
+            </div>
+            <img
+              src="@/assets/images/close.svg"
+              style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+              @click="toggleCustomObjectModal"
+              alt=""
+            />
+          </div>
+          <div class="opp-modal">
+            <section>
+              <div style="display: flex; justify-content: space-between;">
+                <!-- <label class="modal-label">Label</label>
+                <textarea
+                  id="user-input"
+                  cols="30"
+                  rows="4"
+                  :disabled="false"
+                  style="width: 40.25vw; border-radius: 0.4rem"
+                  @input="() => null"
+                >
+                </textarea> -->
+                <Multiselect
+                  @input="getCustomObjectFields"
+                  :options="customObjects"
+                  openDirection="below"
+                  style="width: 20vw; margin-top: 2rem; margin-left: 1rem;"
+                  selectLabel="Enter"
+                  label="custom"
+                  v-model="selectedCustomObject"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+  
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Custom Object
+                    </p>
+                  </template>
+                </Multiselect>
+                <div v-if="selectedCustomObject" class="field-section">
+                  <div class="search-bar">
+                    <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+                    <input type="search" placeholder="Search Custom Object Fields" v-model="COfilterText" />
+                  </div>
+  
+                  <div class="field-section__fields">
+                    <div style="height: 45vh; overflow: scroll">
+                      <p v-for="(field, i) in COfilteredFields" :key="field.id">
+                        <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+                        <label :for="i"></label>
+                        {{ field.label }}
+                        <span v-if="field.required" class="red-text">required</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <!-- <div class="flex-end-opp">
+                  <div v-if="true" style="display: flex; align-items: center">
+                    <button class="add-button" @click="() => null">
+                      Save
+                    </button>
+                    <p @click="toggleCustomObjectModal" class="cancel">Cancel</p>
+                  </div>
+                </div> -->
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <section class="wrapper">
       <div class="tabs">
         <div class="tab">
@@ -71,6 +156,9 @@
                   height="13px"
                   alt=""
                 />
+                <button v-if="selectedForm" @click="toggleCustomObjectModal" class="custom-object-button">
+                  Add Custom Object
+                </button>
                 <button
                   v-if="selectedForm && selectedForm.fields.length"
                   @click.prevent="deleteForm(activeForm)"
@@ -870,6 +958,8 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 
 import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 
+import Modal from '@/components/InviteModal'
+
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
@@ -884,9 +974,11 @@ export default {
   name: 'CustomSlackForm',
   components: {
     PulseLoadingSpinnerButton,
+    Modal,
     draggable,
     ToggleCheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
   props: {
     stageForms: {
@@ -932,11 +1024,16 @@ export default {
       activeForm: null,
       addingForm: false,
       currentlySelectedForm: null,
+      customObjects: [{custom: 'Custom Object'}],
+      selectedCustomObject: null,
       selectedForm: null,
       selectedStage: null,
       allForms: null,
       filterText: '',
+      COfilterText: '',
       dropdownLoading: false,
+      modalLoading: false,
+      loaderText: 'Loading...',
       currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: SObjectField,
@@ -983,6 +1080,7 @@ export default {
       addingFields: false,
       productSelected: false,
       addingProducts: false,
+      customObjectModal: false,
       formStages: [],
       stages: [],
       noteTitle: {
@@ -1389,6 +1487,13 @@ export default {
         )
         .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
+    COfilteredFields() {
+      return this.formFields.list
+        .filter((field) =>
+          field.referenceDisplayLabel.toLowerCase().includes(this.COfilterText.toLowerCase()),
+        )
+        .filter((field) => !this.addedFieldNames.includes(field.apiName))
+    },
     currentFields() {
       return this.customForm ? this.customForm.fields : []
     },
@@ -1437,6 +1542,21 @@ export default {
     this.getStageForms()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
+    toggleCustomObjectModal() {
+      this.customObjectModal = !this.customObjectModal
+    },
+    getCustomObjectFields() {
+      this.modalLoading = true
+      setTimeout(() => {
+        this.loaderText = 'Really loading...'
+        setTimeout(() => {
+          this.modalLoading = false;
+        }, 2000)
+      }, 2000)
+    },
     async deleteForm(form) {
       if (form.id && form.id.length) {
         const id = form.id
@@ -2375,6 +2495,16 @@ img:hover {
   margin-right: 3vw;
   cursor: pointer;
 }
+.custom-object-button {
+  padding: 8px 20px;
+  font-size: 13px;
+  background-color: $dark-green;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  margin-right: 8px;
+  cursor: pointer;
+}
 .white_button {
   padding: 8px 20px;
   font-size: 14px;
@@ -2466,5 +2596,84 @@ img:hover {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+.opp-modal-container {
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  background-color: white;
+  // width: 44vw;
+  width: 70vw;
+  height: 80vh;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  // border: 1px solid #e8e8e8;
+}
+.flex-row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.header {
+  font-size: 18px;
+  padding: 0;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  letter-spacing: 1px;
+  h4 {
+    font-size: 20px;
+  }
+}
+.logo {
+  margin: 0px 8px 0px 16px;
+  background-color: $white-green;
+  border-radius: 4px;
+  padding: 4px 6px;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.modal-label {
+  display: flex;
+  align-items: flex-start;
+  padding: 6px 0px;
+  font-size: 12.5px;
+  min-width: 80px;
+  margin-top: 12px;
+  letter-spacing: 1px;
+  color: $light-gray-blue;
+  border: none;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+.add-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  margin: 0 0.5rem 0 0;
+  padding: 9px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
+  letter-spacing: 0.75px;
+}
+.add-button:hover {
+  box-shadow: 1px 2px 2px $very-light-gray;
+}
+.cancel {
+  color: $dark-green;
+  font-weight: bold;
+  margin-left: 1rem;
+  cursor: pointer;
 }
 </style>
