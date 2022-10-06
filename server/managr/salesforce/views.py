@@ -867,7 +867,24 @@ class SalesforceSObjectViewSet(
     def get_custom_objects(self, request, *args, **kwargs):
         user = request.user
         objects = user.salesforce_account.list_objects()
-        return Response(data={"sobjects":objects})
+        return Response(data={"sobjects": objects})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="custom-objects-field-sync",
+    )
+    def sync_custom_object_fields(self, request, *args, **kwargs):
+        user = request.user
+        object = request.data.get("sobject")
+        verbose_name = f"custom-field-sync-{request.user.email}-{str(uuid.uuid4())}"
+        task = emit_gen_next_object_field_sync(
+            str(user.id),
+            [f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{object}"],
+            verbose_name=verbose_name,
+        )
+        return Response(data={"verbose_name": task.verbose_name})
 
 
 class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):

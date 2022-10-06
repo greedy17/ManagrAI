@@ -921,7 +921,7 @@ class SalesforceAuthAccount(TimeStampModel):
                 lambda resource: f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{resource}",
                 filter(
                     lambda resource: resource
-                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    if self.sobjects.get(resource, None) not in ["", None]
                     else False,
                     self.sobjects,
                 ),
