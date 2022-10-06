@@ -100,6 +100,12 @@ class Lead(TimeStampModel, IntegrationModel):
         base_url = self.owner.salesforce_account.instance_url
         return LeadAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class OpportunityQuerySet(models.QuerySet):
     def for_user(self, user):

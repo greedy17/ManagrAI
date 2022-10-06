@@ -15,7 +15,7 @@ from managr.salesforce.adapter.exceptions import (
 )
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
-from managr.alerts.models import AlertInstance
+from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry, Account
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
@@ -2571,6 +2571,28 @@ def process_convert_lead(payload, context):
                 ],
             },
         }
+    update_blocks = [
+        block_builders.section_with_button_block(
+            "Send Recap",
+            "SEND_RECAP",
+            f":white_check_mark: Successfully converted your Lead {lead.name}",
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[
+                    f"u={str(user.id)}",
+                    f"account={res['Account']}",
+                    f"opportunity={res['Opportunity']}",
+                    f"contact={res['Contact']}",
+                ],
+            ),
+        )
+    ]
+    slack_requests.send_channel_message(
+        user.slack_integration.channel,
+        user.organization.slack_integration.access_token,
+        block_set=update_blocks,
+    )
+    return
 
 
 @processor(required_context=["f"])
@@ -2578,9 +2600,7 @@ def process_submit_alert_resource_data(payload, context):
     # get context
     has_error = False
     state = swap_public_fields(payload["view"]["state"]["values"])
-    print(state)
     current_form_ids = context.get("f").split(",")
-    print(current_form_ids)
     user = User.objects.get(id=context.get("u"))
     trigger_id = payload["trigger_id"]
     view_id = payload["view"]["id"]
@@ -2602,7 +2622,6 @@ def process_submit_alert_resource_data(payload, context):
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-    print(all_form_data)
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     loading_view_data = send_loading_screen(
@@ -2970,6 +2989,78 @@ def process_submit_bulk_update(payload, context):
     return {"response_action": "clear"}
 
 
+def create_summary_object(api_names, resources, resource_type):
+    object = {}
+    if resource_type == "Opportunity":
+        amounts = [(resource.amount if resource.amount else 0) for resource in resources]
+        object["Amount"] = round(sum(amounts), 2)
+    for resource in resources:
+        for api_name in api_names:
+            value = resource.secondary_data[api_name]
+            if api_name in object.keys():
+                if value in object[api_name].keys():
+                    object[api_name][value].append(resource.name)
+                else:
+                    object[api_name][value] = [resource.name]
+            else:
+                object[api_name] = {}
+                object[api_name][value] = [resource.name]
+    return object
+
+
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
+def process_get_summary(payload, context):
+    u = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload["view"]["private_metadata"])
+    config = AlertConfig.objects.get(id=context.get("config_id"))
+    instances = list(
+        AlertInstance.objects.filter(
+            config_id=config.id, invocation=pm.get("invocation")
+        ).values_list("resource_id", flat=True)
+    )
+    values = payload["view"]["state"]["values"]["CRM_FIELDS"][
+        f"CHOOSE_CRM_FIELDS?u={context.get('u')}"
+    ]["selected_options"]
+    value_list = [option["value"] for option in values]
+    api_name_obj = {}
+    for value in values:
+        api_name_obj[value["value"]] = value["text"]["text"]
+    resources = model_routes[config.template.resource_type]["model"].objects.filter(
+        id__in=instances
+    )
+    summary_object = create_summary_object(value_list, resources, config.template.resource_type)
+
+    blocks = [
+        block_builders.header_block(
+            f"Workflow Summary for {len(instances)} {config.template.title}"
+        ),
+        {"type": "divider"},
+    ]
+    if config.template.resource_type == "Opportunity":
+        summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['Amount'])}"
+        blocks.insert(1, block_builders.simple_section(summary_amount, "mrkdwn"))
+        summary_object.pop("Amount")
+    summary_text = ""
+
+    for field in summary_object.keys():
+        summary_text += f"\n\n*{api_name_obj[field]}:*\n"
+        for key in summary_object[field]:
+            summary_text += f"\n\t*{len(summary_object[field][key])} - {key}* ({', '.join(summary_object[field][key])})"
+        blocks.append(block_builders.simple_section(summary_text, "mrkdwn"))
+        blocks.append({"type": "divider"})
+        summary_text = ""
+    return {
+        "response_action": "update",
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Workflow Summary"},
+            "blocks": blocks,
+        },
+    }
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2999,6 +3090,7 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_meeting_convert_lead,
         slack_const.COMMAND_FORMS__CONVERT_LEAD: process_convert_lead,
         slack_const.PROCESS_SUBMIT_BULK_UPDATE: process_submit_bulk_update,
+        slack_const.GET_SUMMARY: process_get_summary,
     }
 
     callback_id = payload["view"]["callback_id"]

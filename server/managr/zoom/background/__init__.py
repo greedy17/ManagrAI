@@ -441,6 +441,12 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                     f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
                 )
             except CannotSendToChannel as e:
+                res = slack_requests.send_channel_message(
+                    user.slack_integration.channel,
+                    slack_org_access_token,
+                    text="Your Meeting just ended",
+                    block_set=block_set,
+                )
                 return logger.exception(
                     f"Failed to send to channel in kick off slack interaction for workflow {str(workflow.id)} {e}"
                 )
