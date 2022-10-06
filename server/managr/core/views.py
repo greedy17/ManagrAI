@@ -1,7 +1,8 @@
+import json
 import logging
 import requests
 import textwrap
-from django.utils import timezone
+from django.core import serializers
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
@@ -438,6 +439,14 @@ class UserViewSet(
         except Exception as e:
             logger.exception(f"Remove user error: {e}")
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
+    )
+    def admin_tasks(self, request, *args, **kwargs):
+        tasks = CompletedTask.objects.all()[:100]
+        dict_tasks = serializers.serialize("json", tasks)
+        return Response(data={"tasks": dict_tasks})
 
 
 class ActivationLinkView(APIView):
