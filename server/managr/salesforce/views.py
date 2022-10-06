@@ -867,8 +867,7 @@ class SalesforceSObjectViewSet(
     def get_custom_objects(self, request, *args, **kwargs):
         user = request.user
         objects = user.salesforce_account.list_objects()
-        print(objects)
-        return
+        return Response(data={"sobjects":objects})
 
 
 class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):

@@ -40,7 +40,7 @@
                   openDirection="below"
                   style="width: 20vw; margin-top: 2rem; margin-left: 1rem;"
                   selectLabel="Enter"
-                  label="custom"
+                  label="label"
                   v-model="selectedCustomObject"
                 >
                   <template slot="noResult">
@@ -1551,8 +1551,12 @@ export default {
       this.customObjectModal = !this.customObjectModal
     },
     getCustomObjectFields() {
+      if (!this.selectedCustomObject) {
+        return
+      }
       this.modalLoading = true
       this.loaderText = 'Loading...'
+      // Make call to salesforce to retrieve fields
       setTimeout(() => {
         this.loaderText = 'Really loading...'
         setTimeout(() => {
@@ -1564,7 +1568,7 @@ export default {
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
       console.log('res', res)
-      this.customObjects = res
+      this.customObjects = res.sobjects
     },
     async deleteForm(form) {
       if (form.id && form.id.length) {
