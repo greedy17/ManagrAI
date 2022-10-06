@@ -1554,14 +1554,36 @@ export default {
       if (!this.selectedCustomObject) {
         return
       }
+      // function getTime(total, timeouts) {
+      //   const waitArr = []
+      //   let decay = total
+      //   for (let i = 0; i < timeouts-1; i++) {
+      //     const wait = Math.floor(Math.random() * 1500) + 1000
+      //     if (decay-wait <= 0) {
+      //       waitArr.push(Math.abs(decay-wait))
+      //       decay = 1
+      //     } else {
+      //       waitArr.push(wait)
+      //       decay = decay - wait
+      //     }
+      //   }
+      //   waitArr.push(decay)
+      //   return waitArr
+      // }
       this.modalLoading = true
       this.loaderText = 'Loading...'
       // Make call to salesforce to retrieve fields
+      // give name, will return task name
+      // use polling to wait until it's done
+      // const times = getTime(6000, 3)
       setTimeout(() => {
         this.loaderText = 'Really loading...'
         setTimeout(() => {
-          this.modalLoading = false;
-          this.loaderText = ''
+          this.loaderText = 'I promise it is loading...'
+          setTimeout(() => {
+            this.modalLoading = false;
+            this.loaderText = ''
+          }, 2000)
         }, 2000)
       }, 2000)
     },
