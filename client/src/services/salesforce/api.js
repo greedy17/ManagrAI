@@ -112,7 +112,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
         params: this.cls.toAPI(params),
       })
-
+      console.log(res.data)
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
@@ -223,6 +223,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
   async getCustomObjectFields(sobject) {
     try {
+      console.log('hit')
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/custom-objects-field-sync/', { sobject })
       return res.data
     } catch (e) {

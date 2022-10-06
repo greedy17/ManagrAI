@@ -55,7 +55,7 @@
                   </template>
                 </Multiselect>
                 <div v-if="selectedCustomObject" class="field-section">
-                  <div @click="test(customFields)" class="search-bar">
+                  <div class="search-bar">
                     <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
                     <input type="search" placeholder="Search Custom Object Fields" v-model="COfilterText" />
                   </div>
@@ -143,7 +143,7 @@
               <h3 v-if="!selectedForm && !currentlySelectedForm" class="form-type">
                 Add/edit your stage related forms
               </h3>
-              <h3 v-else-if="selectedForm">
+              <h3 @click="test(resource)" v-else-if="selectedForm">
                 {{ selectedForm.stage + ' Form' }}
               </h3>
               <h3 v-else>{{ currentlySelectedForm }}</h3>
@@ -1050,13 +1050,7 @@ export default {
           salesforceObject: this.resource,
         },
       }),
-      customFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
-        filters: {
-          salesforceObject: this.selectedCustomObjectName,
-        },
-      }),
+      customFields: null,
       formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
@@ -1292,6 +1286,7 @@ export default {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
     task: 'checkAndClearInterval',
+    customFields: 'watcherCustomFields',
     customForm: {
       immediate: true,
       deep: true,
@@ -1654,8 +1649,23 @@ export default {
       this.modalLoading = false
     },
     updateCustomFields() {
+      console.log('updateCustomFields before', this.selectedCustomObjectName)
+      this.customFields = CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.selectedCustomObjectName,
+        },
+      }),
+      // setTimeout(() => {
+      //   this.customFields.refresh()
+      //   console.log('timeout', this.customFields)
+      // }, 2000)
+      // this.customFields.refresh()
+      console.log('updateCustomFields after', this.customFields)
+    },
+    watcherCustomFields() {
       this.customFields.refresh()
-      console.log('updateCustomFields', this.customFields)
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
