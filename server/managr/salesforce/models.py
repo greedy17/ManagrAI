@@ -1065,6 +1065,9 @@ class SalesforceAuthAccount(TimeStampModel):
     def update_opportunity(self, data):
         return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)
 
+    def list_objects(self):
+        return self.adapter_class.list_objects()
+
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
 

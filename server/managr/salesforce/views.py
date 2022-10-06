@@ -858,6 +858,18 @@ class SalesforceSObjectViewSet(
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="custom-objects",
+    )
+    def get_custom_objects(self, request, *args, **kwargs):
+        user = request.user
+        objects = user.salesforce_account.list_objects()
+        print(objects)
+        return
+
 
 class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = MeetingWorkflowSerializer
@@ -889,8 +901,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
