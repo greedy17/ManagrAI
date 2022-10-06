@@ -355,7 +355,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                                 break
                             else:
                                 try:
-                                    self.user.salesforce_account.regenerate_token()
+                                    if self.resource_object.owner == self.user:
+                                        self.user.salesforce_account.regenerate_token()
+                                    else:
+                                        self.resource_object.owner.salesforce_account.regenerate_token()
                                     attempts += 1
                                 except InvalidRefreshToken:
                                     logger.exception(
