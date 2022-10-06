@@ -969,6 +969,7 @@ import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectPicklist } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
+import { SObjects } from '../../services/salesforce'
 
 export default {
   name: 'CustomSlackForm',
@@ -1033,7 +1034,7 @@ export default {
       COfilterText: '',
       dropdownLoading: false,
       modalLoading: false,
-      loaderText: 'Loading...',
+      loaderText: '',
       currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: SObjectField,
@@ -1535,6 +1536,7 @@ export default {
         salesforceObject: this.Opportunity,
         picklistFor: 'StageName',
       })
+      this.getCustomObjects()
     } catch (e) {
       console.log(e)
     }
@@ -1550,12 +1552,19 @@ export default {
     },
     getCustomObjectFields() {
       this.modalLoading = true
+      this.loaderText = 'Loading...'
       setTimeout(() => {
         this.loaderText = 'Really loading...'
         setTimeout(() => {
           this.modalLoading = false;
+          this.loaderText = ''
         }, 2000)
       }, 2000)
+    },
+    async getCustomObjects() {
+      const res = await SObjects.api.getCustomObjects()
+      console.log('res', res)
+      this.customObjects = res
     },
     async deleteForm(form) {
       if (form.id && form.id.length) {

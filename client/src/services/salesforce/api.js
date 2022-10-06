@@ -213,6 +213,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
+  async getCustomObjects() {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/custom-objects/')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting Custom Objects' })(e)
+    }
+  }
   async sendRecap(bulk, form_ids) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/send-recap/', { bulk, form_ids })
