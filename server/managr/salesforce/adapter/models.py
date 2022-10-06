@@ -300,6 +300,11 @@ class SalesforceAuthAccountAdapter:
             )
         )
 
+    def format_objects(self, res_data):
+        return list(
+            map(lambda object: {"label": object["label"], "name": object["name"]}, res_data.items())
+        )
+
     @staticmethod
     def from_api(data, user_id=None):
         salesforce_link = data.pop("id", None)
@@ -656,6 +661,16 @@ class SalesforceAuthAccountAdapter:
             res = self._handle_response(res)
             res = self._format_resource_response(res, resource)
             return res
+
+    def list_objects(self):
+        url = f"{self.instance_url}{sf_consts.OBJECTS_URI}"
+        with Client as client:
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+
+            return self.format_objects(res)
 
     def revoke(self):
         # if a token is already expired a 400 error occurs we can ignore that
