@@ -858,6 +858,18 @@ class SalesforceSObjectViewSet(
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="custom-objects",
+    )
+    def get_custom_objects(self, request, *args, **kwargs):
+        user = request.user
+        objects = user.salesforce_account.list_objects()
+        print(objects)
+        return
+
 
 class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = MeetingWorkflowSerializer
@@ -1023,15 +1035,3 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="custom-objects",
-    )
-    def get_custom_objects(self, request, *args, **kwargs):
-        user = request.user
-        objects = user.salesforce_account.list_objects()
-        print(objects)
-        return
