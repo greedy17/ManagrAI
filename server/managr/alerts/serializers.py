@@ -20,9 +20,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            organization=template_user.organization,
-            user_level=target,
-            is_active=True,
+            organization=template_user.organization, user_level=target, is_active=True,
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -470,9 +468,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
         if len(new_configs):
             new_configs = list(map(lambda x: {**x, "template": data.id}, new_configs))
             _new_configs = AlertConfigWriteSerializer(
-                data=new_configs,
-                many=True,
-                context=self.context,
+                data=new_configs, many=True, context=self.context,
             )
             try:
                 _new_configs.is_valid(raise_exception=True)
@@ -485,6 +481,8 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
 class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
     sobject_instances = serializers.SerializerMethodField("get_sobject_instances")
     configs_ref = AlertConfigRefSerializer(source="configs", many=True)
+    groups_ref = AlertGroupSerializer(source="groups", many=True)
+    message_template_ref = AlertMessageTemplateRefSerializer(source="message_template")
 
     class Meta:
         model = alert_models.AlertTemplate
@@ -496,8 +494,12 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
             "resource_type",
             "alert_level",
             "invocation",
+            "message_template",
+            "message_template_ref",
             "configs",
             "configs_ref",
+            "groups",
+            "groups_ref",
             "last_invocation_datetime",
             "sobject_instances",
         )
