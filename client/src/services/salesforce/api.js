@@ -221,6 +221,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error getting Custom Objects' })(e)
     }
   }
+  async getCustomObjectFields(sobject) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/custom-objects-field-sync/', { sobject })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting Custom Object Fields' })(e)
+    }
+  }
   async sendRecap(bulk, form_ids) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/send-recap/', { bulk, form_ids })

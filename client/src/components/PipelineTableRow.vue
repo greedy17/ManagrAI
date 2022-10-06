@@ -471,6 +471,9 @@ export default {
     //     console.log(e)
     //   }
     // },
+    test(log) {
+      console.log('log', log)
+    },
     checkAndClearInterval() {
       if (this.task.completed == true) {
         this.stopChecker()
@@ -479,9 +482,6 @@ export default {
       } else {
         return
       }
-    },
-    test(log) {
-      console.log('log', log)
     },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)

@@ -966,6 +966,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
+import User from '@/services/users'
 import { SObjectField, SObjectPicklist } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
@@ -1025,7 +1026,12 @@ export default {
       activeForm: null,
       addingForm: false,
       currentlySelectedForm: null,
-      customObjects: [{custom: 'Custom Object'}],
+      customObjects: [],
+      verboseName: '',
+      checker: null,
+      task: null,
+      oldIndex: 0,
+      loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...',],
       selectedCustomObject: null,
       selectedForm: null,
       selectedStage: null,
@@ -1043,6 +1049,13 @@ export default {
           salesforceObject: this.resource,
         },
       }),
+      // COformFields: CollectionManager.create({
+      //   ModelClass: SObjectField,
+      //   pagination: { size: 200 },
+      //   filters: {
+      //     salesforceObject: this.resource,
+      //   },
+      // }),
       formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
@@ -1277,6 +1290,7 @@ export default {
   watch: {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
+    task: 'checkAndClearInterval',
     customForm: {
       immediate: true,
       deep: true,
@@ -1547,10 +1561,20 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    checkAndClearInterval() {
+      console.log('this.task', this.task)
+      if (this.task.completed == true) {
+        this.stopChecker()
+        this.updateCustomFields()
+        this.oldIndex = 0
+      } else {
+        return
+      }
+    },
     toggleCustomObjectModal() {
       this.customObjectModal = !this.customObjectModal
     },
-    getCustomObjectFields() {
+    async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
         return
       }
@@ -1570,22 +1594,65 @@ export default {
       //   waitArr.push(decay)
       //   return waitArr
       // }
-      this.modalLoading = true
-      this.loaderText = 'Loading...'
-      // Make call to salesforce to retrieve fields
-      // give name, will return task name
-      // use polling to wait until it's done
-      // const times = getTime(6000, 3)
-      setTimeout(() => {
-        this.loaderText = 'Really loading...'
-        setTimeout(() => {
-          this.loaderText = 'I promise it is loading...'
-          setTimeout(() => {
-            this.modalLoading = false;
-            this.loaderText = ''
-          }, 2000)
+      try {
+        this.modalLoading = true
+        this.loaderText = this.loaderTextList[0]
+        // Make call to salesforce to retrieve fields
+        // give name, will return task name
+        // use polling to wait until it's done
+        const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name)
+        console.log(res)
+        this.verboseName = res.verbose_name
+        this.checker = setInterval(() => {
+          this.checkTask()
+          this.loaderText = this.loaderTextList[this.changeLoaderText()]
         }, 2000)
-      }, 2000)
+        // const times = getTime(6000, 3)
+        // setTimeout(() => {
+        //   this.loaderText = 'Really loading...'
+        //   setTimeout(() => {
+        //     this.loaderText = 'I promise it is loading...'
+        //     setTimeout(() => {
+        //       this.modalLoading = false;
+        //       this.loaderText = ''
+        //     }, 2000)
+        //   }, 2000)
+        // }, 2000)
+      } catch(e) {
+        console.log(e)
+      }
+    },
+    async checkTask() {
+      try {
+        this.task = await User.api.checkTasks(this.verboseName)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    changeLoaderText() {
+      // const index = Math.floor(Math.random() * 3)
+      let newIndex
+      if (this.oldIndex === 2) {
+        newIndex = 2
+      } else {
+        newIndex = this.oldIndex + 1
+        this.oldIndex = newIndex
+      }
+      // if (index !== this.oldIndex) {
+      //   newIndex = index
+      //   this.oldIndex = index
+      // } else {
+      //   newIndex = this.changeLoaderText()
+      // }
+      return newIndex
+    },
+    stopChecker() {
+      clearInterval(this.checker)
+      this.loaderText = ''
+      this.modalLoading = false
+    },
+    updateCustomFields() {
+      console.log('updateCustomFields')
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
