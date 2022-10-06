@@ -878,10 +878,13 @@ class SalesforceSObjectViewSet(
     def sync_custom_object_fields(self, request, *args, **kwargs):
         user = request.user
         object = request.data.get("sobject")
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")        
         verbose_name = f"custom-field-sync-{request.user.email}-{str(uuid.uuid4())}"
         task = emit_gen_next_object_field_sync(
             str(user.id),
             [f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{object}"],
+            schedule_time=formatted_time,
             verbose_name=verbose_name,
         )
         return Response(data={"verbose_name": task.verbose_name})

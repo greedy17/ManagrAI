@@ -55,14 +55,14 @@
                   </template>
                 </Multiselect>
                 <div v-if="selectedCustomObject" class="field-section">
-                  <div class="search-bar">
+                  <div @click="test(customFields)" class="search-bar">
                     <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
                     <input type="search" placeholder="Search Custom Object Fields" v-model="COfilterText" />
                   </div>
   
                   <div class="field-section__fields">
                     <div style="height: 45vh; overflow: scroll">
-                      <p v-for="(field, i) in COfilteredFields" :key="field.id">
+                      <p v-for="(field, i) in customFields.list" :key="field.id">
                         <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                         <label :for="i"></label>
                         {{ field.label }}
@@ -966,6 +966,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
+import User from '@/services/users'
 import { SObjectField, SObjectPicklist } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
@@ -1025,8 +1026,14 @@ export default {
       activeForm: null,
       addingForm: false,
       currentlySelectedForm: null,
-      customObjects: [{custom: 'Custom Object'}],
+      customObjects: [],
+      verboseName: '',
+      checker: null,
+      task: null,
+      oldIndex: 0,
+      loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...',],
       selectedCustomObject: null,
+      selectedCustomObjectName: null,
       selectedForm: null,
       selectedStage: null,
       allForms: null,
@@ -1041,6 +1048,13 @@ export default {
         pagination: { size: 200 },
         filters: {
           salesforceObject: this.resource,
+        },
+      }),
+      customFields: CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.selectedCustomObjectName,
         },
       }),
       formFieldList: [],
@@ -1277,6 +1291,7 @@ export default {
   watch: {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
+    task: 'checkAndClearInterval',
     customForm: {
       immediate: true,
       deep: true,
@@ -1547,23 +1562,100 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    checkAndClearInterval() {
+      console.log('this.task', this.task)
+      if (this.task.completed == true) {
+        this.stopChecker()
+        this.updateCustomFields()
+        this.oldIndex = 0
+      } else {
+        return
+      }
+    },
     toggleCustomObjectModal() {
       this.customObjectModal = !this.customObjectModal
     },
-    getCustomObjectFields() {
+    async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
         return
       }
-      this.modalLoading = true
-      this.loaderText = 'Loading...'
-      // Make call to salesforce to retrieve fields
-      setTimeout(() => {
-        this.loaderText = 'Really loading...'
-        setTimeout(() => {
-          this.modalLoading = false;
-          this.loaderText = ''
+      this.selectedCustomObjectName = this.selectedCustomObject.name
+      // function getTime(total, timeouts) {
+      //   const waitArr = []
+      //   let decay = total
+      //   for (let i = 0; i < timeouts-1; i++) {
+      //     const wait = Math.floor(Math.random() * 1500) + 1000
+      //     if (decay-wait <= 0) {
+      //       waitArr.push(Math.abs(decay-wait))
+      //       decay = 1
+      //     } else {
+      //       waitArr.push(wait)
+      //       decay = decay - wait
+      //     }
+      //   }
+      //   waitArr.push(decay)
+      //   return waitArr
+      // }
+      try {
+        this.modalLoading = true
+        this.loaderText = this.loaderTextList[0]
+        // Make call to salesforce to retrieve fields
+        // give name, will return task name
+        // use polling to wait until it's done
+        const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name)
+        console.log(res)
+        this.verboseName = res.verbose_name
+        this.checker = setInterval(() => {
+          this.checkTask()
+          this.loaderText = this.loaderTextList[this.changeLoaderText()]
         }, 2000)
-      }, 2000)
+        // const times = getTime(6000, 3)
+        // setTimeout(() => {
+        //   this.loaderText = 'Really loading...'
+        //   setTimeout(() => {
+        //     this.loaderText = 'I promise it is loading...'
+        //     setTimeout(() => {
+        //       this.modalLoading = false;
+        //       this.loaderText = ''
+        //     }, 2000)
+        //   }, 2000)
+        // }, 2000)
+      } catch(e) {
+        console.log(e)
+      }
+    },
+    async checkTask() {
+      try {
+        this.task = await User.api.checkTasks(this.verboseName)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    changeLoaderText() {
+      // const index = Math.floor(Math.random() * 3)
+      let newIndex
+      if (this.oldIndex === 2) {
+        newIndex = 2
+      } else {
+        newIndex = this.oldIndex + 1
+        this.oldIndex = newIndex
+      }
+      // if (index !== this.oldIndex) {
+      //   newIndex = index
+      //   this.oldIndex = index
+      // } else {
+      //   newIndex = this.changeLoaderText()
+      // }
+      return newIndex
+    },
+    stopChecker() {
+      clearInterval(this.checker)
+      this.loaderText = ''
+      this.modalLoading = false
+    },
+    updateCustomFields() {
+      this.customFields.refresh()
+      console.log('updateCustomFields', this.customFields)
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()

@@ -117,7 +117,7 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
 
 
 def emit_gen_next_object_field_sync(
-    user_id, ops_list, for_dev, schedule_time=timezone.now(), verbose_name=None
+    user_id, ops_list, for_dev=False, schedule_time=timezone.now(), verbose_name=None
 ):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
     if verbose_name:
