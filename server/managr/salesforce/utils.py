@@ -143,3 +143,13 @@ def map_records(arr1, arr2):
         obj.update(found_obj)
         merged_list.append(obj)
     return merged_list
+
+
+def swap_public_fields(state):
+    if "meeting_comment" in state.keys():
+        state["meeting_comments"] = state["meeting_comment"]
+        state.pop("meeting_comment")
+    if "meeting_title" in state.keys():
+        state["meeting_type"] = state["meeting_title"]
+        state.pop("meeting_title")
+    return state
