@@ -324,7 +324,8 @@ def CONVERT_LEAD_BODY(access_token, data):
         result += f"<tns:{key}>{data[key]}</tns:{key}>"
         if count != len(data.keys()):
             result += "\n"
-
+    if "OpportunityId" not in data.keys() and "OpportunityName" not in data.keys():
+        result += "\n<tns:doNotCreateOpportunity>true</tns:doNotCreateOpportunity>"
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ens="urn:sobject.partner.soap.sforce.com" xmlns:fns="urn:fault.partner.soap.sforce.com" xmlns:tns="urn:partner.soap.sforce.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <soap:Header>
