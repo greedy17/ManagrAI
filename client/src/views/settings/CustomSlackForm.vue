@@ -17,7 +17,7 @@
             <img
               src="@/assets/images/close.svg"
               style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
-              @click="toggleCustomObjectModal"
+              @click="closeCustomModal"
               alt=""
             />
           </div>
@@ -62,7 +62,7 @@
   
                   <div class="field-section__fields">
                     <div style="height: 45vh; overflow: scroll">
-                      <p v-for="(field, i) in customFields.list" :key="field.id">
+                      <p v-for="(field, i) in COfilteredFields/*customFields.list*/" :key="field.id">
                         <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                         <label :for="i"></label>
                         {{ field.label }}
@@ -143,7 +143,7 @@
               <h3 v-if="!selectedForm && !currentlySelectedForm" class="form-type">
                 Add/edit your stage related forms
               </h3>
-              <h3 @click="test(resource)" v-else-if="selectedForm">
+              <h3 v-else-if="selectedForm">
                 {{ selectedForm.stage + ' Form' }}
               </h3>
               <h3 v-else>{{ currentlySelectedForm }}</h3>
@@ -156,8 +156,11 @@
                   height="13px"
                   alt=""
                 />
-                <button v-if="selectedForm" @click="toggleCustomObjectModal" class="custom-object-button">
+                <button v-if="selectedForm && customResource === 'Opportunity' && !selectedForm.fields.length && !addedFields.length" @click="toggleCustomObjectModal" class="custom-object-button">
                   Add Custom Object
+                </button>
+                <button v-else-if="selectedForm && customResource && customResource !== 'Opportunity'" @click="removeCustomObject" class="custom-object-button">
+                  Remove Custom Object
                 </button>
                 <button
                   v-if="selectedForm && selectedForm.fields.length"
@@ -1047,13 +1050,15 @@ export default {
         ModelClass: SObjectField,
         pagination: { size: 200 },
         filters: {
-          salesforceObject: this.resource,
+          salesforceObject: this.customResource,
         },
       }),
       customFields: null,
       formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
+      customResource: this.resource,
+      removeCustomObj: false,
       newCustomForm: this.customForm,
       customSlackFormConfig: [],
       formHasChanges: false,
@@ -1287,6 +1292,8 @@ export default {
     selectedForm: 'setCustomForm',
     task: 'checkAndClearInterval',
     customFields: 'watcherCustomFields',
+    customResource: 'watcherCustomResource',
+    formFields: 'watcherCustomResource', 
     customForm: {
       immediate: true,
       deep: true,
@@ -1332,7 +1339,7 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields.length) {
+        if (val && val.fields.length && !this.removeCustomObj) {
           this.addedFields = [...val.fieldsRef]
           if (this.newFormType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
@@ -1366,6 +1373,7 @@ export default {
         } else if (val && !val.fields.length) {
           this.addedFields = []
         }
+        this.removeCustomObj = false
       },
     },
 
@@ -1499,7 +1507,7 @@ export default {
         .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
-      return this.formFields.list
+      return this.customFields.list
         .filter((field) =>
           field.referenceDisplayLabel.toLowerCase().includes(this.COfilterText.toLowerCase()),
         )
@@ -1557,8 +1565,21 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    removeCustomObject() {
+      this.removeCustomObj = true
+      this.customResource = this.resource
+      this.selectedCustomObjectName = null
+      this.newCustomForm.customObject = ''
+      this.addedFields = []
+      this.formFields = CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.resource,
+        },
+      })
+    },
     checkAndClearInterval() {
-      console.log('this.task', this.task)
       if (this.task.completed == true) {
         this.stopChecker()
         this.updateCustomFields()
@@ -1569,6 +1590,24 @@ export default {
     },
     toggleCustomObjectModal() {
       this.customObjectModal = !this.customObjectModal
+    },
+    closeCustomModal() {
+      this.customObjectModal = false
+      if (this.selectedCustomObject /*&& !this.newCustomForm.customObject*/) {
+        // console.log('this.newCustomForm.customObject', this.newCustomForm.customObject)
+        // if (!this.newCustomForm.customObject) {
+        //   console.log('check hit')
+        //   this.customResource = this.resource
+        // }
+        this.selectedCustomObject = null
+        this.formFields = CollectionManager.create({
+          ModelClass: SObjectField,
+          pagination: { size: 200 },
+          filters: {
+            salesforceObject: this.customResource,
+          },
+        })
+      }
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1598,7 +1637,6 @@ export default {
         // give name, will return task name
         // use polling to wait until it's done
         const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name)
-        console.log(res)
         this.verboseName = res.verbose_name
         this.checker = setInterval(() => {
           this.checkTask()
@@ -1649,27 +1687,27 @@ export default {
       this.modalLoading = false
     },
     updateCustomFields() {
-      console.log('updateCustomFields before', this.selectedCustomObjectName)
       this.customFields = CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 200 },
         filters: {
           salesforceObject: this.selectedCustomObjectName,
         },
-      }),
-      // setTimeout(() => {
-      //   this.customFields.refresh()
-      //   console.log('timeout', this.customFields)
-      // }, 2000)
-      // this.customFields.refresh()
-      console.log('updateCustomFields after', this.customFields)
+      })
+
+      if (this.selectedCustomObject) {
+        this.customResource = this.selectedCustomObjectName
+      }
     },
     watcherCustomFields() {
       this.customFields.refresh()
+      this.formFields.refresh()
+    },
+    watcherCustomResource() {
+      this.formFields.refresh()
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
-      console.log('res', res)
       this.customObjects = res.sobjects
     },
     async deleteForm(form) {
@@ -1718,6 +1756,14 @@ export default {
     },
     setCustomForm() {
       this.newCustomForm = this.selectedForm
+      this.customResource = this.newCustomForm && this.newCustomForm.customObject ? this.newCustomForm.customObject : this.resource
+      this.formFields = CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.customResource,
+        },
+      })
     },
     setStage(n) {
       this.selectedStage = n.value
@@ -1944,6 +1990,9 @@ export default {
       // this.formFields.filters = { salesforceObject: this.resource }
       // this.formFields.refresh()
     },
+    changeCustomObjectName() {
+      this.newCustomForm.customObject = this.customResource
+    },
     goBack() {
       if (this.fromAdmin) {
         this.goBackAdmin()
@@ -1967,6 +2016,9 @@ export default {
       if (~this.currentFields.findIndex((f) => f == field.id)) {
         this.removedFields = [this.removedFields, field]
       }
+      // if (this.customObjectModal) {
+      //   this.customSlackForm.customObject = this.customResource
+      // }
     },
     async onSave() {
       if (
@@ -1989,17 +2041,24 @@ export default {
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-
+      if (
+        this.customResource !== 'Opportunity' && this.customResource !== 'Lead' &&
+        this.customResource !== 'Contact' && this.customResource !== 'Account'
+      ) {
+        this.changeCustomObjectName()
+      }
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.newCustomForm,
           fields: fields,
           removedFields: this.removedFields,
           fields_ref: fields_ref,
+          custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
         })
         .then((res) => {
           // this.$emit('update:selectedForm', res)
-          this.$router.go()
+
+          // this.$router.go()
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -2719,7 +2778,7 @@ img:hover {
   background-color: white;
   // width: 44vw;
   width: 70vw;
-  height: 80vh;
+  height: 70vh;
   border-radius: 0.5rem;
   padding: 1rem;
   // border: 1px solid #e8e8e8;
