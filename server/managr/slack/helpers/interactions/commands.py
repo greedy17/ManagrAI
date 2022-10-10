@@ -288,7 +288,7 @@ def get_notes_command(context):
     block_context = {
         "u": str(user.id),
         "type": "command",
-        "options": "%".join(["Contact", "Opportunity", "Account"]),
+        "options": "%".join(["Contact", "Opportunity", "Account", "Lead"]),
         "action_id": "GET_NOTES",
     }
     blocks = get_block_set("pick_resource_modal_block_set", context=block_context)

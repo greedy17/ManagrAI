@@ -12,7 +12,7 @@ const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
 const UNINVITE_ENDPOINT = '/users/remove-user/'
-const STAFF_ENDPOINT = '/users/staff/'
+const TASKS_ENDPOINT = '/users/admin-tasks/'
 // const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
 const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
 const STAFF_FORMS = '/users/staff/slack-forms/'
@@ -126,7 +126,6 @@ export default class UserAPI {
   }
 
   uninvite(id) {
-    console.log('uninvite', id)
     const data = { remove_id: id }
     const promise = apiClient()
       .post(UNINVITE_ENDPOINT, this.cls.toAPI(data))
@@ -138,6 +137,15 @@ export default class UserAPI {
         }),
       )
     return promise
+  }
+
+  async getTasks() {
+    try {
+      const response = await this.client.get(TASKS_ENDPOINT)
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getTasks' })
+    }
   }
 
   activate(uid, token, form) {

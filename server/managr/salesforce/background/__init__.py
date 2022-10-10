@@ -1,19 +1,14 @@
 import logging
 import re
-import sched
 import pytz
 import time
 import random
 from datetime import datetime
-
 from background_task import background
 from background_task.models import CompletedTask, Task
-
-
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q
-
 from rest_framework.exceptions import ValidationError
 
 from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
@@ -35,7 +30,7 @@ from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.slack.models import UserSlackIntegration
 from managr.salesforce.utils import process_text_field_format
-
+from managr.salesforce.utils import swap_public_fields
 from ..routes import routes
 from ..models import (
     SFResourceSync,
@@ -1101,6 +1096,9 @@ def _process_update_contacts(workflow_id, *args):
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
         data = form.saved_data
+        data = swap_public_fields(data)
+        if data.get("meeting_comments") is not None and data.get("meeting_type") is not None:
+            emit_add_update_to_sf(str(form.id))
         if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
             data["AccountId"] = workflow.resource.integration_id
         if data:
