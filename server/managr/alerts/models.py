@@ -557,17 +557,17 @@ class AlertInstance(TimeStampModel):
                             user = self.user
                             if self.resource.secondary_data.get(v):
                                 field = user.salesforce_account.object_fields.filter(
-                                    api_name=v
+                                    api_name=v, salesforce_object=self.template.resource_type
                                 ).first()
                                 if field and field.data_type == "DateTime":
                                     binding_map[binding] = binding_map[binding][0:10]
                                 if field and field.data_type == "Reference":
+                                    relationship = field.reference_to_infos[0]["api_name"]
                                     try:
                                         reference_record = (
-                                            model_routes[field.relationship_name]["model"]
+                                            model_routes[relationship]["model"]
                                             .objects.filter(integration_id=binding_map[binding])
                                             .first()
-                                            .name
                                         )
                                     except Exception as e:
                                         logger.info(e)
@@ -577,7 +577,7 @@ class AlertInstance(TimeStampModel):
                                     url = self.user.salesforce_account.instance_url.split(".")[0]
                                     binding_map[
                                         binding
-                                    ] = f"<{url}.lightning.force.com/lightning/r/{field.relationship_name}/{binding_map[binding]}/view|{reference_record}>"
+                                    ] = f"<{url}.lightning.force.com/lightning/r/{relationship}/{binding_map[binding]}/view|{reference_record}>"
                         elif k == "__Recipient":
                             binding_map[binding] = getattr(self.user, v)
                             if binding_map[binding] in ["", None]:

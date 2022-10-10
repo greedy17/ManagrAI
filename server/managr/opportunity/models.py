@@ -45,8 +45,15 @@ class Lead(TimeStampModel, IntegrationModel):
     )
     objects = LeadQuerySet.as_manager()
 
+    @property
+    def display_name(self):
+        if self.email:
+            return self.email
+        else:
+            return self.name
+
     def __str__(self):
-        return f"name{self.name}, email {self.email}, owner: {self.owner}, integration_id: {self.integration_id}"
+        return f"{self.display_name}"
 
     @property
     def as_slack_option(self):
@@ -243,7 +250,7 @@ class Opportunity(TimeStampModel, IntegrationModel):
         )
 
     def __str__(self):
-        return f"Opportunity '{self.name}' ({self.id})"
+        return f"{self.name}"
 
     def save(self, *args, **kwargs):
         obj = (
