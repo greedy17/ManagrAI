@@ -2,7 +2,7 @@ import json
 import uuid
 import logging
 import pytz
-
+import random
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
@@ -2475,6 +2475,62 @@ def process_get_summary_fields(payload, context):
     return
 
 
+def get_random_deal_score(opp_name):
+    scores = {
+        "engage": ["Engagement is very high", "Engagement is low"],
+        "stage": ["Stage recently advanced", "Stage hasn't advanced recently"],
+        "close_date": ["Close Date has moved to this week", "Close date was pushed back"],
+        "update": [
+            "Opp was updated within the last 7 days",
+            "Opp was last updated more than a week ago",
+        ],
+    }
+    score = 0
+    score_text = ""
+    for score_key in scores.keys():
+        k = random.randint(0, 1)
+        score_text += f"\t-{scores[score_key][k]}\n"
+        if k == 0:
+            score += 25
+    score_text = f"*{opp_name}* has a deal score of *{score}*\n" + score_text
+    return score_text
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_get_deal_score(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    config_id = context.get("config_id")
+    config = AlertConfig.objects.get(id=config_id)
+    instances = list(
+        AlertInstance.objects.filter(config_id=config.id, invocation=context.get("invocation"))
+    )[0:7]
+    deal_text = ""
+    for instance in instances:
+        instance_text = get_random_deal_score(instance.resource.name)
+        deal_text += f"\n{instance_text}"
+    blocks = [
+        block_builders.header_block(f"{config.template.resource_type} Deal Score"),
+        {"type": "divider"},
+        block_builders.simple_section(deal_text, "mrkdwn"),
+    ]
+    view_data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": f"Deal Score"},
+            "blocks": blocks,
+        },
+    }
+
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+        view_data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
+
+
 #########################################################
 # MORNING/AFTERNOON DIGEST ACTIONS
 #########################################################
@@ -3393,6 +3449,7 @@ def handle_block_actions(payload):
         slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
         slack_const.GET_SUMMARY: process_get_summary_fields,
+        slack_const.GET_DEAL_SCORE: process_get_deal_score,
     }
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)

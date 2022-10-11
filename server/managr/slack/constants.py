@@ -193,7 +193,7 @@ PROCESS_BULK_UPDATE = "PROCESS_BULK_UPDATE"
 CHOOSE_CRM_FIELD = "CHOOSE_CRM_FIELD"
 GET_SUMMARY = "GET_SUMMARY"
 CHOOSE_CRM_FIELDS = "CHOOSE_CRM_FIELDS"
-
+GET_DEAL_SCORE = "GET_DEAL_SCORE"
 #########################################################
 # VIEW SUBMISSION CONSTANTS
 #########################################################
