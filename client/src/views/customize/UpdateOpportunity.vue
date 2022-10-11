@@ -7,7 +7,7 @@
       </p>
     </div>
     <div class="box__content--expanded">
-      <CustomSlackForm
+      <!-- <CustomSlackForm
         :formType="UPDATE"
         :customForm="
           (this.selectedForm = this.allForms.find(
@@ -15,6 +15,18 @@
           ))
         "
         :resource="OPPORTUNITY"
+        v-on:update:selectedForm="updateForm($event)"
+        :loading="formFields.refreshing"
+        :stageForms="formStages"
+      /> -->
+      <CustomSlackForm
+        :formType="UPDATE"
+        :customForm="
+          (this.selectedForm = this.allForms.find(
+            (f) => f.resource == DEAL && f.formType == UPDATE,
+          ))
+        "
+        :resource="DEAL"
         v-on:update:selectedForm="updateForm($event)"
         :loading="formFields.refreshing"
         :stageForms="formStages"
@@ -74,7 +86,7 @@ export default {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
       await this.listPicklists({
-        salesforceObject: this.Opportunity,
+        salesforceObject: this.Deal,
         picklistFor: 'StageName',
       })
     } catch (error) {
@@ -94,7 +106,6 @@ export default {
       try {
         this.formFields.filters = query_params
         this.formFields.refresh()
-        console.log(this.formFields)
       } catch {
         this.$toast('Error gathering fields', {
           timeout: 2000,
@@ -106,6 +117,7 @@ export default {
       }
     },
     updateForm(event) {
+      console.log(event)
       this.selectedForm = event
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
 

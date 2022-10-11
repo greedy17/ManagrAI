@@ -12,6 +12,24 @@ from managr.organization import constants as org_consts
 logger = logging.getLogger("managr")
 
 
+DATA_TYPE_OBJ = {
+    "calculation_score": "Int",
+    "text": "String",
+    "checkbox": "Boolean",
+    "radio": "Picklist",
+    "booleancheckbox": "Boolean",
+    "calculation_read_time": "DateTime",
+    "phonenumber": "Phone",
+    "select": "Picklist",
+    "date": "Date",
+    "number": "Int",
+    "calculation_rollup": "Int",
+    "textarea": "TextArea",
+    "calculation_equation": "Int",
+    "text": "String",
+}
+
+
 class HubspotAuthAccountAdapter:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", None)
@@ -386,6 +404,8 @@ class HObjectFieldAdapter:
     @staticmethod
     def from_api(data):
         data["integration_source"] = "HUBSPOT"
+        type = data["fieldType"]
+        data["fieldType"] = DATA_TYPE_OBJ[type]
         d = object_to_snake_case(data)
 
         return d

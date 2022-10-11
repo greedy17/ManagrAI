@@ -166,7 +166,9 @@ class ObjectFieldQuerySet(models.QuerySet):
 
 
 class ObjectField(TimeStampModel, IntegrationModel):
-    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="object_fields")
+    user = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="object_fields", null=True
+    )
     crm_object = models.CharField(max_length=255, null=True)
     api_name = models.CharField(max_length=255)
     createable = models.BooleanField(default=False)
@@ -201,3 +203,6 @@ class ObjectField(TimeStampModel, IntegrationModel):
         default=False, help_text="Indicates if we can filter queries against this field"
     )
     objects = ObjectFieldQuerySet.as_manager()
+
+    def __str__(self):
+        return f"{self.label} {self.api_name}"

@@ -1,0 +1,44 @@
+[
+    {
+        "model": "crm.ObjectField",
+        "pk": "0bb152b5-aac1-4ee0-9c25-51ae98d55af2",
+        "fields": {
+            "api_name": "meeting_comments",
+            "createable": true,
+            "updateable": true,
+            "required": false,
+            "data_type": "String",
+            "display_value": "",
+            "label": "Notes",
+            "reference": false,
+            "reference_to_infos": [],
+            "relationship_name": null,
+            "options": [],
+            "is_public": true,
+            "filterable": true,
+            "datetime_created": "2020-08-03 11:39:23.632256Z",
+            "last_edited": "2020-08-03 11:39:23.632256Z"
+        }
+    },
+    {
+        "model": "crm.ObjectField",
+        "pk": "6407b7a1-a877-44e2-979d-1effafec5034",
+        "fields": {
+            "api_name": "meeting_type",
+            "createable": true,
+            "required": false,
+            "updateable": true,
+            "data_type": "String",
+            "display_value": "",
+            "label": "Note Subject",
+            "reference": false,
+            "reference_to_infos": [],
+            "relationship_name": null,
+            "options": [],
+            "is_public": true,
+            "filterable": true,
+            "datetime_created": "2020-08-03 11:39:23.632256Z",
+            "last_edited": "2020-08-03 11:39:23.632256Z"
+        }
+    }
+]

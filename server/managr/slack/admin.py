@@ -4,6 +4,7 @@ from django.forms.models import ModelChoiceField
 from . import models as slack_models
 from . import constants as slack_consts
 from managr.salesforce import models as sf_models
+from managr.crm import models as crm_models
 from managr.hubspot.models import HObjectField
 from django.db.models import Q
 from managr.core.models import User
@@ -20,22 +21,25 @@ class CustomFormFieldInline(admin.StackedInline):
         parent = self.get_parent_object_from_request(request)
         if parent:
             if db_field.name == "field":
-                queryset = sf_models.SObjectField.objects.filter(
+                queryset = crm_models.ObjectField.objects.filter(
                     (
-                        Q(salesforce_account__user__organization=parent.organization)
-                        & Q(salesforce_object=parent.resource)
-                        & Q(salesforce_account__user__is_admin=True)
+                        Q(user__organization=parent.organization)
+                        & Q(crm_object=parent.resource)
+                        & Q(user__is_admin=True)
                     )
                     | Q(is_public=True)
                 )
                 return ModelChoiceField(queryset)
         else:
-            queryset = sf_models.SObjectField.objects.all()
+            queryset = sf_models.ObjectField.objects.all()
             return ModelChoiceField(queryset)
         return super(CustomFormField, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-    model = slack_models.FormField
-    fields = ("order",)
+    model = slack_models.CustomFormField
+    fields = (
+        "field",
+        "order",
+    )
     extra = 0
 
 

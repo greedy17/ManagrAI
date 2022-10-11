@@ -414,7 +414,8 @@
               !addingFields &&
               addedFieldNames.includes('Name') &&
               formType === 'CREATE') ||
-            (!addingFields && formType === 'UPDATE' && resource === 'Account')
+            (!addingFields && formType === 'UPDATE' && resource === 'Account') ||
+            (resource == 'Deal' && !addingFields)
           "
           :style="
             resource === 'Opportunity'
@@ -456,10 +457,7 @@
         <div class="example--footer">
           <PulseLoadingSpinnerButton
             v-if="
-              resource === 'Opportunity' &&
-              !productSelected &&
-              !userHasProducts &&
-              formType === 'UPDATE'
+              resource === 'Deal' && !productSelected && !userHasProducts && formType === 'UPDATE'
             "
             @click="onSave"
             class="primary-button"
@@ -642,6 +640,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 import SlackOAuth from '@/services/slack'
 import { SObjectField } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -695,7 +694,7 @@ export default {
       dropdownLoading: false,
       currentStageForm: null,
       formFields: CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 200 },
       }),
       formFieldList: [],
@@ -969,9 +968,10 @@ export default {
             } else {
               fieldParam['updateable'] = true
             }
+            console.log(val)
             try {
               this.formFields.filters = {
-                salesforceObject: val,
+                crmObject: val,
 
                 ...fieldParam,
               }
@@ -1001,8 +1001,8 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: this.resource,
-
+                // salesforceObject: this.resource,
+                crmObject: this.resource,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -1049,6 +1049,7 @@ export default {
     },
   },
   created() {
+    console.log(this.formFields)
     this.getActionChoices()
   },
   methods: {

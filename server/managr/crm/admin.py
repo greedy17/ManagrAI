@@ -7,6 +7,7 @@ class CustomObjectField(admin.ModelAdmin):
     list_display = (
         "user",
         "label",
+        "crm_object",
         "data_type",
     )
 

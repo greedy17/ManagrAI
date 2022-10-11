@@ -25,4 +25,5 @@ class ObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     filter_class = ObjectFieldFilterSet
 
     def get_queryset(self):
+        print(self)
         return ObjectField.objects.for_user(self.request.user)
