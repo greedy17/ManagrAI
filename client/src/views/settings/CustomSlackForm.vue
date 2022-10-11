@@ -2058,7 +2058,7 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
 
-          // this.$router.go()
+          this.$router.go()
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
