@@ -2719,7 +2719,6 @@ def process_submit_digest_resource_data(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_submit_bulk_update(payload, context):
-    print(payload)
     user = User.objects.get(id=context.get("u"))
     state = payload["view"]["state"]["values"]
     pm = json.loads(payload["view"]["private_metadata"])

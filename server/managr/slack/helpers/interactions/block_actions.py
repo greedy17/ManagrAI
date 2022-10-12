@@ -2445,7 +2445,6 @@ def process_select_crm_field(payload, context):
     else:
         blocks.insert(index + 1, slack_field)
     pm.update(**context)
-    print(pm)
     loading_view_data = {
         "view_id": view_id,
         "view": {
