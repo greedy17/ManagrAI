@@ -1593,12 +1593,7 @@ export default {
     },
     closeCustomModal() {
       this.customObjectModal = false
-      if (this.selectedCustomObject /*&& !this.newCustomForm.customObject*/) {
-        // console.log('this.newCustomForm.customObject', this.newCustomForm.customObject)
-        // if (!this.newCustomForm.customObject) {
-        //   console.log('check hit')
-        //   this.customResource = this.resource
-        // }
+      if (this.selectedCustomObject) {
         this.selectedCustomObject = null
         this.formFields = CollectionManager.create({
           ModelClass: SObjectField,
@@ -1614,45 +1609,15 @@ export default {
         return
       }
       this.selectedCustomObjectName = this.selectedCustomObject.name
-      // function getTime(total, timeouts) {
-      //   const waitArr = []
-      //   let decay = total
-      //   for (let i = 0; i < timeouts-1; i++) {
-      //     const wait = Math.floor(Math.random() * 1500) + 1000
-      //     if (decay-wait <= 0) {
-      //       waitArr.push(Math.abs(decay-wait))
-      //       decay = 1
-      //     } else {
-      //       waitArr.push(wait)
-      //       decay = decay - wait
-      //     }
-      //   }
-      //   waitArr.push(decay)
-      //   return waitArr
-      // }
       try {
         this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
-        // Make call to salesforce to retrieve fields
-        // give name, will return task name
-        // use polling to wait until it's done
         const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name)
         this.verboseName = res.verbose_name
         this.checker = setInterval(() => {
           this.checkTask()
           this.loaderText = this.loaderTextList[this.changeLoaderText()]
         }, 2000)
-        // const times = getTime(6000, 3)
-        // setTimeout(() => {
-        //   this.loaderText = 'Really loading...'
-        //   setTimeout(() => {
-        //     this.loaderText = 'I promise it is loading...'
-        //     setTimeout(() => {
-        //       this.modalLoading = false;
-        //       this.loaderText = ''
-        //     }, 2000)
-        //   }, 2000)
-        // }, 2000)
       } catch(e) {
         console.log(e)
       }
@@ -1665,7 +1630,6 @@ export default {
       }
     },
     changeLoaderText() {
-      // const index = Math.floor(Math.random() * 3)
       let newIndex
       if (this.oldIndex === 2) {
         newIndex = 2
@@ -1673,12 +1637,6 @@ export default {
         newIndex = this.oldIndex + 1
         this.oldIndex = newIndex
       }
-      // if (index !== this.oldIndex) {
-      //   newIndex = index
-      //   this.oldIndex = index
-      // } else {
-      //   newIndex = this.changeLoaderText()
-      // }
       return newIndex
     },
     stopChecker() {
@@ -1698,6 +1656,7 @@ export default {
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
       }
+      this.closeCustomModal()
     },
     watcherCustomFields() {
       this.customFields.refresh()
@@ -2016,9 +1975,6 @@ export default {
       if (~this.currentFields.findIndex((f) => f == field.id)) {
         this.removedFields = [this.removedFields, field]
       }
-      // if (this.customObjectModal) {
-      //   this.customSlackForm.customObject = this.customResource
-      // }
     },
     async onSave() {
       if (

@@ -223,7 +223,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
   async getCustomObjectFields(sobject) {
     try {
-      console.log('hit')
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/custom-objects-field-sync/', { sobject })
       return res.data
     } catch (e) {
