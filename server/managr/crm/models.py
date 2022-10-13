@@ -206,3 +206,16 @@ class ObjectField(TimeStampModel, IntegrationModel):
 
     def __str__(self):
         return f"{self.label} {self.api_name}"
+
+    @property
+    def reference_display_label(self):
+        """returns the reference object's name as a display label"""
+
+        if (
+            self.data_type == "Reference"
+            and self.reference
+            and self.relationship_name
+            and not self.is_public
+        ):
+            return self.relationship_name
+        return self.label

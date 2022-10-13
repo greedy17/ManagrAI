@@ -570,6 +570,7 @@ class SlackFormsViewSet(
 
     def update(self, request, *args, **kwargs):
         data = self.request.data
+        print(data)
         fields = data.pop("fields", [])
         fields_ref = data.pop("fields_ref", [])
         data.update({"organization": self.request.user.organization_id})
@@ -577,10 +578,10 @@ class SlackFormsViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
-        instance.fields.clear()
+        instance.custom_fields.clear()
         fields_state = {}
         for i, field in enumerate(fields_ref):
-            instance.fields.add(
+            instance.custom_fields.add(
                 field["id"],
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )

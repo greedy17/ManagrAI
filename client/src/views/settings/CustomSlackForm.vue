@@ -472,6 +472,13 @@
             text="Save"
             :loading="savingForm"
           />
+          <PulseLoadingSpinnerButton
+            v-if="resource === 'Deal' && !productSelected && formType === 'UPDATE'"
+            @click="onSave"
+            class="primary-button"
+            text="Save"
+            :loading="savingForm"
+          />
 
           <div
             v-if="

@@ -169,4 +169,5 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "is_public",
             "imported_by",
             "filterable",
+            "reference_display_label",
         )

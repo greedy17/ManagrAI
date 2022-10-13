@@ -43,8 +43,14 @@ class CustomFormFieldInline(admin.StackedInline):
     extra = 0
 
 
-class CustomFormField(admin.ModelAdmin):
+class CustomFormFieldAdmin(admin.ModelAdmin):
     model = slack_models.FormField
+    list_display = ("form", "order")
+    ordering = ("-datetime_created",)
+
+
+class CustomFormField(admin.ModelAdmin):
+    model = slack_models.CustomFormField
     list_display = ("form", "order")
     ordering = ("-datetime_created",)
 
@@ -68,4 +74,5 @@ admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)
 admin.site.register(slack_models.OrgCustomSlackFormInstance, CustomOrgSlackFormsInstance)
 admin.site.register(slack_models.OrganizationSlackIntegration)
 admin.site.register(slack_models.UserSlackIntegration)
-admin.site.register(slack_models.FormField, CustomFormField)
+admin.site.register(slack_models.FormField, CustomFormFieldAdmin)
+admin.site.register(slack_models.CustomFormField, CustomFormField)

@@ -192,6 +192,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
+    custom_fields = models.ManyToManyField("salesforce.ObjectField", through="crm.CustomFormField")
     fields = models.ManyToManyField("salesforce.SObjectField", through="slack.FormField")
 
     objects = OrgCustomSlackFormQuerySet.as_manager()
@@ -298,7 +299,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return model_object
 
     def get_user_fields(self):
-        print(self.template)
         template_fields = (
             self.template.formfield_set.all()
             .values_list("field__api_name", "field__salesforce_object",)
