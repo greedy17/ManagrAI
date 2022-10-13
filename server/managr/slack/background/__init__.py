@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 from background_task import background
 
 from managr.api.decorators import slack_api_exceptions, log_all_exceptions
@@ -50,27 +51,47 @@ def _process_send_paginated_alerts(payload, context):
             )
         return
     alert_template = alert_instance.template
-    bulk_update_block = block_builders.simple_button_block(
-        "Update in Bulk",
-        "bulk_update",
-        action_id=action_with_params(
-            slack_const.PROCESS_BULK_UPDATE,
-            params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
-        ),
+    action_blocks = [
+        block_builders.simple_button_block(
+            "Update in Bulk",
+            "bulk_update",
+            action_id=action_with_params(
+                slack_const.PROCESS_BULK_UPDATE,
+                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
+            ),
+        )
+    ]
+    action_blocks.append(
+        block_builders.simple_button_block(
+            "Get Summary",
+            "get_summary",
+            action_id=action_with_params(
+                slack_const.GET_SUMMARY,
+                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
+            ),
+        )
     )
-    summary_block = block_builders.simple_button_block(
-        "Get Summary",
-        "get_summary",
-        action_id=action_with_params(
-            slack_const.GET_SUMMARY,
-            params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
-        ),
-    )
+
+    if settings.IN_STAGING or settings.IN_DEV:
+        action_blocks.append(
+            block_builders.simple_button_block(
+                "Get Deal Score",
+                "get_deal_score",
+                action_id=action_with_params(
+                    slack_const.GET_DEAL_SCORE,
+                    params=[
+                        f"invocation={invocation}",
+                        f"config_id={config_id}",
+                        f"u={str(user.id)}",
+                    ],
+                ),
+            )
+        )
     blocks = [
         block_builders.header_block(
             f"{len(alert_instances)} results for workflow {alert_template.title}"
         ),
-        block_builders.actions_block([bulk_update_block, summary_block]),
+        block_builders.actions_block(action_blocks),
         {"type": "divider"},
     ]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
