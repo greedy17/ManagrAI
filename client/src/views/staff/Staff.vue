@@ -606,6 +606,7 @@
       <h3>Organizations</h3>
       <Multiselect
         placeholder="Select Organization"
+        @select="clearUsersAndSlackForm"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
         v-model="selected_org"
         :options="organizations /*.list*/"
@@ -770,9 +771,9 @@
             {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.form_type : '-' }} by
             {{ getUserName(slackFormInstance.user) }}
             {{
-              slackFormInstance.submissionDate
-                ? `at ${formatDateTime(slackFormInstance.submissionDate)} from ${
-                    slackFormInstance.updateSource
+              slackFormInstance.submission_date
+                ? `at ${formatDateTime(slackFormInstance.submission_date)} from ${
+                    slackFormInstance.update_source
                   }`
                 : `(Not Submitted)`
             }}
@@ -783,7 +784,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(meetingWorkflow, i) in orgMeetingWorkflows /* here */"
+          v-for="(meetingWorkflow, i) in orgMeetingWorkflows"
           :key="meetingWorkflow.id"
         >
           <h4 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
@@ -857,7 +858,7 @@ export default {
       },
       selectedUsers: null,
       selectedSlackForms: null,
-      orgUsers: null,
+      orgUsers: [],
       orgSlackForms: [],
       orgSlackFormInstances: null,
       selectedCommand: '',
@@ -906,6 +907,14 @@ export default {
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
       return user ? `${user.firstName} ${user.lastName}` : '-'
+    },
+    clearUsersAndSlackForm() {
+      this.selectedSlackForms = null
+      this.selectedUsers = null
+    },
+    async getAllOrgUsers(orgId) {
+      const res = await User.api.getAllOrgUsers(orgId)
+      return res
     },
     async getAllForms() {
       try {
@@ -1086,7 +1095,7 @@ export default {
       }
     },
     customUserLabel(user) {
-      return user.fullName.trim() ? user.fullName : user.email
+      return user.full_name.trim() ? user.full_name : user.email
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -1260,15 +1269,18 @@ export default {
   watch: {
     async organizations() {
       if (this.selected_org) {
-        this.orgUsers = this.filterUsers(this.selected_org.id)
-        this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
-        this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
+        // this.orgUsers = this.filterUsers(this.selected_org.id)
+        // this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
+        // this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
       }
     },
     async selected_org() {
       if (this.selected_org) {
         this.loading = false
-        this.orgUsers = this.filterUsers(this.selected_org.id)
+        this.ignoreEmails = this.selected_org.ignore_email_ref
+        this.hasProducts = this.selected_org.has_products
+        this.stateActive = this.selected_org.state
+        this.orgUsers = await this.getAllOrgUsers(this.selected_org.id)
         this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
         this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
         this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
