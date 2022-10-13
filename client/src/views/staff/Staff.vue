@@ -784,7 +784,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(meetingWorkflow, i) in orgMeetingWorkflows /* here */"
+          v-for="(meetingWorkflow, i) in orgMeetingWorkflows"
           :key="meetingWorkflow.id"
         >
           <h4 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
