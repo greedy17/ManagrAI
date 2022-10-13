@@ -858,7 +858,7 @@ export default {
       },
       selectedUsers: null,
       selectedSlackForms: null,
-      orgUsers: null,
+      orgUsers: [],
       orgSlackForms: [],
       orgSlackFormInstances: null,
       selectedCommand: '',
@@ -913,9 +913,8 @@ export default {
       this.selectedUsers = null
     },
     async getAllOrgUsers(orgId) {
-      console.log('getAllOrgUsers', this.allUsers)
-      // const res = await User.api.getAllOrgUsers(orgId)
-      // this.allUsers = res
+      const res = await User.api.getAllOrgUsers(orgId)
+      return res
     },
     async getAllForms() {
       try {
@@ -1096,7 +1095,7 @@ export default {
       }
     },
     customUserLabel(user) {
-      return user.fullName.trim() ? user.fullName : user.email
+      return user.full_name.trim() ? user.full_name : user.email
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -1148,7 +1147,6 @@ export default {
     openModal(name, data) {
       this.modalName = name
       this.modalInfo = data
-      console.log('data', data)
       this.editOpModalOpen = true
     },
     resetEdit() {
@@ -1271,9 +1269,9 @@ export default {
   watch: {
     async organizations() {
       if (this.selected_org) {
-        this.orgUsers = this.filterUsers(this.selected_org.id)
-        this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
-        this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
+        // this.orgUsers = this.filterUsers(this.selected_org.id)
+        // this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
+        // this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
       }
     },
     async selected_org() {
@@ -1282,8 +1280,7 @@ export default {
         this.ignoreEmails = this.selected_org.ignore_email_ref
         this.hasProducts = this.selected_org.has_products
         this.stateActive = this.selected_org.state
-        this.orgUsers = this.filterUsers(this.selected_org.id) // delete this
-        // this.orgUsers = this.getAllOrgUsers(this.selected_org.id)
+        this.orgUsers = await this.getAllOrgUsers(this.selected_org.id)
         this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
         this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
         this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
