@@ -1274,6 +1274,9 @@ export default {
     async selected_org() {
       if (this.selected_org) {
         this.loading = false
+        this.ignoreEmails = this.selected_org.ignore_email_ref
+        this.hasProducts = this.selected_org.has_products
+        this.stateActive = this.selected_org.state
         this.orgUsers = this.filterUsers(this.selected_org.id)
         this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
         this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
