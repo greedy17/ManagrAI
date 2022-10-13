@@ -912,9 +912,9 @@ export default {
       this.selectedSlackForms = null
       this.selectedUsers = null
     },
-    async getAllUsers() {
-      console.log('getAllUsers', this.allUsers)
-      // const res = await User.api.getAllUsers()
+    async getAllOrgUsers(orgId) {
+      console.log('getAllOrgUsers', this.allUsers)
+      // const res = await User.api.getAllOrgUsers(orgId)
       // this.allUsers = res
     },
     async getAllForms() {
@@ -1266,7 +1266,6 @@ export default {
   created() {
     this.getTasks()
     this.getStaffOrgs()
-    this.getAllUsers()
     this.allUsers.refresh()
   },
   watch: {
@@ -1283,7 +1282,8 @@ export default {
         this.ignoreEmails = this.selected_org.ignore_email_ref
         this.hasProducts = this.selected_org.has_products
         this.stateActive = this.selected_org.state
-        this.orgUsers = this.filterUsers(this.selected_org.id)
+        this.orgUsers = this.filterUsers(this.selected_org.id) // delete this
+        // this.orgUsers = this.getAllOrgUsers(this.selected_org.id)
         this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
         this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
         this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(

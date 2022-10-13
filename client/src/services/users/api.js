@@ -140,12 +140,12 @@ export default class UserAPI {
     return promise
   }
 
-  async getAllUsers() {
+  async getAllOrgUsers(org_id) {
     try {
-      const response = await this.client.get(ALL_USERS_ENDPOINT)
+      const response = await this.client.get(ALL_USERS_ENDPOINT, { params: { org_id } })
       return response.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'UsersAPI.getAllUsers' })
+      apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
     }
   }
 
