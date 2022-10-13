@@ -243,7 +243,7 @@
             <div class="flex-row-spread sticky border-bottom">
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>{{ modalInfo.firstName }} {{ modalInfo.lastName }}</h4>
+                <h4>{{ modalInfo.first_name }} {{ modalInfo.last_name }}</h4>
               </div>
             </div>
             <section class="note-section">
@@ -251,41 +251,41 @@
               <p class="note-section__body">
                 <span class="underline">Email:</span>
                 {{ modalInfo.email ? modalInfo.email : 'None' }}
-                <span class="underline">Is Active:</span> {{ modalInfo.isActive }}
-                <span class="underline">Is Invited:</span> {{ modalInfo.isInvited }}
-                <span class="underline">Is Admin:</span> {{ modalInfo.isAdmin }}
-                <span class="underline">Is Staff:</span> {{ modalInfo.isStaff }}
-                <span class="underline">User Level:</span> {{ modalInfo.userLevel }}
+                <span class="underline">Is Active:</span> {{ modalInfo.is_active }}
+                <span class="underline">Is Invited:</span> {{ modalInfo.is_invited }}
+                <span class="underline">Is Admin:</span> {{ modalInfo.is_admin }}
+                <span class="underline">Is Staff:</span> {{ modalInfo.is_staff }}
+                <span class="underline">User Level:</span> {{ modalInfo.user_level }}
                 <span class="underline">Role:</span> {{ modalInfo.role }}
                 <span class="underline">Timezone:</span> {{ modalInfo.timezone }}
                 <span class="underline">Activated Managr Configs:</span>
-                {{ modalInfo.activatedManagrConfigs ? modalInfo.activatedManagrConfigs : 'None' }}
+                {{ modalInfo.activated_managr_configs ? modalInfo.activated_managr_configs : 'None' }}
               </p>
             </section>
             <section class="note-section">
               <p class="note-section__title">User Slack Integrations</p>
               <p class="note-section__body">
                 <span class="underline">Slack ID:</span>
-                {{ modalInfo.slackRef ? modalInfo.slackRef.slackId : 'None' }}
+                {{ modalInfo.slack_ref ? modalInfo.slack_ref.slack_id : 'None' }}
                 <span class="underline">Channel:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.channel
-                    ? modalInfo.slackAccount.channel
+                  modalInfo.slack_account && modalInfo.slack_account.channel
+                    ? modalInfo.slack_account.channel
                     : 'None'
                 }}
                 <span class="underline">Organization Slack:</span>
-                {{ modalInfo.organizationRef.slackIntegration }}
+                {{ modalInfo.organization_ref.slack_integration }}
                 <span class="underline">Is Onboarded:</span> {{ modalInfo.onboarding }}
                 <span class="underline">Recap Channel:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.recapChannel
-                    ? modalInfo.slackAccount.recapChannel
+                  modalInfo.slack_account && modalInfo.slack_account.recap_channel
+                    ? modalInfo.slack_account.recap_channel
                     : 'None'
                 }}
                 <span class="underline">Recap Recievers:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.recapReceivers
-                    ? modalInfo.slackAccount.recapReceivers
+                  modalInfo.slack_account && modalInfo.slack_account.recap_receivers
+                    ? modalInfo.slack_account.recap_receivers
                     : 'None'
                 }}
               </p>
@@ -293,98 +293,98 @@
             <section class="note-section">
               <p class="note-section__title">
                 Salesforce ({{
-                  modalInfo.salesforceAccountRef ? modalInfo.salesforceAccountRef.id : 'None'
+                  modalInfo.salesforce_account_ref ? modalInfo.salesforce_account_ref.id : 'None'
                 }})
               </p>
               <p class="note-section__body">
                 <span class="underline">SFDC ID:</span>
                 {{
-                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.salesforceId
-                    ? modalInfo.salesforceAccountRef.salesforceId
+                  modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.salesforce_id
+                    ? modalInfo.salesforce_account_ref.salesforce_id
                     : 'None'
                 }}
                 <span class="underline">sobjects:</span>
                 {{
-                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.sobjects
-                    ? modalInfo.salesforceAccountRef.sobjects
+                  modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.sobjects
+                    ? modalInfo.salesforce_account_ref.sobjects
                     : 'None'
                 }}
                 <span class="underline">Instance URL:</span>
                 {{
-                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.instanceUrl
-                    ? modalInfo.salesforceAccountRef.instanceUrl
+                  modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.instance_url
+                    ? modalInfo.salesforce_account_ref.instance_url
                     : 'None'
                 }}
                 <span class="underline">Access Token:</span>
                 {{
-                  modalInfo.salesforceAccountRef && modalInfo.salesforceAccountRef.accessToken
-                    ? modalInfo.salesforceAccountRef.accessToken
+                  modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.access_token
+                    ? modalInfo.salesforce_account_ref.access_token
                     : 'None'
                 }}
               </p>
             </section>
             <section class="note-section">
               <p class="note-section__title">
-                Nylas ({{ modalInfo.nylasRef ? modalInfo.nylasRef.id : 'None' }})
+                Nylas ({{ modalInfo.nylas_ref ? modalInfo.nylas_ref.id : 'None' }})
               </p>
               <p class="note-section__body">
                 <span class="underline">Access Token:</span>
                 {{
-                  modalInfo.nylasRef && modalInfo.nylasRef.accessToken
-                    ? modalInfo.nylasRef.accessToken
+                  modalInfo.nylas_ref && modalInfo.nylas_ref.access_token
+                    ? modalInfo.nylas_ref.access_token
                     : 'None'
                 }}
                 <span class="underline">Email:</span>
                 {{
-                  modalInfo.nylasRef && modalInfo.nylasRef.emailAddress
-                    ? modalInfo.nylasRef.emailAddress
+                  modalInfo.nylas_ref && modalInfo.nylas_ref.email_address
+                    ? modalInfo.nylas_ref.email_address
                     : 'None'
                 }}
                 <span class="underline">Event Calendar ID:</span>
                 {{
-                  modalInfo.nylasRef && modalInfo.nylasRef.eventCalendarId
-                    ? modalInfo.nylasRef.eventCalendarId
+                  modalInfo.nylas_ref && modalInfo.nylas_ref.event_calendar_id
+                    ? modalInfo.nylas_ref.event_calendar_id
                     : 'None'
                 }}
                 <span class="underline">Provider:</span>
                 {{
-                  modalInfo.nylasRef && modalInfo.nylasRef.provider
-                    ? modalInfo.nylasRef.provider
+                  modalInfo.nylas_ref && modalInfo.nylas_ref.provider
+                    ? modalInfo.nylas_ref.provider
                     : 'None'
                 }}
               </p>
             </section>
             <section class="note-section">
               <p class="note-section__title">
-                Zoom ({{ modalInfo.zoomRef ? modalInfo.zoomRef.id : 'None' }})
+                Zoom ({{ modalInfo.zoom_ref ? modalInfo.zoom_ref.id : 'None' }})
               </p>
               <p class="note-section__body">
                 <span class="underline">Zoom ID:</span>
                 {{
-                  modalInfo.zoomRef && modalInfo.zoomRef.zoomId ? modalInfo.zoomRef.zoomId : 'None'
+                  modalInfo.zoom_ref && modalInfo.zoom_ref.zoom_id ? modalInfo.zoom_ref.zoom_id : 'None'
                 }}
                 <span class="underline">Timezone:</span>
                 {{
-                  modalInfo.zoomRef && modalInfo.zoomRef.timezone
-                    ? modalInfo.zoomRef.timezone
+                  modalInfo.zoom_ref && modalInfo.zoom_ref.timezone
+                    ? modalInfo.zoom_ref.timezone
                     : 'None'
                 }}
                 <span class="underline">Account ID:</span>
                 {{
-                  modalInfo.zoomRef && modalInfo.zoomRef.accountId
-                    ? modalInfo.zoomRef.accountId
+                  modalInfo.zoom_ref && modalInfo.zoom_ref.account_id
+                    ? modalInfo.zoom_ref.account_id
                     : 'None'
                 }}
                 <span class="underline">Access Token:</span>
                 {{
-                  modalInfo.zoomRef && modalInfo.zoomRef.accessToken
-                    ? modalInfo.zoomRef.accessToken
+                  modalInfo.zoom_ref && modalInfo.zoom_ref.access_token
+                    ? modalInfo.zoom_ref.access_token
                     : 'None'
                 }}
                 <span class="underline">Fake Meeting ID:</span>
                 {{
-                  modalInfo.zoomRef && modalInfo.zoomRef.fakeMeetingIdRef
-                    ? modalInfo.zoomRef.fakeMeetingIdRef
+                  modalInfo.zoom_ref && modalInfo.zoom_ref.fake_meeting_id_ref
+                    ? modalInfo.zoom_ref.fake_meeting_id_ref
                     : 'None'
                 }}
               </p>
@@ -392,38 +392,38 @@
             <section class="note-section">
               <p class="note-section__title">
                 Slack Account ({{
-                  modalInfo.slackAccount ? modalInfo.slackAccount.slackId : 'None'
+                  modalInfo.slack_account ? modalInfo.slack_account.slack_id : 'None'
                 }})
               </p>
               <p class="note-section__body">
                 <span class="underline">Slack ID:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.slackId
-                    ? modalInfo.slackAccount.slackId
+                  modalInfo.slack_account && modalInfo.slack_account.slack_id
+                    ? modalInfo.slack_account.slack_id
                     : 'None'
                 }}
                 <span class="underline">Channel:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.channel
-                    ? modalInfo.slackAccount.channel
+                  modalInfo.slack_account && modalInfo.slack_account.channel
+                    ? modalInfo.slack_account.channel
                     : 'None'
                 }}
                 <span class="underline">Zoom Channel:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.zoomChannel
-                    ? modalInfo.slackAccount.zoomChannel
+                  modalInfo.slack_account && modalInfo.slack_account.zoom_channel
+                    ? modalInfo.slack_account.zoom_channel
                     : 'None'
                 }}
                 <span class="underline">Recap Receivers:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.recapReceivers
-                    ? modalInfo.slackAccount.recapReceivers
+                  modalInfo.slack_account && modalInfo.slack_account.recap_receivers
+                    ? modalInfo.slack_account.recap_receivers
                     : 'None'
                 }}
                 <span class="underline">Real Time Alert Configs:</span>
                 {{
-                  modalInfo.slackAccount && modalInfo.slackAccount.realtimeAlertConfigs
-                    ? modalInfo.slackAccount.realtimeAlertConfigs
+                  modalInfo.slack_account && modalInfo.slack_account.realtime_alert_configs
+                    ? modalInfo.slack_account.realtime_alert_configs
                     : 'None'
                 }}
               </p>
@@ -906,7 +906,7 @@ export default {
     },
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
-      return user ? `${user.firstName} ${user.lastName}` : '-'
+      return user ? `${user.first_name} ${user.last_name}` : '-'
     },
     clearUsersAndSlackForm() {
       this.selectedSlackForms = null
@@ -1114,6 +1114,7 @@ export default {
       if (!this.selectedUsers || !this.selectedUsers.length) {
         return
       }
+      // this.selectedUsers = [this.selectedUsers]
       this.selectedUsers.forEach((u, i) => {
         this.eventCalendarIDObj[i] = u.nylasRef.eventCalendarId
         this.fakeMeetingIDObj[i] = u.zoomRef.fakeMeetingIdRef
