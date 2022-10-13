@@ -23,9 +23,9 @@ class CustomFormFieldInline(admin.StackedInline):
             if db_field.name == "field":
                 queryset = crm_models.ObjectField.objects.filter(
                     (
-                        Q(user__organization=parent.organization)
-                        & Q(crm_object=parent.resource)
-                        & Q(user__is_admin=True)
+                        Q(salesforce_account__user__organization=parent.organization)
+                        & Q(salesforce_object=parent.resource)
+                        & Q(salesforce_account__user__team_lead_of=parent.team)
                     )
                     | Q(is_public=True)
                 )
@@ -58,6 +58,11 @@ class CustomFormField(admin.ModelAdmin):
 class CustomOrgSlackForms(admin.ModelAdmin):
     model = slack_models.OrgCustomSlackForm
     inlines = (CustomFormFieldInline,)
+    list_display = (
+        "form_type",
+        "resource",
+        "team",
+    )
     list_filter = ("organization",)
 
 

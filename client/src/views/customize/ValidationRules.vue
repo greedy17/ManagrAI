@@ -537,7 +537,7 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  width: 80vw;
+  width: 50vw;
 }
 .container {
   color: $base-gray;
@@ -547,6 +547,7 @@ export default {
   align-items: flex-start;
   flex-direction: column;
   height: 100%;
+  outline: 1px solid red;
 }
 .box__content--expanded {
   max-height: 90vh;
@@ -567,7 +568,7 @@ export default {
   border-radius: 0.3rem;
   background-color: $white;
   color: $base-gray;
-  width: 82vw;
+  width: 48vw;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -641,7 +642,7 @@ button:disabled {
 .stage {
   &__dropdown {
     min-height: 40vh;
-    width: 82vw;
+    width: 48vw;
     border-radius: 0.3rem;
     border: 1px solid #e8e8e8;
     background-color: $white;

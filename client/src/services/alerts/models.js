@@ -106,6 +106,7 @@ export default class AlertTemplate extends AlertTemplateRef {
   static groups = new fields.ArrayField({ type: new fields.CharField() })
   static configs = new fields.ArrayField({ type: new fields.CharField() })
   static instances = new fields.ArrayField({ type: new fields.CharField() })
+  static sobjectInstances = new fields.Field({})
 }
 export class Config extends Model {
   static api = new RealTimeAlertConfigAPI(Config)

@@ -166,6 +166,14 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       return apiErrorHandler({ apiName: 'Salesforce API' })(e)
     }
   }
+  async bulkUpdate(formData) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/bulk-update/', formData)
+      return res.data
+    } catch (e) {
+      return apiErrorHandler({ apiName: 'Salesforce API' })(e)
+    }
+  }
   async createResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/create/', formData)
@@ -190,9 +198,9 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
     }
   }
-  async getSobjectPicklistValues(sobject_id, value, for_filter = false) {
+  async getSobjectPicklistValues(sobject_id, value, for_filter = false, for_meetings = false) {
     try {
-      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value, for_filter })
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/sobject-picklist-values/', { params: sobject_id, value, for_filter, for_meetings })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)

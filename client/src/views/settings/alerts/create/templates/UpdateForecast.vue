@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.UPDATE_FORECAST" />
+  <PopularWorkflows :config="allConfigs.NINETY_DAY_PIPELINE" />
 </template>
 
 <script>
@@ -11,7 +11,7 @@ import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWo
 import allConfigs from '../../configs'
 
 export default {
-  name: 'UpdateForecast',
+  name: '90DayPipeline',
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

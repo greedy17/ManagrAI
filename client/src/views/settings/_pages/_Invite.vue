@@ -1,6 +1,47 @@
 <template>
   <div class="invite-container">
     <Modal
+      v-if="uninviteModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleConfirmCancel()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Are you sure?</h3>
+          </div>
+          <div class="flex-row">
+            <h4 class="invite-form__subtitle">
+              By clicking Confirm, you will be removing this user from your organization.
+            </h4>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="handleUninvite(uninviteId)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                text="Confirm"
+                :loading="loading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem">
+                Cancel
+              </div>
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
+    <Modal
       v-if="inviteOpen"
       dimmed
       @close-modal="
@@ -11,10 +52,10 @@
     >
       <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
         <div class="header">
-          <h3 class="invite-form__title">Invite Users via Slack</h3>
-          <h4 class="invite-form__subtitle">
-            {{ $store.state.user.organizationRef.name }}
-          </h4>
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Invite Users via Slack</h3>
+          </div>
         </div>
 
         <div
@@ -29,7 +70,7 @@
                   v-model="selectedMember"
                   :options="slackMembers.members"
                   openDirection="below"
-                  style="min-width: 15vw"
+                  style="width: 26vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="realName"
@@ -62,7 +103,7 @@
                   v-model="selectedLevel"
                   :options="userTypes"
                   openDirection="below"
-                  style="min-width: 15vw"
+                  style="width: 26vw"
                   selectLabel="Enter"
                   label="key"
                 >
@@ -81,24 +122,33 @@
           </div>
         </div>
         <div class="invite-form__actions">
-          <template>
-            <PulseLoadingSpinnerButton
-              @click="handleInvite"
-              class="invite-button"
-              text="Invite"
-              :loading="loading"
-              >Invite</PulseLoadingSpinnerButton
-            >
-            <div class="cancel-button" @click="handleCancel">Cancel</div>
-          </template>
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="handleInvite"
+                class="invite-button"
+                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                text="Invite"
+                :loading="loading"
+                >Invite</PulseLoadingSpinnerButton
+              >
+              <div
+                class="cancel-button"
+                @click="handleCancel"
+                style="margin-right: 2.5rem; margin-bottom: 0.4rem"
+              >
+                Cancel
+              </div>
+            </template>
+          </div>
         </div>
       </form>
       <div v-else class="invite-form" style="padding: 2rem">
         <div class="header">
-          <h3 class="invite-form__title">Invite Users to Managr</h3>
-          <h4 class="invite-form__subtitle">
-            {{ $store.state.user.organizationRef.name }}
-          </h4>
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Invite Users to Managr</h3>
+          </div>
         </div>
 
         <div style="margin-top: 1rem">
@@ -168,15 +218,11 @@
       </div>
     </Modal>
     <div class="invite-list__container">
-      <div class="key">
+      <!-- <div class="key">
         <div class="left-key">
-          <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
+          <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
         </div>
-        <div class="right-key">
-          <p class="complete">Complete</p>
-          <p class="incomplete">Incomplete</p>
-        </div>
-      </div>
+      </div> -->
 
       <div class="invite-list__section__container" style="margin-bottom: 2rem">
         <div
@@ -203,25 +249,26 @@
         >
           Integrations
         </div>
+        <div style="position: relative; right: 3%"></div>
       </div>
 
       <div class="invite-list__section__container">
-        <img class="back-logo" src="@/assets/images/logo.png" />
+        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div
-          style="display: flex; align-items: flex-start; color: #199e54; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 14px"
           class="invite-list__section__item col"
         >
           {{ user.fullName }}
           <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 14px"
           class="invite-list__section__item"
         >
-          {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
+          {{ user.userLevel == 'MANAGER' ? 'Team Leader (You)' : 'Rep(You)' }}
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 14px"
           class="invite-list__section__item"
         >
           Registered
@@ -231,74 +278,93 @@
           style="display: flex; align-items: flex-start"
           class="invite-list__section__item invite-list__status"
         >
-          <span :class="user.slackRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
+          <span :class="user.slackRef ? '' : 'grayscale'">
+            <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
           </span>
-          <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
+          <span :class="user.hasSalesforceIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/salesforce.png" height="18px" alt="" />
           </span>
-          <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
+          <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/zoom.png" alt="" height="18px" />
           </span>
-          <span :class="user.nylasRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
+          <span :class="user.nylasRef ? '' : 'grayscale'">
+            <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
           </span>
         </div>
+        <div style="position: relative; right: 3%; cursor: text; visibility: hidden">
+          <img src="@/assets/images/remove.svg" style="filter: invert(60%)" height="22px" alt="" />
+        </div>
       </div>
-      <div v-for="member in team.list" :key="member.id" class="invite-list__section__container">
-        <template v-if="member.id !== user.id">
+      <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
+        <template
+          v-if="
+            member.id !== user.id &&
+            member.team === $store.state.user.team &&
+            !(member.firstName && !member.isActive)
+          "
+        >
           <div
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item col"
+            @click="test(member)"
           >
-            {{ member.firstName ? member.firstName : 'Pending' }}
+            <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
+            {{ !member.firstName ? 'Pending' : member.isActive ? member.firstName : '[REMOVED]' }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
-              {{ member.email }}
+              {{ !member.firstName ? member.email : member.isActive ? member.email : '[REMOVED]' }}
             </p>
           </div>
           <div
             v-if="member.userLevel == 'MANAGER'"
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             Manager
           </div>
           <div
             v-else-if="member.userLevel == 'SDR'"
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             SDR
           </div>
           <div
             v-else-if="member.userLevel == 'REP'"
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             REP
           </div>
           <div
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
-            {{ member.isActive ? 'Registered' : 'Pending..' }}
+            <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
+            {{ !member.firstName ? 'Pending...' : member.isActive ? 'Registered' : '[REMOVED]' }}
           </div>
           <div
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item invite-list__status"
           >
-            <span :class="member.slackRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
+            <span :class="member.slackRef ? '' : 'grayscale'">
+              <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
+            <span :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
+              <img src="@/assets/images/salesforce.png" height="18px" alt="" />
             </span>
-            <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
+            <span :class="member.hasZoomIntegration ? '' : 'grayscale'">
+              <img src="@/assets/images/zoom.png" alt="" height="18px" />
             </span>
-            <span :class="member.nylasRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
+            <span :class="member.nylasRef ? '' : 'grayscale'">
+              <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
             </span>
+          </div>
+          <div
+            v-if="!member.isAdmin && member.isActive"
+            style="position: relative; right: 3%; cursor: pointer"
+            @click="openUninviteModal(member.id)"
+          >
+            <img src="@/assets/images/remove.svg" class="red" height="22px" alt="" />
           </div>
         </template>
       </div>
@@ -327,6 +393,9 @@ export default {
       type: Boolean,
       default: false,
     },
+    handleEdit: {
+      type: Function,
+    },
   },
   data() {
     return {
@@ -339,6 +408,8 @@ export default {
       organizationRef: null,
       slackMembers: new SlackUserList(),
       inviteRecipient: '',
+      uninviteId: '',
+      uninviteModal: false,
       selectedUserType: User.types.REP,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
@@ -366,6 +437,9 @@ export default {
     await this.listUsers()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     onCopy: function () {
       this.$toast('Link copied.', {
         timeout: 2000,
@@ -437,7 +511,6 @@ export default {
           (member) => member.id == this.userInviteForm.field.slackId.value,
         )[0].profile.email
         const res = await User.api.invite(this.userInviteForm.value)
-        console.log(res)
         this.$toast('Invitation Sent', {
           timeout: 2000,
           position: 'top-left',
@@ -450,7 +523,7 @@ export default {
       } catch (e) {
         let err = e.response.data
         if (err.email) {
-          this.$toast('Emanil error', {
+          this.$toast('Email error', {
             timeout: 2000,
             position: 'top-left',
             type: 'error',
@@ -461,6 +534,41 @@ export default {
       } finally {
         this.loading = false
         this.inviteOpen = !this.inviteOpen
+      }
+    },
+    handleConfirmCancel() {
+      this.uninviteModal = false
+      this.uninviteId = ''
+    },
+    openUninviteModal(memberId) {
+      this.uninviteModal = true
+      this.uninviteId = memberId
+    },
+    async handleUninvite(id) {
+      this.loading = true
+      try {
+        const res = await User.api.uninvite(id)
+        this.$toast('User Removed Successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        await this.refresh()
+        // this.resetData()
+        this.uninviteModal = false
+      } catch (e) {
+        console.log(e)
+        this.$toast('Something went wrong', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loading = false
       }
     },
     async handleInviteNonSlack() {
@@ -516,6 +624,12 @@ export default {
     hasSlack() {
       return !!this.$store.state.user.slackRef
     },
+    usersInTeam() {
+      return this.team.list.filter(
+        (member) =>
+          member.id !== this.$store.state.user.id && member.team === this.$store.state.user.team,
+      )
+    },
   },
 }
 </script>
@@ -530,11 +644,28 @@ export default {
   color: $very-light-gray;
   padding-left: 1rem;
 }
+.grayscale {
+  filter: grayscale(99%);
+}
 input {
   width: 16vw;
   height: 2.5rem;
   border-radius: 5px;
   border: 1px solid #e8e8e8;
+}
+.red {
+  filter: invert(42%) sepia(36%) saturate(937%) hue-rotate(308deg) brightness(114%) contrast(96%);
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $soft-gray;
+  border-radius: 6px;
+  cursor: pointer;
+
+  margin-left: 8px;
+  background-color: white;
 }
 input:focus {
   outline: none;
@@ -594,8 +725,10 @@ input:focus {
   filter: invert(80%);
 }
 .section-header {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
+  letter-spacing: 0.75px;
+  color: $light-gray-blue;
 }
 .key {
   display: flex;
@@ -603,6 +736,7 @@ input:focus {
   width: 100%;
   font-size: 0.75rem;
   margin-bottom: 1.5rem;
+  margin-left: 16px;
 }
 .right-key {
   display: flex;
@@ -615,9 +749,11 @@ input:focus {
   width: 100%;
   flex-direction: row;
   justify-self: flex-start;
+  align-items: center;
 }
 .header {
   margin-top: -1rem;
+  width: 100%;
 }
 .complete {
   border-bottom: 2.9px solid $dark-green;
@@ -631,6 +767,7 @@ input:focus {
 }
 .back-logo {
   position: absolute;
+  z-index: -1;
   opacity: 0.06;
   filter: alpha(opacity=50);
   height: 28%;
@@ -664,41 +801,48 @@ form {
 }
 .invite-button {
   background-color: $dark-green;
+  border-radius: 6px;
   color: white;
+  border: none;
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
   box-shadow: none;
 }
-button {
-  @include primary-button();
-  margin-top: 1.25rem;
-  height: 2.5rem;
-  width: 19rem;
-  font-size: 14px;
-}
+// button {
+//   @include primary-button();
+//   margin-top: 1.25rem;
+//   height: 2.5rem;
+//   width: 19rem;
+//   font-size: 14px;
+// }
 .invite-form {
   border: none;
   border-radius: 0.75rem;
-  min-width: 27vw;
-  min-height: 64vh;
+  min-width: 37vw;
+  // min-height: 64vh;
   display: flex;
   align-items: center;
+  justify-content: space-around;
   flex-direction: column;
   background-color: white;
   color: $base-gray;
   &__title {
     font-weight: bold;
     text-align: left;
-  }
-  &__subtitle {
-    color: $dark-green;
+    font-size: 22px;
   }
   &__actions {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
     margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
   }
   &__actions-noslack {
     display: flex;
@@ -710,9 +854,9 @@ button {
 .invite-list {
   &__container {
     background-color: $white;
-    border: 1px solid #e8e8e8;
+    // border: 1px solid #e8e8e8;
     color: $base-gray;
-    width: 60vw;
+    width: 92vw;
     height: 60vh;
     overflow: scroll;
     padding: 1.5rem 0rem 1.5rem 1rem;
@@ -726,6 +870,8 @@ button {
       width: 100%;
       display: flex;
       margin-bottom: 0.5rem;
+      z-index: 2;
+      margin-left: 16px;
     }
     &__item {
       width: 33%;
@@ -733,7 +879,9 @@ button {
     }
   }
   &__status {
-    font-size: 0.75rem;
+    img {
+      margin-right: 16px;
+    }
   }
 }
 .cancel-button {
@@ -744,5 +892,55 @@ button {
   &:hover {
     cursor: pointer;
   }
+}
+.invite_button {
+  color: $dark-green;
+  background-color: white;
+  border-radius: 0.25rem;
+  transition: all 0.25s;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
+  width: 6rem;
+  margin-top: 0.75rem;
+  margin-left: 0.5rem;
+  box-shadow: none;
+  height: 2rem;
+  z-index: 3;
+}
+.invite_button:disabled {
+  color: $base-gray;
+  background-color: $soft-gray;
+  border-radius: 0.25rem;
+  transition: all 0.25s;
+  padding: 8px 12px;
+  font-weight: 400px;
+  font-size: 14px;
+  border: 1px solid #e8e8e8;
+}
+.invite_button:hover {
+  cursor: pointer;
+  transform: scale(1.025);
+  box-shadow: 1px 2px 3px $mid-gray;
+  background-color: white;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  width: 90%;
+  margin: 0 auto;
+  letter-spacing: 1px;
+  h4 {
+    font-size: 20px;
+  }
+}
+.logo {
+  height: 24px;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
 }
 </style>

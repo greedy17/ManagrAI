@@ -8,6 +8,7 @@ from background_task.models import CompletedTask
 from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
 from .models import User, UserActivity, UserForecast
+from managr.organization.models import Team
 
 
 @receiver(post_save, sender=User)
@@ -47,3 +48,14 @@ def create_user_related_models(sender, instance, created, **kwargs):
         UserActivity.objects.create(user=instance)
         UserForecast.objects.create(user=instance)
 
+
+@receiver(post_save, sender=User)
+def add_user_to_admin_team(sender, instance, created, **kwargs):
+    """When a new user is created, automatically generate an auth token for them."""
+    if created:
+        if instance.is_admin:
+            instance.organization.create_initial_team()
+        else:
+            admin_team = Team.objects.filter(organization=instance.organization).first()
+            instance.team = admin_team
+            instance.save()

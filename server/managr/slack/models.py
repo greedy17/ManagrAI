@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.forms import UUIDField
 
+from managr.slack.helpers import block_builders
 from managr.salesforce.models import SObjectField
 from managr.hubspot.models import HObjectField
 from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
@@ -157,7 +158,7 @@ class UserSlackIntegration(TimeStampModel):
 class OrgCustomSlackFormQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            return self.filter(organization=user.organization_id)
+            return self.filter(team=user.team)
         else:
             return self.none()
 
@@ -170,6 +171,9 @@ class OrgCustomSlackForm(TimeStampModel):
 
     organization = models.ForeignKey(
         "organization.Organization", related_name="custom_slack_forms", on_delete=models.CASCADE,
+    )
+    team = models.ForeignKey(
+        "organization.Team", related_name="team_forms", on_delete=models.CASCADE, null=True
     )
     form_type = models.CharField(
         max_length=255,
@@ -198,13 +202,46 @@ class OrgCustomSlackForm(TimeStampModel):
     objects = OrgCustomSlackFormQuerySet.as_manager()
 
     def __str__(self):
-        return f"Slack Form {self.resource}, {self.form_type} for {self.organization.name}"
+        return f"{self.organization.name}-{self.resource} {self.form_type} - ({self.team})"
 
     class Meta:
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "organization", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage"]
+
+    def generate_form_state(self):
+        form_fields = FormField.objects.filter(form=self)
+        state_object = {}
+        for i, field in enumerate(form_fields):
+            state_object[field.order] = field.field.api_name
+        self.config = state_object
+        self.save()
+
+    def recreate_form(self):
+        team_lead = self.team.team_lead
+        fields = SObjectField.objects.filter(
+            Q(
+                api_name__in=self.config.values(),
+                salesforce_object=self.resource,
+                salesforce_account=team_lead.salesforce_account,
+            )
+            | Q(is_public=True)
+        )
+        self.fields.clear()
+        for i, field in enumerate(self.config.items()):
+            current_field = fields.filter(api_name=field[1]).first()
+            if current_field:
+                self.fields.add(
+                    current_field.id,
+                    through_defaults={"order": field[0], "include_in_recap": True,},
+                )
+        return self.save()
+
+    def to_slack_options(self):
+        filtered_fields = self.fields.filter(is_public=False)
+        options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
+        return options
 
     def generate_form_state(self):
         form_fields = FormField.objects.filter(form=self)
@@ -307,19 +344,14 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         user_fields = []
         # hack to maintain order
         for field in template_fields:
-            f = (
-                SObjectField.objects.get(
+            try:
+                f = SObjectField.objects.get(
                     Q(api_name=field[0])
                     & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
                     & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
                 )
-                if self.user.crm == "SALESFORCE"
-                else HObjectField.objects.get(
-                    Q(name=field[0])
-                    & Q(Q(hubspot_object=field[1]) | Q(hubspot_object__isnull=True))
-                    & (Q(is_public=True) | Q(hubspot_account=self.user.hubspot_account))
-                )
-            )
+            except SObjectField.DoesNotExist:
+                logger.exception(f"GET USER FIELDS EXCEPTION DOES NOT EXIST: {field}")
             user_fields.append(f)
         if not template_fields:
             # user has not created form use all fields

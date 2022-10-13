@@ -312,7 +312,7 @@ def init_fake_meeting(request):
                                 params=[f"w={str(workflow.id)}"],
                             ),
                             "managr": f"{slack_consts.MANAGR_URL}/meetings",
-                            "title": f"*New Task:* Log your meeting",
+                            "title": f"*New Task:* Log your meeting :calendar: *{meeting.topic}*",
                         },
                     ),
                     block_builders.context_block(f"Owned by {user.full_name}"),

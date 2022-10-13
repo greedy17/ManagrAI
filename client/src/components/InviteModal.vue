@@ -1,7 +1,7 @@
 
 <template>
   <div class="container" ref="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
-    <div class="modal" :class="{ 'box-shadow': !dimmed }">
+    <div class="modal" :class="{ 'box-shadow white': !dimmed }">
       <div :class="{ content: includeMargin }">
         <slot />
       </div>
@@ -107,6 +107,9 @@ export default {
   flex-flow: column;
   box-sizing: border-box;
   border-radius: 8px;
+}
+.white {
+  background-color: white;
 }
 
 .content {

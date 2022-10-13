@@ -1,37 +1,17 @@
 <template>
   <div class="update_opportunity">
-    <div class="opportunity_title">
-      <h3>Update Opportunity</h3>
-      <p style="color: #9b9b9b; margin-top: -0.5rem; font-size: 14px">
-        Select the Opportunity fields you’d like to display and update via Managr or Slack:
-      </p>
-    </div>
-    <div class="box__content--expanded">
-      <!-- <CustomSlackForm
-        :formType="UPDATE"
-        :customForm="
-          (this.selectedForm = this.allForms.find(
-            (f) => f.resource == OPPORTUNITY && f.formType == UPDATE,
-          ))
-        "
-        :resource="OPPORTUNITY"
-        v-on:update:selectedForm="updateForm($event)"
-        :loading="formFields.refreshing"
-        :stageForms="formStages"
-      /> -->
-      <CustomSlackForm
-        :formType="UPDATE"
-        :customForm="
-          (this.selectedForm = this.allForms.find(
-            (f) => f.resource == DEAL && f.formType == UPDATE,
-          ))
-        "
-        :resource="DEAL"
-        v-on:update:selectedForm="updateForm($event)"
-        :loading="formFields.refreshing"
-        :stageForms="formStages"
-      />
-    </div>
+    <CustomSlackForm
+      :formType="UPDATE"
+      :customForm="
+        (this.selectedForm = this.allForms.find(
+          (f) => f.resource == OPPORTUNITY && f.formType == UPDATE,
+        ))
+      "
+      :resource="OPPORTUNITY"
+      v-on:update:selectedForm="updateForm($event)"
+      :loading="formFields.refreshing"
+      :stageForms="formStages"
+    />
   </div>
 </template>
 
@@ -119,6 +99,7 @@ export default {
     updateForm(event) {
       console.log(event)
       this.selectedForm = event
+
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
 
       if (~index) {
@@ -159,15 +140,14 @@ export default {
 
 .update_opportunity {
   color: $base-gray;
-  overflow: auto;
+  // overflow: auto;
+  padding-left: 72px;
 }
 
 .opportunity_title {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 4.2rem;
-  margin-top: 3rem;
 }
 h3 {
   font-size: 1.35rem;

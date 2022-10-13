@@ -564,7 +564,7 @@ class SlackFormsViewSet(
         instance.fields.clear()
         for i, field in enumerate(fields):
             instance.fields.add(field, through_defaults={"order": i})
-
+        instance.team = self.request.user.team
         instance.save()
         return Response(serializer.data)
 
@@ -573,9 +573,14 @@ class SlackFormsViewSet(
         print(data)
         fields = data.pop("fields", [])
         fields_ref = data.pop("fields_ref", [])
-        data.update({"organization": self.request.user.organization_id})
+        data.update(
+            {"organization": self.request.user.organization_id, "team": self.request.user.team}
+        )
         serializer = self.get_serializer(data=data, instance=self.get_object())
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            print(e)
         serializer.save()
         instance = serializer.instance
         instance.custom_fields.clear()
@@ -593,9 +598,7 @@ class SlackFormsViewSet(
             org = Organization.objects.get(id=request.data["organization"])
             org.update_has_settings("products")
             form = OrgCustomSlackForm.objects.filter(
-                organization=self.request.user.organization_id,
-                resource="OpportunityLineItem",
-                form_type="UPDATE",
+                team=self.request.user.team, resource="OpportunityLineItem", form_type="UPDATE",
             ).first()
             update_data = data
             update_data["form_type"] = "UPDATE"
@@ -1125,19 +1128,23 @@ def get_notes_command(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
+    options = "%".join(["Contact", "Opportunity", "Account"])
     context = {
         "u": str(user.id),
         "slack_id": slack_id,
         "type": "command",
+        "options": options,
+        "action_id": "GET_NOTES",
     }
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.GET_NOTES,
-            "title": {"type": "plain_text", "text": "Choose opportunity"},
-            "blocks": get_block_set("choose_opportunity", context=context),
+            "title": {"type": "plain_text", "text": "Choose Record Type"},
+            "blocks": get_block_set("pick_resource_modal_block_set", context=context),
             "private_metadata": json.dumps(context),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }
     slack_requests.generic_request(url, data, access_token=access_token)

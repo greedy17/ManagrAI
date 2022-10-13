@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.forms import CharField
 
 from managr.salesforce.adapter.models import (
     Product2Adapter,
@@ -50,6 +51,12 @@ class Organization(TimeStampModel):
     number_of_allowed_users = models.IntegerField(default=1)
     objects = OrganizationQuerySet.as_manager()
 
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        ordering = ["-datetime_created"]
+
     @property
     def deactivate_all_users(self):
         # TODO: When deleting an org also remember to revoke nylas tokens and request delete
@@ -61,7 +68,7 @@ class Organization(TimeStampModel):
 
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
-        templates = user.organization.custom_slack_forms.all()
+        templates = user.team.team_forms.all()
 
         if preserve_fields:
             for form in templates:
@@ -81,32 +88,46 @@ class Organization(TimeStampModel):
         else:
             for form in templates:
                 form.fields.filter(is_public=False).delete()
-
+        admin_team = current_admin.team
         current_admin.is_admin = False
         current_admin.save()
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
         new_admin.save()
+        admin_team.team_lead = new_admin
+        admin_team.save()
+        return new_admin
 
     def update_has_settings(self, type):
         if type == "products":
             self.has_products = True
             self.save()
 
-    def __str__(self):
-        return f"{self.name}"
+    def create_initial_team(self):
+        admin = self.users.filter(is_admin=True).first()
+        team = Team.objects.create(name=self.name, organization=self, team_lead=admin)
+        forms = self.custom_slack_forms
+        forms.update(team=team)
+        users = self.users
+        users.update(team=team)
 
-    class Meta:
-        ordering = ["-datetime_created"]
+    def add_to_admin_team(self, user_email):
+        user = self.users.filter(email=user_email).first()
+        admin = self.users.filter(is_admin=True).first()
+        user.team = admin.team
+        user.save()
+        return
 
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(organization=user.organization)
+            if user.is_admin:
+                return self.filter(owner__organization=user.organization)
+            elif user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__team=user.team)
             else:
-                return self.filter(organization=user.organization, owner=user)
+                return self.filter(owner=user)
         else:
             return None
 
@@ -212,12 +233,20 @@ class Account(TimeStampModel, IntegrationModel):
         base_url = self.owner.salesforce_account.instance_url
         return AccountAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
 
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class ContactQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
+            if user.is_admin:
                 return self.filter(owner__organization=user.organization)
+            elif user.user_level in ["SDR", "MANAGER"]:
+                return self.filter(owner__team=user.team)
             else:
                 return self.filter(owner=user)
         else:
@@ -327,9 +356,11 @@ class Contact(TimeStampModel, IntegrationModel):
         base_url = self.owner.salesforce_account.instance_url
         return ContactAdapter.get_current_values(integration_id, token, base_url, self.owner.id)
 
-    @property
-    def as_slack_option(self):
-        return block_builders.option(self.name, str(self.id))
+    def update_database_values(self, data, *args, **kwargs):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
 
 
 class StageQuerySet(models.QuerySet):
@@ -605,6 +636,12 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.integration_id))
 
+    def get_current_values(self):
+        res = self.user.salesforce_account.adapter_class.get_resource_in_list(
+            "PricebookEntry", list(self.state.keys())
+        )
+        return res
+
 
 class OpportunityLineItemQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -717,3 +754,64 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         data.pop("meeting_type", None)
         self.secondary_data.update(data)
         return self.save()
+
+
+class TeamQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        elif user.organization and user.is_active:
+            return self.filter(organization=user.organization)
+        else:
+            return None
+
+
+class Team(TimeStampModel):
+    name = models.CharField(max_length=255)
+    organization = models.ForeignKey(
+        "organization.Organization", related_name="teams", on_delete=models.CASCADE
+    )
+    team_lead = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="team_lead_of"
+    )
+
+    objects = TeamQuerySet.as_manager()
+
+    def __str__(self):
+        return f"{self.name} - {self.team_lead.email}"
+
+    def delete(self):
+        if self.team_forms:
+            for form in self.team_forms.all():
+                form.delete()
+        admin_team = Team.objects.filter(organization=self.organization).first()
+        self.users.all().update(team=admin_team)
+        team_lead = self.team_lead
+        team_lead.team = admin_team
+        self.team_lead.save()
+        super(Team, self).delete()
+
+    def change_team_lead(self, user, preserve_fields=False):
+        templates = user.organization.custom_slack_forms.all()
+
+        if preserve_fields:
+            for form in templates:
+                new_team_lead = user
+                fields = form.fields.filter(is_public=False)
+                form_fields = fields.values_list("api_name", flat=True)
+                new_admin_fields = new_team_lead.imported_sobjectfield.filter(
+                    api_name__in=[form_fields], salesforce_object=form.resource
+                )
+                form_field_set = form.formfield_set.all()
+                for formfield in form_field_set:
+                    new_field = new_admin_fields.filter(api_name=formfield.field.api_name).first()
+                    if new_field:
+                        formfield.field = new_field
+                        formfield.save()
+        else:
+            for form in templates:
+                form.fields.filter(is_public=False).delete()
+
+        self.team_lead = new_team_lead
+        self.save()
+

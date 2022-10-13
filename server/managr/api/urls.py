@@ -63,7 +63,7 @@ urlpatterns = [
     ),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
-    path("task-status", core_views.get_task_status, name="get-task-status"),
+    path("task-status/", core_views.get_task_status, name="get-task-status"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
         "nylas/callback/accounts",
@@ -186,6 +186,7 @@ router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
 router.register("crm/fields", crm_views.ObjectFieldViewSet, "crm-fields")
+router.register("organization/teams", organization_views.TeamViewSet, "organization-teams")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
 router.register("salesforce/sobject", sf_views.SalesforceSObjectViewSet, "salesforce-sobject")
 router.register(

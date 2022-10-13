@@ -138,312 +138,215 @@
     >
       <div class="modal-container"></div>
     </Modal> -->
-    <header class="forecast-header">
-      <section class="row">
-        <div>
-          <button @click.stop="showList = !showList" class="select-btn1">
-            {{ currentForecast }}
-            <img
-              v-if="!showList"
-              style="height: 0.75rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.svg"
-              class="invert"
-              alt=""
-            />
-            <img
-              v-else
-              class="invert"
-              style="height: 0.75rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.svg"
-              alt=""
-            />
-          </button>
-          <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
-            <div class="list-section__title row-spread">
-              <p>Active Trackers</p>
-            </div>
-            <button class="list-button">
-              My Tracker
-              <span class="green-text" v-if="currentForecast === 'My Tracker'"> active</span>
-            </button>
-          </div>
-          <p class="gray-text smaller-font margin-left-s" v-if="forecastOpps && !loading">
-            Opportunites Tracked: {{ forecastLength }}
-          </p>
-          <p v-else></p>
-        </div>
 
-        <!-- <section class="relative">
-          <button @click.stop="addingFilter" class="add-filter-button margin-left-s">
-            <img
-              src="@/assets/images/plusOne.svg"
-              style="height: 0.8rem; margin-right: 0.25rem"
-              alt=""
-            />Add filter
-          </button>
-          <div v-outside-click="closeFilters" v-if="filtering" class="list-section">
-            <div class="list-section__title flex-row-spread">
-              <p>Select Filter</p>
+    <div class="forecast-header title">
+      <p>Tracker</p>
+      <div class="row margin-top-s">
+        <div class="header-settings">
+          <p>%</p>
+          <img
+            style="cursor: pointer"
+            @click="resetSettings"
+            src="@/assets/images/settings.svg"
+            alt=""
+          />
+        </div>
+      </div>
+    </div>
+
+    <section class="row">
+      <div class="col">
+        <section class="forecast-overview">
+          <div class="forecast-overview__section" v-if="forecastOpps && !loading">
+            <!-- <h3>{{ forecastLength }}</h3> -->
+            <div>
+              <img src="@/assets/images/coins.svg" height="16px" style="margin-right: 8px" alt="" />
+              <h3>5</h3>
             </div>
-            <button
-              :key="i"
-              v-for="(filter, i) in filters"
-              @click="addFilter(filter.apiName, filter.name, filter.type)"
-              class="list-button-2"
-            >
-              {{ filter.name }}
-            </button>
+            <p>Opportunites Tracked</p>
+          </div>
+          <div class="forecast-overview__section">
+            <div>
+              <span class="filter-red"
+                ><img src="@/assets/images/caret-down.svg" height="18px" alt=""
+              /></span>
+
+              <h3>$1,000,000</h3>
+              <!-- <h3>{{ formatCash(averageDeal) }}</h3> -->
+            </div>
+            <p>Avg Deal Size <span class="red">4.25%</span></p>
+          </div>
+          <div class="forecast-overview__section">
+            <div>
+              <span class="filter-green">
+                <img src="@/assets/images/caret-up.svg" height="18px" alt="" />
+              </span>
+
+              <h3>$5,000,000</h3>
+              <!-- <h3>{{formatCash(originalAmount) }}</h3> -->
+            </div>
+            <p>Total <span class="green">8.73%</span></p>
           </div>
         </section>
 
-        <div
-          v-for="(filter, i) in activeFilters"
-          :key="i"
-          @mouseenter="hoveredIndex = filter"
-          @mouseleave="hoveredIndex = null"
-          class="main"
-        >
-          <strong class="medium-font">{{ filter }}</strong>
-          <small class="margin-left-s">{{ activeOperators[i] }}</small>
-          <small class="margin-left-s">{{ filterValues[i] }}</small>
-          <span v-if="hoveredIndex === filter" class="selected-filters__close"
-            ><img src="@/assets/images/close.png" @click="removeFilter(filter, i)" alt=""
-          /></span>
-        </div>
-
-        <section class="row relative" v-if="filterSelected">
-          <main class="main__before">
-            <small
-              ><strong>{{ currentFilter }}</strong></small
+        <section v-if="!loading && stages" class="table-section">
+          <div class="table">
+            <div class="table-row">
+              <div class="cell-name-header">Opportunity Name</div>
+              <div
+                :key="index"
+                v-for="(header, index) in forecastHeaders"
+                class="table-cell-header"
+              >
+                {{ header }}
+              </div>
+            </div>
+            <div v-if="!forecastOpps" class="margin-left margin-top small-font gray-text">
+              <p>
+                No opps in forecast. Add them via
+                <span @click="resetSettings" class="settings"
+                  >settings <img src="@/assets/images/settings.svg" class="invert" alt="" />
+                </span>
+              </p>
+            </div>
+            <div
+              v-else-if="forecastOpps"
+              v-for="(opp, i, index) in forecastOpps"
+              :key="i"
+              class="table-row"
             >
-            <small style="margin-left: 0.2rem">{{ currentOperator }}</small>
-            <small style="margin-left: 0.2rem">{{ currentVal }}</small>
-          </main>
+              <p class="no-display">{{ setOriginalAmount(opp.data.Amount) }}</p>
+              <div class="table-cell cell-name row">
+                <div class="row-spread">
+                  <div>
+                    <p class="letter-spacing">{{ opp.data.Name }}</p>
+                    <p class="blue-text">
+                      {{
+                        currentValues[index].account_ref
+                          ? currentValues[index].account_ref.name
+                          : ''
+                      }}
+                    </p>
+                    <p class="gray-text">
+                      Owned by:
+                      {{
+                        currentValues[index].owner_ref
+                          ? currentValues[index].owner_ref.full_name
+                          : ''
+                      }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="table-cell">
+                <p
+                  class="letter-spacing"
+                  :class="{
+                    'green-background': currentValues[index].amount > opp.data.Amount,
+                    'red-background': currentValues[index].amount < opp.data.Amount,
+                  }"
+                >
+                  {{ currentValues[index].amount ? formatCash(currentValues[index].amount) : '' }}
+                </p>
+                <p class="gray-text letter-spacing">
+                  {{ opp.data.Amount ? formatCash(opp.data.Amount) : '' }}
+                </p>
+              </div>
+              <div class="table-cell">
+                <p>{{ formatDateTime(opp.dateAdded.split(' ')[0]) }}</p>
+              </div>
+              <div class="table-cell">
+                <p
+                  class="align-center"
+                  :class="{
+                    'green-background':
+                      stages.indexOf(currentValues[index].stage) >
+                      stages.indexOf(opp.data.StageName),
+                    'red-background':
+                      stages.indexOf(currentValues[index].stage) <
+                      stages.indexOf(opp.data.StageName),
+                  }"
+                >
+                  {{ currentValues[index].stage }}
+                </p>
+                <p class="gray-text">{{ opp.data.StageName }}</p>
+              </div>
 
-          <div>
-            <FilterSelection
-              @filter-added="applyFilter"
-              @operator-selected="addOperator"
-              @value-selected="valueSelected"
-              @close-selection="closeFilterSelection"
-              :type="filterType"
-              :filterName="currentFilter"
-              :dropdowns="picklistQueryOpts"
-              :apiName="filterApiName"
-            />
-          </div>
-        </section> -->
-      </section>
-      <div class="row">
-        <!-- <button class="forecast-header__green-button">
-          <p class="green-text">%</p>
-        </button> -->
-        <button class="margin-left-s forecast-header__button" @click="resetSettings">
-          <img src="@/assets/images/settings.svg" alt="" />
-        </button>
-      </div>
-    </header>
-    <section v-if="!loading && stages" class="table-section">
-      <div class="table">
-        <div class="table-row">
-          <div class="cell-name-header">Opportunity Name</div>
-          <div :key="index" v-for="(header, index) in forecastHeaders" class="table-cell-header">
-            {{ header }}
-          </div>
-        </div>
-        <div v-if="!forecastOpps" class="margin-left margin-top small-font gray-text">
-          <p>
-            No opps in forecast. Add them via
-            <span @click="resetSettings" class="settings"
-              >settings <img src="@/assets/images/settings.svg" class="invert" alt="" />
-            </span>
-          </p>
-        </div>
-        <div
-          v-else-if="forecastOpps"
-          v-for="(opp, i, index) in forecastOpps"
-          :key="i"
-          class="table-row"
-        >
-          <p class="no-display">{{ setOriginalAmount(opp.data.Amount) }}</p>
-          <div class="table-cell cell-name row">
-            <div class="row-spread">
-              <div>
-                <!-- <p>{{ index }}</p> -->
-                <p>{{ opp.data.Name }}</p>
-                <p class="green-text">
-                  {{
-                    currentValues[index].account_ref ? currentValues[index].account_ref.name : ''
-                  }}
+              <div class="table-cell">
+                <p
+                  class="align-center"
+                  :class="{
+                    'green-background':
+                      forecasts.indexOf(currentValues[index].forecast_category) >
+                      forecasts.indexOf(opp.data.ForecastCategoryName),
+                    'red-background':
+                      forecasts.indexOf(currentValues[index].forecast_category) <
+                      forecasts.indexOf(opp.data.ForecastCategoryName),
+                  }"
+                >
+                  {{ currentValues[index].forecast_category }}
                 </p>
                 <p class="gray-text">
-                  Owned by:
-                  {{
-                    currentValues[index].owner_ref ? currentValues[index].owner_ref.full_name : ''
-                  }}
+                  {{ opp.data.ForecastCategoryName ? opp.data.ForecastCategoryName : '' }}
                 </p>
               </div>
 
-              <div class="row">
-                <button
-                  @click="getNotes(allOpps.filter((opp) => opp.integration_id === i)[0].id)"
-                  class="name-cell-edit-note-button"
+              <div class="table-cell">
+                <p
+                  class="align-center"
+                  :class="{
+                    'green-background': currentValues[index].close_date < opp.data.CloseDate,
+                    'red-background': currentValues[index].close_date > opp.data.CloseDate,
+                  }"
                 >
-                  <img
-                    class="invert-less"
-                    src="@/assets/images/white-note.svg"
-                    height="12px"
-                    alt=""
-                  />
-                </button>
-
-                <button
-                  @click="
-                    deleteOpen = true
-                    setDeleteId(opp.data.Id)
-                  "
-                  class="name-cell-edit-note-button"
-                >
-                  <img class="invertTrash" src="@/assets/images/trash.svg" height="14px" alt="" />
-                </button>
+                  {{ currentValues[index] ? formatDate(currentValues[index].close_date) : '' }}
+                </p>
+                <p class="gray-text">
+                  {{ opp.data.CloseDate ? formatDate(opp.data.CloseDate) : '' }}
+                </p>
+              </div>
+              <div class="table-cell">
+                <p>
+                  {{
+                    opp.data.LastActivityDate
+                      ? formatDateTime(currentValues[index].last_activity_date)
+                      : ''
+                  }}
+                </p>
               </div>
             </div>
           </div>
-          <div class="table-cell">
-            <p class="green-text-amount align-center letter-spacing">
-              {{ currentValues[index].amount ? formatCash(currentValues[index].amount) : '' }}
-              <span v-if="currentValues[index].amount < opp.data.Amount"
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span v-else-if="currentValues[index].amount > opp.data.Amount"
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text letter-spacing">
-              {{ opp.data.Amount ? formatCash(opp.data.Amount) : '' }}
-            </p>
-          </div>
-          <div class="table-cell">
-            <p>{{ formatDateTime(opp.dateAdded.split(' ')[0]) }}</p>
-          </div>
-          <div class="table-cell">
-            <p class="align-center">
-              {{ currentValues[index].stage }}
-              <span
-                v-if="
-                  stages.indexOf(currentValues[index].stage) < stages.indexOf(opp.data.StageName)
-                "
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span
-                v-else-if="
-                  stages.indexOf(currentValues[index].stage) > stages.indexOf(opp.data.StageName)
-                "
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text">{{ opp.data.StageName }}</p>
-          </div>
-          <div class="table-cell">
-            <p class="align-center">
-              {{ currentValues[index].forecast_category }}
-              <span
-                v-if="
-                  forecasts.indexOf(currentValues[index].forecast_category) <
-                  forecasts.indexOf(opp.data.ForecastCategoryName)
-                "
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span
-                v-else-if="
-                  forecasts.indexOf(currentValues[index].forecast_category) >
-                  forecasts.indexOf(opp.data.ForecastCategoryName)
-                "
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text">
-              {{ opp.data.ForecastCategoryName ? opp.data.ForecastCategoryName : '' }}
-            </p>
-          </div>
-          <div class="table-cell">
-            <p class="align-center">
-              {{ currentValues[index] ? formatDate(currentValues[index].close_date) : '' }}
-              <span v-if="currentValues[index].close_date > opp.data.CloseDate"
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span v-else-if="currentValues[index].close_date < opp.data.CloseDate"
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text">
-              {{ opp.data.CloseDate ? formatDate(opp.data.CloseDate) : '' }}
-            </p>
-          </div>
-          <div class="table-cell">
-            <p>
-              {{
-                opp.data.LastActivityDate
-                  ? formatDateTime(currentValues[index].last_activity_date)
-                  : ''
-              }}
-            </p>
+        </section>
+      </div>
+      <div style="position: relative" class="statistics">
+        <h3 class="letter-spacing">{{ selectedOpp.name }}</h3>
+        <div>
+          <small class="yellow">fair</small>
+          <Chart />
+          <div class="margin-top-neg">
+            <Tabs />
           </div>
         </div>
-        <div class="table-row-sticky" v-if="forecastOpps">
-          <div class="table-cell-s">
-            <p class="letter-spacing">Total:</p>
-          </div>
-          <div class="table-cell-s">
-            <p class="green-text align-center letter-spacing">
-              {{ formatCash(totalAmount) }}
-              <span v-if="totalAmount < originalAmount"
-                ><img
-                  class="filter-red margin-left-s"
-                  src="@/assets/images/trendingDown.svg"
-                  alt=""
-              /></span>
-              <span v-else-if="totalAmount > originalAmount"
-                ><img
-                  class="filter-green margin-left-s"
-                  src="@/assets/images/trendingUp.svg"
-                  alt=""
-              /></span>
-            </p>
-            <p class="gray-text letter-spacing">{{ formatCash(originalAmount) }}</p>
-          </div>
-          <div class="table-cell-s"><p class="letter-spacing">Avg Deal Size:</p></div>
-          <div class="table-cell-s">
-            <p class="letter-spacing">{{ formatCash(averageDeal) }}</p>
-          </div>
-          <div class="table-cell-s"></div>
-          <div class="table-cell-s"></div>
-          <div class="table-cell-s"></div>
-        </div>
+        <div style="position: sticky; bottom: 0">test</div>
+
+        <!-- <div class="row">
+          <button
+            @click="getNotes(allOpps.filter((opp) => opp.integration_id === i)[0].id)"
+            class="name-cell-edit-note-button"
+          >
+            <img class="invert-less" src="@/assets/images/note.svg" height="12px" alt="" />
+          </button>
+
+          <button
+            @click="
+              deleteOpen = true
+              setDeleteId(opp.data.Id)
+            "
+            class="name-cell-edit-note-button"
+          >
+            <img class="invertTrash" src="@/assets/images/trash.svg" height="12px" alt="" />
+          </button>
+        </div> -->
       </div>
     </section>
     <div v-if="loading">
@@ -454,6 +357,8 @@
 
 <script>
 import { SObjects, SObjectPicklist } from '@/services/salesforce'
+import Chart from '@/components/Chart'
+import Tabs from '@/components/Tabs'
 import User from '@/services/users'
 
 export default {
@@ -514,6 +419,7 @@ export default {
       activeFilters: [],
       filterNames: [],
       notesLength: 0,
+      selectedOpp: null,
     }
   },
   components: {
@@ -521,6 +427,8 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     FilterSelection: () => import(/* webpackPrefetch: true */ '@/components/FilterSelection'),
+    Chart,
+    Tabs,
   },
   // watch: {
   //   allOpps: ['getStagesAndForecast'],
@@ -533,6 +441,9 @@ export default {
 
   mounted() {
     this.setPicklist()
+    setTimeout(() => {
+      console.log(this.forecastOpps)
+    }, 3000)
   },
   methods: {
     resetNotes() {
@@ -611,8 +522,9 @@ export default {
       this.loading = true
       try {
         const res = await User.api.getForecastValues()
+        console.log(res)
         this.currentValues = res
-
+        this.selectedOpp = res[0]
         for (let i = 0; i < res.length; i++) {
           this.totalAmount += parseInt(res[i].amount) ? parseInt(res[i].amount) : 0
         }
@@ -829,6 +741,43 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+
+.statistics {
+  border: 1px solid $soft-gray;
+  background-color: white;
+  height: 83vh;
+  width: 32vw;
+  border-radius: 8px;
+  padding: 12px;
+  h3 {
+    color: $base-gray;
+  }
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  margin-right: 16px;
+}
+.green-background {
+  // background-color: $off-white;
+  color: $dark-green;
+  padding: 4px 6px;
+  border-radius: 6px;
+  margin-left: -6px;
+}
+.red-background {
+  // background-color: $off-white;
+  color: $coral;
+  padding: 4px 6px;
+  border-radius: 6px;
+  margin-left: -6px;
+}
+.blue-text {
+  color: $light-gray-blue !important;
+}
+.margin-top-neg {
+  margin-top: -32px;
+}
 .modal-container-notes {
   background-color: $white;
   overflow: auto;
@@ -914,7 +863,7 @@ export default {
   align-items: center;
 }
 .forecast {
-  margin: 3.5rem 1rem 0.5rem 0.5rem;
+  margin: 8px 0px 0px 64px;
   padding: 0 1rem 0rem 0.75rem;
 }
 .letter-spacing {
@@ -924,11 +873,39 @@ export default {
   position: relative;
 }
 .filter-green {
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: $white-green;
+  margin-right: 8px;
+  padding: 2px;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+    padding: 0px;
+  }
 }
 .filter-red {
-  filter: invert(48%) sepia(76%) saturate(3436%) hue-rotate(326deg) brightness(113%) contrast(96%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: $light-red;
+  margin-right: 8px;
+  padding: 2px;
+  img {
+    filter: invert(48%) sepia(76%) saturate(3436%) hue-rotate(326deg) brightness(113%) contrast(96%);
+    padding: 0px;
+  }
+}
+.red {
+  color: $coral;
+  margin-left: 8px;
+}
+.green {
+  color: $dark-green;
+  margin-left: 8px;
 }
 .row {
   display: flex;
@@ -958,11 +935,11 @@ export default {
 .table-section {
   margin: 0;
   padding: 0;
-  min-height: 50vh;
-  height: 78vh;
+  height: 66vh;
+  width: 60vw;
+  margin-top: 16px;
   overflow: scroll;
-  margin-top: -0.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1.25px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
   background-color: white;
@@ -992,11 +969,11 @@ export default {
   display: table-cell;
   position: sticky;
   min-width: 12vw;
-  background-color: $off-white;
+  background-color: white;
   padding: 1vh 3vh;
   border: none;
   border-bottom: 1px solid $soft-gray;
-  font-size: 13px;
+  font-size: 12px;
 }
 .table-cell-s {
   display: table-cell;
@@ -1023,9 +1000,9 @@ export default {
   position: sticky;
   background-color: white;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.5px;
-  color: $base-gray;
+  color: $light-gray-blue;
 }
 .cell-name-header {
   display: table-cell;
@@ -1039,9 +1016,9 @@ export default {
   position: sticky;
   background-color: white;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.5px;
-  color: $base-gray;
+  color: $light-gray-blue;
 }
 .cell-name {
   background-color: white;
@@ -1059,20 +1036,21 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 0.5rem 0.25rem;
-  margin-bottom: -0.5rem;
+  padding: 4px 0px;
   position: relative;
   z-index: 4;
 
   &__button {
+    margin-top: 4px;
     background-color: white;
-    border: 0.8px solid $gray;
+    box-shadow: 1px 2px 2px $very-light-gray;
+    border: none;
     height: 2rem;
     width: 3rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 3px;
+    border-radius: 8px;
     cursor: pointer;
   }
   &__green-button {
@@ -1088,7 +1066,6 @@ export default {
   }
   button > img {
     height: 1rem;
-    // filter: invert(70%);
   }
 }
 .forecast-footer {
@@ -1407,6 +1384,12 @@ export default {
   margin-right: 0.5rem;
   color: $base-gray;
 }
+.yellow {
+  background-color: $light-yellow;
+  color: $yellow;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
 .yes__button {
   display: flex;
   align-items: center;
@@ -1457,6 +1440,67 @@ export default {
     margin-top: -14px;
     margin-bottom: 8px;
     letter-spacing: 0.6px;
+  }
+}
+.title {
+  padding: 0;
+  margin: 0;
+  margin-left: 8px;
+  margin-bottom: 9px;
+  font-size: 18px;
+  color: $light-gray-blue;
+  letter-spacing: 1px;
+}
+.margin-top-s {
+  margin-top: 12px;
+}
+.header-settings {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  background-color: white;
+  outline: 1px solid $soft-gray;
+  border-radius: 6px;
+  padding: 4px 6px;
+  width: 80px;
+  p {
+    margin: 0;
+    color: $base-gray;
+    cursor: pointer;
+  }
+}
+.forecast-overview {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 12px;
+  border: 1px solid $soft-gray;
+  border-radius: 12px;
+  width: 60vw;
+  background-color: white;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    margin-right: 32px;
+    padding: 12px;
+
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    p {
+      font-size: 11px;
+      color: $light-gray-blue;
+      margin-top: -8px;
+    }
+    h3 {
+      color: $base-gray;
+    }
   }
 }
 </style>

@@ -88,6 +88,7 @@ export default class SlackAPI {
   }
 
   postOrgCustomForm(data) {
+    console.log(data)
     if (data.id && data.id.length) {
       return this.client
         .patch(SLACK_CUSTOM_FORM_ENDPOINT + data.id + '/', this.cls.customSlackForm.toAPI(data))

@@ -221,7 +221,7 @@
               style="width: 14vw; padding-bottom: 8rem"
               track-by="value"
               label="label"
-              @select="setDropdownValue($event)"
+              @select="emitDropdown($event, workflow)"
             >
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
@@ -274,7 +274,9 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
+              v-on:keyup.enter="
+                setUpdateValues(field.apiName, Number($event.target.value), field.dataType)
+              "
               id="user-input"
               type="number"
               :value="
@@ -286,6 +288,27 @@
             <div v-if="editing" class="save">
               <p>Press "Enter" to save</p>
             </div>
+          </div>
+          <div v-else-if="field.dataType === 'Reference'">
+            <Multiselect
+              style="width: 14vw; padding-bottom: 8rem"
+              v-model="dropdownVal[field.apiName]"
+              @select="setUpdateValues(field.apiName, $event.id, field.dataType)"
+              :options="referenceOpts[field.apiName] ? referenceOpts[field.apiName] : []"
+              openDirection="below"
+              selectLabel="Enter"
+              label="name"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ field.apiName }}
+                </p>
+              </template>
+            </Multiselect>
           </div>
         </div>
         <PipelineField
@@ -299,6 +322,7 @@
               : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
           :lastStageUpdate="workflow['last_stage_update']"
+          :referenceOpts="referenceOpts"
         />
       </div>
     </div>
@@ -329,6 +353,7 @@
               : workflow['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
           "
           :lastStageUpdate="workflow['last_stage_update']"
+          :referenceOpts="referenceOpts"
         />
       </div>
     </div>
@@ -355,7 +380,7 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
-      dropdownValue: null,
+      referenceOptions: [],
       dropdownVal: {},
       executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
@@ -375,7 +400,10 @@ export default {
     stageData: {},
     closeDateData: {},
     ForecastCategoryNameData: {},
+    BulkUpdateName: {},
+    BulkUpdateValue: {},
     picklistOpts: {},
+    referenceOpts: {},
     inlineLoader: {},
     closeEdit: {},
     stages: {},
@@ -386,15 +414,6 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     workflowCheckList: 'checkSelect',
-    dropdownValue: {
-      handler(val) {
-        if (this.stages.includes(val)) {
-          this.$emit('open-stage-form', val, this.workflow.id, this.workflow.integration_id)
-        } else {
-          this.setUpdateValues('StageName', val)
-        }
-      },
-    },
   },
   methods: {
     checkSelect() {
@@ -402,8 +421,9 @@ export default {
         ? (this.isSelected = true)
         : (this.isSelected = false)
     },
-    setDropdownValue(val) {
-      this.dropdownValue = val.value
+    emitDropdown(val, opp) {
+      const item = { val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id }
+      this.$emit('set-dropdown-value', item)
     },
     closeInline() {
       this.editing = false
@@ -423,6 +443,7 @@ export default {
         this.formData[key] = val
       }
       setTimeout(() => {
+        this.dropdownVal = {}
         this.$emit('inline-edit', this.formData, this.workflow.id, dataType)
       }, 500)
     },
@@ -512,6 +533,34 @@ export default {
         const res = await SObjects.api
           .updateResource({
             form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_id: this.workflow.id,
+            integration_ids: [this.workflow.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.updatedWorkflowList = []
+      }
+    },
+    async onBulkUpdate() {
+      this.updatedWorkflowList.push(this.workflow.id)
+      try {
+        const formData = {}
+        formData[this.BulkUpdateName] = this.BulkUpdateValue
+        const res = await SObjects.api
+          .updateResource({
+            form_data: formData,
             resource_type: 'Opportunity',
             form_type: 'UPDATE',
             resource_id: this.workflow.id,

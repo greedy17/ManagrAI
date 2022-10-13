@@ -169,6 +169,7 @@ class CustomUserAdmin(UserAdmin):
                     "crm",
                     "onboarding",
                     "activated_managr_configs",
+                    "team",
                 )
             },
         ),

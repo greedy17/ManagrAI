@@ -33,7 +33,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.core.utils import get_totals_for_year
+from managr.core.utils import pull_usage_data
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
@@ -44,6 +44,7 @@ from .serializers import (
     UserRegistrationSerializer,
     NoteTemplateSerializer,
 )
+from managr.organization.models import Team
 from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 from managr.core.background import emit_process_calendar_meetings
 from .nylas.emails import (
@@ -57,15 +58,15 @@ logger = logging.getLogger("managr")
 
 
 def GET_COMMAND_OBJECTS():
-    from managr.salesforce.background import (
-        emit_gen_next_sync,
-        emit_gen_next_object_field_sync,
+    from managr.salesforce.cron import (
+        queue_users_sf_resource,
+        queue_users_sf_fields,
     )
 
     commands = {
-        "SALESFORCE_FIELDS": emit_gen_next_object_field_sync,
-        "SALESFORCE_RESOURCES": emit_gen_next_sync,
-        "PULL_USAGE_DATA": get_totals_for_year,
+        "SALESFORCE_FIELDS": queue_users_sf_fields,
+        "SALESFORCE_RESOURCES": queue_users_sf_resource,
+        "PULL_USAGE_DATA": pull_usage_data,
     }
     return commands
 
@@ -314,25 +315,17 @@ class UserViewSet(
     )
     def launch_command(self, request, *args, **kwargs):
         COMMANDS = GET_COMMAND_OBJECTS()
-        user = request.user
         data = request.data
         command = data.get("command")
         command_function = COMMANDS[command]
-        scheduled_time = timezone.now()
-        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         if command == "SALESFORCE_FIELDS":
-            operations = [
-                *user.salesforce_account.field_sync_opts,
-                *user.salesforce_account.validation_sync_opts,
-            ]
-            command_function(str(user.id), operations, False, formatted_time)
+            command_function()
             response_data = {
                 "success": True,
                 "message": "Successfully started field sync for users",
             }
         elif command == "SALESFORCE_RESOURCES":
-            operations = user.salesforce_account.resource_sync_opts
-            command_function(str(user.id), operations, formatted_time)
+            command_function()
             response_data = {
                 "success": True,
                 "message": "Successfully started resource sync for users",
@@ -710,7 +703,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
-
+        user.organization.add_to_admin_team(user.email)
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         if slack_id:
@@ -839,10 +832,12 @@ def request_reset_link(request):
     [permissions.AllowAny,]
 )
 def get_task_status(request):
+    data = {}
     verbose_name = request.GET.get("verbose_name", None)
+
     if verbose_name:
         try:
-            task = CompletedTask.object.get(verbose_name=verbose_name)
+            task = CompletedTask.objects.get(verbose_name=verbose_name)
             if task:
                 data = {"completed": True}
         except CompletedTask.DoesNotExist:

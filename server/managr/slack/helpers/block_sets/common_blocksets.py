@@ -78,10 +78,10 @@ def direct_to_block_set(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Complete in Slack", "complete_in_slack", action_id=slack_context,
+                    "Open", "complete_in_slack", action_id=slack_context,
                 ),
                 block_builders.simple_button_block(
-                    "Complete in Managr", "complete_in_managr", url=managr_url, style="primary"
+                    "Grid View", "complete_in_managr", url=managr_url, style="primary"
                 ),
             ]
         ),
@@ -497,7 +497,7 @@ def calendar_reminders_blockset(context):
     else:
         action_blocks.append(
             block_builders.simple_button_block(
-                "Map to Opportunity",
+                "Link to CRM Record",
                 f"type%{str(meeting.id)}",
                 action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
                 style="primary",
@@ -594,7 +594,7 @@ def initial_alert_message(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Complete in Slack",
+                    "Open",
                     "update_in_slack",
                     action_id=action_with_params(
                         slack_const.PAGINATE_ALERTS,
@@ -606,10 +606,7 @@ def initial_alert_message(context):
                     ),
                 ),
                 block_builders.simple_button_block(
-                    "Complete in Managr",
-                    "open_in_pipeline",
-                    url=f"{url}/{template}",
-                    style="primary",
+                    "Grid View", "open_in_pipeline", url=f"{url}/{template}", style="primary",
                 ),
             ]
         ),

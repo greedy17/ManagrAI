@@ -1,32 +1,31 @@
 <template>
   <div class="alert-operand-row">
-    <div
-      style="margin: 2rem 0.25rem"
-      class="toggle__switch"
-      v-if="form.field.operandOrder.value != 0"
-    >
-      <label>AND</label>
+    <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
+      <!-- <label>AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label>OR</label>
+      <label>OR</label> -->
+      <small @click="toggleSelectedCondition" class="andOr">
+        <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
+        <span class="space-s">|</span>
+        <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
+      >
     </div>
 
     <div class="alert-operand-row__options">
-      <div class="centered" style="flex-direction: column">
-        <p>Select CRM Field:</p>
-
+      <div>
         <FormField :errors="form.field.operandIdentifier.errors">
           <template v-slot:input>
             <Multiselect
-              placeholder="Select Field"
+              placeholder="Field"
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="width: 16vw"
+              style="width: 15vw"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -44,7 +43,7 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.svg" alt="" />
-                  Select Field
+                  Field
                 </p>
               </template>
             </Multiselect>
@@ -52,20 +51,15 @@
         </FormField>
       </div>
 
-      <div
-        v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')"
-        class="centered"
-        style="flex-direction: column"
-      >
-        <p>Select an operator:</p>
+      <div v-if="!(selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME')">
         <FormField :errors="form.field.operandOperator.errors">
           <template v-slot:input>
             <Multiselect
-              placeholder="Select Operator"
+              placeholder="Operator"
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="width: 16vw"
+              style="width: 15vw"
               selectLabel="Enter"
               label="label"
             >
@@ -75,7 +69,7 @@
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.svg" alt="" />
-                  Select Operator
+                  Operator
                 </p>
               </template>
             </Multiselect>
@@ -84,21 +78,15 @@
       </div>
 
       <div class="alert-operand-row__value">
-        <div
-          class="centered"
-          style="flex-direction: column"
-          v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'"
-        >
-          <p>Select a value:</p>
-
+        <div v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'">
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
               <Multiselect
-                placeholder="Select Value"
+                placeholder="Value"
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="width: 16vw"
+                style="width: 15vw"
                 selectLabel="Enter"
                 label="label"
               >
@@ -108,7 +96,7 @@
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
-                    Select Value
+                    Value
                   </p>
                 </template>
               </Multiselect>
@@ -117,21 +105,15 @@
         </div>
 
         <template v-else>
-          <div
-            class="centered"
-            style="flex-direction: column"
-            v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'"
-          >
-            <p>Select a value:</p>
-
+          <div v-if="selectedFieldType == 'BOOLEAN' && selectedFieldTypeRaw == 'Boolean'">
             <FormField :errors="form.field.operandValue.errors">
               <template v-slot:input>
                 <Multiselect
-                  placeholder="Select value"
+                  placeholder="Value"
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="width: 16vw"
+                  style="width: 15vw"
                   selectLabel="Enter"
                   label="label"
                 >
@@ -141,7 +123,7 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      Select Value
+                      Value
                     </p>
                   </template>
                 </Multiselect>
@@ -154,22 +136,20 @@
               style="
                 display: flex;
                 flex-direction: row;
-                min-width: 34vw;
-                justify-content: space-between;
-                align-items: flex-start;
+                justify-content: space-evenly;
+                align-items: center;
               "
               v-if="selectedFieldType == 'DATE' || selectedFieldType == 'DATETIME'"
             >
-              <div style="text-align: center">
-                <p>Select an operator:</p>
+              <div>
                 <FormField :errors="form.field.operandOperator.errors">
                   <template v-slot:input>
                     <Multiselect
-                      placeholder="Select Operator"
+                      placeholder="Operator"
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 16vw"
+                      style="width: 15vw; margin-right: 12px"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -179,7 +159,7 @@
                       <template slot="placeholder">
                         <p class="slot-icon">
                           <img src="@/assets/images/search.svg" alt="" />
-                          Select Operator
+                          Operator
                         </p>
                       </template>
                     </Multiselect>
@@ -188,19 +168,11 @@
               </div>
 
               <div>
-                <div
-                  class="centered"
-                  style="margin-bottom: 0.8rem; margin-top: 0.75rem; margin-left: -1rem"
-                >
-                  <label>In the past</label>
-                  <ToggleCheckBox
-                    @input="toggleSelectedOperand"
-                    :value="MyOperand !== 'Negative'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label>In the future</label>
-                </div>
+                <small @click="toggleSelectedOperand" class="andOr">
+                  <span :class="MyOperand !== 'Negative' ? 'inactive' : ''">In the past</span>
+                  <span class="space-s">|</span>
+                  <span :class="MyOperand === 'Negative' ? 'inactive' : ''">In the future</span>
+                </small>
 
                 <FormField v-if="MyOperand === 'Negative'" :errors="form.field.operandValue.errors">
                   <template v-slot:input>
@@ -231,8 +203,7 @@
               </div>
             </div>
 
-            <div class="centered" style="flex-direction: column" v-else>
-              <p>Enter value:</p>
+            <div v-else>
               <FormField
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
@@ -588,17 +559,46 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 13vw;
+  width: 15vw;
   border: 1px solid #e8e8e8 !important;
   border-radius: 0.3rem;
   background-color: white;
   box-shadow: none !important;
+  color: $base-gray;
+  font-size: 12px;
 }
+
 ::v-deep .input-form {
-  width: 13vw;
+  width: 15vw;
 }
 ::v-deep .input-form__active {
   border: none;
+}
+.andOr {
+  border: 1px solid $soft-gray;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: $base-gray;
+}
+.inactive {
+  color: $very-light-gray;
+  font-size: 9px;
+  border-radius: 4px;
+}
+.space-s {
+  margin: 0 4px;
+}
+.l-gray {
+  color: $soft-gray;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 8px;
+  // margin-top: -16px;
+  color: $very-light-gray;
 }
 .multi-slot {
   display: flex;
@@ -675,8 +675,8 @@ img {
 }
 .alert-operand-row__options {
   display: flex;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   justify-content: space-evenly;
-  margin-top: -1rem;
 }
 </style>

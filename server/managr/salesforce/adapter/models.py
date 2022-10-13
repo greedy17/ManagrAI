@@ -1,6 +1,4 @@
 import json
-import pytz
-import requests
 from datetime import datetime
 import os.path
 import logging
@@ -367,7 +365,6 @@ class SalesforceAuthAccountAdapter:
             res = client.post(
                 f"{sf_consts.REFRESH_URI}", data=data, headers=sf_consts.AUTHENTICATION_HEADERS,
             )
-
             return SalesforceAuthAccountAdapter._handle_response(res)
 
     def list_fields(self, resource):
@@ -597,9 +594,10 @@ class SalesforceAuthAccountAdapter:
         merged_res = self._format_resource_response(merged_res, resource)
         return merged_res
 
-    def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
+    def list_relationship_data(
+        self, relationship, fields, value, sobject_type, include_owner=False, *args, **kwargs
+    ):
         # build the filter query from the name fields and value
-        sobject_type = args[0] if len(args) else None
         filter_query = ""
         for index, f in enumerate(fields):
             if value:
@@ -607,11 +605,24 @@ class SalesforceAuthAccountAdapter:
                 if index != 0:
                     string_val = f" OR {string_val}"
                 filter_query = filter_query + string_val
-
+        query = (
+            sf_consts.SALESFORCE_RESOURCE_QUERY_URI
+            if include_owner
+            else sf_consts.SALESFORCE_RESOURCE_REFRENCE_QUERY_URI
+        )
         filter_query_string = [f"AND ({filter_query})"] if len(filter_query) else []
+        add_fields = (
+            [
+                f"AND ({extra_field.replace(':','=')})"
+                for extra_field in kwargs.get("add_fields").split(",")
+            ]
+            if len(kwargs.get("add_fields", []))
+            else []
+        )
         # always retreive id
         fields.insert(0, "Id")
-        url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )[0]}"
+        filter_query_string.extend(add_fields)
+        url = f"{self.instance_url}{query(self.salesforce_id, relationship, fields, additional_filters=filter_query_string, limit=20, SobjectType=sobject_type )[0]}"
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
@@ -1567,6 +1578,18 @@ class PricebookEntryAdapter:
         formatted_data["imported_by"] = str(user_id)
 
         return PricebookEntryAdapter(**formatted_data)
+
+    @staticmethod
+    def get_current_values(integration_id, access_token, custom_base, user_id):
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_PRICEBOOKENTRY, integration_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.get(url, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},)
+            r = SalesforceAuthAccountAdapter._handle_response(r)
+            r = PricebookEntryAdapter.from_api(r, user_id)
+            return r
 
 
 class OpportunityLineItemAdapter:

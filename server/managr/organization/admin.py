@@ -1,7 +1,7 @@
 from django.contrib import admin
-
+from django import forms
 from managr.slack.models import OrganizationSlackIntegration
-
+from managr.core.models import User
 from .models import (
     OpportunityLineItem,
     Organization,
@@ -12,6 +12,7 @@ from .models import (
     Product2,
     Pricebook2,
     PricebookEntry,
+    Team,
 )
 
 
@@ -92,6 +93,19 @@ class CustomOpportunityLineItem(admin.ModelAdmin):
     list_filter = ("opportunity__owner",)
 
 
+class CustomUserInline(admin.StackedInline):
+    model = User
+    fields = ("email", "team")
+    extra = 0
+
+
+class CustomTeam(admin.ModelAdmin):
+    model = Team
+    inlines = (CustomUserInline,)
+    list_display = ("name", "organization", "team_lead")
+    list_filter = ("organization",)
+
+
 admin.site.register(Organization, CustomOrganization)
 admin.site.register(Account, CustomAccount)
 admin.site.register(Product2, CustomProduct2)
@@ -101,3 +115,4 @@ admin.site.register(OpportunityLineItem, CustomOpportunityLineItem)
 admin.site.register(Contact, CustomContact)
 admin.site.register(ActionChoice)
 admin.site.register(Stage)
+admin.site.register(Team, CustomTeam)

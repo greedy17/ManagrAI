@@ -1,200 +1,6 @@
 <template>
-  <div class="tab">
-    <div class="tab__header-items__group">
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
-        @click="selectedTab = 'TEMPLATE'"
-        class="tab__header-items__item"
-      >
-        Workflow Title
-      </div>
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
-        @click="selectedTab = 'GROUPS'"
-        class="tab__header-items__item"
-      >
-        Conditions
-      </div>
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
-        @click="selectedTab = 'CONFIG'"
-        class="tab__header-items__item"
-      >
-        Delivery
-      </div>
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
-        @click="selectedTab = 'MESSAGE'"
-        class="tab__header-items__item"
-      >
-        Message
-      </div>
-    </div>
-
-    <div class="tab__panel">
-      <div style="display: flex; justify-content: center">
-        <!-- <PulseLoadingSpinner v-if="savingInTab" /> -->
-        <div v-show="savedChanges">Saved Changes</div>
-      </div>
-      <div class="alerts-template-list__content">
-        <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
-          <div v-if="!templateNames.includes(alert.title)">
-            <h4>Edit workflow title:</h4>
-            <FormField
-              :id="`resource-title-${alert.id}`"
-              :errors="templateTitleField.errors"
-              @input="executeUpdateTemplate(templateTitleField)"
-              v-model="templateTitleField.value"
-            />
-          </div>
-          <div v-else>
-            <h3>{{ alert.title }}</h3>
-            <p class="even">
-              Cant edit templated alert titles &nbsp;
-              <img src="@/assets/images/exclamation.svg" class="invert" alt="" />
-            </p>
-          </div>
-        </div>
-        <div v-if="selectedTab == 'GROUPS'">
-          <div class="card-rows" v-for="(group, index) in alert.groupsRef" :key="index">
-            <div class="group-card">
-              <div style="display: flex; justify-content: flex-end; width: 100%">
-                <div class="img-border">
-                  <img
-                    @click.stop="onRemoveAlertGroup(group.id, index)"
-                    style="height: 1rem; cursor: pointer; filter: invert(10%)"
-                    src="@/assets/images/trash.svg"
-                    alt=""
-                  />
-                </div>
-              </div>
-
-              <div class="group-card__title">Workflow conditions group {{ index + 1 }}</div>
-              <div>
-                <p
-                  @click="onDeleteOperand(operand.id, i, index)"
-                  class="row"
-                  :key="i"
-                  v-for="(operand, i) in group.operandsRef"
-                >
-                  <span class="img-border">
-                    <img
-                      class="remove-color"
-                      src="@/assets/images/remove.svg"
-                      style="height: 1rem"
-                      alt=""
-                    />
-                  </span>
-                  {{ 'Condition ' + (i + 1) + ': ' }}
-                  {{ getReadableOperandRow(operand) }}
-                </p>
-
-                <div
-                  style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
-                >
-                  <button class="condition-button" @click="onShowOperandModal(index)">
-                    Add condition
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            v-if="!alert.groupsRef.length"
-            style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
-          >
-            <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
-          </div>
-        </div>
-        <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
-          <div class="alerts-template-list__content-message__form">
-            <div class="alerts-template-list__content-message__form-body">
-              <div>
-                <h3>Edit your workflow message:</h3>
-              </div>
-              <FormField :errors="messageTemplateForm.field.body.errors">
-                <template v-slot:input>
-                  <quill-editor
-                    @blur="messageTemplateForm.field.body.validate()"
-                    @input="executeUpdateMessageTemplate"
-                    ref="message-body"
-                    v-model="messageTemplateForm.field.body.value"
-                    :options="{
-                      modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                    }"
-                    class="message__box"
-                  />
-                </template>
-              </FormField>
-            </div>
-            <div
-              style="
-                display: flex;
-                align-items: flex-start;
-                flex-direction: column;
-                margin-left: 3rem;
-              "
-            >
-              <h3>Add CRM fields:</h3>
-              <Multiselect
-                placeholder="Select field"
-                v-model="crmValue"
-                @input="bindText(`${alert.resourceType}.${$event.apiName}`)"
-                :options="fields.list"
-                openDirection="below"
-                style="width: 14vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="fieldNextPage">
-                    Load More
-                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select field
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-          </div>
-        </div>
-        <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
-          <div class="card-rows">
-            <div class="group-card">
-              <div class="group-card__title">Delivery Options</div>
-              <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
-                <span class="img-border">
-                  <img
-                    class="remove-color"
-                    @click="onDeleteConfig(config.id, index)"
-                    src="@/assets/images/remove.svg"
-                    style="height: 1rem"
-                    alt=""
-                  />
-                </span>
-
-                {{ 'Option ' + (index + 1) + ': ' }}
-                {{ getReadableConfig(config) }}
-              </p>
-              <div style="display: flex; justify-content: center; width: 100%">
-                <button class="condition-button" @click="onShowSettingsModal">
-                  Add delivery option
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div>
+    <BuildYourOwn :oldAlert="alert" />
   </div>
 </template>
 
@@ -210,10 +16,11 @@ import { quillEditor } from 'vue-quill-editor'
 import debounce from 'lodash.debounce'
 
 //Internal
-import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
-import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
-import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
+// import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
+// import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
+// import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
 import FormField from '@/components/forms/FormField'
+import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 /**
  * Services
  *
@@ -245,10 +52,11 @@ export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    AlertOperandModal,
-    AlertGroupModal,
-    AlertSettingsModal,
+    // AlertOperandModal,
+    // AlertGroupModal,
+    // AlertSettingsModal,
     quillEditor,
+    BuildYourOwn,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
@@ -281,7 +89,6 @@ export default {
       fields: CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 200 },
-        filters: { forAlerts: true, filterable: true },
       }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
@@ -612,14 +419,13 @@ export default {
       }
     },
   },
-  async created() {
-    // populate values for stand alone fields
-    // for this version only allowing edit of certain fields or delete of array items
-    if (this.alert) {
-      this.templateTitleField.value = this.alert.title
-      this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
-    }
-  },
+  // async created() {
+
+  //   if (this.alert) {
+  //     this.templateTitleField.value = this.alert.title
+  //     this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
+  //   }
+  // },
 }
 </script>
 

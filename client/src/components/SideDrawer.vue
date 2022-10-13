@@ -145,6 +145,7 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
             fromWorkflow: true,
           })
+          console.log(res)
           this.workflows.push(res.data.results.length)
         }
       } catch (error) {

@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.DEAL_ROTTING" />
+  <PopularWorkflows :config="allConfigs.DEAL_REVIEW" />
 </template>
 
 <script>
@@ -11,7 +11,7 @@ import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWo
 import allConfigs from '../../configs'
 
 export default {
-  name: 'DealRotting',
+  name: 'DealReview',
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

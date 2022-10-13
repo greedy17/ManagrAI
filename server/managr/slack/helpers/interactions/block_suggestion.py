@@ -90,7 +90,7 @@ def process_get_user_accounts(payload, context):
     }
 
 
-@processor(required_context=["u", "resource"])
+@processor(required_context=["u", "resource_type"])
 def process_get_local_resource_options(payload, context):
     """
     Retrieves data saved in our db for resources, note this is not used when fields are from the slack forms built with fields
@@ -98,11 +98,10 @@ def process_get_local_resource_options(payload, context):
     """
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-    resource = context.get("resource")
+    resource = context.get("resource_type")
     additional_opts = json.loads(context.get("add_opts", json.dumps([])))
     field_id = context.get("field_id")
     # conver type to make sure it follows {label:str|num, values:str|num}
-
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
     if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
         return {
@@ -276,12 +275,15 @@ def process_get_external_relationship_options(payload, context):
     fields = context.get("fields").split(",") if len(context.get("fields")) else []
     value = payload["value"]
     resource = context.get("resource")
+    add_fields = context.get("add", None)
     attempts = 1
     while True:
         sf_account = user.salesforce_account
         sf_adapter = sf_account.adapter_class
         try:
-            res = sf_adapter.list_relationship_data(relationship, fields, value, resource)
+            res = sf_adapter.list_relationship_data(
+                relationship, fields, value, resource, add_fields=add_fields
+            )
             break
         except TokenExpired:
             if attempts >= 5:
