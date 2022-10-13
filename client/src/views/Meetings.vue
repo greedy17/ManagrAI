@@ -52,7 +52,7 @@
         </section>
       </div>
     </Modal>
-    <Modal
+    <section
       v-if="meetingOpen"
       dimmed
       @close-modal="
@@ -62,127 +62,101 @@
       "
     >
       <div class="create-modal">
-        <header class="create-modal__header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" height="28px" alt="" />
-            <h3>Create Zoom Meeting</h3>
-          </div>
+        <div class="form-field">
+          <p>Meeting Title</p>
+          <input v-model="meetingTitle" class="zoom-input" type="text" id="title" />
+        </div>
 
-          <img
-            src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -0.5rem; margin-right: 0.5rem; cursor: pointer"
-            @click="resetMeeting()"
-            alt=""
+        <div class="form-field">
+          <p for="description">Meeting Description</p>
+          <textarea v-model="description" class="zoom-input-ta" type="text" id="description" />
+        </div>
+
+        <div class="form-field">
+          <p for="startDate">Date</p>
+          <input id="startDate" v-model="startDate" class="zoom-input" type="date" />
+        </div>
+
+        <div class="form-field">
+          <p for="startTime">Time</p>
+          <input id="startTime" v-model="startTime" class="zoom-input" type="time" />
+        </div>
+
+        <div class="form-field">
+          <p>Duration</p>
+          <Multiselect
+            placeholder="Duration"
+            style="width: 32vw"
+            v-model="meetingDuration"
+            :options="fiveMinuteIntervals"
+            openDirection="below"
+            :multiple="false"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+          </Multiselect>
+        </div>
+
+        <div class="form-field">
+          <p>Internal Participants</p>
+          <Multiselect
+            placeholder="Internal Users"
+            style="width: 32vw"
+            v-model="internalParticipantsSelected"
+            :options="internalParticipants"
+            openDirection="below"
+            selectLabel="Enter"
+            track-by="id"
+            :custom-label="internalCustomLabel"
+            :multiple="true"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+          </Multiselect>
+        </div>
+
+        <div class="form-field">
+          <p>External Participants</p>
+          <Multiselect
+            placeholder="External Users"
+            style="width: 32vw; margin-bottom: 1rem"
+            v-model="externalParticipantsSelected"
+            :options="externalParticipants"
+            openDirection="above"
+            selectLabel="Enter"
+            track-by="id"
+            :custom-label="externalCustomLabel"
+            :multiple="true"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+            <template slot="afterList">
+              <p v-if="hasNext" @click="addMoreContacts" class="multi-slot__more">
+                Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+              </p>
+              <p v-else class="multi-slot__more" style="color: #4d4e4c; cursor: text">
+                End of list
+              </p>
+            </template>
+          </Multiselect>
+        </div>
+
+        <div class="form-field">
+          <p class="label">Additional Users</p>
+          <input
+            :class="
+              extraParticipantsSelected.length ? 'zoom-input' : 'light-gray-placeholder zoom-input'
+            "
+            v-model="extraParticipantsSelected"
+            type="text"
+            placeholder="Separate emails by commas"
           />
-        </header>
-        <section class="create-modal__body">
-          <span>
-            <label for="title">Meeting Title</label>
-            <input v-model="meetingTitle" class="zoom-input" type="text" id="title" />
-          </span>
-
-          <span>
-            <label for="description">Meeting Description</label>
-            <textarea v-model="description" class="zoom-input-ta" type="text" id="description" />
-          </span>
-
-          <span>
-            <label for="startDate">Date</label>
-            <input id="startDate" v-model="startDate" class="zoom-input" type="date" />
-          </span>
-
-          <span>
-            <label for="startTime">Time</label>
-            <input id="startTime" v-model="startTime" class="zoom-input" type="time" />
-          </span>
-
-          <span>
-            <label>Duration</label>
-            <Multiselect
-              placeholder="Duration"
-              style="width: 32vw"
-              v-model="meetingDuration"
-              :options="fiveMinuteIntervals"
-              openDirection="below"
-              :multiple="false"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </span>
-
-          <span>
-            <label>Internal Participants</label>
-            <Multiselect
-              placeholder="Internal Users"
-              style="width: 32vw"
-              v-model="internalParticipantsSelected"
-              :options="internalParticipants"
-              openDirection="below"
-              selectLabel="Enter"
-              track-by="id"
-              :custom-label="internalCustomLabel"
-              :multiple="true"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </span>
-
-          <span>
-            <label>External Participants</label>
-            <Multiselect
-              placeholder="External Users"
-              style="width: 32vw; margin-bottom: 1rem"
-              v-model="externalParticipantsSelected"
-              :options="externalParticipants"
-              openDirection="below"
-              selectLabel="Enter"
-              track-by="id"
-              :custom-label="externalCustomLabel"
-              :multiple="true"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-              <template slot="afterList">
-                <p v-if="hasNext" @click="addMoreContacts" class="multi-slot__more">
-                  Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                </p>
-                <p v-else class="multi-slot__more" style="color: #4d4e4c; cursor: text">
-                  End of list
-                </p>
-              </template>
-            </Multiselect>
-          </span>
-
-          <span>
-            <label class="label">Additional Users</label>
-            <input
-              :class="
-                extraParticipantsSelected.length
-                  ? 'zoom-input'
-                  : 'light-gray-placeholder zoom-input'
-              "
-              v-model="extraParticipantsSelected"
-              type="text"
-              placeholder="Separate emails by commas"
-            />
-          </span>
-
-          <div class="create-modal__footer">
-            <button v-if="!submitting" class="green_button" @click="submitZoomMeeting">
-              Submit
-            </button>
-            <div v-else>
-              <PipelineLoader />
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
-    </Modal>
+    </section>
 
     <div v-if="editOpModalOpen">
       <UpdateForm
@@ -238,36 +212,48 @@
       />
     </div>
 
-    <div class="container" ref="pipelines" v-if="!loading">
-      <div class="results">
-        <div class="results-title">
-          <p>
-            Meetings : <span>{{ meetings.length }}</span>
-          </p>
-        </div>
+    <div class="alerts-header">
+      <div class="results-title">
+        <p v-if="!meetingOpen">
+          Meetings : <span>{{ meetings.length }}</span>
+        </p>
 
-        <div class="flex-row">
-          <div v-if="hasZoomIntegration" class="tooltip">
-            <button class="img-button" :disabled="!hasZoomIntegration">
-              <img src="@/assets/images/calendar.svg" alt="" style="height: 1rem" />
-            </button>
-            <span class="tooltiptext">Schedule Zoom</span>
-          </div>
-          <div v-else>
-            <button @click="resetMeeting()" class="img-button" :disabled="!hasZoomIntegration">
-              <img src="@/assets/images/calendar.svg" alt="" style="height: 24px" />
-            </button>
-          </div>
-
-          <div class="tooltip">
-            <button @click="refreshCalEvents" class="img-button">
-              <img src="@/assets/images/refresh.svg" style="height: 24px" alt="" />
-            </button>
-            <span class="tooltiptext">Sync Calendar</span>
-          </div>
-        </div>
+        <button class="back-button" @click="resetMeeting()" v-else>
+          <img src="@/assets/images/left.svg" height="12px" alt="" /> Back
+        </button>
       </div>
 
+      <h3 v-if="meetingOpen">Create Zoom Meeting</h3>
+
+      <div v-if="!meetingOpen" class="flex-row">
+        <div class="tooltip">
+          <button @click="refreshCalEvents" class="img-button">
+            <img src="@/assets/images/refresh.svg" alt="" style="height: 22px" />
+          </button>
+          <span class="tooltiptext">Sync Calendar</span>
+        </div>
+
+        <button
+          @click="resetMeeting()"
+          style="margin-left: 8px"
+          class="green_button"
+          :disabled="!hasZoomIntegration"
+        >
+          Schedule Zoom
+        </button>
+      </div>
+
+      <div v-else>
+        <button v-if="!submitting" class="green_button" @click="submitZoomMeeting">
+          Create Meeting
+        </button>
+        <div v-else>
+          <PipelineLoader />
+        </div>
+      </div>
+    </div>
+
+    <div class="container" ref="pipelines" v-if="!loading && !meetingOpen">
       <div v-if="meetings.length">
         <MeetingWorkflow
           v-for="(meeting, i) in meetings"
@@ -330,6 +316,7 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     MeetingWorkflowHeader,
     MeetingWorkflow,
     UpdateForm,
@@ -338,6 +325,7 @@ export default {
   },
   data() {
     return {
+      selectedDate: null,
       contactCreateReferenceOpts: {},
       currentSelectedProduct: null,
       savingProduct: null,
@@ -477,8 +465,8 @@ export default {
   },
   computed: {
     allMeetingsUpdated() {
-      // return this.$store.state.meetings.every((meeting) => meeting.is_completed)
-      console.log(this.$store.state.meetings.every((meeting) => meeting.is_completed))
+      return this.$store.state.meetings.every((meeting) => meeting.is_completed)
+      // console.log(this.$store.state.meetings.every((meeting) => meeting.is_completed))
     },
     user() {
       return this.$store.state.user
@@ -1567,11 +1555,74 @@ export default {
 @import '@/styles/buttons';
 
 .container {
-  min-height: 92vh;
-  width: 38vw;
+  min-height: 85vh;
+  padding: 16px 0px;
+  width: 40vw;
   outline: 1px solid $soft-gray;
   border-radius: 8px;
   background-color: white;
+}
+.back-button {
+  color: $base-gray;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  letter-spacing: 0.75px;
+
+  img {
+    margin-right: 8px;
+  }
+}
+.transparent-container {
+  min-height: 94vh;
+  width: 48vw;
+  background-color: transparent;
+  position: relative;
+}
+#container {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: $base-gray;
+  opacity: 0.4;
+  z-index: 10;
+  border-radius: 8px;
+}
+#calendar {
+  z-index: 11;
+  color: white;
+  position: absolute;
+  bottom: 50%;
+  left: 40%;
+  font-size: 24px;
+}
+.alerts-header {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 72px;
+  background-color: white;
+  width: 96vw;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $light-gray-blue;
+  }
 }
 .empty-list {
   display: flex;
@@ -1687,6 +1738,40 @@ export default {
   }
 }
 
+:disabled {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: $soft-gray !important;
+  cursor: text !important;
+  color: $base-gray !important;
+  transition: all 0.3s;
+  font-size: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.dark-button {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: $dark-green;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
+  font-size: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 16px;
+
+  img {
+    filter: invert(99%);
+    margin-left: 8px;
+  }
+}
 .light-green-bg {
   background-color: $white-green;
   color: $dark-green !important;
@@ -1994,11 +2079,12 @@ section {
 }
 .pipelines {
   color: $base-gray;
-  margin-top: 24px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  margin-left: 88px;
+  justify-content: center;
+  margin-left: 80px;
+  margin-top: 12vh;
 }
 .invert {
   filter: invert(85%);
@@ -2193,18 +2279,18 @@ section {
 }
 .zoom-input {
   border: 1px solid $soft-gray;
-  border-radius: 0.3rem;
-  padding: 0.25rem;
-  height: 3rem;
-  width: 32vw;
+  border-radius: 6px;
+  padding: 12px 8px;
+
+  width: 40vw;
   font-family: inherit;
 }
 .zoom-input-ta {
   border: 1px solid $soft-gray;
-  border-radius: 0.3rem;
-  height: 100px;
-  padding: 0.25rem;
-  width: 32vw;
+  border-radius: 6px;
+  height: 80px;
+  padding: 8px;
+  width: 40vw;
   font-family: inherit;
 }
 #user-input:focus {
@@ -2289,7 +2375,6 @@ section {
 }
 .flex-end {
   width: 100%;
-  padding: 2rem 0.25rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2317,6 +2402,17 @@ a {
   font-weight: bold;
   font-size: 12px;
   border: none;
+  cursor: pointer;
+}
+.white_button {
+  color: $dark-green;
+  background-color: white;
+  max-height: 2rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1.25rem;
+  font-weight: bold;
+  font-size: 12px;
+  border: 1px solid $soft-gray;
   cursor: pointer;
 }
 
@@ -2414,57 +2510,40 @@ a {
 .select-btn:disabled:hover {
   transform: none;
 }
-.create-modal {
-  position: relative;
-  width: 36vw;
-  max-height: 80vh;
+.form-field {
   background-color: white;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+
+  color: $base-gray;
+  border-radius: 6px;
+  width: 50vw;
+  // min-height: 25vh;
+  letter-spacing: 0.75px;
+  padding: 2px 16px 32px 16px;
+  margin-top: 16px;
+  &__head {
+    padding: 8px 12px;
+    background-color: white;
+    margin-bottom: 0;
+    // color: $very-light-gray;
+  }
+  &__body {
+    padding: 6px 12px;
+    background-color: white;
+    font-size: 11px;
+    color: $light-gray-blue;
+    p {
+      margin-top: 0;
+    }
+  }
+}
+.create-modal {
+  width: 100%;
+  // background-color: white;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  overflow: scroll;
-
-  span {
-    margin-bottom: 8px;
-  }
-
-  &__header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 20px;
-    position: fixed;
-    background-color: white;
-    width: 36vw;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    h3 {
-      font-size: 21px;
-      letter-spacing: 1px;
-      margin-left: 4px;
-    }
-  }
-  &__body {
-    padding: 20px;
-    margin-top: 84px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-  &__footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    background-color: white;
-    position: sticky;
-    bottom: 0;
-    width: 36vw;
-    height: 70px;
-    padding: 8px 16px 0px 0px;
-  }
+  padding-bottom: 16px;
 }
 label {
   display: inline-block;

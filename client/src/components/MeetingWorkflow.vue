@@ -25,7 +25,11 @@
         <p>View Meeting Attendees: {{ meeting.participants.length }}</p>
       </div>
       <div v-else class="attendees">
-        <div v-for="(participant, participantIndex) in participants" :key="participantIndex">
+        <div
+          class="attendees__div"
+          v-for="(participant, participantIndex) in participants"
+          :key="participantIndex"
+        >
           <div class="roww" v-if="!meeting.participants[participantIndex].id">
             <p>
               {{ meeting.participants[participantIndex].email }}
@@ -81,7 +85,7 @@
               </p>
               <img
                 src="@/assets/images/close.svg"
-                style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+                style="height: 18px; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
                 @click="addingContact = !addingContact"
               />
             </div>
@@ -314,7 +318,7 @@
             </div>
 
             <div class="contact-field-section__footer">
-              <p
+              <button
                 v-if="hasLastName"
                 @click="
                   ;(addingContact = !addingContact),
@@ -325,12 +329,11 @@
                       formData,
                     )
                 "
-                style="color: #199e54"
+                class="add-button"
               >
                 Add
-              </p>
-              <p v-else style="color: #aaaaaa">Add</p>
-              <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
+              </button>
+              <!-- <p v-else style="color: #aaaaaa">Add</p> -->
             </div>
           </div>
 
@@ -397,12 +400,12 @@
             <span class="tooltiptext">Change {{ resourceType }}</span>
           </div>
 
-          <div class="tooltip">
+          <!-- <div class="tooltip">
             <button class="img-button" @click="emitGetNotes(resourceId)">
               <img src="@/assets/images/note.svg" height="16px" alt="" />
             </button>
             <span class="tooltiptext">View Notes</span>
-          </div>
+          </div> -->
         </div>
       </section>
 
@@ -419,8 +422,8 @@
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p v-if="!resourceType || !mapType">Select Record</p>
-          <p
+          <h4 v-if="!resourceType || !mapType">Select Record</h4>
+          <h4
             v-else-if="resourceType && resourceId"
             style="cursor: pointer; color: #4d4e4c; font-size: 14px"
             @click="changeMapType(null)"
@@ -428,15 +431,15 @@
             Select
             {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
             <img src="@/assets/images/swap.svg" height="14px" alt="" />
-          </p>
-          <p
+          </h4>
+          <h4
             v-else
             style="cursor: pointer; color: #4d4e4c; font-size: 14px"
             @click="changeMapType(null)"
           >
             Select {{ mapType ? mapType : 'Record' }}
             <img src="@/assets/images/swap.svg" height="14px" alt="" />
-          </p>
+          </h4>
 
           <img
             src="@/assets/images/close.svg"
@@ -480,11 +483,8 @@
           </Multiselect>
         </div>
 
-        <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Link to record</p>
-        </div>
-        <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Link to record</p>
+        <div class="add-field-section__footer">
+          <button :disabled="!mappedOpp" @click="mapOpp" class="add-button">Link to Record</button>
         </div>
       </div>
     </div>
@@ -494,7 +494,7 @@
 
       <div class="cards__header__div">
         <p v-if="!resourceId && !meetingLoading" class="red-text">
-          Link to record in order to update.
+          Link meeting to a record in order to update.
         </p>
       </div>
 
@@ -511,7 +511,7 @@
               resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
             )
           "
-          class="add-button"
+          class="white-button"
         >
           Update
         </button>
@@ -865,7 +865,7 @@ export default {
   border-radius: 8px;
   margin-left: 12px;
   padding-top: 12px;
-  div {
+  &__div {
     background-color: $off-white;
     border-radius: 8px;
     color: $base-gray;
@@ -961,6 +961,19 @@ a {
   filter: invert(30%);
   cursor: pointer;
 }
+.white-button {
+  border: 1px solid $soft-gray;
+  padding: 8px 12px;
+  margin-right: 1rem;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  transition: all 0.3s;
+  font-size: 12px;
+  letter-spacing: 0.75px;
+  font-weight: bold;
+}
 .add-button {
   border: none;
   padding: 8px 12px;
@@ -969,6 +982,17 @@ a {
   background-color: $dark-green;
   cursor: pointer;
   color: white;
+  transition: all 0.3s;
+  font-size: 12px;
+}
+.add-button:disabled {
+  border: none;
+  padding: 8px 12px;
+  margin-right: 1rem;
+  border-radius: 8px;
+  background-color: $soft-gray;
+  cursor: text;
+  color: $gray;
   transition: all 0.3s;
   font-size: 12px;
 }
@@ -1027,7 +1051,7 @@ a {
 }
 .red-text {
   color: $coral !important;
-  background-color: $light-coral;
+  // background-color: $light-coral;
   padding: 8px !important;
   border-radius: 8px;
   display: flex;
@@ -1061,66 +1085,55 @@ a {
 .contact-field-section {
   position: absolute;
   z-index: 7;
-  right: 0;
-  top: 0;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
-  background-color: $white;
-  min-width: 46vw;
+  background-color: white !important;
+  width: 40vw;
   overflow: scroll;
   box-shadow: 2px 2px 3px 2px $very-light-gray;
-  max-height: 50vh;
+  min-height: 36vh;
+  max-height: 70vh;
   &__title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem;
+    padding: 12px !important;
     color: $base-gray;
-    background-color: $off-white;
     letter-spacing: 0.4px;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px !important;
     width: 100%;
     position: sticky;
     top: 0;
     z-index: 2;
   }
   &__body {
-    p {
-      background-color: $white-green;
-      color: $dark-green;
-      width: fit-content;
-      padding: 4px 8px;
-      margin: 16px 0px 0px 0px;
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      margin-left: 1px;
-    }
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    margin: 8px;
+    margin-left: 8px;
     flex-direction: column;
     overflow: scroll;
+    background-color: white !important;
+
+    p {
+      color: $light-gray-blue;
+      font-size: 12px;
+    }
   }
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    position: sticky;
+    justify-content: flex-end;
+    position: absolute;
     bottom: 0;
     z-index: 2;
-    background-color: white;
+    background-color: white !important;
     margin-top: 0.5rem;
     padding: 0.75rem 0.5rem;
     width: 100%;
     height: 2rem;
-    border-top: 1px solid $soft-gray;
-    p {
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      color: $dark-green;
-    }
   }
 }
 .multi-slot {
@@ -1157,27 +1170,27 @@ a {
 .noupdate-field-section {
   position: absolute;
   z-index: 7;
-  left: 1.5rem;
-  top: 10vh;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
   background-color: $white;
-  min-width: 20vw;
+  width: 26vw;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem;
+    padding: 0 0.5rem;
     align-items: center;
     color: $base-gray;
-    background-color: $off-white;
+
     letter-spacing: 0.4px;
     font-weight: bold;
     font-size: 14px;
     width: 100%;
   }
   &__body {
-    height: 2rem;
+    margin: 16px 0px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1190,7 +1203,7 @@ a {
     padding: 0rem 0.5rem;
     width: 100%;
     min-height: 6vh;
-    border-top: 1px solid $soft-gray;
+
     p {
       cursor: pointer;
       font-weight: bold;
@@ -1202,10 +1215,11 @@ a {
 .participant-field-section {
   position: absolute;
   z-index: 7;
-  right: 0.5rem;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
   background-color: $white;
-  min-width: 20vw;
+  min-width: 26vw;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
@@ -1214,7 +1228,7 @@ a {
     align-items: center;
     padding: 0.5rem;
     color: $base-gray;
-    background-color: $off-white;
+
     letter-spacing: 0.4px;
     font-weight: bold;
     font-size: 14px;
@@ -1233,7 +1247,7 @@ a {
     padding: 0rem 0.5rem;
     width: 100%;
     min-height: 6vh;
-    border-top: 1px solid $soft-gray;
+
     p {
       cursor: pointer;
       font-weight: bold;
@@ -1245,8 +1259,8 @@ a {
 .add-field-section {
   position: absolute;
   z-index: 20;
-  top: 96px;
-  left: 144px;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -1265,17 +1279,9 @@ a {
     align-items: center;
     padding: 8px 4px 8px 12px;
     color: $base-gray;
-    background-color: $off-white;
+
     letter-spacing: 0.75px;
     width: 100%;
-    margin-left: 0px;
-
-    p {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      font-size: 16px;
-    }
   }
   &__body {
     padding: 32px 16px;
@@ -1287,12 +1293,11 @@ a {
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     margin-top: 1rem;
     width: 100%;
     height: 80px;
-    border-top: 1px solid $soft-gray;
-    margin-left: 0px;
+
     p {
       cursor: pointer;
       color: $dark-green;

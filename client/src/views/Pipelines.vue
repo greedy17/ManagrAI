@@ -1,5 +1,5 @@
 <template>
-  <div class="pipelines">
+  <div @keyup.esc="closeInlineEditor" tabindex="0" class="pipelines">
     <Modal v-if="modalOpen" dimmed>
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
@@ -58,12 +58,13 @@
                 @click="addingTemplate = !addingTemplate"
                 class="note-templates__content"
               >
-                <img
+                <!-- <img
                   src="@/assets/images/add-document.svg"
                   height="18px"
                   style="margin-right: 2px"
                   alt=""
-                />
+                /> -->
+                Insert template
               </span>
 
               <span @click="goToProfile" class="note-templates__content" v-else>
@@ -76,7 +77,7 @@
               <div
                 v-for="(template, i) in noteTemplates"
                 :key="i"
-                @click="setTemplate(template.body, field.apiName, template.subject)"
+                @click="setTemplate(template.body, 'meeting_comments', template.subject)"
                 class="note-templates2__content"
               >
                 {{ template.subject }}
@@ -1638,38 +1639,15 @@
       </h3> -->
       <section style="margin-top: -10px" class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
-          <!-- <Multiselect
-            style="z-index: 20"
-            :options="listViews"
-            selectLabel="Enter"
-            value="All Opportunities"
-          /> -->
-          <button @click.stop="showList = !showList" class="select-btn1">
+          <small class="pipeline-header">View:</small>
+          <button @click.stop="showList = !showList" class="text-button">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-            <img
-              v-if="!showList"
-              style="height: 0.7rem; margin-left: 0.5rem"
-              src="@/assets/images/rightArrow.svg"
-              alt=""
-            />
-            <img
-              v-else
-              style="height: 0.7rem; margin-left: 0.5rem"
-              src="@/assets/images/downArrow.svg"
-              alt=""
-            />
+
+            <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
-              <p>
-                Opportunities
-                <img
-                  src="@/assets/images/shuffle.svg"
-                  style="margin-left: 4px; padding-top: 2px"
-                  height="14px"
-                  alt=""
-                />
-              </p>
+              <p>Opportunities</p>
             </div>
             <!-- <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -1767,9 +1745,10 @@
               class="add-filter-button"
             >
               <img
-                src="@/assets/images/plusOne.svg"
+                src="@/assets/images/filter.svg"
                 class="invert"
-                style="height: 0.8rem; margin-right: 0.25rem"
+                height="12px"
+                style="margin-right: 0.25rem"
                 alt=""
               />Filter
             </button>
@@ -2257,10 +2236,10 @@
           </button>
         </div>
       </div>
-      <div style="margin-top: 16px"></div>
+      <div style="margin-top: 8px"></div>
       <!-- <div class="results"></div> -->
       <section v-if="!selectedWorkflow && !loadingWorkflows" class="table-section">
-        <div v-outside-click="emitCloseEdit" class="table">
+        <div style="position: relative" v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
             :oppFields="oppFields"
             @check-all="onCheckAll"
@@ -2286,6 +2265,7 @@
             @set-dropdown-value="setDropdownValue"
             @get-reference-opts="getReferenceOpts"
             @updated-values="updateOpps"
+            @close-inline-editor="closeInlineEditor"
             :dropdownLoading="dropdownLoading"
             :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
@@ -2306,6 +2286,239 @@
             :currentInlineRow="currentInlineRow"
             :extraPipelineFields="extraPipelineFields"
           />
+
+          <div
+            :key="opp.id"
+            v-for="(opp, j) in allOpps"
+            :style="`top: ${(j + 1) * 10}vh;`"
+            class="table-row-overlay"
+          >
+            <div class="cell-name"></div>
+            <div
+              class="table-cell"
+              :key="i"
+              v-for="(field, i) in oppFields"
+              :class="{
+                'table-cell-wide':
+                  field.dataType === 'TextArea' ||
+                  (field.length > 250 && field.dataType === 'String'),
+              }"
+            >
+              <div
+                v-show="currentCell == i && currentInlineRow == j && editingInline"
+                class="inline-edit"
+              >
+                <div class="inline-edit__body">
+                  <div
+                    v-if="
+                      field.dataType === 'TextArea' ||
+                      (field.length > 250 && field.dataType === 'String')
+                    "
+                    class="inline-row"
+                  >
+                    <textarea
+                      id="user-input-wide-inline"
+                      :value="
+                        field.apiName.includes('__c')
+                          ? opp['secondary_data'][field.apiName]
+                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                      "
+                      @input="setUpdateValues(field.apiName, $event.target.value)"
+                    />
+                  </div>
+                  <div
+                    v-else-if="
+                      (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
+                      (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
+                      (field.dataType === 'String' && field.apiName !== 'NextStep') ||
+                      (field.dataType === 'Email' && field.apiName !== 'NextStep')
+                    "
+                    class="inline-row"
+                  >
+                    <input
+                      @input="setUpdateValues(field.apiName, $event.target.value)"
+                      id="user-input-inline"
+                      type="text"
+                      :value="
+                        field.apiName.includes('__c')
+                          ? opp['secondary_data'][field.apiName]
+                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                      "
+                    />
+                  </div>
+
+                  <div
+                    v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
+                  >
+                    <Multiselect
+                      style="width: 23vw; font-size: 12px"
+                      :options="allPicklistOptions[field.id]"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      track-by="value"
+                      label="label"
+                      v-model="dropdownVal[field.apiName]"
+                      :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                      @select="
+                        setUpdateValues(
+                          field.apiName === 'ForecastCategory'
+                            ? 'ForecastCategoryName'
+                            : field.apiName,
+                          $event.value,
+
+                          field.dataType === 'MultiPicklist' ? true : false,
+                        )
+                      "
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          {{
+                            (
+                              field.apiName.includes('__c')
+                                ? opp['secondary_data'][field.apiName]
+                                : opp['secondary_data'][
+                                    capitalizeFirstLetter(camelize(field.apiName))
+                                  ]
+                            )
+                              ? field.apiName.includes('__c')
+                                ? opp['secondary_data'][field.apiName]
+                                : opp['secondary_data'][
+                                    capitalizeFirstLetter(camelize(field.apiName))
+                                  ]
+                              : field.referenceDisplayLabel
+                          }}
+                        </p>
+                      </template>
+                    </Multiselect>
+                    <!-- <Multiselect
+                      v-else-if="field.apiName === 'StageName'"
+                      :options="allPicklistOptions[field.id]"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      style="width: 23vw; font-size: 13px"
+                      track-by="value"
+                      label="label"
+                      @select="emitDropdown($event, opp)"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          {{
+                            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                          }}
+                        </p>
+                      </template>
+                    </Multiselect> -->
+                  </div>
+                  <div class="inline-row" v-else-if="field.dataType === 'Date'">
+                    <input
+                      type="date"
+                      id="user-input-inline"
+                      :value="
+                        field.apiName.includes('__c')
+                          ? opp['secondary_data'][field.apiName]
+                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                      "
+                      @input="setUpdateValues(field.apiName, $event.target.value)"
+                    />
+                  </div>
+                  <div v-else-if="field.dataType === 'DateTime'">
+                    <input
+                      type="datetime-local"
+                      id="user-input-inline"
+                      :value="
+                        field.apiName.includes('__c')
+                          ? opp['secondary_data'][field.apiName]
+                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                      "
+                      @input="setUpdateValues(field.apiName, $event.target.value)"
+                    />
+                  </div>
+                  <div
+                    v-else-if="
+                      field.dataType === 'Phone' ||
+                      field.dataType === 'Double' ||
+                      field.dataType === 'Currency'
+                    "
+                    class="inline-row"
+                  >
+                    <input
+                      id="user-input-inline"
+                      type="number"
+                      :value="
+                        field.apiName.includes('__c')
+                          ? opp['secondary_data'][field.apiName]
+                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                      "
+                      @input="setUpdateValues(field.apiName, $event.target.value)"
+                    />
+                  </div>
+                  <div v-else-if="field.dataType === 'Boolean'">
+                    <Multiselect
+                      v-model="dropdownVal[field.apiName]"
+                      :options="booleans"
+                      openDirection="below"
+                      style="width: 23vw"
+                      selectLabel="Enter"
+                      @select="setUpdateValues(field.apiName, $event)"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          {{
+                            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                          }}
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                  <div v-else-if="field.dataType === 'Reference'">
+                    <Multiselect
+                      style="width: 23vw; font-size: 13px"
+                      v-model="dropdownVal[field.apiName]"
+                      :options="referenceOpts[field.apiName]"
+                      @open="getCreateReferenceOpts(field.apiName, field.id)"
+                      :loading="dropdownLoading"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      label="name"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          {{ field.apiName }}
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
+                <div class="inline-edit__footer">
+                  <small>ESC to cancel</small>
+                  <button
+                    @click="inlineUpdate(formData, opp.id, opp.integrationId)"
+                    class="add-button"
+                  >
+                    Update
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -2378,27 +2591,6 @@
           </div>
         </div>
       </section>
-      <div class="row between height-s">
-        <!-- <h6 style="color: #484a6e; min-width: fit-content">
-          {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-        </h6> -->
-        <div class="pagination">
-          <span class="results-2">
-            Displaying
-            {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length }} of
-            {{ selectedWorkflow && currentWorkflow ? currentWorkflow.length : oppTotal }}</span
-          >
-          <button
-            v-if="hasNext && !selectedWorkflow"
-            @click="nextPage"
-            style="font-size: 11px"
-            class="select-btn"
-            :disabled="loadingNext"
-          >
-            Next
-          </button>
-        </div>
-      </div>
     </div>
     <div v-if="loading">
       <Loader loaderText="Pulling in your latest Salesforce data" />
@@ -2438,6 +2630,8 @@ export default {
   },
   data() {
     return {
+      editingInline: false,
+      currentCell: null,
       loadingNext: false,
       viewingProducts: false,
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
@@ -2735,6 +2929,9 @@ export default {
     },
   },
   methods: {
+    closeInlineEditor() {
+      this.editingInline = false
+    },
     goToWorkflow(id) {
       this.$router.push({ name: 'Pipelines', params: { id: id } })
     },
@@ -2866,17 +3063,14 @@ export default {
     //   }, 100)
     // },
     async getFilteredOpps() {
-      this.currentPage = 1
       try {
-        const res = await SObjects.api.getObjects('Opportunity', 1, true, [
+        const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, [
           ...this.filters,
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
         ])
 
         this.allOpps = res.results
         this.originalList = res.results
-        res.next ? (this.hasNext = true) : (this.hasNext = false)
-        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
         this.oppTotal = res.count
 
         if (this.currentList === 'Closing this month') {
@@ -2897,10 +3091,7 @@ export default {
     pricebookLabel({ name }) {
       return name
     },
-    nextPage() {
-      this.currentPage += 1
-      this.addMore(this.currentPage)
-    },
+
     replaceURLs(message, field) {
       if (!message) return
 
@@ -2917,8 +3108,10 @@ export default {
 
       this.setUpdateValues(field, message)
     },
-    changeCurrentRow(i) {
+    changeCurrentRow(i, cell) {
       this.currentInlineRow = i
+      this.currentCell = cell
+      this.editingInline = true
     },
     addToForecastList() {
       let list = []
@@ -3039,28 +3232,26 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
         if (this.filterText) {
-          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+          let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, [
             ...this.filters,
             ['CONTAINS', 'Name', this.filterText.toLowerCase()],
           ])
-          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-          this.allOppsForWorkflows = wfr.results
+
           this.allOpps = updatedRes.results
           this.originalList = updatedRes.results
-          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+
           this.oppTotal = updatedRes.count
-          this.currentPage = 1
         } else {
-          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-          this.allOppsForWorkflows = wfr.results
+          let updatedRes = await SObjects.api.getObjectsForWorkflows(
+            'Opportunity',
+            true,
+            this.filters,
+          )
+
           this.allOpps = updatedRes.results
           this.originalList = updatedRes.results
-          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
+
           this.oppTotal = updatedRes.count
-          this.currentPage = 1
         }
         if (this.selectedWorkflow) {
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3138,15 +3329,17 @@ export default {
         let res
         if (this.filterText) {
           const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
-          res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
-        } else if (this.workflowFilterText) {
-          const textFilters = [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],
-          ]
-          res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
-        } else {
-          res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+          res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, textFilters)
+        }
+        // else if (this.workflowFilterText) {
+        //   const textFilters = [
+        //     ...this.filters,
+        //     ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],
+        //   ]
+        //   res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
+        // }
+        else {
+          res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, this.filters)
         }
         if (this.selectedWorkflow) {
           this.allOpps = res.results
@@ -3825,12 +4018,9 @@ export default {
     async updateOpps() {
       try {
         if (!this.filterText) {
-          let res = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
+          let res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, this.filters)
           this.allOpps = res.results
           this.originalList = res.results
-          res.next ? (this.hasNext = true) : (this.hasNext = false)
-          this.hasNextOriginal = this.hasNext
-          res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
           this.oppTotal = res.count
           this.originalOppTotal = res.count
           if (this.currentList === 'Closing this month') {
@@ -3864,7 +4054,13 @@ export default {
       }
     },
     async resourceSync() {
-      if (this.currentDay !== this.syncDay + '/') {
+      // console.log(this.currentDay, this.syncDay)
+      console.log(this.currentDay, '0' + this.syncDay)
+      if (
+        this.currentDay !== this.syncDay + '/' &&
+        this.currentDay !== this.syncDay &&
+        this.currentDay !== '0' + this.syncDay
+      ) {
         setTimeout(() => {
           this.loading = true
         }, 300)
@@ -3928,28 +4124,23 @@ export default {
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (this.filterText) {
-          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+          let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, [
             ...this.filters,
             ['CONTAINS', 'Name', this.filterText.toLowerCase()],
           ])
-          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-          this.allOppsForWorkflows = wfr.results
           this.allOpps = updatedRes.results
           this.originalList = updatedRes.results
-          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
           this.oppTotal = updatedRes.count
-          this.currentPage = 1
         } else {
-          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, this.filters)
-          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-          this.allOppsForWorkflows = wfr.results
+          let updatedRes = await SObjects.api.getObjectsForWorkflows(
+            'Opportunity',
+            true,
+            this.filters,
+          )
+
           this.allOpps = updatedRes.results
           this.originalList = updatedRes.results
-          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
           this.oppTotal = updatedRes.count
-          this.currentPage = 1
         }
 
         if (this.selectedWorkflow) {
@@ -4062,7 +4253,6 @@ export default {
 
       this.editOpModalOpen = false
       this.modalOpen = false
-
       this.ModalOpen = false
       try {
         const res = await SObjects.api.updateResource({
@@ -4077,28 +4267,18 @@ export default {
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (this.filterText) {
-          let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [
+          let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, [
             ...this.filters,
             ['CONTAINS', 'Name', this.filterText.toLowerCase()],
           ])
-          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-          this.allOppsForWorkflows = wfr.results
           this.allOpps = updatedRes.results
           this.originalList = updatedRes.results
-          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
           this.oppTotal = updatedRes.count
-          this.currentPage = 1
         } else {
           let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, [...this.filters])
-          let wfr = await SObjects.api.getObjectsForWorkflows('Opportunity')
-          this.allOppsForWorkflows = wfr.results
           this.allOpps = updatedRes.results
           this.originalList = updatedRes.results
-          updatedRes.next ? (this.hasNext = true) : (this.hasNext = false)
-          updatedRes.previous ? (this.hasPrev = true) : (this.hasPrev = false)
           this.oppTotal = updatedRes.count
-          this.currentPage = 1
         }
 
         if (this.selectedWorkflow) {
@@ -4151,7 +4331,7 @@ export default {
             ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
             : this.filters
         }
-        let updatedRes = await SObjects.api.getObjects('Opportunity', 1, true, filter)
+        let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filter)
         this.allOpps = updatedRes.results
         this.originalList = updatedRes.results
         if (this.storedFilters.length) {
@@ -4362,7 +4542,7 @@ export default {
     },
     async getUsers() {
       try {
-        const res = await SObjects.api.getObjects('User')
+        const res = await SObjects.api.getObjectsForWorkflows('User')
         this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
       } catch (e) {
         this.$toast('Error gathering users!', {
@@ -4410,35 +4590,13 @@ export default {
         this.loadingAccounts = false
       }
     },
-    // async getObjectsForWorkflows() {
-    //   this.loading = true
-    //   try {
-    //     const res = await SObjects.api.getObjectsForWorkflows('Opportunity')
-    //     this.allOppsForWorkflows = res.results
-    //   } catch (e) {
-    //     this.$toast('Error gathering Opportunities!', {
-    //       timeout: 2000,
-    //       position: 'top-left',
-    //       type: 'error',
-    //       toastClassName: 'custom',
-    //       bodyClassName: ['custom'],
-    //     })
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
-    async getObjects(page = 1) {
-      this.currentPage = page
 
+    async getObjects() {
       this.loading = true
-
       try {
-        const res = await SObjects.api.getObjects('Opportunity', page, true, this.filters)
+        const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, this.filters)
         this.allOpps = res.results
         this.originalList = res.results
-        res.next ? (this.hasNext = true) : (this.hasNext = false)
-        this.hasNextOriginal = this.hasNext
-        res.previous ? (this.hasPrev = true) : (this.hasPrev = false)
         this.oppTotal = res.count
         this.originalOppTotal = res.count
       } catch (e) {
@@ -4453,31 +4611,7 @@ export default {
         this.loading = false
       }
     },
-    async addMore(page) {
-      this.loadingNext = true
-      try {
-        const filter = this.filterText
-          ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
-          : this.filters
-        let response = await SObjects.api.getObjects('Opportunity', page, true, filter)
-        const allOppsSpread = [...response.results, ...this.allOpps]
 
-        this.allOpps = allOppsSpread
-        response.next ? (this.hasNext = true) : (this.hasNext = false)
-      } catch (e) {
-        this.$toast('Error gathering Opportunities!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        setTimeout(() => {
-          this.loadingNext = false
-        }, 200)
-      }
-    },
     async getNotes(id) {
       try {
         const res = await SObjects.api.getNotes({
@@ -4615,7 +4749,28 @@ export default {
     transform: translate(0%, 50%);
   }
 }
+.inline-edit {
+  position: absolute;
+  margin-top: 7.5vh;
+  background-color: white;
+  box-shadow: 1px 1px 20px 1px $very-light-gray;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-left: 2px;
+  width: 25vw;
 
+  &__body {
+    padding: 16px 0px;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 2px solid $soft-gray;
+    padding: 8px 0px;
+  }
+}
 .empty-list {
   display: flex;
   flex-direction: column;
@@ -4744,7 +4899,7 @@ export default {
   letter-spacing: 0.5px;
   padding: 4px 0px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
 
   /* Position the tooltip text */
   position: absolute;
@@ -5218,6 +5373,11 @@ select {
     height: 18px !important;
   }
 }
+.pipeline-header {
+  font-size: 11px;
+  color: $light-gray-blue;
+  margin-left: 4px;
+}
 .select-btn2 {
   border: 0.5px solid $very-light-gray;
   padding: 0.375rem 0.75rem;
@@ -5295,7 +5455,7 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 79vh;
+  max-height: 88vh;
   overflow: scroll;
   border-radius: 12px;
   border: 1px solid #e8e8e8;
@@ -5371,6 +5531,31 @@ h3 {
 .table-row {
   display: table-row;
   left: 0;
+}
+.table-row-overlay {
+  top: 10vh;
+  z-index: 20;
+  position: absolute;
+  display: table-row;
+
+  // height: 100%;
+}
+.table-cell {
+  display: table-cell;
+  min-width: 16vw;
+  border: none;
+  font-size: 13px;
+}
+.table-cell-wide {
+  display: table-cell;
+  min-width: 26vw;
+  border: none;
+  font-size: 13px;
+}
+.cell-name {
+  min-width: 21.5vw;
+  display: table-cell;
+  padding-left: 4px;
 }
 .modal-container {
   background-color: $white;
@@ -5603,10 +5788,13 @@ section {
   justify-content: flex-start !important;
 }
 .pipelines {
-  padding: 32px 0px 0px 72px;
+  padding: 28px 0px 0px 72px;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
   letter-spacing: 0.75px !important;
+}
+.pipelines:focus {
+  outline: none;
 }
 .invert {
   filter: invert(80%);
@@ -5632,15 +5820,15 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  margin: 0 0.5rem 0 0;
   padding: 0.25rem 0.6rem;
   border-radius: 6px;
   background-color: transparent;
   cursor: pointer;
-  color: $dark-green;
+  color: $base-gray;
+  letter-spacing: 0.75px !important;
 
   img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+    filter: invert(70%);
   }
 }
 .add-button {
@@ -5694,6 +5882,29 @@ section {
   border-radius: 8px;
   margin-right: 0.5rem;
 }
+#user-input-inline {
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background-color: white;
+  width: 23vw;
+  font-family: $base-font-family;
+  letter-spacing: 0.75px;
+  padding: 8px 12px;
+}
+#user-input-wide-inline {
+  border: 1px solid #e8e8e8;
+  height: 140px;
+  border-radius: 8px;
+  background-color: white;
+  min-height: 2.5rem;
+  width: 23vw;
+  font-family: $base-font-family;
+  letter-spacing: 0.75px;
+  padding: 8px 12px;
+}
+#user-input-wide-inline {
+  outline: none;
+}
 #user-input {
   border: 1px solid #e8e8e8;
   border-radius: 8px;
@@ -5707,7 +5918,8 @@ section {
 #user-input > div {
   color: red !important;
 }
-#user-input:focus {
+#user-input:focus,
+#user-input-inline:focus {
   outline: none;
 }
 .number-input {
@@ -5796,6 +6008,14 @@ main:hover > span {
   color: white;
   font-weight: bold;
 }
+.text-button {
+  border: none;
+  font-size: 13px;
+  background-color: transparent;
+  margin-right: 8px;
+  color: $base-gray;
+  letter-spacing: 0.75px;
+}
 .list-section {
   z-index: 4;
   position: absolute;
@@ -5817,7 +6037,7 @@ main:hover > span {
     top: 0;
     z-index: 5;
     color: $base-gray;
-    background-color: $white;
+    background-color: $off-white;
     letter-spacing: 0.75px;
     padding-left: 0.75rem;
     font-size: 16px;
@@ -5858,7 +6078,7 @@ main:hover > span {
   border-radius: 6px;
   color: $base-gray;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.75px;
 }
 .list-button:hover {

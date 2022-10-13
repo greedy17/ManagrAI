@@ -112,6 +112,7 @@ input[type='search']:focus {
   color: $base-gray;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 400 !important;
   letter-spacing: 0.75px;
 }
 .filter-button:hover {

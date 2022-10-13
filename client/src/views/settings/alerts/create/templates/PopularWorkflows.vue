@@ -1,19 +1,43 @@
 <template>
   <div class="alerts-page">
     <div class="alerts-header">
-      <div @click="test">
-        <h3>{{ config.title }}</h3>
-        <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-          {{ config.subtitle }}
-        </p>
+      <button @click="$router.push({ name: 'ListTemplates' })" class="back-button">
+        <img src="@/assets/images/left.svg" height="14px" alt="" />
+        Back
+      </button>
+
+      <h3>{{ config.title }}</h3>
+
+      <div v-if="hasSlack">
+        <PulseLoadingSpinnerButton
+          :loading="savingTemplate"
+          :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
+          text="Activate Template"
+          @click.stop="onSave"
+          :disabled="!verifySubmit() || savingTemplate"
+        />
       </div>
 
-      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
-        <img class="invert" src="@/assets/images/back.svg" alt="" />
-        Back to workflows
-      </button>
+      <div v-else>
+        <button
+          v-if="largeOpps"
+          :disabled="!selectFieldBool || !largeOppsBool"
+          @click="noSlackSave"
+          :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+        <button
+          v-else
+          @click="noSlackSave"
+          :disabled="selectField ? !selectFieldBool : null"
+          :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+      </div>
     </div>
-    <div style="margin-top: 1rem" class="alert__column container">
+    <div class="centered">
       <div
         class="forecast__collection"
         :key="i"
@@ -21,85 +45,77 @@
       >
         <div v-if="selectField">
           <div
-            class="delivery__row"
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <div v-if="largeOpps">
-              <span style="margin-bottom: 0.5rem">Select your "Amount" Field</span>
-              <div>
-                <div class="alert-group-row__operands">
-                  <div
-                    :key="i"
-                    v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups"
-                    class="alert-group-row__operands__row rows"
-                  >
-                    <div :class="i > 0 ? 'visible' : ''">
-                      <div>
-                        <div>
-                          <FormField>
-                            <template v-slot:input>
-                              <Multiselect
-                                placeholder="Select Field"
-                                v-model="largeOpp"
-                                :options="objectFields.list"
-                                openDirection="below"
-                                style="min-width: 13vw"
-                                selectLabel="Enter"
-                                track-by="apiName"
-                                label="referenceDisplayLabel"
-                              >
-                                <template slot="noResult">
-                                  <p class="multi-slot">No results. Try loading more</p>
-                                </template>
-                                <template slot="afterList">
-                                  <p class="multi-slot__more" @click="objectFieldNextPage">
-                                    Load More
-                                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                                  </p>
-                                </template>
-                                <template slot="placeholder">
-                                  <p class="slot-icon">
-                                    <img src="@/assets/images/search.svg" alt="" />
-                                    Select Field
-                                  </p>
-                                </template>
-                              </Multiselect>
-                            </template>
-                          </FormField>
-                        </div>
+            <div style="padding-left: 12px" class="section" v-if="largeOpps">
+              <h4 class="section__header">Select your "Amount" Field</h4>
 
-                        <div class="alert-operand-row__value">
-                          <span style="margin-bottom: 0.5rem">"Amount" is greater than:</span>
-                          <template>
-                            <div>
-                              <FormField
-                                :errors="alertOperand.field.operandValue.errors"
-                                v-model="largeOppValue"
-                                :inputType="
-                                  getInputType(alertOperand.field._operandIdentifier.value)
-                                "
-                                large
-                                bordered
-                                placeholder="Enter a value"
-                              />
-                            </div>
+              <div>
+                <div :key="i" v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups">
+                  <div :class="i > 0 ? 'visible' : ''">
+                    <div>
+                      <div>
+                        <FormField>
+                          <template v-slot:input>
+                            <Multiselect
+                              placeholder="Select Field"
+                              v-model="largeOpp"
+                              :options="objectFields.list"
+                              openDirection="below"
+                              style="width: 20vw"
+                              selectLabel="Enter"
+                              track-by="apiName"
+                              label="referenceDisplayLabel"
+                            >
+                              <template slot="noResult">
+                                <p class="multi-slot">No results. Try loading more</p>
+                              </template>
+                              <template slot="afterList">
+                                <p class="multi-slot__more" @click="objectFieldNextPage">
+                                  Load More
+                                  <img src="@/assets/images/plusOne.svg" alt="" />
+                                </p>
+                              </template>
+                              <template slot="placeholder">
+                                <p class="slot-icon">
+                                  <img src="@/assets/images/search.svg" alt="" />
+                                  Select Field
+                                </p>
+                              </template>
+                            </Multiselect>
                           </template>
-                        </div>
+                        </FormField>
+                      </div>
+
+                      <div>
+                        <h4 class="section__header">"Amount" is greater than:</h4>
+                        <template>
+                          <div>
+                            <FormField
+                              :errors="alertOperand.field.operandValue.errors"
+                              v-model="largeOppValue"
+                              :inputType="getInputType(alertOperand.field._operandIdentifier.value)"
+                              large
+                              bordered
+                              placeholder="Enter a value"
+                            />
+                          </div>
+                        </template>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div v-else>
-              <span>Select your Field</span>
+            <div style="padding-left: 12px" class="section" v-else>
+              <h4 class="section__header">Select "Required" Field</h4>
               <Multiselect
                 placeholder="Select Field"
                 v-model="identity"
                 :options="objectFields.list"
                 openDirection="below"
-                style="min-width: 13vw; margin-top: 0.75rem"
+                style="width: 20vw; margin-top: 0.75rem"
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
@@ -109,7 +125,7 @@
                 </template>
                 <template slot="afterList">
                   <p class="multi-slot__more" @click="objectFieldNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                    Load More <img src="@/assets/images/plusOne.svg" alt="" />
                   </p>
                 </template>
                 <template slot="placeholder">
@@ -122,41 +138,86 @@
             </div>
           </div>
         </div>
-        <div v-else class="delivery__row" :errors="form.field.recurrenceDay.errors">
-          <div style="margin-bottom: 0.5rem" class="row__">
-            <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'green' : ''"
-              >Weekly</label
-            >
-            <ToggleCheckBox
-              v-if="hasSlack"
-              @input="
-                config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
-                  ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
-                  : (config.newConfigs[0].recurrenceFrequency = 'WEEKLY')
-              "
-              :value="config.newConfigs[0].recurrenceFrequency !== 'WEEKLY'"
-              offColor="#41b883"
-              onColor="#41b883"
-              style="margin-left: 0.25rem; margin-right: 0.25rem"
+        <div v-else class="section" :errors="form.field.recurrenceDay.errors">
+          <h4 class="section__head">Select Delivery Day</h4>
+
+          <section class="section__body">
+            <div class="row__">
+              <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'base' : ''"
+                >Weekly</label
+              >
+              <ToggleCheckBox
+                v-if="hasSlack"
+                @input="
+                  config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
+                    ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
+                    : (config.newConfigs[0].recurrenceFrequency = 'WEEKLY')
+                "
+                :value="config.newConfigs[0].recurrenceFrequency !== 'WEEKLY'"
+                offColor="#41b883"
+                onColor="#41b883"
+                style="margin-left: 8px; margin-right: 8px"
+              />
+              <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'base' : ''"
+                >Monthly</label
+              >
+            </div>
+            <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
+              <FormField>
+                <template v-slot:input>
+                  <Multiselect
+                    :disabled="!hasSlack"
+                    placeholder="Select Day"
+                    @input="setDay($event)"
+                    v-model="selectedDays"
+                    :options="weeklyOpts"
+                    openDirection="below"
+                    style="width: 20vw"
+                    selectLabel="Enter"
+                    track-by="value"
+                    label="key"
+                    :multiple="true"
+                    :closeOnSelect="false"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ hasSlack ? 'Select Days' : 'Connect slack' }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </template>
+              </FormField>
+            </div>
+            <FormField
+              id="delivery"
+              v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
+              placeholder="Day of month"
+              v-model="config.newConfigs[0].recurrenceDay"
+              small
             />
-            <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'green' : ''"
-              >Monthly</label
-            >
-          </div>
-          <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
-            <FormField>
+          </section>
+        </div>
+        <div v-if="userLevel == 'MANAGER'" class="section">
+          <h4 class="section__head">Select Pipelines</h4>
+
+          <div class="section__body">
+            <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
                 <Multiselect
                   :disabled="!hasSlack"
-                  placeholder="Select Day"
-                  @input="setDay($event)"
-                  v-model="selectedDays"
-                  :options="weeklyOpts"
+                  placeholder="Select Users"
+                  @input="mapIds"
+                  v-model="selectedUsers"
+                  :options="userTargetsOpts"
                   openDirection="below"
-                  style="width: 14vw"
+                  style="width: 20vw"
                   selectLabel="Enter"
-                  track-by="value"
-                  label="key"
+                  track-by="id"
+                  label="fullName"
                   :multiple="true"
                   :closeOnSelect="false"
                 >
@@ -166,147 +227,108 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      {{ hasSlack ? 'Select Days' : 'Connect slack' }}
+                      {{ hasSlack ? 'Select Users' : 'Connect slack' }}
                     </p>
                   </template>
                 </Multiselect>
               </template>
             </FormField>
           </div>
-          <FormField
-            id="delivery"
-            v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
-            placeholder="Day of month"
-            v-model="config.newConfigs[0].recurrenceDay"
-            small
-          />
         </div>
-        <div v-if="userLevel == 'MANAGER'" class="delivery__row">
-          <span style="margin-bottom: 0.5rem">Select Users</span>
-          <FormField :errors="form.field.alertTargets.errors">
-            <template v-slot:input>
-              <Multiselect
-                :disabled="!hasSlack"
-                placeholder="Select Users"
-                @input="mapIds"
-                v-model="selectedUsers"
-                :options="userTargetsOpts"
-                openDirection="below"
-                style="width: 14vw"
-                selectLabel="Enter"
-                track-by="id"
-                label="fullName"
-                :multiple="true"
-                :closeOnSelect="false"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    {{ hasSlack ? 'Select Users' : 'Connect slack' }}
-                  </p>
-                </template>
-              </Multiselect>
-            </template>
-          </FormField>
-        </div>
-        <div
-          v-if="hasSlack"
-          style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-          "
-        >
-          <div v-if="!channelName" class="row__">
-            <label :class="!create ? 'green' : ''">Select #channel</label>
-            <ToggleCheckBox
-              style="margin-left: 0.25rem; margin-right: 0.25rem"
-              @input="changeCreate"
-              :value="create"
-              offColor="#41b883"
-              onColor="#41b883"
-            />
-            <label :class="create ? 'green' : ''">Create #channel</label>
-          </div>
 
-          <label v-else for="channel" style="font-weight: bold"
-            >Alert will send to
-            <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
-            channel</label
-          >
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-            "
-            v-if="create"
-          >
-            <input
-              v-model="channelName"
-              class="search__input"
-              type="text"
-              name="channel"
-              id="channel"
-              placeholder="Name your channel"
-              @input="logNewName(channelName)"
-            />
-            <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-              <button
-                v-if="channelName"
-                @click="createChannel(channelName)"
-                class="purple__button bouncy"
-              >
-                Create Channel
-              </button>
-              <button v-else class="disabled__button">Create Channel</button>
-            </div>
-          </div>
-          <div style="margin-top: 0.5rem" v-else>
-            <template>
-              <Multiselect
-                v-if="!directToUsers"
-                placeholder="Select Channel"
-                v-model="selectedChannel"
-                @input="setRecipient"
-                :options="userChannelOpts.channels"
-                openDirection="below"
-                style="min-width: 13vw"
-                selectLabel="Enter"
-                track-by="id"
-                label="name"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
-                    Load More
-                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select Channels
-                  </p>
-                </template>
-              </Multiselect>
-            </template>
-            <div v-if="userLevel !== 'REP'" class="sendAll">
-              <input type="checkbox" id="allUsers" v-model="directToUsers" />
-              <label for="allUsers">Send directly to users</label>
+        <div v-if="hasSlack" class="section">
+          <h4 class="section__head">Select Delivery Method</h4>
+
+          <div class="section__body">
+            <div v-if="!channelName" class="row__">
+              <label :class="!create ? 'base' : ''">Select #channel</label>
+              <ToggleCheckBox
+                style="margin-left: 8px; margin-right: 8px"
+                @input="changeCreate"
+                :value="create"
+                offColor="#41b883"
+                onColor="#41b883"
+              />
+              <label :class="create ? 'base' : ''">Create #channel</label>
             </div>
 
-            <div v-else class="sendAll">
-              <input type="checkbox" id="allUsers" v-model="directToUsers" />
-              <label for="allUsers">Send to primary channel</label>
+            <label v-else for="channel"
+              >Alert will send to
+              <span>{{ channelName }}</span>
+            </label>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: flex-start;
+              "
+              v-if="create"
+            >
+              <input
+                v-model="channelName"
+                class="search__input"
+                type="text"
+                name="channel"
+                id="channel"
+                placeholder="Name your channel"
+                @input="logNewName(channelName)"
+              />
+              <div v-if="!channelCreated" style="margin-top: 1.25rem">
+                <button
+                  v-if="channelName"
+                  @click="createChannel(channelName)"
+                  class="purple__button bouncy"
+                >
+                  Create Channel
+                </button>
+                <button v-else class="disabled__button">Create Channel</button>
+              </div>
+            </div>
+            <div style="margin-top: 0.5rem" v-else>
+              <template>
+                <Multiselect
+                  v-if="!directToUsers"
+                  placeholder="Select Channel"
+                  v-model="selectedChannel"
+                  @input="setRecipient"
+                  :options="userChannelOpts.channels"
+                  openDirection="below"
+                  style="width: 20vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :loading="dropdownLoading"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="afterList">
+                    <p
+                      class="multi-slot__more"
+                      @click="listUserChannels(userChannelOpts.nextCursor)"
+                    >
+                      Load More
+                      <img src="@/assets/images/plusOne.svg" alt="" />
+                    </p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Channels
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+              <div v-if="userLevel !== 'REP'" class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send directly to users</label>
+              </div>
+
+              <div v-else class="sendAll">
+                <input type="checkbox" id="allUsers" v-model="directToUsers" />
+                <label for="allUsers">Send to primary channel</label>
+              </div>
             </div>
           </div>
         </div>
@@ -318,35 +340,6 @@
           in order to recieve notifications.
         </p>
       </div>
-    </div>
-
-    <div v-if="hasSlack" class="bottom_locked margin-top">
-      <PulseLoadingSpinnerButton
-        :loading="savingTemplate"
-        :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button bouncy'"
-        text="Activate alert"
-        @click.stop="onSave"
-        :disabled="!verifySubmit() || savingTemplate"
-      />
-    </div>
-
-    <div class="bottom_locked margin-top" v-else>
-      <button
-        v-if="largeOpps"
-        :disabled="!selectFieldBool || !largeOppsBool"
-        @click="noSlackSave"
-        :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button bouncy'"
-      >
-        Activate without Slack
-      </button>
-      <button
-        v-else
-        @click="noSlackSave"
-        :disabled="selectField ? !selectFieldBool : null"
-        :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button bouncy'"
-      >
-        Activate without Slack
-      </button>
     </div>
   </div>
 </template>
@@ -746,7 +739,6 @@ export default {
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
-          console.log(res)
 
           this.handleUpdate()
 
@@ -827,19 +819,26 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 13vw;
+  width: 20vw;
   border: 1px solid #e8e8e8 !important;
   border-radius: 0.3rem;
   background-color: white;
   box-shadow: none !important;
 }
 ::v-deep .input-form {
-  width: 13vw;
+  width: 20vw;
 }
 ::v-deep .input-form__active {
   border: none;
 }
 
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 16px;
+}
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -883,7 +882,7 @@ input[type='checkbox'] + label::before {
 .sendAll {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   font-size: 12px;
   color: $base-gray;
   margin-top: 1rem;
@@ -896,28 +895,69 @@ input[type='checkbox'] + label::before {
     transform: translateY(-6px);
   }
 }
+.section {
+  background-color: white;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  border: 1px solid $soft-gray;
+  color: $base-gray;
+  border-radius: 6px;
+  width: 50vw;
+  min-height: 25vh;
+  letter-spacing: 0.75px;
+  padding: 0px 0px 32px 0px;
+  margin-top: 16px;
+  &__head {
+    padding: 8px 12px;
+    background-color: white;
+    margin-bottom: 0;
+    // color: $very-light-gray;
+  }
+  &__body {
+    padding: 6px 12px;
+    background-color: white;
+    font-size: 11px;
+    color: $light-gray-blue;
+    p {
+      margin-top: 0;
+    }
+  }
+}
 .alerts-header {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 72px;
+  background-color: $white;
+  width: 96vw;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  flex-direction: row;
-  padding: 0vw 12vw;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $light-gray-blue;
+  }
 }
 .back-button {
-  font-size: 14px;
-  color: $dark-green;
+  color: $base-gray;
   background-color: transparent;
   display: flex;
   align-items: center;
   border: none;
   cursor: pointer;
-  margin: 1rem 0rem 0rem 0rem;
+  font-size: 16px;
+  letter-spacing: 0.75px;
 
   img {
-    height: 1rem;
-    margin-right: 0.5rem;
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
+    margin-right: 8px;
   }
 }
 .slot-icon {
@@ -983,11 +1023,9 @@ input[type='checkbox'] + label::before {
   letter-spacing: 0.5px;
   height: 2.5rem;
   background-color: white;
-  border: none;
+  border: 1px solid $soft-gray;
   margin-top: 1rem;
-  width: 75%;
-  text-align: center;
-  box-shadow: 1px 1px 3px 0px $very-light-gray;
+  width: 20vw;
 }
 input[type='text']:focus {
   outline: none;
@@ -1027,7 +1065,9 @@ input[type='text']:focus {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  letter-spacing: 0.75px;
+  margin-bottom: 8px;
 }
 input {
   cursor: pointer;
@@ -1056,29 +1096,21 @@ input {
 }
 .forecast__collection {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-evenly;
-  flex-direction: row;
-  background-color: $white;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.3rem;
-  width: 75vw;
-  padding: 2rem;
-  margin-bottom: 1rem;
+  justify-content: flex-start;
 }
 img {
-  filter: invert(60%);
+  filter: invert(40%);
 }
-.invert {
-  filter: invert(80%);
-}
+
 .alerts-page {
   height: 100vh;
   color: $base-gray;
-  margin-top: 4rem;
+  margin-top: 11vh;
 }
-.green {
-  color: $dark-green;
+.base {
+  color: $base-gray;
 }
 .spacer {
   height: 20vh;

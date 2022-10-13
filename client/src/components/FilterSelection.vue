@@ -4,7 +4,7 @@
       <div class="filter-selection__body">
         <Multiselect
           placeholder="Select Operator"
-          style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+          style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 100"
           v-model="selectedOperator"
           :options="operators"
           @select="$emit('operator-selected', $event.value)"
@@ -181,6 +181,9 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+::v-deep .multiselect__select {
+  z-index: 100 !important;
+}
 input:focus {
   outline: none;
 }

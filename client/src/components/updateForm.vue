@@ -838,20 +838,15 @@
               </div>
 
               <div class="current-products__footer">
-                <button class="add-button__" @click="updateProduct">Update Product</button>
                 <p @click="cancelEditProduct">Cancel</p>
+                <button class="add-button__" @click="updateProduct">Update Product</button>
               </div>
             </div>
           </div>
         </div>
         <div class="flex-end-opp">
           <div v-if="hasProducts && resource === 'Opportunity'">
-            <button
-              v-if="!addingProduct"
-              @click="addProduct"
-              style="margin-bottom: 0.75rem"
-              class="select-btn1"
-            >
+            <button v-if="!addingProduct" @click="addProduct" class="select-btn1">
               Add Product
             </button>
 
@@ -861,6 +856,7 @@
           </div>
           <div v-else></div>
           <div style="display: flex; align-items: center">
+            <!-- <p @click="resetEdit" class="cancel">Cancel</p> -->
             <button
               @click="
                 onMakeMeetingUpdate()
@@ -870,7 +866,6 @@
             >
               Update
             </button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
         </div>
       </div>
@@ -1042,6 +1037,7 @@ export default {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
+  padding: 8px 12px;
   width: 40.25vw;
   font-family: $base-font-family;
 }
@@ -1106,16 +1102,9 @@ export default {
 }
 .label {
   display: inline-block;
-  padding: 6px;
   font-size: 14px;
-  text-align: center;
-  min-width: 80px;
   margin-top: 12px;
-  background-color: $white-green;
-  color: $dark-green;
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  color: $light-gray-blue;
 }
 .close-template {
   position: absolute;
@@ -1308,7 +1297,7 @@ export default {
   }
 }
 .select-btn1 {
-  border: 0.7px solid $dark-green;
+  border: 0.7px solid $soft-gray;
   padding: 0.45rem 1.25rem;
   font-size: 13px;
   display: flex;
@@ -1318,9 +1307,10 @@ export default {
   background-color: white;
   cursor: pointer;
   color: $dark-green;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.75px;
   margin-right: 0.5rem;
   transition: all 0.25s;
+  font-weight: bold;
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);

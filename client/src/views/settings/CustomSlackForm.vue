@@ -8,13 +8,19 @@
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
-                <p @click="switchFormType" class="form-type">
-                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
-                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
-                </p>
-                <div>
-                  <button @click="onSave" class="save">Save Form</button>
+                <div class="row__">
+                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
+                  <ToggleCheckBox
+                    style="margin-left: 0.5rem; margin-right: 0.5rem"
+                    @input="switchFormType"
+                    :value="newFormType == 'UPDATE'"
+                    offColor="#41b883"
+                    onColor="#41b883"
+                  />
+                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
                 </div>
+
+                <!-- <button @click="onSave" class="save abs-top">Save Form</button> -->
               </div>
               <div id="formSection">
                 <draggable
@@ -32,10 +38,10 @@
                           {{ field.label }}
                         </p>
                         <img
-                          src="@/assets/images/trash.svg"
+                          src="@/assets/images/remove.svg"
                           alt=""
                           id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                           @click="
                             () => {
                               onRemoveField(field)
@@ -52,33 +58,39 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label" @click="changeToStage">Stage Related</label>
+          <label for="tab-2" class="tab-label" @click="changeToStage">Opp - Stage Related</label>
           <div class="tab-content">
-            <section class="space-between">
-              <h3 v-if="!selectedForm && !currentlySelectedForm" class="form-type">
-                Add/edit your stage related forms
-              </h3>
-              <h3 v-else-if="selectedForm">
-                {{ selectedForm.stage + ' Form' }}
-              </h3>
-              <h3 v-else>{{ currentlySelectedForm }}</h3>
-              <div>
+            <section style="margin-top: -16px" class="space-between">
+              <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
                 <img
-                  @click="selectedForm = null"
-                  v-if="selectedForm"
-                  style="margin-right: 16px"
+                  style="margin-right: 8px; margin-top: -16px"
                   src="@/assets/images/left.svg"
                   height="13px"
                   alt=""
                 />
-                <button
+                Back
+              </h4>
+
+              <div class="row__">
+                <h4 style="margin-right: 16px" v-if="selectedForm">
+                  {{ selectedForm.stage + ' Form' }}
+                </h4>
+                <h4 style="margin-right: 16px" v-else>{{ currentlySelectedForm }}</h4>
+
+                <div
+                  class="margin-right"
+                  @click.prevent="deleteForm(activeForm)"
+                  v-if="selectedForm && selectedForm.fields.length"
+                >
+                  <img src="@/assets/images/remove.svg" class="red-filter" alt="" />
+                </div>
+                <!-- <button
                   v-if="selectedForm && selectedForm.fields.length"
                   @click.prevent="deleteForm(activeForm)"
                   class="delete"
                 >
-                  Delete Form
-                </button>
-                <button @click="onSave" class="save">Save Form</button>
+                  Delete
+                </button> -->
               </div>
             </section>
 
@@ -112,10 +124,11 @@
                   @input="setStage($event)"
                   :options="stages"
                   openDirection="below"
-                  style="width: 20vw"
+                  style="width: 40vw; margin-top: -24px"
                   selectLabel="Enter"
                   track-by="value"
                   label="label"
+                  :value="currentlySelectedStage"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
@@ -124,8 +137,20 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      {{ selectedStage ? selectedStage : 'Select stage' }}
+                      {{ selectedStage ? selectedStage : 'Select stage to create/edit form' }}
                     </p>
+                  </template>
+
+                  <template slot="option" slot-scope="props">
+                    <div>
+                      <span class="option__title">{{ props.option.value }}</span
+                      ><span
+                        v-if="currentStagesWithForms.includes(props.option.value)"
+                        class="option__small"
+                      >
+                        edit
+                      </span>
+                    </div>
                   </template>
                 </Multiselect>
               </div>
@@ -147,10 +172,10 @@
                         {{ field.label }}
                       </p>
                       <img
-                        src="@/assets/images/trash.svg"
+                        src="@/assets/images/remove.svg"
                         alt=""
                         id="remove"
-                        :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                        :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                         @click="
                           () => {
                             onRemoveField(field)
@@ -170,13 +195,18 @@
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
-                <p @click="switchFormType" class="form-type">
-                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
-                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
-                </p>
-                <div>
-                  <button @click="onSave" class="save">Save Form</button>
+                <div class="row__">
+                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
+                  <ToggleCheckBox
+                    style="margin-left: 0.5rem; margin-right: 0.5rem"
+                    @input="switchFormType"
+                    :value="newFormType == 'UPDATE'"
+                    offColor="#41b883"
+                    onColor="#41b883"
+                  />
+                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
                 </div>
+                <div></div>
               </div>
               <div id="formSection">
                 <draggable
@@ -194,10 +224,10 @@
                           {{ field.label }}
                         </p>
                         <img
-                          src="@/assets/images/trash.svg"
+                          src="@/assets/images/remove.svg"
                           alt=""
                           id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                           @click="
                             () => {
                               onRemoveField(field)
@@ -218,13 +248,18 @@
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
-                <p @click="switchFormType" class="form-type">
-                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
-                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
-                </p>
-                <div>
-                  <button @click="onSave" class="save">Save Form</button>
+                <div class="row__">
+                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
+                  <ToggleCheckBox
+                    style="margin-left: 0.5rem; margin-right: 0.5rem"
+                    @input="switchFormType"
+                    :value="newFormType == 'UPDATE'"
+                    offColor="#41b883"
+                    onColor="#41b883"
+                  />
+                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
                 </div>
+                <div></div>
               </div>
               <div id="formSection">
                 <draggable
@@ -242,10 +277,10 @@
                           {{ field.label }}
                         </p>
                         <img
-                          src="@/assets/images/trash.svg"
+                          src="@/assets/images/remove.svg"
                           alt=""
                           id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                           @click="
                             () => {
                               onRemoveField(field)
@@ -266,13 +301,18 @@
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
-                <p @click="switchFormType" class="form-type">
-                  {{ camelize(newFormType) }} {{ camelize(newResource) }}
-                  <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
-                </p>
-                <div>
-                  <button @click="onSave" class="save">Save Form</button>
+                <div class="row__">
+                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
+                  <ToggleCheckBox
+                    style="margin-left: 0.5rem; margin-right: 0.5rem"
+                    @input="switchFormType"
+                    :value="newFormType == 'UPDATE'"
+                    offColor="#41b883"
+                    onColor="#41b883"
+                  />
+                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
                 </div>
+                <div></div>
               </div>
               <div id="formSection">
                 <draggable
@@ -290,10 +330,10 @@
                           {{ field.label }}
                         </p>
                         <img
-                          src="@/assets/images/trash.svg"
+                          src="@/assets/images/remove.svg"
                           alt=""
                           id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
+                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
                           @click="
                             () => {
                               onRemoveField(field)
@@ -308,25 +348,21 @@
             </section>
           </div>
         </div>
+        <div class="tab">
+          <div class="tab-label right">
+            <button @click="onSave" class="save mar-left">Save Form</button>
+          </div>
+        </div>
       </div>
     </section>
     <div class="field-section">
       <div class="search-bar">
         <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-        <input type="search" placeholder="Search Opportunity Fields" v-model="filterText" />
+        <input type="search" :placeholder="`Search ${newResource} Fields`" v-model="filterText" />
       </div>
 
       <div class="field-section__fields">
         <div style="height: 85vh; overflow: scroll">
-          <!-- <section>
-            <p key="name"><input type="checkbox" /> Name <span>required</span></p>
-            <p><input type="checkbox" /> Stage <span>required</span></p>
-            <p>
-              <input type="checkbox" /> Close Date
-              <span>required</span>
-            </p>
-          </section> -->
-
           <p v-for="(field, i) in filteredFields" :key="field.id">
             <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
@@ -336,532 +372,6 @@
         </div>
       </div>
     </div>
-
-    <!-- <div class="opportunity__row">
-      <div :class="formType !== 'STAGE_GATING' ? 'collection_fields' : 'stage_fields'">
-        <div class="sticky">
-          <p>{{ camelize(formType)  + {{camelize(resource)}} ' ' + resource }} Form</p>
-        </div>
-
-        <div>
-          <div v-if="formType === 'STAGE_GATING'">
-            <div class="center">
-              <button
-                v-if="!addingFields"
-                @click="
-                  () => {
-                    addingFields = !addingFields
-                  }
-                "
-                class="default_button"
-              >
-                Add Fields
-                <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="resource === 'Contact' || resource === 'Lead' || resource === 'Account'">
-          <p>{{ formType + ' ' + resource }} Form</p>
-          <div v-if="formType === 'CREATE'">
-            <div
-              v-if="
-                (!addedFieldNames.includes('LastName') &&
-                  (resource === 'Contact' || resource === 'Lead')) ||
-                (!addedFieldNames.includes('LastName') && resource === 'Account')
-              "
-              class="centered"
-            >
-              <p style="margin-left: 0.5rem">
-                {{ resource === 'Account' ? 'Account Name' : 'Last Name'
-                }}<span style="color: #fa646a">*</span>
-              </p>
-              <Multiselect
-                :placeholder="
-                  resource === 'Account' ? `Search for Account` : `Search for 'Last Name'`
-                "
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    {{ resource === 'Account' ? `Search for 'Account'` : `Search for 'Last Name'` }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div
-              v-if="!addedFieldNames.includes('Company') && resource === 'Lead'"
-              class="centered"
-            >
-              <p style="margin-left: 0.5rem">Company<span style="color: #fa646a">*</span></p>
-              <Multiselect
-                placeholder="Search for 'Company'"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Search for 'Company'
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div v-if="!addedFieldNames.includes('Status') && resource === 'Lead'" class="centered">
-              <p style="margin-left: 0.5rem">Status<span style="color: #fa646a">*</span></p>
-              <Multiselect
-                placeholder="Search for 'Status'"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Search for 'Status'
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="resource === 'Opportunity' && formType !== 'STAGE_GATING'">
-          <div v-if="!addedFieldLabels.includes('Name')" class="centered">
-            <p style="margin-left: 0.5rem">Name: <span style="color: #fa646a">*</span></p>
-            <Multiselect
-              placeholder="Search for 'Name'"
-              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              @input="onAddField($event)"
-              openDirection="below"
-              style="width: 20vw"
-              selectLabel="Enter"
-              track-by="apiName"
-              label="referenceDisplayLabel"
-              :loading="dropdownLoading"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results. Try loading more</p>
-              </template>
-              <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">
-                  Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                </p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  Search for 'Name'
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <div v-if="!addedFieldNames.includes('StageName')" class="centered">
-            <div class="row__">
-              <p style="margin-left: 0.5rem">Stage <span style="color: #fa646a">*</span></p>
-            </div>
-            <Multiselect
-              placeholder="Search for 'Stage'"
-              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              @input="onAddField($event)"
-              openDirection="below"
-              style="width: 20vw"
-              selectLabel="Enter"
-              track-by="apiName"
-              label="referenceDisplayLabel"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results. Try loading more</p>
-              </template>
-              <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">
-                  Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                </p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  Search for 'Stage'
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <div v-if="!addedFieldNames.includes('CloseDate')" class="centered">
-            <div class="row__">
-              <p style="margin-left: 0.5rem">Close Date <span style="color: #fa646a">*</span></p>
-            </div>
-
-            <Multiselect
-              placeholder="Search for 'Close Date'"
-              :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-              @input="onAddField($event)"
-              openDirection="below"
-              style="width: 20vw"
-              selectLabel="Enter"
-              track-by="apiName"
-              label="referenceDisplayLabel"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results. Try loading more</p>
-              </template>
-              <template slot="afterList">
-                <p class="multi-slot__more" @click="onFieldsNextPage">
-                  Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                </p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  Search for 'Close Date'
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <div
-            v-if="!userHasProducts && !addedFieldNames.includes('Amount') && formType !== 'CREATE'"
-            class="centered"
-          >
-            <div class="row__">
-              <div style="margin-left: 0.5rem" class="centered">
-                <label :class="!productSelected ? 'green' : 'label'">Amount</label>
-                <ToggleCheckBox
-                  style="margin-left: 0.15rem; margin-right: 0.15rem"
-                  :value="productSelected"
-                  @input="productSelect"
-                  offColor="#41b883"
-                  onColor="#41b883"
-                />
-                <label style="margin-right: 0.15rem" :class="productSelected ? 'green' : 'label'"
-                  >Products</label
-                >
-              </div>
-              <p style="font-size: 12px; color: #9b9b9b; margin-left: 0.5rem">(Optional)</p>
-            </div>
-            <div v-if="!productSelected">
-              <Multiselect
-                placeholder="Search for 'Amount'"
-                :options="
-                  formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))
-                "
-                @input="onAddField($event)"
-                openDirection="below"
-                style="width: 16vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="onFieldsNextPage">
-                    Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Search for 'Amount'
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-
-            <div v-if="productSelected">Add products on the next page</div>
-          </div>
-        </div>
-
-        <p class="section-title">
-          Organize your form fields:
-          <span style="color: #41b883; font-size: 11px; margin-left: 0.5rem">*drag and drop</span>
-        </p>
-
-        <draggable
-          style="margin-top: 0.5rem"
-          v-model="addedFields"
-          group="fields"
-          @start="drag = true"
-          @end="drag = false"
-        >
-          <div v-for="field in addedFields" :key="field.id">
-            <div :class="unshownIds.includes(field.id) ? 'invisible' : 'centered'">
-              <div class="drag-item">
-                <img
-                  :class="unshownIds.includes(field.id) ? 'invisible' : 'invert2'"
-                  src="@/assets/images/drag.svg"
-                  id="drag"
-                  style="height: 1rem; width: auto; cursor: grab"
-                  alt=""
-                />
-                <p :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                  {{ field.referenceDisplayLabel }}
-                </p>
-              </div>
-
-              <div class="img-border">
-                <img
-                  src="@/assets/images/trash.svg"
-                  alt=""
-                  id="remove"
-                  :class="unshownIds.includes(field.id) ? 'invisible' : 'invert'"
-                  @click="
-                    () => {
-                      onRemoveField(field)
-                    }
-                  "
-                />
-              </div>
-            </div>
-          </div>
-        </draggable>
-
-        <div
-          v-if="
-            resource === 'Opportunity' ||
-            (resource === 'Contact' &&
-              !addingFields &&
-              addedFieldNames.includes('LastName') &&
-              formType === 'CREATE') ||
-            (!addingFields && formType === 'UPDATE' && resource === 'Contact') ||
-            resource === 'OpportunityLineItem' ||
-            (!addingFields && formType === 'UPDATE' && resource === 'Lead') ||
-            (resource === 'Lead' &&
-              requiredLeadFields.every((i) => addedFieldNames.includes(i)) &&
-              formType === 'CREATE') ||
-            (resource === 'Account' &&
-              !addingFields &&
-              addedFieldNames.includes('Name') &&
-              formType === 'CREATE') ||
-            (!addingFields && formType === 'UPDATE' && resource === 'Account')
-          "
-          :style="
-            resource === 'Opportunity'
-              ? `
-              display: flex; 
-              align-items: center; 
-              justify-content: center;
-            `
-              : `
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-direction: column;
-              margin-top: 0.5rem;
-            `
-          "
-        >
-          <button
-            v-if="
-              requiredOpportunityFields.every((i) => addedFieldNames.includes(i)) ||
-              resource !== 'Opportunity'
-            "
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            class="default_button"
-          >
-            {{
-              !addingFields && formType === 'UPDATE' && resource === 'Contact'
-                ? `Add fields`
-                : `Add more fields`
-            }}
-            <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-          </button>
-        </div>
-
-        <div class="example--footer">
-          <PulseLoadingSpinnerButton
-            v-if="
-              resource === 'Opportunity' &&
-              !productSelected &&
-              !userHasProducts &&
-              formType === 'UPDATE'
-            "
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
-          />
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'Opportunity' && !productSelected && formType === 'CREATE'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-
-          <div
-            v-if="
-              resource === 'Opportunity' &&
-              (productSelected || userHasProducts) &&
-              formType !== 'CREATE' &&
-              formType !== 'STAGE_GATING'
-            "
-          >
-            <button
-              v-if="requiredOpportunityFields.every((i) => addedFieldNames.includes(i))"
-              class="save"
-              @click="goToProducts"
-              style="margin-right: 4px"
-            >
-              Save + Continue to products
-            </button>
-            <button v-else class="disabled" style="margin-right: 4px">
-              Save + Continue to products
-            </button>
-          </div>
-
-          <PulseLoadingSpinnerButton
-            v-else-if="resource === 'Contact' && formType === 'CREATE'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-            :disabled="!addedFieldNames.includes('LastName')"
-          />
-          <PulseLoadingSpinnerButton
-            v-else-if="resource === 'Contact' && formType === 'UPDATE'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'OpportunityLineItem'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-
-          <PulseLoadingSpinnerButton
-            v-if="resource === 'Lead' || resource === 'Account'"
-            @click="onSave"
-            class="primary-button"
-            text="Save"
-            :loading="savingForm"
-          />
-          <div class="row__" v-if="formType === 'STAGE_GATING'">
-            <PulseLoadingSpinnerButton
-              @click="onSave"
-              class="primary-button"
-              text="Save"
-              :loading="savingForm"
-            />
-            <button style="margin-right: 0.5rem" @click="goToValidations" class="disabled__">
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="recommend" v-if="addingFields">
-        <div class="recommend__header">
-          <h4>{{ formType !== 'STAGE_GATING' ? 'Add More Fields' : 'Add Fields' }}</h4>
-          <img
-            @click="
-              () => {
-                addingFields = !addingFields
-              }
-            "
-            height="1rem"
-            src="@/assets/images/close.svg"
-            alt=""
-          />
-        </div>
-        <div class="recommend__body">
-          <Multiselect
-            :placeholder="
-              formType === 'STAGE_GATING' ? 'Search for Validation Fields' : 'Search Fields'
-            "
-            :options="formFields.list.filter((field) => !addedFieldNames.includes(field.apiName))"
-            @input="onAddField($event)"
-            openDirection="below"
-            :style="
-              formType === 'STAGE_GATING'
-                ? 'width: 20vw; margin-top: 1.5rem'
-                : 'width: 20vw; margin-top: 1rem'
-            "
-            selectLabel="Enter"
-            :customLabel="
-              ({ referenceDisplayLabel }) =>
-                referenceDisplayLabel === 'PricebookEntry' ? 'Products' : referenceDisplayLabel
-            "
-            track-by="apiName"
-            label="referenceDisplayLabel"
-          >
-            <template slot="noResult">
-              <p class="multi-slot">No results. Try loading more</p>
-            </template>
-            <template slot="afterList">
-              <p class="multi-slot__more" @click="onFieldsNextPage">
-                Load More <img src="@/assets/images/plusOne.svg" class="invert2" alt="" />
-              </p>
-            </template>
-            <template slot="placeholder">
-              <p class="slot-icon">
-                <img src="@/assets/images/search.svg" alt="" />
-                {{ formType === 'STAGE_GATING' ? 'Search for Validation Fields' : 'Search Fields' }}
-              </p>
-            </template>
-          </Multiselect>
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>
 
@@ -932,6 +442,7 @@ export default {
       activeForm: null,
       addingForm: false,
       currentlySelectedForm: null,
+      currentlySelectedStage: null,
       selectedForm: null,
       selectedStage: null,
       allForms: null,
@@ -1437,6 +948,10 @@ export default {
     this.getStageForms()
   },
   methods: {
+    clearStageData() {
+      this.selectedForm = null
+      this.currentlySelectedStage = null
+    },
     async deleteForm(form) {
       if (form.id && form.id.length) {
         const id = form.id
@@ -1485,6 +1000,10 @@ export default {
       this.newCustomForm = this.selectedForm
     },
     setStage(n) {
+      if (n.value == this.selectedStage) {
+        this.selectedStage = n.value
+        this.addForm(this.selectedStage)
+      }
       this.selectedStage = n.value
     },
     updateForm(event) {
@@ -1501,6 +1020,7 @@ export default {
 
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
+
         // this.$toast('This stage has a form', {
         //   timeout: 2000,
         //   position: 'top-left',
@@ -1734,21 +1254,21 @@ export default {
       }
     },
     async onSave() {
-      if (
-        (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
-        this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
-      ) {
-        if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$toast('Please enter a meeting type', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-          return
-        }
-      }
+      // if (
+      //   (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
+      //   this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
+      // ) {
+      //   if (!this.meetingType.length && !this.actionChoices.length) {
+      //     this.$toast('Please enter a meeting type', {
+      //       timeout: 2000,
+      //       position: 'top-left',
+      //       type: 'error',
+      //       toastClassName: 'custom',
+      //       bodyClassName: ['custom'],
+      //     })
+      //     return
+      //   }
+      // }
       this.savingForm = true
 
       let fields = new Set([...this.addedFields.map((f) => f.id)])
@@ -1764,7 +1284,6 @@ export default {
         })
         .then((res) => {
           // this.$emit('update:selectedForm', res)
-          this.$router.go()
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -1772,6 +1291,9 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
+          setTimeout(() => {
+            this.$router.go()
+          }, 400)
         })
         .finally(() => {
           this.savingForm = false
@@ -1811,16 +1333,28 @@ export default {
 }
 
 .delete {
-  background-color: white !important;
-  border: 1px solid $coral !important;
-  border-radius: 0.25rem;
-  color: $coral !important;
+  background-color: $coral;
+  border: none;
+  border-radius: 4px;
+  color: white;
   cursor: pointer;
   padding: 8px 16px;
-  margin-right: 8px;
+  margin-right: 2.75vw;
 }
 .red-text {
   color: $coral;
+}
+.red-filter {
+  filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%) contrast(121%);
+}
+.option {
+  &__small {
+    background-color: $white-green;
+    border-radius: 4px;
+    margin-left: 16px;
+    padding: 2px 6px;
+    color: $dark-green;
+  }
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -1988,10 +1522,9 @@ input[type='search']:focus {
   width: 100%;
   height: 92vh;
   position: absolute;
-  z-index: 1;
   top: 2.75em;
   left: 0;
-  padding: 8px 24px;
+  padding: 32px 24px 16px 24px;
   background: #fff;
   color: $base-gray;
   opacity: 0;
@@ -2111,10 +1644,12 @@ input[type='search']:focus {
 }
 .tab-switch:checked + .tab-label {
   background: #fff;
-  color: $base-gray;
-  border-bottom: 0;
+  color: $dark-green;
+  font-weight: bold;
+
+  border-radius: 4px;
   transition: all 0.35s;
-  z-index: 1;
+  z-index: 10;
   top: -0.0625rem;
 }
 .tab-switch:checked + label + .tab-content {
@@ -2123,7 +1658,7 @@ input[type='search']:focus {
   transition: all 0.35s;
 }
 .tab-text {
-  color: $light-gray-blue;
+  color: $base-gray !important;
   font-size: 14px;
   letter-spacing: 0.75px;
 }
@@ -2208,17 +1743,21 @@ input[type='search']:focus {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.2rem;
+  background-color: white;
+  border: 1px solid $soft-gray;
+  border-radius: 4px;
   cursor: pointer;
-  padding: 0.15rem 0.3rem;
+  padding: 4px;
+}
+.margin-right {
+  margin-right: 2.75vw;
 }
 .label {
   font-size: 0.85rem;
 }
-.green {
-  color: $dark-green;
-  font-size: 0.85rem;
+.gray {
+  color: $light-gray-blue;
+  opacity: 0.7;
 }
 .default_button {
   padding: 0.5rem 1rem;
@@ -2372,8 +1911,14 @@ img:hover {
   color: white;
   border: none;
   border-radius: 0.25rem;
-  margin-right: 3vw;
   cursor: pointer;
+}
+.mar-left {
+  margin-left: 4vw;
+  margin-top: 6px;
+}
+.right {
+  width: 16vw;
 }
 .white_button {
   padding: 8px 20px;

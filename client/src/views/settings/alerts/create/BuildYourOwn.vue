@@ -1,6 +1,6 @@
 <template>
   <div class="alerts-page">
-    <section>
+    <section v-if="!oldAlert">
       <div class="title">
         <h4 @click="test" class="title__head">General</h4>
 
@@ -44,11 +44,30 @@
           :key="i"
           v-for="(form, i) in alertTemplateForm.field.alertConfig.groups"
         >
-          <p @click="changeFrequency" class="andOr">
+          <!-- <p @click="changeFrequency" class="andOr">
             <span :class="alertFrequency !== 'WEEKLY' ? 'inactive' : ''">Weekly</span>
             <span class="space-s">|</span>
             <span :class="alertFrequency !== 'MONTHLY' ? 'inactive' : ''">Monthly</span>
-          </p>
+          </p> -->
+          <div class="row__">
+            <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+              >Weekly</label
+            >
+            <ToggleCheckBox
+              style="margin: 0.25rem"
+              @input="
+                form.field.recurrenceFrequency.value == 'WEEKLY'
+                  ? (form.field.recurrenceFrequency.value = 'MONTHLY')
+                  : (form.field.recurrenceFrequency.value = 'WEEKLY')
+              "
+              :value="form.field.recurrenceFrequency.value !== 'WEEKLY'"
+              offColor="#41b883"
+              onColor="#41b883"
+            />
+            <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+              >Monthly</label
+            >
+          </div>
 
           <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
             <div class="week-row">
@@ -321,7 +340,7 @@
       <div>{{ oldAlert }}</div>
     </section> -->
 
-    <!-- <section v-else>
+    <section v-else>
       <div class="title">
         <h4 @click="test" class="title__head">General</h4>
         <section class="title__body">
@@ -334,7 +353,7 @@
           type="text"
           class="input-field"
           placeholder="Name"
-          v-model="oldAlert.field.title.value"
+          v-model="updatedAlert.title"
           autofocus
         />
 
@@ -345,7 +364,7 @@
             :options="resources"
             openDirection="below"
             style="width: 94%; margin-left: 12px; margin-top: 8px"
-            v-model="oldAlert.resourceType"
+            v-model="updatedAlert.resourceType"
             selectLabel="Enter"
           >
           </Multiselect>
@@ -358,25 +377,25 @@
           <p>When would you like to be notified ?</p>
         </section>
 
-        <div class="title__body" :key="i" v-for="(form, i) in oldAlert.field.alertConfig.groups">
+        <div class="title__body" :key="i" v-for="(config, i) in updatedAlert.configssRef">
           <p @click="changeFrequency" class="andOr">
             <span :class="alertFrequency !== 'WEEKLY' ? 'inactive' : ''">Weekly</span>
             <span class="space-s">|</span>
             <span :class="alertFrequency !== 'MONTHLY' ? 'inactive' : ''">Monthly</span>
           </p>
 
-          <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
+          <div v-if="config.recurrenceFrequency.value !== 'MONTHLY'">
             <div class="week-row">
               <span
                 v-for="(day, i) in weeklyOpts"
                 :key="i"
-                :class="form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''"
+                :class="config.recurrenceDays.includes(day.value) ? 'active-option' : ''"
               >
                 <input
                   type="checkbox"
                   :id="day.value"
                   :value="day.value"
-                  v-model="form.field.recurrenceDays.value"
+                  v-model="config.recurrenceDays"
                 />
                 <label :for="day.value">{{ day.key.charAt(0) }}</label>
               </span>
@@ -384,11 +403,9 @@
           </div>
 
           <FormField
-            v-if="form.field.recurrenceFrequency.value == 'MONTHLY'"
+            v-if="config.recurrenceFrequency.value == 'MONTHLY'"
             placeholder="Day of month"
-            :errors="form.field.recurrenceDay.errors"
-            @blur="form.field.recurrenceDay.validate()"
-            v-model="form.field.recurrenceDay.value"
+            v-model="config.recurrenceDay.value"
             small
           />
         </div>
@@ -483,10 +500,10 @@
           <p>We'll alert you when these conditions are met</p>
         </section>
 
-        <div :key="i" v-for="(form, i) in oldAlert.field.alertConfig.groups">
+        <div :key="i" v-for="(form, i) in updatedAlert.groupsRef">
           <div
             :key="index"
-            v-for="(alertGroup, index) in oldAlert.field.alertGroups.groups"
+            v-for="(alertGroup, index) in updatedAlert.groupsRef"
             :class="index > 0 ? 'margin-top border-top' : ''"
             class="title__body"
           >
@@ -495,10 +512,9 @@
                 style="margin-top: 16px"
                 class="end"
                 v-show="index !== 0"
-                v-if="oldAlert.field.alertGroups.groups.length > 1"
+                v-if="updatedAlert.groupsRef.length > 1"
               >
                 <small class="remove__group" @click="onRemoveAlertGroup(index), scrollToTop()">
-              
                   <img
                     src="@/assets/images/close.svg"
                     height="16px"
@@ -509,7 +525,7 @@
               </div>
               <AlertGroup
                 :form="alertGroup"
-                :resourceType="oldAlert.field.resourceType.value"
+                :resourceType="updatedAlert.resourceType"
                 @scroll-to-view="scrollToElement"
               />
             </div>
@@ -517,7 +533,7 @@
 
           <div class="flex-end">
             <button
-              v-if="oldAlert.field.alertGroups.groups.length < 3"
+              v-if="updatedAlert.groupsRef.length < 3"
               class="group_button"
               @click="onAddAlertGroup(), scrollToElement()"
             >
@@ -534,13 +550,11 @@
           <p>This is the message you'll recieve in slack with your workflow.</p>
         </section>
 
-       
         <FormField id="message">
           <template v-slot:input>
             <quill-editor
-              @blur="oldAlert.field.alertMessages.groups[0].field.body.validate()"
               ref="message-body"
-              v-model="oldAlert.field.alertMessages.groups[0].field.body.value"
+              v-model="updatedAlert.messageTemplateRef.body"
               :options="{
                 modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
                 placeholder: 'Write your message.',
@@ -587,7 +601,7 @@
           @click.stop="onSave"
         />
       </div>
-    </section> -->
+    </section>
   </div>
 </template>
 
@@ -632,6 +646,7 @@ export default {
   },
   data() {
     return {
+      updatedAlert: this.oldAlert,
       addingFields: false,
       frequencies: ['WEEKLY', 'MONTHLY'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
@@ -709,6 +724,7 @@ export default {
     }
   },
   watch: {
+    alertIsValid: 'activateSave',
     selectedResourceType: {
       immediate: true,
       async handler(val, prev) {
@@ -731,6 +747,9 @@ export default {
   methods: {
     test() {
       console.log(this.alertTemplateForm.isValid)
+    },
+    activateSave() {
+      this.$emit('can-save', !!this.alertIsValid)
     },
     scrollToTop() {
       this.$refs.top ? this.$refs.top.scrollIntoView({ behavior: 'smooth' }) : null
@@ -1087,7 +1106,9 @@ export default {
     },
     setOldAlertValues() {
       if (this.oldAlert) {
-        console.log(this.oldAlert)
+        console.log('SAVED ALERT', this.oldAlert)
+        console.log('ALERT TEMPLATE FORM', this.alertTemplateForm)
+
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
           this.oldAlert.configsRef[0].recipientType
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
@@ -1100,6 +1121,36 @@ export default {
           this.oldAlert.configsRef[0].recurrenceDays
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
           this.oldAlert.configsRef[0].alertTargetsRef.map((target) => target.value)
+        this.alertTemplateForm.field.alertMessages.groups[0].field.body =
+          this.oldAlert.messageTemplateRef.body
+
+        // for (let i = 0; i < this.oldAlert.groupsRef.length; i++) {
+        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
+        //     i
+        //   ].fields.operandCondition.value =
+        //     this.oldAlert.groupsRef[i].operandsRef[i].operandCondition
+
+        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
+        //     i
+        //   ].fields.operandIdentifier.value =
+        //     this.oldAlert.groupsRef[i].operandsRef[i].operandIdentifier
+
+        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
+        //     i
+        //   ].fields.operandOrder.value = this.oldAlert.groupsRef[i].operandsRef[i].operandOrder
+
+        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
+        //     i
+        //   ].fields.operandType.value = this.oldAlert.groupsRef[i].operandsRef[i].operandType
+
+        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
+        //     i
+        //   ].fields.operandOperator.value = this.oldAlert.groupsRef[i].operandsRef[i].operandOperator
+
+        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
+        //     i
+        //   ].fields.operandValue.value = this.oldAlert.groupsRef[i].operandsRef[i].operandValue
+        // }
       }
     },
   },
@@ -1118,6 +1169,9 @@ export default {
       } else {
         return [{ fullName: 'Myself', id: 'SELF' }]
       }
+    },
+    alertIsValid() {
+      return this.alertTemplateForm.isValid
     },
     editor() {
       return this.$refs['message-body'].quill
@@ -1147,7 +1201,11 @@ export default {
   },
   mounted() {
     this.setDefaultChannel()
-    this.setOldAlertValues()
+    console.log('SAVED ALERT', this.oldAlert)
+    console.log('ALERT TEMPLATE FORM', this.alertTemplateForm)
+    // this.updatedAlert.groupsRef
+
+    // this.setOldAlertValues()
   },
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
@@ -1819,7 +1877,7 @@ textarea {
   height: 94vh;
   overflow: scroll;
   color: $base-gray;
-  padding: 0 12px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;

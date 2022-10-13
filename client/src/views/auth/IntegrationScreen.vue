@@ -40,9 +40,9 @@
         </div>
 
         <div class="card">
-          <div class="card__header lb-bg">
-            <img src="@/assets/images/gmailCal.png" style="margin-right: 8px; height: 30px" />
-            <img src="@/assets/images/outlookMail.png" style="height: 30px" />
+          <div class="card__header lbp-bg">
+            <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 32px" />
+            <img src="@/assets/images/outlookMail.png" style="height: 32px" />
             <!-- <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" /> -->
           </div>
 
@@ -71,7 +71,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header lr-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/slackLogo.png" />
           </div>
 
@@ -648,6 +648,10 @@ export default {
   background-color: $very-light-blue;
   border: 1px solid $very-light-blue;
 }
+.rb-bg {
+  background: rgb(238, 174, 202);
+  background: radial-gradient(circle, rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+}
 .vlb-bg {
   background: rgb(181, 222, 255);
   background: linear-gradient(90deg, rgba(181, 222, 255, 1) 1%, rgba(127, 196, 251, 1) 100%);
@@ -677,6 +681,9 @@ export default {
   background: rgb(147, 162, 247);
   background: linear-gradient(90deg, rgb(181, 191, 244) 0%, rgb(176, 185, 245) 32%);
   border: 1px solid $very-light-blue;
+
+  //   background: rgb(238,174,202);
+  // background: radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
 }
 .lp-bg {
   background: rgb(221, 184, 255);
@@ -763,20 +770,16 @@ a {
   }
 }
 .orange_button {
-  color: white;
-  background-color: $dark-green;
+  color: $dark-green;
+  background-color: white;
   border-radius: 6px;
   padding: 6px 12px;
   font-weight: 600;
   font-size: 11px;
-  border: none;
-  transition: all 0.25s;
+  border: 1px solid $soft-gray;
   cursor: pointer;
 }
 
-.orange_button:hover {
-  transform: scale(1.05);
-}
 .grey-text {
   color: $light-gray-blue;
 }
