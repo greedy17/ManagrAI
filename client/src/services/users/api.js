@@ -12,6 +12,7 @@ const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
 const UNINVITE_ENDPOINT = '/users/remove-user/'
+const ALL_USERS_ENDPOINT = '/users/get-all-users/'
 const TASKS_ENDPOINT = '/users/admin-tasks/'
 // const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
 const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
@@ -137,6 +138,15 @@ export default class UserAPI {
         }),
       )
     return promise
+  }
+
+  async getAllUsers() {
+    try {
+      const response = await this.client.get(ALL_USERS_ENDPOINT)
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getAllUsers' })
+    }
   }
 
   async getTasks() {

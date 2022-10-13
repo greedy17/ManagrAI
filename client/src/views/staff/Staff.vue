@@ -912,6 +912,11 @@ export default {
       this.selectedSlackForms = null
       this.selectedUsers = null
     },
+    async getAllUsers() {
+      console.log('getAllUsers', this.allUsers)
+      // const res = await User.api.getAllUsers()
+      // this.allUsers = res
+    },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm(null, true)
@@ -1261,6 +1266,7 @@ export default {
   created() {
     this.getTasks()
     this.getStaffOrgs()
+    this.getAllUsers()
     this.allUsers.refresh()
   },
   watch: {
