@@ -380,7 +380,14 @@
             selectLabel="Enter"
             label="key"
             track-by="value"
-          />
+        >
+        <template slot="placeholder">
+          <p class="slot-icon">
+            <img src="@/assets/images/search.svg" alt="" />
+            {{getUser.timezone}}
+          </p>
+        </template>
+        </Multiselect>
           <button class="invite_button" type="submit" @click="handleUpdate">
             Update
             <img
