@@ -606,6 +606,7 @@
       <h3>Organizations</h3>
       <Multiselect
         placeholder="Select Organization"
+        @select="clearUsersAndSlackForm"
         style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
         v-model="selected_org"
         :options="organizations /*.list*/"
@@ -906,6 +907,10 @@ export default {
     getUserName(id) {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
       return user ? `${user.firstName} ${user.lastName}` : '-'
+    },
+    clearUsersAndSlackForm() {
+      this.selectedSlackForms = null
+      this.selectedUsers = null
     },
     async getAllForms() {
       try {
