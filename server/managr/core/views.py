@@ -448,6 +448,15 @@ class UserViewSet(
         dict_tasks = serializers.serialize("json", tasks)
         return Response(data={"tasks": dict_tasks})
 
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
+    )
+    def admin_users(self, request, *args, **kwargs):
+        param = request.query_params.get("org_id", None)
+        users = User.objects.filter(organization=param)
+        serialized = self.get_serializer(users, many=True).data
+        return Response(serialized)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
