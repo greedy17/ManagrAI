@@ -771,9 +771,9 @@
             {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.form_type : '-' }} by
             {{ getUserName(slackFormInstance.user) }}
             {{
-              slackFormInstance.submissionDate
-                ? `at ${formatDateTime(slackFormInstance.submissionDate)} from ${
-                    slackFormInstance.updateSource
+              slackFormInstance.submission_date
+                ? `at ${formatDateTime(slackFormInstance.submission_date)} from ${
+                    slackFormInstance.update_source
                   }`
                 : `(Not Submitted)`
             }}
@@ -1143,6 +1143,7 @@ export default {
     openModal(name, data) {
       this.modalName = name
       this.modalInfo = data
+      console.log('data', data)
       this.editOpModalOpen = true
     },
     resetEdit() {
