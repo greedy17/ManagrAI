@@ -1,16 +1,11 @@
 <template>
   <div class="registration">
     <div>
-      <div class="header">
-        <img class="logo" src="@/assets/images/logo.png" />
-        <h2>Register</h2>
-      </div>
-
       <template v-if="!isLoading">
         <template v-if="errorValidatingEmail">
           <div class="box" style="display: flex; flex-direction: column; align-items: center">
             <span>
-              <small class="muted"
+              <small
                 >You have already activated your account, if you forgot your password you can reset
                 it here
               </small>
@@ -20,92 +15,98 @@
           </div>
         </template>
         <template v-else>
-          <div class="registration__text">
-            Create and customize your Managr account with {{ organization }} within minutes.
-          </div>
-
-          <div style="margin-top: -1rem" class="registration__form">
+          <div class="registration__form">
             <div class="form-card">
-              <FormField
-                label="Full Name"
-                @blur="registrationForm.field.fullName.validate()"
-                :errors="registrationForm.field.fullName.errors"
-                v-model="registrationForm.field.fullName.value"
-                large
-                placeholder=""
-                id="fullname"
-              />
-              <FormField
-                label="Your Email"
-                @blur="registrationForm.field.email.validate()"
-                :errors="registrationForm.field.email.errors"
-                v-model="registrationForm.field.email.value"
-                large
-                :disabled="true"
-                placeholder=""
-                id="email"
-              />
-              <FormField
-                label="Set a Password"
-                @blur="registrationForm.field.password.validate()"
-                :errors="registrationForm.field.password.errors"
-                v-model="registrationForm.field.password.value"
-                placeholder=""
-                inputType="password"
-                large
-                id="password"
-              />
-              <FormField
-                label="Re-Enter Password"
-                @blur="registrationForm.field.confirmPassword.validate()"
-                :errors="registrationForm.field.confirmPassword.errors"
-                v-model="registrationForm.field.confirmPassword.value"
-                placeholder=""
-                inputType="password"
-                large
-                id="renterpassword"
-              />
+              <h2>Register</h2>
 
-              <div style="width: 100%; text-align: center">
+              <span>
+                <label for="fullname">Full Name</label>
+                <input
+                  @blur="registrationForm.field.fullName.validate()"
+                  :errors="registrationForm.field.fullName.errors"
+                  v-model="registrationForm.field.fullName.value"
+                  id="fullname"
+                />
+              </span>
+
+              <span>
+                <label for="email">Email</label>
+                <input
+                  label="Your Email"
+                  @blur="registrationForm.field.email.validate()"
+                  :errors="registrationForm.field.email.errors"
+                  v-model="registrationForm.field.email.value"
+                  type="email"
+                  id="email"
+                />
+              </span>
+
+              <span>
+                <label for="password">Set a Pasword</label>
+                <input
+                  @blur="registrationForm.field.password.validate()"
+                  :errors="registrationForm.field.password.errors"
+                  v-model="registrationForm.field.password.value"
+                  type="password"
+                  id="password"
+                />
+              </span>
+
+              <span>
+                <label for="renterpassword">Re-Enter Password</label>
+                <input
+                  @blur="registrationForm.field.confirmPassword.validate()"
+                  :errors="registrationForm.field.confirmPassword.errors"
+                  v-model="registrationForm.field.confirmPassword.value"
+                  type="password"
+                  id="renterpassword"
+                />
+              </span>
+
+              <!-- <div style="width: 100%; text-align: center">
                 <p>
                   Your timezone:
                   <span style="color: #41b883; font-weight: bold">{{ userTime }}</span>
                 </p>
                 <p v-if="!changeZone" @click="selectZone" class="time">Change timezone ?</p>
                 <p v-else @click="selectZone" class="time">Select your timezone:</p>
-              </div>
+              </div> -->
 
-              <FormField v-if="changeZone">
-                <template v-slot:input>
-                  <Multiselect
-                    placeholder="Select time zone"
-                    @input="test($event)"
-                    v-model="selectedZone"
-                    :options="timezones"
-                    openDirection="below"
-                    style="width: 16vw"
-                    selectLabel="Enter"
-                    label="key"
-                  >
-                    <template slot="noResult">
-                      <p>No results.</p>
-                    </template>
-                  </Multiselect>
+              <Multiselect
+                :placeholder="userTime"
+                @input="test($event)"
+                v-model="selectedZone"
+                :options="timezones"
+                openDirection="above"
+                style="width: 45vw"
+                selectLabel="Enter"
+                label="key"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
                 </template>
-              </FormField>
+              </Multiselect>
+
+              <div class="form-card__footer">
+                <div>
+                  By clicking Sign Up, I agree to the
+                  <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
+                  and
+                  <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+                </div>
+
+                <Button
+                  class="registration__button"
+                  type="submit"
+                  @click="onSubmit"
+                  text="Sign Up"
+                />
+              </div>
             </div>
 
-            <div style="margin-top: 1rem" class="registration__privacy">
-              By clicking Sign Up, I agree to the
-              <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
-              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
-            </div>
-
-            <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
-
-            <div style="margin-top: 1rem">
+            <!-- <div style="margin-top: 1rem">
               <router-link :to="{ name: 'Login' }">Back to Login</router-link>
-            </div>
+            </div> -->
           </div>
         </template>
       </template>
@@ -236,9 +237,10 @@ export default {
 
 input:focus {
   outline: none;
-  border: none;
 }
-
+a {
+  text-decoration: none;
+}
 .registration {
   display: flex;
   padding: 2rem 0rem 0rem 0rem;
@@ -261,8 +263,8 @@ input:focus {
 
   &__button {
     @include primary-button();
-    width: 19rem;
-    border-radius: 3px;
+    width: 10rem;
+    border-radius: 6px;
     margin-top: 1rem;
     box-shadow: none;
   }
@@ -312,35 +314,38 @@ h1 {
 }
 
 input {
-  @include input-field();
-  height: 2.5rem;
-  width: 15.65rem;
-  display: block;
-  margin: 0.625rem 0;
-
-  &:disabled {
-    border: 2px solid $dark-green;
-  }
+  width: 45vw;
+  border-radius: 4px;
+  padding: 10px;
+  border: 1px solid $soft-gray;
+}
+input:focus {
+  outline: none;
 }
 
-button {
-  @include primary-button();
-  margin-top: 1.25rem;
-  height: 1.875rem;
-  width: 9.375rem;
+label {
+  font-size: 13px;
+  color: $light-gray-blue;
 }
+
 .form-card {
   display: flex;
-  align-items: space-evenly;
+  align-items: flex-start;
   justify-content: space-evenly;
-  flex-direction: row;
-  flex-wrap: wrap;
-  border-radius: 0.3rem;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 6px;
   background-color: white;
-  border: 1px solid #e8e8e8;
-  padding: 2rem;
+  // border: 1px solid #e8e8e8;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  padding: 1rem 2rem;
   width: 50vw;
   color: $base-gray;
+  letter-spacing: 0.75px;
+
+  &__footer {
+    font-size: 12px;
+  }
 }
 
 a {

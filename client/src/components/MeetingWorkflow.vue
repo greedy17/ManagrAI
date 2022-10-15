@@ -48,7 +48,7 @@
             </span>
             <span
               v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
-              class="tooltip"
+              class="right-tooltip"
             >
               <img
                 src="@/assets/images/remove.svg"
@@ -56,7 +56,7 @@
                 @click="removeParticipant(participantIndex)"
                 alt=""
               />
-              <span class="tooltiptext">Remove</span>
+              <span class="right-tooltiptext">Remove</span>
             </span>
             <span v-if="meeting.participants[participantIndex].__has_changes">
               <img class="filter" src="@/assets/images/profile.svg" alt="" />
@@ -393,12 +393,9 @@
         </div>
 
         <div class="cards__header__div row">
-          <div class="tooltip">
-            <button class="img-button" @click="switchResource">
-              <img src="@/assets/images/replace.svg" height="16px" />
-            </button>
-            <span class="tooltiptext">Change {{ resourceType }}</span>
-          </div>
+          <button class="img-button" @click="switchResource">
+            <img src="@/assets/images/replace.svg" height="16px" />
+          </button>
 
           <!-- <div class="tooltip">
             <button class="img-button" @click="emitGetNotes(resourceId)">
@@ -515,6 +512,7 @@
         >
           Update
         </button>
+
         <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
       </div>
       <div v-if="noUpdate" class="noupdate-field-section">
@@ -542,9 +540,9 @@
       </div>
     </div>
     <div class="cards__header bottom" v-else>
-      <img src="@/assets/images/cloud-upload.svg" height="16px" alt="" />
+      <img class="filtered-green" src="@/assets/images/badge-check.svg" height="18px" alt="" />
       <div class="cards__header__div">
-        <p class="success">Meeting Logged</p>
+        <p style="color: #41b883">Meeting Logged</p>
       </div>
     </div>
   </div>
@@ -878,6 +876,9 @@ export default {
   font-size: 14px !important;
   color: $base-gray !important;
 }
+.filtered-green {
+  filter: invert(55%) sepia(75%) saturate(324%) hue-rotate(101deg) brightness(97%) contrast(91%);
+}
 .removeSpace {
   margin: 0 !important;
   padding: 0 !important;
@@ -898,39 +899,58 @@ export default {
     filter: invert(70%);
   }
 }
+
 .tooltip {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2px 0px;
+  display: inline-block;
 }
+
+/* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
+  width: 110px;
   background-color: $base-gray;
-  color: white;
+  opacity: 0.9;
+  color: #fff;
   text-align: center;
-  // border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 8px 4px;
+  padding: 5px 0;
   border-radius: 6px;
-  font-size: 12px;
 
-  /* Position the tooltip text */
+  /* Position the tooltip text - see examples below! */
   position: absolute;
-  z-index: 1000;
-  width: 140px;
-  bottom: 175%;
-  left: 50%;
-  margin-left: -50px;
-
-  /* Fade in tooltip */
-  opacity: 0;
-  transition: opacity 0.3s;
+  z-index: 1;
+  top: -5px;
+  right: 105%;
 }
+
+/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
+}
+
+.right-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.right-tooltip .right-tooltiptext {
+  visibility: hidden;
+  width: 110px;
+  background-color: $base-gray;
+  opacity: 0.9;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 105%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.right-tooltip:hover .right-tooltiptext {
+  visibility: visible;
 }
 
 input:focus {
@@ -1051,7 +1071,7 @@ a {
 }
 .red-text {
   color: $coral !important;
-  // background-color: $light-coral;
+  background-color: $light-coral;
   padding: 8px !important;
   border-radius: 8px;
   display: flex;
@@ -1369,5 +1389,6 @@ a {
   background-color: transparent;
   padding: 4px 6px;
   border: none;
+  cursor: pointer;
 }
 </style> 

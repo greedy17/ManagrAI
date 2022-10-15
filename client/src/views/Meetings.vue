@@ -61,32 +61,33 @@
         }
       "
     >
-      <div class="create-modal">
-        <div class="form-field">
-          <p>Meeting Title</p>
+      <div class="form-field">
+        <span>
+          <label for="title">Meeting Title</label>
           <input v-model="meetingTitle" class="zoom-input" type="text" id="title" />
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p for="description">Meeting Description</p>
+        <span>
+          <label for="description">Meeting Description</label>
           <textarea v-model="description" class="zoom-input-ta" type="text" id="description" />
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p for="startDate">Date</p>
+        <span>
+          <label for="startDate">Date</label>
           <input id="startDate" v-model="startDate" class="zoom-input" type="date" />
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p for="startTime">Time</p>
+        <span>
+          <label for="startTime">Time</label>
           <input id="startTime" v-model="startTime" class="zoom-input" type="time" />
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p>Duration</p>
+        <span>
+          <label for="duration">Duration</label>
           <Multiselect
+            id="duration"
             placeholder="Duration"
-            style="width: 32vw"
+            style="width: 44vw"
             v-model="meetingDuration"
             :options="fiveMinuteIntervals"
             openDirection="below"
@@ -96,13 +97,14 @@
               <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p>Internal Participants</p>
+        <span>
+          <label for="internals">Internal Participants</label>
           <Multiselect
+            id="internals"
             placeholder="Internal Users"
-            style="width: 32vw"
+            style="width: 44vw"
             v-model="internalParticipantsSelected"
             :options="internalParticipants"
             openDirection="below"
@@ -115,13 +117,14 @@
               <p class="multi-slot">No results.</p>
             </template>
           </Multiselect>
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p>External Participants</p>
+        <span>
+          <label for="externals">Externals</label>
           <Multiselect
+            id="externals"
             placeholder="External Users"
-            style="width: 32vw; margin-bottom: 1rem"
+            style="width: 44vw; margin-bottom: 1rem"
             v-model="externalParticipantsSelected"
             :options="externalParticipants"
             openDirection="above"
@@ -142,11 +145,12 @@
               </p>
             </template>
           </Multiselect>
-        </div>
+        </span>
 
-        <div class="form-field">
-          <p class="label">Additional Users</p>
+        <span>
+          <label for="additionals">Additional Users</label>
           <input
+            id="additionals"
             :class="
               extraParticipantsSelected.length ? 'zoom-input' : 'light-gray-placeholder zoom-input'
             "
@@ -154,7 +158,7 @@
             type="text"
             placeholder="Separate emails by commas"
           />
-        </div>
+        </span>
       </div>
     </section>
 
@@ -342,8 +346,6 @@ export default {
       createData: {},
       productRefCopy: {},
       productReferenceOpts: {},
-      allPicklistOptions: {},
-      apiPicklistOptions: {},
       createReferenceOpts: {},
       page: 1,
       savingCreateForm: false,
@@ -362,7 +364,6 @@ export default {
       countSets: 0,
       dropdownLoading: false,
       loadingProducts: false,
-      pricebooks: null,
       selectedPriceBook: null,
       pricebookPage: 1,
       savedPricebookEntryId: '',
@@ -480,14 +481,18 @@ export default {
     meetings() {
       return this.$store.state.meetings
     },
+    allPicklistOptions() {
+      return this.$store.state.allPicklistOptions
+    },
+    apiPicklistOptions() {
+      return this.$store.state.apiPicklistOptions
+    },
+    pricebooks() {
+      return this.$store.state.pricebooks
+    },
   },
   created() {
-    // this.getMeetingList()
-    // this.$store.dispatch('loadMeetings')
-    // this.getObjects()
     this.getAllForms()
-    this.getAllPicklist()
-    this.getPricebooks()
     this.templates.refresh()
   },
   beforeMount() {
@@ -738,17 +743,7 @@ export default {
       this.externalParticipantsSelected = []
       this.extraParticipantsSelected = ''
     },
-    async getAllPicklist() {
-      try {
-        const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
-        for (let i = 0; i < res.length; i++) {
-          this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
-          this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
+
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
@@ -856,7 +851,7 @@ export default {
         const res = await MeetingWorkflows.api
           .mapMeeting(workflow, resource, resourceType)
           .then(() => {
-            this.getMeetingList()
+            this.$store.dispatch('loadMeetings')
           })
       } catch (e) {
         this.$toast('Error mapping record', {
@@ -876,7 +871,7 @@ export default {
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api.removeParticipant(workflow, participant).then(() => {
-          this.getMeetingList()
+          this.$store.dispatch('loadMeetings')
         })
       } catch (e) {
         this.$toast('Error removing participant', {
@@ -902,7 +897,7 @@ export default {
             form_data: data,
           })
           .then(() => {
-            this.getMeetingList()
+            this.$store.dispatch('loadMeetings')
           })
       } catch (e) {
         console.log(e)
@@ -991,8 +986,9 @@ export default {
             },
             stage_form_id: [],
           })
-          .then(() => {
-            this.getMeetingList()
+          .then((res) => {
+            console.log(res)
+            this.$store.dispatch('loadMeetings')
           })
       } catch (e) {
         this.$toast('Meeting log unsuccessful, error with no update', {
@@ -1116,7 +1112,7 @@ export default {
             form_data: this.formData,
           })
           .then((res) => {
-            this.getMeetingList()
+            this.$store.dispatch('loadMeetings')
           })
         this.$toast('Meeting logged Successfully', {
           timeout: 2000,
@@ -1167,8 +1163,7 @@ export default {
       }
     },
     async getPricebooks() {
-      const res = await SObjects.api.getObjects('Pricebook2')
-      this.pricebooks = res.results
+      this.$store.dispatch('loadPricebooks')
     },
     async getPricebookEntries(id) {
       try {
@@ -1554,6 +1549,35 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.form-field {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 6px;
+  background-color: white;
+  // border: 1px solid #e8e8e8;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  padding: 2rem;
+  width: 50vw;
+  color: $base-gray;
+  letter-spacing: 0.75px;
+  label {
+    color: $light-gray-blue;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  &__footer {
+    font-size: 12px;
+  }
+  span {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 .container {
   min-height: 85vh;
   padding: 16px 0px;
@@ -2275,14 +2299,15 @@ section {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 40.25vw;
+  width: 45vw;
 }
+
 .zoom-input {
   border: 1px solid $soft-gray;
   border-radius: 6px;
   padding: 12px 8px;
 
-  width: 40vw;
+  width: 44vw;
   font-family: inherit;
 }
 .zoom-input-ta {
@@ -2290,8 +2315,9 @@ section {
   border-radius: 6px;
   height: 80px;
   padding: 8px;
-  width: 40vw;
+  width: 44vw;
   font-family: inherit;
+  resize: none;
 }
 #user-input:focus {
   outline: 1px solid $dark-green;
@@ -2510,33 +2536,7 @@ a {
 .select-btn:disabled:hover {
   transform: none;
 }
-.form-field {
-  background-color: white;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
 
-  color: $base-gray;
-  border-radius: 6px;
-  width: 50vw;
-  // min-height: 25vh;
-  letter-spacing: 0.75px;
-  padding: 2px 16px 32px 16px;
-  margin-top: 16px;
-  &__head {
-    padding: 8px 12px;
-    background-color: white;
-    margin-bottom: 0;
-    // color: $very-light-gray;
-  }
-  &__body {
-    padding: 6px 12px;
-    background-color: white;
-    font-size: 11px;
-    color: $light-gray-blue;
-    p {
-      margin-top: 0;
-    }
-  }
-}
 .create-modal {
   width: 100%;
   // background-color: white;
@@ -2545,18 +2545,7 @@ a {
   flex-direction: column;
   padding-bottom: 16px;
 }
-label {
-  display: inline-block;
-  padding: 6px;
-  font-size: 14px;
-  text-align: center;
-  min-width: 80px;
-  background-color: $white-green;
-  color: $dark-green;
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
+
 .cloud {
   display: flex;
   align-items: center;

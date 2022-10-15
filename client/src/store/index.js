@@ -23,6 +23,7 @@ const state = {
   },
   pollingItems: [],
   pricebooks: null,
+  allOpps: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -44,6 +45,9 @@ const mutations = {
     state.token = null
     state.user = null
     state.stages = []
+  },
+  SAVE_ALL_OPPS(state, allOpps) {
+    state.allOpps = allOpps
   },
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
@@ -81,6 +85,14 @@ const actions = {
       //   toastClassName: 'custom',
       //   bodyClassName: ['custom'],
       // })
+    }
+  },
+  async loadAllOpps({ commit }, filters = []) {
+    try {
+      const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      commit('SAVE_ALL_OPPS', res.results)
+    } catch (e) {
+      console.log(e)
     }
   },
   async loadPricebooks({ commit }) {

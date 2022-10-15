@@ -1283,6 +1283,7 @@ export default {
           fields_ref: fields_ref,
         })
         .then((res) => {
+          console.log(res)
           // this.$emit('update:selectedForm', res)
           this.$toast('Form saved', {
             timeout: 2000,

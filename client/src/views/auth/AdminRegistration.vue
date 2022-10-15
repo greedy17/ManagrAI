@@ -1,103 +1,96 @@
 <template>
   <div class="registration">
     <div class="registration-card">
-      <div class="header">
-        <img class="logo" src="@/assets/images/logo.png" />
-        <h2>Register</h2>
-      </div>
-
-      <div class="registration__text">Create and customize your Managr account within minutes.</div>
       <div class="registration__form">
         <div class="form-card">
-          <FormField
-            label="Full Name"
-            @blur="registrationForm.field.fullName.validate()"
-            :errors="registrationForm.field.fullName.errors"
-            v-model="registrationForm.field.fullName.value"
-            large
-            bordered
-            placeholder=""
-            id="name"
-          />
-          <FormField
-            label="Your Email"
-            @blur="registrationForm.field.email.validate()"
-            :errors="registrationForm.field.email.errors"
-            v-model="registrationForm.field.email.value"
-            large
-            bordered
-            placeholder=""
-            id="email"
-          />
-          <FormField
-            id="password"
-            label="Set a Password"
-            @blur="registrationForm.field.password.validate()"
-            :errors="registrationForm.field.password.errors"
-            v-model="registrationForm.field.password.value"
-            placeholder=""
-            inputType="password"
-            large
-            bordered
-          />
-          <FormField
-            id="confirm-password"
-            label="Re-Enter Password"
-            @blur="registrationForm.field.confirmPassword.validate()"
-            :errors="registrationForm.field.confirmPassword.errors"
-            v-model="registrationForm.field.confirmPassword.value"
-            placeholder=""
-            inputType="password"
-            large
-            bordered
-          />
-          <FormField
-            label="Company"
-            @blur="registrationForm.field.organizationName.validate()"
-            :errors="registrationForm.field.organizationName.errors"
-            v-model="registrationForm.field.organizationName.value"
-            placeholder=""
-            large
-            bordered
-            id="company"
-          />
+          <h2>Register</h2>
 
-          <FormField :errors="registrationForm.field.role.errors" label="Role">
-            <template v-slot:input>
-              <Multiselect
-                placeholder="Select User Role"
-                @input="tester($event)"
-                v-model="userRole"
-                :options="userRoles"
-                openDirection="below"
-                style="width: 18vw"
-                selectLabel="Enter"
-                label="name"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
+          <span>
+            <label for="name">Full Name</label>
+            <input
+              @blur="registrationForm.field.fullName.validate()"
+              :errors="registrationForm.field.fullName.errors"
+              v-model="registrationForm.field.fullName.value"
+              placeholder=""
+              id="name"
+            />
+          </span>
+
+          <span>
+            <label for="email">Email</label>
+            <input
+              @blur="registrationForm.field.email.validate()"
+              :errors="registrationForm.field.email.errors"
+              v-model="registrationForm.field.email.value"
+              type="email"
+              id="email"
+            />
+          </span>
+
+          <span>
+            <label for="password">Set a Password</label>
+            <input
+              id="password"
+              @blur="showVals(registrationForm.field.password)"
+              :errors="registrationForm.field.password.errors"
+              v-model="registrationForm.field.password.value"
+              type="password"
+            />
+          </span>
+
+          <span>
+            <label for="confirm-password">Re-Enter Password</label>
+            <input
+              id="confirm-password"
+              label="Re-Enter Password"
+              @blur="registrationForm.field.confirmPassword.validate()"
+              :errors="registrationForm.field.confirmPassword.errors"
+              v-model="registrationForm.field.confirmPassword.value"
+              type="password"
+            />
+          </span>
+
+          <span>
+            <label for="company">Company</label>
+            <input
+              @blur="registrationForm.field.organizationName.validate()"
+              :errors="registrationForm.field.organizationName.errors"
+              v-model="registrationForm.field.organizationName.value"
+              placeholder=""
+              id="company"
+            />
+          </span>
+
+          <Multiselect
+            placeholder="Select User Role"
+            @input="tester($event)"
+            v-model="userRole"
+            :options="userRoles"
+            openDirection="above"
+            style="width: 45vw; margin-top: 4px"
+            selectLabel="Enter"
+            label="name"
+          >
+            <template slot="noResult">
+              <p>No results.</p>
             </template>
-          </FormField>
+          </Multiselect>
 
-          <div style="width: 100%; text-align: center">
-            <p>
-              Your timezone: <span style="color: #41b883; font-weight: bold">{{ userTime }}</span>
-            </p>
+          <!-- <div>
+            <span class="gray">{{ userTime }}</span>
             <p v-if="!changeZone" @click="selectZone" class="time">Change timezone ?</p>
             <p v-else @click="selectZone" class="time">Select your timezone:</p>
-          </div>
+          </div> -->
 
-          <FormField v-if="changeZone">
+          <FormField>
             <template v-slot:input>
               <Multiselect
-                placeholder="Select time zone"
+                :placeholder="userTime"
                 @input="test($event)"
                 v-model="selectedZone"
                 :options="timezones"
-                openDirection="below"
-                style="width: 16vw"
+                openDirection="above"
+                style="width: 45vw; margin-top: 4px"
                 selectLabel="Enter"
                 label="key"
               >
@@ -107,18 +100,21 @@
               </Multiselect>
             </template>
           </FormField>
-        </div>
-        <div class="registration__privacy">
-          By clicking Sign Up, I agree to the
-          <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
-          <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+
+          <div class="form-card__footer">
+            <div>
+              By clicking Sign Up, I agree to the
+              <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a> and
+              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>.
+            </div>
+
+            <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
+          </div>
         </div>
 
-        <Button class="registration__button" type="submit" @click="onSubmit" text="Sign Up" />
-
-        <div style="margin-top: 1rem">
+        <!-- <div style="margin-top: 1rem">
           <router-link :to="{ name: 'Login' }">Back to Login</router-link>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -165,6 +161,10 @@ export default {
     })
   },
   methods: {
+    showVals(val) {
+      let errors = []
+      // errors =
+    },
     selectZone() {
       this.changeZone = !this.changeZone
     },
@@ -230,6 +230,10 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+::v-deep .tn-input__label {
+  color: $light-gray-blue;
+}
+
 .registration {
   display: flex;
   padding: 2rem 0rem 0rem 0rem;
@@ -249,12 +253,13 @@ export default {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
     margin-top: 0.5rem;
+    letter-spacing: 0.75px;
   }
 
   &__button {
     @include primary-button();
-    width: 19rem;
-    border-radius: 3px;
+    width: 10rem;
+    border-radius: 6px;
     margin-top: 1rem;
     box-shadow: none;
   }
@@ -279,23 +284,34 @@ export default {
   cursor: pointer;
   font-size: 14px;
 }
+::v-deep .multiselect__placeholder {
+  color: $light-gray-blue;
+}
 .time:hover {
   color: $gray;
 }
 .form-card {
   display: flex;
-  align-items: space-evenly;
+  align-items: flex-start;
   justify-content: space-evenly;
-  flex-direction: row;
-  flex-wrap: wrap;
-  border-radius: 0.3rem;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 6px;
   background-color: white;
-  border: 1px solid #e8e8e8;
-  padding: 2rem;
+  // border: 1px solid #e8e8e8;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  padding: 1rem 2rem;
   width: 50vw;
   color: $base-gray;
-}
+  letter-spacing: 0.75px;
 
+  &__footer {
+    font-size: 12px;
+  }
+}
+a {
+  text-decoration: none;
+}
 .registration__form {
   background-color: transparent !important;
   display: flex;
@@ -303,33 +319,40 @@ export default {
   align-items: center;
 }
 
+// input {
+//   height: 2.5rem;
+//   width: 100%;
+//   display: block;
+//   margin: 1rem;
+
+//   &:disabled {
+//     border: 2px solid $dark-green;
+//   }
+// }
+
 input {
-  height: 2.5rem;
-  width: 100%;
-  display: block;
-  margin: 1rem;
-
-  &:disabled {
-    border: 2px solid $dark-green;
-  }
+  width: 45vw;
+  border-radius: 4px;
+  padding: 10px;
+  border: 1px solid $soft-gray;
+}
+input:focus {
+  outline: none;
 }
 
-button {
-  @include primary-button();
-  margin-top: 1.25rem;
-  height: 1.875rem;
-  width: 9.375rem;
+label {
+  font-size: 13px;
+  color: $light-gray-blue;
 }
+
+// button {
+//   @include primary-button();
+//   margin-top: 1.25rem;
+//   height: 1.875rem;
+//   width: 9.375rem;
+// }
 a {
   color: $dark-green;
   font-weight: bold;
-}
-
-::v-deep .input-content {
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-}
-::v-deep .input-form__active {
-  border: none;
 }
 </style>

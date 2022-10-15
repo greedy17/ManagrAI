@@ -20,9 +20,9 @@
         />
 
         <div style="margin-top: 16px">
-          <label class="label" for="type">Resource type </label>
+          <label class="label" for="type">Select Record </label>
           <Multiselect
-            placeholder="Resources"
+            placeholder="Record types"
             :options="resources"
             openDirection="below"
             style="width: 94%; margin-left: 12px; margin-top: 8px"
@@ -50,7 +50,7 @@
             <span :class="alertFrequency !== 'MONTHLY' ? 'inactive' : ''">Monthly</span>
           </p> -->
           <div class="row__">
-            <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'green' : ''"
+            <label :class="form.field.recurrenceFrequency.value == 'WEEKLY' ? 'gray' : ''"
               >Weekly</label
             >
             <ToggleCheckBox
@@ -64,7 +64,7 @@
               offColor="#41b883"
               onColor="#41b883"
             />
-            <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'green' : ''"
+            <label :class="form.field.recurrenceFrequency.value == 'MONTHLY' ? 'gray' : ''"
               >Monthly</label
             >
           </div>
@@ -114,12 +114,22 @@
             <input type="checkbox" id="allUsers" v-model="directToUsers" />
             <label for="allUsers">Send to primary channel</label>
           </div>
-          <div v-if="!channelName && !directToUsers" class="row__">
-            <small @click="changeCreate" style="margin-top: 12px" class="andOr">
+          <div style="margin-top: 16px" v-if="!channelName && !directToUsers" class="row__">
+            <label :class="!create ? 'gray' : ''">Select Channel</label>
+            <ToggleCheckBox
+              style="margin: 0.25rem"
+              @input="changeCreate"
+              :value="create"
+              offColor="#41b883"
+              onColor="#41b883"
+            />
+            <label :class="create ? 'gray' : ''">Create Channel</label>
+
+            <!-- <small @click="changeCreate" style="margin-top: 12px" class="andOr">
               <span :class="create ? 'inactive' : ''">Select Channel</span>
               <span class="space-s">|</span>
               <span :class="!create ? 'inactive' : ''">Create Channel</span>
-            </small>
+            </small> -->
           </div>
 
           <div v-if="create && !directToUsers">
@@ -320,288 +330,9 @@
           </Multiselect>
         </div>
       </div>
-
-      <div v-if="alertTemplateForm.isValid || savingTemplate" class="end" style="width: 50vw">
-        <PulseLoadingSpinnerButton
-          :loading="savingTemplate"
-          class="gold__button pulse"
-          text="Create Workflow"
-          style="margin: 8px 0px"
-          @click.stop="onSave"
-        />
-      </div>
     </section>
 
-    <!-- <section v-else>
-      <div>{{ alertTemplateForm }}</div>
-      <h1>
-        ------------------------------------------------SEPERATOR---------------------------------------------------------
-      </h1>
-      <div>{{ oldAlert }}</div>
-    </section> -->
-
-    <section v-else>
-      <div class="title">
-        <h4 @click="test" class="title__head">General</h4>
-        <section class="title__body">
-          <p>What type of workflow are you building ?</p>
-        </section>
-
-        <label class="label" for="name">Name your Workflow </label>
-        <input
-          id="name"
-          type="text"
-          class="input-field"
-          placeholder="Name"
-          v-model="updatedAlert.title"
-          autofocus
-        />
-
-        <div style="margin-top: 16px">
-          <label class="label" for="type">Resource type </label>
-          <Multiselect
-            placeholder="Resources"
-            :options="resources"
-            openDirection="below"
-            style="width: 94%; margin-left: 12px; margin-top: 8px"
-            v-model="updatedAlert.resourceType"
-            selectLabel="Enter"
-          >
-          </Multiselect>
-        </div>
-      </div>
-
-      <div class="title">
-        <h4 class="title__head">Delivery Day</h4>
-        <section class="title__body">
-          <p>When would you like to be notified ?</p>
-        </section>
-
-        <div class="title__body" :key="i" v-for="(config, i) in updatedAlert.configssRef">
-          <p @click="changeFrequency" class="andOr">
-            <span :class="alertFrequency !== 'WEEKLY' ? 'inactive' : ''">Weekly</span>
-            <span class="space-s">|</span>
-            <span :class="alertFrequency !== 'MONTHLY' ? 'inactive' : ''">Monthly</span>
-          </p>
-
-          <div v-if="config.recurrenceFrequency.value !== 'MONTHLY'">
-            <div class="week-row">
-              <span
-                v-for="(day, i) in weeklyOpts"
-                :key="i"
-                :class="config.recurrenceDays.includes(day.value) ? 'active-option' : ''"
-              >
-                <input
-                  type="checkbox"
-                  :id="day.value"
-                  :value="day.value"
-                  v-model="config.recurrenceDays"
-                />
-                <label :for="day.value">{{ day.key.charAt(0) }}</label>
-              </span>
-            </div>
-          </div>
-
-          <FormField
-            v-if="config.recurrenceFrequency.value == 'MONTHLY'"
-            placeholder="Day of month"
-            v-model="config.recurrenceDay.value"
-            small
-          />
-        </div>
-      </div>
-
-      <div class="title">
-        <h4 class="title__head">Delivery Method</h4>
-        <section class="title__body">
-          <p>Where would you like to be notified ?</p>
-        </section>
-
-        <div style="margin-top: -8px" class="title__body">
-          <div class="custom-checkbox" v-if="user.userLevel !== 'REP'">
-            <input type="checkbox" id="allUsers" v-model="directToUsers" />
-            <label for="allUsers">Send directly to users</label>
-          </div>
-
-          <div v-else>
-            <input type="checkbox" id="allUsers" v-model="directToUsers" />
-            <label for="allUsers">Send to primary channel</label>
-          </div>
-          <div v-if="!channelName && !directToUsers" class="row__">
-            <small @click="changeCreate" style="margin-top: 12px" class="andOr">
-              <span :class="create ? 'inactive' : ''">Select Channel</span>
-              <span class="space-s">|</span>
-              <span :class="!create ? 'inactive' : ''">Create Channel</span>
-            </small>
-          </div>
-
-          <div v-if="create && !directToUsers">
-            <input
-              style="margin-top: 8px"
-              v-model="channelName"
-              class="search__input"
-              type="text"
-              name="channel"
-              id="channel"
-              placeholder="Name your channel"
-              @input="logNewName(channelName)"
-            />
-
-            <div v-if="!channelCreated">
-              <button
-                @click="createChannel(channelName)"
-                class="gold__button"
-                :class="channelName ? 'pulse' : ''"
-                :disabled="!channelName"
-              >
-                Create Channel
-              </button>
-            </div>
-          </div>
-
-          <div v-else>
-            <template>
-              <Multiselect
-                v-if="!directToUsers"
-                placeholder="Search Channels"
-                v-model="selectedChannel"
-                @input="setRecipient"
-                :options="userChannelOpts.channels"
-                openDirection="above"
-                style="width: 25vw; margin-top: 12px"
-                selectLabel="Enter"
-                track-by="id"
-                label="name"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
-                    Load More
-                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Search Channels
-                  </p>
-                </template>
-              </Multiselect>
-            </template>
-          </div>
-        </div>
-      </div>
-
-      <div ref="top" class="title">
-        <h4 class="title__head">Conditions</h4>
-        <section class="title__body">
-          <p>We'll alert you when these conditions are met</p>
-        </section>
-
-        <div :key="i" v-for="(form, i) in updatedAlert.groupsRef">
-          <div
-            :key="index"
-            v-for="(alertGroup, index) in updatedAlert.groupsRef"
-            :class="index > 0 ? 'margin-top border-top' : ''"
-            class="title__body"
-          >
-            <div>
-              <div
-                style="margin-top: 16px"
-                class="end"
-                v-show="index !== 0"
-                v-if="updatedAlert.groupsRef.length > 1"
-              >
-                <small class="remove__group" @click="onRemoveAlertGroup(index), scrollToTop()">
-                  <img
-                    src="@/assets/images/close.svg"
-                    height="16px"
-                    style="margin-left: 4px"
-                    alt=""
-                  />
-                </small>
-              </div>
-              <AlertGroup
-                :form="alertGroup"
-                :resourceType="updatedAlert.resourceType"
-                @scroll-to-view="scrollToElement"
-              />
-            </div>
-          </div>
-
-          <div class="flex-end">
-            <button
-              v-if="updatedAlert.groupsRef.length < 3"
-              class="group_button"
-              @click="onAddAlertGroup(), scrollToElement()"
-            >
-              Add group
-            </button>
-          </div>
-        </div>
-        <div ref="bottom"></div>
-      </div>
-
-      <div style="margin-bottom: 8px" class="title">
-        <h4 class="title__head">Slack Message</h4>
-        <section class="title__body">
-          <p>This is the message you'll recieve in slack with your workflow.</p>
-        </section>
-
-        <FormField id="message">
-          <template v-slot:input>
-            <quill-editor
-              ref="message-body"
-              v-model="updatedAlert.messageTemplateRef.body"
-              :options="{
-                modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                placeholder: 'Write your message.',
-                theme: 'snow',
-              }"
-              class="message__box"
-            />
-          </template>
-        </FormField>
-        <div style="margin-right: 8px" class="end">
-          <Multiselect
-            placeholder="Select field"
-            v-model="crmValue"
-            @input="bindText(`${selectedResourceType}.${$event.apiName}`, `${$event.label}`)"
-            :options="fields.list"
-            openDirection="above"
-            style="width: 18vw; margin-right: 4px"
-            selectLabel="Enter"
-            track-by="apiName"
-            label="referenceDisplayLabel"
-          >
-            <template slot="noResult">
-              <p class="multi-slot">No results.</p>
-            </template>
-            <template slot="afterList">
-              <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
-            </template>
-            <template slot="placeholder">
-              <p class="slot-icon">
-                <img src="@/assets/images/search.svg" alt="" />
-                Insert Value { }
-              </p>
-            </template>
-          </Multiselect>
-        </div>
-      </div>
-
-      <div class="end" style="width: 50vw">
-        <PulseLoadingSpinnerButton
-          :loading="savingTemplate"
-          class="gold__button pulse"
-          text="Create Workflow"
-          style="margin: 8px 0px"
-          @click.stop="onSave"
-        />
-      </div>
-    </section>
+    <section v-else></section>
   </div>
 </template>
 
@@ -620,6 +351,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import FormField from '@/components/forms/FormField'
 import AlertGroup from '@/views/settings/alerts/create/_AlertGroup'
 import SlackNotificationTemplate from '@/views/settings/alerts/create/SlackNotificationTemplate'
+import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel.vue'
 import Modal from '@/components/Modal'
 
 /**
@@ -642,6 +374,7 @@ export default {
     SlackNotificationTemplate,
     Modal,
     quillEditor,
+    AlertsEditPanel,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -1000,16 +733,8 @@ export default {
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
-
           this.$emit('close-builder')
           this.$router.go()
-          this.$toast('Workflow saved successfully', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
         } catch (e) {
           this.$toast('An error occured while trying to save your workflow', {
             timeout: 2000,
@@ -1029,7 +754,7 @@ export default {
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `${title}: { ${val} }`)
+      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
     },
     onNextPage() {
       this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
@@ -1209,7 +934,8 @@ export default {
   },
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
-    // this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value = ''
+    this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
+      'Hey { __Recipient.full_name },'
     this.alertTemplateForm.field.resourceType.value = 'Opportunity'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
@@ -1508,9 +1234,7 @@ input::placeholder {
 }
 .gray {
   color: $base-gray;
-  font-size: 11px;
-  cursor: pointer;
-  padding: 4px 8px;
+  font-weight: bold;
 }
 .gray:hover {
   opacity: 0.5;
@@ -1901,7 +1625,7 @@ textarea {
 //   margin-top: 24px;
 // }
 .green {
-  // color: $dark-green;
+  color: $dark-green;
   font-weight: bold;
 }
 .green-bg {
@@ -1940,7 +1664,11 @@ textarea {
     cursor: pointer;
     color: $light-gray-blue;
     margin-right: 8px;
-    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    width: 26px;
     border-radius: 100%;
     border: 1px solid $soft-gray;
     transition: all 0.2s;

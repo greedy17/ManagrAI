@@ -50,18 +50,18 @@
         </div>
 
         <div v-show="showIcons" class="flex-row">
-          <div class="tooltip">
+          <div>
             <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
               <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
             </button>
-            <span class="tooltiptext">Expand</span>
+            <!-- <span class="tooltiptext">Expand</span> -->
           </div>
 
-          <div class="tooltip">
+          <div>
             <button @click="emitGetNotes" class="name-cell-note-button-1">
               <img class="gray" height="12px" src="@/assets/images/note.svg" />
             </button>
-            <span class="tooltiptext">Notes</span>
+            <!-- <span class="tooltiptext">Notes</span> -->
           </div>
         </div>
       </div>
@@ -682,46 +682,48 @@ export default {
   align-items: space-evenly;
   // box-shadow: 1px 1px 1px $very-light-gray;
 }
+
 // .left-border {
 //   border-left: 2px solid $off-white !important;
 // }
+
 .tooltip {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 1px 0px;
-
-  img {
-    filter: invert(30%);
-  }
+  display: inline-block;
 }
+
+/* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
-  background-color: $base-gray;
-  color: white;
+  width: 120px;
+  background-color: black;
+  color: #fff;
   text-align: center;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 4px 0px;
+  padding: 5px 0;
   border-radius: 6px;
-  font-size: 11px;
+  opacity: 0.7;
 
-  /* Position the tooltip text */
+  /* Position the tooltip text - see examples below! */
   position: absolute;
-  z-index: 20 !important;
-  width: 80px;
-  top: 80%;
-  left: 50%;
-  margin-left: -50px;
-
-  /* Fade in tooltip */
-  opacity: 0;
-  transition: opacity 0.3s;
+  z-index: 1;
+  top: 100%;
+  left: 40%;
+  margin-left: -60px; /* half of width */
 }
+
+/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
+}
+.tooltip .tooltiptext::after {
+  content: ' ';
+  position: absolute;
+  bottom: 100%; /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
 }
 .save {
   background-color: transparent;

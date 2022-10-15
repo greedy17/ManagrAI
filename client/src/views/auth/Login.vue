@@ -4,7 +4,7 @@
       <div class="column">
         <img src="@/assets/images/logo.png" class="logo" alt="logo" />
         <h2>Log in to Managr</h2>
-        <p class="enter-email">Please enter your email and password</p>
+        <!-- <p class="enter-email">Please enter your email and password</p> -->
       </div>
       <FormField
         type="email"
@@ -186,7 +186,7 @@ input:focus {
   color: $mid-gray;
 }
 .logo {
-  height: 4rem;
+  margin-top: 16px;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
@@ -200,6 +200,7 @@ input:focus {
   justify-content: center;
   align-items: center;
   color: white;
+  letter-spacing: 0.75px;
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
     padding: 0rem;
@@ -208,7 +209,7 @@ input:focus {
 
 .login-page__form {
   background-color: $white;
-  border-radius: 0.3rem;
+  border-radius: 6px;
   width: 30vw;
   margin-top: 4rem;
   display: flex;
@@ -216,7 +217,8 @@ input:focus {
   align-items: center;
   justify-content: center;
   color: $base-gray;
-  border: 1px solid #e8e8e8;
+  // border: 1px solid #e8e8e8;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
 
   @media only screen and (max-width: 768px) {
     /* For mobile phones: */
@@ -241,7 +243,7 @@ button {
 
 a {
   text-decoration: none;
-  color: $gray;
+  color: $light-gray-blue;
 }
 
 label {
@@ -263,7 +265,7 @@ label {
 .enter-email {
   @include muted-font();
   margin-top: -0.5rem;
-  color: $gray;
+  color: $light-gray-blue;
 }
 img {
   height: 80px;

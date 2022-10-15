@@ -99,19 +99,8 @@
       </div>
     </Modal>
 
-    <Modal dimmed v-if="!editing">
-      <div class="edit__modal">
-        <div class="edit__modal__header">
-          <p>Editing {{ currentAlert.title }}</p>
-          <button class="delete" @click="deleteClosed(currentAlert.id)">Delete</button>
-        </div>
-        <AlertsEditPanel :alert="currentAlert" />
-      </div>
-    </Modal>
-
     <template v-if="!templates.refreshing">
       <!-- <transition name="fade">
-      
       </transition> -->
 
       <div v-if="editing" class="alert_cards">
@@ -298,8 +287,6 @@
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
-//Internal
-import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 /**
  * Services
  *
@@ -316,7 +303,7 @@ export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    AlertsEditPanel,
+
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
@@ -334,13 +321,9 @@ export default {
       meetingListOpen: false,
       activeWorkflow: null,
       allConfigs,
-      userChannelOpts: new SlackListResponse(),
       templates: CollectionManager.create({
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
-      }),
-      groups: CollectionManager.create({
-        ModelClass: AlertGroup,
       }),
       users: CollectionManager.create({ ModelClass: User }),
       templateTitles: [],
@@ -362,14 +345,12 @@ export default {
   },
   async created() {
     this.templates.refresh()
-    this.groups.refresh()
     if (this.zoomChannel) {
       this.getZoomChannel()
     }
     if (this.hasRecapChannel) {
       this.getRecapChannel()
     }
-    await this.listUserChannels()
   },
   beforeUpdate() {
     if (this.templates.list.length) {
@@ -479,14 +460,7 @@ export default {
     closeEdit() {
       this.editing = !this.editing
     },
-    async listUserChannels(cursor = null) {
-      const res = await SlackOAuth.api.listUserChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.userChannelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.userChannelOpts = results
-    },
+
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
       this.deleteOpen = !this.deleteOpen
@@ -516,7 +490,7 @@ export default {
     async onToggleAlert(id, value) {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
-        await this.templates.refresh()
+        // await this.templates.refresh()
 
         this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
