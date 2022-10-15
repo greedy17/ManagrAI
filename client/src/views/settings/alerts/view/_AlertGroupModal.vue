@@ -57,10 +57,10 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertGroupModel.api.createGroup(this.form.toAPI)
-          this.$toast('Successfully added group and operand', {
+          this.$toast('Successfully added group', {
             timeout: 2000,
             position: 'top-left',
-            type: 'sucess',
+            type: 'success',
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })

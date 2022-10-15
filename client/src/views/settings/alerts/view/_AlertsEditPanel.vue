@@ -18,7 +18,7 @@
 
       <section class="title__body" v-else>
         <p>Cant edit templated alert titles</p>
-        <h3>{{ alert.title }}</h3>
+        <h2 style="color: #4d4e4c; font-size: 16px">{{ alert.title }}</h2>
       </section>
     </div>
 
@@ -29,14 +29,10 @@
         <p>Edit your workflow conditions</p>
       </section>
       <div
-        style="
-          border-top: 1px solid #eeeeee;
-          border-bottom: 1px solid #eeeeee;
-          padding-top: 8px;
-          padding-bottom: 8px;
-        "
+        style="padding-top: 8px; padding-bottom: 8px"
         v-for="(group, index) in alert.groupsRef"
         :key="index"
+        :class="index > 0 ? 'top-border' : ''"
       >
         <div
           v-if="alert.groupsRef.length > 1"
@@ -660,6 +656,9 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+}
+.top-border {
+  border-top: 1px solid #eeeeee;
 }
 .remove__group {
   background-color: $off-white;

@@ -109,7 +109,7 @@
               </div>
             </div>
             <div style="padding-left: 12px" class="section" v-else>
-              <h4 class="section__header">Select "Required" Field</h4>
+              <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
                 v-model="identity"

@@ -278,10 +278,10 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertConfig.api.createConfig(this.form.toAPI)
-          this.$toast('Successfully added new settings', {
+          this.$toast('Successfully added new delivery settings', {
             timeout: 2000,
             position: 'top-left',
-            type: 'sucess',
+            type: 'success',
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
