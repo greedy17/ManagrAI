@@ -49,7 +49,7 @@
         </button>
 
         <div v-else>
-          <button @click="updateWorkflow" class="green_button">Close Editor</button>
+          <button @click="updateWorkflow" class="green_button">Update</button>
           <button @click="deleteWorkflow(currentAlert.id)" class="delete right-margin">
             Delete
           </button>
