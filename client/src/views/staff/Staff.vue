@@ -1060,6 +1060,7 @@ export default {
   margin-top: 3rem;
   display: flex;
   height: 100vh;
+  padding-left: 72px;
 }
 
 .staff__drawer {
