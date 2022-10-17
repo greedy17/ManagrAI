@@ -476,7 +476,7 @@ export default {
     async refresh() {
       this.user = this.$store.state.user
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
-        this.$router.push({ name: 'Integrations' })
+        this.$router.push({ name: 'ListTemplates' })
       }
       if (this.user.isStaff) {
         await this.organizations.refresh()
