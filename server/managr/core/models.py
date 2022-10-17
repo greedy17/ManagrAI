@@ -3,7 +3,6 @@ import uuid
 import json
 import logging
 from datetime import datetime
-
 from urllib.error import HTTPError
 import requests
 
@@ -17,7 +16,7 @@ from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField, ArrayField
 
 from managr.utils import sites as site_utils
-from managr.utils.misc import datetime_appended_filepath
+from managr.utils.misc import datetime_appended_filepath, phrase_to_snake_case
 from managr.utils.client import HttpClient
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -344,6 +343,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
+
+    @property
+    def note_templates(self):
+        return NoteTemplate.objects.for_user(self)
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
@@ -747,6 +750,11 @@ class NoteTemplate(TimeStampModel):
 
     def __str__(self):
         return f"{self.subject} {self.user}"
+
+    @property
+    def as_slack_option(self):
+        value = phrase_to_snake_case(self.subject)
+        return block_builders.option(self.subject, value)
 
     class Meta:
         ordering = ["datetime_created"]

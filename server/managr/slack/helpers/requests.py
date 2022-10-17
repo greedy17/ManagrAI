@@ -167,7 +167,10 @@ def generic_request(url, data, access_token=None):
         if access_token
         else slack_auth.json_headers(),
     )
-    blocks = original_data.get("view", {}).get("blocks", []) if data else []
+    if "view" in data.keys():
+        blocks = original_data.get("view", {}).get("blocks", []) if data else []
+    else:
+        blocks = data.get("blocks")
     return _handle_response(res, blocks=blocks)
 
 

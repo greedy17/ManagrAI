@@ -53,6 +53,15 @@ export class MeetingWorkflowAPI extends ModelAPI {
     }
   }
 
+  async getStaffMeetings(org_id) {
+    try {
+      const response = await this.client.get(MeetingWorkflowAPI.ENDPOINT + 'admin/', { params: { org_id } })
+      return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'Error getting meetings' })(e)
+    }
+  }
+
   async mapMeeting(workflow_id, resource_id, resource_type) {
     try {
       const res = await this.client.post(MeetingWorkflowAPI.ENDPOINT + 'map-workflow/', { workflow_id: workflow_id, resource_id: resource_id, resource_type: resource_type })

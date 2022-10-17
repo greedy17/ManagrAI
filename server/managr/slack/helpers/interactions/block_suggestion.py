@@ -275,6 +275,9 @@ def process_get_external_relationship_options(payload, context):
     value = payload["value"]
     resource = context.get("resource")
     add_fields = context.get("add", None)
+    if relationship == "Group":
+        relationship = "User"
+        fields = ["FirstName", "LastName", "Name"]
     attempts = 1
     while True:
         sf_account = user.salesforce_account
@@ -401,6 +404,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_CONTACT_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
         slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
+        slack_const.COMMAND_FORMS__CONVERT_LEAD: process_get_sobject_list,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_get_local_resource_options,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
         slack_const.GET_DEAL_STAGE_OPTIONS: process_get_deal_stage_options,

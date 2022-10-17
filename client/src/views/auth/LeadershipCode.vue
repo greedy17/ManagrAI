@@ -2,13 +2,10 @@
   <div class="leadership-code">
     <div class="leadership-card">
       <img class="leadership-code__logo" src="@/assets/images/logo.png" />
-      <h2>Welcome</h2>
-      <div class="leadership-code__text">
-        Please enter your Leadership code provided by the Managr team.
-      </div>
+      <!-- <h2>Welcome</h2> -->
+      <div class="leadership-code__text">Please enter your Leadership code.</div>
       <div class="input__container">
-        Enter Code
-        <input v-model="code" type="text" class="leadership-code__input" />
+        <input placeholder="Enter Code" v-model="code" type="text" class="leadership-code__input" />
       </div>
       <button type="submit" @click="handleApplyCode">Apply Code</button>
     </div>
@@ -52,7 +49,8 @@ export default {
 .leadership-card {
   margin-top: 2rem;
   background-color: white;
-  border: 1px solid #e8e8e8;
+  // border: 1px solid #e8e8e8;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
   border-radius: 0.5rem;
   padding: 3rem;
   color: $base-gray;
@@ -66,6 +64,7 @@ export default {
   align-items: center;
   text-align: center;
   background-color: transparent;
+  letter-spacing: 0.75px;
   &__logo {
     height: 4rem;
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
@@ -76,18 +75,22 @@ export default {
     color: $base-gray;
     font-family: #{$base-font-family};
     width: 100%;
-    max-width: 20rem;
-    margin-bottom: 4rem;
+    margin: 2rem 0rem;
   }
 
   &__input {
     @include input-field-white();
     outline: none;
   }
+
+  &__input:focus,
+  &__input:active {
+    outline: none !important;
+  }
 }
 
 input:focus {
-  outline: none;
+  outline: none !important;
 }
 
 h2 {
@@ -120,6 +123,10 @@ input {
   &:disabled {
     border: 2px solid $dark-green;
   }
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .input {
@@ -134,7 +141,8 @@ button {
   @include primary-button();
   margin-top: 1.25rem;
   height: 2.25rem;
-  border-radius: 3px;
+  border-radius: 6px;
   width: 19rem;
+  box-shadow: none;
 }
 </style>

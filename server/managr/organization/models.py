@@ -168,7 +168,7 @@ class Account(TimeStampModel, IntegrationModel):
     objects = AccountQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.name} {self.organization}"
+        return f"{self.name}"
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -298,10 +298,10 @@ class Contact(TimeStampModel, IntegrationModel):
             first_name = self.secondary_data.get("FirstName")
         if self.secondary_data.get("LastName", None) not in ["", None]:
             last_name = self.secondary_data.get("LastName")
-        return f"{first_name} {last_name} <{email}>"
+        return f"{first_name} {last_name} - {email}"
 
     def __str__(self):
-        return f"contact integration: {self.integration_source}: {self.integration_id}, email: {self.email}"
+        return f"{self.name}"
 
     @property
     def as_slack_option(self):

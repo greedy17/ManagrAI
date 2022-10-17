@@ -1,7 +1,8 @@
+import json
 import logging
 import requests
 import textwrap
-from django.utils import timezone
+from django.core import serializers
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
@@ -422,6 +423,40 @@ class UserViewSet(
             str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
         )
         return Response(data={"success": True})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="remove-user",
+    )
+    def remove_user(self, request, *args, **kwargs):
+        remove_id = request.data.get("remove_id")
+        try:
+            remove_user = User.objects.get(id=remove_id)
+            remove_user.is_active = False
+            remove_user.save()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(f"Remove user error: {e}")
+            return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
+    )
+    def admin_tasks(self, request, *args, **kwargs):
+        tasks = CompletedTask.objects.all()[:100]
+        dict_tasks = serializers.serialize("json", tasks)
+        return Response(data={"tasks": dict_tasks})
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
+    )
+    def admin_users(self, request, *args, **kwargs):
+        param = request.query_params.get("org_id", None)
+        users = User.objects.filter(organization=param)
+        serialized = self.get_serializer(users, many=True).data
+        return Response(serialized)
 
 
 class ActivationLinkView(APIView):

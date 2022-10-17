@@ -1,19 +1,19 @@
 <template>
   <div class="alert-operand-row">
     <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
-      <!-- <label>AND</label>
+      <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label>OR</label> -->
-      <small @click="toggleSelectedCondition" class="andOr">
+      <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
+      <!-- <small @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
         <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
-      >
+      > -->
     </div>
 
     <div class="alert-operand-row__options">
@@ -583,7 +583,7 @@ export default {
 }
 .inactive {
   color: $very-light-gray;
-  font-size: 9px;
+  font-size: 11px;
   border-radius: 4px;
 }
 .space-s {
@@ -662,8 +662,9 @@ img {
   justify-content: center;
   align-items: center;
   margin-bottom: 2rem;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 0.75px;
+  color: $base-gray;
 
   label {
     padding: 0rem 0.2rem;

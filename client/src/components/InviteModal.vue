@@ -93,7 +93,7 @@ export default {
   display: flex;
   flex-flow: column;
   align-items: center;
-  overflow-y: scroll;
+  // overflow-y: scroll;
 }
 
 .dimmed {

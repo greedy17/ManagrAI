@@ -1131,55 +1131,6 @@ export default {
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
     },
-    async goToProducts() {
-      if (
-        (this.resource == 'Opportunity' || this.resource == 'Account') &&
-        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
-      ) {
-        if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$toast('Please enter a meeting type', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-          return
-        }
-      }
-      this.savingForm = true
-
-      let fields = new Set([...this.addedFields.map((f) => f.id)])
-      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
-      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-
-      SlackOAuth.api
-        .postOrgCustomForm({
-          ...this.customForm,
-          fields: fields,
-          removedFields: this.removedFields,
-          fields_ref: fields_ref,
-        })
-        .then((res) => {
-          this.$emit('update:selectedForm', res)
-          this.$store.dispatch('refreshCurrentUser')
-          this.$toast('Form added successfully', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        })
-        .finally(() => {
-          this.savingForm = false
-          if (this.fromAdmin) {
-            this.$router.go()
-          } else {
-            this.$router.push({ name: 'ProductForm' })
-          }
-        })
-    },
     lowerCase(word1, word2) {
       return (word1 + ' ' + word2)
         .toLowerCase()
@@ -1254,21 +1205,21 @@ export default {
       }
     },
     async onSave() {
-      // if (
-      //   (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
-      //   this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
-      // ) {
-      //   if (!this.meetingType.length && !this.actionChoices.length) {
-      //     this.$toast('Please enter a meeting type', {
-      //       timeout: 2000,
-      //       position: 'top-left',
-      //       type: 'error',
-      //       toastClassName: 'custom',
-      //       bodyClassName: ['custom'],
-      //     })
-      //     return
-      //   }
-      // }
+      if (
+        (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
+        this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
+        if (!this.meetingType.length && !this.actionChoices.length) {
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          return
+        }
+      }
       this.savingForm = true
 
       let fields = new Set([...this.addedFields.map((f) => f.id)])
@@ -1283,6 +1234,7 @@ export default {
           fields_ref: fields_ref,
         })
         .then((res) => {
+          console.log(res)
           // this.$emit('update:selectedForm', res)
           this.$toast('Form saved', {
             timeout: 2000,
@@ -1303,6 +1255,62 @@ export default {
           //   this.$router.go()
           // }
         })
+    },
+    async goToProducts() {
+      if (
+        (this.resource == 'Opportunity' || this.resource == 'Account') &&
+        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
+        if (!this.meetingType.length && !this.actionChoices.length) {
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          return
+        }
+      }
+      this.savingForm = true
+
+      let fields = new Set([...this.addedFields.map((f) => f.id)])
+      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+
+      try {
+        const res = await SlackOAuth.api.postOrgCustomForm({
+          ...this.customForm,
+          fields: fields,
+          removedFields: this.removedFields,
+          fields_ref: fields_ref,
+        })
+        this.$emit('update:selectedForm', res)
+        this.$store.dispatch('refreshCurrentUser')
+        this.$toast('Form added successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.savingForm = false
+        if (this.fromAdmin && this.formType !== 'UPDATE') {
+          this.$router.push({ name: 'Staff' })
+        } else {
+          this.$router.push({ name: 'ProductForm' })
+        }
+      } catch (e) {
+        console.log('error', e)
+        this.$toast('Form submission failed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.savingForm = false
+      }
     },
   },
 }

@@ -168,10 +168,13 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
         from managr.salesforce.routes import routes
 
         if instance.resource_type:
-            resource = instance.resource_type
-            serializer = routes[resource]["serializer"]
-            resource_id = routes[resource]["model"].objects.get(id=instance.resource_id)
-            return serializer(instance=resource_id).data
+            resource_type = instance.resource_type
+            serializer = routes[resource_type]["serializer"]
+            resource = routes[resource_type]["model"].objects.filter(id=instance.resource_id)
+            if len(resource):
+                return serializer(instance=resource.first()).data
+            else:
+                return None
         else:
             return None
 

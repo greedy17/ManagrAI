@@ -67,7 +67,7 @@ function requireIsAdminAuth(to, from, next) {
     })
   } else if (!store.state.user.isAdmin) {
     next({
-      name: 'Integrations',
+      name: 'ListTemplates',
       query: { redirect: to.fullPath },
     })
   } else {
@@ -87,7 +87,7 @@ function homepageRedirect(to, from, next) {
     })
   } else {
     next({
-      name: 'Integrations',
+      name: 'ListTemplates',
     })
   }
 }

@@ -275,6 +275,7 @@ export default new Router({
         },
         {
           path: 'list-templates',
+          beforeEnter: Auth.requireAuth,
           name: 'ListTemplates',
           component: () =>
             import(

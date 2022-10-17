@@ -1,9 +1,9 @@
 <template>
   <div class="alerts">
-    <div class="header">
+    <div v-if="!isOnboarding" class="header">
       <div>
         <h3 v-if="!buildingCustom && !editingWorkflow" class="left-margin">Workflows</h3>
-        <h3 @click="closeBuilder" v-else-if="buildingCustom" class="left-margin centered">
+        <h3 @click="closeBuilder" v-else-if="buildingCustom" class="left-margin-s centered">
           <img
             style="margin-right: 4px; filter: invert(40%)"
             src="@/assets/images/left.svg"
@@ -13,7 +13,7 @@
           Back
         </h3>
 
-        <h3 @click="closeBuilder" v-else class="left-margin centered">
+        <h3 @click="closeBuilder" v-else class="left-margin-s centered">
           <img
             style="margin-right: 4px; filter: invert(40%)"
             src="@/assets/images/left.svg"
@@ -49,9 +49,27 @@
         </button>
 
         <div v-else>
-          <button @click="saveWorkflow" class="green_button">Update</button>
-          <button @click="saveWorkflow" class="delete right-margin">Delete</button>
+          <button @click="updateWorkflow" class="green_button">Update</button>
+          <button @click="deleteWorkflow(currentAlert.id)" class="delete right-margin">
+            Delete
+          </button>
         </div>
+      </div>
+    </div>
+
+    <div class="onboarding-header" v-else>
+      <div>
+        <h3 class="left-margin">Getting started</h3>
+      </div>
+
+      <!-- <div>
+        <p>progress bar</p>
+      </div> -->
+
+      <div style="margin-right: 16px">
+        <button @click="onboardComplete" :disabled="!hasZoomChannel" class="primary-button">
+          Complete
+        </button>
       </div>
     </div>
 
@@ -67,6 +85,7 @@
       v-show="!buildingCustom && !editingWorkflow"
       :key="$route.fullPath"
       @edit-workflow="openEditWorkflow"
+      :templates="templates"
     ></router-view>
   </div>
 </template>
@@ -77,6 +96,7 @@ import { UserOnboardingForm } from '@/services/users/forms'
 import AlertTemplate from '@/services/alerts/'
 import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
+import User from '@/services/users'
 
 export default {
   name: 'AlertsDashboardMenu',
@@ -95,6 +115,7 @@ export default {
       canSave: false,
       editingWorkflow: false,
       currentAlert: null,
+      loading: false,
     }
   },
 
@@ -102,6 +123,81 @@ export default {
     closeBuilder() {
       this.buildingCustom = false
       this.editingWorkflow = false
+    },
+    onboardComplete() {
+      this.userOnboardingForm.field.onboarding.value = false
+      User.api
+        .update(this.user.id, this.userOnboardingForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+          this.$router.push({ name: 'ListTemplates' })
+          this.$toast('Onboarding Complete!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    updateWorkflow() {
+      this.buildingCustom = false
+      this.editingWorkflow = false
+      this.$toast('Workflow Updated', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'success',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
+    },
+    deleteWorkflow(id) {
+      console.log(id)
+      this.$emit('delete-workflow')
+    },
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
+    },
+    handleUpdate() {
+      User.api
+        .update(this.user.id)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    async deleteWorkflow(id) {
+      this.deletedTitle(id)
+
+      try {
+        await AlertTemplate.api.deleteAlertTemplate(id)
+        this.handleUpdate()
+        this.$router.go()
+        // this.$toast('Workflow removed', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+      } catch (e) {
+        this.$toast('Error removing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingWorkflow = false
+      }
     },
     openEditWorkflow(alert) {
       this.editingWorkflow = true
@@ -125,6 +221,9 @@ export default {
     goToCustom() {
       this.$router.push({ name: 'BuildYourOwn' })
     },
+  },
+  created() {
+    this.templates.refresh()
   },
   computed: {
     hasZoomChannel() {
@@ -171,6 +270,17 @@ export default {
     opacity: 0.9;
     transform: translate(10%, 0%);
   }
+}
+
+.secondary-button {
+  font-size: 12px;
+}
+.primary-button {
+  box-shadow: none;
+  font-size: 13px;
+}
+.primary-button:disabled:hover {
+  background-color: $soft-gray !important;
 }
 .ec .onboarding {
   filter: blur(10px);
@@ -283,6 +393,9 @@ img {
       margin-top: 16px;
     }
   }
+}
+.bold {
+  font-weight: bold !important;
 }
 .tab-switch:checked + .tab-label {
   background: #fff;
@@ -406,8 +519,36 @@ a:hover span {
     cursor: pointer;
   }
 }
+
+.onboarding-header {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  background-color: $white;
+  letter-spacing: 0.75px;
+  width: 100vw;
+  border-bottom: 1px solid $soft-gray;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+}
 .left-margin {
   margin-left: 30px;
+}
+.left-margin-s {
+  margin-left: 16px;
 }
 .right-margin {
   margin-right: 40px;
