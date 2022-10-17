@@ -36,6 +36,7 @@ import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import VueSanitize from "vue-sanitize";
 
+
 let defaults = VueSanitize.defaults;
 // defaults.allowedTags = defaults.allowedTags.filter(t => t === 'br' || t === 'li');
 

@@ -72,7 +72,10 @@ class AlertTemplate(TimeStampModel):
             user_sf.salesforce_id,
             self.resource_type,
             ["Id"],
-            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+            additional_filters=[
+                *self.adapter_class.additional_filters(),
+                operand_groups,
+            ],
         )
         return f"{user_sf.instance_url}{q[0]}"
 
@@ -86,7 +89,10 @@ class AlertTemplate(TimeStampModel):
             user_sf.salesforce_id,
             self.resource_type,
             ["Id"],
-            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+            additional_filters=[
+                *self.adapter_class.additional_filters(),
+                operand_groups,
+            ],
             user_list=user_list,
         )
         return f"{user_sf.instance_url}{q[0]}"
@@ -147,7 +153,10 @@ class AlertGroupQuerySet(models.QuerySet):
 
 class AlertGroup(TimeStampModel):
     group_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -201,7 +210,10 @@ class AlertOperand(TimeStampModel):
         "alerts.AlertGroup", on_delete=models.CASCADE, related_name="operands"
     )
     operand_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -426,7 +438,10 @@ class AlertConfig(TimeStampModel):
                     salesforce_account__isnull=False,
                 )
             elif target == "ALL":
-                query |= Q(is_active=True, salesforce_account__isnull=False,)
+                query |= Q(
+                    is_active=True,
+                    salesforce_account__isnull=False,
+                )
             elif target == "SDR":
                 query |= Q(
                     user_level=core_consts.USER_LEVEL_SDR,
@@ -463,7 +478,9 @@ class AlertInstanceQuerySet(models.QuerySet):
 
 class AlertInstance(TimeStampModel):
     template = models.ForeignKey(
-        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
+        "alerts.AlertTemplate",
+        on_delete=models.CASCADE,
+        related_name="instances",
     )
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alerts")
     rendered_text = models.TextField(

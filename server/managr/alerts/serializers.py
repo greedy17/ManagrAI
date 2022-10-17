@@ -1,12 +1,16 @@
+import logging
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.salesforce.serializers import SObjectFieldSerializer
+from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
+from managr.salesforce.routes import routes as model_routes
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from . import constants as alert_consts
 from . import models as alert_models
 from copy import copy
 
+logger = logging.getLogger("managr")
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
 def create_configs_for_target(target, template_user, config):
@@ -472,3 +476,80 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
             except Exception as e:
                 print(f"ERROR {e}")
         return data
+
+
+class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
+    sobject_instances = serializers.SerializerMethodField("get_sobject_instances")
+    configs_ref = AlertConfigRefSerializer(source="configs", many=True)
+    groups_ref = AlertGroupSerializer(source="groups", many=True)
+    message_template_ref = AlertMessageTemplateRefSerializer(source="message_template")
+
+    class Meta:
+        model = alert_models.AlertTemplate
+        fields = (
+            "id",
+            "title",
+            "user",
+            "is_active",
+            "resource_type",
+            "alert_level",
+            "invocation",
+            "message_template",
+            "message_template_ref",
+            "configs",
+            "configs_ref",
+            "groups",
+            "groups_ref",
+            "last_invocation_datetime",
+            "sobject_instances",
+        )
+
+    def get_sobject_instances(self, instance, *args, **kwargs):
+        request_user = self.context.get("request").user
+
+        configs = instance.configs.all()
+        template = instance
+        attempts = 1
+        while True:
+            sf = request_user.salesforce_account
+            try:
+                if template.user != request_user:
+                    if hasattr(request_user, "salesforce_account"):
+                        res = sf.adapter_class.execute_alert_query(
+                            template.url_str(request_user, configs.first().id),
+                            template.resource_type,
+                        )
+                        res_data = [item.integration_id for item in res]
+                        break
+                users = []
+                for config in configs:
+                    users = [*users, *config.target_users]
+                res_data = []
+                for user in users:
+                    if hasattr(user, "salesforce_account"):
+                        res = sf.adapter_class.execute_alert_query(
+                            template.url_str(user, config.id), template.resource_type
+                        )
+                        res_data.extend([item.integration_id for item in res])
+
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    res_data = {"error": "Could not refresh token"}
+                    logger.exception(
+                        f"Failed to retrieve alerts for {template.resource} data for user {str(user.id)} after {attempts} tries"
+                    )
+                    break
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
+            except SFQueryOffsetError:
+                return logger.warning(
+                    f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
+                )
+        print(res_data)
+        model = model_routes[template.resource_type]["model"]
+        queryset = model.objects.filter(integration_id__in=res_data)
+        serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
+        secondary_data = [obj["secondary_data"] for obj in serialized.data]
+        return secondary_data

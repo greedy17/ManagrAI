@@ -1,166 +1,137 @@
 <template>
   <div class="logZoomPage">
-    <div
-      style="display: flex; align-item: center; justify-content: space-between; margin: 0vw 19vw"
-    >
-      <div>
-        <h3>Meeting Recaps</h3>
-        <p style="margin-top: -0.5rem; font-size: 14px; color: #9b9b9b">
-          Recieve meeting recaps from essential team members
-        </p>
-      </div>
+    <div class="alerts-header">
+      <button @click="$router.push({ name: 'ListTemplates' })" class="back-button">
+        <img class="invert" src="@/assets/images/left.svg" alt="" height="12px" />
+        Back
+      </button>
 
-      <button @click="$router.push({ name: 'CreateNew' })" class="back-button">
-        <img class="invert" src="@/assets/images/back.svg" alt="" />
-        Back to workflows
+      <h3>Meeting Recaps</h3>
+
+      <button
+        class="green__button"
+        v-if="!create"
+        :disabled="!((channelCreated || recapChannel) && userIds.length > 0)"
+        @click="handleRecapUpdate(recapChannel)"
+      >
+        Activate Channel
+      </button>
+
+      <button
+        v-else
+        class="green__button"
+        @click="handleRecapUpdate(createdZoomChannel)"
+        :disabled="!((channelCreated || recapChannel) && userIds.length > 0)"
+      >
+        Activate Channel
       </button>
     </div>
 
-    <div style="flex-direction: column" class="centered">
-      <div class="card">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            margin-top: -0.6rem;
-          "
-        >
-          <p style="text-align: center; font-weight: bold">Select Users</p>
-          <div>
-            <Multiselect
-              placeholder="Select Users"
-              v-model="userIds"
-              :options="userList"
-              openDirection="below"
-              style="width: 14vw"
-              selectLabel="Enter"
-              track-by="id"
-              label="fullName"
-              :multiple="true"
-              :closeOnSelect="false"
-            >
-              <template slot="noResult">
-                <p>No results.</p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  Select Users
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-        </div>
-
+    <div class="centered">
+      <div class="section">
+        <h4>Select Users</h4>
         <div>
-          <div style="margin-bottom: 0.5rem" v-if="!channelName" class="row">
-            <label :class="!create ? 'green' : ''">Select #channel</label>
-            <ToggleCheckBox
-              style="margin: 0.25rem"
-              @input="changeCreate"
-              :value="create"
-              offColor="#41b883"
-              onColor="#41b883"
-            />
-            <label :class="create ? 'green' : ''">Create #channel</label>
-          </div>
-
-          <label v-else for="channel" style="font-weight: bold"
-            >Alerts will send to
-            <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
-            channel</label
+          <Multiselect
+            placeholder="Select Users"
+            v-model="userIds"
+            :options="userList"
+            openDirection="below"
+            style="width: 20vw"
+            selectLabel="Enter"
+            track-by="id"
+            label="fullName"
+            :multiple="true"
+            :closeOnSelect="false"
           >
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-            "
-            v-if="create"
-          >
-            <input
-              v-model="channelName"
-              class="search__input"
-              type="text"
-              name="channel"
-              id="channel"
-              placeholder="Name your channel"
-              @input="logNewName(channelName)"
-            />
-
-            <div v-if="!channelCreated" v style="margin-top: 1.25rem">
-              <button
-                v-if="channelName"
-                @click="createChannel(channelName)"
-                class="green__button bouncy"
-              >
-                Create Channel
-              </button>
-              <button v-else class="disabled__button">Create Channel</button>
-            </div>
-          </div>
-
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-            "
-            v-else
-          >
-            <FormField>
-              <template v-slot:input>
-                <Multiselect
-                  placeholder="Select Channel"
-                  v-model="recapChannel"
-                  :options="userChannelOpts.channels"
-                  openDirection="below"
-                  style="min-width: 13vw"
-                  selectLabel="Enter"
-                  track-by="id"
-                  label="name"
-                  :loading="dropdownLoading"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results. Try loading more</p>
-                  </template>
-                  <template slot="afterList">
-                    <p
-                      class="multi-slot__more"
-                      @click="listUserChannels(userChannelOpts.nextCursor)"
-                    >
-                      Load More
-                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                    </p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      Select Channel
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-            </FormField>
-          </div>
+            <template slot="noResult">
+              <p>No results.</p>
+            </template>
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.svg" alt="" />
+                Select Users
+              </p>
+            </template>
+          </Multiselect>
         </div>
       </div>
-      <div v-if="(channelCreated || recapChannel) && userIds.length > 0" style="margin-top: 2rem">
-        <div v-if="!create">
-          <button class="green__button bouncy" @click="handleRecapUpdate(recapChannel)">
-            Activate Channel
-          </button>
+
+      <div class="section">
+        <h4>Select or create a Slack channel</h4>
+        <div style="margin-bottom: 0.5rem" v-if="!channelName" class="row">
+          <label :class="!create ? 'green' : ''">Select #channel</label>
+          <ToggleCheckBox
+            style="margin: 0.25rem"
+            @input="changeCreate"
+            :value="create"
+            offColor="#41b883"
+            onColor="#41b883"
+          />
+          <label :class="create ? 'green' : ''">Create #channel</label>
         </div>
+
+        <label v-else for="channel" style="font-weight: bold"
+          >Alerts will send to
+          <span>{{ channelName }}</span>
+        </label>
+        <div v-if="create">
+          <input
+            v-model="channelName"
+            class="search__input"
+            type="text"
+            name="channel"
+            id="channel"
+            placeholder="Name your channel"
+            @input="logNewName(channelName)"
+          />
+
+          <div v-if="!channelCreated" style="margin-top: 1.25rem">
+            <button
+              :disabled="!channelName"
+              @click="createChannel(channelName)"
+              class="green__button"
+            >
+              Create Channel
+            </button>
+          </div>
+        </div>
+
         <div v-else>
-          <button class="green__button bouncy" @click="handleRecapUpdate(createdZoomChannel)">
-            Activate Channel
-          </button>
+          <FormField>
+            <template v-slot:input>
+              <Multiselect
+                placeholder="Select Channel"
+                v-model="recapChannel"
+                :options="userChannelOpts.channels"
+                openDirection="below"
+                style="width: 20vw"
+                selectLabel="Enter"
+                track-by="id"
+                label="name"
+                :loading="dropdownLoading"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="afterList">
+                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                    Load More
+                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                  </p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Channel
+                  </p>
+                </template>
+              </Multiselect>
+            </template>
+          </FormField>
         </div>
       </div>
+
+      <div></div>
     </div>
   </div>
 </template>
@@ -224,12 +195,12 @@ export default {
 
       this.createdZoomChannel = ''
       this.recapChannel = ''
-      this.$router.push({ name: 'CreateNew' })
+      this.$router.push({ name: 'ListTemplates' })
       // location.reload()
-      this.$toast('Workflow saved successfully', {
+      this.$toast('Recap channel saved!', {
         timeout: 2000,
         position: 'top-left',
-        type: 'sucess',
+        type: 'success',
         toastClassName: 'custom',
         bodyClassName: ['custom'],
       })
@@ -389,21 +360,19 @@ export default {
     transform: translateY(-6px);
   }
 }
+
 .back-button {
-  font-size: 14px;
-  color: $dark-green;
+  color: $base-gray;
   background-color: transparent;
   display: flex;
   align-items: center;
   border: none;
   cursor: pointer;
-  margin: 1rem 0rem 0rem 0rem;
+  font-size: 16px;
+  letter-spacing: 0.75px;
 
   img {
-    height: 1rem;
-    margin-right: 0.5rem;
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
+    margin-right: 8px;
   }
 }
 
@@ -473,9 +442,36 @@ input[type='text']:focus {
   border: 1px solid #e8e8e8;
   color: $base-gray;
 }
+.section {
+  background-color: white;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  border: 1px solid $soft-gray;
+  color: $base-gray;
+  border-radius: 6px;
+  width: 50vw;
+  min-height: 25vh;
+  letter-spacing: 0.75px;
+  padding: 0px 0px 32px 12px;
+  margin-top: 16px;
+  &__head {
+    padding: 8px 12px;
+    background-color: white;
+    margin-bottom: 0;
+    // color: $very-light-gray;
+  }
+  &__body {
+    padding: 6px 12px;
+    background-color: white;
+    font-size: 11px;
+    color: $light-gray-blue;
+    p {
+      margin-top: 0;
+    }
+  }
+}
 .centered {
-  margin-top: 1rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -497,13 +493,36 @@ input[type='text']:focus {
     filter: invert(70%);
   }
 }
+.alerts-header {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 72px;
+  background-color: $white;
+  width: 96vw;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $light-gray-blue;
+  }
+}
 .green__button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   padding: 0.5rem 1rem;
-  border-radius: 0.3rem;
+  border-radius: 6px;
   font-weight: bold;
   line-height: 1.14;
   text-indent: none;
@@ -512,14 +531,11 @@ input[type='text']:focus {
   color: $white;
   background-color: $dark-green;
   cursor: pointer;
-  height: 2rem;
-  font-weight: bold;
-  font-size: 1.02rem;
 }
 .green {
   color: #41b883;
 }
-.disabled__button {
+.green__button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -544,6 +560,6 @@ img {
   filter: invert(60%);
 }
 .invert {
-  filter: invert(80%);
+  filter: invert(30%);
 }
 </style>

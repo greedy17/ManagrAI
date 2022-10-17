@@ -1,8 +1,5 @@
 <template>
   <div class="alert-settings-modal">
-    <div class="alert-settings-modal__header">
-      <h2>Add Delivery Option</h2>
-    </div>
     <div class="row__save">
       <div class="alerts-page__settings__frequency">
         <label class="alerts-page__settings__frequency-label">Weekly</label>
@@ -20,7 +17,7 @@
       </div>
     </div>
     <div class="alerts-page__settings">
-      <div class="alerts-page__settings__day">
+      <div style="margin-bottom: 16px" class="alerts-page__settings__day">
         <p>Select day:</p>
         <div style="margin-top: -1.75rem" v-if="weeklyOrMonthly == 'WEEKLY'">
           <FormField>
@@ -60,7 +57,7 @@
           />
         </div>
       </div>
-      <div class="alerts-page__settings__target-users">
+      <div style="margin-bottom: 16px" class="alerts-page__settings__target-users">
         <p>Select Users:</p>
         <FormField style="margin-top: -1.75rem" :errors="form.field.alertTargets.errors">
           <template v-slot:input>
@@ -89,7 +86,7 @@
           </template>
         </FormField>
       </div>
-      <div style="margin-top: 1rem" class="alerts-page__settings__recipients">
+      <div style="margin-top: 2rem" class="alerts-page__settings__recipients">
         <div class="alerts-page__settings__recipient-type">
           <div v-if="!channelName" class="row__">
             <label>Select channel</label>
@@ -171,7 +168,7 @@
           >
         </div>
       </div>
-      <div class="save-button">
+      <div style="margin-top: -24px" class="save-button">
         <PulseLoadingSpinnerButton
           text="save"
           @click="onSave"
@@ -281,10 +278,10 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertConfig.api.createConfig(this.form.toAPI)
-          this.$toast('Successfully added new settings', {
+          this.$toast('Successfully added new delivery settings', {
             timeout: 2000,
             position: 'top-left',
-            type: 'sucess',
+            type: 'success',
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
@@ -572,6 +569,7 @@ h2 {
   background-color: $white;
   color: $base-gray;
   font-size: 14px;
+  padding: 16px 0px 0px 16px;
   font-family: Lato-Regular, sans-serif;
   &__header {
     outline: 1px solid #e8e8e8;

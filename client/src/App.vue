@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <NavBar v-if="!hideNavBar && userIsLoggedIn" />
-    <SideDrawer :key="$route.fullPath"></SideDrawer>
+    <!-- <SideDrawer :key="$route.fullPath"></SideDrawer> -->
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
-    <img src="@/assets/images/backgroundLogo.png" class="background-logo" />
+    <!-- <img src="@/assets/images/backgroundLogo.png" class="background-logo" /> -->
   </div>
 </template>
 
@@ -58,6 +58,12 @@ export default {
     if (this.userIsLoggedIn) {
       this.refreshCurrentUser()
     }
+    this.$store.dispatch('loadMeetings')
+    this.$store.dispatch('loadAllOpps')
+    this.$store.dispatch('loadAllPicklists')
+    this.$store.dispatch('loadApiPicklists')
+    this.$store.dispatch('loadPricebooks')
+    // this.$store.dispatch('loadWorkflows')
   },
 
   methods: {
@@ -117,7 +123,7 @@ input {
 }
 
 .page-content {
-  padding: 1rem;
+  padding: 2px 16px;
 }
 
 .section-shadow {

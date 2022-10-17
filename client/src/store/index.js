@@ -3,6 +3,8 @@ import Vuex from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
 import User from '@/services/users/'
 import Status from '@/services/statuses'
+// import { apiClient, apiErrorHandler } from '@/services/api'
+import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce'
 
 Vue.use(Vuex)
 
@@ -13,12 +15,17 @@ const state = {
   user: null,
   token: null,
   stages: null,
+  meetings: [],
   showToolbarNav: false,
   pollingData: {
     items: {},
     lastCheck: null,
   },
   pollingItems: [],
+  pricebooks: null,
+  allOpps: null,
+  allPicklistOptions: null,
+  apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
 }
@@ -39,6 +46,22 @@ const mutations = {
     state.user = null
     state.stages = []
   },
+  SAVE_ALL_OPPS(state, allOpps) {
+    state.allOpps = allOpps
+  },
+  SAVE_MEETINGS(state, meetings) {
+    state.meetings = meetings
+  },
+  SAVE_PRICEBOOKS(state, pricebooks) {
+    state.pricebooks = pricebooks
+  },
+  SAVE_ALL_PICKLISTS(state, allPicklistOptions) {
+    state.allPicklistOptions = allPicklistOptions;
+  },
+  SAVE_API_PICKLISTS(state, apiPicklistOptions) {
+    state.apiPicklistOptions = apiPicklistOptions;
+  }
+
 }
 
 const actions = {
@@ -48,6 +71,67 @@ const actions = {
     const res = await Status.api.list({})
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
+  },
+  async loadMeetings({ commit }) {
+    try {
+      const res = await MeetingWorkflows.api.getMeetingList()
+      commit('SAVE_MEETINGS', res.results)
+    } catch (e) {
+      console.log(e)
+      // this.$toast('Error gathering Meetings!', {
+      //   timeout: 2000,
+      //   position: 'top-left',
+      //   type: 'error',
+      //   toastClassName: 'custom',
+      //   bodyClassName: ['custom'],
+      // })
+    }
+  },
+  async loadAllOpps({ commit }, filters = []) {
+    try {
+      const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      commit('SAVE_ALL_OPPS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadPricebooks({ commit }) {
+    try {
+      const res = await SObjects.api.getObjects('Pricebook2')
+      commit('SAVE_PRICEBOOKS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllPicklists({ commit }) {
+    let obj = {}
+
+    try {
+      const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+      for (let i = 0; i < res.length; i++) {
+        obj[res[i].fieldRef.id] = res[i].values
+      }
+    } catch (e) {
+      console.log(e)
+    } finally {
+
+      commit('SAVE_ALL_PICKLISTS', obj)
+    }
+  },
+  async loadApiPicklists({ commit }) {
+    let obj = {}
+
+    try {
+      const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
+      for (let i = 0; i < res.length; i++) {
+        obj[res[i].fieldRef.apiName] = res[i].values
+      }
+    } catch (e) {
+      console.log(e)
+    } finally {
+
+      commit('SAVE_API_PICKLISTS', obj)
+    }
   },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)

@@ -202,7 +202,7 @@ input:focus {
   background-color: $white;
   min-width: 24vw;
   padding: 1rem 1rem 0rem 1rem;
-  overflow: scroll;
+  overflow: visible;
   box-shadow: 1px 1px 7px 2px $very-light-gray;
 
   &__body {
@@ -216,7 +216,7 @@ input:focus {
     align-items: center;
     justify-content: space-evenly;
     margin-top: 1.5rem;
-    height: 2rem;
+    height: 3rem;
     border-top: 1px solid $soft-gray;
     p {
       cursor: pointer;

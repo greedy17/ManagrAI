@@ -1,156 +1,92 @@
 <template>
-  <div>
-    <div v-if="userLevel == 'REP' && !isOnboarding" class="sidenav">
-      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div> -->
+  <div class="alerts">
+    <div v-if="!isOnboarding" class="header">
+      <div>
+        <h3 v-if="!buildingCustom && !editingWorkflow" class="left-margin">Workflows</h3>
+        <h3 @click="closeBuilder" v-else-if="buildingCustom" class="left-margin-s centered">
+          <img
+            style="margin-right: 4px; filter: invert(40%)"
+            src="@/assets/images/left.svg"
+            height="13px"
+            alt=""
+          />
+          Back
+        </h3>
 
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div class="tooltip">
+        <h3 @click="closeBuilder" v-else class="left-margin-s centered">
           <img
-            src="@/assets/images/org.svg"
-            class="invert"
-            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
+            style="margin-right: 4px; filter: invert(40%)"
+            src="@/assets/images/left.svg"
+            height="13px"
             alt=""
           />
-          <span class="tooltiptext">Popular Workflows</span>
-        </div>
-      </router-link>
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="tooltip">
-          <img
-            src="@/assets/images/star.svg"
-            class="invert"
-            height="20px"
-            style="margin-right: 1rem; padding-left: 0.25rem"
-            alt=""
-          />
-          <span class="tooltiptext">Active Workflows</span>
-        </div>
-      </router-link>
+          Cancel
+        </h3>
+      </div>
 
-      <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div class="tooltip">
-          <img
-            class="invert"
-            src="@/assets/images/build.svg"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
-            alt=""
-          />
-          <span class="tooltiptext">Custom Workflows</span>
+      <div v-if="editingWorkflow">
+        <span class="gray-text">{{ currentAlert.title }}</span>
+      </div>
+
+      <div>
+        <button
+          v-if="!buildingCustom && !editingWorkflow"
+          class="green_button right-margin"
+          @click="buildingCustom = !buildingCustom"
+          :class="!buildingCustom ? 'inactive' : ''"
+        >
+          Create Workflow
+        </button>
+
+        <button
+          @click="saveWorkflow"
+          :disabled="!canSave"
+          class="green_button right-margin"
+          :class="canSave ? 'pulse' : ''"
+          v-else-if="buildingCustom"
+        >
+          Create Workflow
+        </button>
+
+        <div v-else>
+          <button @click="updateWorkflow" class="green_button">Update</button>
+          <button @click="deleteWorkflow(currentAlert.id)" class="delete right-margin">
+            Delete
+          </button>
         </div>
-      </router-link>
+      </div>
     </div>
 
-    <div
-      v-else-if="userLevel !== 'MANAGER' && userLevel !== 'REP'"
-      class="sidenav sidenav__background"
-    >
-      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
+    <div class="onboarding-header" v-else>
+      <div>
+        <h3 class="left-margin">Getting started</h3>
+      </div>
+
+      <!-- <div>
+        <p>progress bar</p>
       </div> -->
 
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div class="tooltip">
-          <img
-            src="@/assets/images/org.svg"
-            class="invert"
-            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
-            alt=""
-          />
-          <span class="tooltiptext">Popular Workflows</span>
-        </div>
-      </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="tooltip">
-          <img
-            src="@/assets/images/star.svg"
-            class="invert"
-            height="20px"
-            style="margin-right: 1rem; padding-left: 0.25rem"
-            alt=""
-          />
-          <span class="tooltiptext">Active Workflows</span>
-        </div>
-      </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div class="tooltip">
-          <img
-            class="invert"
-            src="@/assets/images/build.svg"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
-            alt=""
-          />
-          <span class="tooltiptext">Custom Workflows</span>
-        </div>
-      </router-link>
+      <div style="margin-right: 16px">
+        <button @click="onboardComplete" :disabled="!hasZoomChannel" class="primary-button">
+          Complete
+        </button>
+      </div>
     </div>
 
-    <div v-else-if="userLevel == 'MANAGER'" class="sidenav sidenav__background">
-      <!-- <div style="margin-bottom: 2rem; margin-left: 0.5rem">
-        <h4 class="title">Workflow Automations</h4>
-        <h5 style="margin-top: -0.65rem; color: #9b9b9b">Let us do the work for you</h5>
-      </div> -->
-
-      <router-link exact-active-class="active" :to="{ name: 'RealTime' }">
-        <div class="tooltip">
-          <img
-            class="invert"
-            src="@/assets/images/bolt.svg"
-            style="height: 0.9rem; margin-right: 1rem; margin-left: 1rem"
-            alt=""
-          />
-          <span class="tooltiptext">Instant Updates</span>
-        </div>
-        <!-- <h5>Instant Updates</h5> -->
-      </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'CreateNew' }">
-        <div class="tooltip">
-          <img
-            src="@/assets/images/org.svg"
-            class="invert"
-            style="height: 1.2rem; margin-right: 1rem; margin-left: 1rem"
-            alt=""
-          />
-          <span class="tooltiptext">Popular Workflows</span>
-          <!-- <h5>Popular Workflows</h5> -->
-        </div>
-      </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'ListTemplates' }">
-        <div class="tooltip">
-          <img
-            src="@/assets/images/star.svg"
-            class="invert"
-            height="20px"
-            style="margin-right: 1rem; padding-left: 0.25rem"
-            alt=""
-          />
-          <span class="tooltiptext">Active Workflows</span>
-          <!-- <h5>Active Workflows</h5> -->
-        </div>
-      </router-link>
-
-      <router-link exact-active-class="active" :to="{ name: 'BuildYourOwn' }">
-        <div class="tooltip">
-          <img
-            class="invert"
-            src="@/assets/images/build.svg"
-            style="height: 1.2rem; margin-right: 1rem; padding-left: 0.5rem"
-            alt=""
-          />
-          <span class="tooltiptext">Custom Workflows</span>
-          <!-- <h5>Custom</h5> -->
-        </div>
-      </router-link>
+    <div v-if="buildingCustom && !editingWorkflow">
+      <BuildYourOwn ref="workflowBuilder" @can-save="setCanSave" />
     </div>
 
-    <router-view :key="$route.fullPath"></router-view>
+    <div v-if="editingWorkflow && !buildingCustom">
+      <AlertsEditPanel :alert="currentAlert" />
+    </div>
+
+    <router-view
+      v-show="!buildingCustom && !editingWorkflow"
+      :key="$route.fullPath"
+      @edit-workflow="openEditWorkflow"
+      :templates="templates"
+    ></router-view>
   </div>
 </template>
 
@@ -158,11 +94,16 @@
 import { CollectionManager } from '@thinknimble/tn-models'
 import { UserOnboardingForm } from '@/services/users/forms'
 import AlertTemplate from '@/services/alerts/'
+import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
+import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
+import User from '@/services/users'
 
 export default {
   name: 'AlertsDashboardMenu',
   components: {
     CollectionManager,
+    BuildYourOwn,
+    AlertsEditPanel,
   },
   data() {
     return {
@@ -170,22 +111,119 @@ export default {
       userOnboardingForm: new UserOnboardingForm({}),
       test: true,
       popular: true,
+      buildingCustom: false,
+      canSave: false,
+      editingWorkflow: false,
+      currentAlert: null,
+      loading: false,
     }
   },
-  async created() {
-    this.templates.refresh()
-  },
+
   methods: {
-    // alertsCount(num) {
-    //   let int = num
-    //   if (this.hasZoomChannel) {
-    //     int++
-    //   }
-    //   if (this.hasRecapChannel) {
-    //     int++
-    //   }
-    //   return int
-    // },
+    closeBuilder() {
+      this.buildingCustom = false
+      this.editingWorkflow = false
+    },
+    onboardComplete() {
+      this.userOnboardingForm.field.onboarding.value = false
+      User.api
+        .update(this.user.id, this.userOnboardingForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+          this.$router.push({ name: 'ListTemplates' })
+          this.$toast('Onboarding Complete!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    updateWorkflow() {
+      this.buildingCustom = false
+      this.editingWorkflow = false
+      this.$toast('Workflow Updated', {
+        timeout: 2000,
+        position: 'top-left',
+        type: 'success',
+        toastClassName: 'custom',
+        bodyClassName: ['custom'],
+      })
+    },
+    deleteWorkflow(id) {
+      console.log(id)
+      this.$emit('delete-workflow')
+    },
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
+    },
+    handleUpdate() {
+      User.api
+        .update(this.user.id)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    async deleteWorkflow(id) {
+      this.deletedTitle(id)
+
+      try {
+        await AlertTemplate.api.deleteAlertTemplate(id)
+        this.handleUpdate()
+        this.$router.go()
+        // this.$toast('Workflow removed', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+      } catch (e) {
+        this.$toast('Error removing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingWorkflow = false
+      }
+    },
+    openEditWorkflow(alert) {
+      this.editingWorkflow = true
+      this.currentAlert = alert
+    },
+    saveWorkflow() {
+      this.$refs.workflowBuilder.onSave()
+    },
+    setCanSave(val) {
+      this.canSave = val
+    },
+    goToPopular() {
+      this.$router.push({ name: 'CreateNew' })
+    },
+    goToActive() {
+      this.$router.push({ name: 'ListTemplates' })
+    },
+    goToInstant() {
+      this.$router.push({ name: 'RealTime' })
+    },
+    goToCustom() {
+      this.$router.push({ name: 'BuildYourOwn' })
+    },
+  },
+  created() {
+    this.templates.refresh()
   },
   computed: {
     hasZoomChannel() {
@@ -233,8 +271,31 @@ export default {
     transform: translate(10%, 0%);
   }
 }
-.onboarding {
+
+.secondary-button {
+  font-size: 12px;
+}
+.primary-button {
+  box-shadow: none;
+  font-size: 13px;
+}
+.primary-button:disabled:hover {
+  background-color: $soft-gray !important;
+}
+.ec .onboarding {
   filter: blur(10px);
+}
+.delete {
+  background-color: $coral;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-left: 8px;
+}
+.gray-text {
+  color: $light-gray-blue;
 }
 h5 {
   font-size: 0.8rem;
@@ -252,17 +313,123 @@ img {
   color: $base-gray;
   margin-left: 1.5rem;
 }
-.sidenav {
-  height: 100%;
-  width: 62px;
+.alerts {
+  height: 96vh;
+  width: 94vw;
+  overflow: scroll;
+  margin-top: 48px;
+  border-radius: 6px;
+}
+
+.wrapper {
+  width: 92.5vw;
+  margin: 0 auto;
   font-size: 14px;
-  position: fixed;
+  letter-spacing: 0.75px;
+}
+.tabs {
+  position: relative;
+  margin: 16px 0;
+  background: white;
+  border-radius: 6px;
+}
+.tabs::before,
+.tabs::after {
+  content: '';
+  display: table;
+}
+.tabs::after {
+  clear: both;
+}
+.tab {
+  float: left;
+  margin-left: 8px;
+}
+.tab-switch {
+  display: none;
+}
+.tab-label {
+  position: relative;
+  display: block;
+  line-height: 2.75em;
+  height: 3em;
+  padding: 0 1.618em;
+  color: $light-gray-blue;
+  cursor: pointer;
+  top: 0;
+  transition: all 0.25s;
+}
+// .tab-label:hover {
+//   top: -0.25rem;
+//   transition: top 0.25s;
+// }
+.tab-content {
+  width: 100%;
+  position: absolute;
+  z-index: 1;
+  top: 2.75em;
   left: 0;
-  background-color: #fafbfc;
-  border-right: 2px solid $soft-gray;
+  margin-left: 0px 12px;
+  background: #fff;
   color: $base-gray;
-  padding: 6px;
-  margin-top: -1rem;
+  opacity: 0;
+  transition: all 0.35s;
+  overflow: scroll;
+  border-radius: 6px;
+
+  section {
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    section {
+      border: 1px dashed $light-gray-blue;
+      background-color: $off-white;
+      border-radius: 6px;
+      min-height: 30vh;
+      margin-top: 16px;
+    }
+  }
+}
+.bold {
+  font-weight: bold !important;
+}
+.tab-switch:checked + .tab-label {
+  background: #fff;
+  color: $base-gray;
+  border-bottom: 0;
+  transition: all 0.35s;
+  z-index: 1;
+  top: -0.0625rem;
+}
+.tab-switch:checked + label + .tab-content {
+  z-index: 2;
+  opacity: 1;
+  transition: all 0.35s;
+}
+.tab-text {
+  color: $light-gray-blue;
+  font-size: 14px;
+  letter-spacing: 0.75px;
+}
+.sidenav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  height: 66px;
+  width: 100vw;
+  font-size: 12px;
+  position: fixed;
+  top: 0;
+  background-color: white;
+  border-bottom: 1px solid $soft-gray;
+  color: $base-gray;
+  padding: 4px 12px;
+  z-index: 20;
 }
 a {
   text-decoration: none;
@@ -273,35 +440,22 @@ a:hover {
   border-radius: 0.2rem;
   cursor: pointer;
 }
-.active div:hover {
-  color: white;
-  img {
-    filter: invert(99%);
-  }
-}
+
 .active div {
-  color: white;
-  background-color: $dark-green;
+  color: $dark-green;
   border-radius: 0.2rem;
   font-weight: bold;
   position: relative;
   img {
-    filter: invert(99%);
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
   }
   span {
-    color: white !important;
+    color: $dark-green !important;
     border: 1px solid white !important;
   }
 }
-.active div:after {
-  content: '';
-  background: $darker-green;
-  position: absolute;
-  bottom: 0.3rem;
-  left: 0;
-  height: 70%;
-  width: 3px;
-}
+
 a:hover div {
   color: $dark-green;
   border-radius: 0.2rem;
@@ -312,7 +466,6 @@ a:hover div {
 }
 .invert {
   filter: invert(40%);
-  height: 20px !important;
 }
 a:hover span {
   border-color: $dark-green;
@@ -322,56 +475,123 @@ a:hover span {
   border-color: white;
   color: $white;
 }
-.title {
-  color: $base-gray;
-  font-weight: bold;
+.inactive {
+  color: $light-gray-blue;
+  transition: all 0.2s;
+}
+// .inactive:hover {
+//   color: $base-gray;
+//   transform: translateY(-10%);
+// }
+.green_button {
+  color: white;
+  background-color: $dark-green;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+.green_button:disabled {
+  background-color: $soft-gray;
+  color: $gray;
+}
+.header {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  background-color: $white;
+  width: 96vw;
+  border-bottom: 1px solid $soft-gray;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+}
+
+.onboarding-header {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  background-color: $white;
+  letter-spacing: 0.75px;
+  width: 100vw;
+  border-bottom: 1px solid $soft-gray;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+}
+.left-margin {
+  margin-left: 30px;
+}
+.left-margin-s {
+  margin-left: 16px;
+}
+.right-margin {
+  margin-right: 40px;
 }
 .row {
   display: flex;
   flex-direction: row;
-  height: 2.25rem;
+  height: 16px;
   align-items: center;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding-right: 12px;
+  border-right: 2px solid $soft-gray;
 }
 .tooltip {
-  position: relative;
-  height: 2.25rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin: 16px 0px;
+  padding-right: 12px;
+  border-right: 2px solid $soft-gray;
 }
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 160px;
-  background-color: $base-gray;
-  color: white;
-  text-align: center;
-  border: none !important;
-  letter-spacing: 1px;
-  padding: 8px 0;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: bold !important;
-  position: absolute;
-  z-index: 1;
-  top: 8px;
-  left: 215%;
-  margin-left: -60px;
-  opacity: 70%;
-  transition: opacity 0.3s;
-}
+// .tooltip .tooltiptext {
+//   visibility: hidden;
+//   width: 160px;
+//   background-color: $base-gray;
+//   color: white;
+//   text-align: center;
+//   border: none !important;
+//   letter-spacing: 1px;
+//   padding: 8px 0;
+//   border-radius: 6px;
+//   font-size: 12px;
+//   font-weight: bold !important;
+//   position: absolute;
+//   z-index: 1;
+//   top: 8px;
+//   left: 215%;
+//   margin-left: -60px;
+//   opacity: 70%;
+//   transition: opacity 0.3s;
+// }
 
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
-}
-
-// [tooltiptext][flow^='left']:hover::before,
-// [tooltiptext][flow^='left']:hover::after,
-// [tooltiptext][flow^='right']:hover::before,
-// [tooltiptext][flow^='right']:hover::after {
-//   animation: tooltips-horz 300ms ease-out forwards;
+// .tooltip:hover .tooltiptext {
+//   visibility: visible;
+//   animation: bounce 300ms ease-out forwards;
 // }
 </style>
