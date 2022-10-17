@@ -386,7 +386,7 @@ import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectPicklist } from '@/services/salesforce'
-
+import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
@@ -1449,7 +1449,7 @@ input[type='search']:focus {
   outline: none;
 }
 .field-section {
-  width: 40vw;
+  width: 20vw;
   background-color: white;
   height: 98vh;
   margin-top: 16px;

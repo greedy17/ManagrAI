@@ -3,11 +3,9 @@
     <CustomSlackForm
       :formType="UPDATE"
       :customForm="
-        (this.selectedForm = this.allForms.find(
-          (f) => f.resource == OPPORTUNITY && f.formType == UPDATE,
-        ))
+        (this.selectedForm = this.allForms.find((f) => f.resource == DEAL && f.formType == UPDATE))
       "
-      :resource="OPPORTUNITY"
+      :resource="DEAL"
       v-on:update:selectedForm="updateForm($event)"
       :loading="formFields.refreshing"
       :stageForms="formStages"
