@@ -32,6 +32,14 @@ def to_snake_case(val):
     return value
 
 
+def phrase_to_snake_case(val):
+    if not val:
+        return
+    value = str(val)
+    value = value.replace(" ", "_").lower()
+    return value
+
+
 def object_to_snake_case(obj):
     if type(obj) != dict and type(obj) != str:
         return obj
