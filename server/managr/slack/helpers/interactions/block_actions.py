@@ -375,7 +375,6 @@ def process_stage_selected(payload, context):
             .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
             .first()
         )
-        print(stage_form)
         if stage_form:
             workflow.add_form(
                 slack_const.FORM_RESOURCE_OPPORTUNITY,
@@ -2111,7 +2110,6 @@ def process_show_alert_update_resource_form(payload, context):
             if current_stage
             else None
         )
-        print(stage_template)
         form_ids = [str(slack_form.id)]
         if stage_template:
             stage_form = OrgCustomSlackFormInstance.objects.create(
