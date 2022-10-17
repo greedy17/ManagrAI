@@ -625,7 +625,6 @@ class UserActivity(models.Model):
                 or main_form.previous_data[key] != main_form.saved_data[key]
             )
         ]
-        print(saved_data)
         contact_forms = workflow.forms.filter(
             template__resource="Contact", template__form_type="CREATE"
         )

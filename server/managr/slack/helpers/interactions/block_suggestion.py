@@ -215,7 +215,6 @@ def process_get_picklist_options(payload, context):
         else user.crm_account.hubspot_fields.filter(id=context.get("field")).first()
     )
     options = field.get_slack_options
-    print(options)
     if not len(options):
         logger.exception(f"No values found for picklist {field.api_name}")
         return {"options": []}

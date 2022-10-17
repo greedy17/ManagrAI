@@ -32,7 +32,6 @@ class AlertTemplateFilterSet(FilterSet):
                 ).exclude(user=user)
                 return qs | user_targeted
             else:
-                print(qs)
                 return qs
         else:
             return qs
