@@ -1254,21 +1254,21 @@ export default {
       }
     },
     async onSave() {
-      // if (
-      //   (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
-      //   this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
-      // ) {
-      //   if (!this.meetingType.length && !this.actionChoices.length) {
-      //     this.$toast('Please enter a meeting type', {
-      //       timeout: 2000,
-      //       position: 'top-left',
-      //       type: 'error',
-      //       toastClassName: 'custom',
-      //       bodyClassName: ['custom'],
-      //     })
-      //     return
-      //   }
-      // }
+      if (
+        (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
+        this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
+      ) {
+        if (!this.meetingType.length && !this.actionChoices.length) {
+          this.$toast('Please enter a meeting type', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          return
+        }
+      }
       this.savingForm = true
 
       let fields = new Set([...this.addedFields.map((f) => f.id)])

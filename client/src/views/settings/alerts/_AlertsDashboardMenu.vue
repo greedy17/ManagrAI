@@ -1,6 +1,6 @@
 <template>
   <div class="alerts">
-    <div class="header">
+    <div v-if="!isOnboarding" class="header">
       <div>
         <h3 v-if="!buildingCustom && !editingWorkflow" class="left-margin">Workflows</h3>
         <h3 @click="closeBuilder" v-else-if="buildingCustom" class="left-margin-s centered">
@@ -57,6 +57,22 @@
       </div>
     </div>
 
+    <div class="onboarding-header" v-else>
+      <div>
+        <h3 class="left-margin">Getting started</h3>
+      </div>
+
+      <!-- <div>
+        <p>progress bar</p>
+      </div> -->
+
+      <div style="margin-right: 16px">
+        <button @click="onboardComplete" :disabled="!hasZoomChannel" class="primary-button">
+          Complete
+        </button>
+      </div>
+    </div>
+
     <div v-if="buildingCustom && !editingWorkflow">
       <BuildYourOwn ref="workflowBuilder" @can-save="setCanSave" />
     </div>
@@ -99,6 +115,7 @@ export default {
       canSave: false,
       editingWorkflow: false,
       currentAlert: null,
+      loading: false,
     }
   },
 
@@ -106,6 +123,25 @@ export default {
     closeBuilder() {
       this.buildingCustom = false
       this.editingWorkflow = false
+    },
+    onboardComplete() {
+      this.userOnboardingForm.field.onboarding.value = false
+      User.api
+        .update(this.user.id, this.userOnboardingForm.value)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+          this.$router.push({ name: 'ListTemplates' })
+          this.$toast('Onboarding Complete!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        })
+        .catch((e) => {
+          console.log(e)
+        })
     },
     updateWorkflow() {
       this.buildingCustom = false
@@ -235,6 +271,17 @@ export default {
     transform: translate(10%, 0%);
   }
 }
+
+.secondary-button {
+  font-size: 12px;
+}
+.primary-button {
+  box-shadow: none;
+  font-size: 13px;
+}
+.primary-button:disabled:hover {
+  background-color: $soft-gray !important;
+}
 .ec .onboarding {
   filter: blur(10px);
 }
@@ -347,6 +394,9 @@ img {
     }
   }
 }
+.bold {
+  font-weight: bold !important;
+}
 .tab-switch:checked + .tab-label {
   background: #fff;
   color: $base-gray;
@@ -453,6 +503,31 @@ a:hover span {
   top: 0;
   background-color: $white;
   width: 96vw;
+  border-bottom: 1px solid $soft-gray;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+}
+
+.onboarding-header {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  background-color: $white;
+  letter-spacing: 0.75px;
+  width: 100vw;
   border-bottom: 1px solid $soft-gray;
   padding-top: 8px;
   display: flex;
