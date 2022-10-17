@@ -1045,7 +1045,10 @@ class LeadAdapter:
                 from managr.salesforce.adapter.routes import routes as adapter_routes
 
                 new_objects = {}
-                for object in ["Account", "Opportunity", "Contact"]:
+                objects = ["Account", "Contact"]
+                if success_check["result"]["opportunityId"] != "true":
+                    objects.insert(1, "Opportunity")
+                for object in objects:
                     current_value = adapter_routes[object].get_current_values(
                         res["convertLeadResponse"]["result"][f"{object.lower()}Id"],
                         token,

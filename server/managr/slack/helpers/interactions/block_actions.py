@@ -375,7 +375,7 @@ def process_stage_selected(payload, context):
             .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
             .first()
         )
-
+        print(stage_form)
         if stage_form:
             workflow.add_form(
                 slack_const.FORM_RESOURCE_OPPORTUNITY,
@@ -2111,6 +2111,7 @@ def process_show_alert_update_resource_form(payload, context):
             if current_stage
             else None
         )
+        print(stage_template)
         form_ids = [str(slack_form.id)]
         if stage_template:
             stage_form = OrgCustomSlackFormInstance.objects.create(
@@ -3337,10 +3338,11 @@ def process_insert_note_template(payload, context):
                 stage=current_stage,
             )
         else:
-            stage_form = OrgCustomSlackFormInstance.objects.create(
-                template=stage_template, resource_id=main_form.resource_id, user=user,
-            )
-            current_form_ids.append(str(stage_form.id))
+            if not len(current_forms.filter(template__form_type="STAGE_GATING")):
+                stage_form = OrgCustomSlackFormInstance.objects.create(
+                    template=stage_template, resource_id=main_form.resource_id, user=user,
+                )
+                current_form_ids.append(str(stage_form.id))
     pm.update({"f": ",".join(current_form_ids)})
     if stage_template:
         submit_button_text = "Next"

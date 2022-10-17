@@ -264,12 +264,22 @@ def process_next_page_slack_commands_form(payload, context):
     slack_access_token = user.organization.slack_integration.access_token
     # currently only for update
     blocks = []
+    print(stage_forms)
     for form in stage_forms:
         blocks.extend(form.generate_form())
     if alert_check is not None:
         callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
     else:
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    data = {
+        "type": "modal",
+        "title": {"type": "plain_text", "text": "Stage Related Fields"},
+        "submit": {"type": "plain_text", "text": "Submit"},
+        "blocks": blocks,
+        "private_metadata": json.dumps(view["private_metadata"]),
+        "callback_id": callback_id,
+    }
+    print(data)
     if len(blocks):
         return {
             "response_action": "push",
@@ -2773,6 +2783,11 @@ def process_submit_alert_resource_data(payload, context):
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
+    if (
+        all_form_data.get("meeting_comments") is not None
+        and all_form_data.get("meeting_type") is not None
+    ):
+        emit_add_update_to_sf(str(main_form.id))
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
