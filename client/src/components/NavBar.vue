@@ -64,9 +64,12 @@
           </div>
         </router-link>
 
-        <li v-if="user.isStaff">
-          <router-link exact-active-class="active" :to="{ name: 'Staff' }">Admin</router-link>
-        </li>
+        <router-link v-if="user.isStaff" exact-active-class="active" :to="{ name: 'Staff' }">
+          <div class="tooltip">
+            <img src="@/assets/images/adminPanel.svg" class="nav-img" height="16px" alt="" />
+            <span class="tooltiptext">Admin</span>
+          </div>
+        </router-link>
 
         <router-link style="margin-top: auto" :to="{ name: 'Login' }">
           <div>
