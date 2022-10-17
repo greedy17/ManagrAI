@@ -40,6 +40,7 @@ from managr.slack.helpers.utils import (
     map_fields_to_type,
     block_finder,
 )
+from managr.core.permissions import IsStaff
 
 from managr.salesforce.models import SalesforceAuthAccountAdapter
 from managr.core.serializers import UserSerializer
@@ -547,9 +548,6 @@ class SlackFormsViewSet(
     serializer_class = OrgCustomSlackFormSerializer
 
     def get_queryset(self):
-        fromAdmin = self.request.GET.get("fromAdmin", False)
-        if fromAdmin and self.request.user.is_staff and json.loads(fromAdmin):
-            return OrgCustomSlackForm.objects.for_staff()
         return OrgCustomSlackForm.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -610,6 +608,16 @@ class SlackFormsViewSet(
             instance.config = fields_state
             instance.save()
         return Response(serializer.data)
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+    )
+    def admin_forms(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        param = request.query_params.get("org_id", None)
+        orgs = OrgCustomSlackForm.objects.filter(organization=param)
+        serialized = self.get_serializer(orgs, many=True).data
+        return Response(serialized)
 
 
 @api_view(["post"])
@@ -1248,3 +1256,12 @@ class SlackFormInstanceViewSet(
             user__organization=self.request.user.organization
         )
 
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+    )
+    def admin_form_instances(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        param = request.query_params.get("org_id", None)
+        orgs = OrgCustomSlackFormInstance.objects.filter(user__organization=param)[:50]
+        serialized = self.get_serializer(orgs, many=True).data
+        return Response(serialized)
