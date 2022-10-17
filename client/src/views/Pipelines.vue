@@ -1696,7 +1696,7 @@
               v-for="template in templates.list"
               :key="template.id"
             >
-              {{ template.title }}
+              {{ template.title }} <span class="green">{{ template.sobjectInstances.length }}</span>
             </button>
           </div>
 
@@ -4962,6 +4962,15 @@ export default {
     transform: translate(0%, 50%);
   }
 }
+
+.green {
+  color: $dark-green;
+  background-color: $white-green;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
 .inline-edit {
   position: absolute;
   margin-top: 7.5vh;

@@ -104,69 +104,6 @@
       </transition> -->
 
       <div v-if="editing" class="alert_cards">
-        <div
-          v-for="(config, i) in allConfigs"
-          :key="i"
-          class="card"
-          v-show="!templateTitles.includes(config.title)"
-        >
-          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
-          </div>
-
-          <div class="card__body">
-            <h4>{{ config.title }}</h4>
-            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
-            <div class="card__body__between" style="margin-top: 8px">
-              <p></p>
-              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h4>Log Meeting</h4>
-            </div>
-          </div>
-
-          <div class="added-collection__body">
-            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <div class="row__">
-              <button @click="goToLogZoom" class="white_button">Activate</button>
-            </div>
-          </div>
-        </div>
-        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h4>Meeting Recaps</h4>
-            </div>
-          </div>
-
-          <div class="added-collection__body">
-            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <button @click="goToRecap" class="white_button">Activate</button>
-          </div>
-        </div>
-
         <div :key="i" v-for="(alert, i) in templates.list" class="card">
           <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/logo.png" />
@@ -267,6 +204,69 @@
               <button @click="goToRecap" class="white_button">Change Channel</button>
               <!-- <small> {{ currentRecapChannel }}</small> -->
             </div>
+          </div>
+        </div>
+
+        <div
+          v-for="(config, i) in allConfigs"
+          :key="i"
+          class="card"
+          v-show="!templateTitles.includes(config.title)"
+        >
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>{{ config.title }}</h4>
+            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
+            <div class="card__body__between" style="margin-top: 8px">
+              <p></p>
+              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
+            </div>
+
+            <div>
+              <p class="gray">Meeting Template</p>
+              <h4>Log Meeting</h4>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
+            <p style="height: 32px"></p>
+          </div>
+          <div class="added-collection__footer">
+            <div class="row__">
+              <button @click="goToLogZoom" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
+            </div>
+
+            <div>
+              <p class="gray">Meeting Template</p>
+              <h4>Meeting Recaps</h4>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
+            <p style="height: 32px"></p>
+          </div>
+          <div class="added-collection__footer">
+            <button @click="goToRecap" class="white_button">Activate</button>
           </div>
         </div>
       </div>
