@@ -1696,7 +1696,7 @@
               v-for="template in templates.list"
               :key="template.id"
             >
-              {{ template.title }}
+              {{ template.title }} <span class="green">{{ template.sobjectInstances.length }}</span>
             </button>
           </div>
 
@@ -2251,10 +2251,10 @@
         <div style="position: relative" v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
             :oppFields="oppFields"
-            @check-all="selectedWorkflow ? onCheckAllWorkflows : onCheckAll"
-            @sort-opps="selectedWorkflow ? sortWorkflows : sortOpps"
+            @check-all="onCheckAll"
+            @sort-opps="sortOpps"
             @set-opps="setOpps"
-            @sort-opps-reverse="selectedWorkflow ? sortWorkflowsReverse : sortOppsReverse"
+            @sort-opps-reverse="sortOppsReverse"
             :allSelected="selectedWorkflow ? allWorkflowsSelected : allSelected"
             :extraPipelineFields="extraPipelineFields"
             :fieldOpts="objectFields.list"
@@ -2541,300 +2541,6 @@
         </div>
       </section>
 
-      <!-- <section
-        v-else-if="
-          selectedWorkflow && currentWorkflow && currentWorkflow.length > 0 && !loadingWorkflows
-        "
-        class="table-section"
-      >
-        <div v-outside-click="emitCloseEdit" class="table">
-          <PipelineHeader
-            :oppFields="oppFields"
-            @check-all="onCheckAllWorkflows"
-            :allWorkflowsSelected="allWorkflowsSelected"
-            :extraPipelineFields="extraPipelineFields"
-            @sort-opps-workflows="sortWorkflows"
-            @sort-opps-reverse-workflows="sortWorkflowsReverse"
-          />
-          <PipelineTableRow
-            :key="i"
-            ref="workflowTableChild"
-            v-for="(workflow, i) in filteredWorkflows"
-            @create-form="
-              createFormInstance(
-                workflow.id,
-                workflow.integration_id,
-                workflow.secondary_data.Pricebook2Id,
-              )
-            "
-            @get-notes="getNotes(workflow.id), createFormInstanceForNotes(opp.id, opp.name)"
-            @checked-box="selectWorkflowCheckbox(workflow.id)"
-            @inline-edit="inlineUpdate"
-            @open-stage-form="openStageForm"
-            @current-inline-row="changeCurrentRow"
-            @set-dropdown-value="setDropdownValue"
-            :dropdownValue="dropdownValue"
-            :closeEdit="closeInline"
-            :stages="stagesWithForms"
-            :inlineLoader="inlineLoader"
-            :picklistOpts="allPicklistOptions"
-            :referenceOpts="referenceOpts"
-            :opp="workflow"
-            :index="i + 1 * 1000"
-            :oppFields="oppFields"
-            :primaryCheckList="workflowCheckList"
-            :updateList="updateList"
-            :stageData="newStage"
-            :closeDateData="daysForward"
-            :ForecastCategoryNameData="newForecast"
-            :BulkUpdateName="oppVal ? oppVal.apiName : null"
-            :BulkUpdateValue="oppNewValue"
-            :currentInlineRow="currentInlineRow"
-            :extraPipelineFields="extraPipelineFields"
-          />
-
-             <div
-            :key="opp.id"
-            v-for="(opp, j) in allOpps"
-            :style="`top: ${(j + 1) * 10}vh;`"
-            class="table-row-overlay"
-          >
-            <div class="cell-name"></div>
-            <div
-              class="table-cell"
-              :key="i"
-              v-for="(field, i) in oppFields"
-              :class="{
-                'table-cell-wide':
-                  field.dataType === 'TextArea' ||
-                  (field.length > 250 && field.dataType === 'String'),
-              }"
-            >
-              <div
-                v-show="currentCell == i && currentInlineRow == j && editingInline"
-                class="inline-edit"
-              >
-                <div class="inline-edit__body">
-                  <div
-                    v-if="
-                      field.dataType === 'TextArea' ||
-                      (field.length > 250 && field.dataType === 'String')
-                    "
-                    class="inline-row"
-                  >
-                    <textarea
-                      id="user-input-wide-inline"
-                      :value="
-                        field.apiName.includes('__c')
-                          ? opp['secondary_data'][field.apiName]
-                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                      "
-                      @input="setUpdateValues(field.apiName, $event.target.value)"
-                    />
-                  </div>
-                  <div
-                    v-else-if="
-                      (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
-                      (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                      (field.dataType === 'String' && field.apiName !== 'NextStep') ||
-                      (field.dataType === 'Email' && field.apiName !== 'NextStep')
-                    "
-                    class="inline-row"
-                  >
-                    <input
-                      @input="setUpdateValues(field.apiName, $event.target.value)"
-                      id="user-input-inline"
-                      type="text"
-                      :value="
-                        field.apiName.includes('__c')
-                          ? opp['secondary_data'][field.apiName]
-                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                      "
-                    />
-                  </div>
-
-                  <div
-                    v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
-                  >
-                    <Multiselect
-                      style="width: 23vw; font-size: 12px"
-                      v-if="field.apiName !== 'StageName'"
-                      :options="allPicklistOptions[field.id]"
-                      openDirection="below"
-                      selectLabel="Enter"
-                      track-by="value"
-                      label="label"
-                      v-model="dropdownVal[field.apiName]"
-                      :multiple="field.dataType === 'MultiPicklist' ? true : false"
-                      @select="
-                        setUpdateValues(
-                          field.apiName === 'ForecastCategory'
-                            ? 'ForecastCategoryName'
-                            : field.apiName,
-                          $event.value,
-
-                          field.dataType === 'MultiPicklist' ? true : false,
-                        )
-                      "
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{
-                            (
-                              field.apiName.includes('__c')
-                                ? opp['secondary_data'][field.apiName]
-                                : opp['secondary_data'][
-                                    capitalizeFirstLetter(camelize(field.apiName))
-                                  ]
-                            )
-                              ? field.apiName.includes('__c')
-                                ? opp['secondary_data'][field.apiName]
-                                : opp['secondary_data'][
-                                    capitalizeFirstLetter(camelize(field.apiName))
-                                  ]
-                              : field.referenceDisplayLabel
-                          }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                    <Multiselect
-                      v-else-if="field.apiName === 'StageName'"
-                      :options="allPicklistOptions[field.id]"
-                      openDirection="below"
-                      selectLabel="Enter"
-                      style="width: 23vw; font-size: 13px"
-                      track-by="value"
-                      label="label"
-                      @select="
-                        setDropdownValue({
-                          val: $event.value,
-                          oppId: opp.id,
-                          oppIntegrationId: opp.integration_id,
-                        })
-                      "
-                      v-model="dropdownVal[field.apiName]"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{
-                            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                          }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                  </div>
-                  <div class="inline-row" v-else-if="field.dataType === 'Date'">
-                    <input
-                      type="date"
-                      id="user-input-inline"
-                      :value="
-                        field.apiName.includes('__c')
-                          ? opp['secondary_data'][field.apiName]
-                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                      "
-                      @input="setUpdateValues(field.apiName, $event.target.value)"
-                    />
-                  </div>
-                  <div v-else-if="field.dataType === 'DateTime'">
-                    <input
-                      type="datetime-local"
-                      id="user-input-inline"
-                      :value="
-                        field.apiName.includes('__c')
-                          ? opp['secondary_data'][field.apiName]
-                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                      "
-                      @input="setUpdateValues(field.apiName, $event.target.value)"
-                    />
-                  </div>
-                  <div
-                    v-else-if="
-                      field.dataType === 'Phone' ||
-                      field.dataType === 'Double' ||
-                      field.dataType === 'Currency'
-                    "
-                    class="inline-row"
-                  >
-                    <input
-                      id="user-input-inline"
-                      type="number"
-                      :value="
-                        field.apiName.includes('__c')
-                          ? opp['secondary_data'][field.apiName]
-                          : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                      "
-                      @input="setUpdateValues(field.apiName, $event.target.value)"
-                    />
-                  </div>
-                  <div v-else-if="field.dataType === 'Boolean'">
-                    <Multiselect
-                      v-model="dropdownVal[field.apiName]"
-                      :options="booleans"
-                      openDirection="below"
-                      style="width: 23vw"
-                      selectLabel="Enter"
-                      @select="setUpdateValues(field.apiName, $event)"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{
-                            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                          }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                  </div>
-                  <div v-else-if="field.dataType === 'Reference'">
-                    <Multiselect
-                      style="width: 23vw; font-size: 13px"
-                      v-model="dropdownVal[field.apiName]"
-                      :options="referenceOpts[field.apiName]"
-                      @open="getCreateReferenceOpts(field.apiName, field.id)"
-                      :loading="dropdownLoading"
-                      openDirection="below"
-                      selectLabel="Enter"
-                      label="name"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{ field.apiName }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                  </div>
-                </div>
-                <div class="inline-edit__footer">
-                  <small>ESC to cancel</small>
-                  <button
-                    @click="inlineUpdate(formData, opp.id, opp.integrationId)"
-                    class="add-button"
-                  >
-                    Update
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section> -->
       <section v-else class="empty-table-section">
         <div v-if="loadingWorkflows">
           <PipelineLoader />
@@ -3715,173 +3421,169 @@ export default {
     },
     sortOpps(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
-
-      if (field === 'Stage') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (field === 'Last Activity') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}` + 'Date']
-          const nameB = b['secondary_data'][`${newField}` + 'Date']
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (apiName.includes('__c') && dT !== 'TextArea') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (apiName.includes('__c') && dT === 'TextArea') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
+      if (this.currentWorkflow) {
+        if (field === 'Stage') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data']['StageName']
+            const nameB = b['secondary_data']['StageName']
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (field === 'Last Activity') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}` + 'Date']
+            const nameB = b['secondary_data'][`${newField}` + 'Date']
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (dT === 'TextArea' && !apiName.includes('__c')) {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        }
       } else {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
+        if (field === 'Stage') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data']['StageName']
+            const nameB = b['secondary_data']['StageName']
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (field === 'Last Activity') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}` + 'Date']
+            const nameB = b['secondary_data'][`${newField}` + 'Date']
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (dT === 'TextArea' && !apiName.includes('__c')) {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        }
       }
+
       let custom = false
       this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
 
-      if (field === 'Stage') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (field === 'Last Activity') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}` + 'Date']
-          const nameB = b['secondary_data'][`${newField}` + 'Date']
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (apiName.includes('__c') && dT !== 'TextArea') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (apiName.includes('__c') && dT === 'TextArea') {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
+      if (this.currentWorkflow) {
+        if (field === 'Stage') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data']['StageName']
+            const nameB = b['secondary_data']['StageName']
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (field === 'Last Activity') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}` + 'Date']
+            const nameB = b['secondary_data'][`${newField}` + 'Date']
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (dT === 'TextArea' && !apiName.includes('__c')) {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else {
+          this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        }
       } else {
-        this.allOpps = this.allOpps.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
+        if (field === 'Stage') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data']['StageName']
+            const nameB = b['secondary_data']['StageName']
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (field === 'Last Activity') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}` + 'Date']
+            const nameB = b['secondary_data'][`${newField}` + 'Date']
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (dT === 'TextArea' && !apiName.includes('__c')) {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${newField}`]
+            const nameB = b['secondary_data'][`${newField}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        }
       }
-      let custom = false
-      this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
-    },
-    sortWorkflows(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
 
-      if (field === 'Stage') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (field === 'Last Activity') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}` + 'Date']
-          const nameB = b['secondary_data'][`${newField}` + 'Date']
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (apiName.includes('__c') && dT !== 'TextArea') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else if (apiName.includes('__c') && dT === 'TextArea') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      } else {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
-        })
-      }
-      let custom = false
-      this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
-    },
-    sortWorkflowsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-      if (field === 'Stage') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data']['StageName']
-          const nameB = b['secondary_data']['StageName']
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (field === 'Last Activity') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}` + 'Date']
-          const nameB = b['secondary_data'][`${newField}` + 'Date']
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (apiName.includes('__c') && dT !== 'TextArea') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else if (apiName.includes('__c') && dT === 'TextArea') {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${apiName}`]
-          const nameB = b['secondary_data'][`${apiName}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      } else {
-        this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-          const nameA = a['secondary_data'][`${newField}`]
-          const nameB = b['secondary_data'][`${newField}`]
-          return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
-        })
-      }
       let custom = false
       this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
     },
@@ -3917,41 +3619,60 @@ export default {
       this.oppVal = val
     },
     onCheckAll() {
-      if (this.primaryCheckList.length < 1) {
-        for (let i = 0; i < this.allOpps.length; i++) {
-          this.primaryCheckList.push(this.allOpps[i].id)
-        }
-      } else if (
-        this.primaryCheckList.length > 0 &&
-        this.primaryCheckList.length < this.allOpps.length
-      ) {
-        for (let i = 0; i < this.allOpps.length; i++) {
-          !this.primaryCheckList.includes(this.allOpps[i].id)
-            ? this.primaryCheckList.push(this.allOpps[i].id)
-            : (this.primaryCheckList = this.primaryCheckList)
-        }
-      } else {
-        this.primaryCheckList = []
-      }
-    },
-    onCheckAllWorkflows() {
-      if (this.workflowCheckList.length < 1) {
-        for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          this.workflowCheckList.push(this.filteredWorkflows[i].id)
-        }
-      } else if (
-        this.workflowCheckList.length > 0 &&
-        this.workflowCheckList.length < this.filteredWorkflows.length
-      ) {
-        for (let i = 0; i < this.filteredWorkflows.length; i++) {
-          !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
-            ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
-            : (this.workflowCheckList = this.workflowCheckList)
+      if (this.selectedWorkflow) {
+        if (this.workflowCheckList.length < 1) {
+          for (let i = 0; i < this.filteredWorkflows.length; i++) {
+            this.workflowCheckList.push(this.filteredWorkflows[i].id)
+          }
+        } else if (
+          this.workflowCheckList.length > 0 &&
+          this.workflowCheckList.length < this.filteredWorkflows.length
+        ) {
+          for (let i = 0; i < this.filteredWorkflows.length; i++) {
+            !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
+              ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
+              : (this.workflowCheckList = this.workflowCheckList)
+          }
+        } else {
+          this.workflowCheckList = []
         }
       } else {
-        this.workflowCheckList = []
+        if (this.primaryCheckList.length < 1) {
+          for (let i = 0; i < this.allOpps.length; i++) {
+            this.primaryCheckList.push(this.allOpps[i].id)
+          }
+        } else if (
+          this.primaryCheckList.length > 0 &&
+          this.primaryCheckList.length < this.allOpps.length
+        ) {
+          for (let i = 0; i < this.allOpps.length; i++) {
+            !this.primaryCheckList.includes(this.allOpps[i].id)
+              ? this.primaryCheckList.push(this.allOpps[i].id)
+              : (this.primaryCheckList = this.primaryCheckList)
+          }
+        } else {
+          this.primaryCheckList = []
+        }
       }
     },
+    // onCheckAllWorkflows() {
+    //   if (this.workflowCheckList.length < 1) {
+    //     for (let i = 0; i < this.filteredWorkflows.length; i++) {
+    //       this.workflowCheckList.push(this.filteredWorkflows[i].id)
+    //     }
+    //   } else if (
+    //     this.workflowCheckList.length > 0 &&
+    //     this.workflowCheckList.length < this.filteredWorkflows.length
+    //   ) {
+    //     for (let i = 0; i < this.filteredWorkflows.length; i++) {
+    //       !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
+    //         ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
+    //         : (this.workflowCheckList = this.workflowCheckList)
+    //     }
+    //   } else {
+    //     this.workflowCheckList = []
+    //   }
+    // },
     async listPicklists(type, query_params) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
@@ -4962,6 +4683,15 @@ export default {
     transform: translate(0%, 50%);
   }
 }
+
+.green {
+  color: $dark-green;
+  background-color: $white-green;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
 .inline-edit {
   position: absolute;
   margin-top: 7.5vh;

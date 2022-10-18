@@ -1,6 +1,10 @@
 <template>
   <div class="slack-form-builder">
     <section class="wrapper">
+      <div class="save--button">
+        <button @click="onSave" class="save">Save Form</button>
+      </div>
+
       <div class="tabs">
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
@@ -348,11 +352,11 @@
             </section>
           </div>
         </div>
-        <div class="tab">
+        <!-- <div class="tab">
           <div class="tab-label right">
             <button @click="onSave" class="save mar-left">Save Form</button>
           </div>
-        </div>
+        </div> -->
       </div>
     </section>
     <div class="field-section">
@@ -727,6 +731,7 @@ export default {
         } else if (val && val.formType == 'STAGE_GATING' && !val.fields.length) {
           this.addedFields = []
         }
+        this.newCustomForm = this.customForm
       },
     },
 
@@ -1205,6 +1210,7 @@ export default {
       }
     },
     async onSave() {
+      console.log(this.newCustomForm)
       if (
         (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
         this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -1235,7 +1241,7 @@ export default {
         })
         .then((res) => {
           console.log(res)
-          // this.$emit('update:selectedForm', res)
+          this.$emit('update:selectedForm', res)
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -1339,7 +1345,12 @@ export default {
   border-radius: 6px;
   padding-left: 8px;
 }
-
+.save--button {
+  position: absolute;
+  right: 40vw;
+  z-index: 1000;
+  top: 4vh;
+}
 .delete {
   background-color: $coral;
   border: none;
