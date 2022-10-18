@@ -271,7 +271,7 @@
           <div class="flex-end">
             <button
               v-if="alertTemplateForm.field.alertGroups.groups.length < 3"
-              class="group_button"
+              class="white_button"
               @click="onAddAlertGroup(), scrollToElement()"
             >
               Add group
@@ -1569,11 +1569,21 @@ button img {
   padding: 2.5rem 1rem 0rem 0rem;
 }
 .plus_button {
-  background-color: $dark-green;
-  border: none;
+  background-color: white;
+  border: 1px solid $dark-green;
   border-radius: 100%;
-  color: white;
+  color: $dark-green;
   font-size: 18px;
+}
+.white_button {
+  font-size: 13px;
+  margin-right: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid $dark-green;
+  background-color: white;
+  color: $dark-green;
+  margin-top: 24px;
 }
 .group_button {
   font-size: 13px;

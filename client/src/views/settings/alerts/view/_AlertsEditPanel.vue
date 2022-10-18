@@ -683,11 +683,12 @@ export default {
   margin-right: 8px;
 
   button {
-    background-color: $dark-green;
-    border: none;
+    background-color: white;
+    border: 1px solid $dark-green;
     border-radius: 100%;
-    color: white;
+    color: $dark-green;
     font-size: 18px;
+    cursor: pointer;
   }
 }
 .column {
@@ -795,13 +796,14 @@ input:focus {
 }
 
 .condition-button {
-  background-color: $dark-green;
-  color: white;
+  background-color: white;
+  color: $dark-green;
   border-radius: 0.25rem;
-  border: none;
+  border: 1px solid $dark-green;
   cursor: pointer;
   padding: 0.5rem 1rem;
   margin: 0.5rem;
+  font-size: 13px;
 }
 .row {
   display: flex;
