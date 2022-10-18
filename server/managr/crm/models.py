@@ -5,7 +5,7 @@ from managr.core.models import TimeStampModel, IntegrationModel
 from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.slack.helpers import block_builders
 
-from managr.crm import routes as adapters
+from managr.crm.routes import adapter_routes as adapters
 from managr.crm import constants as crm_consts
 from managr.slack import constants as slack_consts
 
@@ -107,6 +107,13 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         ordering = ["-datetime_created"]
 
     @property
+    def object_type(self):
+        if self.owner.crm == "Salesforce":
+            return "Opportunity"
+        else:
+            return "Deal"
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
@@ -116,6 +123,17 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     @property
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.id))
+
+    def update(self, data):
+        token = self.owner.crm_account.access_token
+        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+            "api_name", flat=True
+        )
+        res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
+        return
 
 
 class BaseContactQuerySet(models.QuerySet):

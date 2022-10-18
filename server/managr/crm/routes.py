@@ -19,8 +19,8 @@ OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
 adapter_routes = {
     crm_consts.CRM_CHOICE_HUBSPOT: {
-        OPPORTUNITY: hubspot_adapters.CompanyAdapter,
-        ACCOUNT: hubspot_adapters.DealAdapter,
+        ACCOUNT: hubspot_adapters.CompanyAdapter,
+        OPPORTUNITY: hubspot_adapters.DealAdapter,
         CONTACT: hubspot_adapters.HubspotContactAdapter,
     },
     crm_consts.CRM_CHOICE_SALESFORCE: {

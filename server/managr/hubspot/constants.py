@@ -13,6 +13,7 @@ HUBSPOT_URL_RESOURCE_MAP = {
     RESOURCE_SYNC_CONTACT: "contacts",
     RESOURCE_SYNC_DEAL: "deals",
 }
+HUBSPOT_API_VERSION = 3
 HUBSPOT_OBJECT_FIELDS = "OBJECT_FIELDS"
 HUBSPOT_FIELD_SYNC = "HUBSPOT_FIELD_SYNC"
 HUBSPOT_RESOURCE_SYNC = "HUBSPOT_RESOURCE_SYNC"
@@ -80,22 +81,28 @@ if settings.USE_HUBSPOT:
 
 
 def HUBSPOT_PIPELINES_URI(pipeline_id):
-    return f"{BASE_URL}/crm/v3/pipelines/Deal/{pipeline_id}"
+    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/pipelines/Deal/{pipeline_id}"
+
+
+def HUBSPOT_RESOURCE_URI(resource):
+    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{resource}/"
 
 
 def HUBSPOT_SEARCH_URI(resource):
-    return f"{BASE_URL}/crm/v3/objects/{HUBSPOT_URL_RESOURCE_MAP[resource]}/search"
+    return (
+        f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{HUBSPOT_URL_RESOURCE_MAP[resource]}/search"
+    )
 
 
 def HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource):
-    return f"{BASE_URL}/crm/v3/associations/{HUBSPOT_URL_RESOURCE_MAP[resource]}/{HUBSPOT_URL_RESOURCE_MAP[associated_resource]}/batch/read"
+    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/associations/{HUBSPOT_URL_RESOURCE_MAP[resource]}/{HUBSPOT_URL_RESOURCE_MAP[associated_resource]}/batch/read"
 
 
 def HUBSPOT_OBJECTS_URI(
     resource, fields, childRelationshipFields=[], additional_filters=[], limit=HUBSPOT_QUERY_LIMIT,
 ):
     fields = set(fields)
-    url = f"{BASE_URL}/crm/v3/objects/{resource}?limit={limit}&properties={','.join(fields)}"
+    url = f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{resource}?limit={limit}&properties={','.join(fields)}"
     return url
 
 

@@ -336,7 +336,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         route = routes[self.resource_type]
         model_class = route["model"]
 
-        print(model_class)
         model_object = model_class.objects.filter(id=self.resource_id).first()
         return model_object
 

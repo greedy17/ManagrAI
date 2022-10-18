@@ -12,8 +12,13 @@ class CustomObjectField(admin.ModelAdmin):
     )
 
 
+class CustomBaseOpportunity(admin.ModelAdmin):
+    model = crm_models.BaseOpportunity
+    list_display = ("name", "owner")
+
+
 # Register your models here.
 admin.site.register(crm_models.BaseAccount)
-admin.site.register(crm_models.BaseOpportunity)
+admin.site.register(crm_models.BaseOpportunity, CustomBaseOpportunity)
 admin.site.register(crm_models.BaseContact)
 admin.site.register(crm_models.ObjectField, CustomObjectField)
