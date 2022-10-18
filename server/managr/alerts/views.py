@@ -233,6 +233,10 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
+                except Exception as e:
+                    return logger.warning(
+                        f"Failed retreive data for {template.title} for user {str(user.id)} because of {e}"
+                    )
             model = model_routes[template.resource_type]["model"]
             queryset = model.objects.filter(integration_id__in=res_data)
             serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
@@ -330,9 +334,7 @@ class AlertConfigViewSet(
                 id=last_instance.template.id
             ).values()[0]
             instances = alert_models.AlertInstance.objects.filter(
-                user=user,
-                config__id=config_id,
-                invocation=last_instance.invocation,
+                user=user, config__id=config_id, invocation=last_instance.invocation,
             )
             return Response(data={"instances": instances.values(), "template": template})
 
@@ -390,8 +392,7 @@ class AlertOperandViewSet(
 
 
 class AlertInstanceViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
     filter_backends = (
         DjangoFilterBackend,
