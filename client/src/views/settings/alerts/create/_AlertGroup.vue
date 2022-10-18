@@ -187,11 +187,12 @@ export default {
   margin-right: 8px;
 
   button {
-    background-color: $dark-green;
-    border: none;
+    background-color: white;
+    border: 1px solid $dark-green;
     border-radius: 100%;
-    color: white;
+    color: $dark-green;
     font-size: 18px;
+    cursor: pointer;
   }
 }
 .filtered {

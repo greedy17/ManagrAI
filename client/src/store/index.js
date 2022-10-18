@@ -4,7 +4,7 @@ import createPersistedState from 'vuex-persistedstate'
 import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
-import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce'
+import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
 
 Vue.use(Vuex)
 
