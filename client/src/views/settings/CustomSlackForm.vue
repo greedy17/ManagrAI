@@ -592,7 +592,7 @@ export default {
         referenceDisplayLabel: 'Note Subject',
         filterable: 'false',
         order: null,
-        includeInRecap: null,
+        includeInRecap: true,
       },
       noteSubject: {
         _fields: {
@@ -686,7 +686,7 @@ export default {
         referenceDisplayLabel: 'Notes',
         filterable: 'false',
         order: null,
-        includeInRecap: null,
+        includeInRecap: true,
       },
     }
   },
@@ -731,7 +731,6 @@ export default {
         } else if (val && val.formType == 'STAGE_GATING' && !val.fields.length) {
           this.addedFields = []
         }
-        this.newCustomForm = this.customForm
       },
     },
 
@@ -1210,7 +1209,9 @@ export default {
       }
     },
     async onSave() {
-      console.log(this.newCustomForm)
+      if (!this.newCustomForm) {
+        this.newCustomForm = this.customForm
+      }
       if (
         (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
         this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -1228,6 +1229,18 @@ export default {
       }
       this.savingForm = true
 
+      let currentFormFields = this.addedFields.map((field) => {
+        return field.id
+      })
+
+      if (this.newFormType == 'UPDATE') {
+        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+          let fieldsToAdd = [this.noteTitle, this.noteSubject]
+          let copyArray = this.addedFields
+          this.addedFields = fieldsToAdd.concat(copyArray)
+        }
+      }
+
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
@@ -1240,8 +1253,7 @@ export default {
           fields_ref: fields_ref,
         })
         .then((res) => {
-          console.log(res)
-          this.$emit('update:selectedForm', res)
+          // this.$emit('update:selectedForm', res)
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
