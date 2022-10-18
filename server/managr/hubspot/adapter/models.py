@@ -530,6 +530,21 @@ class DealAdapter:
             res = client.get(url, headers=headers,)
             return HubspotAuthAccountAdapter._handle_response(res)
 
+    @staticmethod
+    def update(data, access_token, custom_base, hubspot_id, object_fields):
+        json_data = json.dumps(
+            DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)
+        )
+        url = sf_consts.SALESFORCE_WRITE_URI(
+            custom_base, sf_consts.RESOURCE_SYNC_OPPORTUNITY, hubspot_id
+        )
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.patch(
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            return SalesforceAuthAccountAdapter._handle_response(r)
+
 
 class HubspotContactAdapter:
     def __init__(self, **kwargs):
