@@ -413,7 +413,7 @@ export default {
     resource: {
       type: String,
       required: true,
-      default: 'Opportunity',
+      default: 'Deal',
     },
     fields: {
       type: Array,

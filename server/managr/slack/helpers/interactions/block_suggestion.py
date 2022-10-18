@@ -22,6 +22,7 @@ from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.salesforce.adapter.exceptions import TokenExpired
 
 from managr.salesloft.models import Cadence, People
+from managr.crm.models import BaseOpportunity
 
 logger = logging.getLogger("managr")
 
@@ -148,7 +149,10 @@ def process_get_local_resource_options(payload, context):
         return {
             "options": [
                 *additional_opts,
-                *[l.as_slack_option for l in Deal.objects.filter(name__icontains=value)[:50]],
+                *[
+                    l.as_slack_option
+                    for l in BaseOpportunity.objects.filter(name__icontains=value)[:50]
+                ],
             ],
         }
     elif resource == slack_const.SLACK_ACTION_RESOURCE_ACTION_CHOICE:

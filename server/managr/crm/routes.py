@@ -17,7 +17,7 @@ PRICEBOOKENTRY = "PriceBookEntry"
 OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
 
-routes = {
+adapter_routes = {
     crm_consts.CRM_CHOICE_HUBSPOT: {
         OPPORTUNITY: hubspot_adapters.CompanyAdapter,
         ACCOUNT: hubspot_adapters.DealAdapter,

@@ -335,25 +335,40 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
         route = routes[self.resource_type]
         model_class = route["model"]
+
+        print(model_class)
         model_object = model_class.objects.filter(id=self.resource_id).first()
         return model_object
 
     def get_user_fields(self):
+        from managr.crm.models import ObjectField
+
+        # template_fields = (
+        #     self.template.formfield_set.all()
+        #     .values_list("field__api_name", "field__salesforce_object",)
+        #     .order_by("order")
+        # )
+        print(self.template)
         template_fields = (
-            self.template.formfield_set.all()
-            .values_list("field__api_name", "field__salesforce_object",)
+            self.template.customformfield_set.all()
+            .values_list("field__api_name", "field__crm_object",)
             .order_by("order")
         )
         user_fields = []
         # hack to maintain order
         for field in template_fields:
             try:
-                f = SObjectField.objects.get(
+                # f = SObjectField.objects.get(
+                #     Q(api_name=field[0])
+                #     & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
+                #     & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+                # )
+                f = ObjectField.objects.get(
                     Q(api_name=field[0])
-                    & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
-                    & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+                    & Q(Q(crm_object=field[1]) | Q(crm_object__isnull=True))
+                    & (Q(is_public=True) | Q(user=self.user))
                 )
-            except SObjectField.DoesNotExist:
+            except ObjectField.DoesNotExist:
                 logger.exception(f"GET USER FIELDS EXCEPTION DOES NOT EXIST: {field}")
             user_fields.append(f)
         if not template_fields:
@@ -422,11 +437,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         form_values = self.generate_form_values(data)
         form_blocks = []
         for field in user_fields:
-            val = (
-                form_values.get(field.api_name, None)
-                if self.user.crm == "SALESFORCE"
-                else form_values.get(field.name, None)
-            )
+            val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
