@@ -282,7 +282,25 @@
             <h3 class="card__title">Hubspot</h3>
             <p class="card-text">Sync Companies, Deals, and Contacts</p>
             <div>
-              <p style="color: #beb5cc">Coming Soon</p>
+              <PulseLoadingSpinnerButton
+                v-if="!hasHubspotIntegration"
+                :disabled="hasHubspotIntegration"
+                @click="onGetAuthLink('HUBSPOT')"
+                class="orange_button"
+                text="Connect"
+                :loading="generatingToken && selectedIntegration == 'HUBSPOT'"
+              ></PulseLoadingSpinnerButton>
+
+              <div v-else>
+                <div class="img-border">
+                  <img
+                    @click="onRevoke('HUBSPOT')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
