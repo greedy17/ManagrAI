@@ -1,3 +1,4 @@
+from django.conf import settings
 import logging
 import json
 from requests.exceptions import HTTPError
@@ -39,6 +40,10 @@ class HubspotAuthAccountAdapter:
         self.user = kwargs.get("user", None)
         self.hubspot_fields = kwargs.get("hubspot_fields", None)
 
+    @property
+    def internal_user(self):
+        return User.objects.get(id=self.user)
+
     @staticmethod
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
@@ -73,7 +78,10 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
-        user_res = cls.get_user_info(res["access_token"], user.email)["results"]
+        if settings.IN_DEV:
+            user_res = cls.get_user_info(res["access_token"], "zach@mymanagr.com")["results"]
+        else:
+            user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
             "user": user.id,
             "access_token": res.get("access_token"),
@@ -298,7 +306,9 @@ class HubspotAuthAccountAdapter:
         # add extra fields to query string
         from ..routes import routes
 
-        resource_fields = self.hubspot_fields.get(resource)
+        resource_fields = self.internal_user.object_fields.filter(crm_object=resource).values_list(
+            "api_name", flat=True
+        )
         add_filters = kwargs.get(
             "filters",
             [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
