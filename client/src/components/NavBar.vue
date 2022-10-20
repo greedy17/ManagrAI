@@ -43,7 +43,7 @@
         <router-link exact-active-class="active" :to="{ name: 'Notes' }">
           <div class="tooltip">
             <img src="@/assets/images/notebook.svg" height="16px" alt="" />
-            <span class="tooltiptext">Templates</span>
+            <span class="tooltiptext">Note Templates</span>
           </div>
         </router-link>
 
