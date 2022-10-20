@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="max-width: 16vw">
+    <div>
       <div>
         <p style="letter-spacing: 0.25px; font-size: 14px; margin-bottom: 3px">{{ name }}</p>
         <span style="color: #199e54; font-size: 12px" :class="!accountName ? 'gray' : ''">

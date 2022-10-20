@@ -63,6 +63,7 @@ export default {
     this.$store.dispatch('loadAllPicklists')
     this.$store.dispatch('loadApiPicklists')
     this.$store.dispatch('loadPricebooks')
+    this.$store.dispatch('loadTemplates')
     // this.$store.dispatch('loadWorkflows')
   },
 

@@ -1674,7 +1674,7 @@ input[type='search']:focus {
   }
 }
 .tab-switch:checked + .tab-label {
-  background: #fff;
+  background: $white-green;
   color: $dark-green;
   font-weight: bold;
 

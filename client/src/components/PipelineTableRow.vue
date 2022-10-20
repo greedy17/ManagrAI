@@ -98,7 +98,11 @@
         height="14px"
       />
 
-      <div :class="showIcons ? 'hovered' : ''" v-else-if="!updateList.includes(opp.id)">
+      <div
+        style="position: relative"
+        :class="showIcons ? 'hovered' : ''"
+        v-else-if="!updateList.includes(opp.id)"
+      >
         <!-- <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
@@ -293,19 +297,21 @@
             </Multiselect>
           </div>
         </div> -->
-        <PipelineField
-          :index="i"
-          style="direction: ltr; border: "
-          :apiName="field.apiName"
-          :dataType="field.dataType"
-          :fieldData="
-            field.apiName.includes('__c') || field.apiName.includes('__r')
-              ? opp['secondary_data'][field.apiName]
-              : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          "
-          :referenceOpts="referenceOpts"
-          :lastStageUpdate="opp['last_stage_update']"
-        />
+        <div class="limit-cell-height">
+          <PipelineField
+            :index="i"
+            style="direction: ltr"
+            :apiName="field.apiName"
+            :dataType="field.dataType"
+            :fieldData="
+              field.apiName.includes('__c') || field.apiName.includes('__r')
+                ? opp['secondary_data'][field.apiName]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+            "
+            :referenceOpts="referenceOpts"
+            :lastStageUpdate="opp['last_stage_update']"
+          />
+        </div>
 
         <!-- v-show="!(editing && editIndex === i && currentInlineRow === index)" -->
       </div>
@@ -891,10 +897,10 @@ input {
   position: sticky;
   left: 3.5vw;
   z-index: 2;
-  padding: 1px 4px;
+  padding: 0px 4px;
+  line-height: 1.1;
   font-size: 13px;
   border: none;
-  padding-left: 4px;
 }
 .cell-end {
   display: table-cell;
@@ -1004,8 +1010,7 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  // max-height: 8rem;
-  background-color: white;
+  max-height: 10vh;
   padding: 0;
   overflow: auto;
   cursor: pointer;
