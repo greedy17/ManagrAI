@@ -72,7 +72,9 @@ from managr.slack.helpers.exceptions import (
 logger = logging.getLogger("managr")
 
 
-class SlackViewSet(viewsets.GenericViewSet,):
+class SlackViewSet(
+    viewsets.GenericViewSet,
+):
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -198,7 +200,11 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
             channel = integration.incoming_webhook.get("channel_id", None)
             slack_requests.generic_request(
-                integration.incoming_webhook.get("url"), dict(text=text,), integration.access_token,
+                integration.incoming_webhook.get("url"),
+                dict(
+                    text=text,
+                ),
+                integration.access_token,
             )
 
         else:
@@ -212,7 +218,9 @@ class SlackViewSet(viewsets.GenericViewSet,):
         org = request.user.organization
         if hasattr(org, "slack_integration"):
             user_slack = UserSlackIntegration.objects.create(
-                user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
+                user=request.user,
+                slack_id=slack_id,
+                organization_slack=org.slack_integration,
             )
             # get the user's channel
             res = slack_requests.request_user_dm_channel(
@@ -269,7 +277,10 @@ class SlackViewSet(viewsets.GenericViewSet,):
         slack_id = request.user.slack_integration.slack_id
         if organization_slack:
             create_data = slack_requests.create_channel(
-                organization_slack.access_token, name=name, team_id=team_id, user=slack_id,
+                organization_slack.access_token,
+                name=name,
+                team_id=team_id,
+                user=slack_id,
             )
         else:
             create_data = {"ok": False, "response_metadata": {}}
@@ -397,12 +408,13 @@ class SlackViewSet(viewsets.GenericViewSet,):
         if not slack.recap_channel:
             slack.change_recap_channel(request.data.get("recap_channel"))
         logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
-        for user in request.data.get("users"):
-            user_acc = User.objects.filter(id=user).first()
-            if user_acc and hasattr(user_acc, "slack_integration"):
-                if slack_id not in user_acc.slack_integration.recap_receivers:
-                    user_acc.slack_integration.recap_receivers.append(slack_id)
-                    user_acc.slack_integration.save()
+        # if request.data.get("users", None):
+        # for user in request.data.get("users"):
+        #     user_acc = User.objects.filter(id=user).first()
+        #     if user_acc and hasattr(user_acc, "slack_integration"):
+        #         if slack_id not in user_acc.slack_integration.recap_receivers:
+        #             user_acc.slack_integration.recap_receivers.append(slack_id)
+        #             user_acc.slack_integration.save()
         return Response(status=status.HTTP_200_OK, data={"success": True})
 
     @action(
@@ -595,7 +607,9 @@ class SlackFormsViewSet(
             org = Organization.objects.get(id=request.data["organization"])
             org.update_has_settings("products")
             form = OrgCustomSlackForm.objects.filter(
-                team=self.request.user.team, resource="OpportunityLineItem", form_type="UPDATE",
+                team=self.request.user.team,
+                resource="OpportunityLineItem",
+                form_type="UPDATE",
             ).first()
             update_data = data
             update_data["form_type"] = "UPDATE"
@@ -610,7 +624,10 @@ class SlackFormsViewSet(
         return Response(serializer.data)
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin",
     )
     def admin_forms(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""
@@ -624,7 +641,12 @@ class SlackFormsViewSet(
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def update_resource(request):
     # list of accepted commands for this fake endpoint
@@ -697,7 +719,12 @@ def update_resource(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def create_resource(request):
     # list of accepted commands for this fake endpoint
@@ -738,7 +765,10 @@ def create_resource(request):
             .filter(Q(resource=resource_type, form_type="CREATE"))
             .first()
         )
-        slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template,
+            user=user,
+        )
 
         if slack_form:
 
@@ -748,7 +778,10 @@ def create_resource(request):
                 "u": str(user.id),
                 "type": "command",
             }
-            blocks = get_block_set("create_modal", context,)
+            blocks = get_block_set(
+                "create_modal",
+                context,
+            )
             try:
                 index, block = block_finder("StageName", blocks)
             except ValueError:
@@ -847,7 +880,12 @@ def meeting_summary(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def create_task(request):
 
@@ -906,7 +944,10 @@ def create_task(request):
             "type": "modal",
             "callback_id": slack_const.COMMAND_CREATE_TASK,
             "title": {"type": "plain_text", "text": f"Create a Task"},
-            "blocks": get_block_set("create_task_modal", context=context,),
+            "blocks": get_block_set(
+                "create_task_modal",
+                context=context,
+            ),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(private_metadata),
             "external_id": f"create_task_modal.{str(uuid.uuid4())}",
@@ -922,7 +963,12 @@ def create_task(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def list_tasks(request):
     ## helper to make datetime longform
@@ -1032,7 +1078,12 @@ def redirect_from_slack(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def add_to_cadence(request):
     slack_id = request.data.get("user_id", None)
@@ -1048,7 +1099,10 @@ def add_to_cadence(request):
                 }
             )
     user = slack.user
-    blocks = get_block_set("select_account", {"u": str(user.id), "type": "command"},)
+    blocks = get_block_set(
+        "select_account",
+        {"u": str(user.id), "type": "command"},
+    )
     access_token = user.organization.slack_integration.access_token
 
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1102,7 +1156,10 @@ def schedule_meeting_command(request):
             "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
             "title": {"type": "plain_text", "text": "Zoom Meeting Scheduler"},
             "blocks": get_block_set("schedule_meeting_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Submit",},
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit",
+            },
             "private_metadata": json.dumps(context),
         },
     }
@@ -1192,7 +1249,12 @@ def launch_action(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 @slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+    return_opt=Response(
+        data={
+            "response_type": "ephemeral",
+            "text": "Oh-Ohh an error occured",
+        }
+    ),
 )
 def launch_digest(request):
 
@@ -1257,7 +1319,10 @@ class SlackFormInstanceViewSet(
         )
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin",
     )
     def admin_form_instances(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""

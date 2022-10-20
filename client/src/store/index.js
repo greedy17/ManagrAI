@@ -21,6 +21,7 @@ const state = {
     items: {},
     lastCheck: null,
   },
+  templates: null,
   pollingItems: [],
   pricebooks: null,
   allOpps: null,
@@ -52,6 +53,9 @@ const mutations = {
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
   },
+  SAVE_TEMPLATES(state, templates) {
+    state.templates = templates
+  },
   SAVE_PRICEBOOKS(state, pricebooks) {
     state.pricebooks = pricebooks
   },
@@ -72,19 +76,20 @@ const actions = {
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
   },
+  async loadTemplates({ commit }) {
+    try {
+      const res = await User.api.getTemplates()
+      commit('SAVE_TEMPLATES', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
   async loadMeetings({ commit }) {
     try {
       const res = await MeetingWorkflows.api.getMeetingList()
       commit('SAVE_MEETINGS', res.results)
     } catch (e) {
       console.log(e)
-      // this.$toast('Error gathering Meetings!', {
-      //   timeout: 2000,
-      //   position: 'top-left',
-      //   type: 'error',
-      //   toastClassName: 'custom',
-      //   bodyClassName: ['custom'],
-      // })
     }
   },
   async loadAllOpps({ commit }, filters = []) {

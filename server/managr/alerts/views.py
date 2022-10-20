@@ -57,8 +57,8 @@ def create_configs_for_target(target, template_user, config):
         config["recipient_type"] = "SLACK_CHANNEL"
         if "default" in config["recipients"] and template_user.has_slack_integration:
             config["recipients"] = [
-                template_user.slack_integration.zoom_channel
-                if template_user.slack_integration.zoom_channel
+                template_user.slack_integration.recap_channel
+                if template_user.slack_integration.recap_channel
                 else template_user.slack_integration.channel
             ]
         else:
@@ -79,8 +79,8 @@ def create_configs_for_target(target, template_user, config):
             config_copy["alert_targets"] = [str(user.id)]
             if user.has_slack_integration:
                 config_copy["recipients"] = [
-                    user.slack_integration.zoom_channel
-                    if user.slack_integration.zoom_channel
+                    user.slack_integration.recap_channel
+                    if user.slack_integration.recap_channel
                     else user.slack_integration.channel
                 ]
                 config_copy["recipient_type"] = "SLACK_CHANNEL"
