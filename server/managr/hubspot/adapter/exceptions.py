@@ -3,93 +3,109 @@ import re
 
 from rest_framework.exceptions import APIException
 from rest_framework.exceptions import ValidationError
-
+from managr.crm.exceptions import (
+    TokenExpired,
+    InvalidFieldError,
+    MalformedQuery,
+    ApiRateLimitExceeded,
+    Api500Error,
+    APIException,
+    InvalidRefreshToken,
+    FieldValidationError,
+    RequiredFieldError,
+    SFNotFoundError,
+    SFQueryOffsetError,
+    UnableToUnlockRow,
+    UnhandledCRMError,
+    ConvertTargetNotAllowedError,
+    CannotRetreiveObjectType,
+)
 
 logger = logging.getLogger("managr")
 
 
-class TokenExpired(Exception):
-    def __init(self, message="Token Expired"):
-        self.message = message
-        super().__init__(self.message)
+# class TokenExpired(Exception):
+#     def __init(self, message="Token Expired"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class InvalidRefreshToken(Exception):
-    def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
-        self.message = message
-        super().__init__(self.message)
+# class InvalidRefreshToken(Exception):
+#     def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class MalformedQuery(Exception):
-    def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
-        self.message = message
-        super().__init__(self.message)
+# class MalformedQuery(Exception):
+#     def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class ApiRateLimitExceeded(Exception):
-    def __init(self, message="Token Expired"):
-        self.message = message
-        super().__init__(self.message)
+# class ApiRateLimitExceeded(Exception):
+#     def __init(self, message="Token Expired"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class FieldValidationError(Exception):
-    def __init(self, message="Validation Error on Fields"):
-        self.message = message
-        super().__init__(self.message)
+# class FieldValidationError(Exception):
+#     def __init(self, message="Validation Error on Fields"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class RequiredFieldError(Exception):
-    def __init(self, message="Invalid/Missing Required Field"):
-        self.message = message
-        super().__init__(self.message)
+# class RequiredFieldError(Exception):
+#     def __init(self, message="Invalid/Missing Required Field"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class SFNotFoundError(Exception):
-    def __init(self, message="Error Generating Slack Modal"):
-        self.message = message
-        super().__init__(self.message)
+# class SFNotFoundError(Exception):
+#     def __init(self, message="Error Generating Slack Modal"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class SFQueryOffsetError(Exception):
-    def __init(self, message="OFFSET MAX IS 2000"):
-        self.message = message
-        super().__init__(self.message)
+# class SFQueryOffsetError(Exception):
+#     def __init(self, message="OFFSET MAX IS 2000"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class InvalidFieldError(Exception):
-    def __init(self, message="Invalid/Duplicate Field in query"):
-        self.message = message
-        super().__init__(self.message)
+# class InvalidFieldError(Exception):
+#     def __init(self, message="Invalid/Duplicate Field in query"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class UnableToUnlockRow(Exception):
-    def __init(self, message="Unable to unlock row"):
-        self.message = message
-        super().__init__(self.message)
+# class UnableToUnlockRow(Exception):
+#     def __init(self, message="Unable to unlock row"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class CannotRetreiveObjectType(Exception):
-    def __init(self, message="A new error occured Invalid Type/Insufficient Access"):
-        self.message = message
-        super().__init__(self.message)
+# class CannotRetreiveObjectType(Exception):
+#     def __init(self, message="A new error occured Invalid Type/Insufficient Access"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class UnhandledHubspotError(Exception):
-    def __init(self, message="A new error occured"):
-        self.message = message
-        super().__init__(self.message)
+# class UnhandledHubspotError(Exception):
+#     def __init(self, message="A new error occured"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
-class Api500Error(APIException):
-    status_code = 500
-    default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
-    default_code = "hubspot_api_error"
+# class Api500Error(APIException):
+#     status_code = 500
+#     default_detail = """An error occurred with your request, this is an error with our system, please try again in 10 minutes"""
+#     default_code = "hubspot_api_error"
 
 
-class ConvertTargetNotAllowedError(Exception):
-    def __init(self, message="A new error occured"):
-        self.message = message
-        super().__init__(self.message)
+# class ConvertTargetNotAllowedError(Exception):
+#     def __init(self, message="A new error occured"):
+#         self.message = message
+#         super().__init__(self.message)
 
 
 class CustomAPIException:
@@ -152,9 +168,7 @@ class CustomAPIException:
             )
 
         elif self.status_code == 400 and self.param == "NOT_FOUND":
-            raise UnhandledHubspotError(
-                f"The selected object does not exist in hubspot {self.message}"
-            )
+            raise UnhandledCRMError(f"The selected object does not exist in hubspot {self.message}")
         elif self.status_code == 400 and self.param == "INVALID_TYPE":
             raise CannotRetreiveObjectType(
                 f"User does not have access to this object type {self.message}"
@@ -170,4 +184,4 @@ class CustomAPIException:
 
         else:
 
-            raise UnhandledHubspotError(f"hubspot returned {self.param} {self.message}")
+            raise UnhandledCRMError(f"hubspot returned {self.param} {self.message}")

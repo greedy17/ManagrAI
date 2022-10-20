@@ -14,9 +14,11 @@ class BaseAccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(organization=user.organization)
+                return self.filter(organization=user.organization, integration_source=user.crm)
             else:
-                return self.filter(organization=user.organization, owner=user)
+                return self.filter(
+                    organization=user.organization, owner=user, integration_source=user.crm
+                )
         else:
             return None
 
@@ -56,9 +58,13 @@ class BaseOpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(owner__organization=user.organization)
+                return self.filter(
+                    owner__organization=user.organization, integration_source=user.crm
+                )
             else:
-                return self.filter(owner__organization=user.organization, owner=user)
+                return self.filter(
+                    owner__organization=user.organization, owner=user, integration_source=user.crm
+                )
         else:
             return None
 
@@ -133,7 +139,6 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         self.is_stale = True
         self.save()
         return res
-        return
 
 
 class BaseContactQuerySet(models.QuerySet):

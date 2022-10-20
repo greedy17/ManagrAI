@@ -70,11 +70,11 @@ from .background import (
     emit_process_bulk_update,
 )
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
-    UnhandledSalesforceError,
+    UnhandledCRMError,
     SFNotFoundError,
     InvalidRefreshToken,
 )
@@ -630,7 +630,7 @@ class SalesforceSObjectViewSet(
 
                     data = {"success": False, "error": str(e)}
                     break
-                except UnhandledSalesforceError as e:
+                except UnhandledCRMError as e:
                     logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                     data = {"success": False, "error": str(e)}
                     break
@@ -736,7 +736,7 @@ class SalesforceSObjectViewSet(
             except RequiredFieldError as e:
                 data = {"success": False, "error": str(e)}
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 data = {"success": False, "error": str(e)}
                 break
 

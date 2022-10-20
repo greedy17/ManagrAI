@@ -515,6 +515,21 @@ class DealAdapter:
         formatted_data["imported_by"] = str(user_id)
         return DealAdapter(**formatted_data)
 
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        formatted_data = dict()
+        for k, v in data.items():
+            key = mapping.get(k, None)
+            if key:
+                formatted_data[key] = v
+            else:
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
+
+        return formatted_data
+
     @classmethod
     def create_from_api(cls, data):
         return cls(cls.from_api(data))
@@ -532,9 +547,11 @@ class DealAdapter:
 
     @staticmethod
     def update(data, access_token, deal_id, object_fields):
+        print(data)
         json_data = json.dumps(
-            DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)
+            {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
         )
+        print(json_data)
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("deals") + deal_id
         print(url)
         with Client as client:

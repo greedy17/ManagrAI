@@ -35,7 +35,7 @@ from managr.slack.helpers.exceptions import (
     CannotSendToChannel,
 )
 from managr.salesforce.routes import routes as model_routes
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,

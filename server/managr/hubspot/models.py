@@ -25,7 +25,7 @@ from .adapter.models import HubspotAuthAccountAdapter, DealAdapter
 from .adapter.exceptions import (
     TokenExpired,
     InvalidFieldError,
-    UnhandledHubspotError,
+    UnhandledCRMError,
     InvalidRefreshToken,
     CannotRetreiveObjectType,
 )

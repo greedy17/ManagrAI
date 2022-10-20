@@ -15,7 +15,7 @@ from managr.core import constants as core_consts
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.adapter.exceptions import TokenExpired
+from managr.crm.exceptions import TokenExpired
 
 # Create your models here.
 

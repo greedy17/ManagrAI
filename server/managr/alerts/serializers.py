@@ -2,7 +2,7 @@ import logging
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.salesforce.serializers import SObjectFieldSerializer
-from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
+from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
 from managr.salesforce.routes import routes as model_routes
 from managr.core.serializers import UserSerializer
 from managr.core.models import User

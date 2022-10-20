@@ -2,6 +2,8 @@ import datetime
 from dateutil import parser
 from rest_framework import serializers
 
+from managr.crm.models import BaseAccount, BaseContact, BaseOpportunity
+
 from .models import HubspotAuthAccount, Company, HubspotContact, Deal, HObjectField
 from managr.organization.models import Organization
 
@@ -14,7 +16,7 @@ class HubspotAuthAccountSerializer(serializers.ModelSerializer):
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Company
+        model = BaseAccount
         fields = (
             "id",
             "name",
@@ -47,7 +49,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 class HubspotContactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HubspotContact
+        model = BaseContact
         fields = (
             "id",
             "email",
@@ -92,7 +94,7 @@ class HubspotContactSerializer(serializers.ModelSerializer):
 
 class DealSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Deal
+        model = BaseOpportunity
         fields = (
             "id",
             "integration_id",

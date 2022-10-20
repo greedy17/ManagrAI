@@ -19,10 +19,10 @@ from managr.organization.models import (
 from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
-from managr.salesforce.adapter.exceptions import TokenExpired
+from managr.crm.exceptions import TokenExpired
 
 from managr.salesloft.models import Cadence, People
-from managr.crm.models import BaseOpportunity
+from managr.crm.models import BaseOpportunity, BaseAccount, BaseContact
 
 logger = logging.getLogger("managr")
 
@@ -104,13 +104,13 @@ def process_get_local_resource_options(payload, context):
     field_id = context.get("field_id")
     # conver type to make sure it follows {label:str|num, values:str|num}
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
-    if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
+    if resource in [sf_consts.RESOURCE_SYNC_ACCOUNT, hs_consts.RESOURCE_SYNC_COMPANY]:
         return {
             "options": [
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in Account.objects.for_user(user).filter(name__icontains=value)[:50]
+                    for l in BaseAccount.objects.for_user(user).filter(name__icontains=value)[:50]
                 ],
             ],
         }
@@ -125,7 +125,7 @@ def process_get_local_resource_options(payload, context):
                 ],
             ],
         }
-    elif resource == sf_consts.RESOURCE_SYNC_CONTACT:
+    elif resource in [sf_consts.RESOURCE_SYNC_CONTACT, hs_consts.RESOURCE_SYNC_CONTACT]:
         return {
             "options": [
                 *additional_opts,
@@ -135,23 +135,15 @@ def process_get_local_resource_options(payload, context):
                 ],
             ],
         }
-    elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
+    elif resource in [sf_consts.RESOURCE_SYNC_OPPORTUNITY, hs_consts.RESOURCE_SYNC_DEAL]:
         return {
             "options": [
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in Opportunity.objects.for_user(user).filter(name__icontains=value)[:50]
-                ],
-            ],
-        }
-    elif resource == hs_consts.RESOURCE_SYNC_DEAL:
-        return {
-            "options": [
-                *additional_opts,
-                *[
-                    l.as_slack_option
-                    for l in BaseOpportunity.objects.filter(name__icontains=value)[:50]
+                    for l in BaseOpportunity.objects.for_user(user).filter(name__icontains=value)[
+                        :50
+                    ]
                 ],
             ],
         }

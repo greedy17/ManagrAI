@@ -10,7 +10,7 @@ from django.forms import UUIDField
 from managr.slack.helpers import block_builders
 from managr.salesforce.models import SObjectField
 from managr.hubspot.models import HObjectField
-from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
+from managr.crm.exceptions import TokenExpired, InvalidRefreshToken
 from managr.core import constants as core_consts
 from . import constants as slack_consts
 

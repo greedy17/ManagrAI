@@ -113,6 +113,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
 
     # if route doesnt exist catch all will catch the value error here
     route = routes[resource]
+    print(route)
     model_class = route["model"]
     serializer_class = route["serializer"]
 
@@ -138,6 +139,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
                 f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
     for item in res:
+        print(serializer_class)
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             serializer = serializer_class(data=item.as_dict, instance=existing)

@@ -28,7 +28,7 @@ from rest_framework.decorators import (
 )
 from managr.salesforce.routes import routes as model_routes
 
-from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
+from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
 

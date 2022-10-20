@@ -9,7 +9,7 @@ from background_task.models import CompletedTask, Task
 from managr.core import factories as core_factories
 from managr.organization import factories as org_factories
 from managr.salesforce.models import SalesforceAuthAccount, SFResourceSync, SObjectField
-from managr.salesforce.adapter.exceptions import CannotRetreiveObjectType
+from managr.crm.exceptions import CannotRetreiveObjectType
 from managr.slack.models import OrgCustomSlackForm, FormField
 from managr.slack import constants as slack_consts
 

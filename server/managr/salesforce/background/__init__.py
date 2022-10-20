@@ -58,7 +58,7 @@ from ..adapter.exceptions import (
     SFNotFoundError,
     UnableToUnlockRow,
     CannotRetreiveObjectType,
-    UnhandledSalesforceError,
+    UnhandledCRMError,
 )
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
@@ -851,7 +851,7 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
 
                 data = {"success": False, "error": str(e)}
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                 data = {"success": False, "error": str(e)}
                 break
@@ -935,7 +935,7 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
 
                 data = {"success": False, "error": str(e)}
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                 data = {"success": False, "error": str(e)}
                 break
@@ -1938,7 +1938,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
                 error = True
                 error_message = str(e)
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                 error = True
                 error_message = str(e)
@@ -2062,7 +2062,7 @@ def _processs_bulk_update(data, user):
 
                 return_data = {"success": False, "error": str(e)}
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                 return_data = {"success": False, "error": str(e)}
                 break
