@@ -2,7 +2,7 @@
   <div class="alerts-page">
     <section v-if="!oldAlert">
       <div class="title">
-        <h4 @click="test" class="title__head">General</h4>
+        <h4 class="title__head">General</h4>
 
         <section class="title__body">
           <p>What type of workflow are you building ?</p>
@@ -270,8 +270,8 @@
 
           <div class="flex-end">
             <button
-              v-if="alertTemplateForm.field.alertGroups.groups.length < 3"
               class="white_button"
+              :disabled="!(alertTemplateForm.field.alertGroups.groups.length < 3 && validateAlertOperands(alertTemplateForm.field.alertGroups.groups))"
               @click="onAddAlertGroup(), scrollToElement()"
             >
               Add group
@@ -481,6 +481,23 @@ export default {
     test() {
       console.log(this.alertTemplateForm.isValid)
     },
+    validateAlertOperands(operands) {
+      for (let i = 0; i < operands.length; i++) {
+        const operandGroup = operands[i].field.alertOperands.groups
+        for (let j = 0; j < operandGroup.length; j++) {
+          if (!operandGroup[j].field.operandIdentifier.isValid) {
+            return false
+          }
+          if (!operandGroup[j].field.operandOperator.isValid) {
+            return false
+          }
+          if (!operandGroup[j].isValid) {
+            return false
+          }
+        }
+      }
+      return true
+    },
     activateSave() {
       this.$emit('can-save', !!this.alertIsValid)
     },
@@ -542,7 +559,6 @@ export default {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.length < 1
       ) {
         this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value.push('SELF')
-        console.log('test')
         this.setPipelines({
           fullName: 'MYSELF',
           id: 'SELF',
@@ -772,9 +788,6 @@ export default {
     setPipelines(obj) {
       if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.length < 1) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj)
-        console.log(
-          this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.push(obj),
-        )
       }
     },
     setRecipient() {
@@ -831,9 +844,6 @@ export default {
     },
     setOldAlertValues() {
       if (this.oldAlert) {
-        console.log('SAVED ALERT', this.oldAlert)
-        console.log('ALERT TEMPLATE FORM', this.alertTemplateForm)
-
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
           this.oldAlert.configsRef[0].recipientType
         this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
@@ -926,8 +936,6 @@ export default {
   },
   mounted() {
     this.setDefaultChannel()
-    console.log('SAVED ALERT', this.oldAlert)
-    console.log('ALERT TEMPLATE FORM', this.alertTemplateForm)
     // this.updatedAlert.groupsRef
 
     // this.setOldAlertValues()
@@ -1584,6 +1592,11 @@ button img {
   background-color: white;
   color: $dark-green;
   margin-top: 24px;
+}
+.white_button:disabled {
+  background-color: $soft-gray;
+  color: $gray;
+  border: none;
 }
 .group_button {
   font-size: 13px;
