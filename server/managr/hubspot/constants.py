@@ -99,10 +99,13 @@ def HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource):
 
 
 def HUBSPOT_OBJECTS_URI(
-    resource, fields, childRelationshipFields=[], additional_filters=[], limit=HUBSPOT_QUERY_LIMIT,
+    resource, fields, integration_id=None, limit=HUBSPOT_QUERY_LIMIT,
 ):
     fields = set(fields)
-    url = f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{resource}?limit={limit}&properties={','.join(fields)}"
+    url = f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{resource}"
+    if integration_id:
+        url += f"/{integration_id}"
+    url += f"?limit={limit}&properties={','.join(fields)}"
     return url
 
 

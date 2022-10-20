@@ -1438,6 +1438,7 @@ def process_resource_selected_for_task(payload, context):
         OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
         action = payload["actions"][0]
+        print(action)
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
 

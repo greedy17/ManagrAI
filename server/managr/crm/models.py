@@ -47,11 +47,35 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         ordering = ["-datetime_created"]
 
     @property
+    def as_slack_option(self):
+        return block_builders.option(self.name, str(self.id))
+
+    @property
+    def object_type(self):
+        if self.owner.crm == "Salesforce":
+            return "Account"
+        else:
+            return "Company"
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
         return adapters[self.integration_source]["Account"](**data)
+
+    def get_current_values(self):
+        return self.adapter_class.get_current_values()
+
+    def update(self, data):
+        token = self.owner.crm_account.access_token
+        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+            "api_name", flat=True
+        )
+        res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
 
 
 class BaseOpportunityQuerySet(models.QuerySet):
@@ -130,6 +154,9 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     def as_slack_option(self):
         return block_builders.option(self.name, str(self.id))
 
+    def get_current_values(self):
+        return self.adapter_class.get_current_values()
+
     def update(self, data):
         token = self.owner.crm_account.access_token
         object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
@@ -174,11 +201,28 @@ class BaseContact(TimeStampModel, IntegrationModel):
         ordering = ["-datetime_created"]
 
     @property
+    def object_type(self):
+        return "Contact"
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
         return adapters[self.integration_source]["Contact"](**data)
+
+    def get_current_values(self):
+        return self.adapter_class.get_current_values()
+
+    def update(self, data):
+        token = self.owner.crm_account.access_token
+        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+            "api_name", flat=True
+        )
+        res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
 
 
 class ObjectFieldQuerySet(models.QuerySet):
