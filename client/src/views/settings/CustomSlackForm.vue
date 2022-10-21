@@ -12,7 +12,7 @@
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
             <img src="@/assets/images/warning.svg" class="logo" alt="" />
-            <h4>Switching forms. Do you want to save?</h4>
+            <h4>Switching forms. Changes wont be saved!</h4>
           </div>
         </div>
         <section class="modal-buttons">
@@ -20,7 +20,7 @@
             <button @click="modalSave" class="save">Save</button>
           </div>
           <div class="">
-            <button @click="closeModal" class="cancel">Continue Without Saving</button>
+            <button @click="closeModal" class="cancel">Discard Changes</button>
           </div>
         </section>
       </div>
@@ -2096,7 +2096,7 @@ img:hover {
   overflow: auto;
   min-width: 36vw;
   max-width: 36vw;
-  min-height: 24vh;
+  min-height: 20vh;
   max-height: 80vh;
   align-items: center;
   border-radius: 0.5rem;
@@ -2138,8 +2138,11 @@ img:hover {
 }
 .modal-buttons {
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
   margin-top: 3rem;
+  div {
+    margin-left: 0.5rem;
+  }
 }
 .cancel {
   border: 1px solid $soft-gray;
