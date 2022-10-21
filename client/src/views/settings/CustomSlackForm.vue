@@ -17,10 +17,10 @@
         </div>
         <section class="modal-buttons">
           <div class="">
-            <button @click="modalSave" class="save">Save Form</button>
+            <button @click="modalSave" class="save">Save</button>
           </div>
           <div class="">
-            <button @click="closeModal" class="cancel">Cancel</button>
+            <button @click="closeModal" class="cancel">Continue Without Saving</button>
           </div>
         </section>
       </div>
