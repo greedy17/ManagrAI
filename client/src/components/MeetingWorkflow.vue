@@ -992,7 +992,6 @@ a {
   transition: all 0.3s;
   font-size: 12px;
   letter-spacing: 0.75px;
-  font-weight: bold;
 }
 .add-button {
   border: none;

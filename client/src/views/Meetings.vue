@@ -2425,7 +2425,6 @@ a {
   max-height: 2rem;
   border-radius: 0.25rem;
   padding: 0.5rem 1.25rem;
-  font-weight: bold;
   font-size: 12px;
   border: none;
   cursor: pointer;
