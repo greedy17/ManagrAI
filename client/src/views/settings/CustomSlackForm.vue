@@ -27,7 +27,7 @@
     <section class="wrapper">
       <div v-if="newFormType !== 'STAGE_GATING'" class="tab-content">
         <section>
-          <div class="tab-content__div">
+          <div v-if="newResource !== 'OpportunityLineItem'" class="tab-content__div">
             <div class="row">
               <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
               <ToggleCheckBox
@@ -39,6 +39,9 @@
               />
               <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
             </div>
+          </div>
+          <div v-else class="tab-content__div">
+            <label class="gray">Create</label>
           </div>
           <div id="formSection">
             <draggable
@@ -920,9 +923,9 @@ export default {
     },
     changeToProducts() {
       this.newResource = 'OpportunityLineItem'
-      this.newFormType = 'UPDATE'
+      this.newFormType = 'CREATE'
       this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.OPPORTUNITYLINEITEM && f.formType == this.UPDATE,
+        (f) => f.resource == this.OPPORTUNITYLINEITEM && f.formType == this.CREATE,
       )
     },
     changeToStage(stage = '') {
@@ -943,9 +946,7 @@ export default {
     changeToLead() {
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.LEAD && f.formType == this.UPDATE,
-      )
+      this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
     },
     switchFormType() {
       this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
@@ -1055,7 +1056,7 @@ export default {
         return field.id
       })
 
-      if (this.newFormType == 'UPDATE') {
+      if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
         if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
           let fieldsToAdd = [this.noteTitle, this.noteSubject]
           let copyArray = this.addedFields

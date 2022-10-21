@@ -1593,24 +1593,6 @@
                 </span>
               </button>
             </router-link>
-            <button v-if="!selectedWorkflow" @click="closeDatesThisMonth" class="list-button">
-              Closing this month
-              <span
-                class="filter"
-                v-if="currentList === 'Closing this month' && !currentWorkflowName"
-              >
-                active</span
-              >
-            </button>
-            <button v-if="!selectedWorkflow" @click="closeDatesNextMonth" class="list-button">
-              Closing next month
-              <span
-                class="filter"
-                v-if="currentList === 'Closing next month' && !currentWorkflowName"
-              >
-                active</span
-              >
-            </button>
             <button
               @click="goToWorkflow(template.id)"
               class="list-button"
