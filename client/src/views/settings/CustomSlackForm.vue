@@ -25,363 +25,176 @@
         </section>
       </div>
     </Modal>
+    <div class="alerts-header">
+      <section class="row__ light-gray">
+        <p
+          @click="changeToOpportunity"
+          :class="newResource == 'Opportunity' && newFormType !== 'STAGE_GATING' ? 'green' : ''"
+        >
+          Opportunity
+        </p>
+        <p
+          @click="changeToStage"
+          :class="newResource == 'Opportunity' && newFormType == 'STAGE_GATING' ? 'green' : ''"
+        >
+          Opp - Stage related
+        </p>
+        <p @click="changeToAccount" :class="newResource == 'Account' ? 'green' : ''">Account</p>
+        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
+        <p @click="changeToLead" :class="newResource == 'Lead' ? 'green' : ''">Lead</p>
+        <p>Products</p>
+      </section>
+      <button @click="onSave" class="save">Save Form</button>
+    </div>
+
     <section class="wrapper">
-      <div class="save--button">
-        <button @click="onSave" class="save">Save Form</button>
+      <div v-if="newFormType !== 'STAGE_GATING'" class="tab-content">
+        <section>
+          <div class="tab-content__div">
+            <div class="row">
+              <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
+              <ToggleCheckBox
+                style="margin-left: 0.5rem; margin-right: 0.5rem"
+                @input="switchFormType"
+                :value="newFormType == 'UPDATE'"
+                offColor="#41b883"
+                onColor="#41b883"
+              />
+              <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
+            </div>
+          </div>
+          <div id="formSection">
+            <draggable
+              v-model="addedFields"
+              group="fields"
+              @start="drag = true"
+              @end="drag = false"
+              class="drag-section"
+            >
+              <div v-for="field in addedFields" :key="field.id">
+                <div v-if="!unshownIds.includes(field.id)">
+                  <div class="drag-item">
+                    <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                      <img src="@/assets/images/drag.svg" alt="" />
+                      {{ field.label }}
+                    </p>
+                    <img
+                      src="@/assets/images/remove.svg"
+                      alt=""
+                      id="remove"
+                      :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                      @click="
+                        () => {
+                          onRemoveField(field)
+                        }
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+            </draggable>
+          </div>
+        </section>
       </div>
 
-      <div class="tabs">
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
-          <label for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
-          <div class="tab-content">
-            <section>
-              <div class="tab-content__div">
-                <div class="row__">
-                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
-                  <ToggleCheckBox
-                    style="margin-left: 0.5rem; margin-right: 0.5rem"
-                    @input="switchFormType"
-                    :value="newFormType == 'UPDATE'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
-                </div>
+      <div v-else class="tab-content">
+        <section style="margin-top: -16px" class="space-between">
+          <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
+            <img
+              style="margin-right: 8px; margin-top: -16px"
+              src="@/assets/images/left.svg"
+              height="13px"
+              alt=""
+            />
+            Back
+          </h4>
 
-                <!-- <button @click="onSave" class="save abs-top">Save Form</button> -->
-              </div>
-              <div id="formSection">
-                <draggable
-                  v-model="addedFields"
-                  group="fields"
-                  @start="drag = true"
-                  @end="drag = false"
-                  class="drag-section"
-                >
-                  <div v-for="field in addedFields" :key="field.id">
-                    <div v-if="!unshownIds.includes(field.id)">
-                      <div class="drag-item">
-                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                          <img src="@/assets/images/drag.svg" alt="" />
-                          {{ field.label }}
-                        </p>
-                        <img
-                          src="@/assets/images/remove.svg"
-                          alt=""
-                          id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                          @click="
-                            () => {
-                              onRemoveField(field)
-                            }
-                          "
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </draggable>
-              </div>
-            </section>
+          <div class="row__">
+            <h4 style="margin-right: 16px" v-if="selectedForm">
+              {{ selectedForm.stage + ' Form' }}
+            </h4>
+            <h4 style="margin-right: 16px" v-else>{{ currentlySelectedForm }}</h4>
+
+            <div
+              class="margin-right"
+              @click.prevent="deleteForm(activeForm)"
+              v-if="selectedForm && selectedForm.fields.length"
+            >
+              <img src="@/assets/images/remove.svg" class="red-filter" alt="" />
+            </div>
+          </div>
+        </section>
+
+        <div>
+          <div class="row__">
+            <Multiselect
+              v-if="!selectedForm"
+              @input="setStage($event)"
+              :options="stages"
+              openDirection="below"
+              style="width: 40vw; margin-top: -24px"
+              selectLabel="Enter"
+              track-by="value"
+              label="label"
+              :value="currentlySelectedStage"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ selectedStage ? selectedStage : 'Select stage to create/edit form' }}
+                </p>
+              </template>
+
+              <template slot="option" slot-scope="props">
+                <div>
+                  <span class="option__title">{{ props.option.value }}</span
+                  ><span
+                    v-if="currentStagesWithForms.includes(props.option.value)"
+                    class="option__small"
+                  >
+                    edit
+                  </span>
+                </div>
+              </template>
+            </Multiselect>
           </div>
         </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label" @click="changeToStage">Opp - Stage Related</label>
-          <div class="tab-content">
-            <section style="margin-top: -16px" class="space-between">
-              <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
-                <img
-                  style="margin-right: 8px; margin-top: -16px"
-                  src="@/assets/images/left.svg"
-                  height="13px"
-                  alt=""
-                />
-                Back
-              </h4>
 
-              <div class="row__">
-                <h4 style="margin-right: 16px" v-if="selectedForm">
-                  {{ selectedForm.stage + ' Form' }}
-                </h4>
-                <h4 style="margin-right: 16px" v-else>{{ currentlySelectedForm }}</h4>
-
-                <div
-                  class="margin-right"
-                  @click.prevent="deleteForm(activeForm)"
-                  v-if="selectedForm && selectedForm.fields.length"
-                >
-                  <img src="@/assets/images/remove.svg" class="red-filter" alt="" />
-                </div>
-                <!-- <button
-                  v-if="selectedForm && selectedForm.fields.length"
-                  @click.prevent="deleteForm(activeForm)"
-                  class="delete"
-                >
-                  Delete
-                </button> -->
-              </div>
-            </section>
-
-            <div>
-              <!-- <Multiselect
-                v-if="!formLength && !addingForm"
-                @input="selectForm('Opportunity', 'STAGE_GATING', $event.stage)"
-                :options="formStages"
-                openDirection="below"
-                style="width: 20vw"
-                selectLabel="Enter"
-                track-by="stage"
-                label="stage"
-                v-model="currentlySelectedForm"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Edit Stage form
+        <div v-if="selectedForm" id="formSection">
+          <draggable
+            v-model="addedFields"
+            group="fields"
+            @start="drag = true"
+            @end="drag = false"
+            class="drag-section"
+          >
+            <div v-for="field in addedFields" :key="field.id">
+              <div v-if="!unshownIds.includes(field.id)">
+                <div class="drag-item">
+                  <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                    <img src="@/assets/images/drag.svg" alt="" />
+                    {{ field.label }}
                   </p>
-                </template>
-              </Multiselect> -->
-
-              <div class="row__">
-                <Multiselect
-                  v-if="!selectedForm"
-                  @input="setStage($event)"
-                  :options="stages"
-                  openDirection="below"
-                  style="width: 40vw; margin-top: -24px"
-                  selectLabel="Enter"
-                  track-by="value"
-                  label="label"
-                  :value="currentlySelectedStage"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      {{ selectedStage ? selectedStage : 'Select stage to create/edit form' }}
-                    </p>
-                  </template>
-
-                  <template slot="option" slot-scope="props">
-                    <div>
-                      <span class="option__title">{{ props.option.value }}</span
-                      ><span
-                        v-if="currentStagesWithForms.includes(props.option.value)"
-                        class="option__small"
-                      >
-                        edit
-                      </span>
-                    </div>
-                  </template>
-                </Multiselect>
+                  <img
+                    src="@/assets/images/remove.svg"
+                    alt=""
+                    id="remove"
+                    :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                    @click="
+                      () => {
+                        onRemoveField(field)
+                      }
+                    "
+                  />
+                </div>
               </div>
             </div>
-
-            <div v-if="selectedForm" id="formSection">
-              <draggable
-                v-model="addedFields"
-                group="fields"
-                @start="drag = true"
-                @end="drag = false"
-                class="drag-section"
-              >
-                <div v-for="field in addedFields" :key="field.id">
-                  <div v-if="!unshownIds.includes(field.id)">
-                    <div class="drag-item">
-                      <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                        <img src="@/assets/images/drag.svg" alt="" />
-                        {{ field.label }}
-                      </p>
-                      <img
-                        src="@/assets/images/remove.svg"
-                        alt=""
-                        id="remove"
-                        :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                        @click="
-                          () => {
-                            onRemoveField(field)
-                          }
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
-              </draggable>
-            </div>
-          </div>
+          </draggable>
         </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
-          <label for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
-          <div class="tab-content">
-            <section>
-              <div class="tab-content__div">
-                <div class="row__">
-                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
-                  <ToggleCheckBox
-                    style="margin-left: 0.5rem; margin-right: 0.5rem"
-                    @input="switchFormType"
-                    :value="newFormType == 'UPDATE'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
-                </div>
-                <div></div>
-              </div>
-              <div id="formSection">
-                <draggable
-                  v-model="addedFields"
-                  group="fields"
-                  @start="drag = true"
-                  @end="drag = false"
-                  class="drag-section"
-                >
-                  <div v-for="field in addedFields" :key="field.id">
-                    <div v-if="!unshownIds.includes(field.id)">
-                      <div class="drag-item">
-                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                          <img src="@/assets/images/drag.svg" alt="" />
-                          {{ field.label }}
-                        </p>
-                        <img
-                          src="@/assets/images/remove.svg"
-                          alt=""
-                          id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                          @click="
-                            () => {
-                              onRemoveField(field)
-                            }
-                          "
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </draggable>
-              </div>
-            </section>
-          </div>
-        </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
-          <label for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
-          <div class="tab-content">
-            <section>
-              <div class="tab-content__div">
-                <div class="row__">
-                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
-                  <ToggleCheckBox
-                    style="margin-left: 0.5rem; margin-right: 0.5rem"
-                    @input="switchFormType"
-                    :value="newFormType == 'UPDATE'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
-                </div>
-                <div></div>
-              </div>
-              <div id="formSection">
-                <draggable
-                  v-model="addedFields"
-                  group="fields"
-                  @start="drag = true"
-                  @end="drag = false"
-                  class="drag-section"
-                >
-                  <div v-for="field in addedFields" :key="field.id">
-                    <div v-if="!unshownIds.includes(field.id)">
-                      <div class="drag-item">
-                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                          <img src="@/assets/images/drag.svg" alt="" />
-                          {{ field.label }}
-                        </p>
-                        <img
-                          src="@/assets/images/remove.svg"
-                          alt=""
-                          id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                          @click="
-                            () => {
-                              onRemoveField(field)
-                            }
-                          "
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </draggable>
-              </div>
-            </section>
-          </div>
-        </div>
-        <div class="tab">
-          <input type="radio" name="css-tabs" id="tab-5" class="tab-switch" />
-          <label for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
-          <div class="tab-content">
-            <section>
-              <div class="tab-content__div">
-                <div class="row__">
-                  <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
-                  <ToggleCheckBox
-                    style="margin-left: 0.5rem; margin-right: 0.5rem"
-                    @input="switchFormType"
-                    :value="newFormType == 'UPDATE'"
-                    offColor="#41b883"
-                    onColor="#41b883"
-                  />
-                  <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
-                </div>
-                <div></div>
-              </div>
-              <div id="formSection">
-                <draggable
-                  v-model="addedFields"
-                  group="fields"
-                  @start="drag = true"
-                  @end="drag = false"
-                  class="drag-section"
-                >
-                  <div v-for="field in addedFields" :key="field.id">
-                    <div v-if="!unshownIds.includes(field.id)">
-                      <div class="drag-item">
-                        <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                          <img src="@/assets/images/drag.svg" alt="" />
-                          {{ field.label }}
-                        </p>
-                        <img
-                          src="@/assets/images/remove.svg"
-                          alt=""
-                          id="remove"
-                          :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                          @click="
-                            () => {
-                              onRemoveField(field)
-                            }
-                          "
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </draggable>
-              </div>
-            </section>
-          </div>
-        </div>
-        <!-- <div class="tab">
-          <div class="tab-label right">
-            <button @click="onSave" class="save mar-left">Save Form</button>
-          </div>
-        </div> -->
       </div>
     </section>
     <div class="field-section">
@@ -391,7 +204,7 @@
       </div>
 
       <div class="field-section__fields">
-        <div style="height: 85vh; overflow: scroll">
+        <div>
           <p v-for="(field, i) in filteredFields" :key="field.id">
             <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
@@ -1400,6 +1213,30 @@ export default {
     transform: translateY(-6px);
   }
 }
+.alerts-header {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 72px;
+  background-color: white;
+  width: 96vw;
+  border-bottom: 1px solid $soft-gray;
+  padding: 4px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $light-gray-blue;
+  }
+}
 ::v-deep .sortable-ghost {
   border: 1px dashed $very-light-gray;
   border-radius: 6px;
@@ -1522,12 +1359,13 @@ input[type='search']:focus {
 .field-section {
   width: 40vw;
   background-color: white;
-  height: 98vh;
-  margin-top: 16px;
+  height: 100%;
+  margin-top: 28px;
   margin-left: 16px;
   padding: 0px 32px;
   border-radius: 6px;
   letter-spacing: 0.75px;
+
   &__title {
     letter-spacing: 0.75px;
   }
@@ -1546,7 +1384,8 @@ input[type='search']:focus {
       border-radius: 6px;
       padding: 4px 16px;
       margin-top: 16px;
-
+      height: 76vh;
+      overflow: scroll;
       section {
         span {
           color: $coral;
@@ -1562,54 +1401,16 @@ input[type='search']:focus {
   font-size: 14px;
   letter-spacing: 0.75px;
 }
-.tabs {
-  position: relative;
-  margin: 16px 0;
-  background: white;
-  border-radius: 6px;
-}
-.tabs::before,
-.tabs::after {
-  content: '';
-  display: table;
-}
-.tabs::after {
-  clear: both;
-}
-.tab {
-  float: left;
-}
-.tab-switch {
-  display: none;
-}
-.tab-label {
-  position: relative;
-  display: block;
-  line-height: 2.75em;
-  height: 3em;
-  padding: 0 1.618em;
-  color: $light-gray-blue;
-  cursor: pointer;
-  top: 0;
-  transition: all 0.25s;
-}
-.tab-label:hover {
-  top: -0.25rem;
-  transition: top 0.25s;
-}
+
 .tab-content {
   width: 100%;
-  height: 92vh;
-  position: absolute;
-  top: 2.75em;
-  left: 0;
+  height: 86vh;
   padding: 32px 24px 16px 24px;
   background: #fff;
   color: $base-gray;
-  opacity: 0;
-  transition: all 0.35s;
   overflow: scroll;
   border-radius: 6px;
+  margin-top: 28px;
 
   section {
   }
@@ -1721,21 +1522,7 @@ input[type='search']:focus {
     cursor: grab;
   }
 }
-.tab-switch:checked + .tab-label {
-  background: #fff;
-  color: $dark-green;
-  font-weight: bold;
 
-  border-radius: 4px;
-  transition: all 0.35s;
-  z-index: 10;
-  top: -0.0625rem;
-}
-.tab-switch:checked + label + .tab-content {
-  z-index: 2;
-  opacity: 1;
-  transition: all 0.35s;
-}
 .tab-text {
   color: $base-gray !important;
   font-size: 14px;
@@ -1837,6 +1624,17 @@ input[type='search']:focus {
 .gray {
   color: $light-gray-blue;
   opacity: 0.7;
+}
+.light-gray {
+  color: $light-gray-blue;
+  cursor: pointer;
+}
+.green {
+  color: $dark-green !important;
+  background-color: $white-green;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-weight: bold;
 }
 .default_button {
   padding: 0.5rem 1rem;
@@ -1949,7 +1747,8 @@ input[type='search']:focus {
   flex-direction: row;
   align-items: flex-start;
   padding: 0rem;
-  margin: 0;
+  margin-top: 7vh;
+  overflow: hidden;
   color: $base-gray;
 }
 .slot-icon {
@@ -2084,7 +1883,18 @@ img:hover {
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
+  gap: 24px;
+  margin-left: 16px;
+  letter-spacing: 0.75px;
+  font-size: 14px;
 }
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+}
+
 .drop-row {
   display: flex;
   flex-direction: row;

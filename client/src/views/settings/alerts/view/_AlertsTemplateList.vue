@@ -139,7 +139,7 @@
                 </button>
                 <button class="img-border" @click="editWorkflow(alert)">
                   <img
-                    src="@/assets/images/build.svg"
+                    src="@/assets/images/edit.svg"
                     style="filter: invert(40%)"
                     height="14px"
                     alt=""
@@ -227,46 +227,35 @@
           </div>
         </div>
 
-        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h4>Log Meeting</h4>
-            </div>
+        <div v-if="!zoomChannel" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="added-collection__body">
-            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <div class="row__">
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
+            <div class="card__body__between">
+              <p></p>
               <button @click="goToLogZoom" class="white_button">Activate</button>
             </div>
           </div>
         </div>
-        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
 
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h4>Meeting Recaps</h4>
-            </div>
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="added-collection__body">
-            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <button @click="goToRecap" class="white_button">Activate</button>
+          <div class="card__body">
+            <h4>Meeting Recaps</h4>
+            <small class="card-text"
+              >Recieve alerts that give you insight on your teams meetings.</small
+            >
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToRecap" class="white_button">Activate</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1182,7 +1171,6 @@ a {
   font-size: 12px;
   cursor: pointer;
   text-align: center;
-  font-weight: bold;
 }
 .yellow_button {
   color: $yellow;

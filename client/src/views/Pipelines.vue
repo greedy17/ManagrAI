@@ -6,25 +6,15 @@
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
             <h4>{{ selectedresourceName }} Notes</h4>
-
-            <!-- <p style="margin-left: 4px; color: #c2c4ca">Opp's Name</p> -->
           </div>
-
           <div class="flex-row">
             <img
               @click="resetNotes"
               src="@/assets/images/close.svg"
               height="24px"
               alt=""
-              style="margin-right: 16px; filter: invert(30%)"
+              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
             />
-            <!-- <small class="note-border">Total: {{ notesLength }}</small> -->
-            <!-- <small class="note-border light-green-bg"
-              >Most recent: {{ formatMostRecent(notes[0].submission_date) }} days</small
-            >
-            <small class="note-border"
-              >Oldest: {{ formatMostRecent(notes[notes.length - 1].submission_date) }} days</small
-            > -->
           </div>
         </div>
 
@@ -34,7 +24,6 @@
               <input
                 class="input-field"
                 placeholder="Note Title"
-                autofocus
                 type="text"
                 v-model="noteTitle"
                 @input=";(value = $event.target.value), setUpdateValues('meeting_type', value)"
@@ -68,7 +57,7 @@
                 Insert template
               </span>
 
-              <span @click="goToProfile" class="note-templates__content" v-else>
+              <span @click="goToNotes" class="note-templates__content" v-else>
                 Create a template
                 <img src="@/assets/images/note.svg" style="margin-left: 4px" height="18px" alt=""
               /></span>
@@ -703,7 +692,7 @@
             </div>
           </div>
         </div>
-        <div style="outline: 1px solid red" class="flex-end-opp">
+        <div class="flex-end-opp">
           <div v-if="hasProducts">
             <button
               v-if="!addingProduct"
@@ -755,79 +744,11 @@
             <div
               style="margin-left: -0.5rem; margin-top: -2rem; display: none"
               v-if="field.apiName === 'meeting_type'"
-            >
-              <!-- <span class="input-container">
-               
-                <input
-                  class="input-field"
-                  placeholder="Note Title"
-                  style="width: 40.25vw"
-                  autofocus
-                  id="user-input"
-                  type="text"
-                  v-model="noteTitle"
-                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                />
-              </span> -->
-            </div>
+            ></div>
             <div
-              style="margin-top: -2rem; position: relative; display: none"
+              style="position: relative; display: none"
               v-else-if="field.apiName === 'meeting_comments'"
-            >
-              <!-- <span style="margin-left: 0px; margin-top: -4px" class="input-container">
-              
-                <div
-                  @input="setUpdateValues(field.apiName, $event.target.innerHTML)"
-                  class="divArea"
-                  v-html="noteValue"
-                  contenteditable="true"
-                ></div>
-              </span>
-              <section v-if="!addingTemplate" class="note-templates">
-                <span
-                  v-if="noteTemplates.length"
-                  @click="addingTemplate = !addingTemplate"
-                  class="note-templates__content"
-                >
-                  <img
-                    src="@/assets/images/note.svg"
-                    height="18px"
-                    style="margin-left: 8px; padding-bottom: 2px"
-                    alt=""
-                  />
-                </span>
-                <span class="note-templates__content" v-if="noteTemplates.length">
-                  <img
-                    src="@/assets/images/expand.svg"
-                    height="16px"
-                    style="margin-left: 14px; padding-bottom: 1px"
-                    alt=""
-                  />
-                </span>
-                <span @click="goToProfile" class="note-templates__content" v-else>
-                  Create a template <img src="@/assets/images/note.svg" height="18px" alt=""
-                /></span>
-              </section>
-
-              <section class="note-templates2" v-else>
-                <div
-                  v-for="(template, i) in noteTemplates"
-                  :key="i"
-                  @click="setTemplate(template.body, field.apiName, template.subject)"
-                  class="note-templates2__content"
-                >
-                  {{ template.subject }}
-                </div>
-              </section>
-
-              <div
-                v-if="addingTemplate"
-                @click="addingTemplate = !addingTemplate"
-                class="close-template"
-              >
-                <img src="@/assets/images/close.svg" height="20px" alt="" />
-              </div> -->
-            </div>
+            ></div>
             <div
               v-else-if="
                 field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -1643,8 +1564,11 @@
       <section style="margin-top: -10px" class="flex-row-spread">
         <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
           <small class="pipeline-header">View:</small>
-          <button @click.stop="showList = !showList" class="text-button">
+          <button @click.stop="showList = !showList" class="text-button" style="cursor: pointer">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
+            <span style="margin-left: 2px" class="green">{{
+              selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length
+            }}</span>
 
             <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
           </button>
@@ -1664,12 +1588,9 @@
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button @click="allOpportunities" class="list-button">
                 All Opportunities
-                <span
-                  class="filter"
-                  v-if="currentList === 'All Opportunities' && !currentWorkflowName"
-                >
-                  active</span
-                >
+                <span class="green">
+                  {{ allOpps.length }}
+                </span>
               </button>
             </router-link>
             <!-- <button v-if="!selectedWorkflow" @click="closeDatesThisMonth" class="list-button">
@@ -2612,7 +2533,6 @@ export default {
       productRefCopy: {},
       pricebookId: null,
       noteTitle: null,
-      noteTemplates: null,
       noteValue: null,
       addingTemplate: false,
       countSets: 0,
@@ -2630,13 +2550,11 @@ export default {
       currentProducts: [],
       createProductForm: null,
       addingProduct: false,
-      originalOppTotal: null,
       hasNextOriginal: null,
       integrationId: null,
       hasNext: false,
       hasPrev: false,
       currentPage: 1,
-      oppTotal: 0,
       notesLength: 0,
       days: {
         0: 'Sunday',
@@ -2800,6 +2718,9 @@ export default {
     pricebooks() {
       return this.$store.state.pricebooks
     },
+    noteTemplates() {
+      return this.$store.state.templates
+    },
     currentCheckList() {
       if (this.primaryCheckList.length > 0) {
         return this.primaryCheckList
@@ -2876,7 +2797,6 @@ export default {
   },
   mounted() {
     this.resourceSync()
-    this.getTemplates()
     this.objectFields.refresh()
   },
   watch: {
@@ -2884,7 +2804,6 @@ export default {
     workflowCheckList: 'closeAll',
     stageGateField: 'stageGateInstance',
     updateOppForm: ['setForms', 'filtersAndOppFields'],
-    // currentCheckList: 'addToForecastList',
     accountSobjectId: 'getInitialAccounts',
     dropdownValue: {
       handler(val) {
@@ -2934,14 +2853,6 @@ export default {
       this.productName = name
       this.currentSelectedProduct = secondaryData
     },
-    async getTemplates() {
-      try {
-        const res = await User.api.getTemplates()
-        this.noteTemplates = res.results
-      } catch (e) {
-        console.log(e)
-      }
-    },
     setTemplate(val, field, title) {
       this.noteTitle = title
       this.addingTemplate = false
@@ -2953,8 +2864,8 @@ export default {
       this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
     },
-    goToProfile() {
-      this.$router.push({ name: 'InviteUsers' })
+    goToNotes() {
+      this.$router.push({ name: 'Notes' })
     },
     async loadMore() {
       if (!this.savedPricebookEntryId) {
@@ -3405,7 +3316,7 @@ export default {
         this.updateOpps()
         this.currentPage = 1
         this.hasNext = this.hasNextOriginal
-        this.oppTotal = this.originalOppTotal
+
         console.log(this.activeFilters, 'SHOW ME THE MONEY!')
       }
       this.filterSelected = false
@@ -4600,7 +4511,7 @@ export default {
         ['LESS_THAN', 'CloseDate', endOfMonth],
       ])
       this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
-      this.oppTotal = this.allOpps.length
+
       this.currentList = 'Closing this month'
       this.showList = false
       this.workList = false
@@ -4613,7 +4524,7 @@ export default {
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
       this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
-      this.oppTotal = this.allOpps.length
+
       this.currentList = 'Closing this month'
     },
     closeDatesNextMonth() {
@@ -4644,7 +4555,7 @@ export default {
         ['LESS_THAN', 'CloseDate', endOfMonth],
       ])
       this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
-      this.oppTotal = this.allOpps.length
+
       this.currentList = 'Closing next month'
       this.showList = false
       this.closeFilterSelection()
@@ -4656,13 +4567,10 @@ export default {
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
       this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
-      this.oppTotal = this.allOpps.length
+
       this.currentList = 'Closing next month'
     },
     allOpportunities() {
-      // this.currentPage = 1
-      // this.oppTotal = this.originalOppTotal
-      // this.hasNext = this.hasNextOriginal
       this.selectedWorkflow = false
       this.$store.dispatch('loadAllOpps')
       this.currentList = 'All Opportunities'
@@ -4908,9 +4816,6 @@ export default {
   position: relative;
   display: inline-block;
   margin: 10px;
-  @include epic-sides() {
-    background: inherit;
-  }
 }
 
 .basic-slide {
@@ -5574,29 +5479,28 @@ h3 {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.25rem;
-  padding: 0.5rem;
-  overflow-y: auto;
+  padding: 8px;
+  overflow-y: scroll;
   overflow-x: hidden;
   max-height: 70vh;
-
   margin-bottom: 8px;
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
   div {
-    margin-right: -1.25rem;
+    // margin-right: -1.25rem;
   }
 }
 .note-container {
   height: 60vh;
-  overflow: scroll !important;
+  overflow-y: scroll;
   width: 80vw;
   padding: 0px 16px 8px 8px;
   margin: 0;
 }
 .note-container::-webkit-scrollbar {
-  width: 6px; /* Mostly for vertical scrollbars */
-  height: 0px; /* Mostly for horizontal scrollbars */
+  width: 6px;
+  height: 0px;
 }
 .note-container::-webkit-scrollbar-thumb {
   background-color: $very-light-gray;
@@ -5618,7 +5522,6 @@ h3 {
   font-family: $base-font-family;
   &__title {
     font-size: 19px;
-    // letter-spacing: 0.75px;
     color: $base-gray;
     padding: 0;
   }
@@ -5752,7 +5655,7 @@ section {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  justify-content: flex-start !important;
+  justify-content: flex-start;
 }
 .pipelines {
   padding: 28px 0px 0px 72px;
