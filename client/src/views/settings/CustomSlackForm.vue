@@ -17,7 +17,9 @@
         <p @click="changeToAccount" :class="newResource == 'Account' ? 'green' : ''">Account</p>
         <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
         <p @click="changeToLead" :class="newResource == 'Lead' ? 'green' : ''">Lead</p>
-        <p>Products</p>
+        <p @click="changeToProducts" :class="newResource == 'OpportunityLineItem' ? 'green' : ''">
+          Products
+        </p>
       </section>
       <button @click="onSave" class="save">Save Form</button>
     </div>
@@ -914,6 +916,13 @@ export default {
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
+      )
+    },
+    changeToProducts() {
+      this.newResource = 'OpportunityLineItem'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.OPPORTUNITYLINEITEM && f.formType == this.UPDATE,
       )
     },
     changeToStage(stage = '') {
