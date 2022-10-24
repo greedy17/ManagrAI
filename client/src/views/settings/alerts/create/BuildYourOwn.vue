@@ -271,7 +271,12 @@
           <div class="flex-end">
             <button
               class="white_button"
-              :disabled="!(alertTemplateForm.field.alertGroups.groups.length < 3 && validateAlertOperands(alertTemplateForm.field.alertGroups.groups))"
+              :disabled="
+                !(
+                  alertTemplateForm.field.alertGroups.groups.length < 3 &&
+                  validateAlertOperands(alertTemplateForm.field.alertGroups.groups)
+                )
+              "
               @click="onAddAlertGroup(), scrollToElement()"
             >
               Add group
@@ -478,8 +483,8 @@ export default {
     oldAlert: {},
   },
   methods: {
-    test() {
-      console.log(this.alertTemplateForm.isValid)
+    checkForChannel() {
+      !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
     },
     validateAlertOperands(operands) {
       for (let i = 0; i < operands.length; i++) {
@@ -890,6 +895,11 @@ export default {
     },
   },
   computed: {
+    hasRecapChannel() {
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
+    },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
         return [
@@ -935,10 +945,7 @@ export default {
     },
   },
   mounted() {
-    this.setDefaultChannel()
-    // this.updatedAlert.groupsRef
-
-    // this.setOldAlertValues()
+    this.checkForChannel()
   },
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
