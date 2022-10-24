@@ -160,6 +160,7 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "data_type",
             "display_value",
             "label",
+            "length",
             "reference",
             "reference_to_infos",
             "relationship_name",

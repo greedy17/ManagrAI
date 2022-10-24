@@ -307,6 +307,7 @@ class HubspotAuthAccountAdapter:
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
         data = hubspot_consts.HUBSPOT_SEARCH_BODY(resource_fields, add_filters, limit)
+        print(data)
         logger.info(f"{url} was sent")
         with Client as client:
             res = client.post(
@@ -435,6 +436,14 @@ class CompanyAdapter:
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
     )
+
+    @property
+    def internal_user(self):
+        try:
+            user = User.objects.get(id=self.owner)
+        except User.DoesNotExist:
+            user = None
+        return user
 
     @staticmethod
     def reverse_integration_mapping():
@@ -635,6 +644,14 @@ class HubspotContactAdapter:
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
     )
+
+    @property
+    def internal_user(self):
+        try:
+            user = User.objects.get(id=self.owner)
+        except User.DoesNotExist:
+            user = None
+        return user
 
     @staticmethod
     def reverse_integration_mapping():

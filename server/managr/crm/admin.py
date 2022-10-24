@@ -10,6 +10,7 @@ class CustomObjectField(admin.ModelAdmin):
         "crm_object",
         "data_type",
     )
+    search_fields = ("label",)
 
 
 class CustomBaseOpportunity(admin.ModelAdmin):

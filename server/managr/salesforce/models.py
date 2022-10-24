@@ -688,8 +688,10 @@ class MeetingWorkflow(SFSyncOperation):
 
     @property
     def resource(self):
-        from managr.salesforce.routes import routes
+        from managr.salesforce.routes import routes as sf_routes
+        from managr.hubspot.routes import routes as hs_routes
 
+        routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
         model_route = routes.get(self.resource_type, None)
         if model_route and self.resource_id:
             return model_route["model"].objects.get(id=self.resource_id)
@@ -734,6 +736,7 @@ class MeetingWorkflow(SFSyncOperation):
             _kick_off_slack_interaction,
         )
 
+        print(self.resource)
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
             self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
 

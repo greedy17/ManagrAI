@@ -384,7 +384,7 @@ def initial_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     # check the resource attached to this meeting
     resource = workflow.resource
-
+    print(context)
     # If else meeting if has attribute workflow, meeting or else workflow.meeting
     meeting = workflow.meeting
     user_timezone = workflow.user.timezone
@@ -584,21 +584,23 @@ def meeting_review_modal_block_set(context):
 @block_set(required_context=["w"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
     """This interaction updates the message to show a drop down of resources"""
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     type = context.get("type", None)
     action = (
         f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}&type={type}"
         if type
         else f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}"
     )
+    options = (
+        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS
+        if workflow.user.crm == "Salesforce"
+        else slack_const.MEETING_RESOURCE_HUBSPOT_ATTACHMENT_OPTIONS
+    )
+    resource = "Opportunity" if workflow.user.crm == "Salesforce" else "Deal"
     blocks = [
         block_builders.static_select(
-            ":information_source: Select an Opportunity",
-            [
-                *map(
-                    lambda resource: block_builders.option(resource, resource),
-                    slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
-                )
-            ],
+            f":information_source: Select a CRM record type",
+            [*map(lambda resource: block_builders.option(resource, resource), options,)],
             action_id=action,
             block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
         ),

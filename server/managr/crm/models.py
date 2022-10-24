@@ -105,7 +105,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         blank=True,
         null=True,
     )
-    contacts = models.ManyToManyField("BaseContact", related_name="contacts", blank=True)
+    contacts = models.ManyToManyField("BaseContact", related_name="opportunities", blank=True)
     external_account = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
     )
@@ -254,6 +254,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
     label = models.CharField(max_length=255)
     reference = models.BooleanField(default=False)
     relationship_name = models.CharField(max_length=255, null=True)
+    length = models.PositiveIntegerField(default=0)
     reference_to_infos = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,

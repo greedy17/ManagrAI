@@ -250,7 +250,7 @@ def init_fake_meeting(request):
                 }
             )
         meeting_resource = command_params[0]
-
+    print(meeting_resource)
     meeting_uuid = (
         user.zoom_account.fake_meeting_id
         if user.zoom_account.fake_meeting_id
