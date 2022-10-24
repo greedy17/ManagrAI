@@ -1,6 +1,6 @@
 <template>
   <div class="alerts">
-    <div v-if="!isOnboarding" class="header">
+    <div class="header">
       <div>
         <h3 v-if="!buildingCustom && !editingWorkflow" class="left-margin">Workflows</h3>
         <h3 @click="closeBuilder" v-else-if="buildingCustom" class="left-margin-s centered">
@@ -57,21 +57,19 @@
       </div>
     </div>
 
-    <div class="onboarding-header" v-else>
+    <!-- <div class="onboarding-header" v-else>
       <div>
         <h3 class="left-margin">Getting started</h3>
       </div>
 
-      <!-- <div>
-        <p>progress bar</p>
-      </div> -->
+   
 
       <div style="margin-right: 16px">
         <button @click="onboardComplete" :disabled="!hasZoomChannel" class="primary-button">
           Complete
         </button>
       </div>
-    </div>
+    </div> -->
 
     <div v-if="buildingCustom && !editingWorkflow">
       <BuildYourOwn ref="workflowBuilder" @can-save="setCanSave" />

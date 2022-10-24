@@ -1,13 +1,6 @@
 <template>
   <div class="slack-form-builder">
-    <Modal
-      v-if="modalOpen"
-      @close-modal="
-        () => {
-          $emit('cancel'), closeModal()
-        }
-      "
-    >
+    <Modal v-if="modalOpen">
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
@@ -17,10 +10,10 @@
         </div>
         <section class="modal-buttons">
           <div class="">
-            <button @click="modalSave" class="save">Save</button>
+            <button @click="closeModal" class="cancel">Discard</button>
           </div>
           <div class="">
-            <button @click="closeModal" class="cancel">Discard Changes</button>
+            <button @click="modalSave" class="save">Save</button>
           </div>
         </section>
       </div>
@@ -42,7 +35,9 @@
         <p @click="changeToAccount" :class="newResource == 'Account' ? 'green' : ''">Account</p>
         <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
         <p @click="changeToLead" :class="newResource == 'Lead' ? 'green' : ''">Lead</p>
-        <p>Products</p>
+        <p @click="changeToProducts" :class="newResource == 'OpportunityLineItem' ? 'green' : ''">
+          Products
+        </p>
       </section>
       <button @click="onSave" class="save">Save Form</button>
     </div>
@@ -50,7 +45,7 @@
     <section class="wrapper">
       <div v-if="newFormType !== 'STAGE_GATING'" class="tab-content">
         <section>
-          <div class="tab-content__div">
+          <div v-if="newResource !== 'OpportunityLineItem'" class="tab-content__div">
             <div class="row">
               <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
               <ToggleCheckBox
@@ -62,6 +57,9 @@
               />
               <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
             </div>
+          </div>
+          <div v-else class="tab-content__div">
+            <label class="gray">Create</label>
           </div>
           <div id="formSection">
             <draggable
@@ -953,6 +951,13 @@ export default {
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
       )
     },
+    changeToProducts() {
+      this.newResource = 'OpportunityLineItem'
+      this.newFormType = 'CREATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.OPPORTUNITYLINEITEM && f.formType == this.CREATE,
+      )
+    },
     changeToStage(stage = '') {
       this.newResource = 'Opportunity'
       this.newFormType = 'STAGE_GATING'
@@ -971,9 +976,7 @@ export default {
     changeToLead() {
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.LEAD && f.formType == this.UPDATE,
-      )
+      this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
     },
     switchFormType() {
       if (this.formChange) {
@@ -1094,7 +1097,7 @@ export default {
         return field.id
       })
 
-      if (this.newFormType == 'UPDATE') {
+      if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
         if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
           let fieldsToAdd = [this.noteTitle, this.noteSubject]
           let copyArray = this.addedFields
@@ -1124,7 +1127,7 @@ export default {
           })
           setTimeout(() => {
             this.$router.go()
-          }, 400)
+          }, 300)
         })
         .finally(() => {
           this.savingForm = false
@@ -1930,15 +1933,21 @@ img:hover {
   top: 0;
   padding: 0px 6px 8px -2px;
 }
-.border-bottom {
-  border-bottom: 1.25px solid $soft-gray;
-}
+// .border-bottom {
+//   border-bottom: 1.25px solid $soft-gray;
+// }
 .flex-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   padding-top: 8px;
   padding-bottom: 0;
+  letter-spacing: 0.75px;
+  color: $base-gray;
+
+  h4 {
+    font-weight: 400;
+  }
 }
 .logo {
   height: 1.75rem;
@@ -1948,7 +1957,7 @@ img:hover {
 }
 .modal-buttons {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   margin-top: 3rem;
   div {
     margin-left: 0.5rem;

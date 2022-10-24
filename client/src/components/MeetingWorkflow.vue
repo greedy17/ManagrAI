@@ -414,7 +414,7 @@
       </div>
 
       <div class="cards__header__div" v-else>
-        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM Record</button>
+        <button @click="addingOpp = !addingOpp" class="white-button">Link to CRM Record</button>
       </div>
 
       <div v-if="addingOpp" class="add-field-section">
@@ -992,7 +992,6 @@ a {
   transition: all 0.3s;
   font-size: 12px;
   letter-spacing: 0.75px;
-  font-weight: bold;
 }
 .add-button {
   border: none;
@@ -1071,6 +1070,7 @@ a {
 }
 .red-text {
   color: $coral !important;
+  font-weight: 400;
   background-color: $light-coral;
   padding: 8px !important;
   border-radius: 8px;

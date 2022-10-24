@@ -4488,7 +4488,7 @@ export default {
       this.selectedWorkflow = false
       const today = new Date(Date.now())
       const todaySplit = today.toLocaleDateString().split('/')
-      const todayYear  = Number(todaySplit[2])
+      const todayYear = Number(todaySplit[2])
       const todayMonth = Number(todaySplit[0])
       let nextMonth
       let nextYear
@@ -4532,7 +4532,7 @@ export default {
       this.selectedWorkflow = false
       const today = new Date(Date.now())
       const todaySplit = today.toLocaleDateString().split('/')
-      const nextMonthYear  = Number(todaySplit[2])
+      const nextMonthYear = Number(todaySplit[2])
       const nextMonthMonth = Number(todaySplit[0]) + 1
       let nextNextMonth
       let nextYear
