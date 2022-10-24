@@ -388,7 +388,6 @@ export default {
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
-
       alertTemplateForm: new AlertTemplateForm(),
       fields: CollectionManager.create({ ModelClass: SObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -481,6 +480,9 @@ export default {
     directToUsers: 'setDefaultChannel',
   },
   methods: {
+    checkForChannel() {
+      !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
+    },
     repsPipeline() {
       if (this.userLevel !== 'MANAGER') {
         this.config.newConfigs[0].alertTargets = ['SELF']
@@ -497,6 +499,8 @@ export default {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
         : (this.config.newConfigs[0].recipients = null)
+
+      console.log(this.directToUsers)
     },
     verifySubmit() {
       if (this.largeOpps) {
@@ -765,6 +769,11 @@ export default {
   },
 
   computed: {
+    hasRecapChannel() {
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
+        : null
+    },
     userLevel() {
       return this.$store.state.user.userLevel
     },
@@ -799,8 +808,8 @@ export default {
     },
   },
   mounted() {
-    this.setDefaultChannel()
     this.repsPipeline()
+    this.checkForChannel()
   },
   beforeMount() {},
 }
