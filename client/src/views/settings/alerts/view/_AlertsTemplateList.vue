@@ -99,7 +99,7 @@
       </div>
     </Modal>
 
-    <template v-if="!templates.refreshing && !isOnboarding">
+    <template v-if="!templates.refreshing">
       <!-- <transition name="fade">
       </transition> -->
 
@@ -263,9 +263,9 @@
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <div v-else-if="isOnboarding">
+    <!-- <div v-else-if="isOnboarding">
       <Onboarder />
-    </div>
+    </div> -->
 
     <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />

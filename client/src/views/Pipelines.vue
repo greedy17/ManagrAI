@@ -1593,6 +1593,24 @@
                 </span>
               </button>
             </router-link>
+            <!-- <button v-if="!selectedWorkflow" @click="closeDatesThisMonth" class="list-button">
+              Closing this month
+              <span
+                class="filter"
+                v-if="currentList === 'Closing this month' && !currentWorkflowName"
+              >
+                active</span
+              >
+            </button> -->
+            <!-- <button v-if="!selectedWorkflow" @click="closeDatesNextMonth" class="list-button">
+              Closing next month
+              <span
+                class="filter"
+                v-if="currentList === 'Closing next month' && !currentWorkflowName"
+              >
+                active</span
+              >
+            </button> -->
             <button
               @click="goToWorkflow(template.id)"
               class="list-button"
@@ -3155,6 +3173,7 @@ export default {
       this.workList = false
     },
     async getFilteredObjects(value) {
+      console.log('1 2 3', this.operatorValue, this.filterApiName, value)
       this.loadingWorkflows = true
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
@@ -3252,6 +3271,7 @@ export default {
       }
     },
     applyFilter(value) {
+      console.log('value', value)
       this.updateFilterValue = value
       this.operatorsLength += 1
       this.getFilteredObjects(value)
@@ -3272,6 +3292,7 @@ export default {
       }
     },
     selectFilter(name, type, label) {
+      console.log('name type label', name, type, label)
       this.filtering = !this.filtering
       this.filterApiName = name
       this.filterType = type
@@ -4464,11 +4485,31 @@ export default {
     },
     closeDatesThisMonth() {
       this.currentPage = 1
-      this.allOpps = this.originalList
       this.selectedWorkflow = false
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
-      )
+      const today = new Date(Date.now())
+      const todaySplit = today.toLocaleDateString().split('/')
+      const todayYear = Number(todaySplit[2])
+      const todayMonth = Number(todaySplit[0])
+      let nextMonth
+      let nextYear
+      if (todayMonth === 12) {
+        nextMonth = 1
+        nextYear = todayYear + 1
+      } else {
+        nextMonth = todayMonth + 1
+      }
+      const beginningOfMonth = `${todayYear}-${todayMonth}-01`
+      let endOfMonth
+      if (nextYear) {
+        endOfMonth = `${nextYear}-${nextMonth}-01`
+      } else {
+        endOfMonth = `${todayYear}-${nextMonth}-01`
+      }
+      this.$store.dispatch('loadAllOpps', [
+        ...this.filters,
+        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+        ['LESS_THAN', 'CloseDate', endOfMonth],
+      ])
       this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing this month'
@@ -4488,11 +4529,31 @@ export default {
     },
     closeDatesNextMonth() {
       this.currentPage = 1
-      this.allOpps = this.originalList
       this.selectedWorkflow = false
-      this.allOpps = this.allOpps.filter(
-        (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
-      )
+      const today = new Date(Date.now())
+      const todaySplit = today.toLocaleDateString().split('/')
+      const nextMonthYear = Number(todaySplit[2])
+      const nextMonthMonth = Number(todaySplit[0]) + 1
+      let nextNextMonth
+      let nextYear
+      if (nextMonthMonth >= 12) {
+        nextNextMonth = nextMonthMonth - 11
+        nextYear = nextMonthYear + 1
+      } else {
+        nextNextMonth = nextMonthMonth + 1
+      }
+      const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
+      let endOfMonth
+      if (nextYear) {
+        endOfMonth = `${nextYear}-${nextNextMonth}-01`
+      } else {
+        endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
+      }
+      this.$store.dispatch('loadAllOpps', [
+        ...this.filters,
+        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+        ['LESS_THAN', 'CloseDate', endOfMonth],
+      ])
       this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing next month'

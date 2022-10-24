@@ -396,18 +396,39 @@ export default {
   },
   watch: {
     identity: function () {
-      this.form.field.operandIdentifier.value = this.identity.apiName
-      this.form.field._operandIdentifier.value = this.objectFields.list.filter(
-        (item) => item.apiName === this.identity.apiName,
-      )[0]
+      if (this.identity) {
+        this.form.field.operandIdentifier.value = this.identity.apiName
+        this.form.field._operandIdentifier.value = this.objectFields.list.filter(
+          (item) => item.apiName === this.identity.apiName,
+        )[0]
+        this.selectedOperator = null
+        this.selectedOperand = null
+        this.form.field.operandValue.value = null
+      } else {
+        this.form.field.operandIdentifier.value = null
+        this.form.field._operandIdentifier.value = null
+        this.selectedOperator = null
+        this.selectedOperand = null
+        this.form.field.operandValue.value = null
+      }
     },
     selectedOperator: function () {
-      this.form.field.operandOperator.value = this.selectedOperator.value
-      this.form.field._operandOperator.value = this.selectedOperator
+      if (this.selectedOperator) {
+        this.form.field.operandOperator.value = this.selectedOperator.value
+        this.form.field._operandOperator.value = this.selectedOperator
+      } else {
+        this.form.field.operandOperator.value = null
+        this.form.field._operandOperator.value = ''
+      }
     },
     selectedOperand: function () {
-      this.form.field._operandValue.value = this.selectedOperand
-      this.form.field.operandValue.value = this.selectedOperand.value
+      if (this.selectedOperand) {
+        this.form.field._operandValue.value = this.selectedOperand
+        this.form.field.operandValue.value = this.selectedOperand.value
+      } else {
+        this.form.field._operandValue.value = null
+        this.form.field.operandValue.value = null
+      }
     },
     selectedFieldRef: {
       immediate: true,

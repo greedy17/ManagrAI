@@ -36,7 +36,8 @@
         <div
           v-if="
             form.field.alertOperands.groups.length === i + 1 &&
-            form.field.alertOperands.groups.length < 3
+            form.field.alertOperands.groups.length < 3 &&
+            validateAlertOperands(form.field.alertOperands.groups)
           "
           class="column"
         >
@@ -46,7 +47,8 @@
           <span
             v-if="
               form.field.alertOperands.groups.length === i + 1 &&
-              form.field.alertOperands.groups.length < 3
+              form.field.alertOperands.groups.length < 3 &&
+              validateAlertOperands(form.field.alertOperands.groups)
             "
             class="plus_button"
             @click="emitAddOperandForm"
@@ -103,6 +105,9 @@ export default {
   },
   async created() {},
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
         ? (this.selectedCondition = 'OR')
@@ -123,6 +128,20 @@ export default {
       this.form.addToArray('alertOperands', new AlertOperandForm())
       this.form.field.alertOperands.groups[order].field.operandOrder.value = order
       this.$emit('scroll-to-view')
+    },
+    validateAlertOperands(operands) {
+      for (let i = 0; i < operands.length; i++) {
+        if (!operands[i].field.operandIdentifier.isValid) {
+            return false
+          }
+          if (!operands[i].field.operandOperator.isValid) {
+            return false
+          }
+        if (!operands[i].field.operandValue.isValid) {
+          return false
+        }
+      }
+      return true
     },
     onRemoveOperand(i) {
       if (this.form.field.alertOperands.groups.length - 1 <= 0) {

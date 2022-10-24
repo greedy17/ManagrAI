@@ -1,5 +1,23 @@
 <template>
   <div class="slack-form-builder">
+    <Modal v-if="modalOpen">
+      <div class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img src="@/assets/images/warning.svg" class="logo" alt="" />
+            <h4>Switching forms. Changes wont be saved!</h4>
+          </div>
+        </div>
+        <section class="modal-buttons">
+          <div class="">
+            <button @click="closeModal" class="cancel">Discard</button>
+          </div>
+          <div class="">
+            <button @click="modalSave" class="save">Save</button>
+          </div>
+        </section>
+      </div>
+    </Modal>
     <div class="alerts-header">
       <section class="row__ light-gray">
         <p
@@ -218,6 +236,7 @@ export default {
     PulseLoadingSpinnerButton,
     draggable,
     ToggleCheckBox,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
@@ -316,6 +335,8 @@ export default {
       addingFields: false,
       productSelected: false,
       addingProducts: false,
+      modalOpen: false,
+      formChange: false,
       formStages: [],
       stages: [],
       noteTitle: {
@@ -807,6 +828,15 @@ export default {
         this.allForms = [...forms]
       }
     },
+    closeModal() {
+      this.modalOpen = false
+      this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
+
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.newResource && f.formType == this.newFormType,
+      )
+      this.formChange = false
+    },
     setNewForm() {
       this.addForm(this.selectedStage)
       this.addingForm = false
@@ -949,11 +979,20 @@ export default {
       this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
     },
     switchFormType() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        return
+      }
       this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
 
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.newResource && f.formType == this.newFormType,
       )
+    },
+    modalSave() {
+      this.onSave()
+      this.formChange = false
+      this.switchFormType()
     },
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
@@ -999,6 +1038,7 @@ export default {
       }
     },
     onAddField(field) {
+      this.formChange = true
       if (this.addedFieldIds.includes(field.id)) {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
@@ -1030,6 +1070,7 @@ export default {
       if (~this.currentFields.findIndex((f) => f == field.id)) {
         this.removedFields = [this.removedFields, field]
       }
+      this.formChange = true
     },
     async onSave() {
       if (!this.newCustomForm) {
@@ -1086,7 +1127,7 @@ export default {
           })
           setTimeout(() => {
             this.$router.go()
-          }, 400)
+          }, 300)
         })
         .finally(() => {
           this.savingForm = false
@@ -1207,7 +1248,7 @@ export default {
 .save--button {
   position: absolute;
   right: 40vw;
-  z-index: 1000;
+  z-index: 15;
   top: 4vh;
 }
 .delete {
@@ -1862,5 +1903,76 @@ img:hover {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  min-width: 36vw;
+  max-width: 36vw;
+  min-height: 20vh;
+  max-height: 80vh;
+  align-items: center;
+  border-radius: 0.5rem;
+  // border: 1px solid #e8e8e8;
+  z-index: 20;
+}
+.rel {
+  position: relative;
+}
+.flex-row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.sticky {
+  position: sticky;
+  background-color: white;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: 0px 6px 8px -2px;
+}
+// .border-bottom {
+//   border-bottom: 1.25px solid $soft-gray;
+// }
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 8px;
+  padding-bottom: 0;
+  letter-spacing: 0.75px;
+  color: $base-gray;
+
+  h4 {
+    font-weight: 400;
+  }
+}
+.logo {
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  margin-right: 0.25rem;
+  filter: invert(40%);
+}
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 3rem;
+  div {
+    margin-left: 0.5rem;
+  }
+}
+.cancel {
+  border: 1px solid $soft-gray;
+  font-weight: 400 !important;
+  letter-spacing: 1px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  color: $coral !important;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <nav id="nav" v-if="userIsLoggedIn && !isOnboarding">
+    <nav id="nav" v-if="userIsLoggedIn">
       <router-link :to="{ name: 'Pipelines' }">
         <div class="logo">
           <img style="height: 40px" src="@/assets/images/logo.png" />
