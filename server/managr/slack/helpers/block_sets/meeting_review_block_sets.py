@@ -39,7 +39,7 @@ def generate_edit_contact_form(field, id, value, optional=True):
     return block_builders.input_block(field, block_id=id, initial_value=value, optional=optional)
 
 
-def generate_contact_group(index, contact, instance_url):
+def generate_contact_group(index, contact, instance_url, crm):
     # get fields from form and display values based on this form as label value in multi block
     integration_id = contact.get("integration_id")
     # get fields show only these items if they exist in the secondary data as options
@@ -84,8 +84,8 @@ def generate_contact_group(index, contact, instance_url):
         # url button to show in sf
         blocks["accessory"] = {
             "type": "button",
-            "text": {"type": "plain_text", "text": "View In Salesforce"},
-            "value": "View In Salesforce",
+            "text": {"type": "plain_text", "text": f"View In {crm}"},
+            "value": f"View In {crm}",
             "url": sf_consts.SALESFORCE_CONTACT_VIEW_URI(instance_url, integration_id),
             "action_id": f"button-action-{integration_id}",
         }
@@ -156,23 +156,23 @@ def meeting_contacts_block_set(context):
         block_sets = []
         workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
         contacts = workflow.participants
-        sf_account = workflow.user.salesforce_account
+        crm_account = workflow.user.crm_account
     else:
         block_sets = []
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting
         contacts = meeting.participants
-        sf_account = workflow.user.salesforce_account
+        crm_account = workflow.user.crm_account
     # list contacts we already had from sf
-    contacts_in_sf = list(filter(lambda contact: contact["integration_id"], contacts))
+    contacts_in_crm = list(filter(lambda contact: contact["integration_id"], contacts))
 
-    contacts_not_in_sf = list(
+    contacts_not_in_crm = list(
         filter(lambda contact: contact.get("integration_id", None) in [None, ""], contacts,)
     )
 
-    if len(contacts_not_in_sf):
+    if len(contacts_not_in_crm):
         block_sets.extend(
-            [block_builders.simple_section("Contacts below are not in salesforce")]
+            [block_builders.simple_section(f"Contacts below are not in {workflow.user.crm}")]
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
@@ -181,7 +181,7 @@ def meeting_contacts_block_set(context):
             ]
         )
 
-    for i, contact in enumerate(contacts_not_in_sf):
+    for i, contact in enumerate(contacts_not_in_crm):
         workflow_id_param = f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         params = (
@@ -189,7 +189,9 @@ def meeting_contacts_block_set(context):
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )
-        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        block_sets.append(
+            generate_contact_group(i, contact, crm_account.instance_url, workflow.user.crm)
+        )
         # pass meeting id and contact index
         if type:
             if type != "prep":
@@ -236,7 +238,7 @@ def meeting_contacts_block_set(context):
                 }
             )
 
-    if len(contacts_in_sf):
+    if len(contacts_in_crm):
         block_sets.extend(
             [
                 block_builders.simple_section(
@@ -245,7 +247,7 @@ def meeting_contacts_block_set(context):
             ]
         )
 
-    for i, contact in enumerate(contacts_in_sf):
+    for i, contact in enumerate(contacts_in_crm):
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         workflow_id_param = f"w={str(workflow.id)}"
         params = (
@@ -253,7 +255,9 @@ def meeting_contacts_block_set(context):
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )
-        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        block_sets.append(
+            generate_contact_group(i, contact, crm_account.instance_url, workflow.user.crm)
+        )
         # pass meeting id and contact index
         if type:
             if type != "prep":

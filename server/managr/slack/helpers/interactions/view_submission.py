@@ -191,41 +191,42 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
         # save meeting data
     ]
-    for form in contact_forms:
-        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
-            ops.append(
-                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-            )
-        else:
-            ops.append(
-                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-            )
+    # for form in contact_forms:
+    #     if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+    #         ops.append(
+    #             f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+    #         )
+    #     else:
+    #         ops.append(
+    #             f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+    #         )
 
     # emit all events
-    if len(workflow.operations_list):
-        workflow.operations_list = [*workflow.operations_list, *ops]
-    else:
-        workflow.operations_list = ops
-
-    ts, channel = workflow.slack_interaction.split("|")
-    block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
-    ]
-    if len(user.slack_integration.realtime_alert_configs):
-        _send_instant_alert(current_form_ids)
-    try:
-        res = slack_requests.update_channel_message(
-            channel, ts, slack_access_token, block_set=block_set
-        )
-    except Exception as e:
-        logger.exception(
-            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-        return {"response_action": "clear"}
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    # if len(workflow.operations_list):
+    #     workflow.operations_list = [*workflow.operations_list, *ops]
+    # else:
+    #     workflow.operations_list = ops
+    workflow.operations_list = ops
+    print(workflow.operations_list)
+    # ts, channel = workflow.slack_interaction.split("|")
+    # block_set = [
+    #     *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+    # ]
+    # if len(user.slack_integration.realtime_alert_configs):
+    #     _send_instant_alert(current_form_ids)
+    # try:
+    #     res = slack_requests.update_channel_message(
+    #         channel, ts, slack_access_token, block_set=block_set
+    #     )
+    # except Exception as e:
+    #     logger.exception(
+    #         f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+    #     )
+    #     return {"response_action": "clear"}
+    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
-    emit_meeting_workflow_tracker(str(workflow.id))
+    # emit_meeting_workflow_tracker(str(workflow.id))
     update_view = {
         "view_id": loading_res["view"]["id"],
         "view": {

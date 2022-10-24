@@ -328,7 +328,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                                     **dict(
                                         email=participant["user_email"],
                                         # these will only get stored if lastname and firstname are accessible from sf
-                                        external_owner=user.salesforce_account.salesforce_id,
+                                        external_owner=user.crm_account.crm_id,
                                         secondary_data={
                                             "FirstName": _split_first_name(participant["name"]),
                                             "LastName": _split_last_name(participant["name"]),

@@ -29,6 +29,7 @@ from .adapter.exceptions import (
     CannotRetreiveObjectType,
 )
 from . import constants as sf_consts
+from managr.hubspot import constants as hs_consts
 
 logger = logging.getLogger("managr")
 
@@ -706,14 +707,30 @@ class MeetingWorkflow(SFSyncOperation):
             emit_sf_update_resource_from_meeting,
             emit_add_products_to_sf,
         )
+        from managr.hubspot.tasks import (
+            emit_add_call_to_hs,
+            emit_update_hs_contacts,
+            emit_create_new_hs_contacts,
+            emit_hs_update_resource_from_meeting,
+            emit_add_products_to_hs,
+        )
 
-        return {
-            sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
-            sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
-            sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
-            sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
-            sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
-        }
+        if self.user.crm == "SALESFORCE":
+            return {
+                sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
+                sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
+                sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
+                sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
+                sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
+            }
+        else:
+            return {
+                hs_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_hs_update_resource_from_meeting,
+                hs_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_hs_contacts,
+                hs_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_hs_contacts,
+                hs_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_hs,
+                hs_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_hs,
+            }
 
     def begin_tasks(self, attempts=1):
 
@@ -736,7 +753,6 @@ class MeetingWorkflow(SFSyncOperation):
             _kick_off_slack_interaction,
         )
 
-        print(self.resource)
         if self.resource and self.resource != slack_consts.FORM_RESOURCE_LEAD:
             self.add_form(self.resource_type, slack_consts.FORM_TYPE_UPDATE)
 
@@ -899,6 +915,10 @@ class SalesforceAuthAccount(TimeStampModel):
             ).values_list("api_name", flat=True),
         )
         return SalesforceAuthAccountAdapter(**data)
+
+    @property
+    def crm_id(self):
+        return self.salesforce_id
 
     @property
     def resource_sync_opts(self):

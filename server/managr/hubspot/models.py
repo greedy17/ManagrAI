@@ -250,6 +250,14 @@ class HubspotAuthAccount(TimeStampModel):
         )
 
     @property
+    def crm_id(self):
+        return self.hubspot_id
+
+    @property
+    def instance_url(self):
+        return hs_consts.HUBSPOT_INSTANCE_URL
+
+    @property
     def field_sync_opts(self):
         return list(
             map(
@@ -322,6 +330,10 @@ class HubspotAuthAccount(TimeStampModel):
     def get_picklist_values(self, resource):
         values = self.adapter_class.list_picklist_values(resource)
         return values
+
+    def get_deal_stages(self, resource):
+        values = self.adapter_class.list_deal_stages(resource)
+        return values["results"]
 
     def list_resource_data(self, resource, *args, **kwargs):
         attempts = 1

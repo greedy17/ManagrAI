@@ -108,12 +108,40 @@ class HubspotAuthAccountAdapter:
 
         return data
 
+    def list_deal_stages(self, resource):
+        url = hubspot_consts.HUBSPOT_PIPELINE_URI(resource)
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        with Client as client:
+            res = client.get(url, headers=headers,)
+            return self._handle_response(res)
+
+    def associate_objects(
+        self, associate_type, associate_id, to_object, to_object_id, association_id
+    ):
+        url = hubspot_consts.HUBSPOT_ASSOCIATIONS_CREATE_URI(
+            associate_type, associate_id, to_object, to_object_id, association_id
+        )
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        with Client as client:
+            res = client.put(url, headers=headers,)
+            print(res)
+            print(res.json())
+            return self._handle_response(res)
+
     def get_associated_resource(self, resource, associated_resource, resource_id):
         url = hubspot_consts.HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource)
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         data = {"inputs": [{"id": resource_id}]}
         with Client as client:
             res = client.post(url, data=json.dumps(data), headers=headers,)
+            return self._handle_response(res)
+
+    def create_meeting_in_hubspot(self, meeting_data):
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("meetings")
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        send_data = {"properties": meeting_data}
+        with Client as client:
+            res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
     # def format_validation_rules(
