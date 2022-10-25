@@ -13,7 +13,12 @@
           </div>
 
           <div class="card__body">
-            <h3>Salesforce</h3>
+            <h3>
+              Salesforce
+              <span class="required" v-if="!hasSalesforceIntegration">
+                <img src="@/assets/images/required.svg" height="14px" alt=""
+              /></span>
+            </h3>
             <p class="card-text">Sync Accounts, Opportunities, & Contacts</p>
             <div>
               <PulseLoadingSpinnerButton
@@ -30,6 +35,53 @@
                   <img
                     @click="onRevoke('SALESFORCE')"
                     src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header lr-bg" style="padding-left: 36px; padding-right: 36px">
+            <img style="height: 40px" src="@/assets/images/slackLogo.png" />
+          </div>
+
+          <div class="card__body">
+            <h3>
+              Slack
+              <span class="required" v-if="!hasSlackIntegration">
+                <img src="@/assets/images/required.svg" height="14px" alt=""
+              /></span>
+            </h3>
+            <p class="card-text">Interact with Managr through Slack</p>
+            <div>
+              <PulseLoadingSpinnerButton
+                v-if="!hasSlackIntegration"
+                :disabled="
+                  (!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration
+                "
+                @click="onIntegrateSlack"
+                class="orange_button"
+                :text="slackButtonMessage"
+                :loading="generatingToken && selectedIntegration == 'SLACK'"
+              ></PulseLoadingSpinnerButton>
+
+              <div class="row" v-else>
+                <div class="img-border">
+                  <img
+                    @click="onRevoke('SLACK')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+                <div class="img-border">
+                  <img
+                    @click="onGetAuthLink('SLACK')"
+                    src="@/assets/images/refresh.svg"
                     height="16"
                     alt=""
                   />
@@ -62,47 +114,6 @@
                   <img
                     @click="onRevoke('NYLAS')"
                     src="@/assets/images/revoke.svg"
-                    height="16"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card__header lr-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/slackLogo.png" />
-          </div>
-
-          <div class="card__body">
-            <h3>Slack</h3>
-            <p class="card-text">Interact with Managr through Slack</p>
-            <div>
-              <PulseLoadingSpinnerButton
-                v-if="!hasSlackIntegration"
-                :disabled="
-                  (!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration
-                "
-                @click="onIntegrateSlack"
-                class="orange_button"
-                :text="slackButtonMessage"
-                :loading="generatingToken && selectedIntegration == 'SLACK'"
-              ></PulseLoadingSpinnerButton>
-
-              <div class="row" v-else>
-                <div class="img-border">
-                  <img
-                    @click="onRevoke('SLACK')"
-                    src="@/assets/images/revoke.svg"
-                    height="16"
-                    alt=""
-                  />
-                </div>
-                <div class="img-border">
-                  <img
-                    @click="onGetAuthLink('SLACK')"
-                    src="@/assets/images/refresh.svg"
                     height="16"
                     alt=""
                   />
@@ -187,7 +198,7 @@
 
         <div class="card">
           <div class="card__header vlp-bg">
-            <img style="height: 14px" src="@/assets/images/outreach.webp" />
+            <img style="height: 15px" src="@/assets/images/outreach.webp" />
           </div>
 
           <div class="card__body">
@@ -275,7 +286,7 @@
 
         <div class="card">
           <div class="card__header lo-bg">
-            <img style="height: 80px" src="@/assets/images/hubspott.png" />
+            <img style="height: 82px" src="@/assets/images/hubspott.png" />
           </div>
 
           <div class="card__body">
@@ -288,7 +299,7 @@
         </div>
 
         <div class="card">
-          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header lb-bg" style="padding-left: 34px; padding-right: 34px">
             <img style="height: 40px" src="@/assets/images/teamsLogo.png" />
           </div>
 
@@ -351,7 +362,7 @@ export default {
         : ''
       this.generatingToken = true
       this.selectedIntegration = integration
-      console.log(this.selectedIntegration)
+
       let modelClass = this.selectedIntegrationSwitcher
       try {
         const res = await modelClass.api.getAuthLink()
@@ -461,6 +472,9 @@ export default {
   computed: {
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
     },
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
@@ -706,6 +720,11 @@ export default {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+
+.required {
+  filter: invert(50%) sepia(100%) saturate(901%) hue-rotate(323deg) brightness(110%) contrast(96%);
+  margin-left: 4px;
 }
 
 .card-text {

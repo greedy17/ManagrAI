@@ -110,7 +110,7 @@
             <label for="allUsers">Send directly to users</label>
           </div>
 
-          <div v-else>
+          <div class="custom-checkbox" v-else>
             <input type="checkbox" id="allUsers" v-model="directToUsers" />
             <label for="allUsers">Send to primary channel</label>
           </div>

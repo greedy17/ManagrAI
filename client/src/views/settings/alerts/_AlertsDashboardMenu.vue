@@ -49,10 +49,14 @@
         </button>
 
         <div v-else>
-          <button @click="deleteWorkflow(currentAlert.id)" class="delete">
-            Delete
+          <button @click="deleteWorkflow(currentAlert.id)" class="delete">Delete</button>
+          <button
+            @click="updateWorkflow"
+            style="margin-left: 8px"
+            class="green_button right-margin"
+          >
+            Update
           </button>
-          <button @click="updateWorkflow" style="margin-left: 8px" class="green_button right-margin">Update</button>
         </div>
       </div>
     </div>
@@ -153,7 +157,6 @@ export default {
       })
     },
     deleteWorkflow(id) {
-      console.log(id)
       this.$emit('delete-workflow')
     },
     deletedTitle(id) {

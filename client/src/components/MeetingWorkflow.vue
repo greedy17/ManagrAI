@@ -704,7 +704,6 @@ export default {
       }
     },
     setUpdateValues(key, val) {
-      console.log(key, val)
       if (val) {
         this.formData[key] = val
       }
