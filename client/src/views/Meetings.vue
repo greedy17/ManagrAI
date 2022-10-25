@@ -987,7 +987,6 @@ export default {
             stage_form_id: [],
           })
           .then((res) => {
-            console.log(res)
             this.$store.dispatch('loadMeetings')
           })
       } catch (e) {

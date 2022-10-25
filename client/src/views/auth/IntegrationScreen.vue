@@ -362,7 +362,7 @@ export default {
         : ''
       this.generatingToken = true
       this.selectedIntegration = integration
-      console.log(this.selectedIntegration)
+
       let modelClass = this.selectedIntegrationSwitcher
       try {
         const res = await modelClass.api.getAuthLink()

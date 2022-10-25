@@ -889,9 +889,7 @@ export default {
     }
   },
   methods: {
-    test(log) {
-      console.log('log', log)
-    },
+    test(log) {},
     goToProfile() {
       this.$emit('go-to-profile')
     },

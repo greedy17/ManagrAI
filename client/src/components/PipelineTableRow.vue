@@ -463,9 +463,7 @@ export default {
         return
       }
     },
-    test(log) {
-      console.log('log', log)
-    },
+    test(log) {},
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -506,7 +504,6 @@ export default {
       this.$emit('get-notes')
     },
     emitCheckedBox(i) {
-      console.log('this.opp', this.opp)
       this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {

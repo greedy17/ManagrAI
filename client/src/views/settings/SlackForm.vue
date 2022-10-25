@@ -650,9 +650,7 @@ export default {
     this.getActionChoices()
   },
   methods: {
-    test() {
-      console.log(this.formFields.list)
-    },
+    test() {},
     lowerCase(word1, word2) {
       return (word1 + ' ' + word2)
         .toLowerCase()

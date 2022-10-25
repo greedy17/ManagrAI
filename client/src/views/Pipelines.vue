@@ -3174,7 +3174,6 @@ export default {
       this.workList = false
     },
     async getFilteredObjects(value) {
-      console.log('1 2 3', this.operatorValue, this.filterApiName, value)
       this.loadingWorkflows = true
       if (value) {
         this.filters.push([this.operatorValue, this.filterApiName, value])
@@ -3272,7 +3271,6 @@ export default {
       }
     },
     applyFilter(value) {
-      console.log('value', value)
       this.updateFilterValue = value
       this.operatorsLength += 1
       this.getFilteredObjects(value)
@@ -3293,7 +3291,6 @@ export default {
       }
     },
     selectFilter(name, type, label) {
-      console.log('name type label', name, type, label)
       this.filtering = !this.filtering
       this.filterApiName = name
       this.filterType = type
@@ -3301,8 +3298,6 @@ export default {
       this.filterSelected = true
     },
     removeFilter(name, index) {
-      console.log(this.activeFilters)
-
       if (this.activeFilters.length > 1) {
         this.activeFilters.splice(index - 2, 1)
       } else {
@@ -3317,8 +3312,6 @@ export default {
         this.updateOpps()
         this.currentPage = 1
         this.hasNext = this.hasNextOriginal
-
-        console.log(this.activeFilters, 'SHOW ME THE MONEY!')
       }
       this.filterSelected = false
       this.currentFilter = null

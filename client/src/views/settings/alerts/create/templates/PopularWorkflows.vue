@@ -514,15 +514,11 @@ export default {
     goToConnect() {
       this.$router.push({ name: 'Integrations' })
     },
-    test() {
-      console.log(this.config)
-    },
+    test() {},
     setDefaultChannel() {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = 'default')
         : (this.config.newConfigs[0].recipients = null)
-
-      console.log(this.directToUsers)
     },
     verifySubmit() {
       if (this.largeOpps) {
@@ -587,7 +583,6 @@ export default {
         this.config.newConfigs[0].recipients = res.channel.id
         this.channelCreated = !this.channelCreated
       } else {
-        console.log(res.error)
         this.channelName = ''
         if (res.error == 'name_taken') {
           this.$toast('Channel name already taken', {
@@ -711,7 +706,6 @@ export default {
     async noSlackSave() {
       this.savingTemplate = true
       try {
-        console.log(this.config)
         const res = await AlertTemplate.api.createAlertTemplate({
           ...this.config,
           user: this.$store.state.user.id,
@@ -745,7 +739,7 @@ export default {
       const newConfigs = this.config.newConfigs[0]
       const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
       let largeOpsCheck = true
-      console.log(this.config)
+
       if (this.largeOpps) {
         largeOpsCheck = false
         if (this.largeOppsBool) {
