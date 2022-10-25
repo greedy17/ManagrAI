@@ -388,7 +388,6 @@ def initial_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     # check the resource attached to this meeting
     resource = workflow.resource
-    print(context)
     # If else meeting if has attribute workflow, meeting or else workflow.meeting
     meeting = workflow.meeting
     user_timezone = workflow.user.timezone

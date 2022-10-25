@@ -39,7 +39,7 @@ class BaseContactSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "email",
-            "company",
+            "account",
             "external_owner",
             "external_account",
             "owner",
@@ -55,9 +55,9 @@ class BaseContactSerializer(serializers.ModelSerializer):
         owner = data.get("external_owner", None)
         account = data.get("external_account", None)
         if not data.get("external_account", None):
-            data.update({"external_account": ""})
+            data.update({"external_account": "N/A"})
         if not data.get("external_owner", None):
-            data.update({"external_owner": ""})
+            data.update({"external_owner": "N/A"})
         if not data.get("email", None):
             data.update({"email": ""})
         if owner:
@@ -71,7 +71,6 @@ class BaseContactSerializer(serializers.ModelSerializer):
             data.update({"account": acct})
 
         # remove contacts from validation
-        print(data)
         internal_data = super().to_internal_value(data)
         return internal_data
 
@@ -112,9 +111,9 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
         data.update({"close_date": new_date})
         account = data.get("external_account", None)
         if not data.get("external_account", None):
-            data.update({"external_account": ""})
+            data.update({"external_account": "N/A"})
         if not data.get("external_owner", None):
-            data.update({"external_owner": ""})
+            data.update({"external_owner": "N/A"})
         if owner:
             user = User.objects.get(id=imported_by)
             data.update({"owner": user})

@@ -127,9 +127,9 @@ class DealSerializer(serializers.ModelSerializer):
         close_date = data.get("close_date")
         new_date = parser.parse(close_date).date()
         data.update({"close_date": new_date})
-        company = data.get("external_company", None)
-        if not data.get("external_company", None):
-            data.update({"external_company": ""})
+        account = data.get("external_account", None)
+        if not data.get("external_account", None):
+            data.update({"external_account": ""})
         if not data.get("external_owner", None):
             data.update({"external_owner": ""})
         if owner:
@@ -138,12 +138,12 @@ class DealSerializer(serializers.ModelSerializer):
             )
             user = hs_account.user.id if hs_account else hs_account
             data.update({"owner": user})
-        if company:
-            acct = Company.objects.filter(
-                integration_id=company, organization__users__id=imported_by
+        if account:
+            acct = BaseAccount.objects.filter(
+                integration_id=account, organization__users__id=imported_by
             ).first()
             acct = acct.id if acct else acct
-            data.update({"company": acct})
+            data.update({"account": acct})
         # remove contacts from validation
 
         contacts = data.pop("contacts", [])

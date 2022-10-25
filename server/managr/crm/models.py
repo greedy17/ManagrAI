@@ -77,6 +77,12 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
+    def update_database_values(self, data):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class BaseOpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -167,14 +173,20 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
+    def update_database_values(self, data):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class BaseContactQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
             if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(organization=user.organization)
+                return self.filter(owner__organization=user.organization)
             else:
-                return self.filter(organization=user.organization, owner=user)
+                return self.filter(owner=user)
         else:
             return None
 
@@ -210,6 +222,10 @@ class BaseContact(TimeStampModel, IntegrationModel):
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
         return adapters[self.integration_source]["Contact"](**data)
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.email, str(self.id))
 
     def get_current_values(self):
         return self.adapter_class.get_current_values()
@@ -299,6 +315,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
         return self.label
 
     def to_slack_field(self, value=None, *args, **kwargs):
+        print(self.data_type)
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None

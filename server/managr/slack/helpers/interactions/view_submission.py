@@ -207,7 +207,6 @@ def process_zoom_meeting_data(payload, context):
     # else:
     #     workflow.operations_list = ops
     workflow.operations_list = ops
-    print(workflow.operations_list)
     # ts, channel = workflow.slack_interaction.split("|")
     # block_set = [
     #     *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
@@ -557,10 +556,10 @@ def process_submit_resource_data(payload, context):
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
             text = f"Managr created {main_form.resource_type}"
-            message = f"Successfully created *{main_form.resource_type}* _{resource.name if resource.name else resource.email}_"
+            message = f"Successfully created *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
         else:
             text = f"Managr updated {main_form.resource_type}"
-            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
         if (

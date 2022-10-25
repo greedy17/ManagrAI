@@ -391,6 +391,21 @@ class CompanyAdapter:
         formatted_data["imported_by"] = str(user_id)
         return CompanyAdapter(**formatted_data)
 
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        formatted_data = dict()
+        for k, v in data.items():
+            key = mapping.get(k, None)
+            if key:
+                formatted_data[key] = v
+            else:
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
+
+        return formatted_data
+
     @classmethod
     def create_from_api(cls, data):
         return cls(cls.from_api(data))
@@ -438,7 +453,7 @@ class DealAdapter:
         self.id = kwargs.get("id", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
-        self.company = kwargs.get("company", None)
+        self.account = kwargs.get("account", None)
         self.name = kwargs.get("name", None)
         self.stage = kwargs.get("stage", None)
         self.amount = kwargs.get("amount", None)
@@ -461,6 +476,7 @@ class DealAdapter:
         forecast_category="hs_manual_forecast_category",
         amount="amount",
         external_account="company",
+        account="company",
     )
 
     @staticmethod
@@ -570,7 +586,7 @@ class HubspotContactAdapter:
         email="email",
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
-        external_account="account",
+        external_account="company",
     )
 
     @property
@@ -600,6 +616,21 @@ class HubspotContactAdapter:
         formatted_data["integration_source"] = org_consts.INTEGRATION_SOURCE_HUBSPOT
         formatted_data["imported_by"] = str(user_id)
         return HubspotContactAdapter(**formatted_data)
+
+    @staticmethod
+    def to_api(data, mapping, object_fields):
+        """data : data to be passed, mapping: map managr fields to sf fields, object_fields: if a field is not in this list it cannot be pushed"""
+        formatted_data = dict()
+        for k, v in data.items():
+            key = mapping.get(k, None)
+            if key:
+                formatted_data[key] = v
+            else:
+                # TODO: add extra check here to only push creatable on creatable and updateable on updateable
+                if k in object_fields:
+                    formatted_data[k] = v
+
+        return formatted_data
 
     @classmethod
     def create_from_api(cls, data):

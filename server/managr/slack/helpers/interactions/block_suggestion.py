@@ -131,7 +131,9 @@ def process_get_local_resource_options(payload, context):
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in Contact.objects.for_user(user).filter(Q(email__icontains=value))[:50]
+                    for l in BaseContact.objects.for_user(user).filter(Q(email__icontains=value))[
+                        :50
+                    ]
                 ],
             ],
         }

@@ -1137,7 +1137,6 @@ def process_show_update_resource_form(payload, context):
         slack_form = OrgCustomSlackFormInstance.objects.create(
             template=template, resource_id=resource_id, user=user,
         )
-
         if slack_form:
             stage_name = "StageName" if user.crm == "Salesforce" else "dealstage"
             current_stage = slack_form.resource_object.secondary_data.get(stage_name)
@@ -1438,10 +1437,8 @@ def process_resource_selected_for_task(payload, context):
         OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
         action = payload["actions"][0]
-        print(action)
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
-
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")

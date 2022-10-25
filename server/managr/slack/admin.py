@@ -17,23 +17,23 @@ class CustomFormFieldInline(admin.StackedInline):
             return slack_models.OrgCustomSlackForm.objects.get(pk=resolved.kwargs["object_id"])
         return None
 
-    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
-    #     parent = self.get_parent_object_from_request(request)
-    #     if parent:
-    #         if db_field.name == "field":
-    #             queryset = crm_models.ObjectField.objects.filter(
-    #                 (
-    #                     Q(salesforce_account__user__organization=parent.organization)
-    #                     & Q(salesforce_object=parent.resource)
-    #                     & Q(salesforce_account__user__team_lead_of=parent.team)
-    #                 )
-    #                 | Q(is_public=True)
-    #             )
-    #             return ModelChoiceField(queryset)
-    #     else:
-    #         queryset = sf_models.ObjectField.objects.all()
-    #         return ModelChoiceField(queryset)
-    #     return super(CustomFormField, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        parent = self.get_parent_object_from_request(request)
+        if parent:
+            if db_field.name == "field":
+                queryset = crm_models.ObjectField.objects.filter(
+                    (
+                        Q(user__organization=parent.organization)
+                        & Q(crm_object=parent.resource)
+                        & Q(user__team_lead_of=parent.team)
+                    )
+                    | Q(is_public=True)
+                )
+                return ModelChoiceField(queryset)
+        else:
+            queryset = crm_models.ObjectField.objects.all()
+            return ModelChoiceField(queryset)
+        return super(CustomFormField, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     model = slack_models.CustomFormField
     fields = (

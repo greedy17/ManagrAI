@@ -185,7 +185,6 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
                 f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
     for item in res:
-
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             serializer = serializer_class(data=item.as_dict, instance=existing)
