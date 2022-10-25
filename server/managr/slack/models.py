@@ -347,7 +347,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         #     .values_list("field__api_name", "field__salesforce_object",)
         #     .order_by("order")
         # )
-        print(self.template)
         template_fields = (
             self.template.customformfield_set.all()
             .values_list("field__api_name", "field__crm_object",)
