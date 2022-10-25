@@ -224,6 +224,12 @@ class BaseContact(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
+    def update_database_values(self, data):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class ObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):

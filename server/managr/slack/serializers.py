@@ -7,6 +7,7 @@ from .models import (
     OrgCustomSlackForm,
     UserSlackIntegration,
     FormField,
+    CustomFormField,
 )
 
 
@@ -14,7 +15,7 @@ class CustomFormFieldSerializer(serializers.ModelSerializer):
     # field_ref = SObjectFieldSerializer(source="field", read_only=True, required=False)
 
     class Meta:
-        model = FormField
+        model = CustomFormField
         fields = ("datetime_created", "order", "form", "include_in_recap")
 
 

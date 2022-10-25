@@ -15,7 +15,7 @@ class CustomObjectField(admin.ModelAdmin):
 
 class CustomBaseOpportunity(admin.ModelAdmin):
     model = crm_models.BaseOpportunity
-    list_display = ("name", "owner")
+    list_display = ("name", "owner", "object_type")
 
 
 # Register your models here.

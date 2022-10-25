@@ -185,6 +185,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
                 f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
     for item in res:
+
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
             serializer = serializer_class(data=item.as_dict, instance=existing)
@@ -195,7 +196,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
             serializer.is_valid(raise_exception=True)
         except Exception as e:
             logger.exception(
-                f"Failed to save data for {resource} {item.name if item.name else 'N/A'} with hubspot id {item.integration_id} due to the following error {e}"
+                f"Failed to save data for {resource} {item.name if hasattr(item, 'name') else 'N/A'} with hubspot id {item.integration_id} due to the following error {e}"
             )
             break
         serializer.save()
@@ -243,10 +244,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             # if len(user.slack_integration.recap_receivers):
             #     _send_recap(update_form_ids, None, True)
             raise e
-    # value_update = workflow.resource.update_database_values(data)
+    value_update = workflow.resource.update_database_values(data)
     # if user.has_slack_integration and len(user.slack_integration.recap_receivers):
     #     _send_recap(update_form_ids, None, True)
-    # push to sf
     return res
 
 
