@@ -871,6 +871,7 @@ input {
 
 .table-row {
   display: table-row;
+  height: 7vh;
 }
 .empty {
   display: table-cell;

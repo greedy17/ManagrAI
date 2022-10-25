@@ -162,7 +162,29 @@
                 >Monthly</label
               >
             </div>
+
             <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
+              <div class="week-row">
+                <span
+                  v-for="(day, i) in weeklyOpts"
+                  :key="i"
+                  :class="
+                    config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    @input="setDay"
+                    :id="day.value"
+                    :value="day.value"
+                    v-model="config.newConfigs[0].recurrenceDays"
+                    :disabled="!hasSlack"
+                  />
+                  <label :for="day.value">{{ day.key.charAt(0) }}</label>
+                </span>
+              </div>
+            </div>
+            <!-- <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
               <FormField>
                 <template v-slot:input>
                   <Multiselect
@@ -191,7 +213,7 @@
                   </Multiselect>
                 </template>
               </FormField>
-            </div>
+            </div> -->
             <FormField
               id="delivery"
               v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
@@ -320,12 +342,12 @@
                   </template>
                 </Multiselect>
               </template>
-              <div v-if="userLevel !== 'REP'" class="sendAll">
+              <div v-if="userLevel !== 'REP'" class="sendAll custom-checkbox">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
                 <label for="allUsers">Send directly to users</label>
               </div>
 
-              <div v-else class="sendAll">
+              <div v-else class="sendAll custom-checkbox">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
                 <label for="allUsers">Send to primary channel</label>
               </div>
@@ -673,12 +695,12 @@ export default {
         this.selectedChannel
       this.config.newConfigs[0].recipients = [this.selectedChannel.id]
     },
-    setDay(n) {
-      this.config.newConfigs[0].recurrenceDay = 0
-      let days = []
-      n.forEach((day) => days.push(day.value))
-      let newDays = [...new Set(days)]
-      this.config.newConfigs[0].recurrenceDays = newDays
+    setDay() {
+      // this.config.newConfigs[0].recurrenceDay = 0
+      // let days = []
+      // n.forEach((day) => days.push(day.value))
+      // let newDays = [...new Set(days)]
+      // this.config.newConfigs[0].recurrenceDays = newDays
       this.setDaysBool = true
     },
     mapIds() {
@@ -723,6 +745,7 @@ export default {
       const newConfigs = this.config.newConfigs[0]
       const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
       let largeOpsCheck = true
+      console.log(this.config)
       if (this.largeOpps) {
         largeOpsCheck = false
         if (this.largeOppsBool) {
@@ -839,7 +862,40 @@ export default {
 ::v-deep .input-form__active {
   border: none;
 }
+.active-option {
+  color: $base-gray !important;
+  border: 1px solid $base-gray !important;
+}
+.week-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center !important;
+  width: 25vw;
+  overflow-x: scroll;
+  margin-top: 16px;
 
+  span {
+    cursor: pointer;
+    color: $light-gray-blue;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    width: 26px;
+    border-radius: 100%;
+    border: 1px solid $soft-gray;
+    transition: all 0.2s;
+    input {
+      display: none;
+    }
+  }
+
+  span:hover {
+    transform: scale(1.15);
+    color: $base-gray;
+  }
+}
 .centered {
   display: flex;
   flex-direction: column;
@@ -847,7 +903,7 @@ export default {
   justify-content: center;
   padding-bottom: 16px;
 }
-input[type='checkbox']:checked + label::after {
+.custom-checkbox > input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
   width: 1ex;
@@ -864,19 +920,19 @@ input[type='checkbox']:checked + label::after {
   -ms-transform: rotate(-45deg);
   transform: rotate(-45deg);
 }
-input[type='checkbox'] {
+.custom-checkbox > input[type='checkbox'] {
   line-height: 2.1ex;
 }
-input[type='checkbox'] {
+.custom-checkbox > input[type='checkbox'] {
   position: absolute;
   left: -999em;
 }
-input[type='checkbox'] + label {
+.custom-checkbox > input[type='checkbox'] + label {
   position: relative;
   overflow: hidden;
   cursor: pointer;
 }
-input[type='checkbox'] + label::before {
+.custom-checkbox > input[type='checkbox'] + label::before {
   content: '';
   display: inline-block;
   vertical-align: -22%;
@@ -887,6 +943,7 @@ input[type='checkbox'] + label::before {
   border-radius: 4px;
   margin-right: 0.5em;
 }
+
 .sendAll {
   display: flex;
   align-items: center;

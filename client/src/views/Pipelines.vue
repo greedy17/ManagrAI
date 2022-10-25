@@ -2222,8 +2222,8 @@
           <div
             :key="opp.id"
             v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : allOpps"
-            :style="`top: ${(j + 1) * 10}vh;`"
-            class="table-row-overlay"
+            :style="`top: ${screenHeight < 900 ? (j + 1) * 10 : (j + 1) * 7}vh;`"
+            class="table-row-overlay top-height"
           >
             <div class="cell-name"></div>
             <div
@@ -2517,6 +2517,7 @@ export default {
   },
   data() {
     return {
+      screenHeight: window.innerHeight,
       editingInline: false,
       currentCell: null,
       loadingNext: false,
@@ -5403,6 +5404,8 @@ h3 {
 .table-row {
   display: table-row;
   left: 0;
+}
+.top-height {
 }
 .table-row-overlay {
   top: 10vh;

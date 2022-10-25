@@ -81,6 +81,14 @@ export default {
       execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
   },
+  computed: {
+    hasSalesforceIntegration() {
+      return !!this.$store.state.user.salesforceAccount
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
+    },
+  },
   mounted() {
     // let logScript = document.getElementById('logrocket-script')
     // logScript.remove()
@@ -124,6 +132,8 @@ export default {
           localStorage.dateTime = Date.now()
           if (this.$route.query.redirect) {
             this.$router.push(this.$route.query.redirect)
+          } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+            this.$router.push({ name: 'Integrations' })
           } else {
             this.$router.push({ name: 'ListTemplates' })
           }
