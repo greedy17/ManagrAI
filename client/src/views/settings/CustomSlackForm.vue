@@ -339,6 +339,7 @@ export default {
       formChange: false,
       formStages: [],
       stages: [],
+      storedModalFunction: () => null,
       noteTitle: {
         _fields: {
           length: {
@@ -830,12 +831,8 @@ export default {
     },
     closeModal() {
       this.modalOpen = false
-      this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
-
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.newResource && f.formType == this.newFormType,
-      )
       this.formChange = false
+      this.storedModalFunction()
     },
     setNewForm() {
       this.addForm(this.selectedStage)
@@ -938,6 +935,11 @@ export default {
       this.formStages = [...forms]
     },
     changeToAccount() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToAccount
+        return
+      }
       this.newResource = 'Account'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -945,6 +947,11 @@ export default {
       )
     },
     changeToOpportunity() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToOpportunity
+        return
+      }
       this.newResource = 'Opportunity'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -952,6 +959,11 @@ export default {
       )
     },
     changeToProducts() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToProducts
+        return
+      }
       this.newResource = 'OpportunityLineItem'
       this.newFormType = 'CREATE'
       this.newCustomForm = this.allForms.find(
@@ -959,6 +971,11 @@ export default {
       )
     },
     changeToStage(stage = '') {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToStage
+        return
+      }
       this.newResource = 'Opportunity'
       this.newFormType = 'STAGE_GATING'
       this.newCustomForm = this.allForms.find(
@@ -967,6 +984,11 @@ export default {
       )
     },
     changeToContact() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToContact
+        return
+      }
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -974,6 +996,11 @@ export default {
       )
     },
     changeToLead() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToLead
+        return
+      }
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
@@ -981,6 +1008,7 @@ export default {
     switchFormType() {
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.switchFormType
         return
       }
       this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
@@ -990,9 +1018,8 @@ export default {
       )
     },
     modalSave() {
-      this.onSave()
       this.formChange = false
-      this.switchFormType()
+      this.onSave()
     },
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
