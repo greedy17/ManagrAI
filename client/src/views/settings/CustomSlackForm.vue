@@ -80,7 +80,7 @@
                 <div
                   class="margin-right"
                   @click.prevent="deleteForm(activeForm)"
-                  v-if="selectedForm && selectedForm.fields.length"
+                  v-if="selectedForm && selectedForm.customFields.length"
                 >
                   <img src="@/assets/images/remove.svg" class="red-filter" alt="" />
                 </div>
@@ -692,7 +692,7 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields.length) {
+        if (val && val.customFields.length) {
           this.addedFields = [...val.fieldsRef]
           if (this.formType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
@@ -723,7 +723,7 @@ export default {
               )
             })
           }
-        } else if (val && val.formType == 'STAGE_GATING' && !val.fields.length) {
+        } else if (val && val.formType == 'STAGE_GATING' && !val.customFields.length) {
           this.addedFields = []
         }
       },
@@ -733,7 +733,7 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields.length) {
+        if (val && val.customFields.length) {
           this.addedFields = [...val.fieldsRef]
           if (this.newFormType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
@@ -764,7 +764,7 @@ export default {
               )
             })
           }
-        } else if (val && !val.fields.length) {
+        } else if (val && !val.customFields.length) {
           this.addedFields = []
         }
       },
@@ -781,7 +781,6 @@ export default {
             } else {
               fieldParam['updateable'] = true
             }
-            console.log(val)
             try {
               this.formFields.filters = {
                 salesforceObject: val,
@@ -901,7 +900,7 @@ export default {
         .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     currentFields() {
-      return this.customForm ? this.customForm.fields : []
+      return this.customForm ? this.customForm.customFields : []
     },
     addedFieldIds() {
       return this.addedFields.map((field) => {
@@ -1234,7 +1233,6 @@ export default {
           fields_ref: fields_ref,
         })
         .then((res) => {
-          console.log(res)
           // this.$emit('update:selectedForm', res)
           this.$toast('Form saved', {
             timeout: 2000,
