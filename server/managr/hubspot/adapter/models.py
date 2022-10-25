@@ -116,12 +116,40 @@ class HubspotAuthAccountAdapter:
 
         return data
 
+    def list_deal_stages(self, resource):
+        url = hubspot_consts.HUBSPOT_PIPELINE_URI(resource)
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        with Client as client:
+            res = client.get(url, headers=headers,)
+            return self._handle_response(res)
+
+    def associate_objects(
+        self, associate_type, associate_id, to_object, to_object_id, association_id
+    ):
+        url = hubspot_consts.HUBSPOT_ASSOCIATIONS_CREATE_URI(
+            associate_type, associate_id, to_object, to_object_id, association_id
+        )
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        with Client as client:
+            res = client.put(url, headers=headers,)
+            print(res)
+            print(res.json())
+            return self._handle_response(res)
+
     def get_associated_resource(self, resource, associated_resource, resource_id):
         url = hubspot_consts.HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource)
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         data = {"inputs": [{"id": resource_id}]}
         with Client as client:
             res = client.post(url, data=json.dumps(data), headers=headers,)
+            return self._handle_response(res)
+
+    def create_meeting_in_hubspot(self, meeting_data):
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("meetings")
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        send_data = {"properties": meeting_data}
+        with Client as client:
+            res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
     # def format_validation_rules(
@@ -200,107 +228,6 @@ class HubspotAuthAccountAdapter:
             )
             res = self._handle_response(res)
             return self.format_field_options(str(self.id), str(self.user), resource, res_data=res)
-
-    # def list_picklist_values(self, resource):
-    #     """Uses the UI API to list all picklist values resource using this endpoint only returns fields a user has access to"""
-
-    #     record_type_id = self.default_record_ids[resource]
-    #     url = f"{self.instance_url}{hubspot_consts.SALESFORCE_PICKLIST_URI(hubspot_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-    #     with Client as client:
-    #         res = client.get(
-    #             url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #         )
-    #         res = self._handle_response(res)
-
-    #         return self.format_picklist_values(str(self.id), str(self.user), resource, res)
-
-    # def get_stage_picklist_values(self, resource):
-    #     """Sync method to help users whose stages are not populated"""
-    #     record_type_id = self.default_record_ids[resource]
-    #     url = f"{self.instance_url}{hubspot_consts.SALESFORCE_PICKLIST_URI(hubspot_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-    #     url = f"{url}/StageName"
-    #     with Client as client:
-    #         res = client.get(
-    #             url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #         )
-    #         res = self._handle_response(res)
-
-    #         return HubspotPicklistAdapter.create_from_api(
-    #             {
-    #                 "values": res["values"],
-    #                 "salesforce_account": str(self.id),
-    #                 "picklist_for": "StageName",
-    #                 "imported_by": str(self.user),
-    #                 "salesforce_object": resource,
-    #                 "integration_source": "SALESFORCE",
-    #             }
-    #         )
-
-    # def get_individual_picklist_values(self, resource, field_name=None):
-    #     """Sync method to get picklist values for resources not saved in our db"""
-
-    #     record_type_id = self.default_record_ids.get(resource, None)
-    #     if not record_type_id:
-    #         # a record type id is required so we may get picklist values these are saved on the sf auth object
-    #         # some orgs will have custom record id's if this is the case we can retrieve using this method lines 353-356
-    #         # if the user profile does not have access and all records have the same default id then we can use that
-    #         # TODO: Take this one level up and save the record id so we only have to do this once
-
-    #         url = f"{self.instance_url}{hubspot_consts.SF_DEFAULT_RECORD_ID(resource)}"
-    #         with Client as client:
-    #             res = client.get(
-    #                 url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #             )
-
-    #             res = self._handle_response(res)
-
-    #             if res.get("totalSize", 0) > 0:
-    #                 record_type_id = res.get("Id")
-    #             else:
-    #                 record_type_id = self.default_record_ids.get(resource, None)
-    #                 if (
-    #                     not record_type_id
-    #                     and self.default_record_ids
-    #                     and len(self.default_record_ids.items())
-    #                 ):
-    #                     items = list(self.default_record_ids.items())
-    #                     record_type_id = items[0][1] if len(items) else None
-    #                     if not record_type_id:
-    #                         return logger.exception(
-    #                             f"Unable to retreive record id for {url} from field {field_name} for resource {resource}"
-    #                         )
-
-    #     url = f"{self.instance_url}{hubspot_consts.SALESFORCE_PICKLIST_URI(hubspot_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-
-    #     url = f"{url}/{field_name}" if field_name else url
-    #     with Client as client:
-    #         res = client.get(
-    #             url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #         )
-    #         res = self._handle_response(res)
-
-    #         return HubspotPicklistAdapter.create_from_api(
-    #             {
-    #                 "values": res["values"],
-    #                 "salesforce_account": str(self.id),
-    #                 "picklist_for": field_name,
-    #                 "imported_by": str(self.user),
-    #                 "salesforce_object": resource,
-    #                 "integration_source": "SALESFORCE",
-    #             }
-    #         )
-
-    # def list_validations(self, resource):
-    #     """Lists all (active) Validations that apply to a resource from the ValidationRules object"""
-
-    #     url = f"{self.instance_url}{hubspot_consts.SALESFORCE_VALIDATION_QUERY(resource)}"
-    #     with Client as client:
-    #         res = client.get(
-    #             url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #         )
-    #         res = self._handle_response(res)
-
-    #         return self.format_validation_rules(str(self.id), str(self.user), res)
 
     def list_resource_data(self, resource, *args, **kwargs):
         # add extra fields to query string
@@ -446,6 +373,14 @@ class CompanyAdapter:
         external_owner="hubspot_owner_id",
     )
 
+    @property
+    def internal_user(self):
+        try:
+            user = User.objects.get(id=self.owner)
+        except User.DoesNotExist:
+            user = None
+        return user
+
     @staticmethod
     def reverse_integration_mapping():
         """mapping of 'standard' data when sending from the SF API"""
@@ -521,7 +456,7 @@ class DealAdapter:
         self.forecast_category = kwargs.get("forecast_category", None)
         self.owner = kwargs.get("owner", None)
         self.external_owner = kwargs.get("external_owner", None)
-        self.external_company = kwargs.get("external_company", None)
+        self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
         self.contacts = kwargs.get("contacts", [])
         self.secondary_data = kwargs.get("secondary_data", None)
@@ -535,7 +470,7 @@ class DealAdapter:
         close_date="closedate",
         forecast_category="hs_manual_forecast_category",
         amount="amount",
-        # external_company=""
+        external_account="company",
     )
 
     @staticmethod
@@ -608,6 +543,7 @@ class DealAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
+            print(r.json())
             return HubspotAuthAccountAdapter._handle_response(r)
 
     def get_current_values(self):
@@ -631,11 +567,11 @@ class HubspotContactAdapter:
         self.id = kwargs.get("id", None)
         self.integration_source = kwargs.get("integration_source", None)
         self.integration_id = kwargs.get("integration_id", None)
-        self.account = kwargs.get("company", None)
+        self.account = kwargs.get("account", None)
         self.email = kwargs.get("email", None)
         self.owner = kwargs.get("owner", None)
         self.external_owner = kwargs.get("external_owner", None)
-        self.external_account = kwargs.get("external_company", None)
+        self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
         self.secondary_data = kwargs.get("secondary_data", None)
 
@@ -644,7 +580,16 @@ class HubspotContactAdapter:
         email="email",
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
+        external_account="account",
     )
+
+    @property
+    def internal_user(self):
+        try:
+            user = User.objects.get(id=self.owner)
+        except User.DoesNotExist:
+            user = None
+        return user
 
     @staticmethod
     def reverse_integration_mapping():

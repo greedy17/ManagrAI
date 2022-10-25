@@ -53,13 +53,11 @@ export class CustomSlackForm extends Model {
   static resource = new fields.Field({})
   static stage = new fields.CharField({})
   static fieldsRef = new fields.ModelField({ ModelClass: ObjectField, many: true })
-  static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
+  static custom_fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
   static organization = new fields.Field({})
 
   static fromAPI(obj) {
     // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG
-    console.log('obj', obj)
-
     let _refFields = obj['fields_ref'].map(ref => {
       return { ...ref['field_ref'], order: ref['order'], includeInRecap: ref['include_in_recap'] }
     })

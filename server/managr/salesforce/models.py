@@ -29,6 +29,7 @@ from .adapter.exceptions import (
     CannotRetreiveObjectType,
 )
 from . import constants as sf_consts
+from managr.hubspot import constants as hs_consts
 
 logger = logging.getLogger("managr")
 
@@ -688,8 +689,10 @@ class MeetingWorkflow(SFSyncOperation):
 
     @property
     def resource(self):
-        from managr.salesforce.routes import routes
+        from managr.salesforce.routes import routes as sf_routes
+        from managr.hubspot.routes import routes as hs_routes
 
+        routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
         model_route = routes.get(self.resource_type, None)
         if model_route and self.resource_id:
             return model_route["model"].objects.get(id=self.resource_id)
@@ -704,14 +707,30 @@ class MeetingWorkflow(SFSyncOperation):
             emit_sf_update_resource_from_meeting,
             emit_add_products_to_sf,
         )
+        from managr.hubspot.tasks import (
+            emit_add_call_to_hs,
+            emit_update_hs_contacts,
+            emit_create_new_hs_contacts,
+            emit_hs_update_resource_from_meeting,
+            emit_add_products_to_hs,
+        )
 
-        return {
-            sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
-            sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
-            sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
-            sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
-            sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
-        }
+        if self.user.crm == "SALESFORCE":
+            return {
+                sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
+                sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
+                sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
+                sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
+                sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
+            }
+        else:
+            return {
+                hs_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_hs_update_resource_from_meeting,
+                hs_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_hs_contacts,
+                hs_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_hs_contacts,
+                hs_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_hs,
+                hs_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_hs,
+            }
 
     def begin_tasks(self, attempts=1):
 
@@ -896,6 +915,10 @@ class SalesforceAuthAccount(TimeStampModel):
             ).values_list("api_name", flat=True),
         )
         return SalesforceAuthAccountAdapter(**data)
+
+    @property
+    def crm_id(self):
+        return self.salesforce_id
 
     @property
     def resource_sync_opts(self):

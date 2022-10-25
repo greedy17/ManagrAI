@@ -105,7 +105,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         blank=True,
         null=True,
     )
-    contacts = models.ManyToManyField("BaseContact", related_name="contacts", blank=True)
+    contacts = models.ManyToManyField("BaseContact", related_name="opportunities", blank=True)
     external_account = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
     )
@@ -224,6 +224,12 @@ class BaseContact(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
+    def update_database_values(self, data):
+        data.pop("meeting_comments", None)
+        data.pop("meeting_type", None)
+        self.secondary_data.update(data)
+        return self.save()
+
 
 class ObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
@@ -254,6 +260,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
     label = models.CharField(max_length=255)
     reference = models.BooleanField(default=False)
     relationship_name = models.CharField(max_length=255, null=True)
+    length = models.PositiveIntegerField(default=0)
     reference_to_infos = ArrayField(
         JSONField(max_length=128, default=dict),
         default=list,
@@ -295,7 +302,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
-            if self.api_name == "StageName":
+            if self.api_name in ["StageName", "dealstage"]:
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
@@ -342,7 +349,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
                             ),
                         )
                     )
-                user_id = str(self.salesforce_account.user.id)
+                user_id = str(self.user.id)
                 action_query = (
                     f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
                 )
@@ -386,8 +393,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
                 if self.api_name == "PricebookEntryId":
                     display_name = "Products"
                 additional_fields = kwargs.get("fields", "")
-                user_id = str(self.salesforce_account.user.id)
-                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.salesforce_object}&add={additional_fields}"
+                user_id = str(self.user.id)
+                action_query = f"{slack_consts.GET_EXTERNAL_RELATIONSHIP_OPTIONS}?u={user_id}&relationship={self.display_value_keys['api_name']}&fields={','.join(self.display_value_keys['name_fields'])}&resource={self.crm_object}&add={additional_fields}"
             return block_builders.external_select(
                 f"*{display_name}*",
                 action_query,
@@ -411,7 +418,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
                         self.get_slack_options,
                     )
                 )
-            user_id = str(self.salesforce_account.user.id)
+            user_id = str(self.user.id)
             action_query = f"{slack_consts.GET_PICKLIST_OPTIONS}?u={user_id}&field={str(self.id)}"
             return block_builders.multi_external_select(
                 f"*{self.reference_display_label}*",
@@ -481,3 +488,26 @@ class ObjectField(TimeStampModel, IntegrationModel):
             )
 
             # use this one.
+
+    @property
+    def get_slack_options(self):
+        # non sf fields are created with is_public = True and may take options directly
+        if self.is_public and len(self.options):
+
+            return list(
+                map(
+                    lambda option: block_builders.option(option["label"], option["value"]),
+                    self.options,
+                )
+            )
+        elif not self.is_public and hasattr(self, "picklist_options"):
+            return self.picklist_options.as_slack_options
+        elif self.user.crm == "HUBSPOT":
+            return list(
+                map(
+                    lambda option: block_builders.option(option["label"], option["id"]),
+                    self.options,
+                )
+            )
+        else:
+            return [block_builders.option("No Options", None)]

@@ -7,15 +7,18 @@ from .models import (
     OrgCustomSlackForm,
     UserSlackIntegration,
     FormField,
+    CustomFormField,
 )
+
+from managr.crm.serializers import ObjectFieldSerializer
 
 
 class CustomFormFieldSerializer(serializers.ModelSerializer):
-    # field_ref = SObjectFieldSerializer(source="field", read_only=True, required=False)
+    field_ref = ObjectFieldSerializer(source="field", read_only=True, required=False)
 
     class Meta:
-        model = FormField
-        fields = ("datetime_created", "order", "form", "include_in_recap")
+        model = CustomFormField
+        fields = ("datetime_created", "order", "form", "field", "field_ref", "include_in_recap")
 
 
 class OrganizationSlackIntegrationSerializer(serializers.ModelSerializer):
@@ -53,7 +56,7 @@ class UserSlackIntegrationSerializer(serializers.ModelSerializer):
 
 
 class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
-    fields_ref = serializers.SerializerMethodField()
+    fields_ref = serializers.SerializerMethodField("get_fields_ref")
 
     class Meta:
         model = OrgCustomSlackForm
@@ -64,19 +67,19 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "form_type",
             "resource",
             "stage",
-            "fields",
+            "custom_fields",
             "fields_ref",
         )
 
         read_only_fields = (
-            "fields",
+            "custom_fields",
             "fields_ref",
         )
 
     def get_fields_ref(self, obj):
-        fields = obj.formfield_set.all().order_by("order")
+        custom_fields = obj.customformfield_set.all().order_by("order")
         fields_ref = []
-        for field in fields:
+        for field in custom_fields:
             fields_ref.append(CustomFormFieldSerializer(field).data)
         return fields_ref
 
