@@ -49,10 +49,10 @@
         </button>
 
         <div v-else>
-          <button @click="updateWorkflow" class="green_button">Update</button>
-          <button @click="deleteWorkflow(currentAlert.id)" class="delete right-margin">
+          <button @click="deleteWorkflow(currentAlert.id)" class="delete">
             Delete
           </button>
+          <button @click="updateWorkflow" style="margin-left: 8px" class="green_button right-margin">Update</button>
         </div>
       </div>
     </div>
