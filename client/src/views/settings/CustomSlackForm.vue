@@ -4,8 +4,8 @@
       <div class="tabs">
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
-          <label v-if="userHasHubspot" for="tab-1" class="tab-label" @click="changeToDeal">Deal</label>
-          <label v-else for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
+          <label v-if="userCRM === 'HUBSPOT'" for="tab-1" class="tab-label" @click="changeToDeal">Deal</label>
+          <label v-else-if="userCRM === 'SALESFORCE'" for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -191,8 +191,8 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
-          <label v-if="userHasHubspot" for="tab-3" class="tab-label" @click="changeToCompany">Company</label>
-          <label v-else for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
+          <label v-if="userCRM === 'HUBSPOT'" for="tab-3" class="tab-label" @click="changeToCompany">Company</label>
+          <label v-else-if="userCRM === 'SALESFORCE'" for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -245,8 +245,8 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
-          <label v-if="userHasHubspot" for="tab-4" class="tab-label" @click="changeToHubspotContact">Contact</label>
-          <label v-else for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
+          <label v-if="userCRM === 'HUBSPOT'" for="tab-4" class="tab-label" @click="changeToHubspotContact">Contact</label>
+          <label v-else-if="userCRM === 'SALESFORCE'" for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -299,7 +299,7 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-5" class="tab-switch" />
-          <label v-if="!userHasHubspot" for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
+          <label v-if="userCRM === 'SALESFORCE'" for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -934,14 +934,18 @@ export default {
     userHasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
-    userHasHubspot() {
-      return this.$store.state.user.hasHubspotIntegration
+    // userHasHubspot() {
+    //   return this.$store.state.user.hasHubspotIntegration
+    // },
+    userCRM() {
+      return this.$store.state.user.crm
     },
   },
   async created() {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      console.log('store', this.$store.state.user)
       await this.listPicklists({
         salesforceObject: this.Opportunity,
         picklistFor: 'StageName',

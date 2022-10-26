@@ -62,7 +62,11 @@ export default {
 
   async created() {
     try {
-      this.currentResource = this.userHasHubspot ? this.DEAL : this.OPPORTUNITY
+      if (this.userCRM === 'HUBSPOT') {
+        this.currentResource = this.DEAL
+      } else if (this.userCRM === 'SALESFORCE') {
+        this.currentResource = this.OPPORTUNITY
+      }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
       await this.listPicklists({
@@ -80,8 +84,8 @@ export default {
 
   computed: {
     ...mapState(['user']),
-    userHasHubspot() {
-      return this.$store.state.user.hasHubspotIntegration
+    userCRM() {
+      return this.$store.state.user.crm
     },
   },
   methods: {
