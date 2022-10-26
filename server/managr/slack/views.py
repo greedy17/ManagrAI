@@ -707,7 +707,6 @@ def update_resource(request):
 )
 def create_resource(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account", "lead", "contact"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -721,13 +720,18 @@ def create_resource(request):
                 }
             )
     user = slack.user
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = ["opportunity"]
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
     resource_type = None
-
     if len(command_params):
         if command_params[0] not in allowed_commands:
             return Response(
@@ -745,9 +749,8 @@ def create_resource(request):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
-
         if slack_form:
-
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
             context = {
                 "resource_type": resource_type,
                 "f": str(slack_form.id),
@@ -756,7 +759,7 @@ def create_resource(request):
             }
             blocks = get_block_set("create_modal", context,)
             try:
-                index, block = block_finder("StageName", blocks)
+                index, block = block_finder(stage_name, blocks)
             except ValueError:
                 # did not find the block
                 block = None

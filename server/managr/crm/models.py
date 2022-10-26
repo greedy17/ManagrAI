@@ -77,6 +77,16 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
+    def create(self, data):
+        token = self.owner.crm_account.access_token
+        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+            "api_name", flat=True
+        )
+        res = self.adapter_class.create(data, token, self.integration_id, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
+
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
         data.pop("meeting_type", None)
@@ -173,6 +183,16 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
+    def create(self, data):
+        token = self.owner.crm_account.access_token
+        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+            "api_name", flat=True
+        )
+        res = self.adapter_class.create(data, token, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
+
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
         data.pop("meeting_type", None)
@@ -236,6 +256,16 @@ class BaseContact(TimeStampModel, IntegrationModel):
             "api_name", flat=True
         )
         res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        self.is_stale = True
+        self.save()
+        return res
+
+    def create(self, data):
+        token = self.owner.crm_account.access_token
+        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+            "api_name", flat=True
+        )
+        res = self.adapter_class.create(data, token, self.integration_id, object_fields)
         self.is_stale = True
         self.save()
         return res
@@ -315,7 +345,6 @@ class ObjectField(TimeStampModel, IntegrationModel):
         return self.label
 
     def to_slack_field(self, value=None, *args, **kwargs):
-        print(self.data_type)
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
@@ -420,9 +449,13 @@ class ObjectField(TimeStampModel, IntegrationModel):
             )
 
         elif self.data_type == "Date":
+            if self.user.crm == "HUBSPOT" and value is not None:
+                date_value = str(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").date())
+            else:
+                date_value = value
             return block_builders.datepicker(
                 label=f"*{self.reference_display_label}*",
-                initial_date=value,
+                initial_date=date_value,
                 block_id=self.api_name,
             )
 

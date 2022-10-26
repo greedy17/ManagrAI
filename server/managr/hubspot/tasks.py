@@ -22,6 +22,7 @@ from managr.crm.exceptions import (
     CannotRetreiveObjectType,
 )
 from managr.slack import constants as slack_consts
+from managr.slack.models import OrgCustomSlackFormInstance
 from managr.salesforce.models import MeetingWorkflow
 
 logger = logging.getLogger("managr")
@@ -659,4 +660,41 @@ def _process_update_hs_contacts(workflow_id, *args):
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
+    return
+
+
+@background(schedule=0)
+def _process_create_new_hs_resource(form_ids, *args):
+    create_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    if not create_forms.count():
+        return logger.exception(f"An error occured no form was found")
+    user = create_forms.first().user
+    resource = create_forms.first().resource_type
+    # get the create form
+    data = dict()
+    for form in create_forms:
+        data = {**data, **form.saved_data}
+
+    attempts = 1
+    while True:
+        hs = user.hubspot_account
+        try:
+            from managr.hubspot.routes import routes as model_routes
+
+            model_class = model_routes[resource]["model"]
+            res = model_class.create(data)
+            serializer = model_routes.get(resource)["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return serializer.instance
+        except TokenExpired as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to create new resource for user {str(user.id)} after {attempts} tries because their token is expired"
+                )
+            else:
+                hs.regenerate_token()
+                attempts += 1
+        except Exception as e:
+            logger.exception(f"Create failed for {e}")
     return

@@ -66,6 +66,7 @@ from managr.slack.helpers.exceptions import (
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 from managr.salesforce.adapter.models import PricebookEntryAdapter
+from managr.hubspot.tasks import _process_create_new_hs_resource
 
 logger = logging.getLogger("managr")
 
@@ -78,6 +79,13 @@ def swap_public_fields(state):
         state["meeting_type"] = state["meeting_title"]
         state.pop("meeting_title")
     return state
+
+
+def background_create_resource(current_form_ids, crm):
+    if crm == "SALESFORCE":
+        _process_create_new_resource.now(current_form_ids)
+    else:
+        _process_create_new_hs_resource.now(current_form_ids)
 
 
 @log_all_exceptions
@@ -383,7 +391,7 @@ def process_submit_resource_data(payload, context):
                 resource = main_form.resource_object
                 break
             else:
-                resource = _process_create_new_resource.now(current_form_ids)
+                resource = background_create_resource(current_form_ids, user.crm)
                 new_resource = model_routes[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )

@@ -562,6 +562,21 @@ class DealAdapter:
             print(r.json())
             return HubspotAuthAccountAdapter._handle_response(r)
 
+    @staticmethod
+    def create(data, access_token, object_fields):
+        json_data = json.dumps(
+            {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
+        )
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("deals")
+        with Client as client:
+            r = client.post(
+                url,
+                data=json_data,
+                headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
+            )
+            print(r.json())
+            return HubspotAuthAccountAdapter._handle_response(r)
+
     def get_current_values(self):
         user = self.internal_user
         resource_fields = user.object_fields.filter(crm_object="Deal").values_list(
@@ -662,6 +677,24 @@ class HubspotContactAdapter:
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("contacts") + deal_id
         with Client as client:
             r = client.patch(
+                url,
+                data=json_data,
+                headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
+            )
+            return HubspotAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def create(data, access_token, deal_id, object_fields):
+        json_data = json.dumps(
+            {
+                "properties": HubspotContactAdapter.to_api(
+                    data, HubspotContactAdapter.integration_mapping, object_fields
+                )
+            }
+        )
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("contacts")
+        with Client as client:
+            r = client.post(
                 url,
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
