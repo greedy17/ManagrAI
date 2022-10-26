@@ -3,9 +3,9 @@
     <CustomSlackForm
       :formType="UPDATE"
       :customForm="
-        (this.selectedForm = this.allForms.find((f) => f.resource == DEAL && f.formType == UPDATE))
+        (this.selectedForm = this.allForms.find((f) => f.resource == currentResource && f.formType == UPDATE))
       "
-      :resource="DEAL"
+      :resource="currentResource"
       v-on:update:selectedForm="updateForm($event)"
       :loading="formFields.refreshing"
       :stageForms="formStages"
@@ -49,6 +49,7 @@ export default {
       formFields: CollectionManager.create({ ModelClass: ObjectField }),
       stageDropDownOpen: false,
       isVisible: false,
+      currentResource: '',
       validations: CollectionManager.create({
         ModelClass: SObjectValidation,
         pagination: Pagination.create({ size: 2 }),
@@ -61,10 +62,15 @@ export default {
 
   async created() {
     try {
+      if (this.userCRM === 'HUBSPOT') {
+        this.currentResource = this.DEAL
+      } else if (this.userCRM === 'SALESFORCE') {
+        this.currentResource = this.OPPORTUNITY
+      }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
       await this.listPicklists({
-        salesforceObject: this.Deal,
+        salesforceObject: this.currentResource,
         picklistFor: 'StageName',
       })
     } catch (error) {
@@ -78,6 +84,9 @@ export default {
 
   computed: {
     ...mapState(['user']),
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
   methods: {
     async listFields(query_params = {}) {
