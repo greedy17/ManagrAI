@@ -74,7 +74,7 @@
                   <div class="drag-item">
                     <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
                       <img src="@/assets/images/drag.svg" alt="" />
-                      {{ field.label }}
+                      {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
                     </p>
                     <img
                       src="@/assets/images/remove.svg"
@@ -206,7 +206,7 @@
           <p v-for="(field, i) in filteredFields" :key="field.id">
             <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
-            {{ field.label }}
+            {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
             <span v-if="field.required" class="red-text">required</span>
           </p>
         </div>
