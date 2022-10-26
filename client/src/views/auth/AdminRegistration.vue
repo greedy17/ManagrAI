@@ -176,18 +176,17 @@ export default {
     },
     async onSubmit() {
       this.registrationForm.validate()
-
       // Do not continue if the form has errors
-      if (!this.registrationForm.isValid) {
-        this.$toast('Please complete all fields.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        return
-      }
+      // if (!this.registrationForm.isValid) {
+      //   this.$toast('Please complete all fields.', {
+      //     timeout: 2000,
+      //     position: 'top-left',
+      //     type: 'error',
+      //     toastClassName: 'custom',
+      //     bodyClassName: ['custom'],
+      //   })
+      //   return
+      // }
       // Continue with user registration...
       this.submitting = true
 
@@ -210,7 +209,7 @@ export default {
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'ListTemplates' })
+      this.$router.push({ name: 'Integrations' })
     },
   },
   computed: {

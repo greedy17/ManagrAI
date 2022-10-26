@@ -1126,6 +1126,7 @@ a {
     position: sticky;
     top: 0;
     z-index: 2;
+    background-color: white;
   }
   &__body {
     display: flex;
@@ -1145,7 +1146,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    position: absolute;
+    position: sticky;
     bottom: 0;
     z-index: 2;
     background-color: white !important;

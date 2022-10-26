@@ -454,11 +454,8 @@ export default {
   },
   async created() {
     if (this.user.slackRef) {
-      await this.listChannels()
-      await this.listUserChannels()
-    }
-    if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()
+      await this.listUserChannels()
     }
   },
   watch: {
@@ -601,14 +598,14 @@ export default {
           'SLACK_CHANNEL'
       }
     },
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
-    },
+    // async listChannels(cursor = null) {
+    //   const res = await SlackOAuth.api.listChannels(cursor)
+    //   const results = new SlackListResponse({
+    //     channels: [...this.channelOpts.channels, ...res.channels],
+    //     responseMetadata: { nextCursor: res.nextCursor },
+    //   })
+    //   this.channelOpts = results
+    // },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -621,6 +618,7 @@ export default {
         this.dropdownLoading = false
       }, 500)
     },
+
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
