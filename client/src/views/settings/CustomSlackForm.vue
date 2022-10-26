@@ -4,7 +4,8 @@
       <div class="tabs">
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch" />
-          <label for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
+          <label v-if="userHasHubspot" for="tab-1" class="tab-label" @click="changeToDeal">Deal</label>
+          <label v-else for="tab-1" class="tab-label" @click="changeToOpportunity">Opportunity</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -190,7 +191,8 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-3" class="tab-switch" />
-          <label for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
+          <label v-if="userHasHubspot" for="tab-3" class="tab-label" @click="changeToCompany">Company</label>
+          <label v-else for="tab-3" class="tab-label" @click="changeToAccount">Account</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -243,7 +245,8 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-4" class="tab-switch" />
-          <label for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
+          <label v-if="userHasHubspot" for="tab-4" class="tab-label" @click="changeToHubspotContact">Contact</label>
+          <label v-else for="tab-4" class="tab-label" @click="changeToContact">Contact</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -296,7 +299,7 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-5" class="tab-switch" />
-          <label for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
+          <label v-if="!userHasHubspot" for="tab-5" class="tab-label" @click="changeToLead">Lead</label>
           <div class="tab-content">
             <section>
               <div class="tab-content__div">
@@ -931,6 +934,9 @@ export default {
     userHasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
+    userHasHubspot() {
+      return this.$store.state.user.hasHubspotIntegration
+    },
   },
   async created() {
     try {
@@ -1091,11 +1097,25 @@ export default {
         (f) => f.resource == this.ACCOUNT && f.formType == this.UPDATE,
       )
     },
+    changeToCompany() {
+      this.newResource = 'Company'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.COMPANY && f.formType == this.UPDATE,
+      )
+    },
     changeToOpportunity() {
       this.newResource = 'Opportunity'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
+      )
+    },
+    changeToDeal() {
+      this.newResource = 'Deal'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.DEAL && f.formType == this.UPDATE,
       )
     },
     changeToStage(stage = '') {
@@ -1111,6 +1131,13 @@ export default {
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
+      )
+    },
+    changeToHubspotContact() {
+      this.newResource = 'HubspotContact'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
       )
     },
     changeToLead() {
