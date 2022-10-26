@@ -1,6 +1,11 @@
 <template>
-  <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
-    <div v-if="opp" class="table-cell-checkbox">
+  <div
+    @mouseenter="showActions"
+    @mouseleave="hideActions"
+    class="table-row"
+    :class="{ selected: primaryCheckList.includes(opp.id) }"
+  >
+    <div v-if="opp" :class="showIcons ? 'hovered' : ''" class="table-cell-checkbox">
       <div
         v-if="
           updateList.includes(opp.id) ||
@@ -8,7 +13,7 @@
           (inlineLoader && currentInlineRow === index)
         "
       >
-        <SkeletonBox width="10px" height="9px" />
+        <SkeletonBox width="10px" height="10px" />
       </div>
       <div v-else>
         <input
@@ -22,7 +27,7 @@
       </div>
     </div>
 
-    <div style="min-width: 26vw" class="table-cell cell-name">
+    <div :class="showIcons ? 'hovered' : ''" class="cell-name">
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
@@ -33,8 +38,7 @@
               (inlineLoader && currentInlineRow === index)
             "
           >
-            <SkeletonBox width="125px" height="14px" style="margin-bottom: 0.2rem" />
-            <SkeletonBox width="125px" height="9px" />
+            <SkeletonBox width="125px" height="14px" style="margin: 6px 8px" />
           </div>
 
           <PipelineNameSection
@@ -44,30 +48,20 @@
             :owner="opp.owner_ref.first_name"
           />
         </div>
-        <div
-          v-if="
-            updateList.includes(opp.id) ||
-            updatedList.includes(opp.id) ||
-            (inlineLoader && currentInlineRow === index)
-          "
-          class="flex-row"
-        >
-          <SkeletonBox width="15px" height="14px" />
-          <SkeletonBox width="15px" height="14px" />
-        </div>
-        <div v-else class="flex-row">
-          <div class="tooltip">
+
+        <div v-show="showIcons" class="flex-row">
+          <div>
             <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
-              <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/edit.svg" />
+              <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
             </button>
-            <span class="tooltiptext">Update</span>
+            <!-- <span class="tooltiptext">Expand</span> -->
           </div>
 
-          <div class="tooltip">
+          <div>
             <button @click="emitGetNotes" class="name-cell-note-button-1">
-              <img class="gray" src="@/assets/images/white-note.svg" />
+              <img class="gray" height="12px" src="@/assets/images/note.svg" />
             </button>
-            <span class="tooltiptext">View Notes</span>
+            <!-- <span class="tooltiptext">Notes</span> -->
           </div>
         </div>
       </div>
@@ -91,6 +85,7 @@
           opp['secondary_data'][field.apiName] ||
           opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
         ),
+        hovered: showIcons,
       }"
     >
       <SkeletonBox
@@ -103,8 +98,12 @@
         height="14px"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
+      <div
+        style="position: relative"
+        :class="showIcons ? 'hovered' : ''"
+        v-else-if="!updateList.includes(opp.id)"
+      >
+        <!-- <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -120,10 +119,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
           </div>
           <div
             v-else-if="
@@ -144,18 +139,15 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
           </div>
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
             <Multiselect
+              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
               v-if="field.apiName !== 'StageName'"
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 8rem; margin-left: 1vw"
               track-by="value"
               label="label"
               v-model="dropdownVal[field.apiName]"
@@ -195,7 +187,7 @@
               :options="picklistOpts[field.id]"
               openDirection="below"
               selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 8rem"
+              style="width: 14vw; padding-bottom: 200px; font-size: 13px"
               track-by="value"
               label="label"
               @select="emitDropdown($event, opp)"
@@ -223,9 +215,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
             <input
@@ -238,9 +227,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
           </div>
           <div
             v-else-if="
@@ -251,7 +237,9 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, Number($event.target.value), field.dataType)"
+              v-on:keyup.enter="
+                setUpdateValues(field.apiName, Number($event.target.value), field.dataType)
+              "
               id="user-input"
               type="number"
               :value="
@@ -260,9 +248,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
           </div>
           <div v-else-if="field.dataType === 'Boolean'">
             <Multiselect
@@ -286,10 +271,16 @@
           </div>
           <div v-else-if="field.dataType === 'Reference'">
             <Multiselect
-              style="width: 14vw; padding-bottom: 8rem"
+              style="width: 14vw; padding-bottom: 200px; font-size: 13px"
               v-model="dropdownVal[field.apiName]"
               @select="setUpdateValues(field.apiName, $event.id, field.dataType)"
-              :options="referenceOpts[field.apiName] ? referenceOpts[field.apiName] : []"
+              :options="referenceOpts[field.apiName]"
+              @open="
+                field.dataType === 'Reference'
+                  ? $emit('get-reference-opts', field.apiName, field.id)
+                  : null
+              "
+              :loading="dropdownLoading"
               openDirection="below"
               selectLabel="Enter"
               label="name"
@@ -305,21 +296,24 @@
               </template>
             </Multiselect>
           </div>
+        </div> -->
+        <div class="limit-cell-height">
+          <PipelineField
+            :index="i"
+            style="direction: ltr"
+            :apiName="field.apiName"
+            :dataType="field.dataType"
+            :fieldData="
+              field.apiName.includes('__c') || field.apiName.includes('__r')
+                ? opp['secondary_data'][field.apiName]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+            "
+            :referenceOpts="referenceOpts"
+            :lastStageUpdate="opp['last_stage_update']"
+          />
         </div>
-        <PipelineField
-          :index="i"
-          v-show="!(editing && editIndex === i && currentInlineRow === index)"
-          style="direction: ltr; border: "
-          :apiName="field.apiName"
-          :dataType="field.dataType"
-          :fieldData="
-            field.apiName.includes('__c') || field.apiName.includes('__r')
-              ? opp['secondary_data'][field.apiName]
-              : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          "
-          :referenceOpts="referenceOpts"
-          :lastStageUpdate="opp['last_stage_update']"
-        />
+
+        <!-- v-show="!(editing && editIndex === i && currentInlineRow === index)" -->
       </div>
     </div>
     <div
@@ -342,7 +336,7 @@
         height="14px"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
+      <div v-else-if="!updateList.includes(opp.id)">
         <PipelineField
           style="direction: ltr"
           :apiName="field.apiName"
@@ -357,7 +351,18 @@
         />
       </div>
     </div>
-    <div class="table-cell-checkbox"></div>
+    <div :class="showIcons ? 'hovered' : ''" class="cell-end left-border light-gray">
+      <!-- <div
+        v-if="
+          updateList.includes(opp.id) ||
+          updatedList.includes(opp.id) ||
+          (inlineLoader && currentInlineRow === index)
+        "
+        class="flex-row"
+      >
+        <SkeletonBox width="15px" height="14px" />
+      </div> -->
+    </div>
   </div>
 </template>
 
@@ -365,6 +370,7 @@
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import { SObjects } from '@/services/salesforce'
+import User from '@/services/users'
 import debounce from 'lodash.debounce'
 
 export default {
@@ -378,8 +384,12 @@ export default {
   },
   data() {
     return {
+      showIcons: false,
       booleans: ['true', 'false'],
       isSelected: false,
+      task: false,
+      checker: null,
+      verboseName: null,
       currentRow: null,
       formData: {},
       referenceOptions: [],
@@ -403,6 +413,7 @@ export default {
     closeDateData: 'futureDate',
     closeEdit: 'closeInline',
     primaryCheckList: 'checkSelect',
+    task: 'checkAndClearInterval',
   },
   props: {
     index: {},
@@ -422,6 +433,7 @@ export default {
     stages: {},
     currentInlineRow: {},
     extraPipelineFields: {},
+    dropdownLoading: {},
   },
   methods: {
     // async setForm() {
@@ -436,9 +448,22 @@ export default {
     //     console.log(e)
     //   }
     // },
-    test(log) {
-      console.log('log', log)
+    showActions() {
+      this.showIcons = true
     },
+    hideActions() {
+      this.showicons = true ? (this.showIcons = false) : (this.showIcons = true)
+    },
+    checkAndClearInterval() {
+      if (this.task.completed == true) {
+        this.stopChecker()
+        this.updatedList = []
+        this.$emit('updated-values')
+      } else {
+        return
+      }
+    },
+    test(log) {},
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -446,14 +471,15 @@ export default {
     },
     closeInline() {
       this.editing = false
+      this.$emit('close-inline-editor')
     },
     emitDropdown(val, opp) {
-      const item = {val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id}
+      const item = { val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id }
       this.$emit('set-dropdown-value', item)
     },
     editInline(index) {
       this.editing = true
-      this.$emit('current-inline-row', this.index)
+      this.$emit('current-inline-row', this.index, index)
       this.currentRow = this.index
       this.editIndex = index
     },
@@ -478,7 +504,6 @@ export default {
       this.$emit('get-notes')
     },
     emitCheckedBox(i) {
-      console.log('this.opp', this.opp)
       this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {
@@ -584,32 +609,37 @@ export default {
         }, 2000)
       }
     },
+    async checkTask() {
+      try {
+        this.task = await User.api.checkTasks(this.verboseName)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    stopChecker() {
+      clearInterval(this.checker)
+    },
     async onBulkUpdate() {
       this.updatedList.push(this.opp.id)
       try {
         const formData = {}
         formData[this.BulkUpdateName] = this.BulkUpdateValue
         const res = await SObjects.api
-          .updateResource({
+          .bulkUpdate({
             form_data: formData,
             resource_type: 'Opportunity',
             form_type: 'UPDATE',
             resource_id: this.opp.id,
             integration_ids: [this.opp.integration_id],
           })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
+          .then((res) => {
+            this.verboseName = res.verbose_name
+            this.checker = setInterval(() => {
+              this.checkTask()
+            }, 1000)
+          })
       } catch (e) {
         console.log(e)
-      } finally {
-        this.updatedList = []
       }
     },
   },
@@ -626,46 +656,82 @@ export default {
     transform: translate(0%, 50%);
   }
 }
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+// .light-gray {
+//   background-color: $off-white !important;
+
+// }
+
+.img-border {
+  border: none;
+  box-shadow: 1px 1px 2px 1px $very-light-gray !important;
+  padding: 4px 6px 3px 6px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 6px 1px $off-white;
+  background-color: white;
+}
+
+.action-buttons {
+  background-color: white;
+  padding: 8px 8px 8px 24px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 2px 1px $off-white;
+  display: flex;
+  flex-direction: row;
+  align-items: space-evenly;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+}
+
+// .left-border {
+//   border-left: 2px solid $off-white !important;
+// }
 
 .tooltip {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2px 0px;
+  display: inline-block;
 }
+
+/* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
-  background-color: $base-gray;
-  color: white;
+  width: 120px;
+  background-color: black;
+  color: #fff;
   text-align: center;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 4px 0px;
+  padding: 5px 0;
   border-radius: 6px;
-  font-size: 12px;
+  opacity: 0.7;
 
-  /* Position the tooltip text */
+  /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;
-  width: 100px;
   top: 100%;
-  left: 50%;
-  margin-left: -50px;
-
-  /* Fade in tooltip */
-  opacity: 0;
-  transition: opacity 0.3s;
+  left: 40%;
+  margin-left: -60px; /* half of width */
 }
+
+/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
+}
+.tooltip .tooltiptext::after {
+  content: ' ';
+  position: absolute;
+  bottom: 100%; /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
 }
 .save {
   background-color: transparent;
-  color: $dark-green;
+  color: $base-gray;
   letter-spacing: 0.75px;
-  font-weight: bold;
   font-size: 10px;
   z-index: 2;
   // opacity: 0.5;
@@ -674,9 +740,12 @@ export default {
   justify-content: center;
   align-items: center;
   p {
-    background-color: $white-green;
-    padding: 2px 6px;
-    border-radius: 6px;
+    span {
+      background-color: $white-green;
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: $dark-green;
+    }
   }
 }
 #user-input {
@@ -711,8 +780,8 @@ textarea {
   margin-top: -1rem;
 }
 input[type='date'] {
-  background-color: $soft-gray !important;
   color: $base-gray !important;
+  font-family: $base-font-family;
 }
 input[type='date']::-webkit-calendar-picker-indicator {
   background-color: white;
@@ -732,19 +801,26 @@ input {
 }
 .inline-edit {
   cursor: text;
+  // z-index: 2000;
+  // position: sticky;
+  // top: 10vh;
+  // left: -2px;
+  // min-height: 200px;
+  // width: 150%;
+  // background-color: white !important;
+  // box-shadow: 1px 1px 2px 1px $very-light-gray;
+  // padding: 8px 12px;
+  // border-radius: 4px;
 }
 .inline-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 .active-edit {
-  border-bottom: 2px solid $dark-green !important;
-  border-left: 1px solid $soft-gray !important;
-  border-right: 1px solid $soft-gray !important;
-  border-top: 1px solid $soft-gray !important;
-  background-color: white !important;
+  border: 1.5px solid $dark-green !important;
+  border-radius: 3px;
 }
 .multi-slot {
   display: flex;
@@ -762,7 +838,7 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+
     border-top: 1px solid #e8e8e8;
     width: 100%;
     padding: 0.75rem 0rem;
@@ -792,15 +868,12 @@ input {
 
 .table-row {
   display: table-row;
+  height: 7vh;
 }
 .empty {
   display: table-cell;
   position: sticky;
-  background: $off-white;
   min-width: 12vw;
-  border-left: 1px solid $soft-gray;
-  border-right: 1px solid $soft-gray;
-  border-bottom: 1px solid $soft-gray;
 }
 .selected {
   color: $dark-green !important;
@@ -809,39 +882,44 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 16vw;
-  background-color: $off-white;
-  padding: 2vh 3vh;
   border: none;
-  border-bottom: 1px solid $soft-gray;
   font-size: 13px;
+  padding-left: 4px;
 }
 .cell-name {
+  min-width: 18vw;
+  display: table-cell;
   background-color: white;
   color: $base-gray;
   letter-spacing: 0.25px;
   position: sticky;
   left: 3.5vw;
   z-index: 2;
-}
-.table-cell:hover,
-.empty:hover {
-  border: 1px solid $dark-green;
-  background-color: white;
-  border-radius: 4px;
-}
-.cell-name:hover {
+  padding: 0px 4px;
+  line-height: 1.1;
+  font-size: 13px;
   border: none;
-  border-bottom: 1px solid #e8e8e8;
 }
+.cell-end {
+  display: table-cell;
+  position: sticky;
+  border: none;
+  font-size: 13px;
+  background-color: white;
+  color: $base-gray;
+  letter-spacing: 0.75px;
+  position: sticky;
+  right: 0;
+  z-index: 2;
+}
+
 .table-cell-wide {
   display: table-cell;
   position: sticky;
   min-width: 26vw;
-  background-color: $off-white;
-  padding: 2vh 3.5vh;
   border: none;
-  border-bottom: 1px solid $soft-gray;
   font-size: 13px;
+  padding-left: 4px;
 }
 .table-cell-checkbox-header {
   display: table-cell;
@@ -863,25 +941,10 @@ input {
   left: 0;
   position: sticky;
   z-index: 1;
-  border-bottom: 1px solid $soft-gray;
+  // border-bottom: 1px solid $soft-gray;
   background-color: $white;
 }
-.cell-name-header {
-  display: table-cell;
-  padding: 3vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  border-radius: 2px;
-  z-index: 3;
-  left: 3.5vw;
-  top: 0;
-  position: sticky;
-  background-color: $white;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: $base-gray;
-}
+
 .flex-row-spread {
   display: flex;
   flex-direction: row;
@@ -945,51 +1008,42 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 8rem;
-  // width: 110%;
+  max-height: 10vh;
   padding: 0;
   overflow: auto;
-  img {
-    height: 0.25rem;
-  }
-  // cursor: url('../assets/images/edit-cursor.svg'), auto;
   cursor: pointer;
 }
 .name-cell-note-button-1 {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: 0.2rem;
+  margin-right: 16px;
   padding: 0.25rem;
   border-radius: 4px;
-  background-color: white;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0.7px solid $gray;
-  img {
-    height: 0.8rem;
-    padding: 1px;
-  }
-}
-.name-cell-note-button-1:hover,
-.name-cell-edit-note-button-1:hover {
-  transform: scale(1.03);
-  box-shadow: 1px 1px 1px $soft-gray;
+  border: none;
   cursor: pointer;
 }
+
 .name-cell-edit-note-button-1 {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: 0.2rem;
+  margin-right: 8px;
   padding: 0.25rem;
   border-radius: 4px;
-  background-color: white;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0.7px solid $gray;
-  img {
-    height: 1.2rem;
-  }
+  border: none;
+  cursor: pointer;
 }
+.hovered {
+  // background-color: rgba(220, 248, 233, 0.2);
+  background-color: $off-white;
+}
+// .mar-right {
+//   margin-right: 8px;
+// }
+// .mar-left {
+//   margin-left: 8px;
+// }
 </style>

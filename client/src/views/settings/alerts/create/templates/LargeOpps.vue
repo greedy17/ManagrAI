@@ -15,7 +15,7 @@ import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWo
 import allConfigs from '../../configs'
 
 export default {
-  name: 'LargeOpps',
+  name: 'LargeOpportunities',
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

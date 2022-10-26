@@ -57,8 +57,8 @@ def create_configs_for_target(target, template_user, config):
         config["recipient_type"] = "SLACK_CHANNEL"
         if "default" in config["recipients"] and template_user.has_slack_integration:
             config["recipients"] = [
-                template_user.slack_integration.zoom_channel
-                if template_user.slack_integration.zoom_channel
+                template_user.slack_integration.recap_channel
+                if template_user.slack_integration.recap_channel
                 else template_user.slack_integration.channel
             ]
         else:
@@ -79,8 +79,8 @@ def create_configs_for_target(target, template_user, config):
             config_copy["alert_targets"] = [str(user.id)]
             if user.has_slack_integration:
                 config_copy["recipients"] = [
-                    user.slack_integration.zoom_channel
-                    if user.slack_integration.zoom_channel
+                    user.slack_integration.recap_channel
+                    if user.slack_integration.recap_channel
                     else user.slack_integration.channel
                 ]
                 config_copy["recipient_type"] = "SLACK_CHANNEL"
@@ -115,6 +115,9 @@ def alert_config_creator(data, user):
             if len(all_configs) > 1:
                 all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
+        if user.slack_integration.recap_channel is None:
+            if "SELF" in new_configs[0]["alert_targets"]:
+                user.slack_integration.change_recap_channel(new_configs[0]["recipients"][0])
     else:
         return None
     return new_configs
@@ -149,6 +152,8 @@ class AlertTemplateViewSet(
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == "POST":
             return alert_serializers.AlertTemplateWriteSerializer
+        if self.request.GET.get("for_pipeline", None):
+            return alert_serializers.AlertTemplateRunNowSerializer
         return self.serializer_class
 
     def create(self, request, *args, **kwargs):
@@ -230,6 +235,10 @@ class AlertTemplateViewSet(
                 except SFQueryOffsetError:
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
+                    )
+                except Exception as e:
+                    return logger.warning(
+                        f"Failed retreive data for {template.title} for user {str(user.id)} because of {e}"
                     )
             model = model_routes[template.resource_type]["model"]
             queryset = model.objects.filter(integration_id__in=res_data)

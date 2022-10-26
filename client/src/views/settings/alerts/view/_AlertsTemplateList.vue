@@ -1,199 +1,273 @@
 <template>
   <div class="alerts-template-list">
-    <Modal v-if="deleteOpen" dimmed>
+    <Modal v-if="deleteOpen">
       <div class="delete_modal">
         <div class="delete_modal__header">
-          <h2>Delete Workflow</h2>
-          <img @click="deleteOpen = !deleteOpen" src="@/assets/images/close.svg" alt="" />
+          <h4>Delete Workflow</h4>
+          <img
+            @click="deleteOpen = !deleteOpen"
+            src="@/assets/images/close.svg"
+            height="22px"
+            alt=""
+          />
         </div>
 
         <div class="delete_modal__body">
-          <p>This action cannot be undone, are you sure ?</p>
+          <p>This can't be reversed. Are you sure ?</p>
         </div>
 
         <div class="delete_modal__footer">
           <button class="no__button" @click="deleteClose">No</button>
-          <button class="yes__button" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
+          <button class="delete" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
         </div>
       </div>
     </Modal>
 
-    <div class="center__">
-      <h3 v-if="!editing" :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Edit your Workflow Automation
-      </h3>
-      <h3 v-else :class="templates.refreshing ? 'loading-title titles' : 'titles'">
-        Active Workflow Automations
-      </h3>
-      <p
-        :class="templates.refreshing ? 'loading-title titles' : ''"
-        style="font-weight: bold; color: #aaaaaa; font-size: 13px"
-      >
-        Edit, Run, and Schedule your saved Automations
-      </p>
-    </div>
-    <div v-if="!alertsCount(templates.list.length) && !templates.refreshing">
-      <h3
-        class="bouncy"
-        style="
-          color: #5d5e5e;
-          font-weight: bold;
-          text-align: center;
-          margin-top: 16vh;
-          font-size: 3rem;
-        "
-      >
-        0
-      </h3>
-      <p style="font-weight: bold; color: #5d5e5e; text-align: center">Nothing here.. (o^^)o</p>
-    </div>
-    <template
-      style="margin-top: -1rem"
-      v-if="!templates.refreshing && alertsCount(templates.list.length)"
+    <Modal
+      v-if="workflowListOpen"
+      @close-modal="
+        () => {
+          $emit('cancel'), (workflowListOpen = false)
+        }
+      "
     >
-      <transition name="fade">
-        <div v-if="!editing" class="edit__modal">
-          <AlertsEditPanel :alert="currentAlert" />
-          <div class="edit__modal__button">
-            <button @click="closeEdit">Done</button>
+      <div class="workflow__modal">
+        <div class="workflow__modal__header">
+          <h4>
+            {{ activeWorkflow.title }}
+            <!-- <span> {{ activeWorkflow.sobjectInstances.length }}</span> -->
+          </h4>
+
+          <button
+            style="margin-left: 16px"
+            class="green_button"
+            @click="goToPipeline(activeWorkflow.id)"
+          >
+            Open in Pipeline
+          </button>
+        </div>
+
+        <section
+          class="workflow__modal__body"
+          :key="i"
+          v-for="(opp, i) in activeWorkflow.sobjectInstances"
+        >
+          <div class="title">
+            <div>
+              <h4>
+                {{ opp.Name }}
+              </h4>
+              <p>Stage: {{ opp.StageName }}</p>
+              <p>Close Date: {{ opp.CloseDate }}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </Modal>
+
+    <Modal
+      v-if="meetingListOpen"
+      @close-modal="
+        () => {
+          $emit('cancel'), (meetingListOpen = false)
+        }
+      "
+    >
+      <div class="workflow__modal">
+        <div class="workflow__modal__header">
+          <h4>Meetings</h4>
+
+          <button style="margin-left: 16px" class="green_button" @click="goToMeetings">
+            Open in Meetings
+          </button>
+        </div>
+        <div class="workflow__modal__body" v-for="(meeting, i) in meetings" :key="i">
+          <div class="title">
+            <div>
+              <h4>{{ meeting.meeting_ref.topic ? meeting.meeting_ref.topic : 'Meeting' }}</h4>
+              <p>Participants: {{ meeting.meeting_ref.participants.length }}</p>
+              <p>
+                {{
+                  meeting.meeting_ref.start_time
+                    ? formatDateTimeToTime(meeting.meeting_ref.start_time)
+                    : ''
+                }}
+              </p>
+            </div>
           </div>
         </div>
-      </transition>
+      </div>
+    </Modal>
 
-      <transition name="fade">
-        <div class="alert_cards" v-if="editing">
-          <div :key="i" v-for="(alert, i) in templates.list" class="added-collection">
-            <div class="added-collection__header" :data-key="alert.id">
-              <h3>{{ alert.title }}</h3>
-            </div>
-            <div class="added-collection__body">
-              <button
-                :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                @click.stop="onRunAlertTemplateNow(alert.id)"
-                class="green_button"
-              >
-                Send to Slack
-              </button>
-            </div>
-            <div class="added-collection__footer">
-              <img
-                v-if="hasSlackIntegration"
-                style="margin-right: 0.25rem"
-                src="@/assets/images/slackLogo.png"
-                height="12px"
-                alt=""
-              />
-              <!-- <p v-if="hasSlackIntegration" style="font-size: 13px">Schedule:</p> -->
-              <div v-if="hasSlackIntegration" class="row__">
-                <p
-                  :class="!alert.isActive ? 'green' : ''"
-                  style="margin-right: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
-                >
-                  OFF
-                </p>
+    <template v-if="!templates.refreshing">
+      <!-- <transition name="fade">
+      </transition> -->
+
+      <div v-if="editing" class="alert_cards">
+        <div :key="i" v-for="(alert, i) in templates.list" class="card">
+          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>
+              {{ alert.title }}
+            </h4>
+            <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
+
+            <div class="card__body__between">
+              <div class="row__">
+                <div class="tooltip">
+                  <button
+                    style="margin-right: 8px"
+                    :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
+                    @click.stop="onRunAlertTemplateNow(alert.id)"
+                    class="img-border"
+                  >
+                    <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                  </button>
+                  <span class="tooltiptext">Send to Slack</span>
+                </div>
+
+                <button @click="openList(alert)" style="margin-right: 8px" class="img-border">
+                  <img
+                    src="@/assets/images/listed.svg"
+                    style="filter: invert(40%)"
+                    height="14px"
+                    alt=""
+                  />
+                </button>
+                <button class="img-border" @click="editWorkflow(alert)">
+                  <img
+                    src="@/assets/images/edit.svg"
+                    style="filter: invert(40%)"
+                    height="14px"
+                    alt=""
+                  />
+                </button>
+              </div>
+              <div v-if="hasSlackIntegration">
                 <ToggleCheckBox
                   @input="onToggleAlert(alert.id, alert.isActive)"
                   v-model="alert.isActive"
                   offColor="#aaaaaa"
-                  onColor="#41b883"
+                  :onColor="'#41b883'"
                 />
-                <p
-                  :class="alert.isActive ? 'green' : ''"
-                  style="margin-left: 0.25rem; font-size: 11px; letter-spacing: 0.5px"
-                >
-                  ON
-                </p>
+                <!-- templatedAlerts.includes(alert.title) ? '#41b883' : '#7fc4fb' -->
               </div>
-              <div style="width: 30vw" v-else>
-                <img
-                  style="margin-right: 0.2rem"
-                  src="@/assets/images/slackLogo.png"
-                  height="8px"
-                  alt=""
-                />
-                <small
-                  >Connect <span class="link" @click="goToConnect">Slack</span> for
-                  notifications</small
-                >
-              </div>
-
-              <div class="row__two">
-                <span class="img-border">
-                  <img
-                    @click="makeAlertCurrent(alert)"
-                    src="@/assets/images/edit.svg"
-                    class="invert"
-                  />
-                </span>
-
-                <span class="img-border">
-                  <img
-                    src="@/assets/images/trash.svg"
-                    class="invert"
-                    @click="deleteClosed(alert.id)"
-                  />
-                </span>
-              </div>
-            </div>
-
-            <template slot="panel-content">
-              <div>
-                <AlertsEditPanel :alert="alert" />
-              </div>
-            </template>
-          </div>
-          <div v-if="zoomChannel" class="added-collection">
-            <div class="added-collection__header">
-              <h3>Log Meetings</h3>
-              <p></p>
-            </div>
-
-            <div class="added-collection__body">
-              <button @click="goToLogZoom" class="green_button">Change Channel</button>
-            </div>
-            <div class="added-collection__footer">
-              <img
-                style="margin-right: 0.25rem"
-                src="@/assets/images/slackLogo.png"
-                height="15px"
-                alt=""
-              />
-              <p>
-                Current channel:
-                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
-                  currentZoomChannel
-                }}</span>
-              </p>
-            </div>
-          </div>
-
-          <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection">
-            <div class="added-collection__header">
-              <h3>Meeting Recaps</h3>
-            </div>
-
-            <div class="added-collection__body">
-              <button @click="goToRecap" class="green_button">Change Channel/Pipelines</button>
-            </div>
-            <div class="added-collection__footer">
-              <img
-                style="margin-right: 0.2rem"
-                src="@/assets/images/slackLogo.png"
-                height="15px"
-                alt=""
-              />
-              <p>
-                Current channel:
-                <span style="font-weight: bold; color: #41b883; font-size: 13px">{{
-                  currentRecapChannel
-                }}</span>
-              </p>
             </div>
           </div>
         </div>
-      </transition>
+
+        <div v-if="zoomChannel" class="card">
+          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <p class="card-text">Meetings: {{ meetings.length }}</p>
+
+            <div class="card__body__between">
+              <button @click="openMeetings" class="img-border">
+                <img
+                  src="@/assets/images/listed.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+
+              <button @click="goToLogZoom" class="white_button">Change Channel</button>
+              <!-- <small>{{ currentZoomChannel }}</small> -->
+            </div>
+          </div>
+        </div>
+
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card">
+          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+          <div class="card__body">
+            <h4>Meeting Recaps</h4>
+            <p class="card-text">Meetings: {{ meetings.length }}</p>
+
+            <div class="card__body__between">
+              <button @click="openMeetings" class="img-border">
+                <img
+                  src="@/assets/images/listed.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+
+              <button @click="goToRecap" class="white_button">Change Channel</button>
+              <!-- <small> {{ currentRecapChannel }}</small> -->
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-for="(config, i) in allConfigs"
+          :key="i"
+          class="card"
+          v-show="!templateTitles.includes(config.title)"
+        >
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>{{ config.title }}</h4>
+            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
+            <div class="card__body__between" style="margin-top: 8px">
+              <p></p>
+              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!zoomChannel" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToLogZoom" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>Meeting Recaps</h4>
+            <small class="card-text"
+              >Recieve alerts that give you insight on your teams meetings.</small
+            >
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToRecap" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert_cards" v-if="editing"></div>
     </template>
-    <div class="center-loader" v-if="templates.refreshing">
+
+    <!-- <div v-else-if="isOnboarding">
+      <Onboarder />
+    </div> -->
+
+    <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />
     </div>
   </div>
@@ -206,33 +280,49 @@
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
-//Internal
-import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 /**
  * Services
  *
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
-import AlertTemplate from '@/services/alerts/'
+import AlertTemplate, { AlertGroup } from '@/services/alerts/'
+import allConfigs from '../configs'
 
 export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    AlertsEditPanel,
+    Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
   data() {
     return {
-      userChannelOpts: new SlackListResponse(),
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
+      templatedAlerts: [
+        'Close Date Passed',
+        '90 Day Pipeline',
+        'Upcoming Next Step',
+        'Requird Field Empty',
+        'Large Opportunities',
+        'Deal Review',
+        'Close Date Approaching',
+      ],
+      meetingListOpen: false,
+      activeWorkflow: null,
+      allConfigs,
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
+      templateTitles: [],
       deleteOpen: false,
+      workflowListOpen: false,
       deleteId: '',
       deleteTitle: '',
       currentAlert: {},
@@ -255,9 +345,57 @@ export default {
     if (this.hasRecapChannel) {
       this.getRecapChannel()
     }
-    await this.listUserChannels()
+  },
+  beforeUpdate() {
+    if (this.templates.list.length) {
+      this.getActiveTemplateTitles()
+    }
   },
   methods: {
+    editWorkflow(alert) {
+      this.$emit('edit-workflow', alert)
+    },
+    formatDateTimeToTime(input) {
+      let preDate = new Date(input)
+      let newTime = preDate.toLocaleTimeString('en-US')
+      let amPm = newTime.split(' ')[1]
+      let hour = newTime.split(':')[0]
+      let noSeconds = newTime.replace(':', ' ')
+      let noAmPm = newTime.replace(amPm, '')
+      let noAmPmSeconds = noAmPm.replace(':', ' ')
+
+      if (parseInt(hour) < 10) {
+        newTime = '0' + newTime
+        noAmPm = '0' + noAmPm
+        noSeconds = '0' + noSeconds
+        noAmPmSeconds = '0' + noAmPmSeconds
+      }
+      noSeconds = noSeconds.replace(' ', ':')
+      noSeconds = noSeconds.split(':')
+      noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
+      return noSeconds
+    },
+    openList(alert) {
+      this.activeWorkflow = alert
+      this.workflowListOpen = true
+    },
+    openMeetings() {
+      this.meetingListOpen = true
+    },
+    goToMeetings() {
+      this.$router.push({ name: 'Meetings' })
+    },
+    goToPipeline(id) {
+      // this.$router.push({ path: `pipelines/${id}` })
+      this.$router.push({ name: 'Pipelines', params: { id: id } })
+    },
+    goToWorkflow(name) {
+      let newName = name.replace(/\s/g, '')
+      this.$router.push({ name: newName })
+    },
+    getActiveTemplateTitles() {
+      this.templateTitles = this.templates.list.map((template) => template.title)
+    },
     async getRecapChannel() {
       const res = await SlackOAuth.api.channelDetails(this.hasRecapChannel)
       this.currentRecapChannel = res.channel.name
@@ -316,22 +454,14 @@ export default {
     closeEdit() {
       this.editing = !this.editing
     },
-    async listUserChannels(cursor = null) {
-      const res = await SlackOAuth.api.listUserChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.userChannelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.userChannelOpts = results
-    },
+
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
+      this.deleteOpen = !this.deleteOpen
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
         await this.templates.refresh()
         this.handleUpdate()
-
-        this.deleteOpen = !this.deleteOpen
         this.$toast('Workflow removed', {
           timeout: 2000,
           position: 'top-left',
@@ -347,12 +477,14 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        this.editing = true
       }
     },
     async onToggleAlert(id, value) {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
-        await this.templates.refresh()
+        // await this.templates.refresh()
 
         this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
@@ -413,6 +545,12 @@ export default {
     userLevel() {
       return this.$store.state.user.userLevel
     },
+    meetings() {
+      return this.$store.state.meetings
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
   },
 }
 </script>
@@ -451,57 +589,315 @@ export default {
   }
 }
 
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+@keyframes pulseYellow {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $yellow;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.header {
+  outline: 1px solid red;
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $soft-gray;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 8px;
+  background-color: white;
+}
+.card {
+  letter-spacing: 0.75px;
+  background-color: $white;
+  padding: 16px 24px;
+  border: 1px solid #e8e8e8;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  width: 425px;
+  min-height: 144px;
+  transition: all 0.25s;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 16px;
+    border-radius: 6px;
+
+    img {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    margin-left: 12px;
+    width: 100%;
+    h4 {
+      margin: 0;
+      padding: 0;
+    }
+    p {
+      font-size: 12px;
+    }
+
+    &__between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      width: 260px;
+    }
+  }
+}
+
+.card-text {
+  font-size: 11px;
+  color: $light-gray-blue;
+}
+.lb-bg {
+  background: rgb(242, 242, 242);
+  background: rgb(242, 242, 242);
+  background: linear-gradient(
+    90deg,
+    rgba(242, 242, 242, 1) 0%,
+    rgba(238, 255, 247, 1) 0%,
+    rgba(208, 251, 232, 1) 100%
+  );
+}
+.lg-bg {
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  img {
+    filter: grayscale(99%);
+  }
+}
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 1.25s infinite;
+}
+.yellow_pulse {
+  box-shadow: 0 0 0 0 $yellow;
+  transform: scale(1);
+  animation: pulseYellow 1.25s infinite;
+}
+
+#yellow {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $light-yellow;
+  img {
+    filter: brightness(0%) invert(83%) sepia(28%) saturate(7222%) hue-rotate(6deg) brightness(103%)
+      contrast(104%);
+  }
+}
+#gray {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $soft-gray;
+  img {
+    filter: brightness(0%) invert(63%) sepia(13%) saturate(553%) hue-rotate(200deg) brightness(95%)
+      contrast(86%);
+  }
+}
+
+.yellow {
+  color: $yellow !important;
+  background-color: white;
+}
+.red {
+  background-color: $light-red;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  color: $coral;
+  padding: 4px 6px;
+}
 h2 {
   font-size: 1.4rem;
 }
 button:disabled {
-  background-color: $very-light-gray;
+  background-color: $soft-gray;
   cursor: not-allowed;
+  img {
+    filter: grayscale(98%);
+  }
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.5px;
+  padding: 4px 0px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  top: 100%;
+  left: 50%;
+  margin-left: -50px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
 }
 .titles {
   color: $base-gray;
   font-weight: bold;
 }
+.workflow__modal {
+  background-color: $white;
+  color: $base-gray;
+  border-radius: 6px;
+  min-height: 25vh;
+  max-height: 70vh;
+  padding: 0 1rem;
+  overflow: scroll;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    background-color: white;
+    z-index: 2;
+    top: 0;
+    p {
+      font-size: 16px;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+    width: 100%;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      h4 {
+        font-weight: 900;
+        font-size: 13px;
+        margin: 0;
+        padding: 0;
+        min-width: 32vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+
+        span {
+          // background-color: $off-white;
+          color: $light-gray-blue;
+          padding: 4px 8px;
+          border-radius: 4px;
+          margin-left: 12px;
+          font-size: 13px;
+          opacity: 0.9;
+        }
+      }
+
+      p {
+        font-weight: bold;
+        font-size: 13px;
+        color: $light-gray-blue;
+        padding: 0;
+        margin: 0;
+        margin-top: 4px;
+      }
+    }
+  }
+}
 .delete_modal {
   background-color: $white;
   color: $base-gray;
   border-radius: 0.3rem;
-  width: 40vw;
-  padding: 1rem;
+  width: 30vw;
+  letter-spacing: 0.75px;
   &__header {
-    height: 3rem;
-    padding: 1rem 0rem;
+    padding: 0px 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-weight: 400;
-    border-bottom: 1px solid $soft-gray;
     img {
-      height: 1rem;
       margin-top: -1rem;
       cursor: pointer;
     }
   }
   &__body {
-    height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0px 8px 8px 0px;
   }
   &__footer {
-    height: 3rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    padding: 8px 0px;
   }
 }
 .edit__modal {
   background-color: white;
-  border: 1px solid #e8e8e8;
   border-radius: 0.3rem;
   color: $base-gray;
-  width: 84vw;
-  height: 74vh;
+  width: 88vw;
+  height: 92vh;
+  margin-top: -16px;
   overflow: scroll;
   display: flex;
   align-items: center;
@@ -509,12 +905,40 @@ button:disabled {
   flex-direction: column;
   padding: none;
 
+  &__header {
+    background-color: red;
+    padding: 0px 8px;
+    background-color: white;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   &__button {
     display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 0rem 2rem 1rem 0rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0px 8px;
     width: 100%;
+    border-radius: 4px;
+    background: white;
+
+    p {
+      color: $coral;
+      background-color: $light-coral;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 13px;
+      margin-left: -4px;
+    }
 
     button {
       background-color: $dark-green;
@@ -522,21 +946,45 @@ button:disabled {
       border-radius: 0.25rem;
       color: white;
       cursor: pointer;
-      padding: 0.5rem 2rem;
+      padding: 8px 12px;
     }
   }
 }
+.delete {
+  background-color: white !important;
+  border: 1px solid $coral !important;
+  border-radius: 0.25rem;
+  color: $coral !important;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-right: 8px;
+}
+
+// .edit__modal::-webkit-scrollbar {
+//   width: 2px; /* Mostly for vertical scrollbars */
+//   height: 0px; /* Mostly for horizontal scrollbars */
+// }
+// .edit__modal::-webkit-scrollbar-thumb {
+//   background-color: $coral;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// .edit__modal::-webkit-scrollbar-track {
+//   box-shadow: inset 2px 2px 4px 0 $soft-gray;
+//   border-radius: 0.3rem;
+// }
+// .edit__modal::-webkit-scrollbar-track-piece {
+//   margin-top: 0.25rem;
+// }
 
 .no__button {
-  background-color: $soft-gray;
-  outline: 1px solid $soft-gray;
-  border: none;
-  font-size: 16px;
-  border-radius: 0.3rem;
-  cursor: pointer;
-  padding: 0.4rem 2rem;
-  margin-right: 0.5rem;
+  background-color: white;
+  border: 1px solid $soft-gray;
+  border-radius: 0.25rem;
   color: $base-gray;
+  cursor: pointer;
+  padding: 8px 16px;
+  margin-right: 8px;
 }
 .yes__button {
   display: flex;
@@ -555,55 +1003,100 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
-  // margin-left: 75px;
-  margin-top: 3.5rem;
+  margin: 16px 0px;
+  padding-left: 24px;
   color: $base-gray;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
+
 .alert_cards {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
   justify-content: flex-start;
-  // align-items: flex-start;
-  margin-top: 1rem;
   flex-wrap: wrap;
-  padding: 0;
-  width: 86vw;
-}
-.added-collection:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-  transform: scale(1.015);
+  width: 100%;
+  border-radius: 6px;
+  margin-top: 16px;
 }
 
+// .added-collection:hover {
+//   box-shadow: 1px 2px 2px $very-light-gray;
+//   transform: scale(1.015);
+// }
+
+.green-shadow {
+  box-shadow: 1px 2px 6px $very-light-gray;
+  border: 0.5px solid $soft-gray;
+}
+.yellow-shadow {
+  border: 1px solid $soft-gray;
+}
+.gray-shadow {
+  // box-shadow: 2px 2px 6px $very-light-gray;
+  border: 1px solid $soft-gray;
+}
+.gray {
+  color: $light-gray-blue !important;
+}
 .added-collection {
   background-color: white;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  width: 20vw;
-  margin-right: 1rem;
+  border-radius: 9px;
+  // border: 1px solid #e8e8e8;
+  width: 20.5vw;
+  height: 175px;
   margin-bottom: 1rem;
+  margin-right: 1rem;
+  padding-bottom: 0;
   transition: all 0.25s;
   font-size: 12px;
   &__header {
     max-height: 50px;
-    padding: 1.75rem 1rem;
-    font-size: 13px;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    border-bottom: 2px solid $soft-gray;
+    margin-top: 8px;
+    span {
+      margin-left: auto;
+      margin-right: 16px;
+      font-size: 14px;
+      color: $light-gray-blue !important;
+    }
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      margin-left: 8px;
+      p,
+      h4 {
+        margin: 0;
+        padding: 0;
+      }
+      p {
+        font-size: 10px;
+        color: $light-gray-blue;
+      }
+    }
   }
   &__body {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
+    align-items: flex-start;
+    margin-left: 16px;
+    padding-right: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    letter-spacing: 0.75px;
   }
   &__footer {
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     height: 50px;
-    padding: 1rem;
-    justify-content: space-evenly;
+    margin-left: 16px;
   }
 }
 a {
@@ -611,25 +1104,35 @@ a {
   color: white;
   cursor: pointer;
 }
+.green-bg {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $white-green;
+}
+.blue-bg {
+  padding: 4px 8px;
+  margin-left: 16px;
+  margin-top: 4px;
+  border-radius: 6px;
+  background-color: $very-light-blue;
 
+  img {
+    filter: brightness(0%) invert(85%) sepia(36%) saturate(7492%) hue-rotate(188deg)
+      brightness(113%) contrast(97%);
+  }
+}
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin: 0 0.5rem 0 0.5rem;
+  margin: 0 0.5rem 0 0;
   color: $base-gray;
   font-weight: bold;
 }
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.2rem;
-  cursor: pointer;
-  padding: 0.15rem 0.3rem;
-}
+
 .row__two {
   display: flex;
   align-items: center;
@@ -651,15 +1154,73 @@ a {
 .green_button {
   color: white;
   background-color: $dark-green;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
+  border-radius: 6px;
+  padding: 8px 12px;
   font-size: 12px;
   border: none;
   cursor: pointer;
+  text-align: center;
+}
+.white_button {
+  color: $dark-green;
+  background-color: $white;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.75px;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+.yellow_button {
+  color: $yellow;
+  opacity: 0.85;
+  background-color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  border: 1px solid $yellow;
+  cursor: pointer;
+  text-align: center;
+}
+.yellow_button_full {
+  color: white;
+  opacity: 0.85;
+  background-color: $yellow;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  border: 1px solid $yellow;
+  cursor: pointer;
+  text-align: center;
+}
+// .white_button {
+//   color: $base-gray;
+//   background-color: white;
+//   border-radius: 6px;
+//   border: 1px solid $soft-gray;
+//   box-shadow: 1px 1px 1px $very-light-gray;
+//   padding: 6px 8px;
+//   font-size: 12px;
+
+//   cursor: pointer;
+//   text-align: center;
+// }
+.gray_button {
+  color: white;
+  background-color: $light-gray-blue;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  text-align: center;
 }
 .green {
-  color: $dark-green;
+  color: $dark-green !important;
+}
+.blue {
+  color: rgb(118, 191, 252) !important;
 }
 .center__ {
   display: flex;
@@ -670,8 +1231,9 @@ a {
 .center-loader {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   height: 60vh;
+  width: 100%;
 }
 .loading-title {
   display: none;

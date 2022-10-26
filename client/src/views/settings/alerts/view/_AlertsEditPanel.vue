@@ -1,198 +1,151 @@
 <template>
-  <div class="tab">
-    <div class="tab__header-items__group">
+  <div class="edit-panel">
+    <div class="title">
+      <h4 class="title__head">General</h4>
+
+      <section v-if="!templateNames.includes(alert.title)" class="title__body">
+        <div style="display: flex; justify-content: center">
+          <div style="color: #41b883" v-show="savedChanges">Saved Changes!</div>
+        </div>
+        <p>Edit workflow title</p>
+        <input
+          :id="`resource-title-${alert.id}`"
+          :errors="templateTitleField.errors"
+          @input="executeUpdateTemplate(templateTitleField)"
+          v-model="templateTitleField.value"
+        />
+      </section>
+
+      <section class="title__body" v-else>
+        <p>Cant edit templated alert titles</p>
+        <h2 style="color: #4d4e4c; font-size: 16px">{{ alert.title }}</h2>
+      </section>
+    </div>
+
+    <div class="title">
+      <h4 class="title__head">Conditions</h4>
+
+      <section class="title__body">
+        <p>Edit your workflow conditions</p>
+      </section>
       <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'TEMPLATE' }"
-        @click="selectedTab = 'TEMPLATE'"
-        class="tab__header-items__item"
+        style="padding-top: 8px; padding-bottom: 8px"
+        v-for="(group, index) in alert.groupsRef"
+        :key="index"
+        :class="index > 0 ? 'top-border' : ''"
       >
-        Workflow Title
+        <div
+          v-if="alert.groupsRef.length > 1"
+          style="display: flex; justify-content: flex-end; width: 100%"
+        >
+          <div class="remove__group">
+            <img
+              @click.stop="onRemoveAlertGroup(group.id, index)"
+              style="height: 18px; cursor: pointer; filter: invert(40%)"
+              src="@/assets/images/trash.svg"
+              alt=""
+            />
+          </div>
+        </div>
+
+        <div>
+          <p
+            @click="onDeleteOperand(operand.id, i, index)"
+            class="row"
+            :key="i"
+            v-for="(operand, i) in group.operandsRef"
+          >
+            <span class="remove__group" style="margin-right: 8px">
+              <img class="remove-color" src="@/assets/images/remove.svg" style="16px" alt="" />
+            </span>
+            {{ 'Condition ' + (i + 1) + ': ' }}
+            {{ getReadableOperandRow(operand) }}
+          </p>
+
+          <div v-if="group.operandsRef.length < 3" style="margin-left: 12px" class="plus_button">
+            <button @click="onShowOperandModal(index)">+</button>
+          </div>
+        </div>
       </div>
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'GROUPS' }"
-        @click="selectedTab = 'GROUPS'"
-        class="tab__header-items__item"
-      >
-        Conditions
-      </div>
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'CONFIG' }"
-        @click="selectedTab = 'CONFIG'"
-        class="tab__header-items__item"
-      >
-        Delivery
-      </div>
-      <div
-        :class="{ 'tab__header-items__item--active': selectedTab == 'MESSAGE' }"
-        @click="selectedTab = 'MESSAGE'"
-        class="tab__header-items__item"
-      >
-        Message
+
+      <div class="flex-end" v-if="alert.groupsRef.length < 3">
+        <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
       </div>
     </div>
 
-    <div class="tab__panel">
-      <div style="display: flex; justify-content: center">
-        <!-- <PulseLoadingSpinner v-if="savingInTab" /> -->
-        <div v-show="savedChanges">Saved Changes</div>
+    <div class="title">
+      <h4 class="title__head">Delivery</h4>
+
+      <section class="title__body">
+        <p>Edit your delivery options</p>
+      </section>
+
+      <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
+        <span class="remove__group" style="margin-right: 8px">
+          <img
+            class="remove-color"
+            @click="onDeleteConfig(config.id, index)"
+            src="@/assets/images/remove.svg"
+            style="height: 22px"
+            alt=""
+          />
+        </span>
+
+        {{ 'Option ' + (index + 1) + ': ' }}
+        {{ getReadableConfig(config) }}
+      </p>
+
+      <div style="margin-left: 12px" class="plus_button">
+        <button @click="onShowSettingsModal">+</button>
       </div>
-      <div class="alerts-template-list__content">
-        <div v-if="selectedTab == 'TEMPLATE'" class="alerts-template-list__content-template">
-          <div v-if="!templateNames.includes(alert.title)">
-            <h4>Edit workflow title:</h4>
-            <FormField
-              :id="`resource-title-${alert.id}`"
-              :errors="templateTitleField.errors"
-              @input="executeUpdateTemplate(templateTitleField)"
-              v-model="templateTitleField.value"
+    </div>
+
+    <div class="title">
+      <h4 class="title__head">Slack Message</h4>
+
+      <section class="title__body">
+        <p>Edit your slack message</p>
+      </section>
+
+      <div class="alerts-template-list__content-message__form-body">
+        <FormField :errors="messageTemplateForm.field.body.errors">
+          <template v-slot:input>
+            <quill-editor
+              @blur="messageTemplateForm.field.body.validate()"
+              @input="executeUpdateMessageTemplate"
+              ref="message-body"
+              v-model="messageTemplateForm.field.body.value"
+              :options="{
+                modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
+              }"
+              class="message__box"
             />
-          </div>
-          <div v-else>
-            <h3>{{ alert.title }}</h3>
-            <p class="even">
-              Cant edit templated alert titles &nbsp;
-              <img src="@/assets/images/exclamation.svg" class="invert" alt="" />
+          </template>
+        </FormField>
+      </div>
+      <div style="margin-right: 16px" class="flex-end">
+        <Multiselect
+          placeholder="Insert Value { }"
+          v-model="crmValue"
+          @input="bindText(`${alert.resourceType}.${$event.apiName}`, `${$event.label}`)"
+          :options="fields.list"
+          openDirection="above"
+          style="width: 14vw"
+          selectLabel="Enter"
+          track-by="apiName"
+          label="label"
+          :loading="dropdownLoading"
+        >
+          <template slot="noResult">
+            <p class="multi-slot">No results.</p>
+          </template>
+          <template slot="afterList">
+            <p class="multi-slot__more" @click="fieldNextPage">
+              Load More
+              <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
             </p>
-          </div>
-        </div>
-        <div v-if="selectedTab == 'GROUPS'">
-          <div class="card-rows" v-for="(group, index) in alert.groupsRef" :key="index">
-            <div class="group-card">
-              <div style="display: flex; justify-content: flex-end; width: 100%">
-                <div class="img-border">
-                  <img
-                    @click.stop="onRemoveAlertGroup(group.id, index)"
-                    style="height: 1rem; cursor: pointer; filter: invert(10%)"
-                    src="@/assets/images/trash.svg"
-                    alt=""
-                  />
-                </div>
-              </div>
-
-              <div class="group-card__title">Workflow conditions group {{ index + 1 }}</div>
-              <div>
-                <p
-                  @click="onDeleteOperand(operand.id, i, index)"
-                  class="row"
-                  :key="i"
-                  v-for="(operand, i) in group.operandsRef"
-                >
-                  <span class="img-border">
-                    <img
-                      class="remove-color"
-                      src="@/assets/images/remove.svg"
-                      style="height: 1rem"
-                      alt=""
-                    />
-                  </span>
-                  {{ 'Condition ' + (i + 1) + ': ' }}
-                  {{ getReadableOperandRow(operand) }}
-                </p>
-
-                <div
-                  style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
-                >
-                  <button class="condition-button" @click="onShowOperandModal(index)">
-                    Add condition
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            v-if="!alert.groupsRef.length"
-            style="display: flex; justify-content: center; width: 100%; margin-bottom: -1rem"
-          >
-            <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
-          </div>
-        </div>
-        <div v-if="selectedTab == 'MESSAGE'" class="alerts-template-list__content-message">
-          <div class="alerts-template-list__content-message__form">
-            <div class="alerts-template-list__content-message__form-body">
-              <div>
-                <h3>Edit your workflow message:</h3>
-              </div>
-              <FormField :errors="messageTemplateForm.field.body.errors">
-                <template v-slot:input>
-                  <quill-editor
-                    @blur="messageTemplateForm.field.body.validate()"
-                    @input="executeUpdateMessageTemplate"
-                    ref="message-body"
-                    v-model="messageTemplateForm.field.body.value"
-                    :options="{
-                      modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                    }"
-                    class="message__box"
-                  />
-                </template>
-              </FormField>
-            </div>
-            <div
-              style="
-                display: flex;
-                align-items: flex-start;
-                flex-direction: column;
-                margin-left: 3rem;
-              "
-            >
-              <h3>Add CRM fields:</h3>
-              <Multiselect
-                placeholder="Select field"
-                v-model="crmValue"
-                @input="bindText(`${alert.resourceType}.${$event.apiName}`)"
-                :options="fields.list"
-                openDirection="below"
-                style="width: 14vw"
-                selectLabel="Enter"
-                track-by="apiName"
-                label="referenceDisplayLabel"
-                :loading="dropdownLoading"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="afterList">
-                  <p class="multi-slot__more" @click="fieldNextPage">
-                    Load More
-                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                  </p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select field
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-          </div>
-        </div>
-        <div v-if="selectedTab == 'CONFIG'" class="alerts-template-list__content-settings">
-          <div class="card-rows">
-            <div class="group-card">
-              <div class="group-card__title">Delivery Options</div>
-              <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
-                <span class="img-border">
-                  <img
-                    class="remove-color"
-                    @click="onDeleteConfig(config.id, index)"
-                    src="@/assets/images/remove.svg"
-                    style="height: 1rem"
-                    alt=""
-                  />
-                </span>
-
-                {{ 'Option ' + (index + 1) + ': ' }}
-                {{ getReadableConfig(config) }}
-              </p>
-              <div style="display: flex; justify-content: center; width: 100%">
-                <button class="condition-button" @click="onShowSettingsModal">
-                  Add delivery option
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+          </template>
+        </Multiselect>
       </div>
     </div>
   </div>
@@ -320,14 +273,7 @@ export default {
       ],
     }
   },
-  watch: {
-    async selectedTab(val, curr) {
-      if (val && val == 'MESSAGE' && val != curr) {
-        this.fields.filters.salesforceObject = this.alert.resourceType
-        this.fields.refresh()
-      }
-    },
-  },
+
   computed: {
     editor() {
       return this.$refs['message-body'].quill
@@ -346,8 +292,8 @@ export default {
 
         {
           name: 'alert-operands-modal',
-          height: 500,
-          width: 820,
+          height: 400,
+          width: 800,
         },
         {
           'before-close': (e) => {
@@ -403,7 +349,7 @@ export default {
 
         {
           name: 'alert-settings-modal',
-          height: 650,
+          height: 550,
           width: 580,
         },
         {
@@ -548,13 +494,13 @@ export default {
       })
     },
 
-    bindText(val) {
+    bindText(val, title) {
       this.$refs['message-body'].quill.focus()
       let start = 0
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `{ ${val} }`)
+      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
     },
     async updateTemplate(field) {
       this.templateTitleField.validate()
@@ -614,6 +560,7 @@ export default {
   async created() {
     // populate values for stand alone fields
     // for this version only allowing edit of certain fields or delete of array items
+    this.fields.refresh()
     if (this.alert) {
       this.templateTitleField.value = this.alert.title
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
@@ -645,6 +592,23 @@ export default {
 ::v-deep .input-form__active {
   border: none;
 }
+
+::v-deep .ql-toolbar.ql-snow {
+  display: none;
+}
+::v-deep .ql-container.ql-snow {
+  outline: 1px solid $soft-gray;
+  border: none;
+  border-radius: 4px;
+  margin-left: 12px;
+  width: 48vw;
+}
+::v-deep .ql-editor p {
+  color: $base-gray;
+}
+::v-deep .ql-editor.ql-blank::before {
+  color: $very-light-gray;
+}
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -652,6 +616,88 @@ export default {
   100% {
     transform: translateY(-6px);
   }
+}
+.edit-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 0px;
+}
+.title {
+  background-color: white;
+  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  border: 1px solid $soft-gray;
+  color: $base-gray;
+  border-radius: 6px;
+  width: 50vw;
+  // min-height: 25vh;
+  letter-spacing: 0.75px;
+  padding: 0px 0px 32px 0px;
+  margin-top: 16px;
+  &__head {
+    padding: 8px 12px;
+    background-color: white;
+    margin-bottom: 0;
+    // color: $very-light-gray;
+  }
+  &__body {
+    padding: 6px 12px;
+    background-color: white;
+    font-size: 11px;
+    color: $light-gray-blue;
+    p {
+      margin-top: 0;
+    }
+  }
+}
+.flex-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+.top-border {
+  border-top: 1px solid #eeeeee;
+}
+.remove__group {
+  background-color: $off-white;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 3px 6px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  color: $base-gray;
+}
+.plus_button {
+  border: none;
+  background-color: transparent;
+  border-radius: 0.3rem;
+  padding: 0.1rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: $dark-green;
+  margin-right: 8px;
+
+  button {
+    background-color: white;
+    border: 1px solid $dark-green;
+    border-radius: 100%;
+    color: $dark-green;
+    font-size: 18px;
+    cursor: pointer;
+  }
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 14px;
+  margin-top: -22px;
+  color: $very-light-gray;
 }
 h3 {
   font-weight: 400;
@@ -678,6 +724,19 @@ h3 {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+input {
+  border: none;
+  letter-spacing: 0.8px;
+  padding: 8px;
+  color: $base-gray;
+  width: 94%;
+  border: 1px solid $soft-gray;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+input:focus {
+  outline: none;
 }
 .multi-slot {
   display: flex;
@@ -737,19 +796,21 @@ h3 {
 }
 
 .condition-button {
-  background-color: $dark-green;
-  color: white;
+  background-color: white;
+  color: $dark-green;
   border-radius: 0.25rem;
-  border: none;
+  border: 1px solid $dark-green;
   cursor: pointer;
   padding: 0.5rem 1rem;
   margin: 0.5rem;
+  font-size: 13px;
 }
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
-
+  font-size: 14px;
+  letter-spacing: 0.75px;
   cursor: pointer;
 }
 .even {
@@ -772,10 +833,8 @@ h3 {
   filter: invert(80%);
 }
 .message__box {
-  margin-bottom: 2rem;
-  height: 16vh;
-  width: 32vw;
-  border-radius: 0.25rem;
+  height: 30vh;
+  width: 26vw;
   background-color: transparent;
 }
 .tab__header-items {
@@ -809,9 +868,7 @@ h3 {
     padding: 0.75rem;
   }
 }
-.tab__panel {
-  padding: 0.5rem 3rem;
-}
+
 .alerts-template-list__content-message {
   font-size: 14px;
   letter-spacing: 0.2px;

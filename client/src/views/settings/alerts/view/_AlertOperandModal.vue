@@ -1,18 +1,18 @@
 <template>
   <div class="alert-operand-modal">
-    <div class="alert-operand-modal__header">
-      <h3>Add Condition</h3>
-    </div>
+    <div class="alert-operand-modal__header"></div>
     <AlertOperandRow v-if="form" :resourceType="resourceType" :form.sync="form" />
 
     <div class="alert-operand-modal__save">
-      <PulseLoadingSpinnerButton
+      <button
         text="save"
         @click="onSave"
         class="primary-button"
         :loading="isSaving"
         :disabled="!form.isValid"
-      />
+      >
+        Add Condition
+      </button>
     </div>
   </div>
 </template>
@@ -84,17 +84,9 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/layout';
-@import '@/styles/containers';
-@import '@/styles/forms';
-@import '@/styles/emails';
-@import '@/styles/sidebars';
-@import '@/styles/mixins/buttons';
-@import '@/styles/mixins/utils';
-@import '@/styles/buttons';
 
 .primary-button {
-  padding: 0.4rem 1.5rem;
+  padding: 0.4rem 1rem;
   box-shadow: none;
   font-weight: 400;
 }
@@ -113,10 +105,10 @@ export default {
   &__header {
     padding: 0.25rem 1.5rem;
     letter-spacing: 1px;
-    outline: 1px solid #e8e8e8;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 24px;
   }
 
   &__save {

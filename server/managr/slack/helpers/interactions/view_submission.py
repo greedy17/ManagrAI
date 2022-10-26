@@ -2773,6 +2773,11 @@ def process_submit_alert_resource_data(payload, context):
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
+    if (
+        all_form_data.get("meeting_comments") is not None
+        and all_form_data.get("meeting_type") is not None
+    ):
+        emit_add_update_to_sf(str(main_form.id))
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)

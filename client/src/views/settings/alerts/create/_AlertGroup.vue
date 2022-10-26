@@ -2,7 +2,7 @@
   <div>
     <div class="centered">
       <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
-        <label>AND</label>
+        <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
         <ToggleCheckBox
           @input="
             selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
@@ -11,31 +11,59 @@
           offColor="#41b883"
           onColor="#41b883"
         />
-        <label>OR</label>
+        <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
       </div>
+
+      <!-- <small v-if="form.field.groupOrder.value != 0" @click="toggleSelectedCondition" class="andOr">
+        <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
+        <span class="space-s">|</span>
+        <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
+      > -->
     </div>
 
     <div>
-      <div :key="i" v-for="(alertOperand, i) in form.field.alertOperands.groups">
+      <!-- <small class="small-gray-text">Condition 1</small> -->
+      <div
+        style="margin-top: 8px"
+        :key="i"
+        v-for="(alertOperand, i) in form.field.alertOperands.groups"
+      >
         <AlertOperandRow
           @remove-operand="onRemoveOperand(i)"
           :resourceType="resourceType"
           :form="alertOperand"
         />
+        <div
+          v-if="
+            form.field.alertOperands.groups.length === i + 1 &&
+            form.field.alertOperands.groups.length < 3 &&
+            validateAlertOperands(form.field.alertOperands.groups)
+          "
+          class="column"
+        >
+          <small>|</small>
+        </div>
         <div class="row__buttons">
-          <button
+          <span
+            v-if="
+              form.field.alertOperands.groups.length === i + 1 &&
+              form.field.alertOperands.groups.length < 3 &&
+              validateAlertOperands(form.field.alertOperands.groups)
+            "
             class="plus_button"
-            style="margin-right: 0.5rem"
+            @click="emitAddOperandForm"
+          >
+            <button>+</button>
+          </span>
+          <span v-else></span>
+
+          <small
             @click.stop="onRemoveOperand(i)"
             v-if="form.field.alertOperands.groups.length > 1"
-            :disabled="form.field.alertOperands.groups.length - 1 <= 0"
+            class="small-gray-text"
           >
-            <img src="@/assets/images/trash.svg" class="filtered" alt="" />
-          </button>
-
-          <button class="plus_button" @click="addOperandForm">
-            <img src="@/assets/images/plusOne.svg" class="filtered" alt="" />
-          </button>
+            <img src="@/assets/images/remove.svg" height="20px" alt="" />
+          </small>
         </div>
       </div>
     </div>
@@ -77,13 +105,21 @@ export default {
   },
   async created() {},
   methods: {
-    addOperandForm() {
+    test(log) {
+      console.log('log', log)
+    },
+    toggleSelectedCondition() {
+      this.selectedCondition == 'AND'
+        ? (this.selectedCondition = 'OR')
+        : (this.selectedCondition = 'AND')
+    },
+    emitAddOperandForm() {
       const order = this.form.field.alertOperands.groups.length
       if (order >= 3) {
-        this.$toast('You can only add 3 items per group', {
-          timeout: 2000,
+        this.$toast('You can only add 3 conditions per group', {
+          timeout: 2200,
           position: 'top-left',
-          type: 'error',
+          type: 'default',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -91,6 +127,21 @@ export default {
       }
       this.form.addToArray('alertOperands', new AlertOperandForm())
       this.form.field.alertOperands.groups[order].field.operandOrder.value = order
+      this.$emit('scroll-to-view')
+    },
+    validateAlertOperands(operands) {
+      for (let i = 0; i < operands.length; i++) {
+        if (!operands[i].field.operandIdentifier.isValid) {
+            return false
+          }
+          if (!operands[i].field.operandOperator.isValid) {
+            return false
+          }
+        if (!operands[i].field.operandValue.isValid) {
+          return false
+        }
+      }
+      return true
     },
     onRemoveOperand(i) {
       if (this.form.field.alertOperands.groups.length - 1 <= 0) {
@@ -128,8 +179,23 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
+.andOr {
+  border: 1px solid $soft-gray;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: $base-gray;
+}
+.inactive {
+  color: $very-light-gray;
+  font-size: 9px;
+  border-radius: 4px;
+}
+.space-s {
+  margin: 0 4px;
+}
 .plus_button {
-  border: 1px solid #e8e8e8;
+  border: none;
   background-color: transparent;
   border-radius: 0.3rem;
   padding: 0.1rem;
@@ -137,6 +203,16 @@ export default {
   align-items: center;
   cursor: pointer;
   color: $dark-green;
+  margin-right: 8px;
+
+  button {
+    background-color: white;
+    border: 1px solid $dark-green;
+    border-radius: 100%;
+    color: $dark-green;
+    font-size: 18px;
+    cursor: pointer;
+  }
 }
 .filtered {
   filter: invert(20%);
@@ -146,18 +222,48 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 16px;
 }
 .row__buttons {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
+  margin-left: 4px;
 }
 .toggle__switch {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 2rem;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 0.75px;
+  color: $base-gray;
+
+  label {
+    padding: 0rem 0.2rem;
+  }
+}
+.small-gray-text {
+  font-size: 10px;
+  color: $coral;
+  background-color: $off-white;
+  padding: 2px;
+  border-radius: 4px;
+  margin-right: 8px;
+  cursor: pointer;
+
+  img {
+    filter: invert(48%) sepia(24%) saturate(1368%) hue-rotate(309deg) brightness(105%) contrast(96%);
+  }
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 14px;
+  margin-top: -22px;
+  color: $very-light-gray;
 }
 </style>

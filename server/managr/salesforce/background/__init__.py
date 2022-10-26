@@ -193,6 +193,10 @@ def emit_process_slack_bulk_update(user, resource_ids, data, message_ts, channel
     )
 
 
+def emit_process_bulk_update(data, user, verbose_name):
+    return _processs_bulk_update(data, user, verbose_name=verbose_name)
+
+
 # SF Resource Sync Tasks
 
 
@@ -532,7 +536,8 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
 
 
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
@@ -595,7 +600,8 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
@@ -986,7 +992,10 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
+                *filter(
+                    lambda contact: contact.get("_form") == str(form.id),
+                    meeting.participants,
+                )
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -1752,7 +1761,10 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
         for channel in send_summ_to_channels:
             try:
                 r = slack_requests.send_channel_message(
-                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
+                    channel,
+                    slack_access_token,
+                    text=f"Recap Lead",
+                    block_set=blocks,
                 )
                 logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:
@@ -1917,3 +1929,110 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
         )
     except Exception as e:
         logger.exception(f"Failed To Bulk Update Salesforce Data {e}")
+
+
+@background(schedule=0)
+def _processs_bulk_update(data, user):
+    logger.info(f"UPDATE START ---- {data}")
+    user = User.objects.get(id=user)
+    integration_ids = data.get("integration_ids")
+    form_data = data.get("form_data")
+    form_type = data.get("form_type")
+    resource_type = data.get("resource_type")
+    resource_id = data.get("resource_id", None)
+    stage_name = data.get("stage_name", None)
+    instance_data = {
+        "user": user,
+        "resource_type": resource_type,
+        "form_type": form_type,
+        "resource_id": resource_id,
+        "stage_name": stage_name,
+    }
+    return_data = None
+    for id in integration_ids:
+        form_ids = create_form_instance(**instance_data)
+
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+        main_form = forms.filter(template__form_type="UPDATE").first()
+        stage_form_data_collector = {}
+        for form in forms:
+            form.save_form(form_data, False)
+            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+        formatted_saved_data = process_text_field_format(
+            str(user.id), main_form.template.resource, all_form_data
+        )
+        attempts = 1
+        while True:
+            sf = user.salesforce_account
+            try:
+                if resource_type == "OpportunityLineItem":
+                    resource = main_form.resource_object.update_in_salesforce(
+                        str(user.id), all_form_data
+                    )
+                else:
+                    resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                return_data = {
+                    "success": True,
+                }
+                break
+            except FieldValidationError as e:
+                logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
+                print(e)
+                return_data = {"success": False, "error": str(e)}
+                break
+
+            except RequiredFieldError as e:
+                logger.info(f"UPDATE REQUIRED FIELD ERROR {e}")
+
+                return_data = {"success": False, "error": str(e)}
+                break
+            except UnhandledSalesforceError as e:
+                logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
+                return_data = {"success": False, "error": str(e)}
+                break
+
+            except SFNotFoundError as e:
+                logger.info(f"UPDATE SF NOT FOUND ERROR {e}")
+                return_data = {"success": False, "error": str(e)}
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
+                    return_data = {"success": False, "error": "Could not refresh token"}
+                    break
+                else:
+                    if main_form.resource_object.owner == user:
+                        sf.regenerate_token()
+                    else:
+                        main_form.resource_object.owner.salesforce_account.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError:
+                if attempts >= 5:
+                    logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
+                    return_data = {"success": False, "error": "Connection was reset"}
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"UPDATE ERROR {e}")
+                return_data = {"success": False, "error": f"UPDATE ERROR {e}"}
+                break
+        if return_data["success"]:
+            if all_form_data.get("meeting_comments", None) is not None:
+                emit_add_update_to_sf(str(main_form.id))
+            if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
+                _send_instant_alert(form_ids)
+            forms.update(
+                is_submitted=True, update_source="pipeline", submission_date=timezone.now()
+            )
+            value_update = main_form.resource_object.update_database_values(all_form_data)
+            # from_workflow = data.get("from_workflow")
+            # title = data.get("workflow_title", None)
+            # if from_workflow:
+            #     user.activity.increment_untouched_count("workflows")
+            #     user.activity.add_workflow_activity(str(main_form.id), title)
+    return

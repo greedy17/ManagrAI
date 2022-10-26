@@ -6,7 +6,7 @@
       <PulseLoadingSpinnerButton
         text="save"
         @click="onSave"
-        class="btn btn--primary"
+        class="primary-button"
         :loading="isSaving"
         :disabled="!form.isValid"
       />
@@ -57,10 +57,10 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertGroupModel.api.createGroup(this.form.toAPI)
-          this.$toast('Successfully added group and operand', {
+          this.$toast('Successfully added group', {
             timeout: 2000,
             position: 'top-left',
-            type: 'sucess',
+            type: 'success',
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
@@ -79,22 +79,17 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
-@import '@/styles/layout';
-@import '@/styles/containers';
-@import '@/styles/forms';
-@import '@/styles/emails';
-@import '@/styles/sidebars';
-@import '@/styles/mixins/buttons';
-@import '@/styles/mixins/utils';
-@import '@/styles/buttons';
-.btn {
-  &--primary {
-    @include primary-button();
-  }
-  box-shadow: none !important;
+
+.primary-button {
+  padding: 0.4rem 1rem;
+  box-shadow: none;
+  font-weight: 400;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
 }
 .alert-group-modal {
-  padding: 2rem 1rem;
+  padding: 2vh 3.5vw;
   border-radius: 0.2rem;
   height: 100%;
   overflow-y: scroll;
@@ -108,7 +103,10 @@ export default {
 }
 .end {
   display: flex;
-  justify-content: center;
-  margin-top: 2rem;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-right: 1rem;
+  height: 190px;
+  width: 100%;
 }
 </style>

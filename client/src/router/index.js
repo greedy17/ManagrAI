@@ -71,6 +71,12 @@ export default new Router({
       component: () => import('@/views/user/ProfilePage'),
     },
     {
+      path: '/home',
+      component: () => import('../views/Home'),
+      beforeEnter: Auth.requireAuth,
+      name: 'Home',
+    },
+    {
       path: '/create-leads',
       name: 'CreateLeads',
       beforeEnter: Auth.requireAuth,
@@ -132,13 +138,13 @@ export default new Router({
     },
     {
       path: '/next-step',
-      name: 'NextStep',
+      name: 'UpcomingNextStep',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/NextStepDate')
     },
     {
       path: '/large-opps',
-      name: 'LargeOpps',
+      name: 'LargeOpportunities',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
     },
@@ -156,13 +162,13 @@ export default new Router({
     },
     {
       path: '/deal-rotting',
-      name: 'DealRotting',
+      name: 'DealReview',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/DealRotting')
     },
     {
       path: '/update-forecast',
-      name: 'UpdateForecast',
+      name: '90DayPipeline',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/UpdateForecast')
     },
@@ -196,6 +202,12 @@ export default new Router({
       name: 'Meetings',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/Meetings')
+    },
+    {
+      path: '/notes',
+      name: 'Notes',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/Notes')
     },
     {
       path: '/closed-won',
@@ -269,6 +281,7 @@ export default new Router({
         },
         {
           path: 'list-templates',
+          beforeEnter: Auth.requireAuth,
           name: 'ListTemplates',
           component: () =>
             import(

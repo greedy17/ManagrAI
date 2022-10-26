@@ -1,415 +1,442 @@
 <template>
-  <div class="table-row">
-    <div
-      class="table-cell sticky-header wt-bg"
-      :class="{ 'left-green': meetingUpdated, 'left-red': !meetingUpdated }"
-    >
-      <div>
-        <p style="letter-spacing: 0.25px; font-size: 12px; margin-bottom: 3px">
+  <div class="cards">
+    <section class="cards__header">
+      <img src="@/assets/images/meeting.svg" height="16px" alt="" />
+      <div style="margin-left: 18px" class="cards__header__div">
+        <h4>
           {{ meeting.topic ? meeting.topic : 'Meeting' }}
+        </h4>
+        <p style="font-size: 11px">
+          {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
+          <span>{{
+            meeting.end_time ? '- ' + formatDateTimeToTime(meeting.end_time) : '- TBD'
+          }}</span>
         </p>
-        <span style="color: #9b9b9b; font-size: 11px">
-          Time: {{ meeting.start_time ? formatDateTimeToTime(meeting.start_time) : '' }}
-        </span>
       </div>
-    </div>
-    <div class="table-cell-small">
-      {{ meeting.participants.length }}
-    </div>
+    </section>
 
-    <div class="table-cell">
+    <section class="cards__header">
+      <img src="@/assets/images/people.svg" height="16px" alt="" />
       <div
-        v-for="(participant, participantIndex) in participants"
-        :key="participantIndex"
-        class="column"
+        v-if="!showingAttendees"
+        @click="showAttendees"
+        class="cards__header__div cards__attendees"
       >
-        <div v-if="!meeting.participants[participantIndex].id" class="roww">
-          <p class="add-contact">
-            {{ meeting.participants[participantIndex].email }}
-          </p>
-          <span
-            v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
-            class="tooltip"
-          >
-            <img
-              @click="addContact(participantIndex)"
-              class="contact-img green"
-              src="@/assets/images/add-contact.svg"
-              alt=""
-            />
-            <span class="tooltiptext">Add Contact</span>
-          </span>
-          <span
-            v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
-            class="tooltip"
-          >
-            <img
-              src="@/assets/images/remove.svg"
-              class="contact-img red"
-              @click="removeParticipant(participantIndex)"
-              alt=""
-            />
-            <span class="tooltiptext">Remove</span>
-          </span>
-          <span v-if="meeting.participants[participantIndex].__has_changes">
-            <img class="filter" src="@/assets/images/profile.svg" alt="" />
-          </span>
-        </div>
-
-        <div v-else class="roww">
-          <p class="add-contact">
-            {{ meeting.participants[participantIndex].email }}
-          </p>
-          <img
-            style="height: 0.75rem; margin-left: 0.25rem"
-            src="@/assets/images/salesforce.png"
-            alt=""
-          />
-        </div>
-
+        <p>View Meeting Attendees: {{ meeting.participants.length }}</p>
+      </div>
+      <div v-else class="attendees">
         <div
-          v-if="addingContact && selectedIndex === participantIndex"
-          class="contact-field-section"
+          class="attendees__div"
+          v-for="(participant, participantIndex) in participants"
+          :key="participantIndex"
         >
-          <div class="contact-field-section__title">
+          <div class="roww" v-if="!meeting.participants[participantIndex].id">
             <p>
-              Add <span>"{{ meeting.participants[participantIndex].email }}"</span> to your Contacts
+              {{ meeting.participants[participantIndex].email }}
+            </p>
+            <span
+              v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
+              class="tooltip"
+            >
+              <img
+                @click="addContact(participantIndex)"
+                class="contact-img green"
+                src="@/assets/images/add-contact.svg"
+                alt=""
+              />
+              <span class="tooltiptext">Add Contact</span>
+            </span>
+            <span
+              v-if="!meetingUpdated && !meeting.participants[participantIndex].__has_changes"
+              class="right-tooltip"
+            >
+              <img
+                src="@/assets/images/remove.svg"
+                class="contact-img red"
+                @click="removeParticipant(participantIndex)"
+                alt=""
+              />
+              <span class="right-tooltiptext">Remove</span>
+            </span>
+            <span v-if="meeting.participants[participantIndex].__has_changes">
+              <img class="filter" src="@/assets/images/profile.svg" alt="" />
+            </span>
+          </div>
+
+          <div v-else class="roww">
+            <p>
+              {{ meeting.participants[participantIndex].email }}
             </p>
             <img
-              src="@/assets/images/close.svg"
-              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-              @click="addingContact = !addingContact"
+              style="height: 0.75rem; margin-left: 0.25rem"
+              src="@/assets/images/salesforce.png"
+              alt=""
             />
           </div>
 
-          <div v-if="hasLastName" class="contact-field-section__body">
-            <div v-for="(field, i) in contactFields" :key="i">
-              <div
-                v-if="
-                  field.dataType === 'Reference' &&
-                  (field.apiName === 'AccountId' || field.apiName === 'OwnerId')
-                "
-              >
-                <p>{{ field.referenceDisplayLabel }}:</p>
-                <Multiselect
-                  v-if="field.apiName === 'AccountId'"
-                  placeholder="Select Account"
-                  @search-change="$emit('filter-accounts', $event)"
-                  @select="setUpdateValues(field.apiName, $event.id)"
-                  v-model="selectedAccount"
-                  style="width: 42vw"
-                  :options="accounts"
-                  openDirection="below"
-                  selectLabel="Enter"
-                  label="name"
-                  track-by="id"
-                >
-                  <template slot="noResult">
-                    <small class="multi-slot">No results.</small>
-                  </template>
-                </Multiselect>
+          <div
+            v-if="addingContact && selectedIndex === participantIndex"
+            class="contact-field-section"
+          >
+            <div class="contact-field-section__title">
+              <p>
+                Add <span>"{{ meeting.participants[participantIndex].email }}"</span> to your
+                Contacts
+              </p>
+              <img
+                src="@/assets/images/close.svg"
+                style="height: 18px; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+                @click="addingContact = !addingContact"
+              />
+            </div>
 
-                <Multiselect
-                  v-if="field.apiName === 'OwnerId'"
-                  placeholder="Select Owner"
-                  style="width: 42vw"
-                  v-model="selectedOwner"
-                  @select="
-                    setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
-                  "
-                  :options="owners"
-                  openDirection="below"
-                  selectLabel="Enter"
-                  label="full_name"
-                  track-by="id"
-                >
-                  <template slot="noResult">
-                    <small class="multi-slot">No results.</small>
-                  </template>
-                </Multiselect>
-              </div>
-
-              <div
-                v-else-if="
-                  field.dataType === 'Picklist' ||
-                  field.dataType === 'MultiPicklist' ||
-                  (field.dataType === 'Reference' && field.apiName !== 'AccountId')
-                "
-              >
-                <p>{{ field.referenceDisplayLabel }}:</p>
-                <Multiselect
-                  v-model="dropdownVal[field.apiName]"
-                  :options="
-                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                      ? allPicklistOptions[field.id]
-                      : referenceOpts[field.apiName]
-                  "
-                  @select="
-                    setUpdateValues(
-                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                      $event.id ? $event.id : $event.value,
-                    )
-                  "
-                  @search-change="
-                    field.dataType === 'Reference'
-                      ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
-                      : null
-                  "
-                  :loading="dropdownLoading"
-                  openDirection="below"
-                  style="width: 42vw"
-                  selectLabel="Enter"
-                  :multiple="field.dataType === 'MultiPicklist' ? true : false"
-                  :track-by="
-                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                      ? 'value'
-                      : 'id'
-                  "
-                  :label="
-                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                      ? 'label'
-                      : 'name'
+            <div v-if="hasLastName" class="contact-field-section__body">
+              <div v-for="(field, i) in contactFields" :key="i">
+                <div
+                  v-if="
+                    field.dataType === 'Reference' &&
+                    (field.apiName === 'AccountId' || field.apiName === 'OwnerId')
                   "
                 >
-                  <template v-slot:noResult>
-                    <small class="multi-slot">No results. Try loading more</small>
-                  </template>
-                  <template v-slot:placeholder>
-                    <small class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      {{
-                        `${
-                          meeting.participants[participantIndex].secondary_data[field.apiName]
-                        }` === 'null' ||
-                        `${
-                          meeting.participants[participantIndex].secondary_data[field.apiName]
-                        }` === 'undefined'
-                          ? `${field.referenceDisplayLabel}`
-                          : `${
-                              meeting.participants[participantIndex].secondary_data[field.apiName]
-                            }`
-                      }}
-                    </small>
-                  </template>
-                </Multiselect>
-              </div>
+                  <p>{{ field.referenceDisplayLabel }}:</p>
+                  <Multiselect
+                    v-if="field.apiName === 'AccountId'"
+                    placeholder="Select Account"
+                    @search-change="$emit('filter-accounts', $event)"
+                    @select="setUpdateValues(field.apiName, $event.id)"
+                    v-model="selectedAccount"
+                    style="width: 26vw"
+                    :options="accounts"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    label="name"
+                    track-by="id"
+                  >
+                    <template slot="noResult">
+                      <small class="multi-slot">No results.</small>
+                    </template>
+                  </Multiselect>
 
-              <div
-                v-else-if="
-                  field.dataType === 'TextArea' ||
-                  (field.length > 250 && field.dataType === 'String')
-                "
-              >
-                <p>{{ field.referenceDisplayLabel }}:</p>
-                <textarea
-                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                  ccols="30"
-                  rows="4"
-                  style="width: 42vw; border-radius: 0.4rem; padding: 7px"
+                  <Multiselect
+                    v-if="field.apiName === 'OwnerId'"
+                    placeholder="Select Owner"
+                    style="width: 26vw"
+                    v-model="selectedOwner"
+                    @select="
+                      setUpdateValues(field.apiName, $event.salesforce_account_ref.salesforce_id)
+                    "
+                    :options="owners"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    label="full_name"
+                    track-by="id"
+                  >
+                    <template slot="noResult">
+                      <small class="multi-slot">No results.</small>
+                    </template>
+                  </Multiselect>
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'Picklist' ||
+                    field.dataType === 'MultiPicklist' ||
+                    (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                  "
                 >
-                </textarea>
+                  <p>{{ field.referenceDisplayLabel }}:</p>
+                  <Multiselect
+                    v-model="dropdownVal[field.apiName]"
+                    :options="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? allPicklistOptions[field.id]
+                        : referenceOpts[field.apiName]
+                    "
+                    @select="
+                      setUpdateValues(
+                        field.apiName === 'ForecastCategory'
+                          ? 'ForecastCategoryName'
+                          : field.apiName,
+                        $event.id ? $event.id : $event.value,
+                      )
+                    "
+                    @search-change="
+                      field.dataType === 'Reference'
+                        ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                        : null
+                    "
+                    :loading="dropdownLoading"
+                    openDirection="below"
+                    style="width: 26vw"
+                    selectLabel="Enter"
+                    :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                    :track-by="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'value'
+                        : 'id'
+                    "
+                    :label="
+                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                        ? 'label'
+                        : 'name'
+                    "
+                  >
+                    <template v-slot:noResult>
+                      <small class="multi-slot">No results. Try loading more</small>
+                    </template>
+                    <template v-slot:placeholder>
+                      <small class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{
+                          `${
+                            meeting.participants[participantIndex].secondary_data[field.apiName]
+                          }` === 'null' ||
+                          `${
+                            meeting.participants[participantIndex].secondary_data[field.apiName]
+                          }` === 'undefined'
+                            ? `${field.referenceDisplayLabel}`
+                            : `${
+                                meeting.participants[participantIndex].secondary_data[field.apiName]
+                              }`
+                        }}
+                      </small>
+                    </template>
+                  </Multiselect>
+                </div>
 
-                <!-- <p style="display: none">
-                  {{
-                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
-                      'null' ||
-                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
-                      'undefined'
-                      ? null
-                      : setUpdateValues(
-                          field.apiName,
-                          meeting.participants[participantIndex].secondary_data[field.apiName],
-                        )
-                  }}
-                </p> -->
-              </div>
-              <div
-                v-else-if="
-                  field.dataType === 'String' ||
-                  field.dataType === 'Email' ||
-                  field.dataType === 'Date' ||
-                  field.dataType === 'DateTime'
-                "
-              >
-                <p>{{ field.referenceDisplayLabel }}:</p>
-                <input
-                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                  type="text"
-                  :placeholder="
-                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
-                      'null' ||
-                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
-                      'undefined'
-                      ? `Enter ${field.referenceDisplayLabel}`
-                      : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
+                <div
+                  v-else-if="
+                    field.dataType === 'TextArea' ||
+                    (field.length > 250 && field.dataType === 'String')
                   "
-                />
+                >
+                  <p>{{ field.referenceDisplayLabel }}:</p>
+                  <textarea
+                    @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                    ccols="30"
+                    rows="4"
+                    style="width: 26vw; border-radius: 0.4rem; padding: 7px"
+                  >
+                  </textarea>
 
-                <!-- <p style="display: none">
-                  {{
-                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
-                      'null' ||
-                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
-                      'undefined'
-                      ? null
-                      : setUpdateValues(
-                          field.apiName,
-                          meeting.participants[participantIndex].secondary_data[field.apiName],
-                        )
-                  }}
-                </p> -->
-              </div>
-
-              <div
-                v-else-if="
-                  field.dataType === 'Phone' ||
-                  field.dataType === 'Double' ||
-                  field.dataType === 'Currency'
-                "
-              >
-                <p>{{ field.referenceDisplayLabel }}:</p>
-                <input
-                  type="number"
-                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-                  :placeholder="
-                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
-                      'null' ||
-                    `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
-                      'undefined'
-                      ? `Enter ${field.referenceDisplayLabel}`
-                      : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
+                  <p style="display: none">
+                    {{
+                      meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                        'null' ||
+                      meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                        'undefined'
+                        ? null
+                        : setUpdateValues(
+                            field.apiName,
+                            meeting.participants[participantIndex].secondary_data[field.apiName],
+                          )
+                    }}
+                  </p>
+                </div>
+                <div
+                  v-else-if="
+                    field.dataType === 'String' ||
+                    field.dataType === 'Email' ||
+                    field.dataType === 'Date' ||
+                    field.dataType === 'DateTime'
                   "
-                />
-                <!-- 
-                <p style="display: none">
-                  {{
-                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
-                      'null' ||
-                    meeting.participants[participantIndex].secondary_data[field.apiName] ===
-                      'undefined'
-                      ? null
-                      : setUpdateValues(
-                          field.apiName,
-                          meeting.participants[participantIndex].secondary_data[field.apiName],
-                        )
-                  }}
-                </p> -->
+                >
+                  <p>{{ field.referenceDisplayLabel }}:</p>
+                  <input
+                    @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                    type="text"
+                    :placeholder="
+                      `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                        'null' ||
+                      `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                        'undefined'
+                        ? `Enter ${field.referenceDisplayLabel}`
+                        : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
+                    "
+                  />
+
+                  <p style="display: none">
+                    {{
+                      meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                        'null' ||
+                      meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                        'undefined'
+                        ? null
+                        : setUpdateValues(
+                            field.apiName,
+                            meeting.participants[participantIndex].secondary_data[field.apiName],
+                          )
+                    }}
+                  </p>
+                </div>
+
+                <div
+                  v-else-if="
+                    field.dataType === 'Phone' ||
+                    field.dataType === 'Double' ||
+                    field.dataType === 'Currency'
+                  "
+                >
+                  <p>{{ field.referenceDisplayLabel }}:</p>
+                  <input
+                    type="number"
+                    @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                    :placeholder="
+                      `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                        'null' ||
+                      `${meeting.participants[participantIndex].secondary_data[field.apiName]}` ===
+                        'undefined'
+                        ? `Enter ${field.referenceDisplayLabel}`
+                        : `${meeting.participants[participantIndex].secondary_data[field.apiName]}`
+                    "
+                  />
+
+                  <p style="display: none">
+                    {{
+                      meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                        'null' ||
+                      meeting.participants[participantIndex].secondary_data[field.apiName] ===
+                        'undefined'
+                        ? null
+                        : setUpdateValues(
+                            field.apiName,
+                            meeting.participants[participantIndex].secondary_data[field.apiName],
+                          )
+                    }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-          <div style="margin-left: 1rem; padding: 1rem" class="contact-field-section__body" v-else>
-            Add "Last Name" to your<router-link class="link" :to="{ name: 'CreateContacts' }"
-              >contact form</router-link
-            >in order to add Contacts.
-          </div>
-
-          <div class="contact-field-section__footer">
-            <p
-              v-if="hasLastName"
-              @click="
-                ;(addingContact = !addingContact),
-                  $emit(
-                    'add-participant',
-                    workflowId,
-                    meeting.participants[participantIndex]._tracking_id,
-                    formData,
-                  )
-              "
-              style="color: #199e54"
+            <div
+              style="margin-left: 1rem; padding: 1rem"
+              class="contact-field-section__body"
+              v-else
             >
-              Add
-            </p>
-            <p v-else style="color: #aaaaaa">Add</p>
-            <p @click="addingContact = !addingContact" style="color: #fa646a">Cancel</p>
-          </div>
-        </div>
+              Add "Last Name" to your<router-link class="link" :to="{ name: 'CreateContacts' }"
+                >contact form</router-link
+              >in order to add Contacts.
+            </div>
 
-        <div
-          v-if="removingParticipant && selectedIndex === participantIndex"
-          class="participant-field-section"
-        >
-          <div class="participant-field-section__title">
-            <p>
-              Remove <span>"{{ meeting.participants[participantIndex].email }}"</span>
-            </p>
-            <img
-              src="@/assets/images/close.svg"
-              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-              @click="removingParticipant = !removingParticipant"
-            />
+            <div class="contact-field-section__footer">
+              <button
+                v-if="hasLastName"
+                @click="
+                  ;(addingContact = !addingContact),
+                    $emit(
+                      'add-participant',
+                      workflowId,
+                      meeting.participants[participantIndex]._tracking_id,
+                      formData,
+                    )
+                "
+                class="add-button"
+              >
+                Add
+              </button>
+              <!-- <p v-else style="color: #aaaaaa">Add</p> -->
+            </div>
           </div>
 
-          <div class="participant-field-section__body">
-            <p>Are you sure ?</p>
-          </div>
+          <div
+            v-if="removingParticipant && selectedIndex === participantIndex"
+            class="participant-field-section"
+          >
+            <div class="participant-field-section__title">
+              <p>
+                Remove <span>"{{ meeting.participants[participantIndex].email }}"</span>
+              </p>
+              <img
+                src="@/assets/images/close.svg"
+                style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+                @click="removingParticipant = !removingParticipant"
+              />
+            </div>
 
-          <div class="participant-field-section__footer">
-            <p
-              @click="
-                ;(removingParticipant = !removingParticipant),
-                  $emit(
-                    'remove-participant',
-                    workflowId,
-                    meeting.participants[participantIndex]._tracking_id,
-                  )
-              "
-            >
-              Yes
-            </p>
-            <p @click="removingParticipant = !removingParticipant" style="color: #fa646a">No</p>
+            <div class="participant-field-section__body">
+              <p>Are you sure ?</p>
+            </div>
+
+            <div class="participant-field-section__footer">
+              <p
+                @click="
+                  ;(removingParticipant = !removingParticipant),
+                    $emit(
+                      'remove-participant',
+                      workflowId,
+                      meeting.participants[participantIndex]._tracking_id,
+                    )
+                "
+              >
+                Yes
+              </p>
+              <p @click="removingParticipant = !removingParticipant" style="color: #fa646a">No</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <img
+        v-if="showingAttendees"
+        @click="showAttendees"
+        src="@/assets/images/left.svg"
+        height="11px"
+        alt=""
+        style="margin-left: 8px; cursor: pointer"
+      />
+    </section>
 
-    <div class="table-cell">
-      <div class="roww" v-if="resourceId && !meetingUpdated">
-        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
-
-        <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="switchResource">
-            <img style="filter: invert(10%); height: 0.6rem" src="@/assets/images/replace.svg" />
-          </button>
-          <span class="tooltiptext">Change {{ resourceType }}</span>
+    <div class="cards__header">
+      <img src="@/assets/images/link.svg" height="15px" alt="" />
+      <section class="cards__header__section" v-if="resourceId && !meetingUpdated">
+        <div class="cards__header__div removeSpace">
+          <p class="header-text">{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
+          <p style="font-size: 11px">{{ resourceType }}</p>
         </div>
 
-        <div class="tooltip">
-          <button class="name-cell-edit-note-button-1" @click="emitGetNotes(resourceId)">
-            <img src="@/assets/images/white-note.svg" class="invert" height="12px" alt="" />
+        <div class="cards__header__div row">
+          <button class="img-button" @click="switchResource">
+            <img src="@/assets/images/replace.svg" height="16px" />
           </button>
-          <span class="tooltiptext">View Notes</span>
+
+          <!-- <div class="tooltip">
+            <button class="img-button" @click="emitGetNotes(resourceId)">
+              <img src="@/assets/images/note.svg" height="16px" alt="" />
+            </button>
+            <span class="tooltiptext">View Notes</span>
+          </div> -->
         </div>
-      </div>
-      <p
-        style="color: #9b9b9b; font-size: 11px; margin-top: -6px"
-        v-if="resourceId && !meetingUpdated"
-      >
-        Record Type: {{ resourceType }}
-      </p>
-      <div v-else-if="meetingUpdated">
-        <p>{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
-        <p style="color: #9b9b9b; font-size: 11px; margin-top: -6px">
-          Record Type: {{ resourceType }}
+      </section>
+
+      <div class="cards__header__div" v-else-if="meetingUpdated">
+        <p class="header-text">{{ resourceRef.name ? resourceRef.name : resourceRef.email }}</p>
+        <p>
+          {{ resourceType }}
         </p>
       </div>
 
-      <button @click="addingOpp = !addingOpp" v-else class="add-button">Link to CRM Record</button>
+      <div class="cards__header__div" v-else>
+        <button @click="addingOpp = !addingOpp" class="white-button">Link to CRM Record</button>
+      </div>
 
       <div v-if="addingOpp" class="add-field-section">
         <div class="add-field-section__title">
-          <p v-if="!resourceType || !mapType">Select Record</p>
-          <p
+          <h4 v-if="!resourceType || !mapType">Select Record</h4>
+          <h4
             v-else-if="resourceType && resourceId"
-            style="cursor: pointer"
+            style="cursor: pointer; color: #4d4e4c; font-size: 14px"
             @click="changeMapType(null)"
           >
-            Select {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
+            Select
+            {{ !mapType ? 'Record' : resourceType && mapType ? mapType : resourceType }}
             <img src="@/assets/images/swap.svg" height="14px" alt="" />
-          </p>
-          <p v-else style="cursor: pointer" @click="changeMapType(null)">
+          </h4>
+          <h4
+            v-else
+            style="cursor: pointer; color: #4d4e4c; font-size: 14px"
+            @click="changeMapType(null)"
+          >
             Select {{ mapType ? mapType : 'Record' }}
             <img src="@/assets/images/swap.svg" height="14px" alt="" />
-          </p>
+          </h4>
 
           <img
             src="@/assets/images/close.svg"
@@ -421,7 +448,6 @@
         <div class="add-field-section__body">
           <Multiselect
             v-if="selectingResource || !mapType"
-            style="width: 20vw"
             v-model="selectedResourceType"
             @select="changeResource($event)"
             placeholder="Select Record Type"
@@ -436,7 +462,6 @@
           <!-- @search-change="mapType === 'Account' ? getAccounts($event) : null" -->
           <Multiselect
             v-else
-            style="width: 20vw"
             v-model="mappedOpp"
             @select="selectOpp($event)"
             @search-change="getFilteredList($event)"
@@ -455,62 +480,70 @@
           </Multiselect>
         </div>
 
-        <div v-if="mappedOpp" class="add-field-section__footer">
-          <p @click="mapOpp">Link</p>
-        </div>
-        <div v-else style="cursor: text" class="add-field-section__footer">
-          <p style="color: gray; cursor: text">Link</p>
+        <div class="add-field-section__footer">
+          <button :disabled="!mappedOpp" @click="mapOpp" class="add-button">Link to Record</button>
         </div>
       </div>
     </div>
 
-    <div v-if="!meetingUpdated" class="table-cell">
-      <p v-if="!resourceId && !meetingLoading" class="red-text">Link meeting to take action.</p>
-      <div>
-        <div class="column" v-if="resourceId && !meetingLoading">
-          <button
-            @click="
-              $emit(
-                'update-Opportunity',
-                resourceType,
-                workflowId,
-                resourceId,
-                resourceRef ? resourceRef.integration_id : null,
-                resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
-              )
-            "
-            class="add-button"
-          >
-            Update {{ resourceType }}
-          </button>
-          <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
+    <div class="cards__header bottom" v-if="!meetingUpdated">
+      <img src="@/assets/images/cloud-upload.svg" height="16px" alt="" />
+
+      <div class="cards__header__div">
+        <p v-if="!resourceId && !meetingLoading" class="red-text">
+          Link meeting to a record in order to update.
+        </p>
+      </div>
+
+      <div class="cards__header__div row" v-if="resourceId && !meetingLoading">
+        <button
+          style="margin-left: -16px"
+          @click="
+            $emit(
+              'update-Opportunity',
+              resourceType,
+              workflowId,
+              resourceId,
+              resourceRef ? resourceRef.integration_id : null,
+              resourceRef ? resourceRef.secondary_data.Pricebook2Id : null,
+            )
+          "
+          class="white-button"
+        >
+          Update
+        </button>
+
+        <button @click="noUpdate = !noUpdate" class="no-update">No update needed</button>
+      </div>
+      <div v-if="noUpdate" class="noupdate-field-section">
+        <div class="noupdate-field-section__title">
+          <p>No Update Needed</p>
+          <img
+            src="@/assets/images/close.svg"
+            style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
+            @click="noUpdate = !noUpdate"
+          />
         </div>
-        <div v-if="noUpdate" class="noupdate-field-section">
-          <div class="noupdate-field-section__title">
-            <p>No Update Needed</p>
-            <img
-              src="@/assets/images/close.svg"
-              style="height: 1rem; cursor: pointer; margin-right: 0.75rem; margin-top: -0.5rem"
-              @click="noUpdate = !noUpdate"
-            />
-          </div>
 
-          <div class="noupdate-field-section__body">Are you sure ?</div>
+        <div class="noupdate-field-section__body">Are you sure ?</div>
 
-          <div class="noupdate-field-section__footer">
-            <p @click="onNoUpdate">Yes</p>
-            <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
-          </div>
+        <div class="noupdate-field-section__footer">
+          <p @click="onNoUpdate">Yes</p>
+          <p @click="noUpdate = !noUpdate" style="color: #fa646a">No</p>
         </div>
       </div>
+
       <div v-if="meetingLoading">
         <div>
           <PipelineLoader />
         </div>
       </div>
     </div>
-    <div v-else class="table-cell">
-      <p class="success">Meeting Logged</p>
+    <div class="cards__header bottom" v-else>
+      <img class="filtered-green" src="@/assets/images/badge-check.svg" height="18px" alt="" />
+      <div class="cards__header__div">
+        <p style="color: #41b883">Meeting Logged</p>
+      </div>
     </div>
   </div>
 </template>
@@ -523,6 +556,7 @@ export default {
     return {
       fields: ['topic', 'participants_count', 'participants.email'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      showingAttendees: false,
       dropdownVal: {},
       selectedResourceType: null,
       selectingResource: false,
@@ -588,6 +622,9 @@ export default {
     this.getObjects()
   },
   methods: {
+    showAttendees() {
+      this.showingAttendees = !this.showingAttendees
+    },
     async getAccounts(val) {
       this.loadingAccounts = true
       try {
@@ -667,7 +704,6 @@ export default {
       }
     },
     setUpdateValues(key, val) {
-      console.log(key, val)
       if (val) {
         this.formData[key] = val
       }
@@ -728,11 +764,127 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+::v-deep .multiselect__content-wrapper {
+  // margin-top: 49vh;
+}
+
 @keyframes tooltips-horz {
   to {
     opacity: 0.95;
     transform: translate(0%, 50%);
   }
+}
+.cards {
+  width: 100%;
+  height: 100%;
+  margin-top: 16px;
+  // min-height: 70vh;
+  border-radius: 4px;
+  background-color: white;
+  padding: 0px 16px;
+  overflow: auto;
+  margin-top: auto;
+  // box-shadow: 1px 1px 2px 1px $very-light-gray;
+
+  &__attendees {
+    width: fit-content !important;
+    background-color: $off-white;
+    letter-spacing: 0.75px;
+    border-radius: 6px;
+    width: 100%;
+    padding: 6px 10px 6px 6px;
+    p {
+      color: $base-gray !important;
+      cursor: pointer;
+    }
+    span {
+      color: $light-gray-blue;
+    }
+  }
+
+  &__scroll {
+    width: 100%;
+    display: none;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+    width: 100%;
+    &__div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      margin-left: 16px;
+      letter-spacing: 0.75px;
+      h4 {
+        font-weight: 400 !important;
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+      }
+
+      p {
+        font-weight: bold;
+        font-size: 14px;
+        color: $light-gray-blue;
+        padding: 0;
+        margin: 0;
+        margin-top: 2px;
+      }
+    }
+
+    &__section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      background-color: $off-white;
+      border-radius: 8px;
+      padding: 8px;
+      margin-left: 12px;
+    }
+  }
+}
+.attendees {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  max-width: 26vw;
+  overflow-x: scroll;
+  flex-wrap: nowrap;
+  gap: 8px;
+  border-radius: 8px;
+  margin-left: 12px;
+  padding-top: 12px;
+  &__div {
+    background-color: $off-white;
+    border-radius: 8px;
+    color: $base-gray;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0px 8px;
+  }
+}
+.header-text {
+  font-size: 14px !important;
+  color: $base-gray !important;
+}
+.filtered-green {
+  filter: invert(55%) sepia(75%) saturate(324%) hue-rotate(101deg) brightness(97%) contrast(91%);
+}
+.removeSpace {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.bottom {
+  padding-bottom: 16px;
+  border-bottom: 2px solid $soft-gray;
 }
 .slot-icon {
   display: flex;
@@ -746,39 +898,58 @@ export default {
     filter: invert(70%);
   }
 }
+
 .tooltip {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2px 0px;
+  display: inline-block;
 }
+
+/* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
+  width: 110px;
   background-color: $base-gray;
-  color: white;
+  opacity: 0.9;
+  color: #fff;
   text-align: center;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 4px 0px;
+  padding: 5px 0;
   border-radius: 6px;
-  font-size: 12px;
 
-  /* Position the tooltip text */
+  /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;
-  width: 100px;
-  top: 100%;
-  left: 50%;
-  margin-left: -50px;
-
-  /* Fade in tooltip */
-  opacity: 0;
-  transition: opacity 0.3s;
+  top: -5px;
+  right: 105%;
 }
+
+/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
+}
+
+.right-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.right-tooltip .right-tooltiptext {
+  visibility: hidden;
+  width: 110px;
+  background-color: $base-gray;
+  opacity: 0.9;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 105%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.right-tooltip:hover .right-tooltiptext {
+  visibility: visible;
 }
 
 input:focus {
@@ -790,7 +961,7 @@ input {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
-  width: 42vw;
+  width: 26vw;
 }
 .link {
   border-bottom: 2px solid $dark-green;
@@ -809,34 +980,60 @@ a {
   filter: invert(30%);
   cursor: pointer;
 }
-.inverted {
+.white-button {
+  border: 1px solid $soft-gray;
+  padding: 8px 12px;
+  margin-right: 1rem;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  color: $dark-green;
+  transition: all 0.3s;
+  font-size: 12px;
+  letter-spacing: 0.75px;
 }
 .add-button {
   border: none;
-  max-height: 4.5vh;
-  min-height: 2rem;
-  padding: 0.5rem 1.25rem;
+  padding: 8px 12px;
   margin-right: 1rem;
-  border-radius: 0.2rem;
+  border-radius: 8px;
   background-color: $dark-green;
   cursor: pointer;
   color: white;
   transition: all 0.3s;
   font-size: 12px;
 }
-.no-update {
-  background-color: $base-gray;
-  color: white;
+.add-button:disabled {
   border: none;
-  border-radius: 0.2rem;
-  max-height: 4.5vh;
-  min-height: 2rem;
-  padding: 0.5rem 1.25rem;
-  cursor: pointer;
+  padding: 8px 12px;
+  margin-right: 1rem;
+  border-radius: 8px;
+  background-color: $soft-gray;
+  cursor: text;
+  color: $gray;
+  transition: all 0.3s;
   font-size: 12px;
+}
+.no-update {
+  border: none;
+  padding: 8px 12px;
+  margin-right: 1rem;
+  border-radius: 8px;
+  background-color: $base-gray;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
+  font-size: 12px;
+}
+.row {
+  display: flex;
+  flex-direction: row !important;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 .roww {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
 }
@@ -862,20 +1059,20 @@ a {
   margin-left: 0.25rem;
 }
 .success {
-  color: $dark-green;
-  background-color: $white-green;
-  padding: 5px;
-  border-radius: 6px;
-  max-width: 140px;
-  display: flex;
-  align-items: center;
+  color: $dark-green !important;
+  // background-color: $white-green;
+  // padding: 4px 8px !important;
+  // border-radius: 4px;
+  // max-width: 140px;
+  // display: flex;
+  // align-items: center;
 }
 .red-text {
-  color: $coral;
+  color: $coral !important;
+  font-weight: 400;
   background-color: $light-coral;
-  padding: 4px;
-  border-radius: 4px;
-  max-width: 180px;
+  padding: 8px !important;
+  border-radius: 8px;
   display: flex;
   align-items: center;
 }
@@ -907,66 +1104,56 @@ a {
 .contact-field-section {
   position: absolute;
   z-index: 7;
-  right: 0;
-  top: 0;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
-  background-color: $white;
-  min-width: 46vw;
+  background-color: white !important;
+  width: 40vw;
   overflow: scroll;
   box-shadow: 2px 2px 3px 2px $very-light-gray;
-  max-height: 50vh;
+  min-height: 36vh;
+  max-height: 70vh;
   &__title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem;
+    padding: 12px !important;
     color: $base-gray;
-    background-color: $off-white;
     letter-spacing: 0.4px;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px !important;
     width: 100%;
     position: sticky;
     top: 0;
     z-index: 2;
+    background-color: white;
   }
   &__body {
-    p {
-      background-color: $white-green;
-      color: $dark-green;
-      width: fit-content;
-      padding: 4px 8px;
-      margin: 16px 0px 0px 0px;
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      margin-left: 1px;
-    }
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    margin: 8px;
+    margin-left: 8px;
     flex-direction: column;
     overflow: scroll;
+    background-color: white !important;
+
+    p {
+      color: $light-gray-blue;
+      font-size: 12px;
+    }
   }
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    justify-content: flex-end;
     position: sticky;
     bottom: 0;
     z-index: 2;
-    background-color: white;
+    background-color: white !important;
     margin-top: 0.5rem;
     padding: 0.75rem 0.5rem;
     width: 100%;
     height: 2rem;
-    border-top: 1px solid $soft-gray;
-    p {
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      color: $dark-green;
-    }
   }
 }
 .multi-slot {
@@ -1003,27 +1190,27 @@ a {
 .noupdate-field-section {
   position: absolute;
   z-index: 7;
-  left: 1.5rem;
-  top: 10vh;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
   background-color: $white;
-  min-width: 20vw;
+  width: 26vw;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem;
+    padding: 0 0.5rem;
     align-items: center;
     color: $base-gray;
-    background-color: $off-white;
+
     letter-spacing: 0.4px;
     font-weight: bold;
     font-size: 14px;
     width: 100%;
   }
   &__body {
-    height: 2rem;
+    margin: 16px 0px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1036,7 +1223,7 @@ a {
     padding: 0rem 0.5rem;
     width: 100%;
     min-height: 6vh;
-    border-top: 1px solid $soft-gray;
+
     p {
       cursor: pointer;
       font-weight: bold;
@@ -1048,10 +1235,11 @@ a {
 .participant-field-section {
   position: absolute;
   z-index: 7;
-  right: 0.5rem;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
   background-color: $white;
-  min-width: 20vw;
+  min-width: 26vw;
   overflow: scroll;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
   &__title {
@@ -1060,7 +1248,7 @@ a {
     align-items: center;
     padding: 0.5rem;
     color: $base-gray;
-    background-color: $off-white;
+
     letter-spacing: 0.4px;
     font-weight: bold;
     font-size: 14px;
@@ -1079,7 +1267,7 @@ a {
     padding: 0rem 0.5rem;
     width: 100%;
     min-height: 6vh;
-    border-top: 1px solid $soft-gray;
+
     p {
       cursor: pointer;
       font-weight: bold;
@@ -1090,48 +1278,50 @@ a {
 }
 .add-field-section {
   position: absolute;
-  z-index: 7;
-  top: 10vh;
-  right: 0.5rem;
+  z-index: 20;
+  top: 20vh;
+  left: 36vw;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: $white;
-  min-width: 28vw;
+  background-color: white;
+  width: 30vw;
   height: auto;
-  overflow: scroll;
+  overflow: visible;
   box-shadow: 1px 1px 2px 1px $very-light-gray;
+  margin-left: 0px;
+
   &__title {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem;
+    padding: 8px 4px 8px 12px;
     color: $base-gray;
-    background-color: $off-white;
-    letter-spacing: 0.4px;
-    padding-left: 1rem;
-    font-weight: bold;
-    font-size: 16px;
+
+    letter-spacing: 0.75px;
     width: 100%;
   }
   &__body {
-    min-height: 8rem;
-    padding-left: 1rem;
-    margin-top: 1rem;
+    padding: 32px 16px;
+    width: 30vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     margin-top: 1rem;
     width: 100%;
-    min-height: 2rem;
-    border-top: 1px solid $soft-gray;
+    height: 80px;
+
     p {
       cursor: pointer;
       color: $dark-green;
-      font-weight: bold;
+      font-size: 14px;
     }
   }
 }
@@ -1193,5 +1383,12 @@ a {
 .table-cell-small:hover {
   cursor: text;
   background-color: white;
+}
+
+.img-button {
+  background-color: transparent;
+  padding: 4px 6px;
+  border: none;
+  cursor: pointer;
 }
 </style> 

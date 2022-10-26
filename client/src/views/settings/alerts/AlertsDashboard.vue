@@ -14,6 +14,6 @@ export default {
 
 <style lang="scss" scoped>
 .alerts-dashboard {
-  padding: 0 8rem;
+  padding: 0 56px;
 }
 </style>
