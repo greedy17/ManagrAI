@@ -604,9 +604,10 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                         ],
                     ),
+                    style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Grid View", "open_in_pipeline", url=f"{url}/{template}", style="primary",
+                    "Grid View", "open_in_pipeline", url=f"{url}/{template}",
                 ),
             ]
         ),

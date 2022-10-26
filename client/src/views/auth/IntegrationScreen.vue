@@ -124,7 +124,7 @@
         </div>
 
         <div class="card">
-          <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header vlb-bg" style="padding-left: 34px; padding-right: 34px">
             <img style="height: 40px" src="@/assets/images/zoom.png" />
             <!-- <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasZoomIntegration" /> -->
           </div>
@@ -171,7 +171,7 @@
           </div>
 
           <div class="card__body">
-            <h3>SalesLoft</h3>
+            <h3>Salesloft</h3>
             <p class="card-text">Add Contacts to Cadences</p>
             <div>
               <PulseLoadingSpinnerButton

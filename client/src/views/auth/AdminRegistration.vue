@@ -32,10 +32,14 @@
             <input
               id="password"
               @blur="showVals(registrationForm.field.password)"
+              @input="registrationForm.field.password.validate()"
               :errors="registrationForm.field.password.errors"
               v-model="registrationForm.field.password.value"
               type="password"
             />
+            <div class="column" v-for="(message, i) in errorMessages" :key="i">
+              <small class="error">{{ message }}</small>
+            </div>
           </span>
 
           <span>
@@ -145,6 +149,7 @@ export default {
       changeZone: false,
       userRole: null,
       selectedZone: null,
+      errorMessages: [],
     }
   },
   created() {
@@ -162,8 +167,9 @@ export default {
   },
   methods: {
     showVals(val) {
-      let errors = []
-      // errors =
+      let validations = val.errors
+      let messages = validations.map((val) => val.message)
+      this.errorMessages = messages
     },
     selectZone() {
       this.changeZone = !this.changeZone
@@ -317,7 +323,17 @@ a {
   flex-flow: column;
   align-items: center;
 }
-
+.error {
+  color: red;
+  font-size: 10px;
+  margin-right: 12px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
 // input {
 //   height: 2.5rem;
 //   width: 100%;
