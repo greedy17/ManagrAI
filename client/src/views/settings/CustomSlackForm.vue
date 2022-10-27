@@ -1086,7 +1086,7 @@ export default {
           }
           this.stages = dealStage ? dealStage.options : []
         } else if (this.userCRM === 'SALESFORCE') {
-          res = await ObjectField.api.listFields(query_params)
+          res = await SObjectPicklist.api.listPicklists(query_params)
           this.stages = res.length ? res[0]['values'] : []
         }
       } catch (e) {
@@ -1129,7 +1129,8 @@ export default {
             }
           })
       })
-
+      console.log('forms', forms)
+      console.log('stages below forms', this.stages)
       this.formStages = [...forms]
     },
     changeToAccount() {
