@@ -497,10 +497,9 @@
             </div>
           </section>
           <div ref="product" class="adding-product" v-if="addingProduct">
-            <div class="adding-product__header">
-              <img class="fullInvert" src="@/assets/images/tag.svg" alt="" />
-              <p>Add Product</p>
-            </div>
+            <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
+            <!-- <p>Add Product</p> -->
+
             <div class="adding-product__body">
               <div v-if="!pricebookId">
                 <p class="form-label">Pricebook:</p>
@@ -838,29 +837,23 @@
               </div>
 
               <div class="current-products__footer">
+                <p style="margin-top: 16px" @click="cancelEditProduct">Cancel</p>
                 <button class="add-button__" @click="updateProduct">Update Product</button>
-                <p @click="cancelEditProduct">Cancel</p>
               </div>
             </div>
           </div>
         </div>
         <div class="flex-end-opp">
           <div v-if="hasProducts && resource === 'Opportunity'">
-            <button
-              v-if="!addingProduct"
-              @click="addProduct"
-              style="margin-bottom: 0.75rem"
-              class="select-btn1"
-            >
+            <button v-if="!addingProduct" @click="addProduct" class="select-btn1">
               Add Product
             </button>
 
-            <p @click="addProduct" v-else class="product-text">
-              Adding product <img src="@/assets/images/remove.svg" alt="" />
-            </p>
+            <p @click="addProduct" v-else class="cancel">Cancel</p>
           </div>
           <div v-else></div>
           <div style="display: flex; align-items: center">
+            <!-- <p @click="resetEdit" class="cancel">Cancel</p> -->
             <button
               @click="
                 onMakeMeetingUpdate()
@@ -870,7 +863,6 @@
             >
               Update
             </button>
-            <p @click="resetEdit" class="cancel">Cancel</p>
           </div>
         </div>
       </div>
@@ -897,9 +889,7 @@ export default {
     }
   },
   methods: {
-    test(log) {
-      console.log('log', log)
-    },
+    test(log) {},
     goToProfile() {
       this.$emit('go-to-profile')
     },
@@ -1042,6 +1032,7 @@ export default {
   border-radius: 0.3rem;
   background-color: white;
   min-height: 2.5rem;
+  padding: 8px 12px;
   width: 40.25vw;
   font-family: $base-font-family;
 }
@@ -1106,16 +1097,10 @@ export default {
 }
 .label {
   display: inline-block;
-  padding: 6px;
   font-size: 14px;
-  text-align: center;
-  min-width: 80px;
   margin-top: 12px;
-  background-color: $white-green;
-  color: $dark-green;
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  margin-bottom: 4px;
+  color: $light-gray-blue;
 }
 .close-template {
   position: absolute;
@@ -1283,10 +1268,9 @@ export default {
 }
 .flex-end-opp {
   width: 100%;
-  padding: 0.25rem 1.5rem;
-  height: 4rem;
+  padding: 24px 0px 8px 0px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
 }
 .product-text {
@@ -1308,7 +1292,7 @@ export default {
   }
 }
 .select-btn1 {
-  border: 0.7px solid $dark-green;
+  border: 0.7px solid $soft-gray;
   padding: 0.45rem 1.25rem;
   font-size: 13px;
   display: flex;
@@ -1317,8 +1301,8 @@ export default {
   border-radius: 6px;
   background-color: white;
   cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
+  color: $base-gray;
+  letter-spacing: 0.75px;
   margin-right: 0.5rem;
   transition: all 0.25s;
 
@@ -1351,35 +1335,24 @@ input {
   padding: 7px;
 }
 .adding-product {
-  border: 1px solid $dark-green;
-  border-radius: 0.3rem;
-  margin: 0.5rem 0rem;
-  width: 40.5vw;
-  min-height: 30vh;
+  border-radius: 8px;
+  margin: 8px 0px;
+  width: 40.25vw;
+
   &__header {
     display: flex;
     flex-direction: row;
     align-items: center;
-    font-size: 14px;
-    padding: 0.5rem;
-    color: $white;
-    width: 100%;
-    border-bottom: 1px solid $dark-green;
-    background-color: $dark-green;
-    img {
-      height: 1rem;
-      margin-right: 0.5rem;
-    }
   }
   &__body {
-    padding: 0.25rem;
+    padding-top: 4px;
     font-size: 11px !important;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.2rem;
     overflow: auto;
-    height: 30vh;
+
     input {
       width: 10vw;
       height: 1.5rem !important;
@@ -1396,22 +1369,22 @@ input {
     }
   }
 
-  &__body::-webkit-scrollbar {
-    width: 2px; /* Mostly for vertical scrollbars */
-    height: 0px; /* Mostly for horizontal scrollbars */
-  }
-  &__body::-webkit-scrollbar-thumb {
-    background-color: $dark-green;
-    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track {
-    box-shadow: inset 2px 2px 4px 0 $soft-gray;
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track-piece {
-    margin-top: 0.25rem;
-  }
+  // &__body::-webkit-scrollbar {
+  //   width: 2px;
+  //   height: 0px;
+  // }
+  // &__body::-webkit-scrollbar-thumb {
+  //   background-color: $dark-green;
+  //   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  //   border-radius: 0.3rem;
+  // }
+  // &__body::-webkit-scrollbar-track {
+  //   box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  //   border-radius: 0.3rem;
+  // }
+  // &__body::-webkit-scrollbar-track-piece {
+  //   margin-top: 0.25rem;
+  // }
 }
 
 .fullInvert {
@@ -1460,6 +1433,18 @@ input {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+.cancel {
+  border: 1px solid $soft-gray;
+  font-weight: 400 !important;
+  letter-spacing: 1px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  color: $coral !important;
 }
 .current-products {
   font-size: 12px;

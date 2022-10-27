@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="centered">
-      <!-- <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
-        <label>AND</label>
+      <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
+        <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
         <ToggleCheckBox
           @input="
             selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
@@ -11,13 +11,14 @@
           offColor="#41b883"
           onColor="#41b883"
         />
-        <label>OR</label>
-      </div> -->
-      <small v-if="form.field.groupOrder.value != 0" @click="toggleSelectedCondition" class="andOr">
+        <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
+      </div>
+
+      <!-- <small v-if="form.field.groupOrder.value != 0" @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
         <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
-      >
+      > -->
     </div>
 
     <div>
@@ -35,7 +36,8 @@
         <div
           v-if="
             form.field.alertOperands.groups.length === i + 1 &&
-            form.field.alertOperands.groups.length < 3
+            form.field.alertOperands.groups.length < 3 &&
+            validateAlertOperands(form.field.alertOperands.groups)
           "
           class="column"
         >
@@ -45,7 +47,8 @@
           <span
             v-if="
               form.field.alertOperands.groups.length === i + 1 &&
-              form.field.alertOperands.groups.length < 3
+              form.field.alertOperands.groups.length < 3 &&
+              validateAlertOperands(form.field.alertOperands.groups)
             "
             class="plus_button"
             @click="emitAddOperandForm"
@@ -102,6 +105,9 @@ export default {
   },
   async created() {},
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
         ? (this.selectedCondition = 'OR')
@@ -122,6 +128,20 @@ export default {
       this.form.addToArray('alertOperands', new AlertOperandForm())
       this.form.field.alertOperands.groups[order].field.operandOrder.value = order
       this.$emit('scroll-to-view')
+    },
+    validateAlertOperands(operands) {
+      for (let i = 0; i < operands.length; i++) {
+        if (!operands[i].field.operandIdentifier.isValid) {
+            return false
+          }
+          if (!operands[i].field.operandOperator.isValid) {
+            return false
+          }
+        if (!operands[i].field.operandValue.isValid) {
+          return false
+        }
+      }
+      return true
     },
     onRemoveOperand(i) {
       if (this.form.field.alertOperands.groups.length - 1 <= 0) {
@@ -186,11 +206,12 @@ export default {
   margin-right: 8px;
 
   button {
-    background-color: $dark-green;
-    border: none;
+    background-color: white;
+    border: 1px solid $dark-green;
     border-radius: 100%;
-    color: white;
+    color: $dark-green;
     font-size: 18px;
+    cursor: pointer;
   }
 }
 .filtered {
@@ -213,9 +234,16 @@ export default {
 .toggle__switch {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 2rem;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 0.75px;
+  color: $base-gray;
+
+  label {
+    padding: 0rem 0.2rem;
+  }
 }
 .small-gray-text {
   font-size: 10px;

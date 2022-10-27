@@ -3,7 +3,7 @@
     <Modal v-if="deleteOpen">
       <div class="delete_modal">
         <div class="delete_modal__header">
-          <h3>Delete Workflow</h3>
+          <h4>Delete Workflow</h4>
           <img
             @click="deleteOpen = !deleteOpen"
             src="@/assets/images/close.svg"
@@ -33,10 +33,10 @@
     >
       <div class="workflow__modal">
         <div class="workflow__modal__header">
-          <h3>
+          <h4>
             {{ activeWorkflow.title }}
             <!-- <span> {{ activeWorkflow.sobjectInstances.length }}</span> -->
-          </h3>
+          </h4>
 
           <button
             style="margin-left: 16px"
@@ -61,13 +61,6 @@
               <p>Close Date: {{ opp.CloseDate }}</p>
             </div>
           </div>
-          <!-- <section class="button-section">
-            <div>
-              <button class="green-button">Update Record</button>
-              <img src="@/assets/images/note.svg" height="14px" alt="" />
-              <img src="@/assets/images/pipeline.svg" height="14px" alt="" />
-            </div>
-          </section> -->
         </section>
       </div>
     </Modal>
@@ -82,9 +75,9 @@
     >
       <div class="workflow__modal">
         <div class="workflow__modal__header">
-          <h3>Meetings</h3>
+          <h4>Meetings</h4>
 
-          <button style="margin-left: 16px" class="yellow_button_full" @click="goToMeetings">
+          <button style="margin-left: 16px" class="green_button" @click="goToMeetings">
             Open in Meetings
           </button>
         </div>
@@ -107,219 +100,161 @@
     </Modal>
 
     <template v-if="!templates.refreshing">
-      <transition name="fade">
-        <div v-if="!editing" class="edit__modal">
-          <div class="edit__modal__button">
-            <p>Editing {{ currentAlert.title }}</p>
-
-            <div>
-              <button class="delete" @click="deleteClosed(currentAlert.id)">Delete</button>
-              <button @click="closeEdit">Close Editor</button>
-            </div>
-          </div>
-          <AlertsEditPanel :alert="currentAlert" />
-        </div>
-      </transition>
+      <!-- <transition name="fade">
+      </transition> -->
 
       <div v-if="editing" class="alert_cards">
+        <div :key="i" v-for="(alert, i) in templates.list" class="card">
+          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>
+              {{ alert.title }}
+            </h4>
+            <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
+
+            <div class="card__body__between">
+              <div class="row__">
+                <div class="tooltip">
+                  <button
+                    style="margin-right: 8px"
+                    :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
+                    @click.stop="onRunAlertTemplateNow(alert.id)"
+                    class="img-border"
+                  >
+                    <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                  </button>
+                  <span class="tooltiptext">Send to Slack</span>
+                </div>
+
+                <button @click="openList(alert)" style="margin-right: 8px" class="img-border">
+                  <img
+                    src="@/assets/images/listed.svg"
+                    style="filter: invert(40%)"
+                    height="14px"
+                    alt=""
+                  />
+                </button>
+                <button class="img-border" @click="editWorkflow(alert)">
+                  <img
+                    src="@/assets/images/edit.svg"
+                    style="filter: invert(40%)"
+                    height="14px"
+                    alt=""
+                  />
+                </button>
+              </div>
+              <div v-if="hasSlackIntegration">
+                <ToggleCheckBox
+                  @input="onToggleAlert(alert.id, alert.isActive)"
+                  v-model="alert.isActive"
+                  offColor="#aaaaaa"
+                  :onColor="'#41b883'"
+                />
+                <!-- templatedAlerts.includes(alert.title) ? '#41b883' : '#7fc4fb' -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="zoomChannel" class="card">
+          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <p class="card-text">Meetings: {{ meetings.length }}</p>
+
+            <div class="card__body__between">
+              <button @click="openMeetings" class="img-border">
+                <img
+                  src="@/assets/images/listed.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+
+              <button @click="goToLogZoom" class="white_button">Change Channel</button>
+              <!-- <small>{{ currentZoomChannel }}</small> -->
+            </div>
+          </div>
+        </div>
+
+        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card">
+          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+          <div class="card__body">
+            <h4>Meeting Recaps</h4>
+            <p class="card-text">Meetings: {{ meetings.length }}</p>
+
+            <div class="card__body__between">
+              <button @click="openMeetings" class="img-border">
+                <img
+                  src="@/assets/images/listed.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+
+              <button @click="goToRecap" class="white_button">Change Channel</button>
+              <!-- <small> {{ currentRecapChannel }}</small> -->
+            </div>
+          </div>
+        </div>
+
         <div
           v-for="(config, i) in allConfigs"
           :key="i"
-          class="added-collection gray-shadow"
+          class="card"
           v-show="!templateTitles.includes(config.title)"
         >
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="gray">Managr Template</p>
-              <h3>{{ config.title }}</h3>
-            </div>
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="added-collection__body">
-            <p class="gray">{{ config.subtitle }}</p>
-          </div>
-          <div class="added-collection__footer">
-            <button @click="goToWorkflow(config.title)" class="green_button pulse">Activate</button>
-          </div>
-        </div>
-        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h3>Log Meeting</h3>
-            </div>
-          </div>
-
-          <div class="added-collection__body">
-            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <div class="row__">
-              <button @click="goToLogZoom" class="green_button pulse">Activate</button>
-            </div>
-          </div>
-        </div>
-        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h3>Meeting Recaps</h3>
-            </div>
-          </div>
-
-          <div class="added-collection__body">
-            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <button @click="goToRecap" class="green_button pulse">Activate</button>
-          </div>
-        </div>
-
-        <div :key="i" v-for="(alert, i) in templates.list" class="added-collection green-shadow">
-          <div class="added-collection__header" :data-key="alert.id">
-            <div class="green-bg" :class="!templatedAlerts.includes(alert.title) ? 'blue-bg' : ''">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="green" v-if="templatedAlerts.includes(alert.title)">Managr Template</p>
-              <p class="blue" v-else>Custom Workflow</p>
-              <h3>
-                {{ alert.title }}
-              </h3>
-            </div>
-            <span>{{ alert.sobjectInstances.length }}</span>
-          </div>
-          <div class="added-collection__body">
-            <p>Recieve notifications when important close dates have passed</p>
-          </div>
-          <div class="added-collection__footer">
-            <div class="row__">
-              <div class="tooltip">
-                <button
-                  style="margin-right: 8px"
-                  :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                  @click.stop="onRunAlertTemplateNow(alert.id)"
-                  class="white_button"
-                >
-                  <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
-                </button>
-                <span class="tooltiptext">Send to Slack</span>
-              </div>
-
-              <button @click="openList(alert)" style="margin-right: 8px" class="white_button">
-                <img
-                  src="@/assets/images/listed.svg"
-                  style="filter: invert(40%)"
-                  height="14px"
-                  alt=""
-                />
-              </button>
-              <button class="white_button" @click="makeAlertCurrent(alert)">
-                <img
-                  src="@/assets/images/build.svg"
-                  style="filter: invert(40%)"
-                  height="14px"
-                  alt=""
-                />
-              </button>
-            </div>
-
-            <div v-if="hasSlackIntegration" class="row__">
-              <ToggleCheckBox
-                @input="onToggleAlert(alert.id, alert.isActive)"
-                v-model="alert.isActive"
-                offColor="#aaaaaa"
-                :onColor="templatedAlerts.includes(alert.title) ? '#41b883' : '#7fc4fb'"
-              />
-            </div>
-          </div>
-
-          <template slot="panel-content">
-            <div>
-              <AlertsEditPanel :alert="alert" />
-            </div>
-          </template>
-        </div>
-
-        <div v-if="zoomChannel" class="added-collection green-shadow">
-          <div class="added-collection__header">
-            <div id="yellow">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="yellow">Meetings</p>
-              <h3>Log Meeting</h3>
-            </div>
-
-            <span>{{ meetings.length }}</span>
-          </div>
-
-          <div class="added-collection__body">
-            <p>{{ currentZoomChannel }}</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <div class="row__">
-              <button @click="goToLogZoom" class="yellow_button_full">Change Channel</button>
-              <button @click="openMeetings" style="margin-left: 8px" class="white_button">
-                <img
-                  src="@/assets/images/listed.svg"
-                  style="filter: invert(40%)"
-                  height="14px"
-                  alt=""
-                />
-              </button>
+          <div class="card__body">
+            <h4>{{ config.title }}</h4>
+            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
+            <div class="card__body__between" style="margin-top: 8px">
+              <p></p>
+              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
             </div>
           </div>
         </div>
 
-        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="added-collection green-shadow">
-          <div class="added-collection__header">
-            <div id="yellow">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
-            </div>
-
-            <div>
-              <p class="yellow">Meetings</p>
-              <h3>Meeting Recaps</h3>
-            </div>
-
-            <span>{{ meetings.length }}</span>
+        <div v-if="!zoomChannel" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="added-collection__body">
-            <p>
-              {{ currentRecapChannel }}
-            </p>
-            <p style="height: 32px"></p>
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToLogZoom" class="white_button">Activate</button>
+            </div>
           </div>
-          <div class="added-collection__footer">
-            <div class="row__">
-              <button @click="goToRecap" class="yellow_button_full">Change Channel</button>
-              <button @click="openMeetings" style="margin-left: 8px" class="white_button">
-                <img
-                  src="@/assets/images/listed.svg"
-                  style="filter: invert(40%)"
-                  height="14px"
-                  alt=""
-                />
-              </button>
+        </div>
+
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>Meeting Recaps</h4>
+            <small class="card-text"
+              >Recieve alerts that give you insight on your teams meetings.</small
+            >
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToRecap" class="white_button">Activate</button>
             </div>
           </div>
         </div>
@@ -327,6 +262,10 @@
 
       <div class="alert_cards" v-if="editing"></div>
     </template>
+
+    <!-- <div v-else-if="isOnboarding">
+      <Onboarder />
+    </div> -->
 
     <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />
@@ -341,25 +280,24 @@
 // Pacakges
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
-//Internal
-import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 /**
  * Services
  *
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 
-import AlertTemplate from '@/services/alerts/'
+import AlertTemplate, { AlertGroup } from '@/services/alerts/'
 import allConfigs from '../configs'
 
 export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    AlertsEditPanel,
+    Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
@@ -377,7 +315,6 @@ export default {
       meetingListOpen: false,
       activeWorkflow: null,
       allConfigs,
-      userChannelOpts: new SlackListResponse(),
       templates: CollectionManager.create({
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
@@ -408,7 +345,6 @@ export default {
     if (this.hasRecapChannel) {
       this.getRecapChannel()
     }
-    await this.listUserChannels()
   },
   beforeUpdate() {
     if (this.templates.list.length) {
@@ -416,6 +352,9 @@ export default {
     }
   },
   methods: {
+    editWorkflow(alert) {
+      this.$emit('edit-workflow', alert)
+    },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)
       let newTime = preDate.toLocaleTimeString('en-US')
@@ -515,14 +454,7 @@ export default {
     closeEdit() {
       this.editing = !this.editing
     },
-    async listUserChannels(cursor = null) {
-      const res = await SlackOAuth.api.listUserChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.userChannelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.userChannelOpts = results
-    },
+
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
       this.deleteOpen = !this.deleteOpen
@@ -552,7 +484,7 @@ export default {
     async onToggleAlert(id, value) {
       try {
         await AlertTemplate.api.updateAlertTemplate(id, { is_active: value })
-        await this.templates.refresh()
+        // await this.templates.refresh()
 
         this.$toast(`Alert is now ${value ? 'active' : 'inactive'}`, {
           timeout: 2000,
@@ -615,6 +547,9 @@ export default {
     },
     meetings() {
       return this.$store.state.meetings
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
     },
   },
 }
@@ -686,7 +621,93 @@ export default {
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
 }
+.header {
+  outline: 1px solid red;
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $soft-gray;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 8px;
+  background-color: white;
+}
+.card {
+  letter-spacing: 0.75px;
+  background-color: $white;
+  padding: 16px 24px;
+  border: 1px solid #e8e8e8;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  width: 425px;
+  min-height: 144px;
+  transition: all 0.25s;
 
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 16px;
+    border-radius: 6px;
+
+    img {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    margin-left: 12px;
+    width: 100%;
+    h4 {
+      margin: 0;
+      padding: 0;
+    }
+    p {
+      font-size: 12px;
+    }
+
+    &__between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      width: 260px;
+    }
+  }
+}
+
+.card-text {
+  font-size: 11px;
+  color: $light-gray-blue;
+}
+.lb-bg {
+  background: rgb(242, 242, 242);
+  background: rgb(242, 242, 242);
+  background: linear-gradient(
+    90deg,
+    rgba(242, 242, 242, 1) 0%,
+    rgba(238, 255, 247, 1) 0%,
+    rgba(208, 251, 232, 1) 100%
+  );
+}
+.lg-bg {
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  img {
+    filter: grayscale(99%);
+  }
+}
 .pulse {
   box-shadow: 0 0 0 0 $dark-green;
   transform: scale(1);
@@ -884,6 +905,19 @@ button:disabled {
   flex-direction: column;
   padding: none;
 
+  &__header {
+    background-color: red;
+    padding: 0px 8px;
+    background-color: white;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   &__button {
     display: flex;
     flex-direction: row;
@@ -969,12 +1003,12 @@ button:disabled {
   font-size: 16px;
 }
 .alerts-template-list {
-  margin: 16px 8px;
+  margin: 16px 0px;
+  padding-left: 24px;
   color: $base-gray;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 24px;
 }
 
 .alert_cards {
@@ -985,7 +1019,7 @@ button:disabled {
   flex-wrap: wrap;
   width: 100%;
   border-radius: 6px;
-  margin-top: 8px;
+  margin-top: 16px;
 }
 
 // .added-collection:hover {
@@ -1037,7 +1071,7 @@ button:disabled {
       justify-content: flex-start;
       margin-left: 8px;
       p,
-      h3 {
+      h4 {
         margin: 0;
         padding: 0;
       }
@@ -1098,15 +1132,7 @@ a {
   color: $base-gray;
   font-weight: bold;
 }
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.2rem;
-  cursor: pointer;
-  padding: 0.15rem 0.3rem;
-}
+
 .row__two {
   display: flex;
   align-items: center;
@@ -1135,6 +1161,17 @@ a {
   cursor: pointer;
   text-align: center;
 }
+.white_button {
+  color: $dark-green;
+  background-color: $white;
+  border: 1px solid $soft-gray;
+  letter-spacing: 0.75px;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
 .yellow_button {
   color: $yellow;
   opacity: 0.85;
@@ -1157,18 +1194,18 @@ a {
   cursor: pointer;
   text-align: center;
 }
-.white_button {
-  color: $base-gray;
-  background-color: white;
-  border-radius: 6px;
-  border: 1px solid $soft-gray;
-  box-shadow: 1px 1px 1px $very-light-gray;
-  padding: 6px 8px;
-  font-size: 12px;
+// .white_button {
+//   color: $base-gray;
+//   background-color: white;
+//   border-radius: 6px;
+//   border: 1px solid $soft-gray;
+//   box-shadow: 1px 1px 1px $very-light-gray;
+//   padding: 6px 8px;
+//   font-size: 12px;
 
-  cursor: pointer;
-  text-align: center;
-}
+//   cursor: pointer;
+//   text-align: center;
+// }
 .gray_button {
   color: white;
   background-color: $light-gray-blue;

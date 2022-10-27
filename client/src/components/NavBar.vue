@@ -8,12 +8,6 @@
       </router-link>
 
       <div style="height: 100%" class="align-left">
-        <!-- <router-link active-class="active" :to="{ name: 'Home' }">
-          <div class="tooltip">
-            <img src="@/assets/images/star.svg" height="16px" alt="" />
-            <span class="tooltiptext">Home</span>
-          </div>
-        </router-link> -->
         <router-link active-class="active" :to="{ name: 'ListTemplates' }">
           <div class="tooltip">
             <img src="@/assets/images/workflows.svg" height="16px" alt="" />
@@ -35,28 +29,22 @@
           </div>
         </router-link>
 
+        <router-link exact-active-class="active" :to="{ name: 'Notes' }">
+          <div class="tooltip">
+            <img src="@/assets/images/notebook.svg" height="16px" alt="" />
+            <span class="tooltiptext">Note Templates</span>
+          </div>
+        </router-link>
         <router-link
           v-if="isTeamLead || isAdmin"
           exact-active-class="active"
           :to="{ name: 'UpdateOpportunity' }"
         >
           <div class="tooltip">
-            <img src="@/assets/images/list.svg" height="16px" alt="" />
+            <img src="@/assets/images/upload.svg" height="16px" alt="" />
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
-
-        <!-- <router-link exact-active-class="active" :to="{ name: 'Forecast' }">
-          <div class="tooltip">
-            <img src="@/assets/images/tracker.svg" height="16px" alt="" />
-            <span class="tooltiptext">Tracker</span>
-          </div>
-         
-        </router-link> -->
-
-        <li v-if="user.isStaff">
-          <router-link exact-active-class="active" :to="{ name: 'Staff' }">Admin</router-link>
-        </li>
 
         <router-link exact-active-class="active" :to="{ name: 'Integrations' }">
           <div class="tooltip">
@@ -64,26 +52,6 @@
             <span class="tooltiptext">Integrations</span>
           </div>
         </router-link>
-
-        <!-- <router-link
-          v-if="isTeamLead || isAdmin"
-          exact-active-class="active-img"
-          :to="{ name: 'Required' }"
-        >
-          <div class="tooltip">
-            <img src="@/assets/images/list.svg" height="16px" alt="" />
-            <span class="tooltiptext">Forms</span>
-          </div>
-        </router-link> -->
-
-        <!-- <router-link active-class="active" :to="{ name: 'ListTemplates' }">
-          <div class="tooltip">
-            <img src="@/assets/images/workflows.svg" height="16px" alt="" />
-            <span class="tooltiptext">Workflows</span>
-          </div>
-        </router-link> -->
-
-        <!-- @click="goToProfile(Math.floor(Math.random() * 10000))" -->
         <router-link
           exact-active-class="active"
           v-if="routeName === 'InviteUsers'"
@@ -102,12 +70,12 @@
           </div>
         </router-link>
 
-        <!-- <router-link exact-active-class="active" :to="{ name: 'Meetings' }">
+        <router-link v-if="user.isStaff" exact-active-class="active" :to="{ name: 'Staff' }">
           <div class="tooltip">
-            <img src="@/assets/images/calendar.svg" height="16px" alt="" />
-            <span class="tooltiptext">Meetings</span>
+            <img src="@/assets/images/adminPanel.svg" class="nav-img" height="16px" alt="" />
+            <span class="tooltiptext">Admin</span>
           </div>
-        </router-link> -->
+        </router-link>
 
         <router-link style="margin-top: auto" :to="{ name: 'Login' }">
           <div>
@@ -115,51 +83,6 @@
           </div>
         </router-link>
       </div>
-
-      <!-- <div v-else class="right">
-        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }">
-          <div class="tooltip">
-            <img src="@/assets/images/connect.svg" class="nav-img" alt="" />
-            <span class="tooltiptext">Integrations</span>
-          </div>
-        </router-link>
-
-        <router-link
-          v-if="isTeamLead || this.isAdmin"
-          exact-active-class="active-img"
-          :to="{ name: 'Required' }"
-        >
-          <div class="tooltip">
-            <img src="@/assets/images/list.svg" alt="" />
-            <span class="tooltiptext">Forms</span>
-          </div>
-        </router-link>
-
-        <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
-            <div class="tooltip">
-              <small class="profile-wrapper">{{ user.email }}</small>
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </div>
-        </div>
-
-        <div v-else>
-          <router-link :to="{ name: 'InviteUsers' }">
-            <div class="tooltip">
-              <small class="profile-wrapper">{{ user.email }}</small>
-            
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </router-link>
-        </div>
-
-        <div class="center">
-          <router-link :to="{ name: 'Login' }">
-            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
-          </router-link>
-        </div>
-      </div> -->
     </nav>
   </div>
 </template>

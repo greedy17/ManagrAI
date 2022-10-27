@@ -218,18 +218,11 @@
       </div>
     </Modal>
     <div class="invite-list__container">
-      <div class="key">
+      <!-- <div class="key">
         <div class="left-key">
-          <h2>The {{ $store.state.user.organizationRef.name }} Team:</h2>
-          <button v-if="$store.state.user.isTeamLead" class="invite_button" @click="handleEdit">
-            Edit Team
-          </button>
+          <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
         </div>
-        <div class="right-key">
-          <p class="complete">Complete</p>
-          <p class="incomplete">Incomplete</p>
-        </div>
-      </div>
+      </div> -->
 
       <div class="invite-list__section__container" style="margin-bottom: 2rem">
         <div
@@ -256,25 +249,26 @@
         >
           Integrations
         </div>
+        <div style="position: relative; right: 3%"></div>
       </div>
 
       <div class="invite-list__section__container">
-        <img class="back-logo" src="@/assets/images/logo.png" />
+        <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div
-          style="display: flex; align-items: flex-start; color: #199e54; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 14px"
           class="invite-list__section__item col"
         >
           {{ user.fullName }}
           <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 14px"
           class="invite-list__section__item"
         >
-          {{ user.userLevel == 'MANAGER' ? 'Team Leader(You)' : 'Rep(You)' }}
+          {{ user.userLevel == 'MANAGER' ? 'Team Leader (You)' : 'Rep(You)' }}
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 13px"
+          style="display: flex; align-items: flex-start; font-size: 14px"
           class="invite-list__section__item"
         >
           Registered
@@ -284,20 +278,22 @@
           style="display: flex; align-items: flex-start"
           class="invite-list__section__item invite-list__status"
         >
-          <span :class="user.slackRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
+          <span :class="user.slackRef ? '' : 'grayscale'">
+            <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
           </span>
-          <span :class="user.hasSalesforceIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
+          <span :class="user.hasSalesforceIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/salesforce.png" height="18px" alt="" />
           </span>
-          <span :class="user.hasZoomIntegration ? 'active' : 'inactive'">
-            <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
+          <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/zoom.png" alt="" height="18px" />
           </span>
-          <span :class="user.nylasRef ? 'active' : 'inactive'">
-            <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
+          <span :class="user.nylasRef ? '' : 'grayscale'">
+            <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
           </span>
         </div>
-        <div style="position: relative; width: 1rem; right: 1rem; visibility: none" class=""></div>
+        <div style="position: relative; right: 3%; cursor: text; visibility: hidden">
+          <img src="@/assets/images/remove.svg" style="filter: invert(60%)" height="22px" alt="" />
+        </div>
       </div>
       <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
         <template
@@ -308,7 +304,7 @@
           "
         >
           <div
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item col"
             @click="test(member)"
           >
@@ -320,27 +316,27 @@
           </div>
           <div
             v-if="member.userLevel == 'MANAGER'"
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             Manager
           </div>
           <div
             v-else-if="member.userLevel == 'SDR'"
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             SDR
           </div>
           <div
             v-else-if="member.userLevel == 'REP'"
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             REP
           </div>
           <div
-            style="display: flex; align-items: flex-start; font-size: 13px"
+            style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
@@ -350,32 +346,26 @@
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item invite-list__status"
           >
-            <span :class="member.slackRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/slackLogo.png" style="height: 0.8rem" alt="" />
+            <span :class="member.slackRef ? '' : 'grayscale'">
+              <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <span :class="member.hasSalesforceIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/salesforce.png" style="height: 0.8rem" alt="" />
+            <span :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
+              <img src="@/assets/images/salesforce.png" height="18px" alt="" />
             </span>
-            <span :class="member.hasZoomIntegration ? 'active' : 'inactive'">
-              <img src="@/assets/images/zoom.png" alt="" style="height: 0.8rem" />
+            <span :class="member.hasZoomIntegration ? '' : 'grayscale'">
+              <img src="@/assets/images/zoom.png" alt="" height="18px" />
             </span>
-            <span :class="member.nylasRef ? 'active' : 'inactive'">
-              <img src="@/assets/images/gmailCal.png" alt="" style="height: 0.8rem" />
+            <span :class="member.nylasRef ? '' : 'grayscale'">
+              <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
             </span>
           </div>
           <div
             v-if="!member.isAdmin && member.isActive"
-            style="position: relative; right: 7.5%; cursor: pointer"
-            class=""
+            style="position: relative; right: 3%; cursor: pointer"
             @click="openUninviteModal(member.id)"
           >
-            X
+            <img src="@/assets/images/remove.svg" class="red" height="22px" alt="" />
           </div>
-          <div
-            v-else
-            style="position: relative; width: 1rem; right: 1rem; visibility: none"
-            class=""
-          ></div>
         </template>
       </div>
     </div>
@@ -486,7 +476,7 @@ export default {
     async refresh() {
       this.user = this.$store.state.user
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
-        this.$router.push({ name: 'Integrations' })
+        this.$router.push({ name: 'ListTemplates' })
       }
       if (this.user.isStaff) {
         await this.organizations.refresh()
@@ -654,11 +644,28 @@ export default {
   color: $very-light-gray;
   padding-left: 1rem;
 }
+.grayscale {
+  filter: grayscale(99%);
+}
 input {
   width: 16vw;
   height: 2.5rem;
   border-radius: 5px;
   border: 1px solid #e8e8e8;
+}
+.red {
+  filter: invert(42%) sepia(36%) saturate(937%) hue-rotate(308deg) brightness(114%) contrast(96%);
+}
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $soft-gray;
+  border-radius: 6px;
+  cursor: pointer;
+
+  margin-left: 8px;
+  background-color: white;
 }
 input:focus {
   outline: none;
@@ -718,8 +725,10 @@ input:focus {
   filter: invert(80%);
 }
 .section-header {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
+  letter-spacing: 0.75px;
+  color: $light-gray-blue;
 }
 .key {
   display: flex;
@@ -727,6 +736,7 @@ input:focus {
   width: 100%;
   font-size: 0.75rem;
   margin-bottom: 1.5rem;
+  margin-left: 16px;
 }
 .right-key {
   display: flex;
@@ -739,6 +749,7 @@ input:focus {
   width: 100%;
   flex-direction: row;
   justify-self: flex-start;
+  align-items: center;
 }
 .header {
   margin-top: -1rem;
@@ -790,19 +801,21 @@ form {
 }
 .invite-button {
   background-color: $dark-green;
+  border-radius: 6px;
   color: white;
+  border: none;
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
   box-shadow: none;
 }
-button {
-  @include primary-button();
-  margin-top: 1.25rem;
-  height: 2.5rem;
-  width: 19rem;
-  font-size: 14px;
-}
+// button {
+//   @include primary-button();
+//   margin-top: 1.25rem;
+//   height: 2.5rem;
+//   width: 19rem;
+//   font-size: 14px;
+// }
 .invite-form {
   border: none;
   border-radius: 0.75rem;
@@ -841,9 +854,9 @@ button {
 .invite-list {
   &__container {
     background-color: $white;
-    border: 1px solid #e8e8e8;
+    // border: 1px solid #e8e8e8;
     color: $base-gray;
-    width: 60vw;
+    width: 92vw;
     height: 60vh;
     overflow: scroll;
     padding: 1.5rem 0rem 1.5rem 1rem;
@@ -858,6 +871,7 @@ button {
       display: flex;
       margin-bottom: 0.5rem;
       z-index: 2;
+      margin-left: 16px;
     }
     &__item {
       width: 33%;
@@ -865,7 +879,9 @@ button {
     }
   }
   &__status {
-    font-size: 0.75rem;
+    img {
+      margin-right: 16px;
+    }
   }
 }
 .cancel-button {

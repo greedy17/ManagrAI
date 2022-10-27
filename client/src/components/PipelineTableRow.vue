@@ -1,6 +1,11 @@
 <template>
-  <div class="table-row" :class="{ selected: primaryCheckList.includes(opp.id) }">
-    <div v-if="opp" class="table-cell-checkbox">
+  <div
+    @mouseenter="showActions"
+    @mouseleave="hideActions"
+    class="table-row"
+    :class="{ selected: primaryCheckList.includes(opp.id) }"
+  >
+    <div v-if="opp" :class="showIcons ? 'hovered' : ''" class="table-cell-checkbox">
       <div
         v-if="
           updateList.includes(opp.id) ||
@@ -8,7 +13,7 @@
           (inlineLoader && currentInlineRow === index)
         "
       >
-        <SkeletonBox width="10px" height="9px" />
+        <SkeletonBox width="10px" height="10px" />
       </div>
       <div v-else>
         <input
@@ -22,7 +27,7 @@
       </div>
     </div>
 
-    <div class="cell-name">
+    <div :class="showIcons ? 'hovered' : ''" class="cell-name">
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div>
           <div
@@ -42,6 +47,22 @@
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
+        </div>
+
+        <div v-show="showIcons" class="flex-row">
+          <div>
+            <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
+              <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
+            </button>
+            <!-- <span class="tooltiptext">Expand</span> -->
+          </div>
+
+          <div>
+            <button @click="emitGetNotes" class="name-cell-note-button-1">
+              <img class="gray" height="12px" src="@/assets/images/note.svg" />
+            </button>
+            <!-- <span class="tooltiptext">Notes</span> -->
+          </div>
         </div>
       </div>
     </div>
@@ -64,6 +85,7 @@
           opp['secondary_data'][field.apiName] ||
           opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
         ),
+        hovered: showIcons,
       }"
     >
       <SkeletonBox
@@ -76,8 +98,12 @@
         height="14px"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
-        <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
+      <div
+        style="position: relative"
+        :class="showIcons ? 'hovered' : ''"
+        v-else-if="!updateList.includes(opp.id)"
+      >
+        <!-- <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
           <div
             v-if="
               field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
@@ -93,10 +119,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-
-            <div v-if="editing" class="save">
-              <p>Press <span>"Enter"</span> to save</p>
-            </div>
           </div>
           <div
             v-else-if="
@@ -117,9 +139,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press <span>"Enter"</span> to save</p>
-            </div>
           </div>
 
           <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
@@ -196,9 +215,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press <span>"Enter"</span> to save</p>
-            </div>
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
             <input
@@ -211,9 +227,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press <span>"Enter"</span> to save</p>
-            </div>
           </div>
           <div
             v-else-if="
@@ -235,9 +248,6 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
-            <div v-if="editing" class="save">
-              <p>Press <span>"Enter"</span> to save</p>
-            </div>
           </div>
           <div v-else-if="field.dataType === 'Boolean'">
             <Multiselect
@@ -286,21 +296,24 @@
               </template>
             </Multiselect>
           </div>
+        </div> -->
+        <div class="limit-cell-height">
+          <PipelineField
+            :index="i"
+            style="direction: ltr"
+            :apiName="field.apiName"
+            :dataType="field.dataType"
+            :fieldData="
+              field.apiName.includes('__c') || field.apiName.includes('__r')
+                ? opp['secondary_data'][field.apiName]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+            "
+            :referenceOpts="referenceOpts"
+            :lastStageUpdate="opp['last_stage_update']"
+          />
         </div>
-        <PipelineField
-          :index="i"
-          v-show="!(editing && editIndex === i && currentInlineRow === index)"
-          style="direction: ltr; border: "
-          :apiName="field.apiName"
-          :dataType="field.dataType"
-          :fieldData="
-            field.apiName.includes('__c') || field.apiName.includes('__r')
-              ? opp['secondary_data'][field.apiName]
-              : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          "
-          :referenceOpts="referenceOpts"
-          :lastStageUpdate="opp['last_stage_update']"
-        />
+
+        <!-- v-show="!(editing && editIndex === i && currentInlineRow === index)" -->
       </div>
     </div>
     <div
@@ -323,7 +336,7 @@
         height="14px"
       />
 
-      <div class="limit-cell-height" v-else-if="!updateList.includes(opp.id)">
+      <div v-else-if="!updateList.includes(opp.id)">
         <PipelineField
           style="direction: ltr"
           :apiName="field.apiName"
@@ -338,8 +351,8 @@
         />
       </div>
     </div>
-    <div class="cell-end left-border light-gray">
-      <div
+    <div :class="showIcons ? 'hovered' : ''" class="cell-end left-border light-gray">
+      <!-- <div
         v-if="
           updateList.includes(opp.id) ||
           updatedList.includes(opp.id) ||
@@ -348,43 +361,6 @@
         class="flex-row"
       >
         <SkeletonBox width="15px" height="14px" />
-      </div>
-      <div class="row">
-        <div @click="emitGetNotes" class="tooltip mar-right mar-left">
-          <div class="img-border">
-            <img src="@/assets/images/note.svg" height="14px" alt="" />
-          </div>
-
-          <span class="tooltiptext">Notes</span>
-        </div>
-        <div @click="emitCreateForm" class="tooltip mar-right">
-          <div class="img-border">
-            <img src="@/assets/images/edit-note.svg" height="14px" alt="" />
-          </div>
-
-          <span class="tooltiptext">Update</span>
-        </div>
-      </div>
-      <!-- <div v-else class="flex-row action-buttons">
-        <div @click="emitCreateForm" class="tooltip mar-right">
-          <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
-          <span class="tooltiptext">Update</span>
-        </div>
-
-        <div @click="emitGetNotes" class="tooltip mar-right">
-          <img src="@/assets/images/note.svg" height="16px" alt="" />
-          <span class="tooltiptext">Add + View</span>
-        </div>
-
-        <div class="tooltip mar-right">
-          <img src="@/assets/images/tracker.svg" height="16px" alt="" />
-          <span class="tooltiptext">Add to Tracker</span>
-        </div>
-
-        <div class="tooltip mar-right">
-          <img src="@/assets/images/more.svg" height="16px" alt="" />
-          <span class="tooltiptext">More</span>
-        </div>
       </div> -->
     </div>
   </div>
@@ -408,6 +384,7 @@ export default {
   },
   data() {
     return {
+      showIcons: false,
       booleans: ['true', 'false'],
       isSelected: false,
       task: false,
@@ -471,8 +448,11 @@ export default {
     //     console.log(e)
     //   }
     // },
-    test(log) {
-      console.log('log', log)
+    showActions() {
+      this.showIcons = true
+    },
+    hideActions() {
+      this.showicons = true ? (this.showIcons = false) : (this.showIcons = true)
     },
     checkAndClearInterval() {
       if (this.task.completed == true) {
@@ -483,6 +463,7 @@ export default {
         return
       }
     },
+    test(log) {},
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -490,6 +471,7 @@ export default {
     },
     closeInline() {
       this.editing = false
+      this.$emit('close-inline-editor')
     },
     emitDropdown(val, opp) {
       const item = { val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id }
@@ -497,7 +479,7 @@ export default {
     },
     editInline(index) {
       this.editing = true
-      this.$emit('current-inline-row', this.index)
+      this.$emit('current-inline-row', this.index, index)
       this.currentRow = this.index
       this.editIndex = index
     },
@@ -522,7 +504,6 @@ export default {
       this.$emit('get-notes')
     },
     emitCheckedBox(i) {
-      console.log('this.opp', this.opp)
       this.$emit('checked-box', this.opp.id, i)
     },
     capitalizeFirstLetter(string) {
@@ -680,10 +661,10 @@ export default {
   flex-direction: row;
   align-items: center;
 }
-.light-gray {
-  background-color: $off-white !important;
-  // opacity: 0.5;
-}
+// .light-gray {
+//   background-color: $off-white !important;
+
+// }
 
 .img-border {
   border: none;
@@ -704,46 +685,48 @@ export default {
   align-items: space-evenly;
   // box-shadow: 1px 1px 1px $very-light-gray;
 }
+
 // .left-border {
 //   border-left: 2px solid $off-white !important;
 // }
+
 .tooltip {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2px 0px;
-
-  img {
-    filter: invert(30%);
-  }
+  display: inline-block;
 }
+
+/* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
-  background-color: $base-gray;
-  color: white;
+  width: 120px;
+  background-color: black;
+  color: #fff;
   text-align: center;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 4px 0px;
+  padding: 5px 0;
   border-radius: 6px;
-  font-size: 12px;
+  opacity: 0.7;
 
-  /* Position the tooltip text */
+  /* Position the tooltip text - see examples below! */
   position: absolute;
-  z-index: 20 !important;
-  width: 100px;
+  z-index: 1;
   top: 100%;
-  left: 50%;
-  margin-left: -50px;
-
-  /* Fade in tooltip */
-  opacity: 0;
-  transition: opacity 0.3s;
+  left: 40%;
+  margin-left: -60px; /* half of width */
 }
+
+/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
+}
+.tooltip .tooltiptext::after {
+  content: ' ';
+  position: absolute;
+  bottom: 100%; /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
 }
 .save {
   background-color: transparent;
@@ -818,6 +801,16 @@ input {
 }
 .inline-edit {
   cursor: text;
+  // z-index: 2000;
+  // position: sticky;
+  // top: 10vh;
+  // left: -2px;
+  // min-height: 200px;
+  // width: 150%;
+  // background-color: white !important;
+  // box-shadow: 1px 1px 2px 1px $very-light-gray;
+  // padding: 8px 12px;
+  // border-radius: 4px;
 }
 .inline-row {
   display: flex;
@@ -826,10 +819,8 @@ input {
   justify-content: center;
 }
 .active-edit {
-  // border-bottom: 2px solid $dark-green !important;
-  // border-left: 1px solid $soft-gray !important;
-  // border-right: 1px solid $soft-gray !important;
-  // border-top: 1px solid $soft-gray !important;
+  border: 1.5px solid $dark-green !important;
+  border-radius: 3px;
 }
 .multi-slot {
   display: flex;
@@ -877,15 +868,12 @@ input {
 
 .table-row {
   display: table-row;
+  height: 7vh;
 }
 .empty {
   display: table-cell;
   position: sticky;
-  // background: $off-white;
   min-width: 12vw;
-  border-bottom: 1px solid $soft-gray;
-  // border-left: 1px solid $soft-gray;
-  // border-right: 1px solid $soft-gray;
 }
 .selected {
   color: $dark-green !important;
@@ -894,11 +882,9 @@ input {
   display: table-cell;
   position: sticky;
   min-width: 16vw;
-  // padding: 2vh 3vh;
   border: none;
-  border-bottom: 1px solid $soft-gray;
   font-size: 13px;
-  padding: 1px 6px;
+  padding-left: 4px;
 }
 .cell-name {
   min-width: 18vw;
@@ -909,43 +895,31 @@ input {
   position: sticky;
   left: 3.5vw;
   z-index: 2;
-  padding: 1px 4px;
+  padding: 0px 4px;
+  line-height: 1.1;
   font-size: 13px;
   border: none;
-  border-bottom: 1px solid $soft-gray;
 }
 .cell-end {
   display: table-cell;
-  // flex-direction: row;
-  // align-items: center;
-  // justify-content: flex-start;
   position: sticky;
   border: none;
   font-size: 13px;
   background-color: white;
-  border-bottom: 1px solid $soft-gray;
-  padding: 10px 20px;
   color: $base-gray;
   letter-spacing: 0.75px;
   position: sticky;
   right: 0;
   z-index: 2;
 }
-// .table-cell:hover,
-// .empty:hover {
-//   opacity: 0.6;
-// }
 
 .table-cell-wide {
   display: table-cell;
   position: sticky;
   min-width: 26vw;
-  border-bottom: 1px solid $soft-gray !important;
-  // padding: 2vh 3.5vh;
-  padding: 1px 6px;
   border: none;
-
   font-size: 13px;
+  padding-left: 4px;
 }
 .table-cell-checkbox-header {
   display: table-cell;
@@ -967,7 +941,7 @@ input {
   left: 0;
   position: sticky;
   z-index: 1;
-  border-bottom: 1px solid $soft-gray;
+  // border-bottom: 1px solid $soft-gray;
   background-color: $white;
 }
 
@@ -1034,57 +1008,42 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  // max-height: 8rem;
-  background-color: white;
+  max-height: 10vh;
   padding: 0;
   overflow: auto;
-  img {
-    height: 0.25rem;
-  }
-  // cursor: url('../assets/images/edit-cursor.svg'), auto;
   cursor: pointer;
 }
 .name-cell-note-button-1 {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: 12px;
+  margin-right: 16px;
   padding: 0.25rem;
   border-radius: 4px;
-  background-color: white;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0.7px solid $gray;
-  img {
-    height: 0.8rem;
-    padding: 1px;
-  }
-}
-.name-cell-note-button-1:hover,
-.name-cell-edit-note-button-1:hover {
-  transform: scale(1.03);
-  box-shadow: 1px 1px 1px $soft-gray;
+  border: none;
   cursor: pointer;
 }
+
 .name-cell-edit-note-button-1 {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: 12px;
+  margin-right: 8px;
   padding: 0.25rem;
   border-radius: 4px;
-  background-color: white;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0.7px solid $gray;
-  img {
-    height: 1.2rem;
-  }
+  border: none;
+  cursor: pointer;
 }
-.mar-right {
-  margin-right: 8px;
+.hovered {
+  // background-color: rgba(220, 248, 233, 0.2);
+  background-color: $off-white;
 }
-.mar-left {
-  margin-left: 8px;
-}
+// .mar-right {
+//   margin-right: 8px;
+// }
+// .mar-left {
+//   margin-left: 8px;
+// }
 </style>

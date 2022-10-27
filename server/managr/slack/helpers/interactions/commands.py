@@ -109,6 +109,44 @@ def create_resource(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
+def convert_lead(context):
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=user.slack_integration.slack_id)
+            .select_related("user")
+            .first()
+        )
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+        blocks = [
+            block_builders.external_select(
+                "Which lead would you like to convert?",
+                f"{slack_const.COMMAND_FORMS__CONVERT_LEAD}?u={str(user.id)}&resource_type=Lead",
+                block_id="select_lead",
+                placeholder="Type to search",
+            )
+        ]
+        access_token = user.organization.slack_integration.access_token
+        view_id = context.get("view_id", None)
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": view_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Convert Lead"},
+                "blocks": blocks,
+                # "submit": {"type": "plain_text", "text": "Update", "emoji": True},
+                "private_metadata": json.dumps(context),
+                "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def create_task(context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
@@ -250,7 +288,7 @@ def get_notes_command(context):
     block_context = {
         "u": str(user.id),
         "type": "command",
-        "options": "%".join(["Contact", "Opportunity", "Account"]),
+        "options": "%".join(["Contact", "Opportunity", "Account", "Lead"]),
         "action_id": "GET_NOTES",
     }
     blocks = get_block_set("pick_resource_modal_block_set", context=block_context)
@@ -471,6 +509,7 @@ def get_action(action_name, context={}, *args, **kwargs):
     switcher = {
         "UPDATE_RESOURCE": update_resource,
         "CREATE_RESOURCE": create_resource,
+        "CONVERT_LEAD": convert_lead,
         "LIST_TASKS": list_tasks,
         "LOG_NEW_ACTIVITY": log_new_activity,
         "GET_NOTES": get_notes_command,

@@ -11,8 +11,10 @@ const USERS_UPDATE = '/users/update-user-info/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
-const STAFF_ENDPOINT = '/users/staff/'
-const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
+const UNINVITE_ENDPOINT = '/users/remove-user/'
+const ALL_USERS_ENDPOINT = '/users/admin-users/'
+const TASKS_ENDPOINT = '/users/admin-tasks/'
+// const STAFF_ORGANIZATIONS = '/users/staff/organziations/'
 const STAFF_WORKFLOWS = '/users/staff/meetingworkflows/'
 const STAFF_FORMS = '/users/staff/slack-forms/'
 const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
@@ -113,7 +115,6 @@ export default class UserAPI {
 
   invite(userDetails) {
     const data = userDetails
-
     const promise = apiClient()
       .post(INVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
@@ -124,6 +125,38 @@ export default class UserAPI {
         }),
       )
     return promise
+  }
+
+  uninvite(id) {
+    const data = { remove_id: id }
+    const promise = apiClient()
+      .post(UNINVITE_ENDPOINT, this.cls.toAPI(data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.uninvite',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
+  async getAllOrgUsers(org_id) {
+    try {
+      const response = await this.client.get(ALL_USERS_ENDPOINT, { params: { org_id } })
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
+    }
+  }
+
+  async getTasks() {
+    try {
+      const response = await this.client.get(TASKS_ENDPOINT)
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getTasks' })
+    }
   }
 
   activate(uid, token, form) {
@@ -285,7 +318,6 @@ export default class UserAPI {
     }
     try {
       let res = await this.client.post(url, data)
-      console.log(res)
       return res.data
     } catch (e) {
       console.log(e)

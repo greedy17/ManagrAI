@@ -9,26 +9,31 @@
           dataType !== 'Reference' &&
           apiName !== 'StageName'
         "
-        v-html="fieldData ? fieldData : ''"
-        :class="fieldData ? '' : 'blank'"
+        v-html="fieldData ? fieldData : 'Empty'"
+        class="blank"
+        :class="!fieldData ? 'gray' : ''"
       >
         <!-- {{ fieldData ? fieldData : '' }} -->
       </p>
 
-      <p :class="fieldData ? 'bg' : 'blank'" v-else-if="dataType === 'Date'">
-        {{ fieldData ? formatDate(fieldData) : '' }}
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="dataType === 'Date'">
+        {{ fieldData ? formatDate(fieldData) : 'Empty' }}
       </p>
 
-      <p :class="fieldData ? 'bg' : 'blank'" v-else-if="dataType === 'DateTime'">
-        {{ fieldData ? formatDateTime(fieldData) : '' }}
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="dataType === 'DateTime'">
+        {{ fieldData ? formatDateTime(fieldData) : 'Empty' }}
       </p>
 
-      <p :class="fieldData ? '' : 'blank'" v-else-if="dataType === 'Reference'">
-        {{ fieldData && apiName ? referenceName : '' }}
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="dataType === 'Reference'">
+        {{ fieldData && apiName ? referenceName : 'Empty' }}
       </p>
 
-      <p :class="fieldData ? 'flex-columned bg' : 'blank'" v-else-if="apiName === 'StageName'">
-        {{ fieldData ? fieldData : '' }}
+      <p
+        class="flex-columned blank"
+        :class="!fieldData ? 'gray' : ''"
+        v-else-if="apiName === 'StageName'"
+      >
+        {{ fieldData ? fieldData : 'Empty' }}
         <span class="daysinstage">{{
           fieldData
             ? 'Days in Stage: ' +
@@ -37,11 +42,11 @@
         }}</span>
       </p>
 
-      <p :class="fieldData ? 'cash' : 'blank'" v-else>
-        {{ fieldData ? formatCash(fieldData) : '' }}
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else>
+        {{ fieldData ? formatCash(fieldData) : 'Empty' }}
       </p>
     </div>
-    <div v-else class="bg">
+    <div v-else class="blank" :class="!fieldData ? 'gray' : ''">
       <p>{{ fieldData }}</p>
     </div>
   </div>
@@ -163,5 +168,11 @@ export default {
   background-color: #fdf7e6;
   border-radius: 6px;
   padding: 5px 1px;
+}
+.gray {
+  color: $very-light-gray;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 12px;
 }
 </style>

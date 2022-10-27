@@ -28,6 +28,8 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
+from managr.core.permissions import IsStaff
+
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from managr.core.models import User
@@ -898,12 +900,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        from_admin = self.request.GET.get("fromAdmin", False)
-        from_admin
-        user = self.request.user
-        if from_admin and user.is_staff and json.loads(from_admin):
-            return MeetingWorkflow.objects.all()[:100]
-        return MeetingWorkflow.objects.for_user(user).order_by("meeting__start_time")
+        return MeetingWorkflow.objects.for_user(self.request.user).order_by("meeting__start_time")
 
     @action(
         methods=["post"],
@@ -1054,3 +1051,13 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         serializer = MeetingWorkflowSerializer(instance=workflow)
         data = {"success": True, "workflow": serializer.data}
         return Response(data=data)
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+    )
+    def admin_meetings(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        org_param = request.query_params.get("org_id", None)
+        meetings = MeetingWorkflow.objects.filter(user__organization=org_param)[:100]
+        serialized = self.get_serializer(meetings, many=True).data
+        return Response(serialized)

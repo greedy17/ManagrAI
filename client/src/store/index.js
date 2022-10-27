@@ -4,7 +4,7 @@ import createPersistedState from 'vuex-persistedstate'
 import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
-import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce'
+import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
 
 Vue.use(Vuex)
 
@@ -21,8 +21,10 @@ const state = {
     items: {},
     lastCheck: null,
   },
+  templates: null,
   pollingItems: [],
   pricebooks: null,
+  allOpps: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -45,8 +47,14 @@ const mutations = {
     state.user = null
     state.stages = []
   },
+  SAVE_ALL_OPPS(state, allOpps) {
+    state.allOpps = allOpps
+  },
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
+  },
+  SAVE_TEMPLATES(state, templates) {
+    state.templates = templates
   },
   SAVE_PRICEBOOKS(state, pricebooks) {
     state.pricebooks = pricebooks
@@ -68,19 +76,28 @@ const actions = {
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
   },
+  async loadTemplates({ commit }) {
+    try {
+      const res = await User.api.getTemplates()
+      commit('SAVE_TEMPLATES', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
   async loadMeetings({ commit }) {
     try {
       const res = await MeetingWorkflows.api.getMeetingList()
       commit('SAVE_MEETINGS', res.results)
     } catch (e) {
       console.log(e)
-      // this.$toast('Error gathering Meetings!', {
-      //   timeout: 2000,
-      //   position: 'top-left',
-      //   type: 'error',
-      //   toastClassName: 'custom',
-      //   bodyClassName: ['custom'],
-      // })
+    }
+  },
+  async loadAllOpps({ commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'],['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
+    try {
+      const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      commit('SAVE_ALL_OPPS', res.results)
+    } catch (e) {
+      console.log(e)
     }
   },
   async loadPricebooks({ commit }) {

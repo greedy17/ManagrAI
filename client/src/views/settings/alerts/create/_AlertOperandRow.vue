@@ -1,19 +1,19 @@
 <template>
   <div class="alert-operand-row">
     <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
-      <!-- <label>AND</label>
+      <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
       <ToggleCheckBox
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label>OR</label> -->
-      <small @click="toggleSelectedCondition" class="andOr">
+      <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
+      <!-- <small @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
         <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
-      >
+      > -->
     </div>
 
     <div class="alert-operand-row__options">
@@ -396,18 +396,39 @@ export default {
   },
   watch: {
     identity: function () {
-      this.form.field.operandIdentifier.value = this.identity.apiName
-      this.form.field._operandIdentifier.value = this.objectFields.list.filter(
-        (item) => item.apiName === this.identity.apiName,
-      )[0]
+      if (this.identity) {
+        this.form.field.operandIdentifier.value = this.identity.apiName
+        this.form.field._operandIdentifier.value = this.objectFields.list.filter(
+          (item) => item.apiName === this.identity.apiName,
+        )[0]
+        this.selectedOperator = null
+        this.selectedOperand = null
+        this.form.field.operandValue.value = null
+      } else {
+        this.form.field.operandIdentifier.value = null
+        this.form.field._operandIdentifier.value = null
+        this.selectedOperator = null
+        this.selectedOperand = null
+        this.form.field.operandValue.value = null
+      }
     },
     selectedOperator: function () {
-      this.form.field.operandOperator.value = this.selectedOperator.value
-      this.form.field._operandOperator.value = this.selectedOperator
+      if (this.selectedOperator) {
+        this.form.field.operandOperator.value = this.selectedOperator.value
+        this.form.field._operandOperator.value = this.selectedOperator
+      } else {
+        this.form.field.operandOperator.value = null
+        this.form.field._operandOperator.value = ''
+      }
     },
     selectedOperand: function () {
-      this.form.field._operandValue.value = this.selectedOperand
-      this.form.field.operandValue.value = this.selectedOperand.value
+      if (this.selectedOperand) {
+        this.form.field._operandValue.value = this.selectedOperand
+        this.form.field.operandValue.value = this.selectedOperand.value
+      } else {
+        this.form.field._operandValue.value = null
+        this.form.field.operandValue.value = null
+      }
     },
     selectedFieldRef: {
       immediate: true,
@@ -583,7 +604,7 @@ export default {
 }
 .inactive {
   color: $very-light-gray;
-  font-size: 9px;
+  font-size: 11px;
   border-radius: 4px;
 }
 .space-s {
@@ -662,8 +683,9 @@ img {
   justify-content: center;
   align-items: center;
   margin-bottom: 2rem;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 0.75px;
+  color: $base-gray;
 
   label {
     padding: 0rem 0.2rem;
