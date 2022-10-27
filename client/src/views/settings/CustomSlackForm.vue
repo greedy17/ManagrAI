@@ -1129,8 +1129,6 @@ export default {
             }
           })
       })
-      console.log('forms', forms)
-      console.log('stages below forms', this.stages)
       this.formStages = [...forms]
     },
     changeToAccount() {
