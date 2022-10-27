@@ -215,34 +215,25 @@
               <img src="@/assets/images/remove.svg" class="red-filter" alt="" />
             </div>
           </div>
-
-          <!-- ----------------------------------- 
-      FOR BRYANN TO TAKE A LOOK AT
-     -----------------------------------  -->
-
-          <!-- <button
-          v-if="
-          selectedForm &&
-          customResource === 'Opportunity' &&
-          !selectedForm.fields.length &&
-          !addedFields.length
-            "
-          @click="toggleCustomObjectModal"
-          class="custom-object-button"
+          <button
+            v-if="
+            selectedForm &&
+            (customResource === 'Opportunity' || customResource === 'Deal') &&
+            !selectedForm.fields.length &&
+            !addedFields.length
+              "
+            @click="toggleCustomObjectModal"
+            class="custom-object-button"
           >
-          Add Custom Object
-        </button>
-        <button
-          v-else-if="selectedForm && customResource && customResource !== 'Opportunity'"
-          @click="removeCustomObject"
-          class="custom-object-button"
+            Add Custom Object
+          </button>
+          <button
+            v-else-if="selectedForm && customResource && customResource !== 'Opportunity' && customResource !== 'Deal'"
+            @click="removeCustomObject"
+            class="custom-object-button"
           >
-          Remove Custom Object
-      </button> -->
-
-          <!-- ----------------------------------- 
-      FOR BRYANN TO TAKE A LOOK AT
-     -----------------------------------  -->
+            Remove Custom Object
+          </button>
         </section>
 
         <div>
