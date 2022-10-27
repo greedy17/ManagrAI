@@ -24,7 +24,6 @@ export class ObjectFieldAPI extends ModelAPI {
         }
 
         let params = ApiFilter.buildParams(filterMaps, { ...query_params })
-        console.log(params)
         try {
             const res = await this.client.get(ObjectFieldAPI.ENDPOINT + 'fields/', {
                 params: this.cls.toAPI(params),

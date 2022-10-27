@@ -18,6 +18,7 @@ export class ObjectField extends Model {
     static referenceDisplayLabel = new fields.CharField({ readOnly: true })
     static filterable = new fields.CharField({ readOnly: true })
     static order = new fields.IntegerField()
+    static options = new fields.Field()
     static includeInRecap = new fields.Field()
 
     static fromAPI(json = {}) {

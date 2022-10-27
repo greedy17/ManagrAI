@@ -59,7 +59,7 @@
         </div>
         <div class="tab">
           <input type="radio" name="css-tabs" id="tab-2" class="tab-switch" />
-          <label for="tab-2" class="tab-label" @click="changeToStage">Opp - Stage Related</label>
+          <label for="tab-2" class="tab-label" @click="changeToStage">{{userCRM === 'HUBSPOT' ? 'Deal' : 'Opp'}} - Stage Related</label>
           <div class="tab-content">
             <section style="margin-top: -16px" class="space-between">
               <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
@@ -126,8 +126,8 @@
                   openDirection="below"
                   style="width: 40vw; margin-top: -24px"
                   selectLabel="Enter"
-                  track-by="value"
-                  label="label"
+                  :track-by="userCRM === 'HUBSPOT' ? 'label' : 'value'"
+                  :customLabel="customLabel"
                   :value="currentlySelectedStage"
                 >
                   <template slot="noResult">
@@ -143,9 +143,9 @@
 
                   <template slot="option" slot-scope="props">
                     <div>
-                      <span class="option__title">{{ props.option.value }}</span
+                      <span class="option__title">{{ userCRM === 'SALESFORCE' ? props.option.value : props.option.label }}</span
                       ><span
-                        v-if="currentStagesWithForms.includes(props.option.value)"
+                        v-if="currentStagesWithForms.includes(userCRM === 'SALESFORCE' ? props.option.value : props.option.label)"
                         class="option__small"
                       >
                         edit
@@ -945,9 +945,14 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-      console.log('store', this.$store.state.user)
+      let object = this.OPPORTUNITY
+      // if (this.userCRM === 'HUBSPOT') {
+      //   object = this.DEAL
+      // } else if (this.userCRM === 'SALESFORCE') {
+      //   object = this.OPPORTUNITY
+      // }
       await this.listPicklists({
-        salesforceObject: this.Opportunity,
+        salesforceObject: object,
         picklistFor: 'StageName',
       })
     } catch (e) {
@@ -957,6 +962,12 @@ export default {
     this.getStageForms()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
+    customLabel({ label }) {
+      return `${label}`
+    },
     clearStageData() {
       this.selectedForm = null
       this.currentlySelectedStage = null
@@ -1009,11 +1020,19 @@ export default {
       this.newCustomForm = this.selectedForm
     },
     setStage(n) {
-      if (n.value == this.selectedStage) {
+      if (this.userCRM === 'SALESFORCE') {
+        if (n.value == this.selectedStage) {
+          this.selectedStage = n.value
+          this.addForm(this.selectedStage)
+        }
         this.selectedStage = n.value
-        this.addForm(this.selectedStage)
+      } else if (this.userCRM === 'HUBSPOT') {
+        if (n.label == this.selectedStage) {
+          this.selectedStage = n.label
+          this.addForm(this.selectedStage)
+        }
+        this.selectedStage = n.label
       }
-      this.selectedStage = n.value
     },
     updateForm(event) {
       this.selectedForm = event
@@ -1054,9 +1073,25 @@ export default {
     },
     async listPicklists(query_params = {}) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage'
+          })
 
-        this.stages = res.length ? res[0]['values'] : []
+          let dealStage
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStage = res[i]
+              break;
+            }
+          }
+          this.stages = dealStage ? dealStage.options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.stages = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         console.log(e)
       }
