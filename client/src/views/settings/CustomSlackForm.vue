@@ -411,12 +411,12 @@ export default {
     formType: {
       type: String,
       required: true,
-      default: 'UPDATE',
+      default: false,
     },
     resource: {
       type: String,
       required: true,
-      default: 'Deal',
+      default: false,
     },
     fields: {
       type: Array,
@@ -455,7 +455,7 @@ export default {
         ModelClass: ObjectField,
         pagination: { size: 200 },
         filters: {
-          salesforceObject: this.resource,
+          crmObject: this.newResource,
         },
       }),
       formFieldList: [],
@@ -786,11 +786,11 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: val,
-
+                crmObject: val,
                 ...fieldParam,
               }
-              this.formFields.refresh()
+              // this.formFields.refresh()
+
               if (this.formType == 'UPDATE') {
                 // this.onSave()
               }
@@ -815,11 +815,10 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: val,
-
+                crmObject: val,
                 ...fieldParam,
               }
-              this.formFields.refresh()
+              // this.formFields.refresh()
               if (this.formType == 'UPDATE') {
                 // this.onSave()
               }
@@ -846,8 +845,7 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: this.resource,
-
+                crmObject: this.resource,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -874,8 +872,7 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: this.newResource,
-
+                crmObject: this.newResource,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -952,7 +949,7 @@ export default {
       //   object = this.OPPORTUNITY
       // }
       await this.listPicklists({
-        salesforceObject: object,
+        crmObject: object,
         picklistFor: 'StageName',
       })
     } catch (e) {
@@ -1089,7 +1086,7 @@ export default {
           }
           this.stages = dealStage ? dealStage.options : []
         } else if (this.userCRM === 'SALESFORCE') {
-          res = await SObjectPicklist.api.listPicklists(query_params)
+          res = await ObjectField.api.listFields(query_params)
           this.stages = res.length ? res[0]['values'] : []
         }
       } catch (e) {
@@ -1100,7 +1097,7 @@ export default {
       this.selectingStage = !this.selectingStage
       this.loadingStages = true
       try {
-        await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
+        await this.listPicklists({ crmObject: this.OPPORTUNITY, picklistFor: 'StageName' })
       } catch (e) {
         this.$modal.close('add-stage-modal')
         this.$toast('Failed to retreive stages', {
@@ -1121,8 +1118,14 @@ export default {
         this.allForms
           .filter((f) => f.formType == this.STAGE_GATING)
           .forEach((sf) => {
-            if (sf.stage == s.value) {
-              forms.push(sf)
+            if (this.userCRM === 'SALESFORCE') {
+              if (sf.stage == s.value) {
+                forms.push(sf)
+              }
+            } else if (this.userCRM === 'HUBSPOT') {
+              if (sf.stage == s.label) {
+                forms.push(sf)
+              }
             }
           })
       })

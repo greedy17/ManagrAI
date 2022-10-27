@@ -559,9 +559,9 @@ class SlackFormsViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
-        instance.fields.clear()
+        instance.custom_fields.clear()
         for i, field in enumerate(fields):
-            instance.fields.add(field, through_defaults={"order": i})
+            instance.custom_fields.add(field, through_defaults={"order": i})
         instance.team = self.request.user.team
         instance.save()
         return Response(serializer.data)
