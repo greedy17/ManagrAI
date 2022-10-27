@@ -271,11 +271,7 @@ class SalesforceAuthAccountAdapter:
             # in addition to the static ones above
             if exclude in fields.keys():
                 del fields[exclude]
-        custom_additions = dict(
-            salesforce_account=sf_account_id,
-            salesforce_object=res_data["apiName"],
-            imported_by=user_id,
-        )
+        custom_additions = dict(user=user_id, crm_object=res_data["apiName"], imported_by=user_id,)
 
         data = [
             SObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
