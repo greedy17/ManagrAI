@@ -24,12 +24,12 @@ logger = logging.getLogger("managr")
 class SObjectFieldAdapter:
     def __init__(self, data):
         self.user = data.get("user", None)
-        self.crm_object = data.get("salesforce_object", None)
-        self.api_name = data.get("name", None)
+        self.crm_object = data.get("crm_object", None)
+        self.api_name = data.get("api_name", None)
         self.label = data.get("label", None)
         self.data_type = data.get("data_type", None)
-        self.display_value = data.get("display_value", None)
-        self.options = data.get("options", None)
+        self.display_value = data.get("display_value", "")
+        self.options = data.get("options", [])
         self.createable = data.get("createable", True)
         self.reference = data.get("reference", None)
         self.reference_to_infos = data.get("reference_to_infos", [])
@@ -454,7 +454,6 @@ class SalesforceAuthAccountAdapter:
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
 
         url = f"{url}/{field_name}" if field_name else url
-        print(url)
         with Client as client:
             res = client.get(
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),

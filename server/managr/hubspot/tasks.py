@@ -14,16 +14,15 @@ from managr.core.models import User
 from managr.hubspot.models import HSObjectFieldsOperation, HObjectField, HSResourceSync
 from managr.hubspot.serializers import HObjectFieldSerializer
 from managr.crm.models import ObjectField
+from managr.crm.routes import adapter_routes as adapter_routes
 from managr.crm.serializers import ObjectFieldSerializer
 from managr.hubspot.routes import routes as routes
 from managr.hubspot import constants as hs_consts
-from managr.crm.exceptions import (
-    TokenExpired,
-    CannotRetreiveObjectType,
-)
+from managr.crm.exceptions import TokenExpired, CannotRetreiveObjectType, UnhandledCRMError
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.salesforce.models import MeetingWorkflow
+from managr.hubspot.adapter.models import HubspotContactAdapter
 
 logger = logging.getLogger("managr")
 
@@ -559,6 +558,16 @@ def _process_create_new_hs_contacts(workflow_id, *args):
     return
 
 
+def swap_public_fields(state):
+    if "meeting_comment" in state.keys():
+        state["meeting_comments"] = state["meeting_comment"]
+        state.pop("meeting_comment")
+    if "meeting_title" in state.keys():
+        state["meeting_type"] = state["meeting_title"]
+        state.pop("meeting_title")
+    return state
+
+
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
 def _process_update_hs_contacts(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -576,21 +585,14 @@ def _process_update_hs_contacts(workflow_id, *args):
         data = form.saved_data
         data = swap_public_fields(data)
         if data.get("meeting_comments") is not None and data.get("meeting_type") is not None:
-            emit_add_update_to_sf(str(form.id))
+            emit_add_update_to_hs(str(form.id))
         if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
             data["AccountId"] = workflow.resource.integration_id
         if data:
             while True:
-                sf = user.salesforce_account
-                sf_adapter = sf.adapter_class
+                crm = user.crm_account
                 try:
-                    ContactAdapter.update_contact(
-                        data,
-                        sf.access_token,
-                        sf.instance_url,
-                        form.resource_object.integration_id,
-                        sf_adapter.object_fields.get("Contact", {}),
-                    )
+                    form.resource_object.update(data,)
                     attempts = 1
                     form.is_submitted = True
                     form.update_source = "meeting"
@@ -600,66 +602,56 @@ def _process_update_hs_contacts(workflow_id, *args):
                 except TokenExpired as e:
                     if attempts >= 5:
                         logger.exception(
-                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
+                            f"Failed to refresh user token for Hubspot operation add contact to hs failed {str(workflow.id)} <{e}>"
                         )
 
                     else:
                         sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                         time.sleep(sleep)
-                        sf.regenerate_token()
+                        crm.regenerate_token()
                         attempts += 1
-                except UnableToUnlockRow as e:
-                    if attempts >= 5:
-                        logger.exception(
-                            f"Failed to update contact from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
-                        )
-                        raise e
-                    else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                        time.sleep(sleep)
-                        attempts += 1
+                except Exception as e:
+                    logger.exception(f"Unhandled exception for updating contact: {e}")
 
-        # if no data was saved the resource was not updated but we still add the contact role
+        # # if no data was saved the resource was not updated but we still add the contact role
+        # if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
+        #     attempts = 1
+        #     while True:
+        #         sf = user.salesforce_account
+        #         try:
+        #             # check to see if it already has a contact role by checking linked_contacts
+        #             is_linked = workflow.resource.contacts.filter(
+        #                 integration_id=form.resource_object.integration_id
+        #             ).first()
+        #             if not is_linked:
+        #                 workflow.resource.add_contact_role(
+        #                     sf.access_token, sf.instance_url, form.resource_object.integration_id
+        #                 )
+        #                 attempts = 1
+        #             break
 
-        if workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY:
-            attempts = 1
-            while True:
-                sf = user.salesforce_account
-                sf_adapter = sf.adapter_class
-                try:
-                    # check to see if it already has a contact role by checking linked_contacts
-                    is_linked = workflow.resource.contacts.filter(
-                        integration_id=form.resource_object.integration_id
-                    ).first()
-                    if not is_linked:
-                        workflow.resource.add_contact_role(
-                            sf.access_token, sf.instance_url, form.resource_object.integration_id
-                        )
-                        attempts = 1
-                    break
+        #         except TokenExpired as e:
+        #             if attempts >= 5:
+        #                 return logger.exception(
+        #                     f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
+        #                 )
 
-                except TokenExpired as e:
-                    if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(meeting.id)}"
-                        )
+        #             else:
+        #                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+        #                 time.sleep(sleep)
+        #                 sf.regenerate_token()
+        #                 attempts += 1
 
-                    else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                        time.sleep(sleep)
-                        sf.regenerate_token()
-                        attempts += 1
-
-                except UnableToUnlockRow as e:
-                    if attempts >= 5:
-                        logger.exception(
-                            f"Failed to add contact role from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
-                        )
-                        raise e
-                    else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                        time.sleep(sleep)
-                        attempts += 1
+        #         except UnableToUnlockRow as e:
+        #             if attempts >= 5:
+        #                 logger.exception(
+        #                     f"Failed to add contact role from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+        #                 )
+        #                 raise e
+        #             else:
+        #                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+        #                 time.sleep(sleep)
+        #                 attempts += 1
     return
 
 
@@ -674,16 +666,18 @@ def _process_create_new_hs_resource(form_ids, *args):
     data = dict()
     for form in create_forms:
         data = {**data, **form.saved_data}
-
+    print(data)
     attempts = 1
     while True:
         hs = user.hubspot_account
         try:
-            from managr.hubspot.routes import routes as model_routes
 
-            model_class = model_routes[resource]["model"]
-            res = model_class.create(data)
-            serializer = model_routes.get(resource)["serializer"](data=res.as_dict)
+            object_fields = user.object_fields.filter(crm_object=resource).values_list(
+                "api_name", flat=True
+            )
+            adpater_class = adapter_routes[user.crm][resource]
+            res = adpater_class.create(data, hs.access_token, object_fields, str(user.id))
+            serializer = routes.get(resource)["serializer"](data=res.as_dict)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return serializer.instance
@@ -695,6 +689,9 @@ def _process_create_new_hs_resource(form_ids, *args):
             else:
                 hs.regenerate_token()
                 attempts += 1
+        except UnhandledCRMError as e:
+            return logger.exception(f"Create failed for {e}")
         except Exception as e:
-            logger.exception(f"Create failed for {e}")
+            return logger.exception(f"Create failed for {e}")
+
     return

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from datetime import datetime
 from managr.organization.models import Organization
-from managr.crm.models import BaseContact, BaseAccount, BaseOpportunity
+from managr.crm.models import BaseContact, BaseAccount, BaseOpportunity, ObjectField
 from managr.meetings.serializers import MeetingFrontendSerializer
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from .models import (
@@ -94,14 +94,14 @@ class SObjectValidationSerializer(serializers.ModelSerializer):
 
 
 class SObjectPicklistSerializer(serializers.ModelSerializer):
-    field_ref = SObjectFieldSerializer(source="field", required=False)
+    field_ref = SObjectFieldSerializer(source="object_field", required=False)
 
     class Meta:
         model = SObjectPicklist
         fields = (
             "id",
             "values",
-            "field",
+            "object_field",
             "field_ref",
             "salesforce_account",
             "picklist_for",
@@ -112,11 +112,11 @@ class SObjectPicklistSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
 
         if data.get("picklist_for") not in ["", None]:
-            data["field"] = (
-                SObjectField.objects.filter(
+            data["object_field"] = (
+                ObjectField.objects.filter(
                     imported_by__id=data.get("imported_by"),
                     api_name=data.get("picklist_for"),
-                    salesforce_object=data.get("salesforce_object"),
+                    crm_object=data.get("salesforce_object"),
                 )
                 .values_list("id", flat=True)
                 .first()

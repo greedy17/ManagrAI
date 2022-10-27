@@ -17,6 +17,7 @@ from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry, Account
+from managr.crm.routes import adapter_routes as crm_routes
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
@@ -37,6 +38,7 @@ from managr.slack.helpers.utils import (
     send_loading_screen,
     get_crm_value,
 )
+from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
@@ -83,9 +85,9 @@ def swap_public_fields(state):
 
 def background_create_resource(current_form_ids, crm):
     if crm == "SALESFORCE":
-        _process_create_new_resource.now(current_form_ids)
+        return _process_create_new_resource.now(current_form_ids)
     else:
-        _process_create_new_hs_resource.now(current_form_ids)
+        return _process_create_new_hs_resource.now(current_form_ids)
 
 
 @log_all_exceptions
@@ -199,41 +201,41 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
         # save meeting data
     ]
-    # for form in contact_forms:
-    #     if form.template.form_type == slack_const.FORM_TYPE_CREATE:
-    #         ops.append(
-    #             f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-    #         )
-    #     else:
-    #         ops.append(
-    #             f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-    #         )
+    for form in contact_forms:
+        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
+        else:
+            ops.append(
+                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
+            )
 
     # emit all events
-    # if len(workflow.operations_list):
-    #     workflow.operations_list = [*workflow.operations_list, *ops]
-    # else:
-    #     workflow.operations_list = ops
+    if len(workflow.operations_list):
+        workflow.operations_list = [*workflow.operations_list, *ops]
+    else:
+        workflow.operations_list = ops
     workflow.operations_list = ops
-    # ts, channel = workflow.slack_interaction.split("|")
-    # block_set = [
-    #     *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
-    # ]
-    # if len(user.slack_integration.realtime_alert_configs):
-    #     _send_instant_alert(current_form_ids)
-    # try:
-    #     res = slack_requests.update_channel_message(
-    #         channel, ts, slack_access_token, block_set=block_set
-    #     )
-    # except Exception as e:
-    #     logger.exception(
-    #         f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-    #     )
-    #     return {"response_action": "clear"}
-    # workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
+    ts, channel = workflow.slack_interaction.split("|")
+    block_set = [
+        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+    ]
+    if len(user.slack_integration.realtime_alert_configs):
+        _send_instant_alert(current_form_ids)
+    try:
+        res = slack_requests.update_channel_message(
+            channel, ts, slack_access_token, block_set=block_set
+        )
+    except Exception as e:
+        logger.exception(
+            f"Failed To Send Submit Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+        return {"response_action": "clear"}
+    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
     workflow.save()
     workflow.begin_tasks()
-    # emit_meeting_workflow_tracker(str(workflow.id))
+    emit_meeting_workflow_tracker(str(workflow.id))
     update_view = {
         "view_id": loading_res["view"]["id"],
         "view": {
@@ -391,8 +393,10 @@ def process_submit_resource_data(payload, context):
                 resource = main_form.resource_object
                 break
             else:
+                create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
                 resource = background_create_resource(current_form_ids, user.crm)
-                new_resource = model_routes[main_form.template.resource]["model"].objects.get(
+                print(resource)
+                new_resource = create_route[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )
 
@@ -473,20 +477,15 @@ def process_submit_resource_data(payload, context):
                 time.sleep(2)
                 attempts += 1
         except Exception as e:
-            if attempts >= 5:
-                logger.exception(
-                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
-                )
-                has_error = True
-                blocks = get_block_set(
-                    "error_modal",
-                    {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
-                )
-                break
-            else:
-                time.sleep(2)
-                attempts += 1
-
+            logger.exception(
+                f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
+            )
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
+            )
+            break
     if has_error:
         form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
         # if not len(stage_forms):
@@ -842,6 +841,7 @@ def process_digest_attach_resource(payload, context):
 
 @processor()
 def process_update_meeting_contact(payload, context):
+    print(context)
     state = payload["view"]["state"]["values"]
     type = context.get("type", None)
     if type:
@@ -870,7 +870,8 @@ def process_update_meeting_contact(payload, context):
     form.save_form(state)
     user_id = workflow.user.id if type else workflow.user_id
     # reconstruct the current data with the updated data
-    adapter = ContactAdapter.from_api(
+    adapter_class = crm_routes[workflow.user.crm]["Contact"]
+    adapter = adapter_class.from_api(
         {**contact.get("secondary_data", {}), **form.saved_data}, str(user_id)
     )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE

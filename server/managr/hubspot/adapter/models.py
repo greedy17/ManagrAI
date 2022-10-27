@@ -684,7 +684,7 @@ class HubspotContactAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, deal_id, object_fields):
+    def create(data, access_token, object_fields, user_id):
         json_data = json.dumps(
             {
                 "properties": HubspotContactAdapter.to_api(
@@ -699,7 +699,15 @@ class HubspotContactAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            return HubspotAuthAccountAdapter._handle_response(r)
+            print(r.json())
+            res = HubspotAuthAccountAdapter._handle_response(r)
+            url = hubspot_consts.HUBSPOT_OBJECTS_URI("contacts", object_fields, res["id"])
+            r = client.get(url, headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)})
+            r = HubspotAuthAccountAdapter._handle_response(r)
+            print(r)
+            r = HubspotContactAdapter.from_api(r["properties"], user_id)
+            print(r)
+            return r
 
     def get_current_values(self):
         user = self.internal_user

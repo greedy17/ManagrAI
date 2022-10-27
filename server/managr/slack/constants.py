@@ -248,7 +248,7 @@ SALESFORCE_FORM_RESOURCES = [
 
 FORM_RESOURCE_DEAL = "Deal"
 FORM_RESOURCE_COMPANY = "Company"
-FORM_RESOURCE_HUBSPOTCONTACT = "HubspotContact"
+FORM_RESOURCE_HUBSPOTCONTACT = "Contact"
 
 FORM_RESOURCES = (
     (
@@ -266,7 +266,7 @@ FORM_RESOURCES = (
         (
             (FORM_RESOURCE_DEAL, "Deal"),
             (FORM_RESOURCE_COMPANY, "Company"),
-            (FORM_RESOURCE_HUBSPOTCONTACT, "HubspotContact"),
+            (FORM_RESOURCE_HUBSPOTCONTACT, "Contact"),
         ),
     ),
 )

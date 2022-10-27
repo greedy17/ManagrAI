@@ -16,5 +16,5 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        # queue_users_sf_fields(force_all=options.get("force", None))
+        queue_users_sf_fields(force_all=options.get("force", None))
         queue_users_hs_fields(force_all=options.get("force", None))

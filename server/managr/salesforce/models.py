@@ -423,7 +423,14 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     )
     salesforce_object = models.CharField(max_length=255)
     field = models.OneToOneField(
-        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="picklist_options"
+        "salesforce.SObjectField",
+        on_delete=models.CASCADE,
+        related_name="picklist_options",
+        null=True,
+        blank=True,
+    )
+    object_field = models.OneToOneField(
+        "crm.ObjectField", on_delete=models.CASCADE, related_name="crm_picklist_options", null=True
     )
 
     salesforce_account = models.ForeignKey(

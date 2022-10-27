@@ -40,6 +40,8 @@ from ..models import (
     SObjectPicklist,
     MeetingWorkflow,
 )
+from managr.crm.models import ObjectField
+from managr.crm.serializers import ObjectFieldSerializer
 from ..serializers import (
     SObjectFieldSerializer,
     SObjectValidationSerializer,
@@ -390,15 +392,13 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
             logger.info(
                 f"--------------------------------------------------------------------------\nFIELD <{field.label} - {field.api_name}>"
             )
-        existing = SObjectField.objects.filter(
-            api_name=field.api_name,
-            salesforce_account_id=field.salesforce_account,
-            salesforce_object=resource,
+        existing = ObjectField.objects.filter(
+            api_name=field.api_name, user=user, crm_object=resource,
         ).first()
         if existing:
-            serializer = SObjectFieldSerializer(data=field.as_dict, instance=existing)
+            serializer = ObjectFieldSerializer(data=field.as_dict, instance=existing)
         else:
-            serializer = SObjectFieldSerializer(data=field.as_dict)
+            serializer = ObjectFieldSerializer(data=field.as_dict)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # additionally retrieve picklist values
