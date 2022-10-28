@@ -2518,6 +2518,9 @@ export default {
   data() {
     return {
       screenHeight: window.innerHeight,
+      task: false,
+      checker: null,
+      verboseName: null,
       editingInline: false,
       currentCell: null,
       loadingNext: false,
@@ -2806,6 +2809,7 @@ export default {
     stageGateField: 'stageGateInstance',
     updateOppForm: ['setForms', 'filtersAndOppFields'],
     accountSobjectId: 'getInitialAccounts',
+    task: 'checkAndClearInterval',
     dropdownValue: {
       handler(val) {
         if (this.stagesWithForms.includes(val.val)) {
@@ -3829,25 +3833,116 @@ export default {
     },
     bulkUpdate() {
       if (this.selectedWorkflow) {
-        for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
-          if (this.$refs.workflowTableChild[i].isSelected) {
-            this.$refs.workflowTableChild[i].onBulkUpdate()
-            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-          }
-        }
-        this.workflowCheckList = []
+        this.onBulkUpdateWorkflow()
       } else {
-        for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
-          if (this.$refs.pipelineTableChild[i].isSelected) {
-            this.$refs.pipelineTableChild[i].onBulkUpdate()
-            this.updateOpps()
-          }
-        }
-        this.primaryCheckList = []
+        this.onBulkUpdatePrimary()
       }
       this.selectedOpp = null
       this.oppVal = null
       this.oppNewValue = null
+    },
+
+    async onBulkUpdatePrimary() {
+      for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+        if (this.$refs.pipelineTableChild[i].isSelected) {
+          this.$refs.pipelineTableChild[i].updatedList.push(this.$refs.pipelineTableChild[i].opp.id)
+        }
+      }
+      try {
+        console.log('here')
+        const formData = {}
+        formData[this.oppVal.apiName] = this.oppNewValue
+        const res = await SObjects.api
+          .bulkUpdate({
+            form_data: formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_ids: this.primaryCheckList,
+          })
+          .then((res) => {
+            console.log(res)
+            this.verboseName = res.verbose_name
+            this.checker = setInterval(() => {
+              this.checkTask()
+            }, 3000)
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    async onBulkUpdateWorkflow() {
+      for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+        if (this.$refs.workflowTableChild[i].isSelected) {
+          this.$refs.workflowTableChild[i].updatedList.push(this.$refs.workflowTableChild[i].opp.id)
+        }
+      }
+      try {
+        console.log('here')
+        const formData = {}
+        formData[this.oppVal.apiName] = this.oppNewValue
+        const res = await SObjects.api
+          .bulkUpdate({
+            form_data: formData,
+            resource_type: 'Opportunity',
+            form_type: 'UPDATE',
+            resource_ids: this.workflowCheckList,
+          })
+          .then((res) => {
+            console.log(res)
+            this.verboseName = res.verbose_name
+            this.checker = setInterval(() => {
+              this.checkTask()
+            }, 3000)
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    async checkTask() {
+      console.log('at task')
+      try {
+        this.task = await User.api.checkTasks(this.verboseName)
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    stopChecker() {
+      clearInterval(this.checker)
+    },
+
+    checkAndClearInterval() {
+      if (this.task.completed == true) {
+        this.stopChecker()
+        this.workflowCheckList = []
+        this.primaryCheckList = []
+        if (this.selectedWorkflow) {
+          for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
+            if (this.$refs.workflowTableChild[i].isSelected) {
+              this.$refs.workflowTableChild[i].updatedList = []
+            }
+          }
+          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+        } else {
+          for (let i = 0; i < this.$refs.pipelineTableChild.length; i++) {
+            if (this.$refs.pipelineTableChild[i].isSelected) {
+              this.$refs.pipelineTableChild[i].updatedList = []
+            }
+          }
+          this.updateOpps()
+        }
+        this.$toast('Bulk update complete', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } else {
+        return
+      }
     },
     setUpdateValues(key, val, multi) {
       if (multi) {

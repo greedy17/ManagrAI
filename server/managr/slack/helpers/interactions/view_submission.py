@@ -2782,7 +2782,7 @@ def process_submit_alert_resource_data(payload, context):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
-    return {"response_action": "clear"}
+    return
 
 
 @log_all_exceptions
