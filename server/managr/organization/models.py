@@ -634,7 +634,11 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
 
     @property
     def as_slack_option(self):
-        return block_builders.option(self.name, str(self.integration_id))
+        if "CurrencyIsoCode" in self.secondary_data.keys():
+            label = f"{self.name} - {self.secondary_data['CurrencyIsoCode']}"
+        else:
+            label = self.name
+        return block_builders.option(label, str(self.integration_id))
 
     def get_current_values(self):
         res = self.user.salesforce_account.adapter_class.get_resource_in_list(
