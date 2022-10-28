@@ -139,12 +139,12 @@
           <template slot="noResult">
             <p class="multi-slot">No results.</p>
           </template>
-          <template slot="afterList">
+          <!-- <template slot="afterList">
             <p class="multi-slot__more" @click="fieldNextPage">
               Load More
               <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
             </p>
-          </template>
+          </template> -->
         </Multiselect>
       </div>
     </div>
@@ -233,7 +233,13 @@ export default {
       ],
       fields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 200 },
+        filters: {
+          forAlerts: true,
+          filterable: true,
+          page: 1,
+          salesforceObject: alert.resourceType,
+        },
+        pagination: { size: 1000 },
       }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },

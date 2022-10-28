@@ -1935,21 +1935,21 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
 def _processs_bulk_update(data, user):
     logger.info(f"UPDATE START ---- {data}")
     user = User.objects.get(id=user)
-    integration_ids = data.get("integration_ids")
+    resource_ids = data.get("resource_ids")
     form_data = data.get("form_data")
     form_type = data.get("form_type")
     resource_type = data.get("resource_type")
-    resource_id = data.get("resource_id", None)
     stage_name = data.get("stage_name", None)
-    instance_data = {
-        "user": user,
-        "resource_type": resource_type,
-        "form_type": form_type,
-        "resource_id": resource_id,
-        "stage_name": stage_name,
-    }
+    resources = routes[resource_type]["model"].objects.filter(id__in=resource_ids)
     return_data = None
-    for id in integration_ids:
+    for r in resources:
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "stage_name": stage_name,
+            "resource_id": str(r.id),
+        }
         form_ids = create_form_instance(**instance_data)
 
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
@@ -1967,11 +1967,11 @@ def _processs_bulk_update(data, user):
             sf = user.salesforce_account
             try:
                 if resource_type == "OpportunityLineItem":
-                    resource = main_form.resource_object.update_in_salesforce(
+                    resource_update = main_form.resource_object.update_in_salesforce(
                         str(user.id), all_form_data
                     )
                 else:
-                    resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                    resource_update = main_form.resource_object.update_in_salesforce(all_form_data)
                 return_data = {
                     "success": True,
                 }
