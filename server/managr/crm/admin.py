@@ -11,6 +11,7 @@ class CustomObjectField(admin.ModelAdmin):
         "data_type",
     )
     search_fields = ("label",)
+    list_filter = ("crm_object", "user__organization")
 
 
 class CustomBaseOpportunity(admin.ModelAdmin):

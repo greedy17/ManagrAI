@@ -330,7 +330,7 @@ class HObjectFieldAdapter:
         self.createable = data.get("createable", True)
         self.reference = data.get("reference", False)
         self.reference_to_infos = data.get("reference_to_infos", [])
-        self.relationship_name = data.get("relationship_name", None)
+        self.relationship_name = data.get("referenced_object_type", None)
         self.updateable = data.get("updateable", True)
         self.filterable = data.get("filterable", True)
         self.integration_source = data.get("integration_source", "")
@@ -343,7 +343,6 @@ class HObjectFieldAdapter:
         type = data["fieldType"]
         data["fieldType"] = DATA_TYPE_OBJ[type]
         d = object_to_snake_case(data)
-
         return d
 
     @classmethod
@@ -441,6 +440,29 @@ class CompanyAdapter:
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
             return HubspotAuthAccountAdapter._handle_response(r)
+
+    @staticmethod
+    def create(data, access_token, object_fields, user_id):
+        json_data = json.dumps(
+            {
+                "properties": CompanyAdapter.to_api(
+                    data, CompanyAdapter.integration_mapping, object_fields
+                )
+            }
+        )
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("companies")
+        with Client as client:
+            r = client.post(
+                url,
+                data=json_data,
+                headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
+            )
+            res = HubspotAuthAccountAdapter._handle_response(r)
+            url = hubspot_consts.HUBSPOT_OBJECTS_URI("companies", object_fields, res["id"])
+            r = client.get(url, headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)})
+            r = HubspotAuthAccountAdapter._handle_response(r)
+            r = CompanyAdapter.from_api(r["properties"], user_id)
+            return r
 
     def get_current_values(self):
         user = self.internal_user
@@ -563,7 +585,7 @@ class DealAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields):
+    def create(data, access_token, object_fields, user_id):
         json_data = json.dumps(
             {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
         )
@@ -574,8 +596,12 @@ class DealAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            print(r.json())
-            return HubspotAuthAccountAdapter._handle_response(r)
+            res = HubspotAuthAccountAdapter._handle_response(r)
+            url = hubspot_consts.HUBSPOT_OBJECTS_URI("deals", object_fields, res["id"])
+            r = client.get(url, headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)})
+            r = HubspotAuthAccountAdapter._handle_response(r)
+            r = DealAdapter.from_api(r["properties"], user_id)
+            return r
 
     def get_current_values(self):
         user = self.internal_user
@@ -699,14 +725,11 @@ class HubspotContactAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            print(r.json())
             res = HubspotAuthAccountAdapter._handle_response(r)
             url = hubspot_consts.HUBSPOT_OBJECTS_URI("contacts", object_fields, res["id"])
             r = client.get(url, headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)})
             r = HubspotAuthAccountAdapter._handle_response(r)
-            print(r)
             r = HubspotContactAdapter.from_api(r["properties"], user_id)
-            print(r)
             return r
 
     def get_current_values(self):
