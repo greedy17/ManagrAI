@@ -536,8 +536,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
 
 
 @background(
-    schedule=0,
-    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
@@ -600,8 +599,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0,
-    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
@@ -992,10 +990,7 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(
-                    lambda contact: contact.get("_form") == str(form.id),
-                    meeting.participants,
-                )
+                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -1761,10 +1756,7 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
         for channel in send_summ_to_channels:
             try:
                 r = slack_requests.send_channel_message(
-                    channel,
-                    slack_access_token,
-                    text=f"Recap Lead",
-                    block_set=blocks,
+                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
                 )
                 logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:
@@ -1939,17 +1931,17 @@ def _processs_bulk_update(data, user):
     form_data = data.get("form_data")
     form_type = data.get("form_type")
     resource_type = data.get("resource_type")
-    resource_id = data.get("resource_id", None)
     stage_name = data.get("stage_name", None)
-    instance_data = {
-        "user": user,
-        "resource_type": resource_type,
-        "form_type": form_type,
-        "resource_id": resource_id,
-        "stage_name": stage_name,
-    }
+    resources = routes[resource_type]["model"].objects.filter(integration_id__in=integration_ids)
     return_data = None
-    for id in integration_ids:
+    for r in resources:
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "stage_name": stage_name,
+            "resource_id": str(r.id),
+        }
         form_ids = create_form_instance(**instance_data)
 
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
@@ -1967,11 +1959,11 @@ def _processs_bulk_update(data, user):
             sf = user.salesforce_account
             try:
                 if resource_type == "OpportunityLineItem":
-                    resource = main_form.resource_object.update_in_salesforce(
+                    resource_update = main_form.resource_object.update_in_salesforce(
                         str(user.id), all_form_data
                     )
                 else:
-                    resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                    resource_update = main_form.resource_object.update_in_salesforce(all_form_data)
                 return_data = {
                     "success": True,
                 }
