@@ -266,7 +266,7 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : stageReferenceOpts[field.apiName]
+                            : (stageReferenceOpts[field.apiName] ? stageReferenceOpts[field.apiName] : [])
                         "
                         @select="
                           setUpdateValidationValues(
@@ -930,7 +930,7 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : stageReferenceOpts[field.apiName]
+                            : (stageReferenceOpts[field.apiName] ? stageReferenceOpts[field.apiName] : [])
                         "
                         @select="
                           setUpdateValidationValues(
@@ -1977,7 +1977,7 @@
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
-                    : stageReferenceOpts[field.apiName]
+                    : (stageReferenceOpts[field.apiName] ? stageReferenceOpts[field.apiName] : [])
                 "
                 @select="
                   setUpdateValidationValues(
@@ -2818,6 +2818,9 @@ export default {
     },
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     closeInlineEditor() {
       this.editingInline = false
     },
@@ -3063,7 +3066,6 @@ export default {
           this.productReferenceOpts[key] = res
         } else if (type === 'stage') {
           this.stageReferenceOpts[key] = res
-          // console.log('here', this.stageReferenceOpts)
         } else {
           this.createReferenceOpts[key] = res
         }
