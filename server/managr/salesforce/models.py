@@ -1,10 +1,12 @@
 import pytz
 import math
+import json
 import logging
 from collections import OrderedDict
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
+from managr.utils.client import Client
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
@@ -1062,6 +1064,17 @@ class SalesforceAuthAccount(TimeStampModel):
 
         return values
 
+    @staticmethod
+    def create_custom_object(data, access_token, custom_base, salesforce_id, api_name):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, api_name, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.post(
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            return SalesforceAuthAccountAdapter._handle_response(r)
+
     def update_opportunity(self, data):
         return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)
 
@@ -1073,3 +1086,4 @@ class SalesforceAuthAccount(TimeStampModel):
 
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
+
