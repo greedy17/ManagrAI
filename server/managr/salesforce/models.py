@@ -1081,6 +1081,13 @@ class SalesforceAuthAccount(TimeStampModel):
     def list_objects(self):
         return self.adapter_class.list_objects()
 
+    def add_to_sobjects(self, api_name, custom_object=False):
+        if custom_object:
+            self.sobjects[api_name] = False
+        else:
+            self.sobjects[api_name] = True
+        return self.save()
+
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
 
