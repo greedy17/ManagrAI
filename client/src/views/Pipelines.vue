@@ -284,6 +284,7 @@
                             : null
                         "
                         openDirection="below"
+                        :loading="dropdownLoading"
                         v-model="dropdownVal[field.apiName]"
                         style="width: 40vw"
                         selectLabel="Enter"
@@ -948,6 +949,7 @@
                             : null
                         "
                         openDirection="below"
+                        :loading="dropdownLoading"
                         v-model="dropdownVal[field.apiName]"
                         style="width: 40vw; margin-top: 8px"
                         selectLabel="Enter"
@@ -1993,6 +1995,7 @@
                     : null
                 "
                 openDirection="below"
+                :loading="dropdownLoading"
                 v-model="dropdownVal[field.apiName]"
                 style="width: 40.25vw; margin-top: 8px"
                 selectLabel="Enter"
@@ -3054,8 +3057,9 @@ export default {
       this.stageIntegrationId = null
     },
     async getReferenceFieldList(key, val, type, eventVal, filter) {
+      let res
       try {
-        const res = await SObjects.api.getSobjectPicklistValues({
+        res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
           value: eventVal ? eventVal : '',
           for_filter: filter ? [filter] : null,
@@ -3084,6 +3088,7 @@ export default {
         setTimeout(() => {
           this.dropdownLoading = false
         }, 300)
+        return res
       }
     },
     emitCloseEdit() {
@@ -3583,6 +3588,8 @@ export default {
     //     this.workflowCheckList = []
     //   }
     // },
+
+    // work here
     async listPicklists(type, query_params) {
       try {
         const res = await SObjectPicklist.api.listPicklists(query_params)
@@ -4103,7 +4110,7 @@ export default {
 
       this.editOpModalOpen = false
       this.modalOpen = false
-      this.ModalOpen = false
+      this.addOppModalOpen = false
       try {
         const res = await SObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
@@ -4299,21 +4306,21 @@ export default {
         }
       }
     },
-    getReferenceOpts(name, id) {
+    async getReferenceOpts(name, id) {
       this.dropdownLoading = true
-      this.referenceOpts[name] = this.getReferenceFieldList(name, id, 'update')
+      this.referenceOpts[name] = await this.getReferenceFieldList(name, id, 'update')
     },
-    getStageReferenceOpts(name, id) {
+    async getStageReferenceOpts(name, id) {
       this.dropdownLoading = true
-      this.stageReferenceOpts[name] = this.getReferenceFieldList(name, id, 'stage')
+      this.stageReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'stage')
     },
-    getCreateReferenceOpts(name, id) {
+    async getCreateReferenceOpts(name, id) {
       this.dropdownLoading = true
-      this.createReferenceOpts[name] = this.getReferenceFieldList(name, id, 'create')
+      this.createReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'create')
     },
-    getProductReferenceOpts(name, id) {
+    async getProductReferenceOpts(name, id) {
       this.dropdownLoading = true
-      this.productReferenceOpts[name] = this.getReferenceFieldList(name, id, 'createProduct')
+      this.productReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'createProduct')
     },
 
     setDropdownValue(val) {
@@ -4371,6 +4378,7 @@ export default {
 
         if (stageGateForms.length) {
           this.stageGateCopy = stageGateForms[0].fieldsRef
+          // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
           this.stagesWithForms = stages
           for (const field of stageGateForms) {
