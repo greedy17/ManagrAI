@@ -97,7 +97,7 @@
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
-            <img src="@/assets/images/warning.svg" class="logo" alt="" />
+            <img src="@/assets/images/warning.svg" class="logo2" alt="" />
             <h4>Switching forms. Changes wont be saved!</h4>
           </div>
         </div>
@@ -2335,10 +2335,10 @@ img:hover {
   }
 }
 
-.logo {
+.logo2 {
   height: 1.75rem;
   margin-left: 0.5rem;
-  margin-right: 0.25rem;
+  margin-right: 0.5rem;
   filter: invert(40%);
 }
 .modal-buttons {
