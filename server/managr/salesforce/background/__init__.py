@@ -554,15 +554,23 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         template__form_type__in=[
             slack_consts.FORM_TYPE_UPDATE,
             slack_consts.FORM_TYPE_STAGE_GATING,
-        ]
+        ],
+        template__custom_object__isnull=True,
     )
+    custom_object_forms = workflow.forms.filter(template__custom_object__isnull=False)
     update_form_ids = []
     # aggregate the data
     data = dict()
     for form in update_forms:
         update_form_ids.append(str(form.id))
         data = {**data, **form.saved_data}
-
+    custom_object_data_collector = {}
+    if len(custom_object_forms):
+        for custom_form in custom_object_forms:
+            custom_object_data_collector = {
+                **custom_object_data_collector,
+                **custom_form.saved_data,
+            }
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -572,6 +580,14 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             update_forms.update(
                 is_submitted=True, submission_date=timezone.now(), update_source="meeting"
             )
+            if len(custom_object_forms):
+                sf.create_custom_object(
+                    custom_object_data_collector,
+                    sf.access_token,
+                    sf.instance_url,
+                    sf.salesforce_id,
+                    custom_object_forms.first().template.custom_object,
+                )
             break
         except TokenExpired as e:
             if attempts >= 5:
