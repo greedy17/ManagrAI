@@ -35,7 +35,6 @@ export default class ZoomMeetingAPI extends ModelAPI {
   // createZoomMeeting(zoomMeeting) {
   //   // const data = zoomMeeting.toAPI()
 
-  //   console.log('hit?', zoomMeeting)
   //   return this.client
   //     .post(ZOOM_MEETING_ENDPOINT, zoomMeeting)
   //     .then(response => response.data)
