@@ -366,7 +366,6 @@ def process_submit_resource_data(payload, context):
     )
     custom_object_forms = current_forms.filter(template__custom_object__isnull=False)
     stage_form_data_collector = {}
-
     for form in stage_forms:
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
@@ -2633,10 +2632,10 @@ def process_submit_alert_resource_data(payload, context):
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE"]).first()
     stage_forms = current_forms.exclude(
-        template__form_type__in=["UPDATE"], template__custom_object__isnull=True
+        template__form_type__in=["UPDATE"], template__custom_object__isnull=False
     )
     custom_object_forms = current_forms.exclude(
-        template__form_type__in=["UPDATE"], template__custom_object__isnull=False
+        template__form_type__in=["UPDATE"], template__custom_object__isnull=True
     )
     stage_form_data_collector = {}
     for form in stage_forms:
@@ -2748,7 +2747,10 @@ def process_submit_alert_resource_data(payload, context):
                 )
                 break
             else:
-                sf.regenerate_token()
+                if main_form.resource_object.owner == user:
+                    sf.regenerate_token()
+                else:
+                    main_form.resource_object.owner.salesforce_account.regenerate_token()
                 attempts += 1
 
         except ConnectionResetError:
@@ -2767,6 +2769,9 @@ def process_submit_alert_resource_data(payload, context):
             else:
                 time.sleep(2)
                 attempts += 1
+
+        except Exception as e:
+            logger.exception(f"Uncaught Error {e}")
 
     if has_error:
         form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)

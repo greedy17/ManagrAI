@@ -302,7 +302,10 @@ class SalesforceAuthAccountAdapter:
 
     def format_objects(self, res_data):
         return list(
-            map(lambda object: {"label": object["label"], "name": object["name"]}, res_data["sobjects"])
+            map(
+                lambda object: {"label": object["label"], "name": object["name"]},
+                res_data["sobjects"],
+            )
         )
 
     @staticmethod

@@ -217,18 +217,23 @@
           </div>
           <button
             v-if="
-            selectedForm &&
-            (customResource === 'Opportunity' || customResource === 'Deal') &&
-            !selectedForm.fields.length &&
-            !addedFields.length
-              "
+              selectedForm &&
+              (customResource === 'Opportunity' || customResource === 'Deal') &&
+              !selectedForm.fields.length &&
+              !addedFields.length
+            "
             @click="toggleCustomObjectModal"
             class="custom-object-button"
           >
             Use Custom Object
           </button>
           <button
-            v-else-if="selectedForm && customResource && customResource !== 'Opportunity' && customResource !== 'Deal'"
+            v-else-if="
+              selectedForm &&
+              customResource &&
+              customResource !== 'Opportunity' &&
+              customResource !== 'Deal'
+            "
             @click="removeCustomObject"
             class="custom-object-button__remove"
           >

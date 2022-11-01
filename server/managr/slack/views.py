@@ -571,6 +571,8 @@ class SlackFormsViewSet(
         data = self.request.data
         fields = data.pop("fields", [])
         fields_ref = data.pop("fields_ref", [])
+        if not len(data.get("custom_object")):
+            data["custom_object"] = None
         data.update(
             {"organization": self.request.user.organization_id, "team": self.request.user.team}
         )
