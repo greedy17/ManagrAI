@@ -212,7 +212,7 @@
               @click.prevent="deleteForm(activeForm)"
               v-if="selectedForm && selectedForm.fields.length"
             >
-              <img src="@/assets/images/remove.svg" class="red-filter" alt="" />
+              <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
             </div>
           </div>
           <button
@@ -225,12 +225,12 @@
             @click="toggleCustomObjectModal"
             class="custom-object-button"
           >
-            Add Custom Object
+            Use Custom Object
           </button>
           <button
             v-else-if="selectedForm && customResource && customResource !== 'Opportunity' && customResource !== 'Deal'"
             @click="removeCustomObject"
-            class="custom-object-button"
+            class="custom-object-button__remove"
           >
             Remove Custom Object
           </button>
@@ -2104,9 +2104,19 @@ img:hover {
 .custom-object-button {
   padding: 8px 20px;
   font-size: 13px;
-  background-color: $dark-green;
-  color: white;
-  border: none;
+  background-color: white;
+  color: $dark-green;
+  border: 1px solid $dark-green;
+  border-radius: 0.25rem;
+  margin-right: 8px;
+  cursor: pointer;
+}
+.custom-object-button__remove {
+  padding: 8px 20px;
+  font-size: 13px;
+  background-color: white;
+  color: $coral;
+  border: 1px solid $coral;
   border-radius: 0.25rem;
   margin-right: 8px;
   cursor: pointer;
