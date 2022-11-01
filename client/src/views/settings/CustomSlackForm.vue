@@ -1240,6 +1240,7 @@ export default {
       )
     },
     changeToStage(stage = '') {
+      this.clearStageData()
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToStage
