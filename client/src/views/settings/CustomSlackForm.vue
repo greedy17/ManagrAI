@@ -20,7 +20,7 @@
           </div>
           <div class="opp-modal">
             <section>
-              <div style="display: flex; justify-content: space-between">
+              <div style="display: flex; justify-content: center">
                 <!-- <label class="modal-label">Label</label>
                 <textarea
                   id="user-input"
@@ -2236,8 +2236,7 @@ img:hover {
   flex-direction: column;
   overflow-y: scroll;
   background-color: white;
-  // width: 44vw;
-  width: 70vw;
+  width: 35vw;
   height: 70vh;
   border-radius: 0.5rem;
   padding: 1rem;
