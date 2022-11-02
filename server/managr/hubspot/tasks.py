@@ -20,7 +20,7 @@ from managr.hubspot.routes import routes as routes
 from managr.hubspot import constants as hs_consts
 from managr.crm.exceptions import TokenExpired, CannotRetreiveObjectType, UnhandledCRMError
 from managr.slack import constants as slack_consts
-from managr.slack.models import OrgCustomSlackFormInstance
+from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.hubspot.adapter.models import HubspotContactAdapter
 
@@ -56,6 +56,10 @@ def emit_gen_next_hubspot_sync(user_id, ops_list, schedule_time=timezone.now()):
 
 def emit_sync_hobject_fields(user_id, sync_id, resource, scheduled_for=timezone.now()):
     return _process_hobject_fields_sync(user_id, sync_id, resource, schedule=scheduled_for)
+
+
+def emit_generate_hs_form_template(user_id, delete_forms=False, schedule=timezone.now()):
+    return _generate_form_template(user_id, delete_forms, schedule=schedule)
 
 
 def emit_add_call_to_hs(workflow_id, *args):
@@ -149,6 +153,38 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
         serializer.save()
 
     return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _generate_form_template(user_id, delete_forms):
+    user = User.objects.get(id=user_id)
+    org = user.organization
+    # delete all existing forms
+    if delete_forms:
+        org.custom_slack_forms.all().delete()
+    form_check = user.team.team_forms.all()
+    for form in slack_consts.INITIAL_HUBSPOT_FORMS:
+        resource, form_type = form.split(".")
+        if len(form_check) > 0:
+            f = form_check.filter(resource=resource, form_type=form_type).first()
+            f.recreate_form()
+        else:
+            f = OrgCustomSlackForm.objects.create(
+                form_type=form_type, resource=resource, organization=org, team=user.team
+            )
+            public_fields = ObjectField.objects.filter(
+                is_public=True,
+                id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
+            )
+            note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5035").first()
+            note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af1").first()
+            for i, field in enumerate(public_fields):
+                if i == 0 and note_subject is not None:
+                    f.fields.add(note_subject, through_defaults={"order": i})
+                elif i == 1 and note is not None:
+                    f.fields.add(note, through_defaults={"order": i})
+            f.save()
 
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_RESOURCE_SYNC_QUEUE)
@@ -666,7 +702,6 @@ def _process_create_new_hs_resource(form_ids, *args):
     data = dict()
     for form in create_forms:
         data = {**data, **form.saved_data}
-    print(data)
     attempts = 1
     while True:
         hs = user.hubspot_account

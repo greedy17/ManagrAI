@@ -342,6 +342,9 @@ class HObjectFieldAdapter:
         data["integration_source"] = "HUBSPOT"
         type = data["fieldType"]
         data["fieldType"] = DATA_TYPE_OBJ[type]
+        if "referencedObjectType" in data.keys() and data["referencedObjectType"]:
+            data["reference"] = True
+            data["fieldType"] = "Reference"
         d = object_to_snake_case(data)
         return d
 

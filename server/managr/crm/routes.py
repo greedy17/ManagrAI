@@ -9,6 +9,8 @@ from managr.salesforce.adapter import models as salesforce_adapters
 USER_RESOURCE = "User"
 OPPORTUNITY = "Opportunity"
 ACCOUNT = "Account"
+DEAL = "Deal"
+COMPANY = "Company"
 CONTACT = "Contact"
 LEAD = "Lead"
 PRODUCT = "Product"
@@ -19,8 +21,8 @@ OPPORTUNITYLINEITEM = "OpportunityLineItem"
 
 adapter_routes = {
     crm_consts.CRM_CHOICE_HUBSPOT: {
-        ACCOUNT: hubspot_adapters.CompanyAdapter,
-        OPPORTUNITY: hubspot_adapters.DealAdapter,
+        COMPANY: hubspot_adapters.CompanyAdapter,
+        DEAL: hubspot_adapters.DealAdapter,
         CONTACT: hubspot_adapters.HubspotContactAdapter,
     },
     crm_consts.CRM_CHOICE_SALESFORCE: {

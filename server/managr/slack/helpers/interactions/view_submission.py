@@ -395,7 +395,6 @@ def process_submit_resource_data(payload, context):
             else:
                 create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
                 resource = background_create_resource(current_form_ids, user.crm)
-                print(resource)
                 new_resource = create_route[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )

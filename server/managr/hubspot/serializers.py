@@ -124,9 +124,10 @@ class DealSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
         owner = data.get("external_owner", None)
-        close_date = data.get("close_date")
-        new_date = parser.parse(close_date).date()
-        data.update({"close_date": new_date})
+        close_date = data.get("close_date",)
+        if close_date:
+            new_date = parser.parse(close_date).date()
+            data.update({"close_date": new_date})
         account = data.get("external_account", None)
         if not data.get("external_account", None):
             data.update({"external_account": ""})

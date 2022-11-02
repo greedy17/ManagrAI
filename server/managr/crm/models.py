@@ -332,6 +332,30 @@ class ObjectField(TimeStampModel, IntegrationModel):
         return f"{self.label} {self.api_name}"
 
     @property
+    def display_value_keys(self):
+        """helper getter to retrieve related name display keys"""
+        if self.user.crm == "HUBSPOT":
+            return self.relationship_name
+        if self.reference and len(self.reference_to_infos):
+            # some fields are referenced to completely different objects (as in ReportsTo)
+            items = dict(
+                *filter(
+                    lambda details: details["api_name"] == self.relationship_name,
+                    self.reference_to_infos,
+                ),
+            )
+            if not len(items):
+
+                # arbitrarily chosing first option avaliable
+                items = self.reference_to_infos[0]
+            return items
+
+        elif self.reference and not len(self.reference_to_infos):
+            raise ValueError()
+
+        return None
+
+    @property
     def reference_display_label(self):
         """returns the reference object's name as a display label"""
 
