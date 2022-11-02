@@ -950,6 +950,7 @@ export default {
     removeCustomObject() {
       this.removeCustomObj = true
       this.customResource = this.resource
+      this.newResource = this.resource
       this.selectedCustomObjectName = null
       this.newCustomForm.customObject = ''
       this.addedFields = []
@@ -1037,6 +1038,7 @@ export default {
 
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
+        this.newResource = this.selectedCustomObjectName
       }
       this.closeCustomModal()
     },
@@ -1106,10 +1108,12 @@ export default {
     },
     setCustomForm() {
       this.newCustomForm = this.selectedForm
+      // work here
       this.customResource =
         this.newCustomForm && this.newCustomForm.customObject
           ? this.newCustomForm.customObject
           : this.resource
+      this.newResource = this.customResource
       this.formFields = CollectionManager.create({
         ModelClass: SObjectField,
         pagination: { size: 200 },
@@ -1241,6 +1245,7 @@ export default {
       )
     },
     changeToStage(stage = '') {
+      this.clearStageData()
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToStage
