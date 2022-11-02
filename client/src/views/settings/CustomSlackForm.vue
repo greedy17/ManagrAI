@@ -427,7 +427,7 @@ export default {
       currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 200 },
+        pagination: { size: 1000 },
         filters: {
           salesforceObject: this.customResource,
         },
