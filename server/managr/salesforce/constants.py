@@ -26,6 +26,7 @@ SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
 SALESFORCE_SOAP_URI = f"/services/Soap/u/{SF_API_VERSION}"
+OBJECTS_URI = f"{CUSTOM_BASE_URI}/sobjects"
 
 REMOVE_OWNER_ID = {
     # we automatically add owner id as a filter to be most restrictive and not have cross account issues

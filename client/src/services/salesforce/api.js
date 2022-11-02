@@ -121,7 +121,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
         params: this.cls.toAPI(params),
       })
-
+      console.log(res.data)
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
@@ -220,6 +220,22 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+    }
+  }
+  async getCustomObjects() {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/custom-objects/')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting Custom Objects' })(e)
+    }
+  }
+  async getCustomObjectFields(sobject) {
+    try {
+      const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/custom-objects-field-sync/', { sobject })
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error getting Custom Object Fields' })(e)
     }
   }
   async sendRecap(bulk, form_ids) {

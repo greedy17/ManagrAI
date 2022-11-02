@@ -111,8 +111,14 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule_time=timezone.now()):
+def emit_gen_next_object_field_sync(
+    user_id, ops_list, for_dev=False, schedule_time=timezone.now(), verbose_name=None
+):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
+    if verbose_name:
+        return _process_gen_next_object_field_sync(
+            user_id, ops_list, for_dev, schedule=schedule, verbose_name=verbose_name
+        )
     return _process_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule=schedule)
 
 
@@ -536,8 +542,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
 
 
 @background(
-    schedule=0,
-    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
@@ -549,15 +554,23 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         template__form_type__in=[
             slack_consts.FORM_TYPE_UPDATE,
             slack_consts.FORM_TYPE_STAGE_GATING,
-        ]
+        ],
+        template__custom_object__isnull=True,
     )
+    custom_object_forms = workflow.forms.filter(template__custom_object__isnull=False)
     update_form_ids = []
     # aggregate the data
     data = dict()
     for form in update_forms:
         update_form_ids.append(str(form.id))
         data = {**data, **form.saved_data}
-
+    custom_object_data_collector = {}
+    if len(custom_object_forms):
+        for custom_form in custom_object_forms:
+            custom_object_data_collector = {
+                **custom_object_data_collector,
+                **custom_form.saved_data,
+            }
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -567,6 +580,14 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             update_forms.update(
                 is_submitted=True, submission_date=timezone.now(), update_source="meeting"
             )
+            if len(custom_object_forms):
+                sf.create_custom_object(
+                    custom_object_data_collector,
+                    sf.access_token,
+                    sf.instance_url,
+                    sf.salesforce_id,
+                    custom_object_forms.first().template.custom_object,
+                )
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -600,8 +621,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0,
-    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
@@ -992,10 +1012,7 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(
-                    lambda contact: contact.get("_form") == str(form.id),
-                    meeting.participants,
-                )
+                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -1761,10 +1778,7 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
         for channel in send_summ_to_channels:
             try:
                 r = slack_requests.send_channel_message(
-                    channel,
-                    slack_access_token,
-                    text=f"Recap Lead",
-                    block_set=blocks,
+                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
                 )
                 logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:

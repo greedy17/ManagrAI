@@ -114,12 +114,13 @@ const actions = {
     try {
       const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
       for (let i = 0; i < res.length; i++) {
-        obj[res[i].fieldRef.id] = res[i].values
+        if (res[i].fieldRef) {
+          obj[res[i].fieldRef.id] = res[i].values
+        }
       }
     } catch (e) {
       console.log(e)
     } finally {
-
       commit('SAVE_ALL_PICKLISTS', obj)
     }
   },
@@ -129,7 +130,9 @@ const actions = {
     try {
       const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
       for (let i = 0; i < res.length; i++) {
-        obj[res[i].fieldRef.apiName] = res[i].values
+        if (res[i].fieldRef) {
+          obj[res[i].fieldRef.apiName] = res[i].values
+        }
       }
     } catch (e) {
       console.log(e)
