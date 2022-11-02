@@ -30,6 +30,13 @@ DATA_TYPE_OBJ = {
     "text": "String",
 }
 
+REFERENCE_INFO_OBJ = {
+    "OWNER": ["firstname", "lastname"],
+    "COMPANY": ["name"],
+    "DEAL": ["dealname"],
+    "CONTACT": ["email"],
+}
+
 
 class HubspotAuthAccountAdapter:
     def __init__(self, **kwargs):
@@ -345,6 +352,12 @@ class HObjectFieldAdapter:
         if "referencedObjectType" in data.keys() and data["referencedObjectType"]:
             data["reference"] = True
             data["fieldType"] = "Reference"
+            reference_info = REFERENCE_INFO_OBJ.get(data["referencedObjectType"], None)
+            print(reference_info)
+            if reference_info is not None:
+                data["referenceToInfos"] = [
+                    {"api_name": data["referencedObjectType"], "name_fields": reference_info}
+                ]
         d = object_to_snake_case(data)
         return d
 
@@ -617,6 +630,7 @@ class DealAdapter:
                 url,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(user.crm_account.access_token)},
             )
+            print(r.json())
             r = HubspotAuthAccountAdapter._handle_response(r)
             r = DealAdapter.from_api(r["properties"], self.owner)
             return r

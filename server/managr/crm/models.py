@@ -164,7 +164,8 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id)
-        return adapters[self.integration_source]["Opportunity"](**data)
+        resource = "Opportunity" if self.owner.crm == "SALESFORCE" else "Deal"
+        return adapters[self.integration_source][resource](**data)
 
     @property
     def as_slack_option(self):
@@ -334,8 +335,6 @@ class ObjectField(TimeStampModel, IntegrationModel):
     @property
     def display_value_keys(self):
         """helper getter to retrieve related name display keys"""
-        if self.user.crm == "HUBSPOT":
-            return self.relationship_name
         if self.reference and len(self.reference_to_infos):
             # some fields are referenced to completely different objects (as in ReportsTo)
             items = dict(
@@ -433,7 +432,11 @@ class ObjectField(TimeStampModel, IntegrationModel):
 
         elif self.data_type == "Reference":
             # temporarily using id as display value need to sync display value as part of data
-            display_name = self.reference_display_label
+            display_name = (
+                self.reference_display_label
+                if self.integration_source == "SALESFORCE"
+                else self.label
+            )
             initial_option = block_builders.option(value, value) if value else None
             if self.is_public and not self.allow_multiple:
                 user_id = str(kwargs.get("user").id)
