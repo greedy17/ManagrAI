@@ -20,6 +20,7 @@ export class ObjectField extends Model {
     static order = new fields.IntegerField()
     static options = new fields.Field()
     static includeInRecap = new fields.Field()
+    static integrationSource = new fields.CharField()
 
     static fromAPI(json = {}) {
         return new ObjectField(objectToCamelCase(json))
