@@ -42,6 +42,7 @@ export class ObjectFieldAPI extends ModelAPI {
             updateable: ApiFilter.create({ key: 'updateable' }),
             crmObject: ApiFilter.create({ key: 'crm_object' }),
             search: ApiFilter.create({ key: 'search' }),
+            forAlerts: ApiFilter.create({ key: 'for_alerts' }),
             filterable: ApiFilter.create({ key: 'filterable' }),
         }
 
