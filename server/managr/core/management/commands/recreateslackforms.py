@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.core.models import User
 from managr.salesforce.background import emit_generate_form_template
+from managr.hubspot.tasks import emit_generate_hs_form_template
 from managr.salesforce import constants as sf_consts
 
 
@@ -18,13 +19,13 @@ class Command(BaseCommand):
             user = User.objects.filter(email=t).first()
 
         if user.is_admin:
-
-            emit_generate_form_template(str(user.id), True)
+            if user.crm == "SALESFORCE":
+                emit_generate_form_template(str(user.id), True)
+            else:
+                emit_generate_hs_form_template(str(user.id), True)
             self.stdout.write(
                 self.style.SUCCESS(
-                    "Successfully initiated the object field sync for the user {}".format(
-                        user.email,
-                    )
+                    "Successfully initiated form recreation for  {}".format(user.email,)
                 )
             )
         else:
