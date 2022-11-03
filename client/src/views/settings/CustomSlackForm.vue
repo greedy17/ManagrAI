@@ -453,7 +453,7 @@ export default {
       currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
-        pagination: { size: 200 },
+        pagination: { size: 500 },
         filters: {
           crmObject: this.newResource,
         },
@@ -789,7 +789,7 @@ export default {
                 crmObject: val,
                 ...fieldParam,
               }
-              // this.formFields.refresh()
+              this.formFields.refresh()
 
               if (this.formType == 'UPDATE') {
                 // this.onSave()
@@ -818,7 +818,7 @@ export default {
                 crmObject: val,
                 ...fieldParam,
               }
-              // this.formFields.refresh()
+              this.formFields.refresh()
               if (this.formType == 'UPDATE') {
                 // this.onSave()
               }
@@ -895,7 +895,7 @@ export default {
     filteredFields() {
       return this.formFields.list
         .filter((field) =>
-          field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
+          field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()) && field.integrationSource === this.userCRM
         )
         .filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
@@ -1160,7 +1160,7 @@ export default {
       )
     },
     changeToStage(stage = '') {
-      this.newResource = 'Opportunity'
+      this.newResource = (this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity')
       this.newFormType = 'STAGE_GATING'
       this.newCustomForm = this.allForms.find(
         (f) =>
@@ -1175,10 +1175,10 @@ export default {
       )
     },
     changeToHubspotContact() {
-      this.newResource = 'HubspotContact'
+      this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
+        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE 
       )
     },
     changeToLead() {

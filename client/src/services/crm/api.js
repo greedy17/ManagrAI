@@ -18,7 +18,7 @@ export class ObjectFieldAPI extends ModelAPI {
             ...ObjectFieldAPI.FILTERS_MAP,
             createable: ApiFilter.create({ key: 'createable' }),
             updateable: ApiFilter.create({ key: 'updateable' }),
-            crmObject: ApiFilter.create({ key: 'crmObject' }),
+            crmObject: ApiFilter.create({ key: 'crm_object' }),
 
             search: ApiFilter.create({ key: 'search' }),
         }
@@ -40,7 +40,9 @@ export class ObjectFieldAPI extends ModelAPI {
             ...ObjectFieldAPI.FILTERS_MAP,
             createable: ApiFilter.create({ key: 'createable' }),
             updateable: ApiFilter.create({ key: 'updateable' }),
+            crmObject: ApiFilter.create({ key: 'crm_object' }),
             search: ApiFilter.create({ key: 'search' }),
+            forAlerts: ApiFilter.create({ key: 'for_alerts' }),
             filterable: ApiFilter.create({ key: 'filterable' }),
         }
 

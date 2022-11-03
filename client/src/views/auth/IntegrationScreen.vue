@@ -7,7 +7,7 @@
 
     <div>
       <div class="integrations__cards">
-        <div class="card">
+        <div class="card" v-if="userCRM === 'SALESFORCE'">
           <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 30px; width: auto" src="@/assets/images/salesforce.png" />
           </div>
@@ -16,16 +16,7 @@
             <h3>Salesforce</h3>
             <p class="card-text">Sync Accounts, Opportunities, & Contacts</p>
             <div>
-              <PulseLoadingSpinnerButton
-                v-if="!hasSalesforceIntegration"
-                @click="onGetAuthLink('SALESFORCE')"
-                class="orange_button"
-                text="Connect"
-                :loading="generatingToken && selectedIntegration == 'SALESFORCE'"
-                >Connect</PulseLoadingSpinnerButton
-              >
-
-              <div v-else>
+              <div>
                 <div class="img-border">
                   <img
                     @click="onRevoke('SALESFORCE')"
@@ -35,6 +26,64 @@
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" v-else-if="userCRM === 'HUBSPOT'">
+          <div class="card__header lo-bg">
+            <img style="height: 80px" src="@/assets/images/hubspott.png" />
+          </div>
+
+          <div class="card__body">
+            <h3 class="card__title">Hubspot</h3>
+            <p class="card-text">Sync Companies, Deals, and Contacts</p>
+            <div>
+              <div>
+                <div class="img-border">
+                  <img
+                    @click="onRevoke('HUBSPOT')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" v-else>
+          <div class="card__body">
+            <h3 class="card__title">CRM</h3>
+            <p class="card-text">Select a CRM you would like to link</p>
+            <div>
+              <Multiselect
+                placeholder="Select CRM"
+                @input="onGetAuthLink($event.value)"
+                :v-model="selectedCRM"
+                :options="crmList"
+                openDirection="below"
+                style="width: 25vw;"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select CRM
+                  </p>
+                </template>
+              </Multiselect>
+              <!-- <PulseLoadingSpinnerButton
+                @click="selectedCRM ? onGetAuthLink(selectedCRM.value) : () => null"
+                class="orange_button"
+                text="Connect"
+                :loading="generatingToken && selectedIntegration == selectedCRM.value"
+                >Connect</PulseLoadingSpinnerButton
+              > -->
             </div>
           </div>
         </div>
@@ -274,38 +323,6 @@
         </div>
 
         <div class="card">
-          <div class="card__header lo-bg">
-            <img style="height: 80px" src="@/assets/images/hubspott.png" />
-          </div>
-
-          <div class="card__body">
-            <h3 class="card__title">Hubspot</h3>
-            <p class="card-text">Sync Companies, Deals, and Contacts</p>
-            <div>
-              <PulseLoadingSpinnerButton
-                v-if="!hasHubspotIntegration"
-                :disabled="hasHubspotIntegration"
-                @click="onGetAuthLink('HUBSPOT')"
-                class="orange_button"
-                text="Connect"
-                :loading="generatingToken && selectedIntegration == 'HUBSPOT'"
-              ></PulseLoadingSpinnerButton>
-
-              <div v-else>
-                <div class="img-border">
-                  <img
-                    @click="onRevoke('HUBSPOT')"
-                    src="@/assets/images/revoke.svg"
-                    height="16"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
           <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/teamsLogo.png" />
           </div>
@@ -318,6 +335,39 @@
             </div>
           </div>
         </div>
+
+        <!-- VVV THIS IS FOR CHOOSING A MESSENGER APP TO LINK TO MANAGR AT A LATER DATE VVV -->
+
+        <!-- <div class="card">
+          <div class="card__body">
+            <h3 class="card__title">Messenger</h3>
+            <p class="card-text">Select a Messenger you would like to link</p>
+            <div>
+              <Multiselect
+                placeholder="Select Messenger"
+                @input="onGetAuthLink($event.value)"
+                :v-model="selectedMessenger"
+                :options="messengerList"
+                openDirection="below"
+                style="width: 25vw;"
+                selectLabel="Enter"
+                track-by="value"
+                label="label"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results. Try loading more</p>
+                </template>
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Messenger
+                  </p>
+                </template>
+              </Multiselect>
+            </div>
+          </div>
+        </div> -->
+        
       </div>
     </div>
 
@@ -346,16 +396,27 @@ import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'Integrations',
-  components: { PulseLoadingSpinnerButton, CollectionManager },
+  components: { 
+    PulseLoadingSpinnerButton,
+    CollectionManager, 
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'), 
+  },
   data() {
     return {
       generatingToken: false,
       authLink: null,
+      crmList: [{label: 'Salesforce', value: 'SALESFORCE'}, {label: 'Hubspot', value: 'HUBSPOT'}],
+      messengerList: [{label: 'Slack', value: 'SLACK'}, {label: 'Teams', value: 'TEAMS'}],
+      selectedCRM: null,
+      selectedMessenger: null,
       selectedIntegration: null,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     goToTemplates() {
       this.$router.push({ name: 'CreateNew' })
     },
@@ -511,6 +572,9 @@ export default {
     },
     userCanIntegrateSlack() {
       return this.$store.state.user.isAdmin
+    },
+    userCRM() {
+      return this.$store.state.user.crm
     },
     selectedIntegrationSwitcher() {
       switch (this.selectedIntegration) {
@@ -816,5 +880,17 @@ a {
 }
 .font-12 {
   font-size: 12px;
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 </style>
