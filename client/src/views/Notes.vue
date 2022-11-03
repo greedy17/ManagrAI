@@ -208,6 +208,28 @@ export default {
         })
       }
     },
+    async updateTemplate() {
+      try {
+        const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
+        this.$toast('Note template update successful', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error updating template', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.$router.go()
+      }
+    },
     selectTemplate(template) {
       this.selectedTemplate = template
       this.editing = true
