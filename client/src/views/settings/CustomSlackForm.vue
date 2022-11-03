@@ -330,7 +330,7 @@
             <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
             <label :for="i"></label>
             {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
-            <span v-if="field.required" class="red-text">required</span>
+            <!-- <span v-if="field.required" class="red-text">required</span> -->
           </p>
         </div>
       </div>
@@ -434,7 +434,7 @@ export default {
         ModelClass: SObjectField,
         pagination: { size: 200 },
         filters: {
-          salesforceObject: this.customResource,
+          salesforceObject: this.newResource,
         },
       }),
       customFields: null,
