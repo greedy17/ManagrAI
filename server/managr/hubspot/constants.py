@@ -124,13 +124,25 @@ def HUBSPOT_OBJECTS_URI(
     return url
 
 
-def HUBSPOT_OWNERS_URI(email):
-    return f"{BASE_URL}/crm/v3/owners?email={email}"
+def HUBSPOT_OWNERS_URI(email=None):
+    if email and len(email) > 0:
+        return f"{BASE_URL}/crm/v3/owners?email={email}"
+    return f"{BASE_URL}/crm/v3/owners"
 
 
-def HUBSPOT_SEARCH_BODY(fields, filters, limit):
+def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
     fields = set(fields)
-    return {"properties": list(fields), "filters": filters, "limit": limit}
+    return {
+        "properties": list(fields),
+        "filterGroups": [
+            {
+                "filters": [
+                    {"value": filter_value, "propertyName": "name", "operator": "CONTAINS_TOKEN"}
+                ]
+            }
+        ],
+        "limit": limit,
+    }
 
 
 def HUBSPOT_PIPELINE_URI(resource):

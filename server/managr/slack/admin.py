@@ -21,7 +21,6 @@ class CustomFormFieldInline(admin.StackedInline):
         parent = self.get_parent_object_from_request(request)
         if parent:
             if db_field.name == "field":
-                print(parent.resource)
                 queryset = crm_models.ObjectField.objects.filter(
                     (
                         Q(user__organization=parent.organization)
@@ -29,7 +28,7 @@ class CustomFormFieldInline(admin.StackedInline):
                         & Q(user__team_lead_of=parent.team)
                     )
                     | Q(is_public=True)
-                )
+                ).order_by("label")
                 return ModelChoiceField(queryset)
         else:
             queryset = crm_models.ObjectField.objects.all()

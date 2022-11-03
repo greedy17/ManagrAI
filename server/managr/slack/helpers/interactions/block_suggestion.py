@@ -274,10 +274,10 @@ def process_get_external_relationship_options(payload, context):
         fields = ["FirstName", "LastName", "Name"]
     attempts = 1
     while True:
-        sf_account = user.salesforce_account
-        sf_adapter = sf_account.adapter_class
+        crm_account = user.crm_account
+        crm_adapter = crm_account.adapter_class
         try:
-            res = sf_adapter.list_relationship_data(
+            res = crm_adapter.list_relationship_data(
                 relationship, fields, value, resource, add_fields=add_fields
             )
             break
@@ -287,9 +287,8 @@ def process_get_external_relationship_options(payload, context):
                     f"Failed to retrieve reference data for {relationship} data for user {str(user.id)} after {attempts} tries"
                 )
             else:
-                sf_account.regenerate_token()
+                crm_account.regenerate_token()
                 attempts += 1
-
     return {
         "options": list(
             map(lambda val: block_builders.option(val.get("Name"), val.get("Id")), res)

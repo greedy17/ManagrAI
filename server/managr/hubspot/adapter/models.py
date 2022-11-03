@@ -139,8 +139,6 @@ class HubspotAuthAccountAdapter:
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         with Client as client:
             res = client.put(url, headers=headers,)
-            print(res)
-            print(res.json())
             return self._handle_response(res)
 
     def get_associated_resource(self, resource, associated_resource, resource_id):
@@ -281,26 +279,38 @@ class HubspotAuthAccountAdapter:
             res = self._format_resource_response(saved_response, resource)
             return res
 
-    def list_relationship_data(self, relationship, fields, value, *args, **kwargs):
+    def list_relationship_data(self, relationship, fields, value, resource, *args, **kwargs):
         # build the filter query from the name fields and value
-        filter_query = ""
-        for index, f in enumerate(fields):
-            string_val = f"{f} LIKE '%{value}%'"
-            if index != 0:
-                string_val = f" OR {string_val}"
-            filter_query = filter_query + string_val
 
-        filter_query_string = f"AND ({filter_query})"
         # always retreive id
-        fields.insert(0, "Id")
-        url = f"{self.instance_url}{hubspot_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, relationship, fields, additional_filters=[filter_query_string], limit=20 )}"
-        with Client as client:
-            res = client.get(
-                url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+        if len(value) > 0 and relationship != "OWNER":
+            url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
+        else:
+            url = (
+                hubspot_consts.HUBSPOT_OWNERS_URI(value)
+                if relationship == "OWNER"
+                else hubspot_consts.HUBSPOT_OBJECTS_URI(resource, fields)
             )
+        with Client as client:
+            if len(value) > 0 and relationship != "OWNER":
+                data = hubspot_consts.HUBSPOT_SEARCH_BODY(fields, value)
+                res = client.post(
+                    url,
+                    data=json.dumps(data),
+                    headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                )
+            else:
+                res = client.get(
+                    url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                )
             res = self._handle_response(res)
             # no need to format to any adapter
             res = self._format_resource_response(res, None)
+            res = (
+                [{"Name": item["email"], "Id": item["id"]} for item in res]
+                if relationship == "OWNER"
+                else [{"Name": item["properties"]["name"], "Id": item["id"]} for item in res]
+            )
             return res
 
     def execute_alert_query(self, url, resource):
@@ -353,7 +363,6 @@ class HObjectFieldAdapter:
             data["reference"] = True
             data["fieldType"] = "Reference"
             reference_info = REFERENCE_INFO_OBJ.get(data["referencedObjectType"], None)
-            print(reference_info)
             if reference_info is not None:
                 data["referenceToInfos"] = [
                     {"api_name": data["referencedObjectType"], "name_fields": reference_info}
