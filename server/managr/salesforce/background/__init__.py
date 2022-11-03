@@ -256,7 +256,11 @@ def _generate_form_template(user_id, delete_forms):
             f.recreate_form()
         else:
             f = OrgCustomSlackForm.objects.create(
-                form_type=form_type, resource=resource, organization=org, team=user.team
+                form_type=form_type,
+                resource=resource,
+                organization=org,
+                team=user.team,
+                custom_object=None,
             )
             public_fields = SObjectField.objects.filter(
                 is_public=True,
