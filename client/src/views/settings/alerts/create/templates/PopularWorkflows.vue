@@ -827,6 +827,7 @@ export default {
   mounted() {
     this.repsPipeline()
     this.checkForChannel()
+    this.setDefaultChannel()
   },
   beforeMount() {},
 }
