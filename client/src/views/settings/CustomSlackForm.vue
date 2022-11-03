@@ -98,7 +98,7 @@
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
             <img src="@/assets/images/warning.svg" class="logo2" alt="" />
-            <h4>Switching forms. Changes wont be saved!</h4>
+            <p>Switching forms. Changes wont be saved!</p>
           </div>
         </div>
         <section class="modal-buttons">
@@ -316,7 +316,12 @@
     <div class="field-section">
       <div class="search-bar">
         <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-        <input type="search" :placeholder="`Search ${newResource} Fields`" v-model="filterText" />
+        <input
+          @input="searchFields"
+          type="search"
+          :placeholder="`Search ${newResource} Fields`"
+          v-model="filterText"
+        />
       </div>
 
       <div class="field-section__fields">
@@ -427,7 +432,7 @@ export default {
       currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 1000 },
+        pagination: { size: 200 },
         filters: {
           salesforceObject: this.customResource,
         },
@@ -882,11 +887,7 @@ export default {
       return this.formStages.length
     },
     filteredFields() {
-      return this.formFields.list
-        .filter((field) =>
-          field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()),
-        )
-        .filter((field) => !this.addedFieldNames.includes(field.apiName))
+      return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
       return this.customFields.list
@@ -944,8 +945,15 @@ export default {
     this.getStageForms()
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    searchFields() {
+      this.formFields = CollectionManager.create({
+        ModelClass: SObjectField,
+        pagination: { size: 200 },
+        filters: {
+          salesforceObject: this.newResource,
+          search: this.filterText,
+        },
+      })
     },
     removeCustomObject() {
       this.removeCustomObj = true
@@ -1214,6 +1222,7 @@ export default {
         this.storedModalFunction = this.changeToAccount
         return
       }
+      this.filterText = ''
       this.newResource = 'Account'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -1226,6 +1235,7 @@ export default {
         this.storedModalFunction = this.changeToOpportunity
         return
       }
+      this.filterText = ''
       this.newResource = 'Opportunity'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -1238,6 +1248,7 @@ export default {
         this.storedModalFunction = this.changeToProducts
         return
       }
+      this.filterText = ''
       this.newResource = 'OpportunityLineItem'
       this.newFormType = 'CREATE'
       this.newCustomForm = this.allForms.find(
@@ -1251,6 +1262,7 @@ export default {
         this.storedModalFunction = this.changeToStage
         return
       }
+      this.filterText = ''
       this.newResource = 'Opportunity'
       this.newFormType = 'STAGE_GATING'
       this.newCustomForm = this.allForms.find(
@@ -1264,6 +1276,7 @@ export default {
         this.storedModalFunction = this.changeToContact
         return
       }
+      this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -1276,6 +1289,7 @@ export default {
         this.storedModalFunction = this.changeToLead
         return
       }
+      this.filterText = ''
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
