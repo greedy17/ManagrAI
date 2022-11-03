@@ -777,6 +777,8 @@ export default {
           }
         } else if (val && !val.customFields.length) {
           this.addedFields = []
+        } else {
+          this.addedFields = []
         }
       },
     },
