@@ -361,8 +361,8 @@ def process_submit_resource_data(payload, context):
 
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-    stage_forms = current_forms.exclude(
-        template__form_type__in=["UPDATE", "CREATE"], template__custom_object__isnull=True
+    stage_forms = current_forms.filter(
+        template__form_type="STAGE_GATING", template__custom_object__isnull=True
     )
     custom_object_forms = current_forms.filter(template__custom_object__isnull=False)
     stage_form_data_collector = {}
@@ -2631,11 +2631,11 @@ def process_submit_alert_resource_data(payload, context):
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE"]).first()
-    stage_forms = current_forms.exclude(
-        template__form_type__in=["UPDATE"], template__custom_object__isnull=False
+    stage_forms = current_forms.filter(
+        template__form_type="STAGE_GATING", template__custom_object__isnull=True
     )
-    custom_object_forms = current_forms.exclude(
-        template__form_type__in=["UPDATE"], template__custom_object__isnull=True
+    custom_object_forms = current_forms.filter(
+        template__form_type="STAGE_GATING", template__custom_object__isnull=False
     )
     stage_form_data_collector = {}
     for form in stage_forms:
