@@ -1,6 +1,6 @@
 <template>
   <PopularWorkflows
-    :config="allConfigs.LARGE_OPPORTUNITIES"
+    :config="userCRM === 'SALESFORCE' ? allConfigs.LARGE_OPPORTUNITIES : allConfigs.LARGE_DEALS_HUBSPOT"
     :largeOpps="true"
     :selectField="true"
   />
@@ -24,6 +24,11 @@ export default {
     return {
       allConfigs,
     }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>

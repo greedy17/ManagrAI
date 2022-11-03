@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :selectField="true" :config="allConfigs.REQUIRED_FIELD_EMPTY" />
+  <PopularWorkflows :selectField="true" :config="userCRM === 'SALESFORCE' ? allConfigs.REQUIRED_FIELD_EMPTY : allConfigs.REQUIRED_FIELD_EMPTY_HUBSPOT" />
 </template>
 
 <script>
@@ -20,6 +20,11 @@ export default {
     return {
       allConfigs,
     }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>

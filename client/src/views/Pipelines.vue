@@ -3108,6 +3108,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     filteredWorkflows: {
       get: function () {
         return this.currentWorkflow.filter((opp) =>
@@ -4689,6 +4692,7 @@ export default {
       this.dropdownValue = val
     },
     filtersAndOppFields() {
+      console.log('this.updateOppForm', this.updateOppForm)
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -4721,24 +4725,42 @@ export default {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
-        console.log(res)
-        this.updateOppForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-        )
-        this.createOppForm = res
-          .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
-          .fieldsRef.filter(
-            (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        console.log('res getAllForms', res)
+        let stageGateForms
+        if (this.userCRM === 'SALESFORCE') {
+          this.updateOppForm = res.filter(
+            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
           )
-
-        let stageGateForms = res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
-        )
-        this.createProductForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )[0].fieldsRef
-
+          this.createOppForm = res
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+            .fieldsRef.filter(
+              (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+            )
+          stageGateForms = res.filter(
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+          )
+          this.createProductForm = res.filter(
+            (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+          )[0].fieldsRef
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.updateOppForm = res.filter(
+            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal',
+          )
+          this.createOppForm = res
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Deal')[0]
+            .fieldsRef.filter(
+              (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+            )
+          stageGateForms = res.filter(
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
+          )
+          // this.createProductForm = res.filter(
+          //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+          // )[0].fieldsRef
+        }
+        
         if (stageGateForms.length) {
+          console.log('this.stageGateForms', this.stageGateForms)
           this.stageGateCopy = stageGateForms[0].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
           this.stagesWithForms = stages
