@@ -701,7 +701,7 @@ export default {
             let currentFormFields = this.addedFields.map((field) => {
               return field.id
             })
-            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false || currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
               let fieldsToAdd = [this.noteTitle, this.noteSubject]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
@@ -710,7 +710,9 @@ export default {
                 altField.order = i
                 if (
                   altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
                 ) {
                   altField.includeInRecap = true
                 }
@@ -722,7 +724,9 @@ export default {
             this.addedFields = this.addedFields.filter((field) => {
               return (
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
+                field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
               )
             })
           }
@@ -742,7 +746,7 @@ export default {
             let currentFormFields = this.addedFields.map((field) => {
               return field.id
             })
-            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false || currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
               let fieldsToAdd = [this.noteTitle, this.noteSubject]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
@@ -751,7 +755,9 @@ export default {
                 altField.order = i
                 if (
                   altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
                 ) {
                   altField.includeInRecap = true
                 }
@@ -763,7 +769,9 @@ export default {
             this.addedFields = this.addedFields.filter((field) => {
               return (
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
               )
             })
           }
@@ -921,6 +929,8 @@ export default {
       return [
         '6407b7a1-a877-44e2-979d-1effafec5035',
         '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        '6407b7a1-a877-44e2-979d-1effafec5034',
+        '0bb152b5-aac1-4ee0-9c25-51ae98d55af2',
         'e286d1d5-5447-47e6-ad55-5f54fdd2b00d',
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
@@ -948,6 +958,7 @@ export default {
       // } else if (this.userCRM === 'SALESFORCE') {
       //   object = this.OPPORTUNITY
       // }
+      this.newCustomForm = this.customForm
       await this.listPicklists({
         crmObject: object,
         picklistFor: 'StageName',
@@ -1076,7 +1087,6 @@ export default {
             crmObject: this.DEAL,
             search: 'Deal Stage'
           })
-
           let dealStage
           for (let i = 0; i < res.length; i++) {
             if (res[i].apiName === 'dealstage') {
@@ -1177,6 +1187,9 @@ export default {
     changeToHubspotContact() {
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
+      const form = this.allForms.find(
+        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE 
+      )
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE 
       )

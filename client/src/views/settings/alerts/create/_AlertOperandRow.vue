@@ -233,7 +233,8 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
@@ -268,7 +269,7 @@ export default {
       selectedOperator: '',
       selectedOperand: '',
       objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 300 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
@@ -441,6 +442,9 @@ export default {
     await this.objectFields.refresh()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
         return INPUT_TYPE_MAP[type.dataType]
