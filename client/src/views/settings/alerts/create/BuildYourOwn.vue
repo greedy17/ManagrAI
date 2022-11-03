@@ -944,6 +944,7 @@ export default {
   },
   mounted() {
     this.checkForChannel()
+    this.setDefaultChannel()
   },
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
