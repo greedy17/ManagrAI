@@ -367,6 +367,10 @@ class HObjectFieldAdapter:
                 data["referenceToInfos"] = [
                     {"api_name": data["referencedObjectType"], "name_fields": reference_info}
                 ]
+        update_check = data["modificationMetadata"]["readOnlyValue"]
+        if update_check:
+            data["updateable"] = False
+            data["createable"] = False
         d = object_to_snake_case(data)
         return d
 

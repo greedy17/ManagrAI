@@ -49,6 +49,8 @@ def get_hubspot_authentication(request):
         serializer.save()
     except Exception as e:
         logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}")
+    request.user.crm = "HUBSPOT"
+    request.user.save()
     return Response(data={"success": True})
 
 
@@ -63,7 +65,8 @@ def revoke_hubspot_access_token(request):
             # revoke token will fail if ether token is expired
             pass
         hubspot.delete()
-
+        request.user.crm = None
+        request.user.save()
     return Response()
 
 
