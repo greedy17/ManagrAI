@@ -52,7 +52,10 @@
           </div>
         </div>
         <div class="card" v-else>
-          <div class="card__body">
+          <div class="card__body" v-if="generatingToken && (selectedIntegration == 'SALESFORCE' || selectedIntegration === 'HUBSPOT')">
+            <PipelineLoader />
+          </div>
+          <div class="card__body" v-else>
             <h3 class="card__title">CRM</h3>
             <p class="card-text">Select a CRM you would like to link</p>
             <div>
@@ -399,6 +402,7 @@ export default {
   components: { 
     PulseLoadingSpinnerButton,
     CollectionManager, 
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'), 
   },
   data() {
