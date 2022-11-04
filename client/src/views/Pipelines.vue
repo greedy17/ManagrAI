@@ -2858,6 +2858,7 @@
 </template>
 <script>
 import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -2914,12 +2915,13 @@ export default {
       savingCreateForm: false,
       productQueryOpts: {},
       objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 300 },
         filters: {
-          salesforceObject: 'Opportunity',
+          crmObject: this.crmObject,
         },
       }),
+      crmObject: null,
       currentProducts: [],
       createProductForm: null,
       addingProduct: false,
@@ -2982,7 +2984,6 @@ export default {
       oppVal: null,
       originalList: null,
       daysForward: null,
-      // allOpps: null,
       loading: false,
       loadingAccounts: false,
       loadingProducts: false,
@@ -3163,6 +3164,7 @@ export default {
     },
   },
   async created() {
+    this.crmObject = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
