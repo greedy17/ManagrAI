@@ -1,5 +1,5 @@
 <template>
-  <div class="alerts-template-list" @click="test(filteredConfigs)">
+  <div class="alerts-template-list">
     <Modal v-if="deleteOpen">
       <div class="delete_modal">
         <div class="delete_modal__header">
