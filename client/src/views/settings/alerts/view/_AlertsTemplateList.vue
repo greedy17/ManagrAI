@@ -1,5 +1,5 @@
 <template>
-  <div class="alerts-template-list">
+  <div class="alerts-template-list" @click="test(filteredConfigs)">
     <Modal v-if="deleteOpen">
       <div class="delete_modal">
         <div class="delete_modal__header">
@@ -105,7 +105,7 @@
 
       <div v-if="editing" class="alert_cards">
         <div
-          v-for="(config, i) in allConfigs"
+          v-for="(config, i) in filteredConfigs"
           :key="i"
           class="card"
           v-show="!templateTitles.includes(config.title)"
@@ -363,6 +363,9 @@ export default {
     }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)
     },
@@ -552,6 +555,18 @@ export default {
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.zoomChannel
         : null
+    },
+    filteredConfigs() {
+      let filtered = []
+      for (let key in this.allConfigs) {
+        if (this.allConfigs[key].crm === this.userCRM) {
+          filtered.push(this.allConfigs[key])
+        }
+      }
+      return filtered
+    },
+    userCRM() {
+      return this.$store.state.user.crm
     },
     userLevel() {
       return this.$store.state.user.userLevel

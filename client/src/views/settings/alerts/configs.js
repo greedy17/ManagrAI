@@ -3,6 +3,7 @@ const CLOSE_DATE_PASSED = {
     subtitle: "View and update all Opportunities with a passed close date",
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -61,6 +62,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
     subtitle: "View and update all Deals with a passed close date",
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
@@ -119,6 +121,7 @@ const NINETY_DAY_PIPELINE = {
     subtitle: 'Update your Pipeline',
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -178,6 +181,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
     subtitle: 'Update your Pipeline',
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
@@ -237,6 +241,7 @@ const DEAL_REVIEW = {
     subtitle: 'View and update all Opportunities that havent been worked in the last week',
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -285,6 +290,7 @@ const DEAL_REVIEW_HUBSPOT = {
     subtitle: 'View and update all Deals that havent been worked in the last week',
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
@@ -333,6 +339,7 @@ const CLOSE_DATE_APPROACHING = {
     subtitle: 'View and update all Opportunities with an upcoming close date',
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -391,6 +398,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
     subtitle: 'View and update all Deals with an upcoming close date',
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
@@ -449,6 +457,7 @@ const UPCOMING_NEXT_STEP = {
     subtitle: "View and update all Opportunities with Next Steps due this Week",
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -496,6 +505,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
     subtitle: "View and update all Deals with Next Steps due this Week",
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
@@ -543,6 +553,7 @@ const REQUIRED_FIELD_EMPTY = {
     subtitle: "View and update all Opportunities with required fields that have not been filled out",
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -590,6 +601,7 @@ const REQUIRED_FIELD_EMPTY_HUBSPOT = {
     subtitle: "View and update all Deals with required fields that have not been filled out",
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
@@ -637,6 +649,7 @@ const LARGE_OPPORTUNITIES = {
     subtitle: "View and update all your Opportunities that exceed a certain amount",
     user: null,
     isActive: true,
+    crm: 'SALESFORCE',
     resourceType: "Opportunity",
     newGroups: [
         {
@@ -684,6 +697,7 @@ const LARGE_DEALS_HUBSPOT = {
     subtitle: "View and update all your Deals that exceed a certain amount",
     user: null,
     isActive: true,
+    crm: 'HUBSPOT',
     resourceType: "Deal",
     newGroups: [
         {
