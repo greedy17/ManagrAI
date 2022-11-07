@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="centered" @click="test(this.selectedCondition)">
+    <div class="centered">
       <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
         <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
         <ToggleCheckBox
