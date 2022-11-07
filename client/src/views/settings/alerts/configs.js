@@ -70,7 +70,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: ">=",
                     operandValue: "-200",
                     operandType: "FIELD",
@@ -80,7 +80,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: "<=",
                     operandValue: "-1",
                     operandType: "FIELD",
@@ -96,10 +96,10 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-            " Deal.Name ",
-            " Deal.CloseDate ",
+            " Deal.dealname ",
+            " Deal.closedate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.Name }</strong> has a passed close date of <strong>{ Deal.CloseDate }</strong>. Please update it!",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has a passed close date of <strong>{ Deal.closedate }</strong>. Please update it!",
     },
     newConfigs: [
         {
@@ -199,7 +199,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
                 // },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: "<=",
                     operandValue: "90",
                     operandType: "FIELD",
@@ -214,12 +214,12 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " Deal.Name ",
-            " Deal.CloseDate ",
-            " Deal.StageName ",
+            " Deal.dealname ",
+            " Deal.closedate ",
+            " Deal.dealstage ",
             " Deal.LastActivityDate ",
         ],
-        body: "<strong>{ Deal.Name }</strong> has a Close Date of <strong>{ Deal.CloseDate }</strong> \n \n <strong>Stage</strong>: { Deal.StageName } \n \n <strong>Last Activity</strong>: { Deal.LastActivityDate }",
+        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage } \n \n <strong>Last Activity</strong>: { Deal.LastActivityDate }",
     },
     newConfigs: [
         {
@@ -314,10 +314,10 @@ const DEAL_REVIEW_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-            " Deal.Name ",
+            " Deal.dealname ",
             " Deal.LastModifiedDate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Deal.Name }</strong> hasnt been updated since <strong>{ Deal.LastModifiedDate }</strong>",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Deal.dealname }</strong> hasnt been updated since <strong>{ Deal.LastModifiedDate }</strong>",
     },
     newConfigs: [
         {
@@ -406,7 +406,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: "<=",
                     operandValue: "7",
                     operandType: "FIELD",
@@ -416,7 +416,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: ">",
                     operandValue: "-1",
                     operandType: "FIELD",
@@ -432,10 +432,10 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-            " Deal.Name ",
-            " Deal.CloseDate ",
+            " Deal.dealname ",
+            " Deal.closedate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.Name }</strong> has an upcoming close date of <strong>{ Deal.CloseDate }</strong>. Please update it!",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has an upcoming close date of <strong>{ Deal.closedate }</strong>. Please update it!",
     },
     newConfigs: [
         {
@@ -513,7 +513,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: "=",
                     operandValue: '0',
                     operandType: "FIELD",
@@ -529,9 +529,9 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-            " Deal.Name ",
+            " Deal.dealname ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.Name }</strong> has an upcoming Next Step Date due this week.",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has an upcoming Next Step Date due this week.",
     },
     newConfigs: [
         {
@@ -625,9 +625,9 @@ const REQUIRED_FIELD_EMPTY_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-            " Deal.Name ",
+            " Deal.dealname ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.Name }</strong> has a required field that has not been filled out.",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has a required field that has not been filled out.",
     },
     newConfigs: [
         {
@@ -721,9 +721,9 @@ const LARGE_DEALS_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-            " Deal.Name ",
+            " Deal.dealname ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.Name }</strong> is a large deal.",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> is a large deal.",
     },
     newConfigs: [
         {

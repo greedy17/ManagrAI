@@ -308,14 +308,14 @@
             />
           </template>
         </FormField>
-        <div style="margin-right: 8px" class="end">
+        <div style="margin-right: 8px" class="start">
           <Multiselect
             placeholder="Select field"
             v-model="crmValue"
             @input="bindText(`${selectedResourceType}.${$event.apiName}`, `${$event.label}`)"
             :options="fields.list"
             openDirection="above"
-            style="width: 18vw; margin-right: 4px"
+            style="width: 48vw; margin-left: 12px"
             selectLabel="Enter"
             track-by="apiName"
             label="referenceDisplayLabel"
@@ -1248,6 +1248,12 @@ input::placeholder {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+}
+.start {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
 .flex-end {
   display: flex;
