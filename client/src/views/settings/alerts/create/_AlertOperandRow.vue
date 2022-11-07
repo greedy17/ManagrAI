@@ -3,12 +3,13 @@
     <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
       <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
       <ToggleCheckBox
+        v-if="userCRM !== 'HUBSPOT'"
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
+      <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
       <!-- <small @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
@@ -488,6 +489,9 @@ export default {
     },
   },
   computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     selectedFieldTypeRaw() {
       if (this.form.field._operandIdentifier.value) {
         return this.form.field._operandIdentifier.value.dataType

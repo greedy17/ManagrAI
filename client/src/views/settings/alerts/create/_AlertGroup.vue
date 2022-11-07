@@ -1,9 +1,10 @@
 <template>
   <div>
-    <div class="centered">
+    <div class="centered" @click="test(this.selectedCondition)">
       <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
-        <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
+        <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
         <ToggleCheckBox
+          v-if="userCRM !== 'HUBSPOT'"
           @input="
             selectedCondition == 'AND' ? (selectedCondition = 'OR') : (selectedCondition = 'AND')
           "
@@ -103,6 +104,9 @@ export default {
   },
   async created() {},
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
         ? (this.selectedCondition = 'OR')
@@ -136,7 +140,15 @@ export default {
       })
     },
   },
+  mounted() {
+    if (this.userCRM === 'HUBSPOT') {
+      this.selectedCondition = 'OR'
+    }
+  },
   computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     selectedCondition: {
       get() {
         return this.form.field.groupCondition.value
