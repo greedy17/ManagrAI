@@ -125,26 +125,28 @@
       </div>
       <div style="margin-right: 16px" class="flex-end">
         <Multiselect
-          placeholder="Insert Value { }"
+          placeholder="Select field"
           v-model="crmValue"
           @input="bindText(`${alert.resourceType}.${$event.apiName}`, `${$event.label}`)"
           :options="fields.list"
           openDirection="above"
-          style="width: 14vw"
+          style="width: 18vw; margin-right: 4px"
           selectLabel="Enter"
           track-by="apiName"
-          label="label"
-          :loading="dropdownLoading"
+          label="referenceDisplayLabel"
         >
           <template slot="noResult">
             <p class="multi-slot">No results.</p>
           </template>
-          <!-- <template slot="afterList">
-            <p class="multi-slot__more" @click="fieldNextPage">
-              Load More
-              <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+          <template slot="afterList">
+            <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+          </template>
+          <template slot="placeholder">
+            <p class="slot-icon">
+              <img src="@/assets/images/search.svg" alt="" />
+              Insert Value { }
             </p>
-          </template> -->
+          </template>
         </Multiselect>
       </div>
     </div>
@@ -283,9 +285,12 @@ export default {
   computed: {
     editor() {
       return this.$refs['message-body'].quill
-    },
+    }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -506,7 +511,7 @@ export default {
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
+      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
     },
     async updateTemplate(field) {
       this.templateTitleField.validate()
