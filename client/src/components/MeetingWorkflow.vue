@@ -1188,7 +1188,7 @@ a {
   }
 }
 .noupdate-field-section {
-  position: absolute;
+  position: fixed;
   z-index: 7;
   top: 20vh;
   left: 36vw;
@@ -1233,7 +1233,7 @@ a {
   }
 }
 .participant-field-section {
-  position: absolute;
+  position: fixed;
   z-index: 7;
   top: 20vh;
   left: 36vw;
@@ -1277,7 +1277,7 @@ a {
   }
 }
 .add-field-section {
-  position: absolute;
+  position: fixed;
   z-index: 20;
   top: 20vh;
   left: 36vw;
