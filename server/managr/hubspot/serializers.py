@@ -6,6 +6,25 @@ from managr.crm.models import BaseAccount, BaseContact, BaseOpportunity
 
 from .models import HubspotAuthAccount, Company, HubspotContact, Deal, HObjectField
 from managr.organization.models import Organization
+from managr.core.models import User
+
+
+class UserRefSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "first_name",
+            "last_name",
+            "profile_photo",
+        )
+
+    def get_full_name(self, instance):
+        return f"{instance.first_name} {instance.last_name}"
 
 
 class HubspotAuthAccountSerializer(serializers.ModelSerializer):
@@ -93,6 +112,9 @@ class HubspotContactSerializer(serializers.ModelSerializer):
 
 
 class DealSerializer(serializers.ModelSerializer):
+    account_ref = CompanySerializer(source="company", required=False)
+    owner_ref = UserRefSerializer(source="owner", required=False)
+
     class Meta:
         model = BaseOpportunity
         fields = (
@@ -112,6 +134,8 @@ class DealSerializer(serializers.ModelSerializer):
             "contacts",
             "is_stale",
             "secondary_data",
+            "owner_ref",
+            "account_ref",
         )
 
     def _format_date_time_from_api(self, d):
