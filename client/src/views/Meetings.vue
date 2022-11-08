@@ -1396,7 +1396,7 @@ export default {
         this.stagesWithForms = stages
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.resourceFields = this.updateOppForm[0].fieldsRef
-        this.stageGateCopy = stageGateForms[0].fieldsRef
+        this.stageGateCopy = stageGateForms.length ? stageGateForms[0].fieldsRef : []
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef
