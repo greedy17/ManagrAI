@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav id="nav" v-if="userIsLoggedIn && !isOnboarding">
-      <router-link :to="{ name: 'Pipelines' }">
+      <router-link v-if="userCRM !== 'HUBSPOT'" :to="{ name: 'Pipelines' }">
         <div class="logo">
           <img style="height: 40px" src="@/assets/images/logo.png" />
         </div>
@@ -15,7 +15,7 @@
           </div>
         </router-link>
 
-        <router-link exact-active-class="active" :to="{ name: 'Pipelines' }">
+        <router-link v-if="userCRM !== 'HUBSPOT'" exact-active-class="active" :to="{ name: 'Pipelines' }">
           <div class="tooltip">
             <img src="@/assets/images/pipeline.svg" height="16px" alt="" />
             <span class="tooltiptext">Pipeline</span>
@@ -179,6 +179,9 @@ export default {
   computed: {
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
+    },
+    userCRM() {
+      return this.$store.state.user.crm
     },
     routeName() {
       return this.$route.name
