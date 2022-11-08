@@ -971,10 +971,12 @@ export default {
       })
     },
     checkAndClearInterval() {
-      if (this.task.completed == true) {
+      if (this.task.completed) {
         this.stopChecker()
         this.updateCustomFields()
         this.oldIndex = 0
+        this.loaderText = ''
+        this.modalLoading = false
       } else {
         return
       }
@@ -1008,7 +1010,7 @@ export default {
           this.checker = setInterval(() => {
             this.checkTask()
             this.loaderText = this.loaderTextList[this.changeLoaderText()]
-          }, 2000)
+          }, 3000)
         })
       } catch (e) {
         console.log(e)
@@ -1033,8 +1035,6 @@ export default {
     },
     stopChecker() {
       clearInterval(this.checker)
-      this.loaderText = ''
-      this.modalLoading = false
     },
     updateCustomFields() {
       this.customFields = CollectionManager.create({
