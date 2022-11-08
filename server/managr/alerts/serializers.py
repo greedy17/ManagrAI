@@ -3,7 +3,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from managr.salesforce.serializers import SObjectFieldSerializer
 from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
-from managr.salesforce.routes import routes as model_routes
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from . import constants as alert_consts
@@ -11,6 +12,8 @@ from . import models as alert_models
 from copy import copy
 
 logger = logging.getLogger("managr")
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 # REF SERIALIZERS
 ##  SHORTENED SERIALIZERS FOR REF OBJECTS
 def create_configs_for_target(target, template_user, config):
@@ -479,7 +482,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
 
 
 class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
-    sobject_instances = serializers.SerializerMethodField("get_sobject_instances")
+    sobject_instances = serializers.SerializerMethodField("get_crm_instances")
     configs_ref = AlertConfigRefSerializer(source="configs", many=True)
     groups_ref = AlertGroupSerializer(source="groups", many=True)
     message_template_ref = AlertMessageTemplateRefSerializer(source="message_template")
@@ -504,18 +507,19 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
             "sobject_instances",
         )
 
-    def get_sobject_instances(self, instance, *args, **kwargs):
+    def get_crm_instances(self, instance, *args, **kwargs):
         request_user = self.context.get("request").user
 
         configs = instance.configs.all()
         template = instance
         attempts = 1
         while True:
-            sf = request_user.salesforce_account
+            crm_account = request_user.crm_account
+            crm = "salesforce_account" if request_user.crm == "SALESFORCE" else "hubspot_account"
             try:
                 if template.user != request_user:
-                    if hasattr(request_user, "salesforce_account"):
-                        res = sf.adapter_class.execute_alert_query(
+                    if hasattr(request_user, crm):
+                        res = crm_account.adapter_class.execute_alert_query(
                             template.url_str(request_user, configs.first().id),
                             template.resource_type,
                         )
@@ -526,8 +530,8 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                     users = [*users, *config.target_users]
                 res_data = []
                 for user in users:
-                    if hasattr(user, "salesforce_account"):
-                        res = sf.adapter_class.execute_alert_query(
+                    if hasattr(user, "crm_account"):
+                        res = crm_account.adapter_class.execute_alert_query(
                             template.url_str(user, config.id), template.resource_type
                         )
                         res_data.extend([item.integration_id for item in res])
@@ -541,14 +545,16 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                     )
                     break
                 else:
-                    sf.regenerate_token()
+                    crm_account.regenerate_token()
                     attempts += 1
             except SFQueryOffsetError:
                 return logger.warning(
                     f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                 )
-        model = model_routes[template.resource_type]["model"]
+        model = CRM_SWITCHER[request_user.crm][template.resource_type]["model"]
         queryset = model.objects.filter(integration_id__in=res_data)
-        serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
+        serialized = CRM_SWITCHER[request_user.crm][template.resource_type]["serializer"](
+            queryset, many=True
+        )
         secondary_data = [obj["secondary_data"] for obj in serialized.data]
         return secondary_data

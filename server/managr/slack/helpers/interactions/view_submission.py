@@ -2643,9 +2643,9 @@ def process_submit_alert_resource_data(payload, context):
     )
     attempts = 1
     while True:
-        sf = user.salesforce_account
+        crm = user.crm_account
         try:
-            resource = main_form.resource_object.update_in_salesforce(all_form_data)
+            resource = main_form.resource_object.update(all_form_data)
             data = {
                 "view_id": loading_view_data["view"]["id"],
                 "view": {

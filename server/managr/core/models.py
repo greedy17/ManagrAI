@@ -303,7 +303,9 @@ class User(AbstractUser, TimeStampModel):
 
     @property
     def crm_account(self):
-        if self.crm == "SALESFORCE":
+        if self.crm is None:
+            return None
+        elif self.crm == "SALESFORCE":
             return self.salesforce_account
         else:
             return self.hubspot_account

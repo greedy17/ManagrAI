@@ -23,9 +23,12 @@ from managr.slack.helpers.utils import (
 )
 from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
-from managr.salesforce.routes import routes as form_routes
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.alerts.models import AlertInstance
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
 
 def resource_options(crm):

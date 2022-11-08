@@ -315,9 +315,10 @@ class HubspotAuthAccountAdapter:
 
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
+        data = json.dumps(url[1])
         with Client as client:
-            res = client.get(
-                url, headers=hubspot_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            res = client.post(
+                url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
             res = self._handle_response(res)
 
@@ -610,7 +611,6 @@ class DealAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            print(r.json())
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
@@ -643,7 +643,6 @@ class DealAdapter:
                 url,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(user.crm_account.access_token)},
             )
-            print(r.json())
             r = HubspotAuthAccountAdapter._handle_response(r)
             r = DealAdapter.from_api(r["properties"], self.owner)
             return r

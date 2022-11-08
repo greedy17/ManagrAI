@@ -1,4 +1,5 @@
 import pytz
+import time
 import logging
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -12,18 +13,36 @@ from django.utils import timezone
 from managr.alerts.utils.utils import convertToSlackFormat
 from managr.core.models import TimeStampModel
 from managr.core import constants as core_consts
-from managr.salesforce.routes import routes as model_routes
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
 from managr.crm.exceptions import TokenExpired
+from managr.hubspot import constants as hs_consts
 
 # Create your models here.
 
 logger = logging.getLogger("managr")
 
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+
 
 def default_days():
     return [0]
+
+
+HUBSPOT_OPERATOR_CONVERTER = {
+    ">=": "GTE",
+    "<=": "LTE",
+    "<": "LT",
+    ">": "GT",
+    "=": "EQ",
+    "!=": "NE",
+    "CONTAINS": "CONTAINS_TOKEN",
+    "LIKE": "CONTAINS_TOKEN",
+    "STARTSWITH": "CONTAINS_TOKEN",
+    "ENDSWITH": "CONTAINS_TOKEN",
+}
 
 
 class AlertTemplateQuerySet(models.QuerySet):
@@ -62,22 +81,29 @@ class AlertTemplate(TimeStampModel):
 
     def url_str(self, user, config_id):
         """Generates Url Str for request when executing alert"""
-        user_sf = user.salesforce_account if hasattr(user, "salesforce_account") else None
-        operand_groups = [group.query_str(config_id) for group in self.groups.all()]
+        user_crm = user.crm_account
+        if user.crm == "SALESFORCE":
+            operand_groups = [group.sf_query_str(config_id) for group in self.groups.all()]
 
-        operand_groups = f"AND ({' '.join(operand_groups)})"
-        q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
-            user_sf.salesforce_id,
-            self.resource_type,
-            ["Id"],
-            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
-        )
-        return f"{user_sf.instance_url}{q[0]}"
+            operand_groups = f"AND ({' '.join(operand_groups)})"
+            q = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
+                user_crm.salesforce_id,
+                self.resource_type,
+                ["Id"],
+                additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+            )
+            return f"{user_crm.instance_url}{q[0]}"
+        else:
+            operand_groups = [group.hs_query_str(config_id) for group in self.groups.all()]
+            return (
+                hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
+                {"filterGroups": operand_groups},
+            )
 
     def manager_url_str(self, user_list, config_id):
         """Generates Url Str for request when executing alert"""
         user_sf = self.user.salesforce_account if hasattr(self.user, "salesforce_account") else None
-        operand_groups = [group.query_str(config_id) for group in self.groups.all()]
+        operand_groups = [group.sf_query_str(config_id) for group in self.groups.all()]
 
         operand_groups = f"AND ({' '.join(operand_groups)})"
         q = sf_consts.SALESFORCE_MULTIPLE_OWNER_RESOURCE_QUERY_URI(
@@ -161,12 +187,17 @@ class AlertGroup(TimeStampModel):
     class Meta:
         ordering = ["group_order"]
 
-    def query_str(self, config_id):
+    def sf_query_str(self, config_id):
         """returns a grouped qs of operand rows (in ())"""
-        q_s = f"({' '.join([operand.query_str(config_id) for operand in self.operands.all()])})"
+        q_s = f"({' '.join([operand.sf_query_str(config_id) for operand in self.operands.all()])})"
         if self.group_order != 0:
             q_s = f"{self.group_condition} {q_s}"
         return q_s
+
+    def hs_query_str(self, config_id):
+        """returns a grouped qs of operand rows (in ())"""
+        q_s = [operand.hs_query_obj(config_id) for operand in self.operands.all()]
+        return {"filters": q_s}
 
     def delete(self, *args, **kwargs):
         current_item_order = self.group_order
@@ -227,7 +258,7 @@ class AlertOperand(TimeStampModel):
     class Meta:
         ordering = ["operand_order"]
 
-    def query_str(self, config_id):
+    def sf_query_str(self, config_id):
         """gathers different parts of operand and constructs query"""
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
@@ -271,6 +302,67 @@ class AlertOperand(TimeStampModel):
             q_s = (
                 f"{self.operand_identifier} >= {value} AND {self.operand_identifier} <= {end_value}"
             )
+
+        return q_s
+
+    def hs_query_obj(self, config_id):
+        """gathers different parts of operand and constructs query"""
+        # if type is date or date time we need to create a strftime/date
+        value = self.operand_value
+        operator = self.operand_operator
+        if self.data_type == "DATE":
+            # try converting value to int
+            value = int(
+                (
+                    self.group.template.config_run_against_date(config_id)
+                    + timezone.timedelta(days=int(self.operand_value))
+                )
+                # .strftime("%Y-%m-%dT00:00:00Z")
+                .timestamp()
+            )
+        elif self.data_type == "DATETIME":
+            value = int(
+                (
+                    self.group.template.config_run_against_date(config_id)
+                    + timezone.timedelta(days=int(self.operand_value))
+                ).timestamp()
+                # .strftime("%Y-%m-%dT00:00:00Z")
+            )
+        elif self.data_type == "STRING" and self.operand_value != "null":
+
+            # sf requires single quotes for strings only (aka not decimal or date)
+
+            # zero conditional does not get added
+            if self.operand_operator in ["CONTAINS", "STARTSWITH", "ENDSWITH"]:
+                operator = "LIKE"
+                if self.operand_operator == "CONTAINS":
+                    value = f"'*{value}*'"
+                elif self.operand_operator == "STARTSWITH":
+                    value = f"'*{value}'"
+                elif self.operand_operator == "ENDSWITH":
+                    value = f"'{value}*'"
+            else:
+                value = f"'{value}'"
+        q_s = {
+            "value": value,
+            "operator": HUBSPOT_OPERATOR_CONVERTER[operator],
+            "propertyName": self.operand_identifier,
+        }
+        if self.data_type == "DATETIME" and (operator == "=" or operator == "!="):
+            # calulate a boundary for same day
+            end_value = int(
+                self.group.template.config_run_against_date(config_id)
+                + timezone.timedelta(days=int(self.operand_value))
+                .strftime("%Y-%m-%dT11:59:00Z")
+                .timestamp()
+            )
+
+            q_s = {
+                "highValue": end_value,
+                "value": value,
+                "operator": "BETWEEN",
+                "propertyName": self.operand_identifier,
+            }
 
         return q_s
 
@@ -507,7 +599,7 @@ class AlertInstance(TimeStampModel):
     @property
     def resource(self):
         return (
-            model_routes[self.template.resource_type]["model"]
+            CRM_SWITCHER[self.user.crm][self.template.resource_type]["model"]
             .objects.filter(id=self.resource_id)
             .first()
         )

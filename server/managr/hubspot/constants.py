@@ -137,7 +137,11 @@ def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
         "filterGroups": [
             {
                 "filters": [
-                    {"value": filter_value, "propertyName": "name", "operator": "CONTAINS_TOKEN"}
+                    {
+                        "value": f"*{filter_value}*",
+                        "propertyName": "name",
+                        "operator": "CONTAINS_TOKEN",
+                    }
                 ]
             }
         ],

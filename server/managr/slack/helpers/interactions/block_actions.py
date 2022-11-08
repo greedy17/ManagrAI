@@ -51,8 +51,10 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
-from managr.salesforce.routes import routes
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
 
 
@@ -2336,7 +2338,7 @@ def process_show_bulk_update_form(payload, context):
             "resource_id", flat=True
         )
     )
-    model_object = routes[config.template.resource_type]["model"]
+    model_object = CRM_SWITCHER[user.crm][config.template.resource_type]["model"]
     resource_list = model_object.objects.filter(id__in=config_list)
     resource_options = [resource.as_slack_option for resource in resource_list]
     form = user.team.team_forms.filter(
