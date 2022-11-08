@@ -1003,12 +1003,13 @@ export default {
       try {
         this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
-        const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name)
-        this.verboseName = res.verbose_name
-        this.checker = setInterval(() => {
-          this.checkTask()
-          this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        }, 2000)
+        const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
+          this.verboseName = res.verbose_name
+          this.checker = setInterval(() => {
+            this.checkTask()
+            this.loaderText = this.loaderTextList[this.changeLoaderText()]
+          }, 2000)
+        })
       } catch (e) {
         console.log(e)
       }
