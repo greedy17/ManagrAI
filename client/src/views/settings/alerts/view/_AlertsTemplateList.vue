@@ -105,8 +105,8 @@
 
       <div v-if="editing" class="alert_cards">
         <div
-          v-for="(config, i) in filteredConfigs"
-          :key="i"
+          v-for="config in filteredConfigs"
+          :key="config.id"
           class="card"
           v-show="!templateTitles.includes(config.title)"
         >

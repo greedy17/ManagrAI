@@ -4548,7 +4548,8 @@ export default {
             ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
             : this.filters
         }
-        let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filter)
+        const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        let updatedRes = await SObjects.api.getObjectsForWorkflows(objectType, true, filter)
         this.allOpps = updatedRes.results
         this.originalList = updatedRes.results
         if (this.storedFilters.length) {
