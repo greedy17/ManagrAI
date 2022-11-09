@@ -112,12 +112,17 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
 
 
 def emit_gen_next_object_field_sync(
-    user_id, ops_list, for_dev=False, schedule_time=timezone.now(), verbose_name=None
+    user_id, ops_list, for_dev=False, schedule_time=timezone.now(), verbose_name=None, priority=0
 ):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
     if verbose_name:
         return _process_gen_next_object_field_sync(
-            user_id, ops_list, for_dev, schedule=schedule, verbose_name=verbose_name
+            user_id,
+            ops_list,
+            for_dev,
+            schedule=schedule,
+            verbose_name=verbose_name,
+            priority=priority,
         )
     return _process_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule=schedule)
 

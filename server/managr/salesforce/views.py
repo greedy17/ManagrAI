@@ -904,6 +904,7 @@ class SalesforceSObjectViewSet(
             [f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{object}"],
             schedule_time=formatted_time,
             verbose_name=verbose_name,
+            priority=1,
         )
         return Response(data={"verbose_name": task.verbose_name})
 
