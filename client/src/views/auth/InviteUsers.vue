@@ -627,7 +627,6 @@ export default {
       this.pulseLoading = true
       if (!this.newAdmin || !this.newAdmin.id === this.getUser.id) {
         setTimeout(() => {
-          console.log('Please choose a new admin')
           this.$toast('Please choose a new admin', {
             timeout: 2000,
             position: 'top-left',

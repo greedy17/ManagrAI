@@ -266,7 +266,9 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : (stageReferenceOpts[field.apiName] ? stageReferenceOpts[field.apiName] : [])
+                            : stageReferenceOpts[field.apiName]
+                            ? stageReferenceOpts[field.apiName]
+                            : []
                         "
                         @select="
                           setUpdateValidationValues(
@@ -931,7 +933,9 @@
                         :options="
                           field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                             ? allPicklistOptions[field.id]
-                            : (stageReferenceOpts[field.apiName] ? stageReferenceOpts[field.apiName] : [])
+                            : stageReferenceOpts[field.apiName]
+                            ? stageReferenceOpts[field.apiName]
+                            : []
                         "
                         @select="
                           setUpdateValidationValues(
@@ -1979,7 +1983,9 @@
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
-                    : (stageReferenceOpts[field.apiName] ? stageReferenceOpts[field.apiName] : [])
+                    : stageReferenceOpts[field.apiName]
+                    ? stageReferenceOpts[field.apiName]
+                    : []
                 "
                 @select="
                   setUpdateValidationValues(
@@ -3858,7 +3864,6 @@ export default {
         }
       }
       try {
-        console.log('here')
         const formData = {}
         formData[this.oppVal.apiName] = this.oppNewValue
         const res = await SObjects.api
@@ -3887,7 +3892,6 @@ export default {
         }
       }
       try {
-        console.log('here')
         const formData = {}
         formData[this.oppVal.apiName] = this.oppNewValue
         const res = await SObjects.api
@@ -3910,7 +3914,6 @@ export default {
     },
 
     async checkTask() {
-      console.log('at task')
       try {
         this.task = await User.api.checkTasks(this.verboseName)
       } catch (e) {

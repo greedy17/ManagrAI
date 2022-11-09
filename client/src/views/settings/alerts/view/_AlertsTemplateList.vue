@@ -112,7 +112,7 @@
           <div class="card__body">
             <div>
               <h4>
-                {{alert.title}}
+                {{ alert.title }}
               </h4>
               <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
             </div>
@@ -124,7 +124,9 @@
                   <button
                     style="margin-right: 8px"
                     :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                    @click.stop="onRunAlertTemplateNow(alert.id)"
+                    @click.stop="
+                      onRunAlertTemplateNow(alert.id, user.id !== alert.user ? true : false)
+                    "
                     class="img-border"
                   >
                     <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
@@ -140,7 +142,11 @@
                     alt=""
                   />
                 </button>
-                <button v-if="user.id === alert.user" class="img-border" @click="editWorkflow(alert)">
+                <button
+                  class="img-border"
+                  @click="editWorkflow(alert)"
+                  v-if="user.id === alert.user"
+                >
                   <img
                     src="@/assets/images/edit.svg"
                     style="filter: invert(40%)"
@@ -506,9 +512,9 @@ export default {
         })
       }
     },
-    async onRunAlertTemplateNow(id) {
+    async onRunAlertTemplateNow(id, from_workflow) {
       try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
+        await AlertTemplate.api.runAlertTemplateNow(id, from_workflow)
         this.$toast('Workflow initiated', {
           timeout: 2000,
           position: 'top-left',
