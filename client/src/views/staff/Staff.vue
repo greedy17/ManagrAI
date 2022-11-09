@@ -11,70 +11,112 @@
     >
       <div class="modal-container" v-if="modalInfo">
         <div v-if="modalName === 'task'">
-          <h2 class="modal-container__header">{{modalInfo.fields.task_name}}</h2>
+          <h2 class="modal-container__header">{{ modalInfo.fields.task_name }}</h2>
           <div class="modal-container__body">
-            <div class="note-section__body" style="margin-bottom: 1rem;">
+            <div class="note-section__body" style="margin-bottom: 1rem">
               <div>
                 <div class="underline">Task Params:</div>
-                <div class="bottom-margin">{{modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Task Hash:</div>
-                <div class="bottom-margin">{{modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Verbose Name:</div>
-                <div class="bottom-margin">{{modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Priority:</div>
-                <div class="bottom-margin">{{modalInfo.fields.priority || modalInfo.fields.priority === 0 ? modalInfo.fields.priority : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{
+                    modalInfo.fields.priority || modalInfo.fields.priority === 0
+                      ? modalInfo.fields.priority
+                      : 'Null'
+                  }}
+                </div>
               </div>
               <div>
                 <div class="underline">Run At:</div>
-                <div class="bottom-margin">{{modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Repeat:</div>
-                <div class="bottom-margin">{{modalInfo.fields.repeat || modalInfo.fields.repeat === 0 ? modalInfo.fields.repeat : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{
+                    modalInfo.fields.repeat || modalInfo.fields.repeat === 0
+                      ? modalInfo.fields.repeat
+                      : 'Null'
+                  }}
+                </div>
               </div>
               <div>
                 <div class="underline">Repeat Until:</div>
-                <div class="bottom-margin">{{modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Queue:</div>
-                <div class="bottom-margin">{{modalInfo.fields.queue ? modalInfo.fields.queue : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.queue ? modalInfo.fields.queue : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Attempts:</div>
-                <div class="bottom-margin">{{modalInfo.fields.attempts}}</div>
+                <div class="bottom-margin">{{ modalInfo.fields.attempts }}</div>
               </div>
               <div v-if="modalInfo.fields.failed_at">
                 <div>
                   <div class="underline">Failed At:</div>
-                  <div class="bottom-margin">{{modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null'}}</div>
+                  <div class="bottom-margin">
+                    {{ modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null' }}
+                  </div>
                 </div>
                 <div>
                   <div class="underline">Last Error:</div>
-                  <div class="bottom-margin">{{modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null'}}</div>
+                  <div class="bottom-margin">
+                    {{ modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null' }}
+                  </div>
                 </div>
               </div>
               <div>
                 <div class="underline">Locked By:</div>
-                <div class="bottom-margin">{{modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Locked At:</div>
-                <div class="bottom-margin">{{modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{ modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null' }}
+                </div>
               </div>
               <div>
                 <div class="underline">Creator Content Type:</div>
-                <div class="bottom-margin">{{modalInfo.fields.creator_content_type ? modalInfo.fields.creator_content_type : 'Null'}}</div>
+                <div class="bottom-margin">
+                  {{
+                    modalInfo.fields.creator_content_type
+                      ? modalInfo.fields.creator_content_type
+                      : 'Null'
+                  }}
+                </div>
               </div>
               <div>
                 <div class="underline">Creator Object ID:</div>
-                <div>{{modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'}}</div>
+                <div>
+                  {{
+                    modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'
+                  }}
+                </div>
               </div>
             </div>
           </div>
@@ -84,15 +126,16 @@
             <div class="flex-row-spread sticky border-bottom">
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>
-                  {{ modalInfo.form_type }} {{ modalInfo.resource }}
-                </h4>
+                <h4>{{ modalInfo.form_type }} {{ modalInfo.resource }}</h4>
               </div>
             </div>
-            <section class="note-section__body" style="margin-top: 1rem; margin-bottom: 1rem; white-space: normal; padding-left: 20px;">
+            <section
+              class="note-section__body"
+              style="margin-top: 1rem; margin-bottom: 1rem; white-space: normal; padding-left: 20px"
+            >
               <!-- <div>{{modalInfo}}</div> -->
               <div v-for="(field, i) in modalInfo.fields_ref" :key="field.field">
-                <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="margin-top: 0.5rem; margin-bottom: 0.5rem">
                   {{ i + 1 }}.) {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
                 </div>
               </div>
@@ -259,7 +302,9 @@
                 <span class="underline">Role:</span> {{ modalInfo.role }}
                 <span class="underline">Timezone:</span> {{ modalInfo.timezone }}
                 <span class="underline">Activated Managr Configs:</span>
-                {{ modalInfo.activated_managr_configs ? modalInfo.activated_managr_configs : 'None' }}
+                {{
+                  modalInfo.activated_managr_configs ? modalInfo.activated_managr_configs : 'None'
+                }}
               </p>
             </section>
             <section class="note-section">
@@ -361,7 +406,9 @@
               <p class="note-section__body">
                 <span class="underline">Zoom ID:</span>
                 {{
-                  modalInfo.zoom_ref && modalInfo.zoom_ref.zoom_id ? modalInfo.zoom_ref.zoom_id : 'None'
+                  modalInfo.zoom_ref && modalInfo.zoom_ref.zoom_id
+                    ? modalInfo.zoom_ref.zoom_id
+                    : 'None'
                 }}
                 <span class="underline">Timezone:</span>
                 {{
@@ -723,7 +770,9 @@
                 </Multiselect>
               </div>
               <div class="added-collection__body">
-                <button class="green_button" @click="openModal('slackForm', selectedSlackForms)">Go</button>
+                <button class="green_button" @click="openModal('slackForm', selectedSlackForms)">
+                  Go
+                </button>
               </div>
             </div>
             <div class="added-collection">
@@ -799,8 +848,17 @@
       <template v-else>
         <h2>Completed Tasks</h2>
         <div v-for="(task, i) in adminTasks" :key="task.pk">
-          <div :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'" @click="openModal('task', task)">
-            <h4 class="click click_width">{{task.fields.task_name}} ({{formatDateTime(task.fields.run_at)}}, {{getTime(task.fields.run_at)}}) <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{task.fields.last_error ? '[ERROR]' : '[SUCCESS]'}}</span></h4>
+          <div
+            :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
+            @click="openModal('task', task)"
+          >
+            <h4 class="click click_width">
+              {{ task.fields.task_name }} ({{ formatDateTime(task.fields.run_at) }},
+              {{ getTime(task.fields.run_at) }})
+              <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{
+                task.fields.last_error ? '[ERROR]' : '[SUCCESS]'
+              }}</span>
+            </h4>
           </div>
         </div>
       </template>
@@ -937,7 +995,7 @@ export default {
         let res = await User.api.getTasks()
         const tasks = JSON.parse(res.tasks)
         this.adminTasks = tasks
-      } catch(e) {
+      } catch (e) {
         console.log(e)
       }
     },
@@ -992,7 +1050,6 @@ export default {
               timeout: 3000,
             })
           } else {
-            console.log(res['message'])
             this.$toast('Something went wrong. Please try again.', {
               type: 'error',
               timeout: 3000,
