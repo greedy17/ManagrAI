@@ -58,6 +58,7 @@ if settings.USE_HUBSPOT:
         "crm.schemas.deals.read",
         "crm.schemas.deals.write",
         "crm.objects.owners.read",
+        "oauth",
     ]
     URL_SCOPES = " ".join(SCOPES)
     AUTHENTICATION_BODY = lambda code: {
