@@ -194,7 +194,7 @@ class AlertTemplateViewSet(
         obj = self.get_object()
         data = self.request.data
         from_workflow = data.get("from_workflow", False)
-        print(type(from_workflow))
+        print(from_workflow)
         if isinstance(from_workflow, dict):
             config = obj.configs.all().first()
             template = config.template
@@ -245,7 +245,7 @@ class AlertTemplateViewSet(
             queryset = model.objects.filter(integration_id__in=res_data)
             serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
             return Response({"results": serialized.data})
-        elif isinstance(from_workflow, bool):
+        elif isinstance(from_workflow, bool) and from_workflow is True:
             print("here bool")
             config = (
                 obj.configs.all().filter(alert_targets__contains=[self.request.user.id]).first()
