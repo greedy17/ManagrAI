@@ -137,7 +137,7 @@
                     alt=""
                   />
                 </button>
-                <button class="img-border" @click="editWorkflow(alert)">
+                <button v-if="user.id === alert.user" class="img-border" @click="editWorkflow(alert)">
                   <img
                     src="@/assets/images/edit.svg"
                     style="filter: invert(40%)"
