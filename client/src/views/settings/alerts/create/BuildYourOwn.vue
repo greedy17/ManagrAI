@@ -773,7 +773,7 @@ export default {
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
+      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
     },
     onNextPage() {
       this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)

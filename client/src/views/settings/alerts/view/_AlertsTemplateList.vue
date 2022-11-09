@@ -110,9 +110,12 @@
           </div>
 
           <div class="card__body">
-            <h4>
-              {{ alert.title }}
-            </h4>
+            <div>
+              <h4>
+                {{alert.title}}
+              </h4>
+              <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
+            </div>
             <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
 
             <div class="card__body__between">
@@ -1242,5 +1245,10 @@ a {
   color: $dark-green;
   border-bottom: 1px solid $dark-green;
   cursor: pointer;
+}
+.small-text {
+  font-size: 10px;
+  color: $dark-green;
+  margin-top: 4px;
 }
 </style>
