@@ -42,36 +42,42 @@ def generate_edit_contact_form(field, id, value, optional=True):
 def generate_contact_group(index, contact, instance_url, crm):
     # get fields from form and display values based on this form as label value in multi block
     integration_id = contact.get("integration_id")
+    integration_source = contact.get("integration_source")
     # get fields show only these items if they exist in the secondary data as options
     contact_secondary_data = contact.get("secondary_data", {})
+    title_api = "Title" if integration_source == "SALESFORCE" else "jobtitle"
+    first_name_api = "FirstName" if integration_source == "SALESFORCE" else "firstname"
+    last_name_api = "LastName" if integration_source == "SALESFORCE" else "lastname"
+    mobile_api = "MobilePhone" if integration_source == "SALESFORCE" else "mobilephone"
+    phone_api = "Phone" if integration_source == "SALESFORCE" else "phone"
     title = (
-        contact_secondary_data.get("Title")
-        if contact_secondary_data.get("Title", "") and len(contact_secondary_data.get("Title", ""))
+        contact_secondary_data.get(title_api)
+        if contact_secondary_data.get(title_api, "")
+        and len(contact_secondary_data.get(title_api, ""))
         else "N/A"
     )
     first_name = (
-        contact_secondary_data.get("FirstName")
-        if contact_secondary_data.get("FirstName", "")
-        and len(contact_secondary_data.get("FirstName", ""))
+        contact_secondary_data.get(first_name_api)
+        if contact_secondary_data.get(first_name_api, "")
+        and len(contact_secondary_data.get(first_name_api, ""))
         else "N/A"
     )
     last_name = (
-        contact_secondary_data.get("LastName")
-        if contact_secondary_data.get("LastName", "")
-        and len(contact_secondary_data.get("LastName", ""))
+        contact_secondary_data.get(last_name_api)
+        if contact_secondary_data.get(last_name_api, "")
+        and len(contact_secondary_data.get(last_name_api, ""))
         else "N/A :exclamation: *Required*"
     )
 
     email = contact.get("email") if contact.get("email", "") not in ["", None] else "N/A"
     mobile_number = (
-        contact_secondary_data.get("MobilePhone")
-        if contact_secondary_data.get("MobilePhone")
-        and len(contact_secondary_data.get("MobilePhone"))
+        contact_secondary_data.get(mobile_api)
+        if contact_secondary_data.get(mobile_api) and len(contact_secondary_data.get(mobile_api))
         else "N/A"
     )
     phone_number = (
-        contact_secondary_data.get("Phone")
-        if contact_secondary_data.get("Phone") and len(contact_secondary_data.get("Phone"))
+        contact_secondary_data.get(phone_api)
+        if contact_secondary_data.get(phone_api) and len(contact_secondary_data.get(phone_api))
         else "N/A"
     )
 
@@ -337,6 +343,7 @@ def edit_meeting_contacts_block_set(context):
     # if it already has an existing form it will be used
     user = workflow.user
     form_id = contact.get("_form")
+    print(form_id)
     if form_id in ["", None]:
         form_type = (
             slack_const.FORM_TYPE_UPDATE
@@ -356,8 +363,8 @@ def edit_meeting_contacts_block_set(context):
                 user=user, template=template, workflow=workflow
             )
     else:
-        slack_form = OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
 
+        slack_form = OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
     if not slack_form:
         return [
             block_builders.simple_section(
@@ -365,7 +372,7 @@ def edit_meeting_contacts_block_set(context):
             )
         ]
 
-    if not len(slack_form.template.fields.all()):
+    if not len(slack_form.template.custom_fields.all()):
         logger.info(
             f"instance id: {str(slack_form.id)},instance template id: {str(slack_form.template.id)}"
         )
@@ -379,6 +386,7 @@ def edit_meeting_contacts_block_set(context):
         ]
     else:
         slack_form = slack_form.generate_form(contact["secondary_data"])
+        print(slack_form)
         return slack_form
 
 

@@ -218,8 +218,9 @@ def process_zoom_meeting_data(payload, context):
         workflow.operations_list = ops
     workflow.operations_list = ops
     ts, channel = workflow.slack_interaction.split("|")
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+        *get_block_set("loading", {"message": f":rocket: We are saving your data to {crm}..."}),
     ]
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)

@@ -230,6 +230,7 @@ def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPE
 
 @processor()
 def process_edit_meeting_contact(payload, context):
+    print(context)
     trigger_id = payload["trigger_id"]
     view = payload["view"]
     view_id = view["id"]
