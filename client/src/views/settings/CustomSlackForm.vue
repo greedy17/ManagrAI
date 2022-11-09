@@ -972,12 +972,16 @@ export default {
     },
     checkAndClearInterval() {
       if (this.task.completed) {
-        this.stopChecker()
+        // this.stopChecker()
         this.updateCustomFields()
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
       } else {
+        setTimeout(function() {
+          this.checkTask()
+          this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        }.bind(this), 2000)
         return
       }
     },
@@ -986,16 +990,16 @@ export default {
     },
     closeCustomModal() {
       this.customObjectModal = false
-      if (this.selectedCustomObject) {
-        this.selectedCustomObject = null
-        this.formFields = CollectionManager.create({
-          ModelClass: SObjectField,
-          pagination: { size: 200 },
-          filters: {
-            salesforceObject: this.customResource,
-          },
-        })
-      }
+      // if (this.selectedCustomObject) {
+      //   this.selectedCustomObject = null
+      //   this.formFields = CollectionManager.create({
+      //     ModelClass: SObjectField,
+      //     pagination: { size: 200 },
+      //     filters: {
+      //       salesforceObject: this.customResource,
+      //     },
+      //   })
+      // }
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1007,10 +1011,10 @@ export default {
         this.loaderText = this.loaderTextList[0]
         const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
           this.verboseName = res.verbose_name
-          this.checker = setInterval(() => {
+          setTimeout(function() {
             this.checkTask()
             this.loaderText = this.loaderTextList[this.changeLoaderText()]
-          }, 3000)
+          }.bind(this), 2000)
         })
       } catch (e) {
         console.log(e)
