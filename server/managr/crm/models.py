@@ -61,8 +61,9 @@ class BaseAccount(TimeStampModel, IntegrationModel):
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
-        data["owner"] = str(self.owner.id)
-        return adapters[self.integration_source]["Account"](**data)
+        data["owner"] = str(self.owner.id) if self.owner else None
+        resource = "Account" if self.integration_source == "Salesforce" else "Company"
+        return adapters[self.integration_source][resource](**data)
 
     def get_current_values(self):
         return self.adapter_class.get_current_values()
@@ -477,7 +478,10 @@ class ObjectField(TimeStampModel, IntegrationModel):
 
         elif self.data_type == "Date":
             if self.user.crm == "HUBSPOT" and value is not None:
-                date_value = str(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").date())
+                try:
+                    date_value = str(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").date())
+                except ValueError:
+                    date_value = value
             else:
                 date_value = value
             return block_builders.datepicker(

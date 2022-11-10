@@ -343,7 +343,6 @@ def edit_meeting_contacts_block_set(context):
     # if it already has an existing form it will be used
     user = workflow.user
     form_id = contact.get("_form")
-    print(form_id)
     if form_id in ["", None]:
         form_type = (
             slack_const.FORM_TYPE_UPDATE
@@ -386,7 +385,6 @@ def edit_meeting_contacts_block_set(context):
         ]
     else:
         slack_form = slack_form.generate_form(contact["secondary_data"])
-        print(slack_form)
         return slack_form
 
 

@@ -437,9 +437,13 @@ def choose_opportunity_block_set(context):
 def actions_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
-    options = []
+    update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
+    options = [block_builders.option(update_label, "UPDATE_RESOURCE")]
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
+    if user.crm == "SALESFORCE":
+        for action in slack_const.SALESFORCE_ACTIONS:
+            options.append(block_builders.option(action[1], action[0]))
     if hasattr(user, "outreach_account"):
         options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
     if hasattr(user, "salesloft_account"):

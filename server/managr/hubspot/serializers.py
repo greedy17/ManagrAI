@@ -86,9 +86,9 @@ class HubspotContactSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
         owner = data.get("external_owner", None)
-        company = data.get("external_company", None)
-        if not data.get("external_company", None):
-            data.update({"external_company": ""})
+        company = data.get("external_account", None)
+        if not data.get("external_account", None):
+            data.update({"external_account": ""})
         if not data.get("external_owner", None):
             data.update({"external_owner": ""})
         if not data.get("email", None):
@@ -104,7 +104,7 @@ class HubspotContactSerializer(serializers.ModelSerializer):
                 integration_id=company, organization__users__id=imported_by
             ).first()
             acct = acct.id if acct else acct
-            data.update({"company": acct})
+            data.update({"account": acct})
 
         # remove contacts from validation
         internal_data = super().to_internal_value(data)

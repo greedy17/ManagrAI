@@ -841,7 +841,6 @@ def process_digest_attach_resource(payload, context):
 
 @processor()
 def process_update_meeting_contact(payload, context):
-    print(context)
     state = payload["view"]["state"]["values"]
     type = context.get("type", None)
     if type:
