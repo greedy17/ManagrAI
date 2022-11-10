@@ -366,7 +366,6 @@ export default {
       let modelClass = this.selectedIntegrationSwitcher
       try {
         const res = await modelClass.api.getAuthLink()
-        console.log(res)
         if (res.link) {
           window.location.href = res.link
         }

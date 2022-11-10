@@ -110,9 +110,12 @@
           </div>
 
           <div class="card__body">
-            <h4>
-              {{ alert.title }}
-            </h4>
+            <div>
+              <h4>
+                {{ alert.title }}
+              </h4>
+              <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
+            </div>
             <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
 
             <div class="card__body__between">
@@ -121,7 +124,9 @@
                   <button
                     style="margin-right: 8px"
                     :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                    @click.stop="onRunAlertTemplateNow(alert.id)"
+                    @click.stop="
+                      onRunAlertTemplateNow(alert.id, user.id !== alert.user ? true : false)
+                    "
                     class="img-border"
                   >
                     <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
@@ -137,7 +142,11 @@
                     alt=""
                   />
                 </button>
-                <button class="img-border" @click="editWorkflow(alert)">
+                <button
+                  class="img-border"
+                  @click="editWorkflow(alert)"
+                  v-if="user.id === alert.user"
+                >
                   <img
                     src="@/assets/images/edit.svg"
                     style="filter: invert(40%)"
@@ -503,9 +512,9 @@ export default {
         })
       }
     },
-    async onRunAlertTemplateNow(id) {
+    async onRunAlertTemplateNow(id, from_workflow) {
       try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
+        await AlertTemplate.api.runAlertTemplateNow(id, from_workflow)
         this.$toast('Workflow initiated', {
           timeout: 2000,
           position: 'top-left',
@@ -1242,5 +1251,10 @@ a {
   color: $dark-green;
   border-bottom: 1px solid $dark-green;
   cursor: pointer;
+}
+.small-text {
+  font-size: 10px;
+  color: $dark-green;
+  margin-top: 4px;
 }
 </style>
