@@ -970,7 +970,6 @@ export default {
       })
     },
     checkAndClearInterval() {
-      console.log('this.task', this.task)
       if (this.task.completed) {
         this.stopChecker()
         this.updateCustomFields()
@@ -1042,7 +1041,6 @@ export default {
       return newIndex
     },
     stopChecker() {
-      console.log('checker', this.checker, this.$store.state.customObject)
       clearInterval(this.$store.state.customObject.checker)
     },
     updateCustomFields() {
