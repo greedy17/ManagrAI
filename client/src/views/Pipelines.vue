@@ -2177,7 +2177,7 @@
       </div>
       <div style="margin-top: 8px"></div>
       <!-- <div class="results"></div> -->
-      <section v-if="!loadingWorkflows" class="table-section">
+      <section v-if="!loadingWorkflows" class="table-section" @click="test(allOpps)">
         <div style="position: relative" v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
             :oppFields="oppFields"
@@ -3125,30 +3125,33 @@ export default {
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        }
-        if (this.storedFilters.length && !this.selectedWorkflow) {
-          this.storedFilters[3].reversed
-            ? this.sortOppsReverse(
-                this.storedFilters[0],
-                this.storedFilters[1],
-                this.storedFilters[2],
-              )
-            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        setTimeout(() => {
+          if (this.selectedWorkflow) {
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+          console.log('some stored filters', this.storedFilters)
+          if (this.storedFilters.length && !this.selectedWorkflow) {
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
@@ -3159,10 +3162,11 @@ export default {
         })
       } finally {
         this.formData = {}
+        console.log('allOpps down here', this.allOpps)
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
-        }, 750)
+        }, 1500)
       }
     },
     setOpps() {
@@ -3405,11 +3409,13 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          console.log('some data, delightful', this.allOpps)
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
+          console.log('some data after, delightful', this.allOpps)
         } else if (apiName.includes('__c') && dT === 'TextArea') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
@@ -3427,6 +3433,7 @@ export default {
 
       let custom = false
       this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
+      console.log('should be final 1', this.allOpps)
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3489,11 +3496,13 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          console.log('some data', this.allOpps)
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
+          console.log('allOpps after', this.allOpps)
         } else if (apiName.includes('__c') && dT === 'TextArea') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
@@ -3511,6 +3520,7 @@ export default {
 
       let custom = false
       this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
+      console.log('should be final 2', this.allOpps)
     },
     selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
@@ -3999,18 +4009,22 @@ export default {
         } else {
           this.getFilteredOpps()
         }
-        if (this.storedFilters.length) {
-          this.storedFilters[3].reversed
-            ? this.sortOppsReverse(
-                this.storedFilters[0],
-                this.storedFilters[1],
-                this.storedFilters[2],
-              )
-            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-        }
-        if (this.activeFilters.length) {
-          this.getFilteredObjects()
-        }
+        setTimeout(() => {
+          console.log('this.storedFilters', this.storedFilters)
+          if (this.storedFilters.length) {
+            console.log('this.storedFilters', this.storedFilters)
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.activeFilters.length) {
+            this.getFilteredObjects()
+          }
+        }, 2000)
       } catch (e) {
         this.$toast('Error updating Opporunity', {
           timeout: 2000,
@@ -4098,24 +4112,36 @@ export default {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
 
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        }
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        setTimeout(() => {
+          if (this.storedFilters.length) {
+            console.log('this.storedFilters', this.storedFilters)
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.selectedWorkflow) {
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+          if (this.activeFilters.length) {
+            this.getFilteredObjects(this.updateFilterValue)
+          }
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+      }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
@@ -4229,25 +4255,36 @@ export default {
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
-
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        }
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        setTimeout(() => {
+          if (this.storedFilters.length) {
+            console.log('this.storedFilters', this.storedFilters)
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.selectedWorkflow) {
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+          if (this.activeFilters.length) {
+            this.getFilteredObjects(this.updateFilterValue)
+          }
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+      }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
