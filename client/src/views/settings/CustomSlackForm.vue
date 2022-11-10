@@ -51,7 +51,7 @@
                     </p>
                   </template>
                 </Multiselect>
-                <div v-if="selectedCustomObject" class="field-section">
+                <!-- <div v-if="selectedCustomObject" class="field-section">
                   <div class="search-bar">
                     <img
                       src="@/assets/images/search.svg"
@@ -78,7 +78,7 @@
                       </p>
                     </div>
                   </div>
-                </div>
+                </div> -->
                 <!-- <div class="flex-end-opp">
                   <div v-if="true" style="display: flex; align-items: center">
                     <button class="add-button" @click="() => null">
@@ -414,8 +414,8 @@ export default {
       currentlySelectedForm: null,
       customObjects: [],
       verboseName: '',
-      checker: null,
-      task: null,
+      checker: this.$store.state.customObject.checker,
+      task: this.$store.state.customObject.task,
       oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...'],
       selectedCustomObject: null,
@@ -483,6 +483,7 @@ export default {
       formChange: false,
       formStages: [],
       stages: [],
+      timeout: null,
       storedModalFunction: () => null,
       noteTitle: {
         _fields: {
@@ -678,7 +679,7 @@ export default {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
     task: 'checkAndClearInterval',
-    customFields: 'watcherCustomFields',
+    getTask: 'checkAndClearInterval',
     customResource: 'watcherCustomResource',
     formFields: 'watcherCustomResource',
     customForm: {
@@ -889,13 +890,6 @@ export default {
     filteredFields() {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
-    COfilteredFields() {
-      return this.customFields.list
-        .filter((field) =>
-          field.referenceDisplayLabel.toLowerCase().includes(this.COfilterText.toLowerCase()),
-        )
-        .filter((field) => !this.addedFieldNames.includes(field.apiName))
-    },
     currentFields() {
       return this.customForm ? this.customForm.fields : []
     },
@@ -928,9 +922,14 @@ export default {
     userHasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
+    getTask() {
+      return this.$store.state.customObject.task
+    },
   },
   async created() {
     try {
+      this.task = this.$store.state.customObject.task
+      this.checker = this.$store.state.customObject.checker
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       await this.listPicklists({
@@ -971,17 +970,18 @@ export default {
       })
     },
     checkAndClearInterval() {
+      console.log('this.task', this.task)
       if (this.task.completed) {
-        // this.stopChecker()
+        this.stopChecker()
         this.updateCustomFields()
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
       } else {
-        setTimeout(function() {
-          this.checkTask()
-          this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        }.bind(this), 2000)
+        // this.timeout = setTimeout(function() {
+        //   this.checkTask()
+        //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        // }.bind(this), 2000)
         return
       }
     },
@@ -990,16 +990,16 @@ export default {
     },
     closeCustomModal() {
       this.customObjectModal = false
-      // if (this.selectedCustomObject) {
-      //   this.selectedCustomObject = null
-      //   this.formFields = CollectionManager.create({
-      //     ModelClass: SObjectField,
-      //     pagination: { size: 200 },
-      //     filters: {
-      //       salesforceObject: this.customResource,
-      //     },
-      //   })
-      // }
+      if (this.selectedCustomObject) {
+        this.selectedCustomObject = null
+        this.formFields = CollectionManager.create({
+          ModelClass: SObjectField,
+          pagination: { size: 200 },
+          filters: {
+            salesforceObject: this.customResource,
+          },
+        })
+      }
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1009,19 +1009,23 @@ export default {
       try {
         this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
-        const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
-          this.verboseName = res.verbose_name
-          setTimeout(function() {
-            this.checkTask()
-            this.loaderText = this.loaderTextList[this.changeLoaderText()]
-          }.bind(this), 2000)
-        })
+        setTimeout(() => {
+          this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+        }, 400)
+        // const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
+        //   this.verboseName = res.verbose_name
+        //   // this.timeout = setTimeout(function() {
+        //   //   this.checkTask()
+        //   //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        //   // }.bind(this), 2000)
+        // })
       } catch (e) {
         console.log(e)
       }
     },
     async checkTask() {
       try {
+        clearTimeout(this.timeout)
         this.task = await User.api.checkTasks(this.verboseName)
       } catch (e) {
         console.log(e)
@@ -1038,26 +1042,15 @@ export default {
       return newIndex
     },
     stopChecker() {
-      clearInterval(this.checker)
+      console.log('checker', this.checker, this.$store.state.customObject)
+      clearInterval(this.$store.state.customObject.checker)
     },
     updateCustomFields() {
-      this.customFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
-        filters: {
-          salesforceObject: this.selectedCustomObjectName,
-        },
-      })
-
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
         this.newResource = this.selectedCustomObjectName
       }
       this.closeCustomModal()
-    },
-    watcherCustomFields() {
-      this.customFields.refresh()
-      this.formFields.refresh()
     },
     watcherCustomResource() {
       this.formFields.refresh()
@@ -1121,7 +1114,6 @@ export default {
     },
     setCustomForm() {
       this.newCustomForm = this.selectedForm
-      // work here
       this.customResource =
         this.newCustomForm && this.newCustomForm.customObject
           ? this.newCustomForm.customObject
