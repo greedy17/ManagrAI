@@ -111,7 +111,7 @@ def HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource):
 def HUBSPOT_ASSOCIATIONS_CREATE_URI(
     associate_type, associate_id, to_object, to_object_id, assocation_id
 ):
-    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{associate_type}/{associate_id}/associations/{to_object}/{to_object_id}/{assocation_id}"
+    return f"{BASE_URL}/crm/v4/objects/{associate_type}/{associate_id}/associations/{to_object}/{to_object_id}/{assocation_id}"
 
 
 def HUBSPOT_OBJECTS_URI(

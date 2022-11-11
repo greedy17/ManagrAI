@@ -136,9 +136,11 @@ class HubspotAuthAccountAdapter:
         url = hubspot_consts.HUBSPOT_ASSOCIATIONS_CREATE_URI(
             associate_type, associate_id, to_object, to_object_id, association_id
         )
+        print(url)
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         with Client as client:
             res = client.put(url, headers=headers,)
+            print(res.json())
             return self._handle_response(res)
 
     def get_associated_resource(self, resource, associated_resource, resource_id):

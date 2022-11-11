@@ -358,6 +358,9 @@ def _process_add_products_to_hs(workflow_id, non_meeting=False, *args):
     return res
 
 
+CALL_ASSOCIATIONS = {"company": 8, "deal": 212, "contact": 10}
+
+
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
 def _process_add_call_to_hs(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -394,7 +397,7 @@ def _process_add_call_to_hs(workflow_id, *args):
                 meeting_id,
                 workflow.resource_type.lower(),
                 workflow.resource.integration_id,
-                "212",
+                CALL_ASSOCIATIONS[workflow.resource_type.lower()],
             )
             attempts = 1
             break
