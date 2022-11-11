@@ -543,7 +543,7 @@ export default {
     },
     setDefaultChannel() {
       this.directToUsers
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = ['default'])
         : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
     },
     positiveDay(num) {
@@ -624,7 +624,7 @@ export default {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = [res.channel.id]
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -844,52 +844,6 @@ export default {
       setTimeout(() => {
         this.dropdownLoading = false
       }, 1000)
-    },
-    setOldAlertValues() {
-      if (this.oldAlert) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          this.oldAlert.configsRef[0].recipientType
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-          this.oldAlert.configsRef[0].recipients
-        this.alertTemplateForm.field.resourceType.value = this.oldAlert.resourceType
-        this.alertTemplateForm.field.title.value = this.oldAlert.title
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-          this.oldAlert.configsRef[0].recurrenceDay
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value =
-          this.oldAlert.configsRef[0].recurrenceDays
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-          this.oldAlert.configsRef[0].alertTargetsRef.map((target) => target.value)
-        this.alertTemplateForm.field.alertMessages.groups[0].field.body =
-          this.oldAlert.messageTemplateRef.body
-
-        // for (let i = 0; i < this.oldAlert.groupsRef.length; i++) {
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandCondition.value =
-        //     this.oldAlert.groupsRef[i].operandsRef[i].operandCondition
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandIdentifier.value =
-        //     this.oldAlert.groupsRef[i].operandsRef[i].operandIdentifier
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandOrder.value = this.oldAlert.groupsRef[i].operandsRef[i].operandOrder
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandType.value = this.oldAlert.groupsRef[i].operandsRef[i].operandType
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandOperator.value = this.oldAlert.groupsRef[i].operandsRef[i].operandOperator
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandValue.value = this.oldAlert.groupsRef[i].operandsRef[i].operandValue
-        // }
-      }
     },
   },
   computed: {

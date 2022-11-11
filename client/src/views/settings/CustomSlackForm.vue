@@ -970,7 +970,7 @@ export default {
       })
     },
     checkAndClearInterval() {
-      if (this.task.completed) {
+      if (this.task && this.task.completed) {
         this.stopChecker()
         this.updateCustomFields()
         this.oldIndex = 0
