@@ -306,7 +306,7 @@ export default {
       this.form.field.alertTargets.value = mappedIds
     },
     setRecipient(n) {
-      this.form.field.recipients.value = n.id
+      this.form.field.recipients.value = [n.id]
     },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
@@ -336,7 +336,7 @@ export default {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.form.field._recipients.value = res.channel
-        this.form.field.recipients.value = res.channel.id
+        this.form.field.recipients.value = [res.channel.id]
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)

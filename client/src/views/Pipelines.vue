@@ -3129,30 +3129,32 @@ export default {
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        }
-        if (this.storedFilters.length && !this.selectedWorkflow) {
-          this.storedFilters[3].reversed
-            ? this.sortOppsReverse(
-                this.storedFilters[0],
-                this.storedFilters[1],
-                this.storedFilters[2],
-              )
-            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        setTimeout(() => {
+          if (this.selectedWorkflow) {
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+          if (this.storedFilters.length && !this.selectedWorkflow) {
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
@@ -3166,7 +3168,7 @@ export default {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
-        }, 750)
+        }, 1500)
       }
     },
     setOpps() {
@@ -3878,7 +3880,6 @@ export default {
             resource_ids: this.primaryCheckList,
           })
           .then((res) => {
-            console.log(res)
             this.verboseName = res.verbose_name
             this.checker = setInterval(() => {
               this.checkTask()
@@ -3906,7 +3907,6 @@ export default {
             resource_ids: this.workflowCheckList,
           })
           .then((res) => {
-            console.log(res)
             this.verboseName = res.verbose_name
             this.checker = setInterval(() => {
               this.checkTask()
@@ -4003,18 +4003,20 @@ export default {
         } else {
           this.getFilteredOpps()
         }
-        if (this.storedFilters.length) {
-          this.storedFilters[3].reversed
-            ? this.sortOppsReverse(
-                this.storedFilters[0],
-                this.storedFilters[1],
-                this.storedFilters[2],
-              )
-            : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-        }
-        if (this.activeFilters.length) {
-          this.getFilteredObjects()
-        }
+        setTimeout(() => {
+          if (this.storedFilters.length) {
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.activeFilters.length) {
+            this.getFilteredObjects()
+          }
+        }, 2000)
       } catch (e) {
         this.$toast('Error updating Opporunity', {
           timeout: 2000,
@@ -4102,24 +4104,35 @@ export default {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
 
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        }
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        setTimeout(() => {
+          if (this.storedFilters.length) {
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.selectedWorkflow) {
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+          if (this.activeFilters.length) {
+            this.getFilteredObjects(this.updateFilterValue)
+          }
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
@@ -4233,25 +4246,35 @@ export default {
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
-
-        if (this.selectedWorkflow) {
-          this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
-        }
-        if (this.activeFilters.length) {
-          this.getFilteredObjects(this.updateFilterValue)
-        }
-        if (this.currentList === 'Closing this month') {
-          this.stillThisMonth()
-        } else if (this.currentList === 'Closing next month') {
-          this.stillNextMonth()
-        }
-        this.$toast('Salesforce Update Successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        setTimeout(() => {
+          if (this.storedFilters.length) {
+            this.storedFilters[3].reversed
+              ? this.sortOppsReverse(
+                  this.storedFilters[0],
+                  this.storedFilters[1],
+                  this.storedFilters[2],
+                )
+              : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
+          }
+          if (this.selectedWorkflow) {
+            this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
+          }
+          if (this.activeFilters.length) {
+            this.getFilteredObjects(this.updateFilterValue)
+          }
+          if (this.currentList === 'Closing this month') {
+            this.stillThisMonth()
+          } else if (this.currentList === 'Closing next month') {
+            this.stillNextMonth()
+          }
+          this.$toast('Salesforce Update Successful', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,

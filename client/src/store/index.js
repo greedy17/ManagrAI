@@ -29,6 +29,11 @@ const state = {
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
+  customObject: {
+    task: null,
+    verboseName: null,
+    checker: null,
+  },
 }
 
 const mutations = {
@@ -64,7 +69,10 @@ const mutations = {
   },
   SAVE_API_PICKLISTS(state, apiPicklistOptions) {
     state.apiPicklistOptions = apiPicklistOptions;
-  }
+  },
+  UPDATE_CUSTOM_OBJECT: (state, payload) => {
+    state.customObject = payload
+  },
 
 }
 
@@ -141,6 +149,28 @@ const actions = {
     } finally {
 
       commit('SAVE_API_PICKLISTS', obj)
+    }
+  },
+  async checkTask({ commit }, vbName) {
+    try {
+      const task = await User.api.checkTasks(vbName)
+      commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task})
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async setCustomObject({ commit, dispatch }, name) {
+    try {
+      await SObjects.api.getCustomObjectFields(name).then((res) => {
+        const vbName = res.verbose_name
+        state.customObject.checker = setInterval(() => {
+          dispatch('checkTask', vbName)
+          // this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        }, 2000)
+        commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task: null})
+      })
+    } catch (e) {
+      console.log(e)
     }
   },
   updateUser({ commit }, payload) {

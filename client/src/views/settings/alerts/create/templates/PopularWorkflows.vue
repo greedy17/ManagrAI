@@ -518,7 +518,7 @@ export default {
     test() {},
     setDefaultChannel() {
       this.directToUsers
-        ? (this.config.newConfigs[0].recipients = 'default')
+        ? (this.config.newConfigs[0].recipients = ['default'])
         : (this.config.newConfigs[0].recipients = null)
     },
     verifySubmit() {
@@ -581,7 +581,7 @@ export default {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.config.newConfigs[0].recipients = res.channel.id
+        this.config.newConfigs[0].recipients = [res.channel.id]
         this.channelCreated = !this.channelCreated
       } else {
         this.channelName = ''

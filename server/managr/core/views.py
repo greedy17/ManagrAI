@@ -876,6 +876,8 @@ def get_task_status(request):
                 data = {"completed": True}
         except CompletedTask.DoesNotExist:
             data = {"completed": False}
+        except Exception as e:
+            logger.exception(f"Uncaught exception on task status: {e}")
     logger.info(f"Task status for: {verbose_name}, {data}")
     return Response(data=data)
 

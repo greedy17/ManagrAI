@@ -99,6 +99,14 @@
                     </div>
                   </div>
                 </div> -->
+                <!-- <div class="flex-end-opp">
+                  <div v-if="true" style="display: flex; align-items: center">
+                    <button class="add-button" @click="() => null">
+                      Save
+                    </button>
+                    <p @click="toggleCustomObjectModal" class="cancel">Cancel</p>
+                  </div>
+                </div> -->
               </div>
             </section>
           </div>
@@ -454,8 +462,8 @@ export default {
       currentlySelectedForm: null,
       customObjects: [],
       verboseName: '',
-      checker: null,
-      task: null,
+      // checker: this.$store.state.customObject.checker,
+      // task: this.$store.state.customObject.task,
       oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...'],
       selectedCustomObject: null,
@@ -523,6 +531,7 @@ export default {
       formChange: false,
       formStages: [],
       stages: [],
+      timeout: null,
       storedModalFunction: () => null,
       noteTitle: {
         model: 'crm.ObjectField',
@@ -760,7 +769,7 @@ export default {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
     task: 'checkAndClearInterval',
-    customFields: 'watcherCustomFields',
+    getTask: 'checkAndClearInterval',
     customResource: 'watcherCustomResource',
     formFields: 'watcherCustomResource',
     customForm: {
@@ -1033,6 +1042,12 @@ export default {
     userCRM() {
       return this.$store.state.user.crm
     },
+    task() {
+      return this.$store.state.customObject.task
+    },
+    checker() {
+      return this.$store.state.customObject.task
+    },
   },
   async created() {
     try {
@@ -1091,20 +1106,17 @@ export default {
       })
     },
     checkAndClearInterval() {
-      if (this.task.completed) {
-        // this.stopChecker()
+      if (this.task && this.task.completed) {
+        this.stopChecker()
         this.updateCustomFields()
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
       } else {
-        setTimeout(
-          function () {
-            this.checkTask()
-            this.loaderText = this.loaderTextList[this.changeLoaderText()]
-          }.bind(this),
-          2000,
-        )
+        // this.timeout = setTimeout(function() {
+        //   this.checkTask()
+        //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        // }.bind(this), 2000)
         return
       }
     },
@@ -1132,24 +1144,23 @@ export default {
       try {
         this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
-        const res = await SObjects.api
-          .getCustomObjectFields(this.selectedCustomObject.name)
-          .then((res) => {
-            this.verboseName = res.verbose_name
-            setTimeout(
-              function () {
-                this.checkTask()
-                this.loaderText = this.loaderTextList[this.changeLoaderText()]
-              }.bind(this),
-              2000,
-            )
-          })
+        setTimeout(() => {
+          this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+        }, 400)
+        // const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
+        //   this.verboseName = res.verbose_name
+        //   // this.timeout = setTimeout(function() {
+        //   //   this.checkTask()
+        //   //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        //   // }.bind(this), 2000)
+        // })
       } catch (e) {
         console.log(e)
       }
     },
     async checkTask() {
       try {
+        clearTimeout(this.timeout)
         this.task = await User.api.checkTasks(this.verboseName)
       } catch (e) {
         console.log(e)
@@ -1166,26 +1177,14 @@ export default {
       return newIndex
     },
     stopChecker() {
-      clearInterval(this.checker)
+      clearInterval(this.$store.state.customObject.checker)
     },
     updateCustomFields() {
-      this.customFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
-        filters: {
-          salesforceObject: this.selectedCustomObjectName,
-        },
-      })
-
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
         this.newResource = this.selectedCustomObjectName
       }
       this.closeCustomModal()
-    },
-    watcherCustomFields() {
-      this.customFields.refresh()
-      this.formFields.refresh()
     },
     watcherCustomResource() {
       this.formFields.refresh()
@@ -1249,7 +1248,6 @@ export default {
     },
     setCustomForm() {
       this.newCustomForm = this.selectedForm
-      // work here
       this.customResource =
         this.newCustomForm && this.newCustomForm.customObject
           ? this.newCustomForm.customObject

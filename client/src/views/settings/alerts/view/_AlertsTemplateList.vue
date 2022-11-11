@@ -167,7 +167,7 @@
           </div>
         </div>
 
-        <div :key="i" v-for="(alert, i) in templates.list" class="card">
+        <div :key="i" v-for="(alert, i) in leaderTemplatesFirst" class="card">
           <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -637,6 +637,15 @@ export default {
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
+    },
+    leaderTemplatesFirst() {
+      const originalList = this.templates.list
+      const leaders = []
+      const own = []
+      for (let i = 0; i < originalList.length; i++) {
+        this.user.id !== originalList[i].user ? leaders.push(originalList[i]) : own.push(originalList[i])
+      }
+      return [...leaders, ...own]
     },
   },
 }
