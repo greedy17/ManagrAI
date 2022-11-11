@@ -795,7 +795,7 @@ export default {
                 if (
                   altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
                   altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
                   altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
                 ) {
                   altField.includeInRecap = true
@@ -809,7 +809,7 @@ export default {
               return (
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
                 field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
                 field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
               )
             })
@@ -836,14 +836,14 @@ export default {
             ) {
               let fieldsToAdd = [this.noteTitle, this.noteSubject]
               let copyArray = this.addedFields
-              fieldsToAdd = fieldsToAdd.concat(copyArray)
+              fieldsToAdd = Array.from(new Set(fieldsToAdd.concat(copyArray)))
               this.addedFields = fieldsToAdd.map((field, i) => {
                 let altField = { ...field }
                 altField.order = i
                 if (
                   altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
                   altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
-                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
                   altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
                 ) {
                   altField.includeInRecap = true
@@ -857,7 +857,7 @@ export default {
               return (
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
                 field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
-                field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
                 field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
               )
             })
@@ -1082,10 +1082,10 @@ export default {
     },
     searchFields() {
       this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 200 },
         filters: {
-          salesforceObject: this.newResource,
+          crmObject: this.newResource,
           search: this.filterText,
         },
       })
@@ -1582,7 +1582,7 @@ export default {
       // if it exists in the current fields add it to remove field
 
       if (~this.currentFields.findIndex((f) => f == field.id)) {
-        this.removedFields = [this.removedFields, field]
+        this.removedFields = [...this.removedFields, field]
       }
       this.formChange = true
     },
@@ -1612,10 +1612,10 @@ export default {
       })
 
       if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
-        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
+        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false || currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
           let fieldsToAdd = [this.noteTitle, this.noteSubject]
           let copyArray = this.addedFields
-          this.addedFields = fieldsToAdd.concat(copyArray)
+          this.addedFields = Array.from(new Set(fieldsToAdd.concat(copyArray)))
         }
       }
 
@@ -1624,7 +1624,9 @@ export default {
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       if (
         this.customResource !== 'Opportunity' &&
+        this.customResource !== 'Deal' &&
         this.customResource !== 'Lead' &&
+        this.customResource !== 'Company' &&
         this.customResource !== 'Contact' &&
         this.customResource !== 'Account'
       ) {
@@ -1641,7 +1643,6 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
 
-          this.$router.go()
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -1650,7 +1651,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            this.$router.go()
+            // this.$router.go()
           }, 300)
         })
         .finally(() => {
