@@ -2177,7 +2177,7 @@
       </div>
       <div style="margin-top: 8px"></div>
       <!-- <div class="results"></div> -->
-      <section v-if="!loadingWorkflows" class="table-section" @click="test(allOpps)">
+      <section v-if="!loadingWorkflows" class="table-section">
         <div style="position: relative" v-outside-click="emitCloseEdit" class="table">
           <PipelineHeader
             :oppFields="oppFields"
@@ -3129,7 +3129,6 @@ export default {
           if (this.selectedWorkflow) {
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
           }
-          console.log('some stored filters', this.storedFilters)
           if (this.storedFilters.length && !this.selectedWorkflow) {
             this.storedFilters[3].reversed
               ? this.sortOppsReverse(
@@ -3162,7 +3161,6 @@ export default {
         })
       } finally {
         this.formData = {}
-        console.log('allOpps down here', this.allOpps)
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline += 1
@@ -3409,13 +3407,11 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
-          console.log('some data, delightful', this.allOpps)
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
-          console.log('some data after, delightful', this.allOpps)
         } else if (apiName.includes('__c') && dT === 'TextArea') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
@@ -3433,7 +3429,6 @@ export default {
 
       let custom = false
       this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
-      console.log('should be final 1', this.allOpps)
     },
     sortOppsReverse(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
@@ -3496,13 +3491,11 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
-          console.log('some data', this.allOpps)
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
-          console.log('allOpps after', this.allOpps)
         } else if (apiName.includes('__c') && dT === 'TextArea') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
@@ -3520,7 +3513,6 @@ export default {
 
       let custom = false
       this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
-      console.log('should be final 2', this.allOpps)
     },
     selectPrimaryCheckbox(id, index) {
       if (this.primaryCheckList.includes(id)) {
@@ -3884,7 +3876,6 @@ export default {
             resource_ids: this.primaryCheckList,
           })
           .then((res) => {
-            console.log(res)
             this.verboseName = res.verbose_name
             this.checker = setInterval(() => {
               this.checkTask()
@@ -3912,7 +3903,6 @@ export default {
             resource_ids: this.workflowCheckList,
           })
           .then((res) => {
-            console.log(res)
             this.verboseName = res.verbose_name
             this.checker = setInterval(() => {
               this.checkTask()
@@ -4010,9 +4000,7 @@ export default {
           this.getFilteredOpps()
         }
         setTimeout(() => {
-          console.log('this.storedFilters', this.storedFilters)
           if (this.storedFilters.length) {
-            console.log('this.storedFilters', this.storedFilters)
             this.storedFilters[3].reversed
               ? this.sortOppsReverse(
                   this.storedFilters[0],
@@ -4114,7 +4102,6 @@ export default {
 
         setTimeout(() => {
           if (this.storedFilters.length) {
-            console.log('this.storedFilters', this.storedFilters)
             this.storedFilters[3].reversed
               ? this.sortOppsReverse(
                   this.storedFilters[0],
@@ -4141,7 +4128,7 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-      }, 750)
+        }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
@@ -4257,7 +4244,6 @@ export default {
         }
         setTimeout(() => {
           if (this.storedFilters.length) {
-            console.log('this.storedFilters', this.storedFilters)
             this.storedFilters[3].reversed
               ? this.sortOppsReverse(
                   this.storedFilters[0],
@@ -4284,7 +4270,7 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-      }, 750)
+        }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
