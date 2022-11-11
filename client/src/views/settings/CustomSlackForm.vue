@@ -414,8 +414,8 @@ export default {
       currentlySelectedForm: null,
       customObjects: [],
       verboseName: '',
-      checker: this.$store.state.customObject.checker,
-      task: this.$store.state.customObject.task,
+      // checker: this.$store.state.customObject.checker,
+      // task: this.$store.state.customObject.task,
       oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...'],
       selectedCustomObject: null,
@@ -922,14 +922,15 @@ export default {
     userHasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
-    getTask() {
+    task() {
+      return this.$store.state.customObject.task
+    },
+    checker() {
       return this.$store.state.customObject.task
     },
   },
   async created() {
     try {
-      this.task = this.$store.state.customObject.task
-      this.checker = this.$store.state.customObject.checker
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       await this.listPicklists({
