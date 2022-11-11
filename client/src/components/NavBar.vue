@@ -15,7 +15,11 @@
           </div>
         </router-link>
 
-        <router-link v-if="userCRM !== 'HUBSPOT'" exact-active-class="active" :to="{ name: 'Pipelines' }">
+        <router-link
+          v-if="userCRM !== 'HUBSPOT'"
+          exact-active-class="active"
+          :to="{ name: 'Pipelines' }"
+        >
           <div class="tooltip">
             <img src="@/assets/images/pipeline.svg" height="16px" alt="" />
             <span class="tooltiptext">Pipeline</span>
@@ -29,13 +33,19 @@
           </div>
         </router-link>
 
+        <router-link exact-active-class="active" :to="{ name: 'Notes' }">
+          <div class="tooltip">
+            <img src="@/assets/images/notebook.svg" height="16px" alt="" />
+            <span class="tooltiptext">Note Templates</span>
+          </div>
+        </router-link>
         <router-link
           v-if="isTeamLead || isAdmin"
           exact-active-class="active"
           :to="{ name: 'UpdateOpportunity' }"
         >
           <div class="tooltip">
-            <img src="@/assets/images/list.svg" height="16px" alt="" />
+            <img src="@/assets/images/upload.svg" height="16px" alt="" />
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
@@ -77,51 +87,6 @@
           </div>
         </router-link>
       </div>
-
-      <!-- <div v-else class="right">
-        <router-link exact-active-class="active-img" :to="{ name: 'Integrations' }">
-          <div class="tooltip">
-            <img src="@/assets/images/connect.svg" class="nav-img" alt="" />
-            <span class="tooltiptext">Integrations</span>
-          </div>
-        </router-link>
-
-        <router-link
-          v-if="isTeamLead || this.isAdmin"
-          exact-active-class="active-img"
-          :to="{ name: 'Required' }"
-        >
-          <div class="tooltip">
-            <img src="@/assets/images/list.svg" alt="" />
-            <span class="tooltiptext">Forms</span>
-          </div>
-        </router-link>
-
-        <div v-if="routeName === 'InviteUsers'">
-          <div style="cursor: pointer" @click="goToProfile(Math.floor(Math.random() * 10000))">
-            <div class="tooltip">
-              <small class="profile-wrapper">{{ user.email }}</small>
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </div>
-        </div>
-
-        <div v-else>
-          <router-link :to="{ name: 'InviteUsers' }">
-            <div class="tooltip">
-              <small class="profile-wrapper">{{ user.email }}</small>
-            
-              <span class="tooltiptext">Profile</span>
-            </div>
-          </router-link>
-        </div>
-
-        <div class="center">
-          <router-link :to="{ name: 'Login' }">
-            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
-          </router-link>
-        </div>
-      </div> -->
     </nav>
   </div>
 </template>

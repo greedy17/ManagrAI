@@ -166,7 +166,7 @@ class SfSyncTestCase(TestCase):
                     lambda resource: f"OBJECT_FIELDS.{resource}",
                     filter(
                         lambda resource: resource
-                        if sobjects.get(resource, None) not in ["", None, False]
+                        if sobjects.get(resource, None) not in ["", None]
                         else False,
                         sobjects,
                     ),
@@ -191,7 +191,7 @@ class SfSyncTestCase(TestCase):
                     lambda resource: f"OBJECT_FIELDS.{resource}",
                     filter(
                         lambda resource: resource
-                        if sobjects.get(resource, None) not in ["", None, False]
+                        if sobjects.get(resource, None) not in ["", None]
                         else False,
                         sobjects,
                     ),

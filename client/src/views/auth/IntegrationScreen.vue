@@ -13,7 +13,12 @@
           </div>
 
           <div class="card__body">
-            <h3>Salesforce</h3>
+            <h3>
+              Salesforce
+              <span class="required" v-if="!hasSalesforceIntegration">
+                <img src="@/assets/images/required.svg" height="14px" alt=""
+              /></span>
+            </h3>
             <p class="card-text">Sync Accounts, Opportunities, & Contacts</p>
             <div>
               <div>
@@ -52,7 +57,13 @@
           </div>
         </div>
         <div class="card" v-else>
-          <div class="card__body" v-if="generatingToken && (selectedIntegration == 'SALESFORCE' || selectedIntegration === 'HUBSPOT')">
+          <div
+            class="card__body"
+            v-if="
+              generatingToken &&
+              (selectedIntegration == 'SALESFORCE' || selectedIntegration === 'HUBSPOT')
+            "
+          >
             <PipelineLoader />
           </div>
           <div class="card__body" v-else>
@@ -65,7 +76,7 @@
                 :v-model="selectedCRM"
                 :options="crmList"
                 openDirection="below"
-                style="width: 25vw;"
+                style="width: 25vw"
                 selectLabel="Enter"
                 track-by="value"
                 label="label"
@@ -92,43 +103,17 @@
         </div>
 
         <div class="card">
-          <div class="card__header lbp-bg">
-            <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 32px" />
-            <img src="@/assets/images/outlookMail.png" style="height: 32px" />
-            <!-- <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" /> -->
-          </div>
-
-          <div class="card__body">
-            <h3>Calendar</h3>
-            <p class="card-text">Accesses your upcoming meetings</p>
-            <div>
-              <PulseLoadingSpinnerButton
-                v-if="!hasNylasIntegration"
-                @click="onGetAuthLink('NYLAS')"
-                class="orange_button"
-                text="Connect"
-                :loading="generatingToken && selectedIntegration == 'NYLAS'"
-              ></PulseLoadingSpinnerButton>
-              <div v-else>
-                <div class="img-border">
-                  <img
-                    @click="onRevoke('NYLAS')"
-                    src="@/assets/images/revoke.svg"
-                    height="16"
-                    alt=""
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card__header lr-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header lr-bg" style="padding-left: 36px; padding-right: 36px">
             <img style="height: 40px" src="@/assets/images/slackLogo.png" />
           </div>
 
           <div class="card__body">
-            <h3>Slack</h3>
+            <h3>
+              Slack
+              <span class="required" v-if="!hasSlackIntegration">
+                <img src="@/assets/images/required.svg" height="14px" alt=""
+              /></span>
+            </h3>
             <p class="card-text">Interact with Managr through Slack</p>
             <div>
               <PulseLoadingSpinnerButton
@@ -165,7 +150,39 @@
         </div>
 
         <div class="card">
-          <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header lbp-bg">
+            <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 32px" />
+            <img src="@/assets/images/outlookMail.png" style="height: 32px" />
+            <!-- <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasNylasIntegration" /> -->
+          </div>
+
+          <div class="card__body">
+            <h3>Calendar</h3>
+            <p class="card-text">Accesses your upcoming meetings</p>
+            <div>
+              <PulseLoadingSpinnerButton
+                v-if="!hasNylasIntegration"
+                @click="onGetAuthLink('NYLAS')"
+                class="orange_button"
+                text="Connect"
+                :loading="generatingToken && selectedIntegration == 'NYLAS'"
+              ></PulseLoadingSpinnerButton>
+              <div v-else>
+                <div class="img-border">
+                  <img
+                    @click="onRevoke('NYLAS')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header vlb-bg" style="padding-left: 34px; padding-right: 34px">
             <img style="height: 40px" src="@/assets/images/zoom.png" />
             <!-- <img class="filter-dot" src="@/assets/images/dot.svg" v-if="hasZoomIntegration" /> -->
           </div>
@@ -212,7 +229,7 @@
           </div>
 
           <div class="card__body">
-            <h3>SalesLoft</h3>
+            <h3>Salesloft</h3>
             <p class="card-text">Add Contacts to Cadences</p>
             <div>
               <PulseLoadingSpinnerButton
@@ -239,7 +256,7 @@
 
         <div class="card">
           <div class="card__header vlp-bg">
-            <img style="height: 14px" src="@/assets/images/outreach.webp" />
+            <img style="height: 15px" src="@/assets/images/outreach.webp" />
           </div>
 
           <div class="card__body">
@@ -370,7 +387,6 @@
             </div>
           </div>
         </div> -->
-        
       </div>
     </div>
 
@@ -399,18 +415,24 @@ import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'Integrations',
-  components: { 
+  components: {
     PulseLoadingSpinnerButton,
-    CollectionManager, 
+    CollectionManager,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
-    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'), 
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
       generatingToken: false,
       authLink: null,
-      crmList: [{label: 'Salesforce', value: 'SALESFORCE'}, {label: 'Hubspot', value: 'HUBSPOT'}],
-      messengerList: [{label: 'Slack', value: 'SLACK'}, {label: 'Teams', value: 'TEAMS'}],
+      crmList: [
+        { label: 'Salesforce', value: 'SALESFORCE' },
+        { label: 'Hubspot', value: 'HUBSPOT' },
+      ],
+      messengerList: [
+        { label: 'Slack', value: 'SLACK' },
+        { label: 'Teams', value: 'TEAMS' },
+      ],
       selectedCRM: null,
       selectedMessenger: null,
       selectedIntegration: null,
@@ -435,11 +457,10 @@ export default {
         : ''
       this.generatingToken = true
       this.selectedIntegration = integration
-      console.log(this.selectedIntegration)
+
       let modelClass = this.selectedIntegrationSwitcher
       try {
         const res = await modelClass.api.getAuthLink()
-        console.log(res)
         if (res.link) {
           window.location.href = res.link
         }
@@ -548,6 +569,9 @@ export default {
     },
     hasHubspotIntegration() {
       return !!this.$store.state.user.hubspotAccount
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
     },
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
@@ -798,6 +822,11 @@ export default {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+
+.required {
+  filter: invert(50%) sepia(100%) saturate(901%) hue-rotate(323deg) brightness(110%) contrast(96%);
+  margin-left: 4px;
 }
 
 .card-text {

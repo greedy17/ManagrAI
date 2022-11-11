@@ -57,8 +57,8 @@ def create_configs_for_target(target, template_user, config):
         config["recipient_type"] = "SLACK_CHANNEL"
         if "default" in config["recipients"] and template_user.has_slack_integration:
             config["recipients"] = [
-                template_user.slack_integration.zoom_channel
-                if template_user.slack_integration.zoom_channel
+                template_user.slack_integration.recap_channel
+                if template_user.slack_integration.recap_channel
                 else template_user.slack_integration.channel
             ]
         else:
@@ -79,8 +79,8 @@ def create_configs_for_target(target, template_user, config):
             config_copy["alert_targets"] = [str(user.id)]
             if user.has_slack_integration:
                 config_copy["recipients"] = [
-                    user.slack_integration.zoom_channel
-                    if user.slack_integration.zoom_channel
+                    user.slack_integration.recap_channel
+                    if user.slack_integration.recap_channel
                     else user.slack_integration.channel
                 ]
                 config_copy["recipient_type"] = "SLACK_CHANNEL"
@@ -115,6 +115,9 @@ def alert_config_creator(data, user):
             if len(all_configs) > 1:
                 all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
+        if user.slack_integration.recap_channel is None:
+            if "SELF" in new_configs[0]["alert_targets"]:
+                user.slack_integration.change_recap_channel(new_configs[0]["recipients"][0])
     else:
         return None
     return new_configs
@@ -191,7 +194,8 @@ class AlertTemplateViewSet(
         obj = self.get_object()
         data = self.request.data
         from_workflow = data.get("from_workflow", False)
-        if from_workflow:
+        print(from_workflow)
+        if isinstance(from_workflow, dict):
             config = obj.configs.all().first()
             template = config.template
             attempts = 1
@@ -233,11 +237,34 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
                     )
+                except Exception as e:
+                    return logger.warning(
+                        f"Failed retreive data for {template.title} for user {str(user.id)} because of {e}"
+                    )
             model = model_routes[template.resource_type]["model"]
             queryset = model.objects.filter(integration_id__in=res_data)
             serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
             return Response({"results": serialized.data})
+        elif isinstance(from_workflow, bool) and from_workflow is True:
+            print("here bool")
+            config = (
+                obj.configs.all().filter(alert_targets__contains=[self.request.user.id]).first()
+            )
+            template = config.template
+            template.invocation = template.invocation + 1
+            template.last_invocation_datetime = timezone.now()
+            template.save()
+            users = config.target_users
+            user = str(template.user.id) if len(users) > 1 else str(users.first().id)
+            run_time = datetime.now(pytz.utc)
+            _process_check_alert(
+                str(config.id),
+                str(request.user.id),
+                template.invocation,
+                run_time.strftime("%Y-%m-%dT%H:%M%z"),
+            )
         else:
+            print("here else")
             for config in obj.configs.all():
                 template = config.template
                 template.invocation = template.invocation + 1
@@ -252,7 +279,7 @@ class AlertTemplateViewSet(
                     template.invocation,
                     run_time.strftime("%Y-%m-%dT%H:%M%z"),
                 )
-            return Response()
+        return Response()
 
 
 class AlertMessageTemplateViewSet(

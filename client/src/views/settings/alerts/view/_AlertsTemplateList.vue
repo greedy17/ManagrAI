@@ -99,7 +99,7 @@
       </div>
     </Modal>
 
-    <template v-if="!templates.refreshing && !isOnboarding">
+    <template v-if="!templates.refreshing">
       <!-- <transition name="fade">
       </transition> -->
 
@@ -173,9 +173,12 @@
           </div>
 
           <div class="card__body">
-            <h4>
-              {{ alert.title }}
-            </h4>
+            <div>
+              <h4>
+                {{ alert.title }}
+              </h4>
+              <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
+            </div>
             <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
 
             <div class="card__body__between">
@@ -184,7 +187,9 @@
                   <button
                     style="margin-right: 8px"
                     :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                    @click.stop="onRunAlertTemplateNow(alert.id)"
+                    @click.stop="
+                      onRunAlertTemplateNow(alert.id, user.id !== alert.user ? true : false)
+                    "
                     class="img-border"
                   >
                     <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
@@ -200,9 +205,13 @@
                     alt=""
                   />
                 </button>
-                <button class="img-border" @click="editWorkflow(alert)">
+                <button
+                  class="img-border"
+                  @click="editWorkflow(alert)"
+                  v-if="user.id === alert.user"
+                >
                   <img
-                    src="@/assets/images/build.svg"
+                    src="@/assets/images/edit.svg"
                     style="filter: invert(40%)"
                     height="14px"
                     alt=""
@@ -269,14 +278,66 @@
             </div>
           </div>
         </div>
+
+        <div
+          v-for="(config, i) in allConfigs"
+          :key="i"
+          class="card"
+          v-show="!templateTitles.includes(config.title)"
+        >
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>{{ config.title }}</h4>
+            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
+            <div class="card__body__between" style="margin-top: 8px">
+              <p></p>
+              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!zoomChannel" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToLogZoom" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+          <div class="card__body">
+            <h4>Meeting Recaps</h4>
+            <small class="card-text"
+              >Recieve alerts that give you insight on your teams meetings.</small
+            >
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToRecap" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <div v-else-if="isOnboarding">
+    <!-- <div v-else-if="isOnboarding">
       <Onboarder />
-    </div>
+    </div> -->
 
     <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />
@@ -517,9 +578,9 @@ export default {
         })
       }
     },
-    async onRunAlertTemplateNow(id) {
+    async onRunAlertTemplateNow(id, from_workflow) {
       try {
-        await AlertTemplate.api.runAlertTemplateNow(id)
+        await AlertTemplate.api.runAlertTemplateNow(id, from_workflow)
         this.$toast('Workflow initiated', {
           timeout: 2000,
           position: 'top-left',
@@ -1197,7 +1258,6 @@ a {
   font-size: 12px;
   cursor: pointer;
   text-align: center;
-  font-weight: bold;
 }
 .yellow_button {
   color: $yellow;
@@ -1269,5 +1329,10 @@ a {
   color: $dark-green;
   border-bottom: 1px solid $dark-green;
   cursor: pointer;
+}
+.small-text {
+  font-size: 10px;
+  color: $dark-green;
+  margin-top: 4px;
 }
 </style>

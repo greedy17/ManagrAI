@@ -541,7 +541,7 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                 if attempts >= 5:
                     res_data = {"error": "Could not refresh token"}
                     logger.exception(
-                        f"Failed to retrieve alerts for {template.resource} data for user {str(user.id)} after {attempts} tries"
+                        f"Failed to retrieve alerts for {template.resource} data for user {str(request_userer.id)} after {attempts} tries"
                     )
                     break
                 else:
@@ -549,7 +549,11 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                     attempts += 1
             except SFQueryOffsetError:
                 return logger.warning(
-                    f"Failed to sync some data for resource {template.resource} for user {str(user.id)} because of SF LIMIT"
+                    f"Failed to sync some data for resource {template.resource} for user {str(request_user.id)} because of SF LIMIT"
+                )
+            except Exception as e:
+                return logger.warning(
+                    f"Failed retreive data for {template.title} for user {str(request_user.id)} because of {e}"
                 )
         model = CRM_SWITCHER[request_user.crm][template.resource_type]["model"]
         queryset = model.objects.filter(integration_id__in=res_data)

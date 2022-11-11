@@ -113,8 +113,19 @@ def emit_gen_next_sync(user_id, ops_list, schedule_time=timezone.now()):
     return _process_gen_next_sync(user_id, ops_list, schedule=schedule)
 
 
-def emit_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule_time=timezone.now()):
+def emit_gen_next_object_field_sync(
+    user_id, ops_list, for_dev=False, schedule_time=timezone.now(), verbose_name=None, priority=0
+):
     schedule = datetime.strptime(schedule_time, "%Y-%m-%dT%H:%M%Z")
+    if verbose_name:
+        return _process_gen_next_object_field_sync(
+            user_id,
+            ops_list,
+            for_dev,
+            schedule=schedule,
+            verbose_name=verbose_name,
+            priority=priority,
+        )
     return _process_gen_next_object_field_sync(user_id, ops_list, for_dev, schedule=schedule)
 
 
@@ -252,7 +263,11 @@ def _generate_form_template(user_id, delete_forms):
             f.recreate_form()
         else:
             f = OrgCustomSlackForm.objects.create(
-                form_type=form_type, resource=resource, organization=org, team=user.team
+                form_type=form_type,
+                resource=resource,
+                organization=org,
+                team=user.team,
+                custom_object=None,
             )
             public_fields = SObjectField.objects.filter(
                 is_public=True,
@@ -547,15 +562,23 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         template__form_type__in=[
             slack_consts.FORM_TYPE_UPDATE,
             slack_consts.FORM_TYPE_STAGE_GATING,
-        ]
+        ],
+        template__custom_object__isnull=True,
     )
+    custom_object_forms = workflow.forms.filter(template__custom_object__isnull=False)
     update_form_ids = []
     # aggregate the data
     data = dict()
     for form in update_forms:
         update_form_ids.append(str(form.id))
         data = {**data, **form.saved_data}
-
+    custom_object_data_collector = {}
+    if len(custom_object_forms):
+        for custom_form in custom_object_forms:
+            custom_object_data_collector = {
+                **custom_object_data_collector,
+                **custom_form.saved_data,
+            }
     attempts = 1
     while True:
         sf = user.salesforce_account
@@ -565,6 +588,14 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             update_forms.update(
                 is_submitted=True, submission_date=timezone.now(), update_source="meeting"
             )
+            if len(custom_object_forms):
+                sf.create_custom_object(
+                    custom_object_data_collector,
+                    sf.access_token,
+                    sf.instance_url,
+                    sf.salesforce_id,
+                    custom_object_forms.first().template.custom_object,
+                )
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -2010,21 +2041,21 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
 def _processs_bulk_update(data, user):
     logger.info(f"UPDATE START ---- {data}")
     user = User.objects.get(id=user)
-    integration_ids = data.get("integration_ids")
+    resource_ids = data.get("resource_ids")
     form_data = data.get("form_data")
     form_type = data.get("form_type")
     resource_type = data.get("resource_type")
-    resource_id = data.get("resource_id", None)
     stage_name = data.get("stage_name", None)
-    instance_data = {
-        "user": user,
-        "resource_type": resource_type,
-        "form_type": form_type,
-        "resource_id": resource_id,
-        "stage_name": stage_name,
-    }
+    resources = routes[resource_type]["model"].objects.filter(id__in=resource_ids)
     return_data = None
-    for id in integration_ids:
+    for r in resources:
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "stage_name": stage_name,
+            "resource_id": str(r.id),
+        }
         form_ids = create_form_instance(**instance_data)
 
         forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
@@ -2042,11 +2073,11 @@ def _processs_bulk_update(data, user):
             sf = user.salesforce_account
             try:
                 if resource_type == "OpportunityLineItem":
-                    resource = main_form.resource_object.update_in_salesforce(
+                    resource_update = main_form.resource_object.update_in_salesforce(
                         str(user.id), all_form_data
                     )
                 else:
-                    resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                    resource_update = main_form.resource_object.update_in_salesforce(all_form_data)
                 return_data = {
                     "success": True,
                 }

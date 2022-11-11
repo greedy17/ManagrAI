@@ -165,9 +165,11 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
         return False
 
     def get_resource_ref(self, instance):
-        from managr.salesforce.routes import routes
+        from managr.salesforce.routes import routes as sf_routes
+        from managr.hubspot.routes import routes as hs_routes
 
         if instance.resource_type:
+            routes = sf_routes if instance.user.crm == "SALESFORCE" else hs_routes
             resource_type = instance.resource_type
             serializer = routes[resource_type]["serializer"]
             resource = routes[resource_type]["model"].objects.filter(id=instance.resource_id)

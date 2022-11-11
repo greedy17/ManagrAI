@@ -372,11 +372,20 @@ def process_submit_resource_data(payload, context):
 
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-    stage_forms = current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"])
+    stage_forms = current_forms.filter(
+        template__form_type="STAGE_GATING", template__custom_object__isnull=True
+    )
+    custom_object_forms = current_forms.filter(template__custom_object__isnull=False)
     stage_form_data_collector = {}
     for form in stage_forms:
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+
+    custom_object_data_collector = {}
+    for custom_form in custom_object_forms:
+        custom_form.save_form(state)
+        custom_object_data_collector = {**custom_object_data_collector, **custom_form.saved_data}
+
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
@@ -392,6 +401,14 @@ def process_submit_resource_data(payload, context):
             if main_form.template.form_type == "UPDATE":
                 main_form.resource_object.update(all_form_data)
                 resource = main_form.resource_object
+                if len(custom_object_forms):
+                    sf.create_custom_object(
+                        custom_object_data_collector,
+                        sf.access_token,
+                        sf.instance_url,
+                        sf.salesforce_id,
+                        custom_object_forms.first().template.custom_object,
+                    )
                 break
             else:
                 create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
@@ -2623,11 +2640,20 @@ def process_submit_alert_resource_data(payload, context):
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE"]).first()
-    stage_forms = current_forms.exclude(template__form_type__in=["UPDATE"])
+    stage_forms = current_forms.filter(
+        template__form_type="STAGE_GATING", template__custom_object__isnull=True
+    )
+    custom_object_forms = current_forms.filter(
+        template__form_type="STAGE_GATING", template__custom_object__isnull=False
+    )
     stage_form_data_collector = {}
     for form in stage_forms:
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+    custom_object_data_collector = {}
+    for custom_form in custom_object_forms:
+        custom_form.save_form(state)
+        custom_object_data_collector = {**custom_object_data_collector, **custom_form.saved_data}
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
@@ -2646,6 +2672,14 @@ def process_submit_alert_resource_data(payload, context):
         crm = user.crm_account
         try:
             resource = main_form.resource_object.update(all_form_data)
+            if len(custom_object_forms):
+                crm.create_custom_object(
+                    custom_object_data_collector,
+                    crm.access_token,
+                    crm.instance_url,
+                    crm.salesforce_id,
+                    custom_object_forms.first().template.custom_object,
+                )
             data = {
                 "view_id": loading_view_data["view"]["id"],
                 "view": {
@@ -2722,7 +2756,10 @@ def process_submit_alert_resource_data(payload, context):
                 )
                 break
             else:
-                sf.regenerate_token()
+                if main_form.resource_object.owner == user:
+                    sf.regenerate_token()
+                else:
+                    main_form.resource_object.owner.salesforce_account.regenerate_token()
                 attempts += 1
 
         except ConnectionResetError:
@@ -2741,6 +2778,9 @@ def process_submit_alert_resource_data(payload, context):
             else:
                 time.sleep(2)
                 attempts += 1
+
+        except Exception as e:
+            logger.exception(f"Uncaught Error {e}")
 
     if has_error:
         form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
@@ -2782,6 +2822,11 @@ def process_submit_alert_resource_data(payload, context):
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
+    if (
+        all_form_data.get("meeting_comments") is not None
+        and all_form_data.get("meeting_type") is not None
+    ):
+        emit_add_update_to_sf(str(main_form.id))
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)

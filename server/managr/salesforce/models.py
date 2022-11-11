@@ -1,10 +1,12 @@
 import pytz
 import math
+import json
 import logging
 from collections import OrderedDict
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
+from managr.utils.client import Client
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
@@ -447,7 +449,6 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
         for value in values:
             if len(value["label"]) > 75:
                 value["label"] = f"{value['label'][:50]}..."
-
         if values and len(values):
             return list(
                 map(lambda option: block_builders.option(option["label"], option["value"]), values)
@@ -949,7 +950,7 @@ class SalesforceAuthAccount(TimeStampModel):
                 lambda resource: f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{resource}",
                 filter(
                     lambda resource: resource
-                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    if self.sobjects.get(resource, None) not in ["", None]
                     else False,
                     self.sobjects,
                 ),
@@ -1090,11 +1091,33 @@ class SalesforceAuthAccount(TimeStampModel):
 
         return values
 
+    @staticmethod
+    def create_custom_object(data, access_token, custom_base, salesforce_id, api_name):
+        json_data = json.dumps(data)
+        url = sf_consts.SALESFORCE_WRITE_URI(custom_base, api_name, "")
+        token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
+        with Client as client:
+            r = client.post(
+                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+            )
+            return SalesforceAuthAccountAdapter._handle_response(r)
+
     def update_opportunity(self, data):
         return OpportunityAdapter.update_opportunity(data, self.access_token, self.instance_url)
+
+    def list_objects(self):
+        return self.adapter_class.list_objects()
+
+    def add_to_sobjects(self, api_name, custom_object=False):
+        if custom_object:
+            self.sobjects[api_name] = False
+        else:
+            self.sobjects[api_name] = True
+        return self.save()
 
     def save(self, *args, **kwargs):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
+

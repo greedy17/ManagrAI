@@ -44,12 +44,16 @@
               <span>
                 <label for="password">Set a Pasword</label>
                 <input
-                  @blur="registrationForm.field.password.validate()"
+                  @blur="showVals(registrationForm.field.password)"
+                  @input="registrationForm.field.password.validate()"
                   :errors="registrationForm.field.password.errors"
                   v-model="registrationForm.field.password.value"
                   type="password"
                   id="password"
                 />
+                <div class="column" v-for="(message, i) in errorMessages" :key="i">
+                  <small class="error">{{ message }}</small>
+                </div>
               </span>
 
               <span>
@@ -158,6 +162,11 @@ export default {
     })
   },
   methods: {
+    showVals(val) {
+      let validations = val.errors
+      let messages = validations.map((val) => val.message)
+      this.errorMessages = messages
+    },
     selectZone() {
       this.changeZone = !this.changeZone
     },
@@ -187,16 +196,16 @@ export default {
       this.registrationForm.validate()
 
       // Do not continue if the form has errors
-      if (!this.registrationForm.isValid) {
-        this.$toast('Please complete all fields', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        return
-      }
+      // if (!this.registrationForm.isValid) {
+      //   this.$toast('Please complete all fields', {
+      //     timeout: 2000,
+      //     position: 'top-left',
+      //     type: 'error',
+      //     toastClassName: 'custom',
+      //     bodyClassName: ['custom'],
+      //   })
+      //   return
+      // }
 
       // Continue with user registration...
       this.submitting = true
@@ -219,8 +228,7 @@ export default {
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-
-      this.$router.push({ name: 'ListTemplates' })
+      this.$router.push({ name: 'Integrations' })
     },
   },
   mounted() {
@@ -351,6 +359,17 @@ label {
 a {
   color: $dark-green;
   font-weight: bold;
+}
+.error {
+  color: red;
+  font-size: 10px;
+  margin-right: 12px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;

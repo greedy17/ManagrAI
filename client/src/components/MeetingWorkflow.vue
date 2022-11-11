@@ -414,7 +414,7 @@
       </div>
 
       <div class="cards__header__div" v-else>
-        <button @click="addingOpp = !addingOpp" class="add-button">Link to CRM Record</button>
+        <button @click="addingOpp = !addingOpp" class="white-button">Link to CRM Record</button>
       </div>
 
       <div v-if="addingOpp" class="add-field-section">
@@ -707,7 +707,6 @@ export default {
       }
     },
     setUpdateValues(key, val) {
-      console.log(key, val)
       if (val) {
         this.formData[key] = val
       }
@@ -996,7 +995,6 @@ a {
   transition: all 0.3s;
   font-size: 12px;
   letter-spacing: 0.75px;
-  font-weight: bold;
 }
 .add-button {
   border: none;
@@ -1075,6 +1073,7 @@ a {
 }
 .red-text {
   color: $coral !important;
+  font-weight: 400;
   background-color: $light-coral;
   padding: 8px !important;
   border-radius: 8px;
@@ -1131,6 +1130,7 @@ a {
     position: sticky;
     top: 0;
     z-index: 2;
+    background-color: white;
   }
   &__body {
     display: flex;
@@ -1150,7 +1150,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    position: absolute;
+    position: sticky;
     bottom: 0;
     z-index: 2;
     background-color: white !important;

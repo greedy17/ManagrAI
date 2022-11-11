@@ -587,21 +587,27 @@ class SalesforceSObjectViewSet(
             "resource_id": resource_id,
             "stage_name": stage_name,
         }
-        # update_name = f"resource_update_{user.email}_{str(uuid.uuid4())}"
-        # emit_process_update_resources_in_salesforce(
-        #     form_data, user, instance_data, integration_ids, update_name
-        # )
         data = None
         for id in integration_ids:
             form_ids = create_form_instance(**instance_data)
 
-            forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+            all_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+            forms = all_forms.filter(template__custom_object__isnull=True)
             main_form = forms.filter(template__form_type="UPDATE").first()
+            custom_object_forms = all_forms.filter(template__custom_object__isnull=False)
             stage_form_data_collector = {}
             for form in forms:
                 form.save_form(form_data, False)
                 stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
             all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+            custom_object_data_collector = {}
+            if len(custom_object_forms):
+                for custom_form in custom_object_forms:
+                    custom_form.save_form(form_data, False)
+                    custom_object_data_collector = {
+                        **custom_object_data_collector,
+                        **custom_form.saved_data,
+                    }
             formatted_saved_data = process_text_field_format(
                 str(user.id), main_form.template.resource, all_form_data
             )
@@ -615,6 +621,14 @@ class SalesforceSObjectViewSet(
                         )
                     else:
                         resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                        if len(custom_object_forms):
+                            sf.create_custom_object(
+                                custom_object_data_collector,
+                                sf.access_token,
+                                sf.instance_url,
+                                sf.salesforce_id,
+                                custom_object_forms.first().template.custom_object,
+                            )
                     data = {
                         "success": True,
                     }
@@ -900,6 +914,40 @@ class SalesforceSObjectViewSet(
                 break
         data = {"success": False} if has_error else {"success": True}
         return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="custom-objects",
+    )
+    def get_custom_objects(self, request, *args, **kwargs):
+        user = request.user
+        objects = user.salesforce_account.list_objects()
+        return Response(data={"sobjects": objects})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="custom-objects-field-sync",
+    )
+    def sync_custom_object_fields(self, request, *args, **kwargs):
+        user = request.user
+        object = request.data.get("sobject")
+        if object not in user.salesforce_account.sobjects.keys():
+            user.salesforce_account.add_to_sobjects(object, True)
+        scheduled_time = timezone.now()
+        formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+        verbose_name = f"custom-field-sync-{request.user.email}-{str(uuid.uuid4())}"
+        task = emit_gen_next_object_field_sync(
+            str(user.id),
+            [f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{object}"],
+            schedule_time=formatted_time,
+            verbose_name=verbose_name,
+            priority=1,
+        )
+        return Response(data={"verbose_name": task.verbose_name})
 
 
 class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):

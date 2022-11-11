@@ -324,8 +324,6 @@
           <div v-show="selectingOption" class="options">
             <p v-if="!updateInfoSelected" @click="updateInfo">Edit Info</p>
             <p v-if="!manageTeamSelected" @click="manageTeam">Manage Team</p>
-            <p v-if="!createNoteSelected" @click="createNote">Create Note Template</p>
-            <p v-if="!editNoteSelected" @click="editNote">Edit Note Template</p>
             <div class="options__section">
               <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
                 Change Admin
@@ -380,14 +378,14 @@
             selectLabel="Enter"
             label="key"
             track-by="value"
-        >
-        <template slot="placeholder">
-          <p class="slot-icon">
-            <img src="@/assets/images/search.svg" alt="" />
-            {{getUser.timezone}}
-          </p>
-        </template>
-        </Multiselect>
+          >
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.svg" alt="" />
+                {{ getUser.timezone }}
+              </p>
+            </template>
+          </Multiselect>
           <button class="invite_button" type="submit" @click="handleUpdate">
             Update
             <img
@@ -407,128 +405,6 @@
           @cancel="handleCancel"
         />
       </section>
-
-      <section v-if="createNoteSelected">
-        <div class="update-container">
-          <input
-            v-model="noteSubject"
-            class="template-input"
-            type="text"
-            name=""
-            id=""
-            :disabled="savingTemplate"
-            placeholder="Template Title"
-          />
-
-          <quill-editor
-            :disabled="savingTemplate"
-            ref="message-body"
-            :options="{
-              modules: {
-                toolbar: null,
-              },
-              theme: 'snow',
-              placeholder: 'Type out your template here.',
-            }"
-            v-model="noteBody"
-            class="message__box"
-          />
-
-          <div class="tooltip" style="display: flex; align-items: center">
-            <input type="checkbox" id="shared" v-model="isShared" />
-            <label class="small" for="shared">Share Template</label>
-            <span class="tooltiptext">Share template with your team</span>
-          </div>
-
-          <button
-            :disabled="!noteSubject || !noteBody"
-            class="invite_button"
-            type="submit"
-            @click="createTemplate"
-            v-if="!savingTemplate"
-          >
-            Save Template
-            <!-- <img style="height: 0.8rem; margin-left: 0.25rem" src="@/assets/images/logo.png" alt="" /> -->
-          </button>
-
-          <div v-else>
-            <PipelineLoader />
-          </div>
-        </div>
-      </section>
-
-      <div v-if="editNoteSelected">
-        <section>
-          <div v-if="noteTemplates" class="update-container">
-            <div class="centered" v-if="!noteTemplates.length">
-              <div class="row">
-                <p>Looks like you haven't created any templates yet</p>
-                <button
-                  @click="createNote"
-                  style="margin-top: -1px; margin-left: -8px"
-                  class="invite_button"
-                >
-                  Get Started
-                </button>
-              </div>
-            </div>
-
-            <div class="row" v-else>
-              <template v-if="!selectedTemplate">
-                <div
-                  @click="selectTemplate(template)"
-                  class="small-container"
-                  v-for="(template, i) in noteTemplates"
-                  :key="i"
-                >
-                  <div class="small-container__head">
-                    <p>{{ template.subject }}</p>
-                  </div>
-                  <div class="small-container__body">
-                    <p v-html="template.body"></p>
-                  </div>
-                </div>
-              </template>
-
-              <div v-else>
-                <input
-                  v-model="selectedTemplate.subject"
-                  class="template-input"
-                  type="text"
-                  name=""
-                  id=""
-                  :disabled="savingTemplate"
-                  placeholder="Template Title"
-                />
-                <quill-editor
-                  :disabled="savingTemplate"
-                  ref="message-body"
-                  :options="{
-                    modules: {
-                      toolbar: null,
-                    },
-                    theme: 'snow',
-                    placeholder: 'Type out your template here.',
-                  }"
-                  v-model="selectedTemplate.body"
-                  class="message__box"
-                />
-                <div class="align-start">
-                  <input type="checkbox" id="editShared" v-model="selectedTemplate.is_shared" />
-                  <label class="small" for="editShared">Share Template</label>
-                </div>
-                <div style="margin-left: -24px" class="row">
-                  <button class="invite_button" type="submit" @click="updateTemplate">
-                    Update Template
-                  </button>
-
-                  <button @click="removeTemplate" class="delete">Delete</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
     </div>
   </div>
 </template>
@@ -751,7 +627,6 @@ export default {
       this.pulseLoading = true
       if (!this.newAdmin || !this.newAdmin.id === this.getUser.id) {
         setTimeout(() => {
-          console.log('Please choose a new admin')
           this.$toast('Please choose a new admin', {
             timeout: 2000,
             position: 'top-left',

@@ -869,7 +869,6 @@ def request_reset_link(request):
 def get_task_status(request):
     data = {}
     verbose_name = request.GET.get("verbose_name", None)
-
     if verbose_name:
         try:
             task = CompletedTask.objects.get(verbose_name=verbose_name)
@@ -877,6 +876,7 @@ def get_task_status(request):
                 data = {"completed": True}
         except CompletedTask.DoesNotExist:
             data = {"completed": False}
+    logger.info(f"Task status for: {verbose_name}, {data}")
     return Response(data=data)
 
 

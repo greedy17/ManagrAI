@@ -19,8 +19,7 @@ from managr.organization.models import (
 from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
-from managr.crm.exceptions import TokenExpired
-
+from managr.crm.exceptions import TokenExpired, InvalidFieldError
 from managr.salesloft.models import Cadence, People
 from managr.crm.models import BaseOpportunity, BaseAccount, BaseContact
 
@@ -289,6 +288,27 @@ def process_get_external_relationship_options(payload, context):
             else:
                 crm_account.regenerate_token()
                 attempts += 1
+        except InvalidFieldError as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to retrieve reference data for {relationship} data for user {str(user.id)} after {attempts} tries"
+                )
+            elif resource == "OpportunityLineItem":
+                fields.remove("CurrencyIsoCode")
+                attempts += 1
+            else:
+                attempts += 1
+    if "CurrencyIsoCode" in fields:
+        return {
+            "options": list(
+                map(
+                    lambda val: block_builders.option(
+                        f"{val.get('Name')} - {val.get('CurrencyIsoCode')}", val.get("Id")
+                    ),
+                    res,
+                )
+            ),
+        }
     return {
         "options": list(
             map(lambda val: block_builders.option(val.get("Name"), val.get("Id")), res)

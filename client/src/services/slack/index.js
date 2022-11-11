@@ -54,6 +54,8 @@ export class CustomSlackForm extends Model {
   static stage = new fields.CharField({})
   static fieldsRef = new fields.ModelField({ ModelClass: ObjectField, many: true })
   static customFields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
+  static customObject = new fields.CharField({})
+  static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
   static organization = new fields.Field({})
 
   static fromAPI(obj) {

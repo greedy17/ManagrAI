@@ -125,24 +125,26 @@
       </div>
       <div style="margin-right: 16px" class="flex-end">
         <Multiselect
-          placeholder="Insert Value { }"
+          placeholder="Select field"
           v-model="crmValue"
           @input="bindText(`${alert.resourceType}.${$event.apiName}`, `${$event.label}`)"
           :options="fields.list"
           openDirection="above"
-          style="width: 14vw"
+          style="width: 18vw; margin-right: 4px"
           selectLabel="Enter"
           track-by="apiName"
-          label="label"
-          :loading="dropdownLoading"
+          label="referenceDisplayLabel"
         >
           <template slot="noResult">
             <p class="multi-slot">No results.</p>
           </template>
           <template slot="afterList">
-            <p class="multi-slot__more" @click="fieldNextPage">
-              Load More
-              <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+            <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
+          </template>
+          <template slot="placeholder">
+            <p class="slot-icon">
+              <img src="@/assets/images/search.svg" alt="" />
+              Insert Value { }
             </p>
           </template>
         </Multiselect>
@@ -233,7 +235,13 @@ export default {
       ],
       fields: CollectionManager.create({
         ModelClass: SObjectField,
-        pagination: { size: 200 },
+        filters: {
+          forAlerts: true,
+          filterable: true,
+          page: 1,
+          salesforceObject: alert.resourceType,
+        },
+        pagination: { size: 1000 },
       }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
@@ -277,9 +285,12 @@ export default {
   computed: {
     editor() {
       return this.$refs['message-body'].quill
-    },
+    }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     onShowOperandModal(groupIndex) {
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
@@ -500,7 +511,7 @@ export default {
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
+      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
     },
     async updateTemplate(field) {
       this.templateTitleField.validate()
@@ -683,11 +694,12 @@ export default {
   margin-right: 8px;
 
   button {
-    background-color: $dark-green;
-    border: none;
+    background-color: white;
+    border: 1px solid $dark-green;
     border-radius: 100%;
-    color: white;
+    color: $dark-green;
     font-size: 18px;
+    cursor: pointer;
   }
 }
 .column {
@@ -795,13 +807,14 @@ input:focus {
 }
 
 .condition-button {
-  background-color: $dark-green;
-  color: white;
+  background-color: white;
+  color: $dark-green;
   border-radius: 0.25rem;
-  border: none;
+  border: 1px solid $dark-green;
   cursor: pointer;
   padding: 0.5rem 1rem;
   margin: 0.5rem;
+  font-size: 13px;
 }
 .row {
   display: flex;

@@ -987,7 +987,6 @@ export default {
             stage_form_id: [],
           })
           .then((res) => {
-            console.log(res)
             this.$store.dispatch('loadMeetings')
           })
       } catch (e) {
@@ -1762,18 +1761,14 @@ export default {
 }
 
 :disabled {
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background-color: $soft-gray !important;
-  cursor: text !important;
   color: $base-gray !important;
-  transition: all 0.3s;
+  background-color: $soft-gray !important;
+  max-height: 2rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1.25rem;
   font-size: 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-top: 16px;
+  border: none;
+  cursor: pointer;
 }
 
 .dark-button {
@@ -2424,7 +2419,6 @@ a {
   max-height: 2rem;
   border-radius: 0.25rem;
   padding: 0.5rem 1.25rem;
-  font-weight: bold;
   font-size: 12px;
   border: none;
   cursor: pointer;

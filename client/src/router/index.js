@@ -204,6 +204,12 @@ export default new Router({
       component: () => import('@/views/Meetings')
     },
     {
+      path: '/notes',
+      name: 'Notes',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/Notes')
+    },
+    {
       path: '/closed-won',
       name: 'ClosedWon',
       beforeEnter: Auth.requireAuth,

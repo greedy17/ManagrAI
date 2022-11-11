@@ -397,12 +397,13 @@ class SlackViewSet(viewsets.GenericViewSet,):
         if not slack.recap_channel:
             slack.change_recap_channel(request.data.get("recap_channel"))
         logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
-        for user in request.data.get("users"):
-            user_acc = User.objects.filter(id=user).first()
-            if user_acc and hasattr(user_acc, "slack_integration"):
-                if slack_id not in user_acc.slack_integration.recap_receivers:
-                    user_acc.slack_integration.recap_receivers.append(slack_id)
-                    user_acc.slack_integration.save()
+        # if request.data.get("users", None):
+        # for user in request.data.get("users"):
+        #     user_acc = User.objects.filter(id=user).first()
+        #     if user_acc and hasattr(user_acc, "slack_integration"):
+        #         if slack_id not in user_acc.slack_integration.recap_receivers:
+        #             user_acc.slack_integration.recap_receivers.append(slack_id)
+        #             user_acc.slack_integration.save()
         return Response(status=status.HTTP_200_OK, data={"success": True})
 
     @action(
@@ -554,6 +555,9 @@ class SlackFormsViewSet(
         data = self.request.data
         fields = data.pop("fields", [])
         data.pop("fields_ref", [])
+        if not len(data.get("custom_object")):
+            data["custom_object"] = None
+        print(data)
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -570,6 +574,8 @@ class SlackFormsViewSet(
         data = self.request.data
         fields = data.pop("fields", [])
         fields_ref = data.pop("fields_ref", [])
+        if not len(data.get("custom_object")):
+            data["custom_object"] = None
         data.update(
             {"organization": self.request.user.organization_id, "team": self.request.user.team}
         )
@@ -582,6 +588,7 @@ class SlackFormsViewSet(
         instance = serializer.instance
         instance.custom_fields.clear()
         fields_state = {}
+        print(fields_ref)
         for i, field in enumerate(fields_ref):
             instance.custom_fields.add(
                 field["id"],

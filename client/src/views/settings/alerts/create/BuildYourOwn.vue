@@ -110,7 +110,7 @@
             <label for="allUsers">Send directly to users</label>
           </div>
 
-          <div v-else>
+          <div class="custom-checkbox" v-else>
             <input type="checkbox" id="allUsers" v-model="directToUsers" />
             <label for="allUsers">Send to primary channel</label>
           </div>
@@ -397,7 +397,10 @@ export default {
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
-      message: this.userCRM === 'SALESFORCE' ? 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }' : 'Hey { __Recipient.full_name }, your deal { Deal.Name }',
+      message:
+        this.userCRM === 'SALESFORCE'
+          ? 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }'
+          : 'Hey { __Recipient.full_name }, your deal { Deal.Name }',
       templateBounce: true,
       selectedUsers: null,
       fieldBounce: true,
@@ -455,13 +458,13 @@ export default {
   },
   async created() {
     if (this.user.slackRef) {
-      await this.listChannels()
+      await this.users.refresh()
       await this.listUserChannels()
     }
-    if (this.user.userLevel == 'MANAGER') {
-      await this.users.refresh()
-    }
-    this.resources = this.userCRM === 'SALESFORCE' ? ['Opportunity', 'Account', 'Contact', 'Lead'] : ['Deal', 'Contact', 'Company']
+    this.resources =
+      this.userCRM === 'SALESFORCE'
+        ? ['Opportunity', 'Account', 'Contact', 'Lead']
+        : ['Deal', 'Contact', 'Company']
   },
   watch: {
     alertIsValid: 'activateSave',
@@ -485,9 +488,6 @@ export default {
     oldAlert: {},
   },
   methods: {
-    test(log) {
-      console.log('log', log)
-    },
     checkForChannel() {
       !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
     },
@@ -606,14 +606,14 @@ export default {
           'SLACK_CHANNEL'
       }
     },
-    async listChannels(cursor = null) {
-      const res = await SlackOAuth.api.listChannels(cursor)
-      const results = new SlackListResponse({
-        channels: [...this.channelOpts.channels, ...res.channels],
-        responseMetadata: { nextCursor: res.nextCursor },
-      })
-      this.channelOpts = results
-    },
+    // async listChannels(cursor = null) {
+    //   const res = await SlackOAuth.api.listChannels(cursor)
+    //   const results = new SlackListResponse({
+    //     channels: [...this.channelOpts.channels, ...res.channels],
+    //     responseMetadata: { nextCursor: res.nextCursor },
+    //   })
+    //   this.channelOpts = results
+    // },
     async listUserChannels(cursor = null) {
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -626,6 +626,7 @@ export default {
         this.dropdownLoading = false
       }, 500)
     },
+
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
@@ -780,7 +781,7 @@ export default {
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
+      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
     },
     onNextPage() {
       this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
@@ -960,7 +961,8 @@ export default {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey { __Recipient.full_name },'
-    this.alertTemplateForm.field.resourceType.value = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    this.alertTemplateForm.field.resourceType.value =
+      this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
   },
