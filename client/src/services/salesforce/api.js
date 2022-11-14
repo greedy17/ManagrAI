@@ -150,7 +150,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     try {
       
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
-      console.log('res getObjForWork', res)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

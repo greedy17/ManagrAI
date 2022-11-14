@@ -4487,7 +4487,6 @@ export default {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
-        console.log('res getAllForms', res)
         let stageGateForms
         if (this.userCRM === 'SALESFORCE') {
           this.updateOppForm = res.filter(

@@ -103,7 +103,6 @@ const actions = {
   async loadAllOpps({ commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
     try {
       const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
-      console.log('res loadAllOpps', res)
       commit('SAVE_ALL_OPPS', res.results)
     } catch (e) {
       console.log(e)

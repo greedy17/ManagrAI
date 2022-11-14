@@ -554,9 +554,51 @@ export default {
         datetimeCreated: '2020-08-03 11:39:23.632256Z',
         lastEdited: '2020-08-03 11:39:23.632256Z',
       },
+      noteTitleHubspot: {
+        model: 'crm.ObjectField',
+        id: '6407b7a1-a877-44e2-979d-1effafec5035',
+        includeInRecap: true,
+        apiName: 'meeting_type',
+        createable: true,
+        required: false,
+        updateable: true,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Note Subject',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 0,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
       noteSubject: {
         model: 'crm.ObjectField',
         id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2',
+        includeInRecap: true,
+        apiName: 'meeting_comments',
+        createable: true,
+        updateable: true,
+        required: false,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Notes',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 255,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
+      noteSubjectHubspot: {
+        model: 'crm.ObjectField',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
         includeInRecap: true,
         apiName: 'meeting_comments',
         createable: true,
@@ -786,7 +828,7 @@ export default {
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false ||
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
-              let fieldsToAdd = [this.noteTitle, this.noteSubject]
+              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -834,7 +876,7 @@ export default {
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false ||
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
-              let fieldsToAdd = [this.noteTitle, this.noteSubject]
+              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = Array.from(new Set(fieldsToAdd.concat(copyArray)))
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -1651,7 +1693,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            // this.$router.go()
+            this.$router.go()
           }, 300)
         })
         .finally(() => {
