@@ -49,8 +49,8 @@
 
         <section
           class="workflow__modal__body"
-          :key="i"
-          v-for="(opp, i) in activeWorkflow.sobjectInstances"
+          :key="opp.id"
+          v-for="opp in activeWorkflow.sobjectInstances"
         >
           <div class="title">
             <div>
@@ -81,11 +81,11 @@
             Open in Meetings
           </button>
         </div>
-        <div class="workflow__modal__body" v-for="(meeting, i) in meetings" :key="i">
+        <div class="workflow__modal__body" v-for="meeting in meetings" :key="meeting.id">
           <div class="title">
             <div>
               <h4>{{ meeting.meeting_ref.topic ? meeting.meeting_ref.topic : 'Meeting' }}</h4>
-              <p>Participants: {{ meeting.meeting_ref.participants.length }}</p>
+              <p>Participants: {{ meeting.meeting_ref.participants && meething.meeting_ref.participants.length }}</p>
               <p>
                 {{
                   meeting.meeting_ref.start_time
@@ -147,7 +147,7 @@
           </div>
         </div>
 
-        <div :key="i" v-for="(alert, i) in leaderTemplatesFirst" class="card">
+        <div :key="alert.id" v-for="alert in leaderTemplatesFirst" class="card">
           <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -159,7 +159,7 @@
               </h4>
               <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
             </div>
-            <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
+            <p class="card-text" @click="test(alert)">Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}</p>
 
             <div class="card__body__between">
               <div class="row__">
@@ -260,8 +260,8 @@
         </div>
 
         <div
-          v-for="(config, i) in filteredConfigs"
-          :key="i"
+          v-for="config in filteredConfigs"
+          :key="config.id"
           class="card"
           v-show="!templateTitles.includes(config.title)"
         >
@@ -604,7 +604,6 @@ export default {
           filtered.push(this.allConfigs[key])
         }
       }
-      console.log('filtered', filtered)
       return filtered
     },
     userCRM() {
@@ -621,11 +620,12 @@ export default {
     },
     leaderTemplatesFirst() {
       const originalList = this.templates.list
-      console.log('originalList', originalList)
       const leaders = []
       const own = []
-      for (let i = 0; i < originalList.length; i++) {
-        this.user.id !== originalList[i].user ? leaders.push(originalList[i]) : own.push(originalList[i])
+      if (originalList) {
+        for (let i = 0; i < originalList.length; i++) {
+          this.user.id !== originalList[i].user ? leaders.push(originalList[i]) : own.push(originalList[i])
+        }
       }
       return [...leaders, ...own]
     },
