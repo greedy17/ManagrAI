@@ -1431,6 +1431,7 @@ export default {
       )
     },
     changeToCompany() {
+      this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -1451,6 +1452,7 @@ export default {
       )
     },
     changeToDeal() {
+      this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
@@ -1511,6 +1513,7 @@ export default {
       )
     },
     changeToHubspotContact() {
+      this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
       const form = this.allForms.find(
@@ -1537,6 +1540,7 @@ export default {
         this.storedModalFunction = this.switchFormType
         return
       }
+      this.filterText = ''
       this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
 
       this.newCustomForm = this.allForms.find(
