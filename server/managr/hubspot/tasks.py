@@ -23,6 +23,7 @@ from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.hubspot.adapter.models import HubspotContactAdapter
+from managr.crm.models import BaseAccount, BaseContact, BaseOpportunity
 
 logger = logging.getLogger("managr")
 
@@ -395,7 +396,7 @@ def _process_add_call_to_hs(workflow_id, *args):
             associate_res = hs.adapter_class.associate_objects(
                 "meetings",
                 meeting_id,
-                workflow.resource_type.lower(),
+                workflow.resource_type,
                 workflow.resource.integration_id,
                 CALL_ASSOCIATIONS[workflow.resource_type.lower()],
             )
@@ -420,14 +421,12 @@ def _process_add_call_to_hs(workflow_id, *args):
 def _process_add_update_to_hs(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
     resource = None
-    if form.resource_type == "Opportunity":
-        resource = Opportunity.objects.get(id=form.resource_id)
-    elif form.resource_type == "Account":
-        resource = Account.objects.get(id=form.resource_id)
-    elif form.resource_type == "Lead":
-        resource = Lead.objects.get(id=form.resource_id)
+    if form.resource_type == "Deal":
+        resource = BaseOpportunity.objects.get(id=form.resource_id)
+    elif form.resource_type == "Company":
+        resource = BaseAccount.objects.get(id=form.resource_id)
     else:
-        resource = Contact.objects.get(id=form.resource_id)
+        resource = BaseContact.objects.get(id=form.resource_id)
     user = form.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")

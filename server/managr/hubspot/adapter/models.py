@@ -134,12 +134,16 @@ class HubspotAuthAccountAdapter:
         self, associate_type, associate_id, to_object, to_object_id, association_id
     ):
         url = hubspot_consts.HUBSPOT_ASSOCIATIONS_CREATE_URI(
-            associate_type, associate_id, to_object, to_object_id, association_id
+            associate_type, associate_id, to_object, to_object_id
         )
-        print(url)
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        payload = (
+            '[{"associationCategory":"HUBSPOT_DEFINED","associationTypeId":'
+            + f"{association_id}"
+            + "}]"
+        )
         with Client as client:
-            res = client.put(url, headers=headers,)
+            res = client.put(url, headers=headers, data=payload,)
             print(res.json())
             return self._handle_response(res)
 
@@ -318,10 +322,12 @@ class HubspotAuthAccountAdapter:
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
         data = json.dumps(url[1])
+        print(data)
         with Client as client:
             res = client.post(
                 url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
+            print(res.json())
             res = self._handle_response(res)
 
             res = self._format_resource_response(res, resource)

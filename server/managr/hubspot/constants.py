@@ -108,10 +108,8 @@ def HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource):
     return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/associations/{HUBSPOT_URL_RESOURCE_MAP[resource]}/{HUBSPOT_URL_RESOURCE_MAP[associated_resource]}/batch/read"
 
 
-def HUBSPOT_ASSOCIATIONS_CREATE_URI(
-    associate_type, associate_id, to_object, to_object_id, assocation_id
-):
-    return f"{BASE_URL}/crm/v4/objects/{associate_type}/{associate_id}/associations/{to_object}/{to_object_id}/{assocation_id}"
+def HUBSPOT_ASSOCIATIONS_CREATE_URI(associate_type, associate_id, to_object, to_object_id):
+    return f"{BASE_URL}/crm/v4/objects/{associate_type}/{associate_id}/associations/{HUBSPOT_URL_RESOURCE_MAP[to_object]}/{to_object_id}"
 
 
 def HUBSPOT_OBJECTS_URI(

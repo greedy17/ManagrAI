@@ -155,6 +155,8 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
 
     @property
     def object_type(self):
+        if self.owner is None:
+            return None
         if self.owner.crm == "Salesforce":
             return "Opportunity"
         else:

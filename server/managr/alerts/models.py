@@ -338,9 +338,9 @@ class AlertOperand(TimeStampModel):
                 if self.operand_operator == "CONTAINS":
                     value = f"'*{value}*'"
                 elif self.operand_operator == "STARTSWITH":
-                    value = f"'*{value}'"
-                elif self.operand_operator == "ENDSWITH":
                     value = f"'{value}*'"
+                elif self.operand_operator == "ENDSWITH":
+                    value = f"'*{value}'"
             else:
                 value = f"'{value}'"
         q_s = {
