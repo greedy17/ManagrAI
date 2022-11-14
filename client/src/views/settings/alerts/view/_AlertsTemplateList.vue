@@ -104,26 +104,6 @@
       </transition> -->
 
       <div v-if="editing" class="alert_cards">
-        <div
-          v-for="config in filteredConfigs"
-          :key="config.id"
-          class="card"
-          v-show="!templateTitles.includes(config.title)"
-        >
-          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
-          </div>
-
-          <div class="card__body">
-            <h4>{{ config.title }}</h4>
-            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
-            <div class="card__body__between" style="margin-top: 8px">
-              <p></p>
-              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
-            </div>
-          </div>
-        </div>
-
         <div v-if="!zoomChannel" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="gray">
@@ -280,7 +260,7 @@
         </div>
 
         <div
-          v-for="(config, i) in allConfigs"
+          v-for="(config, i) in filteredConfigs"
           :key="i"
           class="card"
           v-show="!templateTitles.includes(config.title)"
@@ -624,6 +604,7 @@ export default {
           filtered.push(this.allConfigs[key])
         }
       }
+      console.log('filtered', filtered)
       return filtered
     },
     userCRM() {
@@ -640,6 +621,7 @@ export default {
     },
     leaderTemplatesFirst() {
       const originalList = this.templates.list
+      console.log('originalList', originalList)
       const leaders = []
       const own = []
       for (let i = 0; i < originalList.length; i++) {
