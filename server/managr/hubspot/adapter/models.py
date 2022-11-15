@@ -85,10 +85,10 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
-        if settings.IN_DEV:
-            user_res = cls.get_user_info(res["access_token"], "zach@mymanagr.com")["results"]
-        else:
-            user_res = cls.get_user_info(res["access_token"], user.email)["results"]
+        # if settings.IN_DEV:
+        #     user_res = cls.get_user_info(res["access_token"], "zach@mymanagr.com")["results"]
+        # else:
+        user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
             "user": user.id,
             "access_token": res.get("access_token"),
@@ -144,7 +144,6 @@ class HubspotAuthAccountAdapter:
         )
         with Client as client:
             res = client.put(url, headers=headers, data=payload,)
-            print(res.json())
             return self._handle_response(res)
 
     def get_associated_resource(self, resource, associated_resource, resource_id):
@@ -254,7 +253,7 @@ class HubspotAuthAccountAdapter:
         resource_class = routes.get(resource)
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
-        data = hubspot_consts.HUBSPOT_SEARCH_BODY(resource_fields, add_filters, limit)
+        data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         logger.info(f"{url} was sent")
         with Client as client:
             res = client.post(
@@ -322,12 +321,10 @@ class HubspotAuthAccountAdapter:
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
         data = json.dumps(url[1])
-        print(data)
         with Client as client:
             res = client.post(
                 url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
-            print(res.json())
             res = self._handle_response(res)
 
             res = self._format_resource_response(res, resource)

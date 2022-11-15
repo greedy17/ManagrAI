@@ -110,7 +110,7 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
                     f"Failed to retrieve alerts for {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
-                sf.regenerate_token()
+                crm.regenerate_token()
                 attempts += 1
         except SFQueryOffsetError:
             return logger.warning(

@@ -557,7 +557,6 @@ class SlackFormsViewSet(
         data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
-        print(data)
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -588,7 +587,6 @@ class SlackFormsViewSet(
         instance = serializer.instance
         instance.custom_fields.clear()
         fields_state = {}
-        print(fields_ref)
         for i, field in enumerate(fields_ref):
             instance.custom_fields.add(
                 field["id"],

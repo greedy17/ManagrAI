@@ -7,6 +7,24 @@ from managr.organization.models import Organization
 from managr.core.models import User
 
 
+class UserRefSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "first_name",
+            "last_name",
+            "profile_photo",
+        )
+
+    def get_full_name(self, instance):
+        return f"{instance.first_name} {instance.last_name}"
+
+
 class BaseAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseAccount
@@ -76,6 +94,8 @@ class BaseContactSerializer(serializers.ModelSerializer):
 
 
 class BaseOpportunitySerializer(serializers.ModelSerializer):
+    owner_ref = UserRefSerializer(source="owner", required=False)
+
     class Meta:
         model = BaseOpportunity
         fields = (
@@ -89,6 +109,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "company",
             "stage",
             "owner",
+            "owner_ref",
             "external_account",
             "external_owner",
             "imported_by",

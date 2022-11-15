@@ -204,6 +204,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
         hs = user.hubspot_account
         try:
             res = hs.list_resource_data(resource)
+
             logger.info(f"Pulled total {len(res)} from request for {resource}")
             attempts = 1
             break

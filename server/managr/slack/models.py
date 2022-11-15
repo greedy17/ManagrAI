@@ -248,7 +248,7 @@ class OrgCustomSlackForm(TimeStampModel):
         return self.save()
 
     def to_slack_options(self):
-        filtered_fields = self.fields.filter(is_public=False)
+        filtered_fields = self.custom_fields.filter(is_public=False)
         options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
         return options
 

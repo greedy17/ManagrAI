@@ -523,7 +523,10 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                             template.url_str(request_user, configs.first().id),
                             template.resource_type,
                         )
-                        res_data = [item.integration_id for item in res]
+                        if len(res):
+                            res_data = [item.integration_id for item in res]
+                        else:
+                            res_data = []
                         break
                 users = []
                 for config in configs:
@@ -555,10 +558,13 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                 return logger.warning(
                     f"Failed retreive data for {template.title} for user {str(request_user.id)} because of {e}"
                 )
-        model = CRM_SWITCHER[request_user.crm][template.resource_type]["model"]
-        queryset = model.objects.filter(integration_id__in=res_data)
-        serialized = CRM_SWITCHER[request_user.crm][template.resource_type]["serializer"](
-            queryset, many=True
-        )
-        secondary_data = [obj["secondary_data"] for obj in serialized.data]
-        return secondary_data
+        if len(res_data):
+            model = CRM_SWITCHER[request_user.crm][template.resource_type]["model"]
+            queryset = model.objects.filter(integration_id__in=res_data)
+            serialized = CRM_SWITCHER[request_user.crm][template.resource_type]["serializer"](
+                queryset, many=True
+            )
+            secondary_data = [obj["secondary_data"] for obj in serialized.data]
+            return secondary_data
+        else:
+            return res_data
