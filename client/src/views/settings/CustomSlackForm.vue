@@ -825,7 +825,7 @@ export default {
               return field.id
             })
             if (
-              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false ||
+              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
               let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
@@ -873,12 +873,12 @@ export default {
               return field.id
             })
             if (
-              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false ||
+              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
               let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
-              fieldsToAdd = Array.from(new Set(fieldsToAdd.concat(copyArray)))
+              fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
                 let altField = { ...field }
                 altField.order = i
@@ -1658,10 +1658,10 @@ export default {
       })
 
       if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
-        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false || currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
-          let fieldsToAdd = [this.noteTitle, this.noteSubject]
+        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false && currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
+          let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
           let copyArray = this.addedFields
-          this.addedFields = Array.from(new Set(fieldsToAdd.concat(copyArray)))
+          this.addedFields = fieldsToAdd.concat(copyArray)
         }
       }
 
@@ -1697,7 +1697,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            this.$router.go()
+            // this.$router.go()
           }, 300)
         })
         .finally(() => {
