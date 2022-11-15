@@ -217,9 +217,8 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
             " Deal.dealstage ",
-            " Deal.LastActivityDate ",
         ],
-        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage } \n \n <strong>Last Activity</strong>: { Deal.LastActivityDate }",
+        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage }",
     },
     newConfigs: [
         {
