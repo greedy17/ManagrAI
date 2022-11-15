@@ -37,7 +37,7 @@
                   openDirection="below"
                   style="width: 20vw; margin-top: 2rem; margin-left: 1rem"
                   selectLabel="Enter"
-                  :track-by="userCRM === 'HUBSPOT' ? 'label' : 'value'"
+                  :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
                   :value="currentlySelectedStage"
                   v-model="selectedCustomObject"
@@ -56,12 +56,12 @@
                   <template slot="option" slot-scope="props">
                     <div>
                       <span class="option__title">{{
-                        userCRM === 'SALESFORCE' ? props.option.value : props.option.label
+                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label
                       }}</span
                       ><span
                         v-if="
                           currentStagesWithForms.includes(
-                            userCRM === 'SALESFORCE' ? props.option.value : props.option.label,
+                            userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
                           )
                         "
                         class="option__small"
@@ -1119,8 +1119,9 @@ export default {
     test(log) {
       console.log('log', log)
     },
-    customLabel({ label }) {
-      return `${label}`
+    customLabel(prop) {
+      console.log('prop', prop)
+      return `${prop.label}`
     },
     searchFields() {
       this.formFields = CollectionManager.create({
