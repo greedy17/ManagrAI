@@ -217,9 +217,8 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
             " Deal.dealstage ",
-            " Deal.LastActivityDate ",
         ],
-        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage } \n \n <strong>Last Activity</strong>: { Deal.LastActivityDate }",
+        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage }",
     },
     newConfigs: [
         {
@@ -315,9 +314,9 @@ const DEAL_REVIEW_HUBSPOT = {
         bindings: [
             " __Recipient.full_name ",
             " Deal.dealname ",
-            " Deal.LastModifiedDate ",
+            " Deal.hs_lastmodifieddate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Deal.dealname }</strong> hasnt been updated since <strong>{ Deal.LastModifiedDate }</strong>",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Deal.dealname }</strong> hasnt been updated since <strong>{ Deal.hs_lastmodifieddate }</strong>",
     },
     newConfigs: [
         {
