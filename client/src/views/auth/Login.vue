@@ -12,7 +12,7 @@
         @blur="loginForm.field.email.validate()"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
-        placeholder="email"
+        placeholder="enter email"
         :errors="loginForm.field.email.errors"
       />
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
@@ -37,11 +37,12 @@
         <p class="pad-right">New to Managr?</p>
         <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
       </div>
-      <div class="row">
+      <div class="row" style="margin-bottom: 1rem;">
         <p class="pad-right">Forgot password?</p>
         <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
       </div>
-      <div class="links">
+    </div>
+    <div class="links">
         <p>
           <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
           |
@@ -50,7 +51,6 @@
           <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
         </p>
       </div>
-    </div>
   </div>
 </template>
 
@@ -205,10 +205,11 @@ input:focus {
   outline: none;
 }
 .login-page {
-  padding: 2rem 2rem;
+  padding: 2rem 2rem 0 2rem;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   color: white;
   letter-spacing: 0.75px;
@@ -221,8 +222,8 @@ input:focus {
 .login-page__form {
   background-color: $white;
   border-radius: 6px;
-  width: 30vw;
-  margin-top: 4rem;
+  width: 20rem;
+  margin-top: 5rem;
   display: flex;
   flex-flow: column;
   align-items: center;
