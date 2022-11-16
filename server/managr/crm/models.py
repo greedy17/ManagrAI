@@ -52,7 +52,7 @@ class BaseAccount(TimeStampModel, IntegrationModel):
 
     @property
     def object_type(self):
-        if self.owner.crm == "Salesforce":
+        if self.owner.crm == "SALESFORCE":
             return "Account"
         else:
             return "Company"
@@ -66,14 +66,26 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         return adapters[self.integration_source][resource](**data)
 
     def get_current_values(self):
+        if self.owner.crm == "SALESFORCE":
+            return self.adapter_class.get_current_values(
+                self.integration_id,
+                self.owner.crm_account.access_token,
+                self.owner.crm_account.instance_url,
+                str(self.owner.id),
+            )
         return self.adapter_class.get_current_values()
 
     def update(self, data):
         token = self.owner.crm_account.access_token
+        custom_base = (
+            self.owner.salesforce_account.instance_url if self.owner.crm == "SALESFORCE" else None
+        )
         object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        res = self.adapter_class.update(
+            data, token, self.integration_id, object_fields, custom_base
+        )
         self.is_stale = True
         self.save()
         return res
@@ -157,7 +169,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     def object_type(self):
         if self.owner is None:
             return None
-        if self.owner.crm == "Salesforce":
+        if self.owner.crm == "SALESFORCE":
             return "Opportunity"
         else:
             return "Deal"
@@ -175,14 +187,26 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         return block_builders.option(self.name, str(self.id))
 
     def get_current_values(self):
+        if self.owner.crm == "SALESFORCE":
+            return self.adapter_class.get_current_values(
+                self.integration_id,
+                self.owner.crm_account.access_token,
+                self.owner.crm_account.instance_url,
+                str(self.owner.id),
+            )
         return self.adapter_class.get_current_values()
 
     def update(self, data):
         token = self.owner.crm_account.access_token
+        custom_base = (
+            self.owner.salesforce_account.instance_url if self.owner.crm == "SALESFORCE" else None
+        )
         object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        res = self.adapter_class.update(
+            data, token, self.integration_id, object_fields, custom_base
+        )
         self.is_stale = True
         self.save()
         return res
@@ -252,14 +276,26 @@ class BaseContact(TimeStampModel, IntegrationModel):
         return block_builders.option(self.email, str(self.id))
 
     def get_current_values(self):
+        if self.owner.crm == "SALESFORCE":
+            return self.adapter_class.get_current_values(
+                self.integration_id,
+                self.owner.crm_account.access_token,
+                self.owner.crm_account.instance_url,
+                str(self.owner.id),
+            )
         return self.adapter_class.get_current_values()
 
     def update(self, data):
         token = self.owner.crm_account.access_token
+        custom_base = (
+            self.owner.salesforce_account.instance_url if self.owner.crm == "SALESFORCE" else None
+        )
         object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.update(data, token, self.integration_id, object_fields)
+        res = self.adapter_class.update(
+            data, token, self.integration_id, object_fields, custom_base
+        )
         self.is_stale = True
         self.save()
         return res
@@ -583,8 +619,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
                     self.options,
                 )
             )
-        elif not self.is_public and hasattr(self, "picklist_options"):
-            return self.picklist_options.as_slack_options
+        elif not self.is_public and hasattr(self, "crm_picklist_options"):
+            return self.crm_picklist_options.as_slack_options
         elif self.user.crm == "HUBSPOT":
             return list(
                 map(
@@ -593,4 +629,5 @@ class ObjectField(TimeStampModel, IntegrationModel):
                 )
             )
         else:
-            return [block_builders.option("No Options", None)]
+            return [block_builders.option("No Options", "None")]
+

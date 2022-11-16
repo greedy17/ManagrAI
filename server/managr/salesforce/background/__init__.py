@@ -64,6 +64,7 @@ from ..adapter.exceptions import (
 )
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
+from ..routes import routes as model_routes
 
 logger = logging.getLogger("managr")
 
@@ -773,15 +774,7 @@ def _process_add_call_to_sf(workflow_id, *args):
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_update_to_sf(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
-    resource = None
-    if form.resource_type == "Opportunity":
-        resource = Opportunity.objects.get(id=form.resource_id)
-    elif form.resource_type == "Account":
-        resource = Account.objects.get(id=form.resource_id)
-    elif form.resource_type == "Lead":
-        resource = Lead.objects.get(id=form.resource_id)
-    else:
-        resource = Contact.objects.get(id=form.resource_id)
+    resource = model_routes[form.resource_type]["model"].objects.get(id=form.resource_id)
     user = form.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")

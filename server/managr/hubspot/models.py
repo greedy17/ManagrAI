@@ -627,7 +627,7 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 )
             )
         else:
-            return [block_builders.option("No Options", None)]
+            return [block_builders.option("No Options", "None")]
 
     def to_slack_field(self, value=None, *args, **kwargs):
         if self.field_type == "radio":

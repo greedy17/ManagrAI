@@ -103,7 +103,8 @@ def authenticate(request):
             *serializer.instance.field_sync_opts,
             *serializer.instance.validation_sync_opts,
         ]
-
+        request.user.crm = "SALESFORCE"
+        request.user.save()
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_object_field_sync(str(request.user.id), operations, False, formatted_time)
