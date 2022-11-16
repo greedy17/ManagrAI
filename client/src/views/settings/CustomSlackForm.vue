@@ -556,7 +556,7 @@ export default {
       },
       noteTitleHubspot: {
         model: 'crm.ObjectField',
-        id: '6407b7a1-a877-44e2-979d-1effafec5035',
+        id: '6407b7a1-a877-44e2-979d-1effafec5034', //'6407b7a1-a877-44e2-979d-1effafec5035',
         includeInRecap: true,
         apiName: 'meeting_type',
         createable: true,
@@ -598,7 +598,7 @@ export default {
       },
       noteSubjectHubspot: {
         model: 'crm.ObjectField',
-        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2', //'0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
         includeInRecap: true,
         apiName: 'meeting_comments',
         createable: true,
