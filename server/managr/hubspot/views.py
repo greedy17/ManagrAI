@@ -1,5 +1,6 @@
 import logging
 from faker import Faker
+from datetime import timezone
 from urllib.parse import urlencode
 
 from django.shortcuts import redirect
@@ -11,13 +12,14 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
+from managr.hubspot.tasks import emit_generate_hs_form_template
 
 from . import constants as hubspot_consts
 
 # from .cron import queue_hubspot_sync
 from .models import HubspotAuthAccount
 from .adapter.models import HubspotAuthAccountAdapter
-
+from .tasks import emit_gen_next_hubspot_sync, emit_gen_next_hubspot_field_sync
 from .serializers import HubspotAuthAccountSerializer
 
 # Create your views here.
@@ -35,6 +37,7 @@ def get_hubspot_auth_link(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_hubspot_authentication(request):
     code = request.data.get("code", None)
+    user = request.user
     if not code:
         raise ValidationError()
     res = HubspotAuthAccountAdapter.create_account(code, request.user.id)
@@ -48,8 +51,27 @@ def get_hubspot_authentication(request):
         serializer.save()
     except Exception as e:
         logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}")
-    request.user.crm = "HUBSPOT"
-    request.user.save()
+    user.crm = "HUBSPOT"
+    user.save()
+    operations = [
+        *serializer.instance.field_sync_opts,
+        *serializer.instance.validation_sync_opts,
+    ]
+    scheduled_time = timezone.now()
+    formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
+    emit_gen_next_hubspot_field_sync(str(user.id), operations, False, formatted_time)
+    # generate forms
+    if serializer.instance.user.is_admin:
+        form_check = user.team.team_forms.all()
+        schedule = (
+            (timezone.now() + timezone.timedelta(minutes=5))
+            if len(form_check) > 0
+            else timezone.now()
+        )
+        emit_generate_hs_form_template(user, schedule=schedule)
+    sync_operations = [*user.salesforce_account.resource_sync_opts]
+    sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
+    emit_gen_next_hubspot_sync(str(user.id), sync_operations, sync_time)
     return Response(data={"success": True})
 
 

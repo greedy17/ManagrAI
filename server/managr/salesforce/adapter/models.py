@@ -117,6 +117,7 @@ class SObjectPicklistAdapter:
     def __init__(self, data):
         self.values = data.get("values", [])
         self.field = data.get("field", None)
+        self.object_field = data.get("field", None)
         self.picklist_for = data.get("picklist_for", "")
         self.salesforce_account = data.get("salesforce_account", None)
         self.integration_source = data.get("integration_source", "")
@@ -1229,7 +1230,7 @@ class OpportunityAdapter:
         return formatted_data
 
     @staticmethod
-    def update_opportunity(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )
