@@ -3147,7 +3147,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4125,7 +4125,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4267,7 +4267,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4616,6 +4616,7 @@ export default {
         })
         this.modalOpen = true
         if (res.length) {
+          this.notes = []
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
             this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
@@ -6267,104 +6268,104 @@ a {
   background: #fff;
   font-size: 14px;
 }
-.results-2 {
-  font-size: 11px;
-  margin-right: 16px;
-  color: $gray;
-}
-.note-templates {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 12px;
-  padding: 12px 6px;
-  margin-top: -34px;
-  border: 1px solid $soft-gray;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  cursor: pointer;
-  width: 40.25vw;
+// .results-2 {
+//   font-size: 11px;
+//   margin-right: 16px;
+//   color: $gray;
+// }
+// .note-templates {
+//   display: flex;
+//   justify-content: flex-end;
+//   font-size: 12px;
+//   padding: 12px 6px;
+//   margin-top: -34px;
+//   border: 1px solid $soft-gray;
+//   border-bottom-left-radius: 4px;
+//   border-bottom-right-radius: 4px;
+//   cursor: pointer;
+//   width: 40.25vw;
 
-  &__content {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
-  img {
-    filter: invert(50%);
-    height: 12px;
-  }
-  &__content:hover {
-    opacity: 0.6;
-  }
-}
+//   &__content {
+//     display: flex;
+//     flex-direction: row;
+//     align-items: center;
+//   }
+//   img {
+//     filter: invert(50%);
+//     height: 12px;
+//   }
+//   &__content:hover {
+//     opacity: 0.6;
+//   }
+// }
 
-.note-templates2 {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 24px;
-  font-size: 12px;
-  padding: 12px 6px;
-  margin-top: -34px;
-  border: 1px solid $soft-gray;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  width: 40.25vw;
-  height: 80px;
-  overflow: scroll;
+// .note-templates2 {
+//   display: flex;
+//   flex-direction: row;
+//   align-items: center;
+//   justify-content: flex-start;
+//   flex-wrap: wrap;
+//   gap: 24px;
+//   font-size: 12px;
+//   padding: 12px 6px;
+//   margin-top: -34px;
+//   border: 1px solid $soft-gray;
+//   border-bottom-left-radius: 4px;
+//   border-bottom-right-radius: 4px;
+//   width: 40.25vw;
+//   height: 80px;
+//   overflow: scroll;
 
-  &__content {
-    border-radius: 4px;
-    border: 0.5px solid $base-gray;
-    color: $base-gray;
-    padding: 8px 6px;
-    margin-bottom: 8px;
-    cursor: pointer;
-  }
-  &__content:hover {
-    opacity: 0.6;
-  }
-}
-.close-template {
-  position: absolute;
-  bottom: 56px;
-  right: 20px;
-  z-index: 3;
-  cursor: pointer;
-  background-color: black;
-  border-radius: 3px;
-  opacity: 0.6;
-  img {
-    filter: invert(99%);
-  }
-}
-.label {
-  display: inline-block;
-  padding: 6px;
-  font-size: 14px;
-  text-align: center;
-  min-width: 80px;
-  margin-top: 12px;
-  background-color: $white-green;
-  color: $dark-green;
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-.red-label {
-  background-color: #fa646a;
-  color: white;
-  display: inline-block;
-  padding: 6px;
-  font-size: 14px;
-  text-align: center;
-  min-width: 80px;
-  margin-top: 12px;
-  margin-left: 2px;
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
+//   &__content {
+//     border-radius: 4px;
+//     border: 0.5px solid $base-gray;
+//     color: $base-gray;
+//     padding: 8px 6px;
+//     margin-bottom: 8px;
+//     cursor: pointer;
+//   }
+//   &__content:hover {
+//     opacity: 0.6;
+//   }
+// }
+// .close-template {
+//   position: absolute;
+//   bottom: 56px;
+//   right: 20px;
+//   z-index: 3;
+//   cursor: pointer;
+//   background-color: black;
+//   border-radius: 3px;
+//   opacity: 0.6;
+//   img {
+//     filter: invert(99%);
+//   }
+// }
+// .label {
+//   display: inline-block;
+//   padding: 6px;
+//   font-size: 14px;
+//   text-align: center;
+//   min-width: 80px;
+//   margin-top: 12px;
+//   background-color: $white-green;
+//   color: $dark-green;
+//   font-weight: bold;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+// }
+// .red-label {
+//   background-color: #fa646a;
+//   color: white;
+//   display: inline-block;
+//   padding: 6px;
+//   font-size: 14px;
+//   text-align: center;
+//   min-width: 80px;
+//   margin-top: 12px;
+//   margin-left: 2px;
+//   font-weight: bold;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+// }
 </style>
