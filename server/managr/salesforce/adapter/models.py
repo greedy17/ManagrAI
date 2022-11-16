@@ -163,6 +163,12 @@ class SalesforceAuthAccountAdapter:
         self.default_record_ids = kwargs.get("default_record_ids", {})
         self.exclude_fields = kwargs.get("exclude_fields", {})
 
+    @property
+    def internal_user(self):
+        from managr.core.models import User
+
+        return User.objects.get(id=self.user)
+
     @staticmethod
     def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
@@ -537,7 +543,9 @@ class SalesforceAuthAccountAdapter:
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
-        extra_items = self.object_fields.get(resource)
+        extra_items = self.internal_user.object_fields.filter(crm_object=resource).values_list(
+            "api_name", flat=True
+        )
         from .routes import routes
 
         add_filters = kwargs.get("filter", None)
