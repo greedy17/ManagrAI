@@ -377,10 +377,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             user_fields.append(f)
         if not template_fields:
             # user has not created form use all fields
-            user_fields = SObjectField.objects.filter(
-                salesforce_account=self.user.salesforce_account,
-                salesforce_object=self.resource_type,
-            )
+            user_fields = ObjectField.objects.filter(user=self.user, crm_object=self.resource_type,)
         return user_fields
 
     def generate_form_values(self, data=None):

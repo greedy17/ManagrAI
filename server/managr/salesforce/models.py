@@ -1119,5 +1119,7 @@ class SalesforceAuthAccount(TimeStampModel):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        self.user.crm = None
+        self.user.save()
         return super().delete(*args, **kwargs)
 
