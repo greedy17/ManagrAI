@@ -1,6 +1,7 @@
 import logging
 from faker import Faker
-from datetime import timezone
+from django.utils import timezone
+
 from urllib.parse import urlencode
 
 from django.shortcuts import redirect
@@ -55,11 +56,10 @@ def get_hubspot_authentication(request):
     user.save()
     operations = [
         *serializer.instance.field_sync_opts,
-        *serializer.instance.validation_sync_opts,
     ]
     scheduled_time = timezone.now()
     formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
-    emit_gen_next_hubspot_field_sync(str(user.id), operations, False, formatted_time)
+    emit_gen_next_hubspot_field_sync(str(user.id), operations, formatted_time)
     # generate forms
     if serializer.instance.user.is_admin:
         form_check = user.team.team_forms.all()
@@ -68,8 +68,8 @@ def get_hubspot_authentication(request):
             if len(form_check) > 0
             else timezone.now()
         )
-        emit_generate_hs_form_template(user, schedule=schedule)
-    sync_operations = [*user.salesforce_account.resource_sync_opts]
+        emit_generate_hs_form_template(str(res.user), schedule=scheduled_time)
+    sync_operations = [*user.hubspot_account.resource_sync_opts]
     sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
     emit_gen_next_hubspot_sync(str(user.id), sync_operations, sync_time)
     return Response(data={"success": True})
