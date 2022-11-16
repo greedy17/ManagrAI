@@ -129,6 +129,11 @@ def HUBSPOT_OWNERS_URI(email=None):
     return f"{BASE_URL}/crm/v3/owners"
 
 
+def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):
+    fields = set(fields)
+    return {"properties": list(fields), "filters": filters, "limit": limit}
+
+
 def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
     fields = set(fields)
     return {

@@ -243,15 +243,16 @@ def alert_instance_block_set(context):
                 style="primary",
             )
         ]
-        if hasattr(user, "gong_account"):
-            options.extend(
-                [block_builders.option("Call Details", "call_details"),]
-            )
-        if instance.template.resource_type != "Lead":
-            if hasattr(user, "outreach_account"):
-                options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
-            if hasattr(user, "salesloft_account"):
-                options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
+        if user.crm == "SALESFORCE":
+            if hasattr(user, "gong_account"):
+                options.extend(
+                    [block_builders.option("Call Details", "call_details"),]
+                )
+            if instance.template.resource_type != "Lead":
+                if hasattr(user, "outreach_account"):
+                    options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
+                if hasattr(user, "salesloft_account"):
+                    options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
 
         action_blocks.append(
             block_builders.static_select_input(

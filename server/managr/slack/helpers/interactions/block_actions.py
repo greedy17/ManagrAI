@@ -2436,7 +2436,7 @@ def process_get_summary_fields(payload, context):
     form = user.team.team_forms.filter(
         form_type="UPDATE", resource=config.template.resource_type
     ).first()
-    fields = form.fields.all().exclude(
+    fields = form.custom_fields.all().exclude(
         Q(data_type__in=["Reference", "String", "TextArea"]) | Q(api_name="Amount")
     )
     fields_options = [block_builders.option(field.label, field.api_name) for field in fields]

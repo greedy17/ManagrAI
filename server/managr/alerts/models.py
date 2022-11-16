@@ -95,6 +95,9 @@ class AlertTemplate(TimeStampModel):
             return f"{user_crm.instance_url}{q[0]}"
         else:
             operand_groups = [group.hs_query_str(config_id) for group in self.groups.all()]
+            operand_groups[0]["filters"].append(
+                {"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"}
+            )
             return (
                 hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
                 {"filterGroups": operand_groups},

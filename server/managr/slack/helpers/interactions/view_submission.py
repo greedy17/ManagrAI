@@ -68,7 +68,8 @@ from managr.slack.helpers.exceptions import (
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 from managr.salesforce.adapter.models import PricebookEntryAdapter
-from managr.hubspot.tasks import _process_create_new_hs_resource
+from managr.hubspot.tasks import _process_create_new_hs_resource, emit_add_update_to_hs
+from managr.crm.utils import CRM_SWITCHER
 
 logger = logging.getLogger("managr")
 
@@ -193,8 +194,6 @@ def process_zoom_meeting_data(payload, context):
         current_form_ids.append(str(form.id))
         form.save_form(state)
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    print(workflow)
-    print(workflow.id)
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -590,9 +589,11 @@ def process_submit_resource_data(payload, context):
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
-            and user.crm == "Salesforce"
         ):
-            emit_add_update_to_sf(str(main_form.id))
+            if user.crm == "SALESFORCE":
+                emit_add_update_to_sf(str(main_form.id))
+            else:
+                emit_add_update_to_hs(str(main_form.id))
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
@@ -3046,9 +3047,10 @@ def process_submit_bulk_update(payload, context):
 
 def create_summary_object(api_names, resources, resource_type):
     object = {}
-    if resource_type == "Opportunity":
+    if resource_type in ["Opportunity", "Deal"]:
         amounts = [(resource.amount if resource.amount else 0) for resource in resources]
-        object["Amount"] = round(sum(amounts), 2)
+        amount_api = "Amount" if resource_type == "Opportunity" else "amount"
+        object[amount_api] = round(sum(amounts), 2)
     for resource in resources:
         for api_name in api_names:
             value = resource.secondary_data[api_name]
@@ -3082,7 +3084,7 @@ def process_get_summary(payload, context):
     api_name_obj = {}
     for value in values:
         api_name_obj[value["value"]] = value["text"]["text"]
-    resources = model_routes[config.template.resource_type]["model"].objects.filter(
+    resources = CRM_SWITCHER[u.crm][config.template.resource_type]["model"].objects.filter(
         id__in=instances
     )
     summary_object = create_summary_object(value_list, resources, config.template.resource_type)
@@ -3097,8 +3099,11 @@ def process_get_summary(payload, context):
         summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['Amount'])}"
         blocks.insert(1, block_builders.simple_section(summary_amount, "mrkdwn"))
         summary_object.pop("Amount")
+    if config.template.resource_type == "Deal":
+        summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['amount'])}"
+        blocks.insert(1, block_builders.simple_section(summary_amount, "mrkdwn"))
+        summary_object.pop("amount")
     summary_text = ""
-
     for field in summary_object.keys():
         summary_text += f"\n\n*{api_name_obj[field]}:*\n"
         for key in summary_object[field]:
