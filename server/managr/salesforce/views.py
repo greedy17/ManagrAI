@@ -116,7 +116,7 @@ def authenticate(request):
                 if len(form_check) > 0
                 else timezone.now()
             )
-            emit_generate_form_template(data.user, schedule=schedule)
+            emit_generate_form_template(data.user, schedule=scheduled_time)
         user = User.objects.get(id=request.user.id)
         sync_operations = [*user.salesforce_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")

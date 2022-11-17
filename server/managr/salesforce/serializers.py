@@ -168,7 +168,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
         from managr.salesforce.routes import routes as sf_routes
         from managr.hubspot.routes import routes as hs_routes
 
-        if instance.resource_type:
+        if instance.resource_type and instance.user.crm is not None:
             routes = sf_routes if instance.user.crm == "SALESFORCE" else hs_routes
             resource_type = instance.resource_type
             serializer = routes[resource_type]["serializer"]
@@ -269,6 +269,7 @@ class ContactSerializer(serializers.ModelSerializer):
         # remove contacts from validation
         internal_data = super().to_internal_value(data)
         return internal_data
+
 
 class UserRefSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()

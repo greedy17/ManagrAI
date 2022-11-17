@@ -1117,7 +1117,19 @@ class SalesforceAuthAccount(TimeStampModel):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        from managr.crm.models import BaseOpportunity, ObjectField, BaseAccount, BaseContact
+
         self.user.crm = None
         self.user.save()
+
+        fields = ObjectField.objects.filter(user=self.user)
+        fields.delete()
+        opps = BaseOpportunity.objects.filter(owner=self.user)
+        opps.delete()
+        accounts = BaseAccount.objects.filter(owner=self.user)
+        accounts.delete()
+        contacts = BaseContact.objects.filter(owner=self.user)
+        contacts.delete()
+        return super().delete(*args, **kwargs)
         return super().delete(*args, **kwargs)
 
