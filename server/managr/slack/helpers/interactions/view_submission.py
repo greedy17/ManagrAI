@@ -38,6 +38,7 @@ from managr.slack.helpers.utils import (
     send_loading_screen,
     get_crm_value,
 )
+from managr.crm.models import BaseOpportunity
 from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.routes import routes as model_routes
@@ -1912,7 +1913,7 @@ def process_submit_product(payload, context):
     while True:
         sf = user.salesforce_account
         try:
-            opp = Opportunity.objects.get(id=main_form.resource_id)
+            opp = BaseOpportunity.objects.get(id=main_form.resource_id)
             try:
                 entry = PricebookEntry.objects.get(
                     integration_id=product_form.saved_data["PricebookEntryId"]
@@ -1928,6 +1929,7 @@ def process_submit_product(payload, context):
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
             }
+            print(product_data)
             if "UnitPrice" not in product_form.saved_data:
                 product_data["UnitPrice"] = str(entry.unit_price)
             if (

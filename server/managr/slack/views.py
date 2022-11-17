@@ -607,9 +607,9 @@ class SlackFormsViewSet(
             update_serializer = self.get_serializer(data=update_data, instance=form)
             update_serializer.is_valid(raise_exception=True)
             instance = update_serializer.instance
-            instance.fields.clear()
+            instance.custom_fields.clear()
             for i, field in enumerate(fields):
-                form.fields.add(field, through_defaults={"order": i})
+                form.custom_fields.add(field, through_defaults={"order": i})
             instance.config = fields_state
             instance.save()
         return Response(serializer.data)

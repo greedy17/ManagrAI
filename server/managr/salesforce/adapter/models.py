@@ -781,7 +781,7 @@ class AccountAdapter:
         return vars(self)
 
     @staticmethod
-    def update_account(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
         )
@@ -926,12 +926,12 @@ class ContactAdapter:
             return r
 
     @staticmethod
-    def update_contact(data, access_token, custom_base, integration_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
         )
         url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
+            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, salesforce_id
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
@@ -1054,10 +1054,11 @@ class LeadAdapter:
             return r
 
     @staticmethod
-    def update_lead(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
         )
+        print(json_data)
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.RESOURCE_SYNC_LEAD, salesforce_id
         )
@@ -1724,7 +1725,7 @@ class OpportunityLineItemAdapter:
             return r
 
     @staticmethod
-    def update_opportunitylineitem(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, custom_base, salesforce_id, object_fields):
         if "PricebookEntryId" in data.keys():
             data.pop("PricebookEntryId")
         json_data = json.dumps(

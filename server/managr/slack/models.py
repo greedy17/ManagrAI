@@ -8,8 +8,7 @@ from django.db.models import Q
 from django.forms import UUIDField
 
 from managr.slack.helpers import block_builders
-from managr.salesforce.models import SObjectField
-from managr.hubspot.models import HObjectField
+
 from managr.crm.exceptions import TokenExpired, InvalidRefreshToken
 from managr.core import constants as core_consts
 from . import constants as slack_consts
@@ -228,20 +227,18 @@ class OrgCustomSlackForm(TimeStampModel):
         self.save()
 
     def recreate_form(self):
+        from managr.crm.models import ObjectField
+
         team_lead = self.team.team_lead
-        fields = SObjectField.objects.filter(
-            Q(
-                api_name__in=self.config.values(),
-                salesforce_object=self.resource,
-                salesforce_account=team_lead.salesforce_account,
-            )
+        fields = ObjectField.objects.filter(
+            Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
             | Q(is_public=True)
         )
-        self.fields.clear()
+        self.custom_fields.clear()
         for i, field in enumerate(self.config.items()):
             current_field = fields.filter(api_name=field[1]).first()
             if current_field:
-                self.fields.add(
+                self.custom_fields.add(
                     current_field.id,
                     through_defaults={"order": field[0], "include_in_recap": True,},
                 )
@@ -259,24 +256,6 @@ class OrgCustomSlackForm(TimeStampModel):
             state_object[field.order] = field.field.api_name
         self.config = state_object
         self.save()
-
-    def recreate_form(self):
-        admin = self.organization.users.filter(is_admin=True).first()
-        fields = SObjectField.objects.filter(
-            Q(
-                api_name__in=self.config.values(),
-                salesforce_object=self.resource,
-                salesforce_account=admin.salesforce_account,
-            )
-            | Q(is_public=True)
-        )
-        self.fields.clear()
-        for i, field in enumerate(self.config.items()):
-            current_field = fields.filter(api_name=field[1]).first()
-            self.fields.add(
-                current_field.id, through_defaults={"order": field[0], "include_in_recap": True,},
-            )
-        return self.save()
 
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):

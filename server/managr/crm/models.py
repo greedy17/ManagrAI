@@ -62,7 +62,7 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["owner"] = str(self.owner.id) if self.owner else None
-        resource = "Account" if self.integration_source == "Salesforce" else "Company"
+        resource = "Account" if self.integration_source == "SALESFORCE" else "Company"
         return adapters[self.integration_source][resource](**data)
 
     def get_current_values(self):

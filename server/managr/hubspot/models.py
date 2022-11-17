@@ -406,8 +406,18 @@ class HubspotAuthAccount(TimeStampModel):
         return super(HubspotAuthAccount, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        from managr.crm.models import BaseOpportunity, ObjectField, BaseAccount, BaseContact
+
         self.user.crm = None
         self.user.save()
+        fields = ObjectField.objects.filter(user=self.user)
+        fields.delete()
+        opps = BaseOpportunity.objects.filter(user=self.user)
+        opps.delete()
+        accounts = BaseAccount.objects.filter(user=self.user)
+        accounts.delete()
+        contacts = BaseContact.objects.filter(user=self.user)
+        contacts.delete()
         return super().delete(*args, **kwargs)
 
 
