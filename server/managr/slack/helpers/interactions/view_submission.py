@@ -1929,7 +1929,6 @@ def process_submit_product(payload, context):
                 **product_form.saved_data,
                 "OpportunityId": opp.integration_id,
             }
-            print(product_data)
             if "UnitPrice" not in product_form.saved_data:
                 product_data["UnitPrice"] = str(entry.unit_price)
             if (

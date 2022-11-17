@@ -1139,7 +1139,7 @@ def process_show_update_resource_form(payload, context):
             template=template, resource_id=resource_id, user=user,
         )
         if slack_form:
-            stage_name = "StageName" if user.crm == "Salesforce" else "dealstage"
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
             current_stage = slack_form.resource_object.secondary_data.get(stage_name)
             stage_template = (
                 OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
@@ -1814,7 +1814,9 @@ def process_get_notes(payload, context):
         )
     )
     note_blocks = [
-        block_builders.header_block(f"Notes for {resource.name}")
+        block_builders.header_block(
+            f"Notes for {resource.name if resource_type not in ['Lead', 'Contact'] else resource.email}"
+        )
         if note_data
         else block_builders.header_block(
             f"No notes for {resource.name}, start leaving notes! :smiley:"

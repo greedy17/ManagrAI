@@ -221,7 +221,7 @@ def alert_instance_block_set(context):
             .first()
             .id
         )
-        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name if form.resource_type not in ['Lead', 'Contact'] else form.resource_object.email}_"
         blocks = block_sets.get_block_set(
             "success_modal", {"u": str(user.id), "form_ids": str(form.id), "message": message,},
         )

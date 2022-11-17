@@ -1058,7 +1058,6 @@ class LeadAdapter:
         json_data = json.dumps(
             LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
         )
-        print(json_data)
         url = sf_consts.SALESFORCE_WRITE_URI(
             custom_base, sf_consts.RESOURCE_SYNC_LEAD, salesforce_id
         )

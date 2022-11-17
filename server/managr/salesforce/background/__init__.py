@@ -584,7 +584,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     while True:
         sf = user.salesforce_account
         try:
-            res = workflow.resource.update_in_salesforce(data)
+            res = workflow.resource.update(data)
             attempts = 1
             update_forms.update(
                 is_submitted=True, submission_date=timezone.now(), update_source="meeting"
@@ -858,7 +858,7 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
         while True:
             sf = user.salesforce_account
             try:
-                resource = main_form.resource_object.update_in_salesforce(all_form_data, True)
+                resource = main_form.resource_object.update(all_form_data, True)
                 data = {
                     "success": True,
                     "task_hash": resource["task_hash"],
@@ -1216,13 +1216,16 @@ def _process_update_contacts(workflow_id, *args):
             while True:
                 sf = user.salesforce_account
                 sf_adapter = sf.adapter_class
+                object_fields = user.object_fields.filter(crm_object="Contact").values_list(
+                    "api_name", flat=True
+                )
                 try:
-                    ContactAdapter.update_contact(
+                    ContactAdapter.update(
                         data,
                         sf.access_token,
-                        sf.instance_url,
                         form.resource_object.integration_id,
-                        sf_adapter.object_fields.get("Contact", {}),
+                        object_fields,
+                        sf.instance_url,
                     )
                     attempts = 1
                     form.is_submitted = True
@@ -1258,7 +1261,6 @@ def _process_update_contacts(workflow_id, *args):
             attempts = 1
             while True:
                 sf = user.salesforce_account
-                sf_adapter = sf.adapter_class
                 try:
                     # check to see if it already has a contact role by checking linked_contacts
                     is_linked = workflow.resource.contacts.filter(
@@ -1319,12 +1321,11 @@ def _process_create_new_resource(form_ids, *args):
             from managr.salesforce.routes import routes as model_routes
 
             adapter = adapter_routes.get(resource)
+            object_fields = user.object_fields.filter(crm_object=resource).values_list(
+                "api_name", flat=True
+            )
             res = adapter.create(
-                data,
-                sf.access_token,
-                sf.instance_url,
-                sf.adapter_class.object_fields.get(resource),
-                str(user.id),
+                data, sf.access_token, sf.instance_url, object_fields, str(user.id),
             )
             serializer = model_routes.get(resource)["serializer"](data=res.as_dict)
             serializer.is_valid(raise_exception=True)
@@ -1943,7 +1944,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
         while True:
             sf = user.salesforce_account
             try:
-                resource = form.resource_object.update_in_salesforce(all_form_data)
+                resource = form.resource_object.update(all_form_data)
                 form.is_submitted = True
                 form.update_source = "slack-bulk"
                 form.submission_date = timezone.now()

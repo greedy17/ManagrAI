@@ -277,7 +277,7 @@ class AlertOperand(TimeStampModel):
                 self.group.template.config_run_against_date(config_id)
                 + timezone.timedelta(days=int(self.operand_value))
             ).strftime("%Y-%m-%dT00:00:00Z")
-        elif self.data_type == "STRING" and self.operand_value != "null":
+        elif self.data_type in ["STRING", "EMAIL"] and self.operand_value != "null":
 
             # sf requires single quotes for strings only (aka not decimal or date)
 

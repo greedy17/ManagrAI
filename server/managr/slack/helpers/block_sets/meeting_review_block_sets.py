@@ -602,10 +602,10 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     )
     options = (
         slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS
-        if workflow.user.crm == "Salesforce"
+        if workflow.user.crm == "SALESFORCE"
         else slack_const.MEETING_RESOURCE_HUBSPOT_ATTACHMENT_OPTIONS
     )
-    resource = "Opportunity" if workflow.user.crm == "Salesforce" else "Deal"
+    resource = "Opportunity" if workflow.user.crm == "SALESFORCE" else "Deal"
     blocks = [
         block_builders.static_select(
             f":information_source: Select a CRM record type",

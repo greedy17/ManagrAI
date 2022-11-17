@@ -284,7 +284,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             if opportunity:
                 meeting_resource_data["resource_id"] = str(opportunity.id)
                 meeting_resource_data["resource_type"] = (
-                    "Opportunity" if user.crm == "Salesforce" else "Deal"
+                    "Opportunity" if user.crm == "SALESFORCE" else "Deal"
                 )
                 existing_contacts = existing_contacts.filter(
                     opportunities__in=[str(opportunity.id)]
@@ -296,7 +296,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
                     meeting_resource_data["resource_type"] = (
-                        "Account" if user.crm == "Salesforce" else "Company"
+                        "Account" if user.crm == "SALESFORCE" else "Company"
                     )
                     existing_contacts = existing_contacts.filter(account=account.id)
                 else:

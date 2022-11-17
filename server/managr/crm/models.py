@@ -227,6 +227,12 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         self.secondary_data.update(data)
         return self.save()
 
+    def add_contact_role(self, access_token, base_url, contact_integration_id):
+
+        return self.adapter_class.add_contact_role(
+            access_token, base_url, contact_integration_id, self.integration_id
+        )
+
 
 class BaseContactQuerySet(models.QuerySet):
     def for_user(self, user):
