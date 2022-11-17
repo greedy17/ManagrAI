@@ -215,7 +215,7 @@
               <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
             </div>
           </div>
-          <button
+          <!-- <button
             v-if="
               selectedForm &&
               (customResource === 'Opportunity' || customResource === 'Deal') &&
@@ -226,8 +226,8 @@
             class="custom-object-button"
           >
             Use Custom Object
-          </button>
-          <button
+          </button> -->
+          <!-- <button
             v-else-if="
               selectedForm &&
               customResource &&
@@ -238,7 +238,7 @@
             class="custom-object-button__remove"
           >
             Remove Custom Object
-          </button>
+          </button> -->
         </section>
 
         <div>

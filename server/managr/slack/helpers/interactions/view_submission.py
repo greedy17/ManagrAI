@@ -2772,6 +2772,14 @@ def process_submit_alert_resource_data(payload, context):
 
         except Exception as e:
             logger.exception(f"Uncaught Error {e}")
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                },
+            )
+            break
 
     if has_error:
         form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
