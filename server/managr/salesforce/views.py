@@ -621,7 +621,7 @@ class SalesforceSObjectViewSet(
                             str(user.id), all_form_data
                         )
                     else:
-                        resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                        resource = main_form.resource_object.update(all_form_data)
                         if len(custom_object_forms):
                             sf.create_custom_object(
                                 custom_object_data_collector,

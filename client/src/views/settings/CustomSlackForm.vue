@@ -400,7 +400,7 @@ import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
 import User from '@/services/users'
-import { SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
 import { SObjects } from '../../services/salesforce'
@@ -535,7 +535,7 @@ export default {
       storedModalFunction: () => null,
       noteTitle: {
         model: 'crm.ObjectField',
-        id: '6407b7a1-a877-44e2-979d-1effafec5034',
+        id: '6407b7a1-a877-44e2-979d-1effafec5035', // '6407b7a1-a877-44e2-979d-1effafec5034'
         includeInRecap: true,
         apiName: 'meeting_type',
         createable: true,
@@ -556,7 +556,7 @@ export default {
       },
       noteTitleHubspot: {
         model: 'crm.ObjectField',
-        id: '6407b7a1-a877-44e2-979d-1effafec5035',
+        id: '6407b7a1-a877-44e2-979d-1effafec5034', //'6407b7a1-a877-44e2-979d-1effafec5035',
         includeInRecap: true,
         apiName: 'meeting_type',
         createable: true,
@@ -577,7 +577,7 @@ export default {
       },
       noteSubject: {
         model: 'crm.ObjectField',
-        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', // '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
         includeInRecap: true,
         apiName: 'meeting_comments',
         createable: true,
@@ -598,7 +598,7 @@ export default {
       },
       noteSubjectHubspot: {
         model: 'crm.ObjectField',
-        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2', //'0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
         includeInRecap: true,
         apiName: 'meeting_comments',
         createable: true,
@@ -930,7 +930,6 @@ export default {
                 ...fieldParam,
               }
               this.formFields.refresh()
-
               if (this.formType == 'UPDATE') {
                 // this.onSave()
               }
@@ -972,7 +971,6 @@ export default {
 
     formType: {
       immediate: true,
-
       async handler(val) {
         if (val) {
           let searchParams = val
@@ -999,7 +997,6 @@ export default {
 
     newFormType: {
       immediate: true,
-
       async handler(val) {
         if (val) {
           let searchParams = val
@@ -1120,13 +1117,12 @@ export default {
       console.log('log', log)
     },
     customLabel(prop) {
-      console.log('prop', prop)
       return `${prop.label}`
     },
     searchFields() {
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
-        pagination: { size: 200 },
+        pagination: { size: 500 },
         filters: {
           crmObject: this.newResource,
           search: this.filterText,
@@ -1141,10 +1137,10 @@ export default {
       this.newCustomForm.customObject = ''
       this.addedFields = []
       this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
+        ModelClass: ObjectField,
+        pagination: { size: 500 },
         filters: {
-          salesforceObject: this.resource,
+          crmObject: this.resource,
         },
       })
     },
@@ -1171,10 +1167,10 @@ export default {
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
         this.formFields = CollectionManager.create({
-          ModelClass: SObjectField,
-          pagination: { size: 200 },
+          ModelClass: ObjectField,
+          pagination: { size: 500 },
           filters: {
-            salesforceObject: this.customResource,
+            crmObject: this.customResource,
           },
         })
       }
@@ -1297,10 +1293,10 @@ export default {
           : this.resource
       this.newResource = this.customResource
       this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
+        ModelClass: ObjectField,
+        pagination: { size: 500 },
         filters: {
-          salesforceObject: this.customResource,
+          crmObject: this.customResource,
         },
       })
     },
@@ -1330,7 +1326,6 @@ export default {
     },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
-
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
 

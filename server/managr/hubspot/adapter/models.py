@@ -85,10 +85,10 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
-        # if settings.IN_DEV:
-        #     user_res = cls.get_user_info(res["access_token"], "zach@mymanagr.com")["results"]
-        # else:
-        user_res = cls.get_user_info(res["access_token"], user.email)["results"]
+        if settings.IN_DEV:
+            user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+        else:
+            user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
             "user": user.id,
             "access_token": res.get("access_token"),

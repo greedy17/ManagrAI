@@ -270,8 +270,28 @@ class ContactSerializer(serializers.ModelSerializer):
         internal_data = super().to_internal_value(data)
         return internal_data
 
+class UserRefSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "first_name",
+            "last_name",
+            "profile_photo",
+        )
+
+    def get_full_name(self, instance):
+        return f"{instance.first_name} {instance.last_name}"
+
 
 class OpportunitySerializer(serializers.ModelSerializer):
+    owner_ref = UserRefSerializer(source="owner", required=False)
+    account_ref = AccountSerializer(source="account", required=False)
+
     class Meta:
         model = BaseOpportunity
         fields = (
@@ -283,8 +303,10 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "close_date",
             "forecast_category",
             "account",
+            "account_ref",
             "stage",
             "owner",
+            "owner_ref",
             "external_account",
             "external_owner",
             "imported_by",

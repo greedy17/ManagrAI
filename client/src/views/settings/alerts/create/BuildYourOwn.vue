@@ -422,7 +422,10 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
-      fields: CollectionManager.create({ ModelClass: ObjectField }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        pagination: { size: 1000 },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },

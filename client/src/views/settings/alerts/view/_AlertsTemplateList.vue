@@ -47,21 +47,36 @@
           </button>
         </div>
 
-        <section
-          class="workflow__modal__body"
-          :key="opp.id"
-          v-for="opp in activeWorkflow.sobjectInstances"
-        >
-          <div class="title">
-            <div>
-              <h4>
-                {{ opp.Name }}
-              </h4>
-              <p>Stage: {{ opp.StageName }}</p>
-              <p>Close Date: {{ opp.CloseDate }}</p>
+        <div v-if="activeWorkflow.sobjectInstances && activeWorkflow.sobjectInstances.length">
+          <section
+            class="workflow__modal__body"
+            :key="opp.id"
+            v-for="opp in activeWorkflow.sobjectInstances"
+          >
+            <div class="title">
+              <div>
+                <h4>
+                  {{ opp.Name }}
+                </h4>
+                <p>Stage: {{ opp.StageName }}</p>
+                <p>Close Date: {{ opp.CloseDate }}</p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
+        <div v-else>
+          <section
+            class="workflow__modal__body"
+          >
+            <div class="title">
+              <div>
+                <h4>
+                  No Results
+                </h4>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </Modal>
 
