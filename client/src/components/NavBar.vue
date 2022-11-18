@@ -26,7 +26,7 @@
           </div>
         </router-link>
 
-        <router-link exact-active-class="active" :to="{ name: 'Meetings' }">
+        <router-link v-if="userCRM !== 'HUBSPOT'" exact-active-class="active" :to="{ name: 'Meetings' }">
           <div class="tooltip">
             <img src="@/assets/images/calendar.svg" height="16px" alt="" />
             <span class="tooltiptext">Meetings</span>
