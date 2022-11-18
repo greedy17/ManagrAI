@@ -308,14 +308,14 @@
             />
           </template>
         </FormField>
-        <div style="margin-right: 8px" class="end">
+        <div style="margin-right: 8px" class="start">
           <Multiselect
             placeholder="Select field"
             v-model="crmValue"
             @input="bindText(`${selectedResourceType}.${$event.apiName}`, `${$event.label}`)"
             :options="fields.list"
             openDirection="above"
-            style="width: 18vw; margin-right: 4px"
+            style="width: 48vw; margin-left: 12px"
             selectLabel="Enter"
             track-by="apiName"
             label="referenceDisplayLabel"
@@ -366,7 +366,8 @@ import Modal from '@/components/Modal'
 import AlertTemplate, { AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
@@ -387,7 +388,7 @@ export default {
       updatedAlert: this.oldAlert,
       addingFields: false,
       frequencies: ['WEEKLY', 'MONTHLY'],
-      resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      resources: [],
       dropdownLoading: false,
       selectedDay: null,
       selectedChannel: null,
@@ -396,7 +397,10 @@ export default {
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
-      message: 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }',
+      message:
+        this.userCRM === 'SALESFORCE'
+          ? 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }'
+          : 'Hey { __Recipient.full_name }, your deal { Deal.Name }',
       templateBounce: true,
       selectedUsers: null,
       fieldBounce: true,
@@ -418,7 +422,10 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        pagination: { size: 1000 },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
@@ -457,6 +464,10 @@ export default {
       await this.users.refresh()
       await this.listUserChannels()
     }
+    this.resources =
+      this.userCRM === 'SALESFORCE'
+        ? ['Opportunity', 'Account', 'Contact', 'Lead']
+        : ['Deal', 'Contact', 'Company']
   },
   watch: {
     alertIsValid: 'activateSave',
@@ -879,6 +890,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     alertFrequency: {
       get() {
         return this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value
@@ -904,7 +918,8 @@ export default {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey { __Recipient.full_name },'
-    this.alertTemplateForm.field.resourceType.value = 'Opportunity'
+    this.alertTemplateForm.field.resourceType.value =
+      this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
   },
@@ -1192,6 +1207,12 @@ input::placeholder {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+}
+.start {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
 .flex-end {
   display: flex;

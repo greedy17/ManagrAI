@@ -39,39 +39,45 @@ def generate_edit_contact_form(field, id, value, optional=True):
     return block_builders.input_block(field, block_id=id, initial_value=value, optional=optional)
 
 
-def generate_contact_group(index, contact, instance_url):
+def generate_contact_group(index, contact, instance_url, crm):
     # get fields from form and display values based on this form as label value in multi block
     integration_id = contact.get("integration_id")
+    integration_source = contact.get("integration_source")
     # get fields show only these items if they exist in the secondary data as options
     contact_secondary_data = contact.get("secondary_data", {})
+    title_api = "Title" if integration_source == "SALESFORCE" else "jobtitle"
+    first_name_api = "FirstName" if integration_source == "SALESFORCE" else "firstname"
+    last_name_api = "LastName" if integration_source == "SALESFORCE" else "lastname"
+    mobile_api = "MobilePhone" if integration_source == "SALESFORCE" else "mobilephone"
+    phone_api = "Phone" if integration_source == "SALESFORCE" else "phone"
     title = (
-        contact_secondary_data.get("Title")
-        if contact_secondary_data.get("Title", "") and len(contact_secondary_data.get("Title", ""))
+        contact_secondary_data.get(title_api)
+        if contact_secondary_data.get(title_api, "")
+        and len(contact_secondary_data.get(title_api, ""))
         else "N/A"
     )
     first_name = (
-        contact_secondary_data.get("FirstName")
-        if contact_secondary_data.get("FirstName", "")
-        and len(contact_secondary_data.get("FirstName", ""))
+        contact_secondary_data.get(first_name_api)
+        if contact_secondary_data.get(first_name_api, "")
+        and len(contact_secondary_data.get(first_name_api, ""))
         else "N/A"
     )
     last_name = (
-        contact_secondary_data.get("LastName")
-        if contact_secondary_data.get("LastName", "")
-        and len(contact_secondary_data.get("LastName", ""))
+        contact_secondary_data.get(last_name_api)
+        if contact_secondary_data.get(last_name_api, "")
+        and len(contact_secondary_data.get(last_name_api, ""))
         else "N/A :exclamation: *Required*"
     )
 
     email = contact.get("email") if contact.get("email", "") not in ["", None] else "N/A"
     mobile_number = (
-        contact_secondary_data.get("MobilePhone")
-        if contact_secondary_data.get("MobilePhone")
-        and len(contact_secondary_data.get("MobilePhone"))
+        contact_secondary_data.get(mobile_api)
+        if contact_secondary_data.get(mobile_api) and len(contact_secondary_data.get(mobile_api))
         else "N/A"
     )
     phone_number = (
-        contact_secondary_data.get("Phone")
-        if contact_secondary_data.get("Phone") and len(contact_secondary_data.get("Phone"))
+        contact_secondary_data.get(phone_api)
+        if contact_secondary_data.get(phone_api) and len(contact_secondary_data.get(phone_api))
         else "N/A"
     )
 
@@ -84,8 +90,8 @@ def generate_contact_group(index, contact, instance_url):
         # url button to show in sf
         blocks["accessory"] = {
             "type": "button",
-            "text": {"type": "plain_text", "text": "View In Salesforce"},
-            "value": "View In Salesforce",
+            "text": {"type": "plain_text", "text": f"View In {crm}"},
+            "value": f"View In {crm}",
             "url": sf_consts.SALESFORCE_CONTACT_VIEW_URI(instance_url, integration_id),
             "action_id": f"button-action-{integration_id}",
         }
@@ -156,23 +162,23 @@ def meeting_contacts_block_set(context):
         block_sets = []
         workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
         contacts = workflow.participants
-        sf_account = workflow.user.salesforce_account
+        crm_account = workflow.user.crm_account
     else:
         block_sets = []
         workflow = MeetingWorkflow.objects.get(id=context.get("w"))
         meeting = workflow.meeting
         contacts = meeting.participants
-        sf_account = workflow.user.salesforce_account
+        crm_account = workflow.user.crm_account
     # list contacts we already had from sf
-    contacts_in_sf = list(filter(lambda contact: contact["integration_id"], contacts))
+    contacts_in_crm = list(filter(lambda contact: contact["integration_id"], contacts))
 
-    contacts_not_in_sf = list(
+    contacts_not_in_crm = list(
         filter(lambda contact: contact.get("integration_id", None) in [None, ""], contacts,)
     )
 
-    if len(contacts_not_in_sf):
+    if len(contacts_not_in_crm):
         block_sets.extend(
-            [block_builders.simple_section("Contacts below are not in salesforce")]
+            [block_builders.simple_section(f"Contacts below are not in {workflow.user.crm}")]
         ) if type else block_sets.extend(
             [
                 block_builders.simple_section(
@@ -181,7 +187,7 @@ def meeting_contacts_block_set(context):
             ]
         )
 
-    for i, contact in enumerate(contacts_not_in_sf):
+    for i, contact in enumerate(contacts_not_in_crm):
         workflow_id_param = f"w={str(workflow.id)}"
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         params = (
@@ -189,7 +195,9 @@ def meeting_contacts_block_set(context):
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )
-        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        block_sets.append(
+            generate_contact_group(i, contact, crm_account.instance_url, workflow.user.crm)
+        )
         # pass meeting id and contact index
         if type:
             if type != "prep":
@@ -236,7 +244,7 @@ def meeting_contacts_block_set(context):
                 }
             )
 
-    if len(contacts_in_sf):
+    if len(contacts_in_crm):
         block_sets.extend(
             [
                 block_builders.simple_section(
@@ -245,7 +253,7 @@ def meeting_contacts_block_set(context):
             ]
         )
 
-    for i, contact in enumerate(contacts_in_sf):
+    for i, contact in enumerate(contacts_in_crm):
         tracking_id_param = f"tracking_id={contact['_tracking_id']}"
         workflow_id_param = f"w={str(workflow.id)}"
         params = (
@@ -253,7 +261,9 @@ def meeting_contacts_block_set(context):
             if type
             else [workflow_id_param, tracking_id_param, channel, timestamp]
         )
-        block_sets.append(generate_contact_group(i, contact, sf_account.instance_url))
+        block_sets.append(
+            generate_contact_group(i, contact, crm_account.instance_url, workflow.user.crm)
+        )
         # pass meeting id and contact index
         if type:
             if type != "prep":
@@ -352,8 +362,8 @@ def edit_meeting_contacts_block_set(context):
                 user=user, template=template, workflow=workflow
             )
     else:
-        slack_form = OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
 
+        slack_form = OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
     if not slack_form:
         return [
             block_builders.simple_section(
@@ -361,7 +371,7 @@ def edit_meeting_contacts_block_set(context):
             )
         ]
 
-    if not len(slack_form.template.fields.all()):
+    if not len(slack_form.template.custom_fields.all()):
         logger.info(
             f"instance id: {str(slack_form.id)},instance template id: {str(slack_form.template.id)}"
         )
@@ -384,7 +394,6 @@ def initial_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     # check the resource attached to this meeting
     resource = workflow.resource
-
     # If else meeting if has attribute workflow, meeting or else workflow.meeting
     meeting = workflow.meeting
     user_timezone = workflow.user.timezone
@@ -584,21 +593,23 @@ def meeting_review_modal_block_set(context):
 @block_set(required_context=["w"])
 def attach_resource_interaction_block_set(context, *args, **kwargs):
     """This interaction updates the message to show a drop down of resources"""
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     type = context.get("type", None)
     action = (
         f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}&type={type}"
         if type
         else f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE}?w={context.get('w')}"
     )
+    options = (
+        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS
+        if workflow.user.crm == "SALESFORCE"
+        else slack_const.MEETING_RESOURCE_HUBSPOT_ATTACHMENT_OPTIONS
+    )
+    resource = "Opportunity" if workflow.user.crm == "SALESFORCE" else "Deal"
     blocks = [
         block_builders.static_select(
-            ":information_source: Select an Opportunity",
-            [
-                *map(
-                    lambda resource: block_builders.option(resource, resource),
-                    slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
-                )
-            ],
+            f":information_source: Select a CRM record type",
+            [*map(lambda resource: block_builders.option(resource, resource), options,)],
             action_id=action,
             block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
         ),

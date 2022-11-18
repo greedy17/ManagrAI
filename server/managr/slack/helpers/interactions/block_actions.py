@@ -51,8 +51,10 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
-from managr.salesforce.routes import routes
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
 
 
@@ -102,9 +104,10 @@ def process_meeting_review(payload, context):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
+    crm = "Salesforce" if workflow.user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(workflow.user.id),
         trigger_id,
@@ -1113,9 +1116,10 @@ def process_show_update_resource_form(payload, context):
     view_type = "update" if is_update else "open"
     view_id = is_update["id"] if is_update else None
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         view_type,
         str(user.id),
         trigger_id,
@@ -1136,9 +1140,9 @@ def process_show_update_resource_form(payload, context):
         slack_form = OrgCustomSlackFormInstance.objects.create(
             template=template, resource_id=resource_id, user=user,
         )
-
         if slack_form:
-            current_stage = slack_form.resource_object.secondary_data.get("StageName")
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+            current_stage = slack_form.resource_object.secondary_data.get(stage_name)
             stage_template = (
                 OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
                 if current_stage
@@ -1158,7 +1162,9 @@ def process_show_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = (
+                block_finder("StageName", blocks) if user.crm else block_finder("dealstage")
+            )
         except ValueError:
             # did not find the block
             block = None
@@ -1436,7 +1442,6 @@ def process_resource_selected_for_task(payload, context):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
-
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -1798,7 +1803,7 @@ def process_get_notes(payload, context):
             f"GET_NOTES?u={u.id}&resource_type={resource_type}"
         ]["selected_option"]["value"]
     )
-    resource = routes[resource_type]["model"].objects.get(id=resource_id)
+    resource = CRM_SWITCHER[u.crm][resource_type]["model"].objects.get(id=resource_id)
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -1811,7 +1816,9 @@ def process_get_notes(payload, context):
         )
     )
     note_blocks = [
-        block_builders.header_block(f"Notes for {resource.name}")
+        block_builders.header_block(
+            f"Notes for {resource.name if resource_type not in ['Lead', 'Contact'] else resource.email}"
+        )
         if note_data
         else block_builders.header_block(
             f"No notes for {resource.name}, start leaving notes! :smiley:"
@@ -2076,9 +2083,10 @@ def process_show_alert_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(user.id),
         trigger_id,
@@ -2334,7 +2342,7 @@ def process_show_bulk_update_form(payload, context):
             "resource_id", flat=True
         )
     )
-    model_object = routes[config.template.resource_type]["model"]
+    model_object = CRM_SWITCHER[user.crm][config.template.resource_type]["model"]
     resource_list = model_object.objects.filter(id__in=config_list)
     resource_options = [resource.as_slack_option for resource in resource_list]
     form = user.team.team_forms.filter(
@@ -2433,21 +2441,28 @@ def process_get_summary_fields(payload, context):
     form = user.team.team_forms.filter(
         form_type="UPDATE", resource=config.template.resource_type
     ).first()
-    fields = form.fields.all().exclude(
+    fields = form.custom_fields.all().exclude(
         Q(data_type__in=["Reference", "String", "TextArea"]) | Q(api_name="Amount")
     )
-    fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
-    blocks = [
-        block_builders.multi_static_select(
-            "Fields to Summarize",
-            options=fields_options,
-            action_id=action_with_params(
-                slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+    if len(fields):
+        fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
+        blocks = [
+            block_builders.multi_static_select(
+                "Fields to Summarize",
+                options=fields_options,
+                action_id=action_with_params(
+                    slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+                ),
+                block_id="CRM_FIELDS",
             ),
-            block_id="CRM_FIELDS",
-        ),
-        block_builders.context_block("*Amount total will be auto calculated"),
-    ]
+            block_builders.context_block("*Amount total will be auto calculated"),
+        ]
+    else:
+        blocks = [
+            block_builders.simple_section(
+                "You do not have any fields on your form that allow summarization"
+            )
+        ]
     data = {
         **context,
         "message_ts": payload["container"]["message_ts"],
@@ -2461,11 +2476,15 @@ def process_get_summary_fields(payload, context):
             "title": {"type": "plain_text", "text": "Workflow Summary"},
             "blocks": blocks,
             "private_metadata": json.dumps(data),
-            "submit": {"type": "plain_text", "text": "Get Summary", "emoji": True},
             "callback_id": slack_const.GET_SUMMARY,
         },
     }
-
+    if len(fields):
+        loading_view_data["view"]["submit"] = {
+            "type": "plain_text",
+            "text": "Get Summary",
+            "emoji": True,
+        }
     slack_requests.generic_request(
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
         loading_view_data,
@@ -2606,9 +2625,10 @@ def process_show_digest_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(user.id),
         trigger_id,

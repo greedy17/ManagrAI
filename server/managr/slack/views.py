@@ -557,15 +557,14 @@ class SlackFormsViewSet(
         data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
-        print(data)
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
-        instance.fields.clear()
+        instance.custom_fields.clear()
         for i, field in enumerate(fields):
-            instance.fields.add(field, through_defaults={"order": i})
+            instance.custom_fields.add(field, through_defaults={"order": i})
         instance.team = self.request.user.team
         instance.save()
         return Response(serializer.data)
@@ -586,10 +585,10 @@ class SlackFormsViewSet(
             print(e)
         serializer.save()
         instance = serializer.instance
-        instance.fields.clear()
+        instance.custom_fields.clear()
         fields_state = {}
         for i, field in enumerate(fields_ref):
-            instance.fields.add(
+            instance.custom_fields.add(
                 field["id"],
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )
@@ -608,9 +607,9 @@ class SlackFormsViewSet(
             update_serializer = self.get_serializer(data=update_data, instance=form)
             update_serializer.is_valid(raise_exception=True)
             instance = update_serializer.instance
-            instance.fields.clear()
+            instance.custom_fields.clear()
             for i, field in enumerate(fields):
-                form.fields.add(field, through_defaults={"order": i})
+                form.custom_fields.add(field, through_defaults={"order": i})
             instance.config = fields_state
             instance.save()
         return Response(serializer.data)
@@ -634,7 +633,6 @@ class SlackFormsViewSet(
 )
 def update_resource(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account", "lead", "contact"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -648,11 +646,17 @@ def update_resource(request):
                 }
             )
     user = slack.user
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = ["opportunity"]
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
     resource_type = None
 
     if len(command_params):
@@ -707,7 +711,6 @@ def update_resource(request):
 )
 def create_resource(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account", "lead", "contact"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -721,13 +724,18 @@ def create_resource(request):
                 }
             )
     user = slack.user
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = ["opportunity"]
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
     resource_type = None
-
     if len(command_params):
         if command_params[0] not in allowed_commands:
             return Response(
@@ -745,9 +753,8 @@ def create_resource(request):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
-
         if slack_form:
-
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
             context = {
                 "resource_type": resource_type,
                 "f": str(slack_form.id),
@@ -756,7 +763,7 @@ def create_resource(request):
             }
             blocks = get_block_set("create_modal", context,)
             try:
-                index, block = block_finder("StageName", blocks)
+                index, block = block_finder(stage_name, blocks)
             except ValueError:
                 # did not find the block
                 block = None

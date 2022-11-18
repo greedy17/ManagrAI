@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('salesforce', '0024_meetingworkflow_non_zoom_meeting'),
+        ("salesforce", "0024_meetingworkflow_non_zoom_meeting"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='salesforceauthaccount',
-            name='last_sync_time',
+            model_name="salesforceauthaccount",
+            name="last_sync_time",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

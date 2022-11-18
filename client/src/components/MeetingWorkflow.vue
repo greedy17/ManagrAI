@@ -621,6 +621,9 @@ export default {
   created() {
     this.getObjects()
   },
+  created() {
+    this.getObjects()
+  },
   methods: {
     showAttendees() {
       this.showingAttendees = !this.showingAttendees
@@ -721,6 +724,7 @@ export default {
       this.selectedIndex = index
     },
     selectOpp(val) {
+      console.log(val)
       this.resource = val.id
       // this.$emit('change-resource', this.resourceType)
       this.mappedOpp = null
@@ -1356,7 +1360,7 @@ a {
 .table-cell {
   display: table-cell;
   position: relative;
-  min-width: 12vw;
+  min-width: 3vw;
   background-color: $off-white;
   padding: 2vh;
   border: none;

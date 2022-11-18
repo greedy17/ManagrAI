@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.CLOSE_DATE_APPROACHING" />
+  <PopularWorkflows :config="userCRM === 'SALESFORCE' ? allConfigs.CLOSE_DATE_APPROACHING : allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT" />
 </template>
 
 <script>
@@ -20,6 +20,11 @@ export default {
     return {
       allConfigs,
     }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>

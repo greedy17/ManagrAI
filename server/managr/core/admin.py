@@ -166,6 +166,7 @@ class CustomUserAdmin(UserAdmin):
                     "role",
                     "timezone",
                     "reminders",
+                    "crm",
                     "onboarding",
                     "activated_managr_configs",
                     "team",

@@ -1626,7 +1626,6 @@
               {{ template.title }} <span class="green">{{ template.sobjectInstances.length }}</span>
             </button>
           </div>
-
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -2495,6 +2494,7 @@
 </template>
 <script>
 import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -2554,12 +2554,13 @@ export default {
       savingCreateForm: false,
       productQueryOpts: {},
       objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 300 },
         filters: {
-          salesforceObject: 'Opportunity',
+          crmObject: this.crmObject,
         },
       }),
+      crmObject: null,
       currentProducts: [],
       createProductForm: null,
       addingProduct: false,
@@ -2620,7 +2621,6 @@ export default {
       oppVal: null,
       originalList: null,
       daysForward: null,
-      // allOpps: null,
       loading: false,
       loadingAccounts: false,
       loadingProducts: false,
@@ -2749,6 +2749,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     filteredWorkflows: {
       get: function () {
         return this.currentWorkflow.filter((opp) =>
@@ -2801,6 +2804,7 @@ export default {
     },
   },
   async created() {
+    this.crmObject = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
@@ -3143,7 +3147,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -3849,6 +3853,9 @@ export default {
       }
     },
     bulkUpdate() {
+      if (!this.selectedOpp || !this.oppVal || !this.oppNewValue) {
+        return
+      }
       if (this.selectedWorkflow) {
         this.onBulkUpdateWorkflow()
       } else {
@@ -4121,7 +4128,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4263,7 +4270,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4275,7 +4282,7 @@ export default {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4303,7 +4310,8 @@ export default {
             ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
             : this.filters
         }
-        let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filter)
+        const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        let updatedRes = await SObjects.api.getObjectsForWorkflows(objectType, true, filter)
         this.allOpps = updatedRes.results
         this.originalList = updatedRes.results
         if (this.storedFilters.length) {
@@ -4318,7 +4326,7 @@ export default {
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4326,7 +4334,7 @@ export default {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4416,13 +4424,13 @@ export default {
         if (this.createOppForm[i].dataType === 'Reference') {
           this.createReferenceOpts[this.createOppForm[i].apiName] = []
         }
-      }
 
-      if (this.hasProducts) {
-        for (let i = 0; i < this.createProductForm.length; i++) {
-          if (this.createProductForm[i].dataType === 'Reference') {
-            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
-            this.productReferenceOpts[this.createProductForm[i].apiName] = []
+        if (this.hasProducts) {
+          for (let i = 0; i < this.createProductForm.length; i++) {
+            if (this.createProductForm[i].dataType === 'Reference') {
+              this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
+              this.productReferenceOpts[this.createProductForm[i].apiName] = []
+            }
           }
         }
       }
@@ -4449,6 +4457,7 @@ export default {
       this.dropdownValue = val
     },
     filtersAndOppFields() {
+      console.log('this.updateOppForm', this.updateOppForm)
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -4481,23 +4490,41 @@ export default {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
-        this.updateOppForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-        )
-        this.createOppForm = res
-          .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
-          .fieldsRef.filter(
-            (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        let stageGateForms
+        if (this.userCRM === 'SALESFORCE') {
+          this.updateOppForm = res.filter(
+            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
           )
-
-        let stageGateForms = res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
-        )
-        this.createProductForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )[0].fieldsRef
-
+          this.createOppForm = res
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+            .fieldsRef.filter(
+              (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+            )
+          stageGateForms = res.filter(
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+          )
+          this.createProductForm = res.filter(
+            (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+          )[0].fieldsRef
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.updateOppForm = res.filter(
+            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal',
+          )
+          this.createOppForm = res
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Deal')[0]
+            .fieldsRef.filter(
+              (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+            )
+          stageGateForms = res.filter(
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
+          )
+          // this.createProductForm = res.filter(
+          //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+          // )[0].fieldsRef
+        }
+        
         if (stageGateForms.length) {
+          console.log('this.stageGateForms', this.stageGateForms)
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
@@ -4592,6 +4619,7 @@ export default {
         })
         this.modalOpen = true
         if (res.length) {
+          this.notes = []
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
             this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
@@ -4981,6 +5009,22 @@ export default {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 2px;
   }
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-color: $coral;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 0.25rem;
+  }
 }
 .basic-slide:focus,
 .basic-slide:active {
@@ -5080,11 +5124,6 @@ export default {
       height: 1rem;
       margin-right: 0.5rem;
       filter: invert(5%);
-    }
-
-    div {
-      display: flex;
-      align-items: center;
     }
   }
   &__body {
@@ -6232,4 +6271,104 @@ a {
   background: #fff;
   font-size: 14px;
 }
+// .results-2 {
+//   font-size: 11px;
+//   margin-right: 16px;
+//   color: $gray;
+// }
+// .note-templates {
+//   display: flex;
+//   justify-content: flex-end;
+//   font-size: 12px;
+//   padding: 12px 6px;
+//   margin-top: -34px;
+//   border: 1px solid $soft-gray;
+//   border-bottom-left-radius: 4px;
+//   border-bottom-right-radius: 4px;
+//   cursor: pointer;
+//   width: 40.25vw;
+
+//   &__content {
+//     display: flex;
+//     flex-direction: row;
+//     align-items: center;
+//   }
+//   img {
+//     filter: invert(50%);
+//     height: 12px;
+//   }
+//   &__content:hover {
+//     opacity: 0.6;
+//   }
+// }
+
+// .note-templates2 {
+//   display: flex;
+//   flex-direction: row;
+//   align-items: center;
+//   justify-content: flex-start;
+//   flex-wrap: wrap;
+//   gap: 24px;
+//   font-size: 12px;
+//   padding: 12px 6px;
+//   margin-top: -34px;
+//   border: 1px solid $soft-gray;
+//   border-bottom-left-radius: 4px;
+//   border-bottom-right-radius: 4px;
+//   width: 40.25vw;
+//   height: 80px;
+//   overflow: scroll;
+
+//   &__content {
+//     border-radius: 4px;
+//     border: 0.5px solid $base-gray;
+//     color: $base-gray;
+//     padding: 8px 6px;
+//     margin-bottom: 8px;
+//     cursor: pointer;
+//   }
+//   &__content:hover {
+//     opacity: 0.6;
+//   }
+// }
+// .close-template {
+//   position: absolute;
+//   bottom: 56px;
+//   right: 20px;
+//   z-index: 3;
+//   cursor: pointer;
+//   background-color: black;
+//   border-radius: 3px;
+//   opacity: 0.6;
+//   img {
+//     filter: invert(99%);
+//   }
+// }
+// .label {
+//   display: inline-block;
+//   padding: 6px;
+//   font-size: 14px;
+//   text-align: center;
+//   min-width: 80px;
+//   margin-top: 12px;
+//   background-color: $white-green;
+//   color: $dark-green;
+//   font-weight: bold;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+// }
+// .red-label {
+//   background-color: #fa646a;
+//   color: white;
+//   display: inline-block;
+//   padding: 6px;
+//   font-size: 14px;
+//   text-align: center;
+//   min-width: 80px;
+//   margin-top: 12px;
+//   margin-left: 2px;
+//   font-weight: bold;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+// }
 </style>

@@ -326,7 +326,8 @@ def check_contact_last_name(meeting_id):
         contacts = meeting.participants
         for contact in contacts:
             contactData = contact.get("secondary_data")
-            if not contactData["LastName"]:
+            last_name = "LastName" if workflow.user.crm == "SALESFORCE" else "lastname"
+            if last_name not in contactData.keys() or not contactData[last_name]:
                 return False
         return True
     else:

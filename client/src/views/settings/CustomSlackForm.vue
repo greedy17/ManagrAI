@@ -37,7 +37,9 @@
                   openDirection="below"
                   style="width: 20vw; margin-top: 2rem; margin-left: 1rem"
                   selectLabel="Enter"
-                  label="label"
+                  :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+                  :customLabel="customLabel"
+                  :value="currentlySelectedStage"
                   v-model="selectedCustomObject"
                 >
                   <template slot="noResult">
@@ -49,6 +51,24 @@
                       <img src="@/assets/images/search.svg" alt="" />
                       Select Custom Object
                     </p>
+                  </template>
+
+                  <template slot="option" slot-scope="props">
+                    <div>
+                      <span class="option__title">{{
+                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label
+                      }}</span
+                      ><span
+                        v-if="
+                          currentStagesWithForms.includes(
+                            userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
+                          )
+                        "
+                        class="option__small"
+                      >
+                        edit
+                      </span>
+                    </div>
                   </template>
                 </Multiselect>
                 <!-- <div v-if="selectedCustomObject" class="field-section">
@@ -112,7 +132,7 @@
       </div>
     </Modal>
 
-    <div class="alerts-header">
+    <div v-if="userCRM !== 'HUBSPOT'" class="alerts-header">
       <section class="row__ light-gray">
         <p
           @click="changeToOpportunity"
@@ -131,6 +151,28 @@
         <p @click="changeToLead" :class="newResource == 'Lead' ? 'green' : ''">Lead</p>
         <p @click="changeToProducts" :class="newResource == 'OpportunityLineItem' ? 'green' : ''">
           Products
+        </p>
+      </section>
+      <button @click="onSave" class="save">Save Form</button>
+    </div>
+
+    <div v-else class="alerts-header">
+      <section class="row__ light-gray">
+        <p
+          @click="changeToDeal"
+          :class="newResource == 'Deal' && newFormType !== 'STAGE_GATING' ? 'green' : ''"
+        >
+          Deal
+        </p>
+        <p
+          @click="changeToStage"
+          :class="newResource == 'Deal' && newFormType == 'STAGE_GATING' ? 'green' : ''"
+        >
+          Deal - Stage related
+        </p>
+        <p @click="changeToCompany" :class="newResource == 'Company' ? 'green' : ''">Company</p>
+        <p @click="changeToHubspotContact" :class="newResource == 'Contact' ? 'green' : ''">
+          Contact
         </p>
       </section>
       <button @click="onSave" class="save">Save Form</button>
@@ -210,7 +252,7 @@
             <div
               class="margin-right"
               @click.prevent="deleteForm(activeForm)"
-              v-if="selectedForm && selectedForm.fields.length"
+              v-if="selectedForm && selectedForm.customFields.length"
             >
               <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
             </div>
@@ -219,7 +261,7 @@
             v-if="
               selectedForm &&
               (customResource === 'Opportunity' || customResource === 'Deal') &&
-              !selectedForm.fields.length &&
+              !selectedForm.customFields.length &&
               !addedFields.length
             "
             @click="toggleCustomObjectModal"
@@ -267,9 +309,15 @@
 
               <template slot="option" slot-scope="props">
                 <div>
-                  <span class="option__title">{{ props.option.value }}</span
+                  <span class="option__title">{{
+                    userCRM === 'SALESFORCE' ? props.option.value : props.option.label
+                  }}</span
                   ><span
-                    v-if="currentStagesWithForms.includes(props.option.value)"
+                    v-if="
+                      currentStagesWithForms.includes(
+                        userCRM === 'SALESFORCE' ? props.option.value : props.option.id,
+                      )
+                    "
                     class="option__small"
                   >
                     edit
@@ -352,8 +400,8 @@ import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
 import User from '@/services/users'
-import { SObjectField, SObjectPicklist } from '@/services/salesforce'
-
+import { SObjectPicklist } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
 import { SObjects } from '../../services/salesforce'
 
@@ -379,12 +427,12 @@ export default {
     formType: {
       type: String,
       required: true,
-      default: 'UPDATE',
+      default: false,
     },
     resource: {
       type: String,
       required: true,
-      default: 'Opportunity',
+      default: false,
     },
     fields: {
       type: Array,
@@ -431,10 +479,10 @@ export default {
       loaderText: '',
       currentStageForm: null,
       formFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
+        ModelClass: ObjectField,
+        pagination: { size: 500 },
         filters: {
-          salesforceObject: this.newResource,
+          crmObject: this.newResource,
         },
       }),
       customFields: null,
@@ -486,193 +534,277 @@ export default {
       timeout: null,
       storedModalFunction: () => null,
       noteTitle: {
-        _fields: {
-          length: {
-            defaultVal: null,
-            readOnly: false,
-          },
-          id: {
-            defaultVal: '',
-            readOnly: true,
-          },
-          apiName: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          custom: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          createable: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          dataType: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          label: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          reference: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          referenceToInfos: {
-            defaultVal: null,
-            readOnly: false,
-          },
-          updateable: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          required: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          unique: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          value: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          displayValue: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          referenceDisplayLabel: {
-            defaultVal: '',
-            readOnly: true,
-          },
-          filterable: {
-            defaultVal: '',
-            readOnly: true,
-          },
-          order: {
-            defaultVal: null,
-            readOnly: false,
-          },
-          includeInRecap: {
-            defaultVal: null,
-            readOnly: false,
-          },
-        },
-        length: 30,
-        id: '6407b7a1-a877-44e2-979d-1effafec5035',
-        apiName: 'meeting_type',
-        custom: true,
-        createable: true,
-        dataType: 'String',
-        label: 'Note Subject',
-        reference: 'false',
-        referenceToInfos: [],
-        updateable: true,
-        required: false,
-        unique: false,
-        value: '',
-        displayValue: '',
-        referenceDisplayLabel: 'Note Subject',
-        filterable: 'false',
-        order: null,
+        model: 'crm.ObjectField',
+        id: '6407b7a1-a877-44e2-979d-1effafec5034', // '6407b7a1-a877-44e2-979d-1effafec5035'
         includeInRecap: true,
+        apiName: 'meeting_type',
+        createable: true,
+        required: false,
+        updateable: true,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Note Subject',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 0,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
+      noteTitleHubspot: {
+        model: 'crm.ObjectField',
+        id: '6407b7a1-a877-44e2-979d-1effafec5034', //'6407b7a1-a877-44e2-979d-1effafec5035',
+        includeInRecap: true,
+        apiName: 'meeting_type',
+        createable: true,
+        required: false,
+        updateable: true,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Note Subject',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 0,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
       },
       noteSubject: {
-        _fields: {
-          length: {
-            defaultVal: null,
-            readOnly: false,
-          },
-          id: {
-            defaultVal: '',
-            readOnly: true,
-          },
-          apiName: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          custom: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          createable: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          dataType: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          label: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          reference: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          referenceToInfos: {
-            defaultVal: null,
-            readOnly: false,
-          },
-          updateable: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          required: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          unique: {
-            defaultVal: false,
-            readOnly: false,
-          },
-          value: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          displayValue: {
-            defaultVal: '',
-            readOnly: false,
-          },
-          referenceDisplayLabel: {
-            defaultVal: '',
-            readOnly: true,
-          },
-          filterable: {
-            defaultVal: '',
-            readOnly: true,
-          },
-          order: {
-            defaultVal: null,
-            readOnly: false,
-          },
-          includeInRecap: {
-            defaultVal: null,
-            readOnly: false,
-          },
-        },
-        length: 255,
-        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        model: 'crm.ObjectField',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2', // '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+        includeInRecap: true,
         apiName: 'meeting_comments',
-        custom: true,
         createable: true,
-        dataType: 'String',
-        label: 'Notes',
-        reference: 'false',
-        referenceToInfos: [],
         updateable: true,
         required: false,
-        unique: false,
-        value: '',
+        dataType: 'String',
         displayValue: '',
-        referenceDisplayLabel: 'Notes',
-        filterable: 'false',
-        order: null,
-        includeInRecap: true,
+        label: 'Notes',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 255,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
       },
+      noteSubjectHubspot: {
+        model: 'crm.ObjectField',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2', //'0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        includeInRecap: true,
+        apiName: 'meeting_comments',
+        createable: true,
+        updateable: true,
+        required: false,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Notes',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 255,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
+      // noteTitle: {
+      //   _fields: {
+      //     length: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //     id: {
+      //       defaultVal: '',
+      //       readOnly: true,
+      //     },
+      //     apiName: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     custom: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     createable: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     dataType: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     label: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     reference: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     referenceToInfos: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //     updateable: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     required: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     unique: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     value: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     displayValue: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     referenceDisplayLabel: {
+      //       defaultVal: '',
+      //       readOnly: true,
+      //     },
+      //     filterable: {
+      //       defaultVal: '',
+      //       readOnly: true,
+      //     },
+      //     order: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //     includeInRecap: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //   },
+      //   length: 30,
+      //   id: '6407b7a1-a877-44e2-979d-1effafec5035',
+      //   apiName: 'meeting_type',
+      //   custom: true,
+      //   createable: true,
+      //   dataType: 'String',
+      //   label: 'Note Subject',
+      //   reference: 'false',
+      //   referenceToInfos: [],
+      //   updateable: true,
+      //   required: false,
+      //   unique: false,
+      //   value: '',
+      //   displayValue: '',
+      //   referenceDisplayLabel: 'Note Subject',
+      //   filterable: 'false',
+      //   order: null,
+      //   includeInRecap: true,
+      // },
+      // noteSubject: {
+      //   _fields: {
+      //     length: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //     id: {
+      //       defaultVal: '',
+      //       readOnly: true,
+      //     },
+      //     apiName: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     custom: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     createable: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     dataType: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     label: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     reference: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     referenceToInfos: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //     updateable: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     required: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     unique: {
+      //       defaultVal: false,
+      //       readOnly: false,
+      //     },
+      //     value: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     displayValue: {
+      //       defaultVal: '',
+      //       readOnly: false,
+      //     },
+      //     referenceDisplayLabel: {
+      //       defaultVal: '',
+      //       readOnly: true,
+      //     },
+      //     filterable: {
+      //       defaultVal: '',
+      //       readOnly: true,
+      //     },
+      //     order: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //     includeInRecap: {
+      //       defaultVal: null,
+      //       readOnly: false,
+      //     },
+      //   },
+      //   length: 255,
+      //   id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+      //   apiName: 'meeting_comments',
+      //   custom: true,
+      //   createable: true,
+      //   dataType: 'String',
+      //   label: 'Notes',
+      //   reference: 'false',
+      //   referenceToInfos: [],
+      //   updateable: true,
+      //   required: false,
+      //   unique: false,
+      //   value: '',
+      //   displayValue: '',
+      //   referenceDisplayLabel: 'Notes',
+      //   filterable: 'false',
+      //   order: null,
+      //   includeInRecap: true,
+      // },
     }
   },
   watch: {
@@ -686,22 +818,27 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields.length) {
+        if (val && val.customFields.length) {
           this.addedFields = [...val.fieldsRef]
           if (this.formType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
               return field.id
             })
-            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-              let fieldsToAdd = [this.noteTitle, this.noteSubject]
+            if (
+              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
+              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
+            ) {
+              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
                 let altField = { ...field }
                 altField.order = i
                 if (
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
                   altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
                 ) {
                   altField.includeInRecap = true
                 }
@@ -712,12 +849,14 @@ export default {
           if (this.formType !== 'UPDATE') {
             this.addedFields = this.addedFields.filter((field) => {
               return (
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                field.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
               )
             })
           }
-        } else if (val && val.formType == 'STAGE_GATING' && !val.fields.length) {
+        } else if (val && val.formType == 'STAGE_GATING' && !val.customFields.length) {
           this.addedFields = []
         }
       },
@@ -727,22 +866,27 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val && val.fields.length && !this.removeCustomObj) {
+        if (val && val.customFields.length && !this.removeCustomObj) {
           this.addedFields = [...val.fieldsRef]
           if (this.newFormType == 'UPDATE') {
             let currentFormFields = this.addedFields.map((field) => {
               return field.id
             })
-            if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-              let fieldsToAdd = [this.noteTitle, this.noteSubject]
+            if (
+              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
+              currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
+            ) {
+              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
                 let altField = { ...field }
                 altField.order = i
                 if (
+                  altField.id == '6407b7a1-a877-44e2-979d-1effafec5034' ||
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' ||
                   altField.id == '6407b7a1-a877-44e2-979d-1effafec5035' ||
-                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                  altField.id == '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
                 ) {
                   altField.includeInRecap = true
                 }
@@ -753,12 +897,16 @@ export default {
           if (this.newNormType !== 'UPDATE') {
             this.addedFields = this.addedFields.filter((field) => {
               return (
+                field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1' &&
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5035' &&
-                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+                field.id !== '0bb152b5-aac1-4ee0-9c25-51ae98d55af2'
               )
             })
           }
-        } else if (val && !val.fields.length) {
+        } else if (val && !val.customFields.length) {
+          this.addedFields = []
+        } else {
           this.addedFields = []
         }
         this.removeCustomObj = false
@@ -778,8 +926,7 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: val,
-
+                crmObject: val,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -807,8 +954,7 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: val,
-
+                crmObject: val,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -825,7 +971,6 @@ export default {
 
     formType: {
       immediate: true,
-
       async handler(val) {
         if (val) {
           let searchParams = val
@@ -838,8 +983,7 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: this.resource,
-
+                crmObject: this.resource,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -853,7 +997,6 @@ export default {
 
     newFormType: {
       immediate: true,
-
       async handler(val) {
         if (val) {
           let searchParams = val
@@ -866,8 +1009,7 @@ export default {
             }
             try {
               this.formFields.filters = {
-                salesforceObject: this.newResource,
-
+                crmObject: this.newResource,
                 ...fieldParam,
               }
               this.formFields.refresh()
@@ -890,8 +1032,17 @@ export default {
     filteredFields() {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
+    COfilteredFields() {
+      return this.customFields.list
+        .filter(
+          (field) =>
+            field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()) &&
+            field.integrationSource === this.userCRM,
+        )
+        .filter((field) => !this.addedFieldNames.includes(field.apiName))
+    },
     currentFields() {
-      return this.customForm ? this.customForm.fields : []
+      return this.customForm ? this.customForm.customFields : []
     },
     addedFieldIds() {
       return this.addedFields.map((field) => {
@@ -912,6 +1063,8 @@ export default {
       return [
         '6407b7a1-a877-44e2-979d-1effafec5035',
         '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        '6407b7a1-a877-44e2-979d-1effafec5034',
+        '0bb152b5-aac1-4ee0-9c25-51ae98d55af2',
         'e286d1d5-5447-47e6-ad55-5f54fdd2b00d',
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
@@ -921,6 +1074,12 @@ export default {
     },
     userHasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
+    },
+    // userHasHubspot() {
+    //   return this.$store.state.user.hasHubspotIntegration
+    // },
+    userCRM() {
+      return this.$store.state.user.crm
     },
     task() {
       return this.$store.state.customObject.task
@@ -933,11 +1092,20 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      let object = this.OPPORTUNITY
+      // if (this.userCRM === 'HUBSPOT') {
+      //   object = this.DEAL
+      // } else if (this.userCRM === 'SALESFORCE') {
+      //   object = this.OPPORTUNITY
+      // }
+      this.newCustomForm = this.customForm
       await this.listPicklists({
-        salesforceObject: this.Opportunity,
+        crmObject: object,
         picklistFor: 'StageName',
       })
-      this.getCustomObjects()
+      if (this.userCRM == 'SALESFORCE') {
+        this.getCustomObjects()
+      }
     } catch (e) {
       console.log(e)
     }
@@ -945,12 +1113,18 @@ export default {
     this.getStageForms()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
+    customLabel(prop) {
+      return `${prop.label}`
+    },
     searchFields() {
       this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
+        ModelClass: ObjectField,
+        pagination: { size: 500 },
         filters: {
-          salesforceObject: this.newResource,
+          crmObject: this.newResource,
           search: this.filterText,
         },
       })
@@ -963,10 +1137,10 @@ export default {
       this.newCustomForm.customObject = ''
       this.addedFields = []
       this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
+        ModelClass: ObjectField,
+        pagination: { size: 500 },
         filters: {
-          salesforceObject: this.resource,
+          crmObject: this.resource,
         },
       })
     },
@@ -993,10 +1167,10 @@ export default {
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
         this.formFields = CollectionManager.create({
-          ModelClass: SObjectField,
-          pagination: { size: 200 },
+          ModelClass: ObjectField,
+          pagination: { size: 500 },
           filters: {
-            salesforceObject: this.customResource,
+            crmObject: this.customResource,
           },
         })
       }
@@ -1119,19 +1293,27 @@ export default {
           : this.resource
       this.newResource = this.customResource
       this.formFields = CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
+        ModelClass: ObjectField,
+        pagination: { size: 500 },
         filters: {
-          salesforceObject: this.customResource,
+          crmObject: this.customResource,
         },
       })
     },
     setStage(n) {
-      if (n.value == this.selectedStage) {
+      if (this.userCRM === 'SALESFORCE') {
+        if (n.value == this.selectedStage) {
+          this.selectedStage = n.value
+          this.addForm(this.selectedStage)
+        }
         this.selectedStage = n.value
-        this.addForm(this.selectedStage)
+      } else if (this.userCRM === 'HUBSPOT') {
+        if (n.label == this.selectedStage) {
+          this.selectedStage = n.label
+          this.addForm(this.selectedStage)
+        }
+        this.selectedStage = n.label
       }
-      this.selectedStage = n.value
     },
     updateForm(event) {
       this.selectedForm = event
@@ -1144,7 +1326,6 @@ export default {
     },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
-
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
 
@@ -1172,9 +1353,24 @@ export default {
     },
     async listPicklists(query_params = {}) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.stages = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStage
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStage = res[i]
+              break
+            }
+          }
+          this.stages = dealStage ? dealStage.options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.stages = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         console.log(e)
       }
@@ -1183,7 +1379,7 @@ export default {
       this.selectingStage = !this.selectingStage
       this.loadingStages = true
       try {
-        await this.listPicklists({ salesforceObject: this.Opportunity, picklistFor: 'StageName' })
+        await this.listPicklists({ crmObject: this.OPPORTUNITY, picklistFor: 'StageName' })
       } catch (e) {
         this.$modal.close('add-stage-modal')
         this.$toast('Failed to retreive stages', {
@@ -1204,12 +1400,17 @@ export default {
         this.allForms
           .filter((f) => f.formType == this.STAGE_GATING)
           .forEach((sf) => {
-            if (sf.stage == s.value) {
-              forms.push(sf)
+            if (this.userCRM === 'SALESFORCE') {
+              if (sf.stage == s.value) {
+                forms.push(sf)
+              }
+            } else if (this.userCRM === 'HUBSPOT') {
+              if (sf.stage == s.label) {
+                forms.push(sf)
+              }
             }
           })
       })
-
       this.formStages = [...forms]
     },
     changeToAccount() {
@@ -1225,6 +1426,14 @@ export default {
         (f) => f.resource == this.ACCOUNT && f.formType == this.UPDATE,
       )
     },
+    changeToCompany() {
+      this.filterText = ''
+      this.newResource = 'Company'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.COMPANY && f.formType == this.UPDATE,
+      )
+    },
     changeToOpportunity() {
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
@@ -1238,6 +1447,17 @@ export default {
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
       )
     },
+    changeToDeal() {
+      this.filterText = ''
+      this.newResource = 'Deal'
+      this.newFormType = 'UPDATE'
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.DEAL && f.formType == this.UPDATE,
+      )
+    },
+    // changeToStage(stage = '') {
+    //   this.newResource = this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'
+    // },
     changeToProducts() {
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
@@ -1259,12 +1479,21 @@ export default {
         return
       }
       this.filterText = ''
-      this.newResource = 'Opportunity'
       this.newFormType = 'STAGE_GATING'
-      this.newCustomForm = this.allForms.find(
-        (f) =>
-          f.resource == this.OPPORTUNITY && f.formType == this.STAGE_GATING && f.stage == stage,
-      )
+      this.newResource = 'Opportunity'
+
+      if (this.userCRM !== 'HUBSPOT') {
+        this.newResource = 'Opportunity'
+        this.newCustomForm = this.allForms.find(
+          (f) =>
+            f.resource == this.OPPORTUNITY && f.formType == this.STAGE_GATING && f.stage == stage,
+        )
+      } else {
+        this.newResource = 'Deal'
+        this.newCustomForm = this.allForms.find(
+          (f) => f.resource == this.DEAL && f.formType == this.STAGE_GATING && f.stage == stage,
+        )
+      }
     },
     changeToContact() {
       if (this.formChange) {
@@ -1277,6 +1506,17 @@ export default {
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
+      )
+    },
+    changeToHubspotContact() {
+      this.filterText = ''
+      this.newResource = 'Contact'
+      this.newFormType = 'UPDATE'
+      const form = this.allForms.find(
+        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
+      )
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
       )
     },
     changeToLead() {
@@ -1296,6 +1536,7 @@ export default {
         this.storedModalFunction = this.switchFormType
         return
       }
+      this.filterText = ''
       this.newFormType === 'CREATE' ? (this.newFormType = 'UPDATE') : (this.newFormType = 'CREATE')
 
       this.newCustomForm = this.allForms.find(
@@ -1383,7 +1624,7 @@ export default {
       // if it exists in the current fields add it to remove field
 
       if (~this.currentFields.findIndex((f) => f == field.id)) {
-        this.removedFields = [this.removedFields, field]
+        this.removedFields = [...this.removedFields, field]
       }
       this.formChange = true
     },
@@ -1413,8 +1654,8 @@ export default {
       })
 
       if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
-        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false) {
-          let fieldsToAdd = [this.noteTitle, this.noteSubject]
+        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false && currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
+          let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
           let copyArray = this.addedFields
           this.addedFields = fieldsToAdd.concat(copyArray)
         }
@@ -1425,7 +1666,9 @@ export default {
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       if (
         this.customResource !== 'Opportunity' &&
+        this.customResource !== 'Deal' &&
         this.customResource !== 'Lead' &&
+        this.customResource !== 'Company' &&
         this.customResource !== 'Contact' &&
         this.customResource !== 'Account'
       ) {
@@ -1442,7 +1685,6 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
 
-          this.$router.go()
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -1685,7 +1927,7 @@ input[type='search']:focus {
   outline: none;
 }
 .field-section {
-  width: 40vw;
+  width: 20vw;
   background-color: white;
   height: 100%;
   margin-top: 28px;

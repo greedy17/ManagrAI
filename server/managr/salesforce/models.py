@@ -23,16 +23,15 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
-
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import (
     TokenExpired,
     InvalidFieldError,
-    UnhandledSalesforceError,
     InvalidRefreshToken,
     CannotRetreiveObjectType,
 )
 from . import constants as sf_consts
+from managr.hubspot import constants as hs_consts
 
 logger = logging.getLogger("managr")
 
@@ -390,9 +389,9 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 )
             )
         elif not self.is_public and hasattr(self, "picklist_options"):
-            return self.picklist_options.as_slack_options
+            return self.crm_picklist_options.as_slack_options
         else:
-            return [block_builders.option("No Options", None)]
+            return [block_builders.option("No Options", "None")]
 
 
 class SObjectValidation(TimeStampModel, IntegrationModel):
@@ -426,7 +425,14 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     )
     salesforce_object = models.CharField(max_length=255)
     field = models.OneToOneField(
-        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="picklist_options"
+        "salesforce.SObjectField",
+        on_delete=models.CASCADE,
+        related_name="picklist_options",
+        null=True,
+        blank=True,
+    )
+    object_field = models.OneToOneField(
+        "crm.ObjectField", on_delete=models.CASCADE, related_name="crm_picklist_options", null=True
     )
 
     salesforce_account = models.ForeignKey(
@@ -447,7 +453,7 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
             return list(
                 map(lambda option: block_builders.option(option["label"], option["value"]), values)
             )
-        return [block_builders.option("No Options", None)]
+        return [block_builders.option("No Options", "None")]
 
 
 class SFSyncOperation(TimeStampModel):
@@ -691,8 +697,10 @@ class MeetingWorkflow(SFSyncOperation):
 
     @property
     def resource(self):
-        from managr.salesforce.routes import routes
+        from managr.salesforce.routes import routes as sf_routes
+        from managr.hubspot.routes import routes as hs_routes
 
+        routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
         model_route = routes.get(self.resource_type, None)
         if model_route and self.resource_id:
             return model_route["model"].objects.get(id=self.resource_id)
@@ -707,14 +715,30 @@ class MeetingWorkflow(SFSyncOperation):
             emit_sf_update_resource_from_meeting,
             emit_add_products_to_sf,
         )
+        from managr.hubspot.tasks import (
+            emit_add_call_to_hs,
+            emit_update_hs_contacts,
+            emit_create_new_hs_contacts,
+            emit_hs_update_resource_from_meeting,
+            emit_add_products_to_hs,
+        )
 
-        return {
-            sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
-            sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
-            sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
-            sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
-            sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
-        }
+        if self.user.crm == "SALESFORCE":
+            return {
+                sf_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_sf_update_resource_from_meeting,
+                sf_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_contacts,
+                sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
+                sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
+                sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
+            }
+        else:
+            return {
+                hs_consts.MEETING_REVIEW__UPDATE_RESOURCE: emit_hs_update_resource_from_meeting,
+                hs_consts.MEETING_REVIEW__UPDATE_CONTACTS: emit_update_hs_contacts,
+                hs_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_hs_contacts,
+                hs_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_hs,
+                hs_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_hs,
+            }
 
     def begin_tasks(self, attempts=1):
 
@@ -901,6 +925,10 @@ class SalesforceAuthAccount(TimeStampModel):
         return SalesforceAuthAccountAdapter(**data)
 
     @property
+    def crm_id(self):
+        return self.salesforce_id
+
+    @property
     def resource_sync_opts(self):
         operations_order = sf_consts.RESOURCE_SYNC_ORDER
         operations = list(
@@ -1010,9 +1038,7 @@ class SalesforceAuthAccount(TimeStampModel):
                     # get the field and make it into a string
                     try:
                         field_str = e.args[0].replace("'", "")
-                        fields = self.object_fields.filter(
-                            salesforce_object=resource, api_name=field_str
-                        )
+                        fields = self.object_fields.filter(crm_object=resource, api_name=field_str)
                         if fields.count():
                             fields.delete()
                         exclude_fields = self.exclude_fields if not None else {}
@@ -1091,5 +1117,19 @@ class SalesforceAuthAccount(TimeStampModel):
         return super(SalesforceAuthAccount, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        from managr.crm.models import BaseOpportunity, ObjectField, BaseAccount, BaseContact
+
+        self.user.crm = None
+        self.user.save()
+
+        fields = ObjectField.objects.filter(user=self.user)
+        fields.delete()
+        opps = BaseOpportunity.objects.filter(owner=self.user)
+        opps.delete()
+        accounts = BaseAccount.objects.filter(owner=self.user)
+        accounts.delete()
+        contacts = BaseContact.objects.filter(owner=self.user)
+        contacts.delete()
+        return super().delete(*args, **kwargs)
         return super().delete(*args, **kwargs)
 

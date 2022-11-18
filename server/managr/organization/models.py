@@ -714,10 +714,10 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         if user and hasattr(user, "salesforce_account"):
             token = user.salesforce_account.access_token
             base_url = user.salesforce_account.instance_url
-            object_fields = user.salesforce_account.object_fields.filter(
-                salesforce_object="OpportunityLineItem"
-            ).values_list("api_name", flat=True)
-            res = OpportunityLineItemAdapter.update_opportunitylineitem(
+            object_fields = user.object_fields.filter(crm_object="OpportunityLineItem").values_list(
+                "api_name", flat=True
+            )
+            res = OpportunityLineItemAdapter.update(
                 data, token, base_url, self.integration_id, object_fields
             )
             self.is_stale = True
@@ -733,9 +733,9 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
                 data["UnitPrice"] = str(entry.unit_price)
             token = user.salesforce_account.access_token
             base_url = user.salesforce_account.instance_url
-            object_fields = user.salesforce_account.object_fields.filter(
-                salesforce_object="OpportunityLineItem"
-            ).values_list("api_name", flat=True)
+            object_fields = user.object_fields.filter(crm_object="OpportunityLineItem").values_list(
+                "api_name", flat=True
+            )
             res = OpportunityLineItemAdapter.create(data, token, base_url, object_fields, user_id)
             from managr.salesforce.routes import routes
 

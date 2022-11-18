@@ -70,11 +70,11 @@ from .background import (
     emit_process_bulk_update,
 )
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
-    UnhandledSalesforceError,
+    UnhandledCRMError,
     SFNotFoundError,
     InvalidRefreshToken,
 )
@@ -103,7 +103,8 @@ def authenticate(request):
             *serializer.instance.field_sync_opts,
             *serializer.instance.validation_sync_opts,
         ]
-
+        request.user.crm = "SALESFORCE"
+        request.user.save()
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_object_field_sync(str(request.user.id), operations, False, formatted_time)
@@ -115,7 +116,7 @@ def authenticate(request):
                 if len(form_check) > 0
                 else timezone.now()
             )
-            emit_generate_form_template(data.user, schedule=schedule)
+            emit_generate_form_template(data.user, schedule=scheduled_time)
         user = User.objects.get(id=request.user.id)
         sync_operations = [*user.salesforce_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
@@ -391,6 +392,7 @@ class SalesforceSObjectViewSet(
             )
         )
         if note_data:
+            print("NOTE DATA", note_data)
             return Response(data=note_data)
         return Response(data=[])
 
@@ -405,6 +407,46 @@ class SalesforceSObjectViewSet(
         task = emit_process_bulk_update(request.data, str(request.user.id), verbose_name)
         data = {"verbose_name": verbose_name}
         return Response(data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="create-bulk-form-instance",
+    )
+    def create_bulk_form_instance(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        user = self.request.user
+        resource_id = self.request.GET.get("resource_id", None)
+        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
+            Q(resource="Opportunity", form_type="UPDATE")
+        )
+        template = template_list.first()
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template, user=user, resource_id=resource_id
+        )
+        attempts = 1
+        while True:
+            try:
+
+                data = {
+                    "form_id": str(slack_form.id),
+                    "success": True,
+                }
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    break
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+                data = {"error": str(e), "success": False}
+                break
+        return Response(data=data)
 
     @action(
         methods=["get"],
@@ -579,7 +621,7 @@ class SalesforceSObjectViewSet(
                             str(user.id), all_form_data
                         )
                     else:
-                        resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                        resource = main_form.resource_object.update(all_form_data)
                         if len(custom_object_forms):
                             sf.create_custom_object(
                                 custom_object_data_collector,
@@ -603,7 +645,7 @@ class SalesforceSObjectViewSet(
 
                     data = {"success": False, "error": str(e)}
                     break
-                except UnhandledSalesforceError as e:
+                except UnhandledCRMError as e:
                     logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                     data = {"success": False, "error": str(e)}
                     break
@@ -709,7 +751,7 @@ class SalesforceSObjectViewSet(
             except RequiredFieldError as e:
                 data = {"success": False, "error": str(e)}
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 data = {"success": False, "error": str(e)}
                 break
 

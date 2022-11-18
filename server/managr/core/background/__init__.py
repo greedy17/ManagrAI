@@ -14,7 +14,7 @@ from django.conf import settings
 
 from django.db.models import Q
 from django.utils import timezone
-from managr.salesforce.adapter.exceptions import TokenExpired
+from managr.crm.exceptions import TokenExpired
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer

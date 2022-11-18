@@ -30,7 +30,10 @@ class UserTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin_user = core_factories.UserFactory(
-            is_admin=True, user_level="MANAGER", organization=org_factories.OrganizationFactory()
+            is_admin=True,
+            user_level="MANAGER",
+            organization=org_factories.OrganizationFactory(),
+            crm="SALESFORCE",
         )
 
         temp = {
@@ -78,7 +81,7 @@ class UserTestCase(TestCase):
         expected = (
             f"{self.row.operand_identifier} {self.row.operand_operator} {self.row.operand_value}"
         )
-        self.assertEqual(self.row.query_str(self.config.id), expected)
+        self.assertEqual(self.row.sf_query_str(self.config.id), expected)
 
     def test_operand_row_generates_query_string_w_str_cond(self):
         """
@@ -92,7 +95,7 @@ class UserTestCase(TestCase):
         expected = (
             f"{self.row.operand_identifier} {self.row.operand_operator} '{self.row.operand_value}'"
         )
-        self.assertEqual(self.row.query_str(self.config.id), expected)
+        self.assertEqual(self.row.sf_query_str(self.config.id), expected)
 
     def test_operand_row_generates_query_string_w_cond(self):
         """
@@ -111,7 +114,7 @@ class UserTestCase(TestCase):
             }
         )
         expected = f"{row.operand_condition} {row.operand_identifier} {row.operand_operator} {row.operand_value}"
-        self.assertEqual(row.query_str(self.config.id), expected)
+        self.assertEqual(row.sf_query_str(self.config.id), expected)
 
     def test_operand_row_generates_date_query_string_w_cond(self):
         """
@@ -134,7 +137,7 @@ class UserTestCase(TestCase):
         expected = (
             f"{row.operand_condition} {row.operand_identifier} {row.operand_operator} {value}"
         )
-        self.assertEqual(row.query_str(self.config.id), expected)
+        self.assertEqual(row.sf_query_str(self.config.id), expected)
 
     def test_operand_row_generates_date_query_string_w_cond_negative(self):
         """
@@ -157,7 +160,7 @@ class UserTestCase(TestCase):
         expected = (
             f"{row.operand_condition} {row.operand_identifier} {row.operand_operator} {value}"
         )
-        self.assertEqual(row.query_str(self.config.id), expected)
+        self.assertEqual(row.sf_query_str(self.config.id), expected)
 
     def test_operand_row_generates_datetime_query_string_w_cond(self):
         """
@@ -186,7 +189,7 @@ class UserTestCase(TestCase):
             f"{row.operand_identifier} >= {value} AND {row.operand_identifier} <= {end_value}"
         )
 
-        self.assertEqual(row.query_str(self.config.id), expected)
+        self.assertEqual(row.sf_query_str(self.config.id), expected)
 
     def test_group_generates_query_string_wo_and_cond(self):
         """
@@ -194,8 +197,8 @@ class UserTestCase(TestCase):
         NOTE if row is top group order it will not append operator
         """
 
-        expected = f"({self.row.query_str(self.config.id)})"
-        self.assertEqual(self.group.query_str(self.config.id), expected)
+        expected = f"({self.row.sf_query_str(self.config.id)})"
+        self.assertEqual(self.group.sf_query_str(self.config.id), expected)
 
     def test_group_generates_url_string(self):
         """
@@ -203,7 +206,7 @@ class UserTestCase(TestCase):
         NOTE if row is top group order it will not append operator
         """
         adapter_class = adapter_routes.get(self.template.resource_type, None)
-        query_items = [group.query_str(self.config.id) for group in self.template.groups.all()]
+        query_items = [group.sf_query_str(self.config.id) for group in self.template.groups.all()]
         query_items = f"AND ({' '.join(query_items)})"
         additional_filters = [*adapter_class.additional_filters(), query_items]
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"
@@ -685,7 +688,7 @@ class UserTestCase(TestCase):
             template=self.template,
         )
         adapter_class = adapter_routes.get(self.template.resource_type, None)
-        query_items = [group.query_str(self.config.id) for group in self.template.groups.all()]
+        query_items = [group.sf_query_str(self.config.id) for group in self.template.groups.all()]
         query_items = f"AND ({' '.join(query_items)})"
         additional_filters = [*adapter_class.additional_filters(), query_items]
         expected = f"{self.sf_account.instance_url}{sf_consts.CUSTOM_BASE_URI}/query/?q=SELECT Id FROM Opportunity WHERE OwnerId = '{self.sf_account.salesforce_id}' {' '.join(additional_filters)} order by LastModifiedDate DESC limit {sf_consts.SALESFORCE_QUERY_LIMIT}"

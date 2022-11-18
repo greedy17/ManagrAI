@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.cron import queue_users_sf_resource
+from managr.hubspot.cron import queue_users_hs_resource
 
 logger = logging.getLogger("managr")
 
@@ -30,4 +31,5 @@ class Command(BaseCommand):
         elif now >= noon and now <= midnight_plus_10_mins:
             return logger.info("Skipping sync between midnight utc time and 10 mins after")
         else:
+            queue_users_hs_resource(force_all=options.get("force", None))
             queue_users_sf_resource(force_all=options.get("force", None))

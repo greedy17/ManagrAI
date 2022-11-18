@@ -100,7 +100,7 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllOpps({ commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'],['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
+  async loadAllOpps({ commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
     try {
       const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
       commit('SAVE_ALL_OPPS', res.results)
@@ -138,6 +138,7 @@ const actions = {
     try {
       const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
       for (let i = 0; i < res.length; i++) {
+        // console.log('res[i]', res[i])
         if (res[i].fieldRef) {
           obj[res[i].fieldRef.apiName] = res[i].values
         }

@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.NINETY_DAY_PIPELINE" />
+  <PopularWorkflows :config="userCRM === 'SALESFORCE' ? allConfigs.NINETY_DAY_PIPELINE : allConfigs.NINETY_DAY_PIPELINE_HUBSPOT" />
 </template>
 
 <script>
@@ -20,6 +20,11 @@ export default {
     return {
       allConfigs,
     }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>

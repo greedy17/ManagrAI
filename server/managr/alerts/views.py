@@ -28,7 +28,7 @@ from rest_framework.decorators import (
 )
 from managr.salesforce.routes import routes as model_routes
 
-from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
+from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
 
@@ -51,7 +51,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True)
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -194,7 +194,6 @@ class AlertTemplateViewSet(
         obj = self.get_object()
         data = self.request.data
         from_workflow = data.get("from_workflow", False)
-        print(from_workflow)
         if isinstance(from_workflow, dict):
             config = obj.configs.all().first()
             template = config.template
@@ -246,7 +245,6 @@ class AlertTemplateViewSet(
             serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
             return Response({"results": serialized.data})
         elif isinstance(from_workflow, bool) and from_workflow is True:
-            print("here bool")
             config = (
                 obj.configs.all().filter(alert_targets__contains=[self.request.user.id]).first()
             )
@@ -264,7 +262,6 @@ class AlertTemplateViewSet(
                 run_time.strftime("%Y-%m-%dT%H:%M%z"),
             )
         else:
-            print("here else")
             for config in obj.configs.all():
                 template = config.template
                 template.invocation = template.invocation + 1

@@ -215,6 +215,9 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
+            </div>
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
             <input
@@ -227,6 +230,9 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
+            </div>
           </div>
           <div
             v-else-if="
