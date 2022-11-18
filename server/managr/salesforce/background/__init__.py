@@ -248,6 +248,42 @@ def _process_gen_next_object_field_sync(user_id, operations_list, for_dev):
     ).begin_tasks(for_dev)
 
 
+DEV_FORM_CONFIGS = {
+    "Opportunity": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "Name",
+        "3": "StageName",
+        "4": "CloseDate",
+        "5": "OwnerId",
+    },
+    "Contact": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "Email",
+        "3": "FirstName",
+        "4": "LastName",
+        "5": "OwnerId",
+    },
+    "Account": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "Name",
+        "3": "Company_Size__c",
+        "4": "OwnerId",
+    },
+    "Lead": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "FirstName",
+        "3": "LastName",
+        "4": "Email",
+        "5": "OwnerId",
+    },
+    "OpportunityLineItem": {"0": "PricebookEntryId", "1": "Quantity", "2": "Description"},
+}
+
+
 @background(schedule=0)
 @log_all_exceptions
 def _generate_form_template(user_id, delete_forms):
@@ -263,25 +299,40 @@ def _generate_form_template(user_id, delete_forms):
             f = form_check.filter(resource=resource, form_type=form_type).first()
             f.recreate_form()
         else:
-            f = OrgCustomSlackForm.objects.create(
-                form_type=form_type,
-                resource=resource,
-                organization=org,
-                team=user.team,
-                custom_object=None,
-            )
-            public_fields = SObjectField.objects.filter(
-                is_public=True,
-                id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
-            )
-            note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5035").first()
-            note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af1").first()
-            for i, field in enumerate(public_fields):
-                if i == 0 and note_subject is not None:
-                    f.fields.add(note_subject, through_defaults={"order": i})
-                elif i == 1 and note is not None:
-                    f.fields.add(note, through_defaults={"order": i})
-            f.save()
+            if settings.IN_DEV:
+                f = OrgCustomSlackForm.objects.create(
+                    form_type=form_type,
+                    resource=resource,
+                    organization=org,
+                    team=user.team,
+                    custom_object=None,
+                    config=DEV_FORM_CONFIGS[resource],
+                )
+                f.recreate_form()
+            else:
+                f = OrgCustomSlackForm.objects.create(
+                    form_type=form_type,
+                    resource=resource,
+                    organization=org,
+                    team=user.team,
+                    custom_object=None,
+                )
+                public_fields = ObjectField.objects.filter(
+                    is_public=True,
+                    id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(
+                        form_type, []
+                    ),
+                )
+                note_subject = public_fields.filter(
+                    id="6407b7a1-a877-44e2-979d-1effafec5034"
+                ).first()
+                note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af2").first()
+                for i, field in enumerate(public_fields):
+                    if i == 0 and note_subject is not None:
+                        f.fields.add(note_subject, through_defaults={"order": i})
+                    elif i == 1 and note is not None:
+                        f.fields.add(note, through_defaults={"order": i})
+                f.save()
 
 
 @background()
@@ -2071,7 +2122,7 @@ def _processs_bulk_update(data, user):
                         str(user.id), all_form_data
                     )
                 else:
-                    resource_update = main_form.resource_object.update_in_salesforce(all_form_data)
+                    resource_update = main_form.resource_object.update(all_form_data)
                 return_data = {
                     "success": True,
                 }
