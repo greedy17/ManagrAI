@@ -339,11 +339,11 @@ class AlertOperand(TimeStampModel):
             if self.operand_operator in ["CONTAINS", "STARTSWITH", "ENDSWITH"]:
                 operator = "LIKE"
                 if self.operand_operator == "CONTAINS":
-                    value = f"'*{value}*'"
+                    value = f"*{value}*"
                 elif self.operand_operator == "STARTSWITH":
-                    value = f"'{value}*'"
+                    value = f"{value}*"
                 elif self.operand_operator == "ENDSWITH":
-                    value = f"'*{value}'"
+                    value = f"*{value}"
             else:
                 value = f"'{value}'"
         q_s = {
@@ -508,30 +508,24 @@ class AlertConfig(TimeStampModel):
                 user_ids_to_include.append(self.template.user.id)
             elif target == "MANAGERS":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_MANAGER,
-                    is_active=True,
-                    salesforce_account__isnull=False,
+                    user_level=core_consts.USER_LEVEL_MANAGER, is_active=True, crm__isnull=False,
                 )
             elif target == "REPS":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_REP,
-                    is_active=True,
-                    salesforce_account__isnull=False,
+                    user_level=core_consts.USER_LEVEL_REP, is_active=True, crm__isnull=False,
                 )
             elif target == "ALL":
-                query |= Q(is_active=True, salesforce_account__isnull=False,)
+                query |= Q(is_active=True, crm__isnull=False,)
             elif target == "SDR":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_SDR,
-                    is_active=True,
-                    salesforce_account__isnull=False,
+                    user_level=core_consts.USER_LEVEL_SDR, is_active=True, crm__isnull=False,
                 )
             elif target == "TEAM":
                 query |= Q(team=self.template.user.team, is_active=True)
             else:
                 user_ids_to_include.append(target)
         if len(user_ids_to_include):
-            query |= Q(id__in=user_ids_to_include, is_active=True, salesforce_account__isnull=False)
+            query |= Q(id__in=user_ids_to_include, is_active=True, crm__isnull=False)
         return self.template.user.organization.users.filter(query).distinct()
 
     def calculate_scheduled_time_for_alert(self, user):

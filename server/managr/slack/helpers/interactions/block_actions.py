@@ -104,9 +104,10 @@ def process_meeting_review(payload, context):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
+    crm = "Salesforce" if workflow.user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(workflow.user.id),
         trigger_id,
@@ -1115,9 +1116,10 @@ def process_show_update_resource_form(payload, context):
     view_type = "update" if is_update else "open"
     view_id = is_update["id"] if is_update else None
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         view_type,
         str(user.id),
         trigger_id,
@@ -2081,9 +2083,10 @@ def process_show_alert_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(user.id),
         trigger_id,
@@ -2441,18 +2444,25 @@ def process_get_summary_fields(payload, context):
     fields = form.custom_fields.all().exclude(
         Q(data_type__in=["Reference", "String", "TextArea"]) | Q(api_name="Amount")
     )
-    fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
-    blocks = [
-        block_builders.multi_static_select(
-            "Fields to Summarize",
-            options=fields_options,
-            action_id=action_with_params(
-                slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+    if len(fields):
+        fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
+        blocks = [
+            block_builders.multi_static_select(
+                "Fields to Summarize",
+                options=fields_options,
+                action_id=action_with_params(
+                    slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+                ),
+                block_id="CRM_FIELDS",
             ),
-            block_id="CRM_FIELDS",
-        ),
-        block_builders.context_block("*Amount total will be auto calculated"),
-    ]
+            block_builders.context_block("*Amount total will be auto calculated"),
+        ]
+    else:
+        blocks = [
+            block_builders.simple_section(
+                "You do not have any fields on your form that allow summarization"
+            )
+        ]
     data = {
         **context,
         "message_ts": payload["container"]["message_ts"],
@@ -2466,11 +2476,15 @@ def process_get_summary_fields(payload, context):
             "title": {"type": "plain_text", "text": "Workflow Summary"},
             "blocks": blocks,
             "private_metadata": json.dumps(data),
-            "submit": {"type": "plain_text", "text": "Get Summary", "emoji": True},
             "callback_id": slack_const.GET_SUMMARY,
         },
     }
-
+    if len(fields):
+        loading_view_data["view"]["submit"] = {
+            "type": "plain_text",
+            "text": "Get Summary",
+            "emoji": True,
+        }
     slack_requests.generic_request(
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
         loading_view_data,
@@ -2611,9 +2625,10 @@ def process_show_digest_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(user.id),
         trigger_id,

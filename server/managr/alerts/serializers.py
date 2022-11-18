@@ -513,12 +513,14 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
         configs = instance.configs.all()
         template = instance
         attempts = 1
+
         while True:
             crm_account = request_user.crm_account
             crm = "salesforce_account" if request_user.crm == "SALESFORCE" else "hubspot_account"
             try:
                 if template.user != request_user:
                     if hasattr(request_user, crm):
+                        template.url_str(request_user, configs.first().id)
                         res = crm_account.adapter_class.execute_alert_query(
                             template.url_str(request_user, configs.first().id),
                             template.resource_type,
@@ -538,7 +540,6 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                             template.url_str(user, config.id), template.resource_type
                         )
                         res_data.extend([item.integration_id for item in res])
-
                 break
             except TokenExpired:
                 if attempts >= 5:
@@ -558,6 +559,7 @@ class AlertTemplateRunNowSerializer(serializers.ModelSerializer):
                 return logger.warning(
                     f"Failed retreive data for {template.title} for user {str(request_user.id)} because of {e}"
                 )
+
         if len(res_data):
             model = CRM_SWITCHER[request_user.crm][template.resource_type]["model"]
             queryset = model.objects.filter(integration_id__in=res_data)
