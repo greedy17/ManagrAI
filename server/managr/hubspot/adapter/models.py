@@ -325,7 +325,6 @@ class HubspotAuthAccountAdapter:
             res = client.post(
                 url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
-            print(res.json())
             res = self._handle_response(res)
 
             res = self._format_resource_response(res, resource)
