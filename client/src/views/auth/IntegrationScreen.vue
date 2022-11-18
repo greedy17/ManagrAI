@@ -1,5 +1,44 @@
 <template>
   <div class="integrations">
+    <Modal
+      v-if="confirmModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleConfirmCancel()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Are you sure?</h3>
+          </div>
+          <div class="flex-row">
+            <h4 class="invite-form__subtitle">
+              By clicking Confirm, you will be disconnecting
+              {{ this.removeAppFormatted ? this.removeAppFormatted : 'this app' }}.
+            </h4>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="onRevoke(removeApp)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
     <div class="welcome">
       <!-- <img src="@/assets/images/logo.png" height="16px" alt="" /> -->
       <p class="inactive">Connect Managr to your favorite Apps</p>
@@ -24,7 +63,7 @@
               <div>
                 <div class="img-border">
                   <img
-                    @click="onRevoke('SALESFORCE')"
+                    @click="setRemoveApp('SALESFORCE')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -46,7 +85,7 @@
               <div>
                 <div class="img-border">
                   <img
-                    @click="onRevoke('HUBSPOT')"
+                    @click="setRemoveApp('HUBSPOT')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -130,7 +169,7 @@
               <div class="row" v-else>
                 <div class="img-border">
                   <img
-                    @click="onRevoke('SLACK')"
+                    @click="setRemoveApp('SLACK')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -170,7 +209,7 @@
               <div v-else>
                 <div class="img-border">
                   <img
-                    @click="onRevoke('NYLAS')"
+                    @click="setRemoveApp('NYLAS')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -203,7 +242,7 @@
               <div class="row" v-else>
                 <div class="img-border">
                   <img
-                    @click="onRevoke('ZOOM')"
+                    @click="setRemoveApp('ZOOM')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -243,7 +282,7 @@
               <div v-else-if="hasSalesloftIntegration">
                 <div class="img-border">
                   <img
-                    @click="onRevoke('SALESLOFT')"
+                    @click="setRemoveApp('SALESLOFT')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -274,7 +313,7 @@
             <div class="row" v-else>
               <div class="img-border">
                 <img
-                  @click="onRevoke('OUTREACH')"
+                  @click="setRemoveApp('OUTREACH')"
                   src="@/assets/images/revoke.svg"
                   height="16"
                   alt=""
@@ -331,7 +370,7 @@
               <div v-else>
                 <div class="img-border">
                   <img
-                    @click="onRevoke('GONG')"
+                    @click="setRemoveApp('GONG')"
                     src="@/assets/images/revoke.svg"
                     height="16"
                     alt=""
@@ -410,6 +449,7 @@ import GongAccount from '@/services/gong'
 import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import { CollectionManager } from '@thinknimble/tn-models'
+import Modal from '@/components/InviteModal'
 
 import AlertTemplate from '@/services/alerts/'
 
@@ -418,6 +458,7 @@ export default {
   components: {
     PulseLoadingSpinnerButton,
     CollectionManager,
+    Modal,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -433,6 +474,10 @@ export default {
         { label: 'Slack', value: 'SLACK' },
         { label: 'Teams', value: 'TEAMS' },
       ],
+      removeApp: '',
+      removeAppFormatted: '',
+      confirmModal: false,
+      pulseLoading: false,
       selectedCRM: null,
       selectedMessenger: null,
       selectedIntegration: null,
@@ -470,13 +515,28 @@ export default {
     },
     async onRevoke(integration) {
       this.generatingToken = true
+      this.pulseLoading = true
       this.selectedIntegration = integration
       try {
         await this.selectedIntegrationSwitcher.api.revoke()
       } finally {
         this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
+        this.pulseLoading = false
+        this.confirmModal = false
       }
+    },
+    setRemoveApp(appName) {
+      if (appName) {
+        this.removeApp = appName
+        this.removeAppFormatted = appName[0] + appName.slice(1).toLowerCase()
+        this.confirmModal = true
+      }
+    },
+    handleConfirmCancel() {
+      this.removeApp = ''
+      this.removeAppFormatted = ''
+      this.confirmModal = false
     },
     async onIntegrateSlack() {
       if (this.user.isAdmin) {
@@ -686,12 +746,6 @@ export default {
     contrast(91%);
 }
 
-.onboarding {
-  filter: blur(10px);
-}
-.test {
-  animation: bounce 0.2s infinite alternate;
-}
 .integrations {
   color: $base-gray;
   display: flex;
@@ -925,5 +979,114 @@ a {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+.invite-form {
+  border: none;
+  border-radius: 0.75rem;
+  min-width: 37vw;
+  // min-height: 64vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-direction: column;
+  background-color: white;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.modal-form {
+  width: 100%;
+  background-color: $white;
+  height: 40vh;
+  // justify-content: space-evenly;
+}
+.confirm-form {
+  width: 37vw;
+  height: 33vh;
+}
+.form-margin-small {
+  margin-top: 10rem;
+}
+.header {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  height: 20vh;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
+.logo {
+  height: 24px;
+  margin-left: 0.25rem;
+  margin-right: 0.5rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
+.invite-button {
+  background-color: $dark-green;
+  color: white;
+  margin-top: 2.5rem;
+  width: 15vw;
+  font-size: 16px;
+  box-shadow: none;
+}
+.modal-button {
+  @include primary-button();
+  box-shadow: none;
+  margin-top: 1.5rem;
+  height: 2.5rem;
+  width: 19rem;
+  font-size: 14px;
 }
 </style>
