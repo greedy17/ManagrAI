@@ -832,8 +832,7 @@ export default {
     },
     async getMeetingList() {
       try {
-        const res = await MeetingWorkflows.api.getMeetingList()
-        this.meetings = res.results
+        this.$store.dispatch('loadMeetings')
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,

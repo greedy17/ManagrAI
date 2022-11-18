@@ -3853,6 +3853,9 @@ export default {
       }
     },
     bulkUpdate() {
+      if (!this.selectedOpp || !this.oppVal || !this.oppNewValue) {
+        return
+      }
       if (this.selectedWorkflow) {
         this.onBulkUpdateWorkflow()
       } else {
