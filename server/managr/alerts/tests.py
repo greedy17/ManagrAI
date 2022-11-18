@@ -30,7 +30,10 @@ class UserTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin_user = core_factories.UserFactory(
-            is_admin=True, user_level="MANAGER", organization=org_factories.OrganizationFactory()
+            is_admin=True,
+            user_level="MANAGER",
+            organization=org_factories.OrganizationFactory(),
+            crm="SALESFORCE",
         )
 
         temp = {
