@@ -30,7 +30,8 @@
       { "name": "USE_SALESFORCE", "value": "${use_salesforce}" },
       { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
       { "name": "USE_GONG", "value": "${use_gong}" },
-      { "name": "USE_OUTREACH", "value": "${use_outreach}" }
+      { "name": "USE_OUTREACH", "value": "${use_outreach}" },
+      { "name": "USE_HUBSPOT", "value": "${use_hubspot}" }
     ],
     "secrets": [
       {
@@ -241,6 +242,22 @@
       {
         "name": "OUTREACH_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:outreachRedirectUri::"
+      },
+      {
+        "name": "HUBSPOT_BASE_URL",
+        "valueFrom": "${config_secret_arn}:hubspotBaseUrl::"
+      },
+      {
+        "name": "HUBSPOT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:hubspotClientId::"
+      },
+      {
+        "name": "HUBSPOT_SECRET",
+        "valueFrom": "${config_secret_arn}:hubspotSecret::"
+      },
+      {
+        "name": "HUBSPOT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:hubspotRedirectUri::"
       }
     ],
     "logConfiguration": {
