@@ -22,7 +22,7 @@ DATA_TYPE_OBJ = {
     "calculation_read_time": "DateTime",
     "phonenumber": "Phone",
     "select": "Picklist",
-    "date": "Date",
+    "date": "DateTime",
     "number": "Int",
     "calculation_rollup": "Int",
     "textarea": "TextArea",
@@ -84,7 +84,6 @@ class HubspotAuthAccountAdapter:
     @classmethod
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
-        print(user)
         res = cls.authenticate(code)
         if settings.IN_DEV:
             user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]

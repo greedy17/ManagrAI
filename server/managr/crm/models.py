@@ -628,9 +628,16 @@ class ObjectField(TimeStampModel, IntegrationModel):
         elif not self.is_public and hasattr(self, "crm_picklist_options"):
             return self.crm_picklist_options.as_slack_options
         elif self.user.crm == "HUBSPOT":
+            if self.api_name == "dealstage":
+                return list(
+                    map(
+                        lambda option: block_builders.option(option["label"], option["id"]),
+                        self.options,
+                    )
+                )
             return list(
                 map(
-                    lambda option: block_builders.option(option["label"], option["id"]),
+                    lambda option: block_builders.option(option["label"], option["value"]),
                     self.options,
                 )
             )

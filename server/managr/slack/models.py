@@ -1,6 +1,7 @@
 import logging
 from re import template
 from django.conf import settings
+from datetime import datetime
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -493,7 +494,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = bool(len(value.get("selected_options", [])))
                 elif value["type"] == "datepicker":
                     date = value.get("selected_date", None)
-                    current_value = date
+                    if self.user.crm == "HUBSPOT" and field == "closedate":
+                        current_value = date + "T18:00:00.000Z"
+                    else:
+                        current_value = date
                 vals[field] = current_value
         return vals
 
