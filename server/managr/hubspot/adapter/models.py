@@ -209,6 +209,7 @@ class HubspotAuthAccountAdapter:
                 data=data,
                 headers=hubspot_consts.AUTHENTICATION_HEADERS,
             )
+            print(res.json())
             return HubspotAuthAccountAdapter._handle_response(res)
 
     @staticmethod
@@ -218,7 +219,7 @@ class HubspotAuthAccountAdapter:
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
-            print(res.json())
+            print(res)
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
