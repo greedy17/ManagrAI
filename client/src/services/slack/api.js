@@ -183,7 +183,6 @@ export default class SlackAPI {
   async refreshForms() {
     try {
       const response = await this.client.get(FORMS_REFRESH)
-      console.log('response', response)
       return response
     } catch(e) {
       apiErrorHandler({ apiName: 'SlackApi.getStaffForms' })

@@ -1155,7 +1155,6 @@ export default {
     async refreshForms() {
       this.pulseLoading = true
       const res = await SlackOAuth.api.refreshForms()
-      console.log('res', res)
       setTimeout(() => {
         this.pulseLoading = false
         this.$router.go()
