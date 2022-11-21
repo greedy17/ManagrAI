@@ -218,6 +218,7 @@ class HubspotAuthAccountAdapter:
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
+            print(res.json())
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
