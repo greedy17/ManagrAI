@@ -214,15 +214,11 @@ class HubspotAuthAccountAdapter:
 
     @staticmethod
     def get_user_info(access_token, email):
-        print(access_token, email)
-        print(hubspot_consts.HUBSPOT_OWNERS_URI(email))
         with Client as client:
             res = client.get(
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
-            print(res)
-            print(res.json())
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
