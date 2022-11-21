@@ -125,7 +125,7 @@ def HUBSPOT_OBJECTS_URI(
 
 def HUBSPOT_OWNERS_URI(email=None):
     if email and len(email) > 0:
-        return f"{BASE_URL}/crm/v3/owners?email={email}"
+        return f"{BASE_URL}crm/v3/owners?email={email}"
     return f"{BASE_URL}/crm/v3/owners"
 
 
