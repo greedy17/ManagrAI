@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="userCRM === 'SALESFORCE' ? allConfigs.CLOSE_DATE_PASSED : allConfigs.CLOSE_DATE_PASSED_HUBSPOT" />
+  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_PASSED_HUBSPOT : allConfigs.CLOSE_DATE_PASSED" />
 </template>
 
 <script>

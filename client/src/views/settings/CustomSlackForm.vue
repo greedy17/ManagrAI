@@ -337,7 +337,7 @@
                   ><span
                     v-if="
                       currentStagesWithForms.includes(
-                        userCRM === 'SALESFORCE' ? props.option.value : props.option.id,
+                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
                       )
                     "
                     class="option__small"

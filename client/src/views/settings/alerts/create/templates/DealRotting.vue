@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="userCRM === 'SALESFORCE' ? allConfigs.DEAL_REVIEW : allConfigs.DEAL_REVIEW_HUBSPOT" />
+  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.DEAL_REVIEW_HUBSPOT : allConfigs.DEAL_REVIEW" />
 </template>
 
 <script>

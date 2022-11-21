@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :selectField="true" :config="userCRM === 'SALESFORCE' ? allConfigs.REQUIRED_FIELD_EMPTY : allConfigs.REQUIRED_FIELD_EMPTY_HUBSPOT" />
+  <PopularWorkflows :selectField="true" :config="userCRM === 'HUBSPOT' ? allConfigs.REQUIRED_FIELD_EMPTY_HUBSPOT : allConfigs.REQUIRED_FIELD_EMPTY" />
 </template>
 
 <script>

@@ -103,7 +103,7 @@
     <div class="title">
       <h4 class="title__head">Slack Message</h4>
 
-      <section class="title__body">
+      <section class="title__body" @click="test(messageTemplateForm)">
         <p>Edit your slack message</p>
       </section>
 
