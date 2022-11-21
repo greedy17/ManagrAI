@@ -431,8 +431,8 @@ def _process_add_update_to_hs(form_id, *args):
     user = form.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
+    if not hasattr(user, "hubspot_account"):
+        return logger.exception("User does not have a hubspot account cannot push to hs")
     start_time = form.submission_date
     subject = (
         "No subject"
@@ -487,8 +487,8 @@ def _process_create_new_hs_contacts(workflow_id, *args):
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
+    if not hasattr(user, "hubspot_account"):
+        return logger.exception("User does not have a hubspot account cannot push to hs")
     meeting = workflow.meeting
     attempts = 1
     if not len(args):
@@ -613,8 +613,8 @@ def _process_update_hs_contacts(workflow_id, *args):
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
+    if not hasattr(user, "hubspot_account"):
+        return logger.exception("User does not have a hubspot account cannot push to hs")
 
     attempts = 1
     contact_forms = workflow.forms.filter(id__in=args[0])
