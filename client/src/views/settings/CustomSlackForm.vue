@@ -153,7 +153,10 @@
           Products
         </p>
       </section>
-      <button @click="onSave" class="save">Save Form</button>
+      <div class="save-refresh-section">
+        <button class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button @click="onSave" class="save">Save Form</button>
+      </div>
     </div>
 
     <div v-else class="alerts-header">
@@ -175,7 +178,10 @@
           Contact
         </p>
       </section>
-      <button @click="onSave" class="save">Save Form</button>
+      <div class="save-refresh-section">
+        <button class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button @click="onSave" class="save">Save Form</button>
+      </div>
     </div>
 
     <section class="wrapper">
@@ -1128,6 +1134,9 @@ export default {
           search: this.filterText,
         },
       })
+    },
+    refreshForms() {
+      console.log('refreshForms')
     },
     removeCustomObject() {
       this.removeCustomObj = true
@@ -2631,5 +2640,14 @@ img:hover {
   cursor: pointer;
   margin-right: 0.5rem;
   color: $coral !important;
+}
+.save-refresh-section {
+  display: flex;
+}
+.img-button {
+  background-color: transparent;
+  padding: 4px 6px;
+  margin-right: 0.5rem;
+  border: none;
 }
 </style>
