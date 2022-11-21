@@ -19,6 +19,7 @@ const SLACK_ZOOM_CHANNEL_UPDATE = '/slack/update-zoom-channel/'
 const ZOOM_RECAP_CHANNEL_UPDATE = '/slack/update-recap-channel/'
 const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
 const ADMIN_FORMS = '/slack/forms/admin/'
+const FORMS_REFRESH = '/slack/forms/form-refresh/'
 const ADMIN_FORM_INSTANCES = '/slack/instances/admin/'
 
 export default class SlackAPI {
@@ -175,6 +176,15 @@ export default class SlackAPI {
     try {
       const response = await this.client.get(ADMIN_FORMS, { params: { org_id } })
       return response.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'SlackApi.getStaffForms' })
+    }
+  }
+  async refreshForms() {
+    try {
+      const response = await this.client.get(FORMS_REFRESH)
+      console.log('response', response)
+      return response
     } catch(e) {
       apiErrorHandler({ apiName: 'SlackApi.getStaffForms' })
     }

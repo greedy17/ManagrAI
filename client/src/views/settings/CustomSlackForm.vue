@@ -154,7 +154,15 @@
         </p>
       </section>
       <div class="save-refresh-section">
-        <button class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <PulseLoadingSpinnerButton
+          v-else
+          @click="refreshForms"
+          class="img-button"
+          text="Refresh"
+          :loading="pulseLoading"
+          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
+        >
         <button @click="onSave" class="save">Save Form</button>
       </div>
     </div>
@@ -179,7 +187,15 @@
         </p>
       </section>
       <div class="save-refresh-section">
-        <button class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <PulseLoadingSpinnerButton
+          v-else
+          @click="refreshForms"
+          class="img-button"
+          text="Refresh"
+          :loading="pulseLoading"
+          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
+        >
         <button @click="onSave" class="save">Save Form</button>
       </div>
     </div>
@@ -468,6 +484,7 @@ export default {
       currentlySelectedForm: null,
       customObjects: [],
       verboseName: '',
+      pulseLoading: false,
       // checker: this.$store.state.customObject.checker,
       // task: this.$store.state.customObject.task,
       oldIndex: 0,
@@ -1135,8 +1152,14 @@ export default {
         },
       })
     },
-    refreshForms() {
-      console.log('refreshForms')
+    async refreshForms() {
+      this.pulseLoading = true
+      const res = await SlackOAuth.api.refreshForms()
+      console.log('res', res)
+      setTimeout(() => {
+        this.pulseLoading = false
+        this.$router.go()
+      }, 300)
     },
     removeCustomObject() {
       this.removeCustomObj = true
