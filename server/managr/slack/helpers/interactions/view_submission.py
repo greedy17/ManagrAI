@@ -211,7 +211,6 @@ def process_zoom_meeting_data(payload, context):
             ops.append(
                 f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
             )
-
     # emit all events
     if len(workflow.operations_list):
         workflow.operations_list = [*workflow.operations_list, *ops]

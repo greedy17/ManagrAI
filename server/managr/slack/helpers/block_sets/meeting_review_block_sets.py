@@ -531,8 +531,9 @@ def meeting_review_modal_block_set(context):
     blocks.extend(slack_form.generate_form())
     # static blocks
     if slack_form:
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None

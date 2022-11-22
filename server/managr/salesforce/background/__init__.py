@@ -288,10 +288,10 @@ DEV_FORM_CONFIGS = {
 @log_all_exceptions
 def _generate_form_template(user_id, delete_forms):
     user = User.objects.get(id=user_id)
-    org = user.organization
+    team = user.team
     # delete all existing forms
     if delete_forms:
-        org.custom_slack_forms.all().delete()
+        team.team_forms.all().delete()
     form_check = user.team.team_forms.all()
     for form in slack_consts.INITIAL_FORMS:
         resource, form_type = form.split(".")
@@ -303,7 +303,7 @@ def _generate_form_template(user_id, delete_forms):
                 f = OrgCustomSlackForm.objects.create(
                     form_type=form_type,
                     resource=resource,
-                    organization=org,
+                    organization=user.organization,
                     team=user.team,
                     custom_object=None,
                     config=DEV_FORM_CONFIGS[resource],
@@ -313,7 +313,7 @@ def _generate_form_template(user_id, delete_forms):
                 f = OrgCustomSlackForm.objects.create(
                     form_type=form_type,
                     resource=resource,
-                    organization=org,
+                    organization=user.organization,
                     team=user.team,
                     custom_object=None,
                 )

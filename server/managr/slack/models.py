@@ -494,7 +494,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = bool(len(value.get("selected_options", [])))
                 elif value["type"] == "datepicker":
                     date = value.get("selected_date", None)
-                    if self.user.crm == "HUBSPOT" and field == "closedate":
+                    if self.user.crm == "HUBSPOT" and field == "closedate" and date is not None:
                         current_value = date + "T18:00:00.000Z"
                     else:
                         current_value = date
