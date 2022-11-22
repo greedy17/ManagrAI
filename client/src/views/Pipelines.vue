@@ -3608,8 +3608,24 @@ export default {
     // work here
     async listPicklists(type, query_params) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStage
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStage = res[i]
+              break
+            }
+          }
+          this.stagePicklistQueryOpts[type] = dealStage ? dealStage.options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         this.$toast('Error gathering update picklist fields', {
           timeout: 2000,
@@ -3622,8 +3638,24 @@ export default {
     },
     async listStagePicklists(type, query_params) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStage
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStage = res[i]
+              break
+            }
+          }
+          this.stagePicklistQueryOpts[type] = dealStage ? dealStage.options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         this.$toast('Error gathering stage picklist fields', {
           timeout: 2000,
@@ -3636,8 +3668,24 @@ export default {
     },
     async listCreatePicklists(type, query_params) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.createQueryOpts[type] = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStage
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStage = res[i]
+              break
+            }
+          }
+          this.createQueryOpts[type] = dealStage ? dealStage.options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.createQueryOpts[type] = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         this.$toast("Error gathering 'create' picklist fields", {
           timeout: 2000,

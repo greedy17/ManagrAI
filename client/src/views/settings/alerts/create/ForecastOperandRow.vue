@@ -202,9 +202,24 @@ export default {
     },
     async listPicklists(query_params = {}) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.picklistOpts = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStage
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStage = res[i]
+              break
+            }
+          }
+          this.picklistOpts = dealStage ? dealStage.options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.picklistOpts = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         console.log(e)
       }
