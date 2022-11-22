@@ -1369,7 +1369,7 @@ export default {
         // })
       }
       let newForm = SlackOAuth.customSlackForm.create({
-        resource: this.OPPORTUNITY,
+        resource: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL,
         formType: this.STAGE_GATING,
         stage: stage,
       })
@@ -1379,7 +1379,7 @@ export default {
         return acc
       }, [])
       this.allForms = [...this.allForms, newForm]
-      this.selectForm('Opportunity', 'STAGE_GATING', stage)
+      this.selectForm(this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal', 'STAGE_GATING', stage)
       this.getStageForms()
     },
     async listPicklists(query_params = {}) {
@@ -1724,7 +1724,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            this.$router.go()
+            // this.$router.go()
           }, 300)
         })
         .finally(() => {
