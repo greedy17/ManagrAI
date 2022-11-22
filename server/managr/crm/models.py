@@ -525,7 +525,10 @@ class ObjectField(TimeStampModel, IntegrationModel):
                 try:
                     date_value = str(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").date())
                 except ValueError:
-                    date_value = value
+                    try:
+                        date_value = str(datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f%z").date())
+                    except ValueError:
+                        date_value = value
             else:
                 date_value = value
             return block_builders.datepicker(

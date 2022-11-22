@@ -220,7 +220,7 @@ class OrgCustomSlackForm(TimeStampModel):
         unique_together = ["resource", "form_type", "team", "stage"]
 
     def generate_form_state(self):
-        form_fields = FormField.objects.filter(form=self)
+        form_fields = CustomFormField.objects.filter(form=self)
         state_object = {}
         for i, field in enumerate(form_fields):
             state_object[field.order] = field.field.api_name
@@ -249,14 +249,6 @@ class OrgCustomSlackForm(TimeStampModel):
         filtered_fields = self.custom_fields.filter(is_public=False)
         options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
         return options
-
-    def generate_form_state(self):
-        form_fields = FormField.objects.filter(form=self)
-        state_object = {}
-        for i, field in enumerate(form_fields):
-            state_object[field.order] = field.field.api_name
-        self.config = state_object
-        self.save()
 
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
