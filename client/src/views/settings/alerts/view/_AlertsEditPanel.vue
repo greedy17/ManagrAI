@@ -236,8 +236,8 @@ export default {
       fields: CollectionManager.create({
         ModelClass: ObjectField,
         filters: {
-          forAlerts: true,
-          filterable: true,
+          // forAlerts: true,
+          // filterable: true,
           page: 1,
           crmObject: alert.resourceType,
         },
