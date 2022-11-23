@@ -3,6 +3,8 @@ import re
 import pytz
 import time
 import random
+from django.conf import settings
+
 from datetime import datetime
 from django.utils import timezone
 from background_task import background
@@ -24,6 +26,7 @@ from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.hubspot.adapter.models import HubspotContactAdapter
 from managr.crm.models import BaseAccount, BaseContact, BaseOpportunity
+
 
 logger = logging.getLogger("managr")
 
@@ -156,6 +159,34 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
     return
 
 
+DEV_FORM_CONFIGS = {
+    "Deal": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "dealname",
+        "3": "dealstage",
+        "4": "closedate",
+        "5": "hubspot_owner_id",
+    },
+    "Contact": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "email",
+        "3": "firstname",
+        "4": "lastname",
+        "5": "hubspot_owner_id",
+    },
+    "Company": {
+        "0": "meeting_type",
+        "1": "meeting_comments",
+        "2": "name",
+        "3": "domain",
+        "4": "closedate",
+        "5": "hubspot_owner_id",
+    },
+}
+
+
 @background(schedule=0)
 @log_all_exceptions
 def _generate_form_template(user_id, delete_forms):
@@ -171,24 +202,39 @@ def _generate_form_template(user_id, delete_forms):
             f = form_check.filter(resource=resource, form_type=form_type).first()
             f.recreate_form()
         else:
-            f = OrgCustomSlackForm.objects.create(
-                form_type=form_type,
-                resource=resource,
-                organization=user.organzation,
-                team=user.team,
-            )
-            public_fields = ObjectField.objects.filter(
-                is_public=True,
-                id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
-            )
-            note_subject = public_fields.filter(id="6407b7a1-a877-44e2-979d-1effafec5034").first()
-            note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af2").first()
-            for i, field in enumerate(public_fields):
-                if i == 0 and note_subject is not None:
-                    f.custom_fields.add(note_subject, through_defaults={"order": i})
-                elif i == 1 and note is not None:
-                    f.custom_fields.add(note, through_defaults={"order": i})
-            f.save()
+            if settings.IN_DEV:
+                f = OrgCustomSlackForm.objects.create(
+                    form_type=form_type,
+                    resource=resource,
+                    organization=user.organization,
+                    team=user.team,
+                    custom_object=None,
+                    config=DEV_FORM_CONFIGS[resource],
+                )
+                f.recreate_form()
+            else:
+                f = OrgCustomSlackForm.objects.create(
+                    form_type=form_type,
+                    resource=resource,
+                    organization=user.organization,
+                    team=user.team,
+                )
+                public_fields = ObjectField.objects.filter(
+                    is_public=True,
+                    id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(
+                        form_type, []
+                    ),
+                )
+                note_subject = public_fields.filter(
+                    id="6407b7a1-a877-44e2-979d-1effafec5034"
+                ).first()
+                note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af2").first()
+                for i, field in enumerate(public_fields):
+                    if i == 0 and note_subject is not None:
+                        f.custom_fields.add(note_subject, through_defaults={"order": i})
+                    elif i == 1 and note is not None:
+                        f.custom_fields.add(note, through_defaults={"order": i})
+                f.save()
 
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_RESOURCE_SYNC_QUEUE)
@@ -364,6 +410,7 @@ def _process_add_products_to_hs(workflow_id, non_meeting=False, *args):
 
 
 CALL_ASSOCIATIONS = {"company": 8, "deal": 212, "contact": 10}
+NOTE_ASSOCIATIONS = {"company": 190, "deal": 214, "contact": 202}
 
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
@@ -404,7 +451,6 @@ def _process_add_call_to_hs(workflow_id, *args):
                 workflow.resource.integration_id,
                 CALL_ASSOCIATIONS[workflow.resource_type.lower()],
             )
-            attempts = 1
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -424,19 +470,13 @@ def _process_add_call_to_hs(workflow_id, *args):
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
 def _process_add_update_to_hs(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
-    resource = None
-    if form.resource_type == "Deal":
-        resource = BaseOpportunity.objects.get(id=form.resource_id)
-    elif form.resource_type == "Company":
-        resource = BaseAccount.objects.get(id=form.resource_id)
-    else:
-        resource = BaseContact.objects.get(id=form.resource_id)
+    resource = routes[form.resource_type]["model"].objects.get(id=form.resource_id)
     user = form.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "hubspot_account"):
         return logger.exception("User does not have a hubspot account cannot push to hs")
-    start_time = form.submission_date
+    formatted_time = datetime.strftime(form.submission_date, "%Y-%m-%dT%H:%M:%S.%fz")
     subject = (
         "No subject"
         if form.saved_data.get("meeting_type") is None
@@ -445,24 +485,25 @@ def _process_add_update_to_hs(form_id, *args):
     description = form.saved_data.get("meeting_comments")
     description = replace_tags(description)
     data = dict(
-        Subject=f"{subject}",
-        Description=description,
-        ActivityDate=start_time.strftime("%Y-%m-%d"),
-        Status="Completed",
-        TaskSubType="Task",
+        hs_timestamp=formatted_time,
+        hubspot_owner_id=user.crm_account.crm_id,
+        hs_note_body=f"{subject} - {description}",
     )
-    if form.resource_type in ["Account", "Opportunity"]:
-        data["WhatId"] = resource.integration_id
-    else:
-        data["WhoId"] = resource.integration_id
     attempts = 1
     while True:
-        sf = user.salesforce_account
+        hs = user.hubspot_account
         try:
-            ActivityAdapter.save_zoom_meeting_to_salesforce(data, sf.access_token, sf.instance_url)
-            attempts = 1
+            create_res = hs.adapter_class.create_note_in_hubspot(data)
+            note_id = create_res["id"]
+            associate_res = hs.adapter_class.associate_objects(
+                "notes",
+                note_id,
+                form.resource_type,
+                form.resource_object.integration_id,
+                NOTE_ASSOCIATIONS[form.resource_type.lower()],
+            )
             break
-        except TokenExpired as e:
+        except TokenExpired:
             if attempts >= 5:
                 return logger.exception(
                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
@@ -470,7 +511,7 @@ def _process_add_update_to_hs(form_id, *args):
             else:
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
-                sf.regenerate_token()
+                hs.regenerate_token()
                 attempts += 1
         except Exception as e:
             if attempts >= 5:

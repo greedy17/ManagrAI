@@ -162,6 +162,14 @@ class HubspotAuthAccountAdapter:
             res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
+    def create_note_in_hubspot(self, note_data):
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("notes")
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        send_data = {"properties": note_data}
+        with Client as client:
+            res = client.post(url, data=json.dumps(send_data), headers=headers,)
+            return self._handle_response(res)
+
     # def format_validation_rules(
     #     self, hubspot_account_id, user_id, res_data=[],
     # ):
