@@ -154,7 +154,7 @@
         </p>
       </section>
       <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
         <PulseLoadingSpinnerButton
           v-else
           @click="refreshForms"
@@ -187,7 +187,7 @@
         </p>
       </section>
       <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
         <PulseLoadingSpinnerButton
           v-else
           @click="refreshForms"
@@ -1724,7 +1724,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            // this.$router.go()
+            this.$router.go()
           }, 300)
         })
         .finally(() => {
@@ -2208,16 +2208,16 @@ input[type='search']:focus {
 .invert2 {
   filter: invert(80%);
 }
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background-color: white;
-  border: 1px solid $soft-gray;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 4px;
-}
+// .img-border {
+//   display: flex;
+//   align-items: center;
+//   justify-content: flex-start;
+//   background-color: white;
+//   border: 1px solid $soft-gray;
+//   border-radius: 4px;
+//   cursor: pointer;
+//   padding: 4px;
+// }
 .margin-right {
   margin-right: 2.75vw;
 }
@@ -2671,5 +2671,11 @@ img:hover {
   padding: 4px 6px;
   margin-right: 0.5rem;
   border: none;
+}
+.img-border {
+  border: 1px solid #eeeeee;
+  padding: 4px 6px 3px 6px;
+  border-radius: 6px;
+  background-color: white;
 }
 </style>
