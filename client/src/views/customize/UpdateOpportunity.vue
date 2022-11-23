@@ -133,7 +133,8 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          const form = this.allForms.find((f) => f.resource == this.currentResource && f.formType == this.UPDATE)
+          const hsPicklist = form.fieldsRef.filter(item => query_params.picklistFor === item.apiName)
           this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
