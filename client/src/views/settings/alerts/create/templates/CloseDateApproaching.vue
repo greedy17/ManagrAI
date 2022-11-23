@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="userCRM === 'SALESFORCE' ? allConfigs.CLOSE_DATE_APPROACHING : allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT" />
+  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT : allConfigs.CLOSE_DATE_APPROACHING" />
 </template>
 
 <script>

@@ -74,7 +74,6 @@
               <span
                 v-for="(day, i) in weeklyOpts"
                 :key="i"
-                :class="form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''"
               >
                 <input
                   type="checkbox"
@@ -82,7 +81,7 @@
                   :value="day.value"
                   v-model="form.field.recurrenceDays.value"
                 />
-                <label :for="day.value">{{ day.key.charAt(0) }}</label>
+                <label :for="day.value" :class="form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''">{{ day.key.charAt(0) }}</label>
               </span>
             </div>
           </div>
@@ -206,7 +205,7 @@
             style="width: 25vw"
             selectLabel="Enter"
             track-by="id"
-            label="fullName"
+            :custom-label="fullOrEmailLabel"
             :multiple="true"
             :closeOnSelect="false"
             :loading="dropdownLoading"
@@ -519,6 +518,12 @@ export default {
     },
     scrollToElement() {
       this.$refs.bottom ? this.$refs.bottom.scrollIntoView({ behavior: 'smooth' }) : null
+    },
+    fullOrEmailLabel(props) {
+      if (!props.fullName.trim()) {
+        return props.email
+      }
+      return props.fullName
     },
     changeFrequency() {
       this.alertFrequency == 'WEEKLY'
@@ -865,6 +870,15 @@ export default {
     },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
+        console.log('userTargetsOpts', [
+          ...this.alertTargetOpts.map((opt) => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ])
         return [
           ...this.alertTargetOpts.map((opt) => {
             return {
@@ -1665,6 +1679,9 @@ textarea {
   margin-top: 16px;
 
   span {
+    transition: all 0.2s;
+  }
+  label {
     cursor: pointer;
     color: $light-gray-blue;
     margin-right: 8px;
@@ -1676,9 +1693,9 @@ textarea {
     border-radius: 100%;
     border: 1px solid $soft-gray;
     transition: all 0.2s;
-    input {
-      display: none;
-    }
+  }
+  input {
+    display: none;
   }
 
   span:hover {

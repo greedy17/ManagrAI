@@ -1,6 +1,6 @@
 <template>
   <PopularWorkflows
-    :config="userCRM === 'SALESFORCE' ? allConfigs.LARGE_OPPORTUNITIES : allConfigs.LARGE_DEALS_HUBSPOT"
+    :config="userCRM === 'HUBSPOT' ? allConfigs.LARGE_DEALS_HUBSPOT : allConfigs.LARGE_OPPORTUNITIES"
     :largeOpps="true"
     :selectField="true"
   />

@@ -153,7 +153,18 @@
           Products
         </p>
       </section>
-      <button @click="onSave" class="save">Save Form</button>
+      <div class="save-refresh-section">
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <PulseLoadingSpinnerButton
+          v-else
+          @click="refreshForms"
+          class="img-button"
+          text="Refresh"
+          :loading="pulseLoading"
+          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
+        >
+        <button @click="onSave" class="save">Save Form</button>
+      </div>
     </div>
 
     <div v-else class="alerts-header">
@@ -175,7 +186,18 @@
           Contact
         </p>
       </section>
-      <button @click="onSave" class="save">Save Form</button>
+      <div class="save-refresh-section">
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <PulseLoadingSpinnerButton
+          v-else
+          @click="refreshForms"
+          class="img-button"
+          text="Refresh"
+          :loading="pulseLoading"
+          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
+        >
+        <button @click="onSave" class="save">Save Form</button>
+      </div>
     </div>
 
     <section class="wrapper">
@@ -315,7 +337,7 @@
                   ><span
                     v-if="
                       currentStagesWithForms.includes(
-                        userCRM === 'SALESFORCE' ? props.option.value : props.option.id,
+                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
                       )
                     "
                     class="option__small"
@@ -462,6 +484,7 @@ export default {
       currentlySelectedForm: null,
       customObjects: [],
       verboseName: '',
+      pulseLoading: false,
       // checker: this.$store.state.customObject.checker,
       // task: this.$store.state.customObject.task,
       oldIndex: 0,
@@ -1129,6 +1152,14 @@ export default {
         },
       })
     },
+    async refreshForms() {
+      this.pulseLoading = true
+      const res = await SlackOAuth.api.refreshForms()
+      setTimeout(() => {
+        this.pulseLoading = false
+        this.$router.go()
+      }, 300)
+    },
     removeCustomObject() {
       this.removeCustomObj = true
       this.customResource = this.resource
@@ -1338,7 +1369,7 @@ export default {
         // })
       }
       let newForm = SlackOAuth.customSlackForm.create({
-        resource: this.OPPORTUNITY,
+        resource: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL,
         formType: this.STAGE_GATING,
         stage: stage,
       })
@@ -1348,25 +1379,15 @@ export default {
         return acc
       }, [])
       this.allForms = [...this.allForms, newForm]
-      this.selectForm('Opportunity', 'STAGE_GATING', stage)
+      this.selectForm(this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal', 'STAGE_GATING', stage)
       this.getStageForms()
     },
     async listPicklists(query_params = {}) {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          res = await ObjectField.api.listFields({
-            crmObject: this.DEAL,
-            search: 'Deal Stage',
-          })
-          let dealStage
-          for (let i = 0; i < res.length; i++) {
-            if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
-              break
-            }
-          }
-          this.stages = dealStage ? dealStage.options : []
+          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.stages = res.length ? res[0]['values'] : []
@@ -2177,16 +2198,16 @@ input[type='search']:focus {
 .invert2 {
   filter: invert(80%);
 }
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background-color: white;
-  border: 1px solid $soft-gray;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 4px;
-}
+// .img-border {
+//   display: flex;
+//   align-items: center;
+//   justify-content: flex-start;
+//   background-color: white;
+//   border: 1px solid $soft-gray;
+//   border-radius: 4px;
+//   cursor: pointer;
+//   padding: 4px;
+// }
 .margin-right {
   margin-right: 2.75vw;
 }
@@ -2631,5 +2652,20 @@ img:hover {
   cursor: pointer;
   margin-right: 0.5rem;
   color: $coral !important;
+}
+.save-refresh-section {
+  display: flex;
+}
+.img-button {
+  background-color: transparent;
+  padding: 4px 6px;
+  margin-right: 0.5rem;
+  border: none;
+}
+.img-border {
+  border: 1px solid #eeeeee;
+  padding: 4px 6px 3px 6px;
+  border-radius: 6px;
+  background-color: white;
 }
 </style>

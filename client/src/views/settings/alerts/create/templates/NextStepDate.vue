@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :selectField="true" :config="userCRM === 'SALESFORCE' ? allConfigs.UPCOMING_NEXT_STEP : allConfigs.UPCOMING_NEXT_STEP_HUBSPOT" />
+  <PopularWorkflows :selectField="true" :config="userCRM === 'HUBSPOT' ? allConfigs.UPCOMING_NEXT_STEP_HUBSPOT : allConfigs.UPCOMING_NEXT_STEP" />
 </template>
 
 <script>

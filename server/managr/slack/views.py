@@ -624,6 +624,20 @@ class SlackFormsViewSet(
         serialized = self.get_serializer(orgs, many=True).data
         return Response(serialized)
 
+    @action(
+        methods=["GET"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="form-refresh",
+    )
+    def form_refresh(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        user = request.user
+        forms = OrgCustomSlackForm.objects.filter(organization=user.organization)
+        for form in forms:
+            form.recreate_form()
+        return Response(status=status.HTTP_200_OK)
+
 
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
