@@ -11,9 +11,19 @@
     >
       <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
         <div class="header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Are you sure?</h3>
+          <div class="flex-row-wrapper">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" alt="" />
+              <h3 class="invite-form__title">Are you sure?</h3>
+            </div>
+            <div class="flex-row">
+              <img
+                @click="handleConfirmCancel"
+                src="@/assets/images/close.svg"
+                alt=""
+                style="filter: invert(30%); cursor: pointer; width: 20px; height: 20px; margin-right: 5px;"
+              />
+            </div>
           </div>
           <div class="flex-row">
             <h4 class="invite-form__subtitle">
@@ -1029,7 +1039,7 @@ a {
 }
 .confirm-form {
   width: 37vw;
-  height: 33vh;
+  height: 30vh;
 }
 .form-margin-small {
   margin-top: 10rem;
@@ -1039,7 +1049,7 @@ a {
   width: 100%;
   // border-bottom: 1px solid $soft-gray;
   position: relative;
-  height: 20vh;
+  height: 22vh;
   border-top-right-radius: 4px;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
@@ -1065,6 +1075,10 @@ a {
   justify-self: start;
   margin: 0 5%;
   letter-spacing: 1px;
+}
+.flex-row-wrapper {
+  display: flex;
+  justify-content: space-between;
 }
 .logo {
   height: 24px;

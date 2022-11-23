@@ -981,18 +981,8 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          res = await ObjectField.api.listFields({
-            crmObject: this.DEAL,
-            search: 'Deal Stage',
-          })
-          let dealStage
-          for (let i = 0; i < res.length; i++) {
-            if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
-              break
-            }
-          }
-          this.picklistQueryOpts[type] = dealStage ? dealStage.options : []
+          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          this.picklistOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
@@ -1005,18 +995,8 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          res = await ObjectField.api.listFields({
-            crmObject: this.DEAL,
-            search: 'Deal Stage',
-          })
-          let dealStage
-          for (let i = 0; i < res.length; i++) {
-            if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
-              break
-            }
-          }
-          this.stagePicklistQueryOpts[type] = dealStage ? dealStage.options : []
+          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          this.stagePicklistQueryOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
@@ -1029,18 +1009,8 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          res = await ObjectField.api.listFields({
-            crmObject: this.DEAL,
-            search: 'Deal Stage',
-          })
-          let dealStage
-          for (let i = 0; i < res.length; i++) {
-            if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
-              break
-            }
-          }
-          this.createQueryOpts[type] = dealStage ? dealStage.options : []
+          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          this.createQueryOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.createQueryOpts[type] = res.length ? res[0]['values'] : []
