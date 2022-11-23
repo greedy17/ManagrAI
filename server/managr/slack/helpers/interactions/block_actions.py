@@ -2949,9 +2949,11 @@ def process_view_recap(payload, context):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
         if form_fields:
-            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
+            form_fields = form_fields | form.template.customformfield_set.filter(
+                include_in_recap=True
+            )
         else:
-            form_fields = form.template.formfield_set.filter(include_in_recap=True)
+            form_fields = form.template.customformfield_set.filter(include_in_recap=True)
     blocks = []
     message_string_for_recap = ""
     for key, new_value in new_data.items():
