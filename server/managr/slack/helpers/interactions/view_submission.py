@@ -2087,7 +2087,8 @@ def process_submit_product(payload, context):
         )
     )
     try:
-        index, block = block_finder("StageName", blocks)
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        index, block = block_finder(stage_name, blocks)
     except ValueError:
         # did not find the block
         block = None
