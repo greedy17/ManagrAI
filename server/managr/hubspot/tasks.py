@@ -160,10 +160,10 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
 @log_all_exceptions
 def _generate_form_template(user_id, delete_forms):
     user = User.objects.get(id=user_id)
-    org = user.organization
+    team = user.team
     # delete all existing forms
     if delete_forms:
-        org.custom_slack_forms.all().delete()
+        team.team_forms.all().delete()
     form_check = user.team.team_forms.all()
     for form in slack_consts.INITIAL_HUBSPOT_FORMS:
         resource, form_type = form.split(".")
@@ -172,7 +172,10 @@ def _generate_form_template(user_id, delete_forms):
             f.recreate_form()
         else:
             f = OrgCustomSlackForm.objects.create(
-                form_type=form_type, resource=resource, organization=org, team=user.team
+                form_type=form_type,
+                resource=resource,
+                organization=user.organzation,
+                team=user.team,
             )
             public_fields = ObjectField.objects.filter(
                 is_public=True,
@@ -431,8 +434,8 @@ def _process_add_update_to_hs(form_id, *args):
     user = form.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
+    if not hasattr(user, "hubspot_account"):
+        return logger.exception("User does not have a hubspot account cannot push to hs")
     start_time = form.submission_date
     subject = (
         "No subject"
@@ -487,14 +490,13 @@ def _process_create_new_hs_contacts(workflow_id, *args):
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
+    if not hasattr(user, "hubspot_account"):
+        return logger.exception("User does not have a hubspot account cannot push to hs")
     meeting = workflow.meeting
     attempts = 1
     if not len(args):
         return
     contact_forms = workflow.forms.filter(id__in=args[0])
-
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
@@ -508,21 +510,16 @@ def _process_create_new_hs_contacts(workflow_id, *args):
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
                 data = form.saved_data
-        if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
-            data["AccountId"] = workflow.resource.integration_id
         while True:
-            sf = user.salesforce_account
-            sf_adapter = sf.adapter_class
+            hs = user.hubspot_account
+            object_fields = user.object_fields.filter(crm_object="Contact").values_list(
+                "api_name", flat=True
+            )
             logger.info(f"Data from form {data}")
             try:
-                res = ContactAdapter.create(
-                    data,
-                    sf.access_token,
-                    sf.instance_url,
-                    sf_adapter.object_fields.get("Contact", {}),
-                    str(user.id),
+                res = HubspotContactAdapter.create(
+                    data, hs.access_token, object_fields, str(user.id),
                 )
-                attempts = 1
                 form.is_submitted = True
                 form.update_source = "meeting"
                 form.submission_date = timezone.now()
@@ -531,69 +528,25 @@ def _process_create_new_hs_contacts(workflow_id, *args):
             except TokenExpired as e:
                 if attempts >= 5:
                     return logger.exception(
-                        f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)}"
+                        f"Failed to refresh user token for Salesforce operation add contact to sf failed {str(workflow.id)} <{e}>"
                     )
 
                 else:
                     sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                     time.sleep(sleep)
-                    sf.regenerate_token()
+                    hs.regenerate_token()
                     attempts += 1
-            except UnableToUnlockRow as e:
+            except Exception as e:
+                logger.info(f"Create exception <{e}>")
                 if attempts >= 5:
                     logger.exception(
-                        f"Failed to create contact for resource log from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                        f"Failed to create contact for {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                     )
                     raise e
                 else:
                     sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     attempts += 1
-
-        if (
-            workflow.resource_type == slack_consts.FORM_RESOURCE_OPPORTUNITY
-            and res
-            and res.integration_id
-        ):
-            while True:
-                sf = user.salesforce_account
-                sf_adapter = sf.adapter_class
-                logger.info(f"Adding Contact Role")
-                try:
-
-                    workflow.resource.add_contact_role(
-                        sf.access_token, sf.instance_url, res.integration_id
-                    )
-                    attempts = 1
-                    break
-                except TokenExpired as e:
-                    if attempts >= 5:
-                        return logger.exception(
-                            f"Failed to refresh user token for Salesforce operation add contact to sf failed"
-                        )
-
-                    else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                        time.sleep(sleep)
-                        sf.regenerate_token()
-                        attempts += 1
-                except UnableToUnlockRow as e:
-                    if attempts >= 5:
-                        logger.exception(
-                            f"Failed to add contact role to resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
-                        )
-                        raise e
-                    else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                        time.sleep(sleep)
-                        attempts += 1
-        try:
-            serializer = ContactSerializer(data=res.as_dict)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-        except Exception as e:
-            logger.exception(f"Failed to create contact in DB because of {e}")
-            return
     return
 
 
@@ -613,8 +566,8 @@ def _process_update_hs_contacts(workflow_id, *args):
     user = workflow.user
     if not user:
         return logger.exception(f"User not found unable to log call {str(user.id)}")
-    if not hasattr(user, "salesforce_account"):
-        return logger.exception("User does not have a salesforce account cannot push to sf")
+    if not hasattr(user, "hubspot_account"):
+        return logger.exception("User does not have a hubspot account cannot push to hs")
 
     attempts = 1
     contact_forms = workflow.forms.filter(id__in=args[0])
@@ -625,8 +578,6 @@ def _process_update_hs_contacts(workflow_id, *args):
         data = swap_public_fields(data)
         if data.get("meeting_comments") is not None and data.get("meeting_type") is not None:
             emit_add_update_to_hs(str(form.id))
-        if workflow.resource_type == slack_consts.FORM_RESOURCE_ACCOUNT:
-            data["AccountId"] = workflow.resource.integration_id
         if data:
             while True:
                 crm = user.crm_account

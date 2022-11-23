@@ -91,32 +91,32 @@ if settings.USE_HUBSPOT:
 
 
 def HUBSPOT_PIPELINES_URI(pipeline_id):
-    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/pipelines/Deal/{pipeline_id}"
+    return f"{BASE_URL}crm/v{HUBSPOT_API_VERSION}/pipelines/Deal/{pipeline_id}"
 
 
 def HUBSPOT_RESOURCE_URI(resource):
-    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{resource}/"
+    return f"{BASE_URL}crm/v{HUBSPOT_API_VERSION}/objects/{resource}/"
 
 
 def HUBSPOT_SEARCH_URI(resource):
     return (
-        f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{HUBSPOT_URL_RESOURCE_MAP[resource]}/search"
+        f"{BASE_URL}crm/v{HUBSPOT_API_VERSION}/objects/{HUBSPOT_URL_RESOURCE_MAP[resource]}/search"
     )
 
 
 def HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource):
-    return f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/associations/{HUBSPOT_URL_RESOURCE_MAP[resource]}/{HUBSPOT_URL_RESOURCE_MAP[associated_resource]}/batch/read"
+    return f"{BASE_URL}crm/v{HUBSPOT_API_VERSION}/associations/{HUBSPOT_URL_RESOURCE_MAP[resource]}/{HUBSPOT_URL_RESOURCE_MAP[associated_resource]}/batch/read"
 
 
 def HUBSPOT_ASSOCIATIONS_CREATE_URI(associate_type, associate_id, to_object, to_object_id):
-    return f"{BASE_URL}/crm/v4/objects/{associate_type}/{associate_id}/associations/{HUBSPOT_URL_RESOURCE_MAP[to_object]}/{to_object_id}"
+    return f"{BASE_URL}crm/v4/objects/{associate_type}/{associate_id}/associations/{HUBSPOT_URL_RESOURCE_MAP[to_object]}/{to_object_id}"
 
 
 def HUBSPOT_OBJECTS_URI(
     resource, fields, integration_id=None, limit=HUBSPOT_QUERY_LIMIT,
 ):
     fields = set(fields)
-    url = f"{BASE_URL}/crm/v{HUBSPOT_API_VERSION}/objects/{resource}"
+    url = f"{BASE_URL}crm/v{HUBSPOT_API_VERSION}/objects/{resource}"
     if integration_id:
         url += f"/{integration_id}"
     url += f"?limit={limit}&properties={','.join(fields)}"
@@ -125,8 +125,8 @@ def HUBSPOT_OBJECTS_URI(
 
 def HUBSPOT_OWNERS_URI(email=None):
     if email and len(email) > 0:
-        return f"{BASE_URL}/crm/v3/owners?email={email}"
-    return f"{BASE_URL}/crm/v3/owners"
+        return f"{BASE_URL}crm/v3/owners?email={email}"
+    return f"{BASE_URL}crm/v3/owners"
 
 
 def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):
@@ -154,4 +154,4 @@ def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
 
 
 def HUBSPOT_PIPELINE_URI(resource):
-    return f"{BASE_URL}/crm/v3/pipelines/{resource}"
+    return f"{BASE_URL}crm/v3/pipelines/{resource}"

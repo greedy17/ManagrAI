@@ -1048,10 +1048,13 @@ def process_stage_selected_command_form(payload, context):
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
-        selected_value = action["selected_option"]["value"]
+        selected_value = (
+            action["selected_option"]["value"]
+            if user.crm == "SALESFORCE"
+            else action["selected_option"]["text"]["text"]
+        )
         # blockfinder returns a tuple of its index in the block and the object
         index, action_block = block_finder(action["block_id"], blocks)
-
         # find all stages previous to it
         stage_form = (
             org.custom_slack_forms.for_user(user)
@@ -1162,9 +1165,7 @@ def process_show_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = (
-                block_finder("StageName", blocks) if user.crm else block_finder("dealstage")
-            )
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -2112,7 +2113,8 @@ def process_show_alert_update_resource_form(payload, context):
             template=template, resource_id=resource_id, user=user, alert_instance_id=alert_instance,
         )
     if slack_form:
-        current_stage = slack_form.resource_object.secondary_data.get("StageName")
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        current_stage = slack_form.resource_object.secondary_data.get(stage_name)
         stage_template = (
             OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
             if current_stage
@@ -2131,7 +2133,7 @@ def process_show_alert_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -2654,7 +2656,8 @@ def process_show_digest_update_resource_form(payload, context):
         prep_instance.form = slack_form
         prep_instance.save()
     if slack_form:
-        current_stage = slack_form.resource_object.secondary_data.get("StageName")
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        current_stage = slack_form.resource_object.secondary_data.get(stage_name)
         stage_template = (
             OrgCustomSlackForm.objects.filter(stage=current_stage).first()
             if current_stage
@@ -2674,7 +2677,7 @@ def process_show_digest_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
