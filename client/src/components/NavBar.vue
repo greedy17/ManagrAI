@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav id="nav" v-if="userIsLoggedIn && !isOnboarding">
-      <router-link v-if="userCRM !== 'HUBSPOT'" :to="{ name: 'Pipelines' }">
+      <router-link :to="{ name: userCRM === 'SALESFORCE' ? 'Pipelines' : 'Integrations' }">
         <div class="logo">
           <img style="height: 40px" src="@/assets/images/logo.png" />
         </div>
