@@ -1386,10 +1386,6 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          // console.log('query_params', query_params)
-          // const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          // console.log('hsPicklist', hsPicklist)
-          // this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
           res = await ObjectField.api.listFields({
             crmObject: this.DEAL,
             search: 'Deal Stage',

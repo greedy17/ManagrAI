@@ -977,48 +977,6 @@ export default {
     closeListSelect() {
       this.showList = false
     },
-    async listPicklists(type, query_params) {
-      try {
-        let res
-        if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          this.picklistOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
-        } else if (this.userCRM === 'SALESFORCE') {
-          res = await SObjectPicklist.api.listPicklists(query_params)
-          this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listStagePicklists(type, query_params) {
-      try {
-        let res
-        if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          this.stagePicklistQueryOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
-        } else if (this.userCRM === 'SALESFORCE') {
-          res = await SObjectPicklist.api.listPicklists(query_params)
-          this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listCreatePicklists(type, query_params) {
-      try {
-        let res
-        if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          this.createQueryOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
-        } else if (this.userCRM === 'SALESFORCE') {
-          res = await SObjectPicklist.api.listPicklists(query_params)
-          this.createQueryOpts[type] = res.length ? res[0]['values'] : []
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
     },

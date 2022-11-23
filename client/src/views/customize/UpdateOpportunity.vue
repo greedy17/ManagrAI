@@ -133,20 +133,9 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          // const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          // this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
-          res = await ObjectField.api.listFields({
-            crmObject: this.DEAL,
-            search: 'Deal Stage',
-          })
-          let dealStage
-          for (let i = 0; i < res.length; i++) {
-            if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
-              break
-            }
-          }
-          this.stages = dealStage ? dealStage.options : []
+          const form = this.allForms.find((f) => f.resource == this.currentResource && f.formType == this.UPDATE)
+          const hsPicklist = form.fieldsRef.filter(item => query_params.picklistFor === item.apiName)
+          this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.stages = res.length ? res[0]['values'] : []
