@@ -205,7 +205,7 @@
             style="width: 25vw"
             selectLabel="Enter"
             track-by="id"
-            label="fullName"
+            :custom-label="fullOrEmailLabel"
             :multiple="true"
             :closeOnSelect="false"
             :loading="dropdownLoading"
@@ -518,6 +518,12 @@ export default {
     },
     scrollToElement() {
       this.$refs.bottom ? this.$refs.bottom.scrollIntoView({ behavior: 'smooth' }) : null
+    },
+    fullOrEmailLabel(props) {
+      if (!props.fullName.trim()) {
+        return props.email
+      }
+      return props.fullName
     },
     changeFrequency() {
       this.alertFrequency == 'WEEKLY'
@@ -864,6 +870,15 @@ export default {
     },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
+        console.log('userTargetsOpts', [
+          ...this.alertTargetOpts.map((opt) => {
+            return {
+              id: opt.value,
+              fullName: opt.key,
+            }
+          }),
+          ...this.users.list,
+        ])
         return [
           ...this.alertTargetOpts.map((opt) => {
             return {
