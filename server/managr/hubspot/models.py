@@ -418,6 +418,8 @@ class HubspotAuthAccount(TimeStampModel):
         accounts.delete()
         contacts = BaseContact.objects.filter(owner=self.user)
         contacts.delete()
+        if self.user.is_team_lead:
+            self.user.team.team_forms.all().delete()
         return super().delete(*args, **kwargs)
 
 

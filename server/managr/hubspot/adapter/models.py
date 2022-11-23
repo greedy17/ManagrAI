@@ -162,6 +162,14 @@ class HubspotAuthAccountAdapter:
             res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
+    def create_note_in_hubspot(self, note_data):
+        url = hubspot_consts.HUBSPOT_RESOURCE_URI("notes")
+        headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
+        send_data = {"properties": note_data}
+        with Client as client:
+            res = client.post(url, data=json.dumps(send_data), headers=headers,)
+            return self._handle_response(res)
+
     # def format_validation_rules(
     #     self, hubspot_account_id, user_id, res_data=[],
     # ):
@@ -224,14 +232,14 @@ class HubspotAuthAccountAdapter:
         with Client as client:
             data = hubspot_consts.REAUTHENTICATION_BODY(self.refresh_token)
             res = client.post(
-                f"{hubspot_consts.BASE_URL}/{hubspot_consts.REFRESH_TOKEN_URI}",
+                f"{hubspot_consts.BASE_URL}{hubspot_consts.REFRESH_TOKEN_URI}",
                 data=data,
                 headers=hubspot_consts.AUTHENTICATION_HEADERS,
             )
             return HubspotAuthAccountAdapter._handle_response(res)
 
     def list_fields(self, resource):
-        url = f"{hubspot_consts.BASE_URL}/{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}"
+        url = f"{hubspot_consts.BASE_URL}{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}"
         with Client as client:
             res = client.get(
                 url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -760,7 +768,7 @@ class HubspotContactAdapter:
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
             res = HubspotAuthAccountAdapter._handle_response(r)
-            url = hubspot_consts.HUBSPOT_OBJECTS_URI("contacts", object_fields, res["id"])
+            url = hubspot_consts.HUBSPOT_OBJECTS_URI("contacts", list(object_fields), res["id"])
             r = client.get(url, headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)})
             r = HubspotAuthAccountAdapter._handle_response(r)
             r = HubspotContactAdapter.from_api(r["properties"], user_id)

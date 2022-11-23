@@ -211,7 +211,6 @@ def process_zoom_meeting_data(payload, context):
             ops.append(
                 f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
             )
-
     # emit all events
     if len(workflow.operations_list):
         workflow.operations_list = [*workflow.operations_list, *ops]
@@ -2837,7 +2836,10 @@ def process_submit_alert_resource_data(payload, context):
         all_form_data.get("meeting_comments") is not None
         and all_form_data.get("meeting_type") is not None
     ):
-        emit_add_update_to_sf(str(main_form.id))
+        if user.crm == "SALESFORCE":
+            emit_add_update_to_sf(str(main_form.id))
+        else:
+            emit_add_update_to_hs(str(main_form.id))
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)

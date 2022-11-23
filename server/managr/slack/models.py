@@ -1,6 +1,7 @@
 import logging
 from re import template
 from django.conf import settings
+from datetime import datetime
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -219,7 +220,7 @@ class OrgCustomSlackForm(TimeStampModel):
         unique_together = ["resource", "form_type", "team", "stage"]
 
     def generate_form_state(self):
-        form_fields = FormField.objects.filter(form=self)
+        form_fields = CustomFormField.objects.filter(form=self)
         state_object = {}
         for i, field in enumerate(form_fields):
             state_object[field.order] = field.field.api_name
@@ -248,14 +249,6 @@ class OrgCustomSlackForm(TimeStampModel):
         filtered_fields = self.custom_fields.filter(is_public=False)
         options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
         return options
-
-    def generate_form_state(self):
-        form_fields = FormField.objects.filter(form=self)
-        state_object = {}
-        for i, field in enumerate(form_fields):
-            state_object[field.order] = field.field.api_name
-        self.config = state_object
-        self.save()
 
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
@@ -493,7 +486,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = bool(len(value.get("selected_options", [])))
                 elif value["type"] == "datepicker":
                     date = value.get("selected_date", None)
-                    current_value = date
+                    if self.user.crm == "HUBSPOT" and field == "closedate" and date is not None:
+                        current_value = date + "T18:00:00.000Z"
+                    else:
+                        current_value = date
                 vals[field] = current_value
         return vals
 
