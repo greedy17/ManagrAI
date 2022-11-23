@@ -18,7 +18,7 @@ class Command(BaseCommand):
         for t in options["users"]:
             user = User.objects.filter(email=t).first()
 
-        if user.is_admin:
+        if user.is_team_lead or user.is_admin:
             if user.crm == "SALESFORCE":
                 emit_generate_form_template(str(user.id), True)
             else:
