@@ -53,20 +53,35 @@ from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
+
+from managr.salesforce.cron import (
+    queue_users_sf_resource,
+    queue_users_sf_fields,
+)
+from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
 from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
 
 
-def GET_COMMAND_OBJECTS():
-    from managr.salesforce.cron import (
-        queue_users_sf_resource,
-        queue_users_sf_fields,
-    )
+def field_syncs():
+    queue_users_sf_fields()
+    queue_users_hs_fields()
+    return
 
+
+def resource_syncs():
+    queue_users_sf_resource()
+    queue_users_hs_resource()
+    return
+
+
+def GET_COMMAND_OBJECTS():
+    field_sync = field_syncs
+    resource_sync = resource_syncs
     commands = {
-        "SALESFORCE_FIELDS": queue_users_sf_fields,
-        "SALESFORCE_RESOURCES": queue_users_sf_resource,
+        "SALESFORCE_FIELDS": field_sync,
+        "SALESFORCE_RESOURCES": resource_sync,
         "PULL_USAGE_DATA": pull_usage_data,
     }
     return commands

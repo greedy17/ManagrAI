@@ -440,7 +440,6 @@ export default {
   },
 
   mounted() {
-    this.setPicklist()
     setTimeout(() => {
       console.log(this.forecastOpps)
     }, 3000)
@@ -601,28 +600,6 @@ export default {
         })
       } finally {
         this.loading = false
-      }
-    },
-    async listPicklists(type, query_params) {
-      try {
-        let res
-        if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          this.picklistOpts[type] = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
-        } else if (this.userCRM === 'SALESFORCE') {
-          res = await SObjectPicklist.api.listPicklists(query_params)
-          this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    setPicklist() {
-      for (let i in this.picklistQueryOpts) {
-        this.picklistQueryOpts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
       }
     },
     applyFilter() {

@@ -597,7 +597,7 @@ def process_submit_resource_data(payload, context):
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
-        # internal_update = main_form.resource_object.update_database_values(all_form_data)
+        internal_update = main_form.resource_object.update_database_values(all_form_data)
         try:
             slack_requests.send_ephemeral_message(
                 user.slack_integration.channel,
@@ -2087,7 +2087,8 @@ def process_submit_product(payload, context):
         )
     )
     try:
-        index, block = block_finder("StageName", blocks)
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        index, block = block_finder(stage_name, blocks)
     except ValueError:
         # did not find the block
         block = None
