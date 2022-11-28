@@ -1724,7 +1724,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            this.$router.go()
+            // this.$router.go()
           }, 300)
         })
         .finally(() => {
