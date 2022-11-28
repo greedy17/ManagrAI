@@ -25,7 +25,7 @@ from managr.crm.exceptions import (
     SFNotFoundError,
 )
 from managr.salesforce.background import _send_instant_alert
-from .utils import create_form_instance
+from .utils import create_form_instance, process_text_field_format
 
 from managr.slack.models import OrgCustomSlackFormInstance
 

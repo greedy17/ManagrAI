@@ -185,6 +185,7 @@ router.register("organizations", organization_views.OrganizationViewSet, "organi
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
+router.register("crm-objects", crm_views.CRMObjectViewSet, "crm-objects")
 router.register("crm/fields", crm_views.ObjectFieldViewSet, "crm-fields")
 router.register("organization/teams", organization_views.TeamViewSet, "organization-teams")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
