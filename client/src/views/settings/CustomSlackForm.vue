@@ -1,6 +1,6 @@
 <template>
   <div class="slack-form-builder">
-    <Modal v-if="customObjectModal" dimmed>
+    <!-- <Modal v-if="customObjectView" dimmed>
       <div class="opp-modal-container">
         <div v-if="modalLoading">
           <Loader :loaderText="loaderText" />
@@ -21,16 +21,7 @@
           <div class="opp-modal">
             <section>
               <div style="display: flex; justify-content: center">
-                <!-- <label class="modal-label">Label</label>
-                <textarea
-                  id="user-input"
-                  cols="30"
-                  rows="4"
-                  :disabled="false"
-                  style="width: 40.25vw; border-radius: 0.4rem"
-                  @input="() => null"
-                >
-                </textarea> -->
+               
                 <Multiselect
                   @input="getCustomObjectFields"
                   :options="customObjects"
@@ -71,7 +62,7 @@
                     </div>
                   </template>
                 </Multiselect>
-                <!-- <div v-if="selectedCustomObject" class="field-section">
+                <div v-if="selectedCustomObject" class="field-section">
                   <div class="search-bar">
                     <img
                       src="@/assets/images/search.svg"
@@ -88,7 +79,7 @@
                   <div class="field-section__fields">
                     <div style="height: 45vh; overflow: scroll">
                       <p
-                        v-for="(field, i) in COfilteredFields /*customFields.list*/"
+                        v-for="(field, i) in COfilteredFields "
                         :key="field.id"
                       >
                         <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
@@ -98,21 +89,21 @@
                       </p>
                     </div>
                   </div>
-                </div> -->
-                <!-- <div class="flex-end-opp">
+                </div>
+                <div class="flex-end-opp">
                   <div v-if="true" style="display: flex; align-items: center">
                     <button class="add-button" @click="() => null">
                       Save
                     </button>
-                    <p @click="toggleCustomObjectModal" class="cancel">Cancel</p>
+                    <p @click="toggleCustomObjectView" class="cancel">Cancel</p>
                   </div>
-                </div> -->
+                </div>
               </div>
             </section>
           </div>
         </div>
       </div>
-    </Modal>
+    </Modal> -->
     <Modal v-if="modalOpen">
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
@@ -136,33 +127,61 @@
       <section class="row__ light-gray">
         <p
           @click="changeToOpportunity"
-          :class="newResource == 'Opportunity' && newFormType !== 'STAGE_GATING' ? 'green' : ''"
+          :class="
+            newResource == 'Opportunity' && newFormType !== 'STAGE_GATING' && !customObjectView
+              ? 'green'
+              : ''
+          "
         >
           Opportunity
         </p>
         <p
           @click="changeToStage"
-          :class="newResource == 'Opportunity' && newFormType == 'STAGE_GATING' ? 'green' : ''"
+          :class="
+            newResource == 'Opportunity' && newFormType == 'STAGE_GATING' && !customObjectView
+              ? 'green'
+              : ''
+          "
         >
           Opp - Stage related
         </p>
-        <p @click="changeToAccount" :class="newResource == 'Account' ? 'green' : ''">Account</p>
-        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
-        <p @click="changeToLead" :class="newResource == 'Lead' ? 'green' : ''">Lead</p>
-        <p @click="changeToProducts" :class="newResource == 'OpportunityLineItem' ? 'green' : ''">
+        <p
+          @click="changeToAccount"
+          :class="newResource == 'Account' && !customObjectView ? 'green' : ''"
+        >
+          Account
+        </p>
+        <p
+          @click="changeToContact"
+          :class="newResource == 'Contact' && !customObjectView ? 'green' : ''"
+        >
+          Contact
+        </p>
+        <p @click="changeToLead" :class="newResource == 'Lead' && !customObjectView ? 'green' : ''">
+          Lead
+        </p>
+        <p
+          @click="changeToProducts"
+          :class="newResource == 'OpportunityLineItem' && !customObjectView ? 'green' : ''"
+        >
           Products
+        </p>
+        <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
+          Custom Object
         </p>
       </section>
       <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
+          <img src="@/assets/images/refresh.svg" />
+        </button>
         <PulseLoadingSpinnerButton
           v-else
           @click="refreshForms"
           class="img-button"
           text="Refresh"
           :loading="pulseLoading"
-          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
-        >
+          ><img src="@/assets/images/refresh.svg"
+        /></PulseLoadingSpinnerButton>
         <button @click="onSave" class="save">Save Form</button>
       </div>
     </div>
@@ -187,21 +206,23 @@
         </p>
       </section>
       <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
+          <img src="@/assets/images/refresh.svg" />
+        </button>
         <PulseLoadingSpinnerButton
           v-else
           @click="refreshForms"
           class="img-button"
           text="Refresh"
           :loading="pulseLoading"
-          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
-        >
+          ><img src="@/assets/images/refresh.svg"
+        /></PulseLoadingSpinnerButton>
         <button @click="onSave" class="save">Save Form</button>
       </div>
     </div>
 
     <section class="wrapper">
-      <div v-if="newFormType !== 'STAGE_GATING'" class="tab-content">
+      <div v-if="newFormType !== 'STAGE_GATING' && !customObjectView" class="tab-content">
         <section>
           <div v-if="newResource !== 'OpportunityLineItem'" class="tab-content__div">
             <div class="row">
@@ -253,7 +274,7 @@
         </section>
       </div>
 
-      <div v-else class="tab-content">
+      <div v-else-if="!customObjectView" class="tab-content">
         <section style="margin-top: -16px" class="space-between">
           <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
             <img
@@ -286,7 +307,7 @@
               !selectedForm.customFields.length &&
               !addedFields.length
             "
-            @click="toggleCustomObjectModal"
+            @click="toggleCustomObjectView"
             class="custom-object-button"
           >
             Use Custom Object
@@ -382,28 +403,135 @@
           </draggable>
         </div>
       </div>
-    </section>
-    <div class="field-section">
-      <div class="search-bar">
-        <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-        <input
-          @input="searchFields"
-          type="search"
-          :placeholder="`Search ${newResource} Fields`"
-          v-model="filterText"
-        />
-      </div>
 
-      <div class="field-section__fields">
-        <div>
-          <p v-for="(field, i) in filteredFields" :key="field.id">
-            <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
-            <label :for="i"></label>
-            {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
-            <!-- <span v-if="field.required" class="red-text">required</span> -->
-          </p>
+      <div class="tab-content" v-else>
+        <div v-if="modalLoading">
+          <Loader :loaderText="loaderText" />
+        </div>
+
+        <div v-else>
+          <Multiselect
+            v-if="!customResource"
+            @input="getCustomObjectFields"
+            :options="customObjects"
+            openDirection="below"
+            style="width: 40vw; margin-left: 1rem"
+            selectLabel="Enter"
+            :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+            :customLabel="customLabel"
+            :value="currentlySelectedStage"
+            v-model="selectedCustomObject"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.svg" alt="" />
+                Select Custom Object
+              </p>
+            </template>
+
+            <template slot="option" slot-scope="props">
+              <div>
+                <span class="option__title">{{
+                  userCRM === 'SALESFORCE' ? props.option.label : props.option.label
+                }}</span
+                ><span
+                  v-if="
+                    currentStagesWithForms.includes(
+                      userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
+                    )
+                  "
+                  class="option__small"
+                >
+                  edit
+                </span>
+              </div>
+            </template>
+          </Multiselect>
+          <section class="space-between" v-else>
+            <h4 style="cursor: pointer" @click="customResource = null">
+              <img
+                style="margin-right: 8px; margin-top: -16px"
+                src="@/assets/images/left.svg"
+                height="13px"
+                alt=""
+              />
+              Back
+            </h4>
+
+            <div class="row__">
+              <h4 style="margin-right: 16px">
+                {{ selectedCustomObjectName + ' Form' }}
+              </h4>
+            </div>
+          </section>
         </div>
       </div>
+    </section>
+
+    <div class="field-section">
+      <section v-if="!customObjectView">
+        <div class="search-bar">
+          <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+          <input
+            @input="searchFields"
+            type="search"
+            :placeholder="`Search ${newResource} Fields`"
+            v-model="filterText"
+          />
+        </div>
+
+        <div class="field-section__fields">
+          <div>
+            <p v-for="(field, i) in filteredFields" :key="field.id">
+              <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+              <label :for="i"></label>
+              {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
+              <!-- <span v-if="field.required" class="red-text">required</span> -->
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section v-else>
+        <div v-if="selectedCustomObject || customResource">
+          <div class="search-bar">
+            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <input
+              type="search"
+              :placeholder="`Search ${selectedCustomObjectName} Fields`"
+              v-model="COfilterText"
+            />
+          </div>
+
+          <div class="field-section__fields">
+            <div>
+              <p v-for="(field, i) in COfilteredFields" :key="field.id">
+                <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+                <label :for="i"></label>
+                {{ field.label }}
+                <span v-if="field.required" class="red-text">required</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="search-bar">
+            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <input type="search" placeholder="Search Object Fields" />
+          </div>
+
+          <div class="field-section__fields">
+            <div>
+              <p>Nothing here. Try selecting an object</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -512,7 +640,7 @@ export default {
       formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
-      customResource: this.resource,
+      customResource: null,
       removeCustomObj: false,
       newCustomForm: this.customForm,
       customSlackFormConfig: [],
@@ -549,7 +677,7 @@ export default {
       addingFields: false,
       productSelected: false,
       addingProducts: false,
-      customObjectModal: false,
+      customObjectView: false,
       modalOpen: false,
       formChange: false,
       formStages: [],
@@ -834,7 +962,6 @@ export default {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
     task: 'checkAndClearInterval',
-    getTask: 'checkAndClearInterval',
     customResource: 'watcherCustomResource',
     formFields: 'watcherCustomResource',
     customForm: {
@@ -851,7 +978,10 @@ export default {
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
-              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
+              let fieldsToAdd =
+                this.userCRM === 'SALESFORCE'
+                  ? [this.noteTitle, this.noteSubject]
+                  : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -899,7 +1029,10 @@ export default {
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
-              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
+              let fieldsToAdd =
+                this.userCRM === 'SALESFORCE'
+                  ? [this.noteTitle, this.noteSubject]
+                  : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -1056,10 +1189,13 @@ export default {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
+      if (!this.customFields) {
+        return
+      }
       return this.customFields.list
         .filter(
           (field) =>
-            field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()) &&
+            field.referenceDisplayLabel.toLowerCase().includes(this.COfilterText.toLowerCase()) &&
             field.integrationSource === this.userCRM,
         )
         .filter((field) => !this.addedFieldNames.includes(field.apiName))
@@ -1136,8 +1272,8 @@ export default {
     this.getStageForms()
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.customFields)
     },
     customLabel(prop) {
       return `${prop.label}`
@@ -1190,14 +1326,15 @@ export default {
         return
       }
     },
-    toggleCustomObjectModal() {
-      this.customObjectModal = !this.customObjectModal
+    toggleCustomObjectView() {
+      this.customObjectView = !this.customObjectView
     },
     closeCustomModal() {
-      this.customObjectModal = false
+      // this.customObjectView = false
+
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
-        this.formFields = CollectionManager.create({
+        this.customFields = CollectionManager.create({
           ModelClass: ObjectField,
           pagination: { size: 500 },
           filters: {
@@ -1205,6 +1342,7 @@ export default {
           },
         })
       }
+      this.formFields.refresh()
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1330,6 +1468,8 @@ export default {
           crmObject: this.customResource,
         },
       })
+
+      console.log(this.formFields)
     },
     setStage(n) {
       if (this.userCRM === 'SALESFORCE') {
@@ -1410,7 +1550,10 @@ export default {
       this.selectingStage = !this.selectingStage
       this.loadingStages = true
       try {
-        await this.listPicklists({ crmObject: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL, picklistFor: this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage' })
+        await this.listPicklists({
+          crmObject: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL,
+          picklistFor: this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage',
+        })
       } catch (e) {
         this.$modal.close('add-stage-modal')
         this.$toast('Failed to retreive stages', {
@@ -1445,6 +1588,7 @@ export default {
       this.formStages = [...forms]
     },
     changeToAccount() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToAccount
@@ -1458,6 +1602,7 @@ export default {
       )
     },
     changeToCompany() {
+      this.customObjectView = false
       this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
@@ -1466,6 +1611,7 @@ export default {
       )
     },
     changeToOpportunity() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToOpportunity
@@ -1479,6 +1625,7 @@ export default {
       )
     },
     changeToDeal() {
+      this.customObjectView = false
       this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
@@ -1490,6 +1637,7 @@ export default {
     //   this.newResource = this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'
     // },
     changeToProducts() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToProducts
@@ -1503,6 +1651,7 @@ export default {
       )
     },
     changeToStage(stage = '') {
+      this.customObjectView = false
       this.clearStageData()
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
@@ -1527,6 +1676,7 @@ export default {
       }
     },
     changeToContact() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToContact
@@ -1540,6 +1690,7 @@ export default {
       )
     },
     changeToHubspotContact() {
+      this.customObjectView = false
       this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
@@ -1551,6 +1702,7 @@ export default {
       )
     },
     changeToLead() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToLead
@@ -1685,19 +1837,29 @@ export default {
       })
 
       if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
-        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false && currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
-          let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
+        if (
+          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
+          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
+        ) {
+          let fieldsToAdd =
+            this.userCRM === 'SALESFORCE'
+              ? [this.noteTitle, this.noteSubject]
+              : [this.noteTitleHubspot, this.noteSubjectHubspot]
           let copyArray = this.addedFields
           this.addedFields = fieldsToAdd.concat(copyArray)
         }
       }
 
-      
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fieldsCheck = []
-      fields.forEach(field => {
-        if (field === '6407b7a1-a877-44e2-979d-1effafec5034' || field === '6407b7a1-a877-44e2-979d-1effafec5035' || field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af2' || field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1') {
+      fields.forEach((field) => {
+        if (
+          field === '6407b7a1-a877-44e2-979d-1effafec5034' ||
+          field === '6407b7a1-a877-44e2-979d-1effafec5035' ||
+          field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af2' ||
+          field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+        ) {
           return
         }
         fieldsCheck.push(field)
