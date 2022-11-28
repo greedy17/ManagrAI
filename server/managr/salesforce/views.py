@@ -681,7 +681,7 @@ class SalesforceSObjectViewSet(
                     break
             if data["success"]:
                 if all_form_data.get("meeting_comments", None) is not None:
-                    emit_add_update_to_sf(str(main_form.id))
+                    (str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
                 ):

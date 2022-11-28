@@ -37,3 +37,13 @@ adapter_routes = {
         sf_consts.SALESFORCE_RESOURCE_TASK: salesforce_adapters.TaskAdapter,
     },
 }
+
+
+def model_routes(user_crm):
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
+
+    if user_crm == "SALESFORCE":
+        return sf_routes
+    else:
+        return hs_routes
