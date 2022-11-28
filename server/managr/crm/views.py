@@ -84,6 +84,90 @@ class CRMObjectViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
+        url_path="create",
+    )
+    def create_resource(self, request, *args, **kwargs):
+        data = self.request.data
+        logger.info(f"CREATE START ---- {data}")
+        user = User.objects.get(id=self.request.user.id)
+        integration_ids = data.get("integration_ids")
+        form_data = data.get("form_data")
+        form_type = data.get("form_type")
+        resource_type = data.get("resource_type")
+        resource_id = data.get("resource_id", None)
+        stage_name = data.get("stage_name", None)
+        instance_data = {
+            "user": user,
+            "resource_type": resource_type,
+            "form_type": form_type,
+            "resource_id": resource_id,
+            "stage_name": stage_name,
+        }
+        form_ids = create_form_instance(**instance_data)
+        forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+        main_form = forms.filter(template__form_type="CREATE").first()
+        if main_form.template.resource == "OpportunityLineItem":
+            opp_ref = integration_ids[0]
+        stage_form_data_collector = {}
+        for form in forms:
+            form.save_form(form_data, False)
+            stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+        all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+
+        data = None
+        attempts = 1
+        while True:
+            sf = user.salesforce_account
+            try:
+                if main_form.template.resource == "OpportunityLineItem":
+                    all_form_data["OpportunityId"] = opp_ref
+                resource = model_routes[main_form.resource_type]["model"].create(
+                    all_form_data, user.id
+                )
+                data = {"success": True, "integration_id": resource.integration_id}
+                break
+            except FieldValidationError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except RequiredFieldError as e:
+                data = {"success": False, "error": str(e)}
+                break
+            except UnhandledCRMError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except SFNotFoundError as e:
+                data = {"success": False, "error": str(e)}
+                break
+
+            except TokenExpired:
+                if attempts >= 5:
+                    data = {"success": False, "error": "Could not refresh token"}
+                    break
+                else:
+                    sf.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError:
+                if attempts >= 5:
+                    data = {"success": False, "error": "Connection was reset"}
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+            except Exception as e:
+                data = {"success": False, "error": str(e)}
+                break
+        if data["success"]:
+            return Response(data=data)
+        else:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
         url_path="update",
     )
     def update_resource(self, request, *args, **kwargs):
