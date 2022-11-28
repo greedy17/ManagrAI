@@ -327,12 +327,14 @@
                   </template>
                   <template slot="afterList">
                     <p
+                      v-if="userChannelOpts.nextCursor"
                       class="multi-slot__more"
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
                       <img src="@/assets/images/plusOne.svg" alt="" />
                     </p>
+                    <p v-else></p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">

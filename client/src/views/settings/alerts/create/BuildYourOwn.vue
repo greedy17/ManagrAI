@@ -71,17 +71,20 @@
 
           <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
             <div class="week-row">
-              <span
-                v-for="(day, i) in weeklyOpts"
-                :key="i"
-              >
+              <span v-for="(day, i) in weeklyOpts" :key="i">
                 <input
                   type="checkbox"
                   :id="day.value"
                   :value="day.value"
                   v-model="form.field.recurrenceDays.value"
                 />
-                <label :for="day.value" :class="form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''">{{ day.key.charAt(0) }}</label>
+                <label
+                  :for="day.value"
+                  :class="
+                    form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''
+                  "
+                  >{{ day.key.charAt(0) }}</label
+                >
               </span>
             </div>
           </div>
@@ -173,10 +176,15 @@
                   <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                  <p
+                    v-if="userChannelOpts.nextCursor"
+                    class="multi-slot__more"
+                    @click="listUserChannels(userChannelOpts.nextCursor)"
+                  >
                     Load More
                     <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
+                  <p v-else></p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -421,8 +429,8 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
-      fields: CollectionManager.create({ 
-        ModelClass: ObjectField, 
+      fields: CollectionManager.create({
+        ModelClass: ObjectField,
         pagination: { size: 1000 },
       }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -622,7 +630,8 @@ export default {
     //   })
     //   this.channelOpts = results
     // },
-    async listUserChannels(cursor = null) {
+    async listUserChannels(cursor) {
+      console.log('cursor', cursor)
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
@@ -630,6 +639,7 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
+      console.log(res)
       setTimeout(() => {
         this.dropdownLoading = false
       }, 500)
@@ -870,15 +880,6 @@ export default {
     },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
-        console.log('userTargetsOpts', [
-          ...this.alertTargetOpts.map((opt) => {
-            return {
-              id: opt.value,
-              fullName: opt.key,
-            }
-          }),
-          ...this.users.list,
-        ])
         return [
           ...this.alertTargetOpts.map((opt) => {
             return {
