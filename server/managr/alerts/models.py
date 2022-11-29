@@ -631,9 +631,7 @@ class AlertInstance(TimeStampModel):
                         k, v = binding.split(".")
                         if k != self.template.resource_type and k != "__Recipient":
                             continue
-                        if k == self.template.resource_type and hasattr(
-                            self.user, "salesforce_account"
-                        ):
+                        if k == self.template.resource_type and hasattr(self.user, "crm"):
                             # if field does not exist set to strike through field with N/A
                             # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
                             binding_map[binding] = current_values.secondary_data.get(v, "~None~")
@@ -643,8 +641,8 @@ class AlertInstance(TimeStampModel):
                             # HACK pb for datetime fields Mike wants just the date
                             user = self.user
                             if self.resource.secondary_data.get(v):
-                                field = user.salesforce_account.object_fields.filter(
-                                    api_name=v, salesforce_object=self.template.resource_type
+                                field = user.object_fields.filter(
+                                    api_name=v, crm_object=self.template.resource_type
                                 ).first()
                                 if field and field.data_type == "DateTime":
                                     binding_map[binding] = binding_map[binding][0:10]
@@ -652,7 +650,7 @@ class AlertInstance(TimeStampModel):
                                     relationship = field.reference_to_infos[0]["api_name"]
                                     try:
                                         reference_record = (
-                                            model_routes[relationship]["model"]
+                                            CRM_SWITCHER[user.crm][relationship]["model"]
                                             .objects.filter(integration_id=binding_map[binding])
                                             .first()
                                         )
@@ -660,11 +658,11 @@ class AlertInstance(TimeStampModel):
                                         logger.info(e)
                                         reference_record = binding_map[binding]
                                         pass
-
-                                    url = self.user.salesforce_account.instance_url.split(".")[0]
-                                    binding_map[
-                                        binding
-                                    ] = f"<{url}.lightning.force.com/lightning/r/{relationship}/{binding_map[binding]}/view|{reference_record}>"
+                                    if user.crm == "SALESFORCE":
+                                        url = self.user.crm_account.instance_url.split(".")[0]
+                                        binding_map[
+                                            binding
+                                        ] = f"<{url}.lightning.force.com/lightning/r/{relationship}/{binding_map[binding]}/view|{reference_record}>"
                         elif k == "__Recipient":
                             binding_map[binding] = getattr(self.user, v)
                             if binding_map[binding] in ["", None]:
