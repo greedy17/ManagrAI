@@ -73,7 +73,11 @@ def request_access_token(code, redirect_uri):
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
-    return requests.post(url, data=data, headers=headers,)
+    return requests.post(
+        url,
+        data=data,
+        headers=headers,
+    )
 
 
 def revoke_access_token(token):
@@ -84,7 +88,10 @@ def revoke_access_token(token):
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     }
 
-    return requests.post(url, headers=headers,)
+    return requests.post(
+        url,
+        headers=headers,
+    )
 
 
 def request_user_dm_channel(slack_id, access_token):
@@ -94,7 +101,11 @@ def request_user_dm_channel(slack_id, access_token):
     """
     url = slack_const.SLACK_API_ROOT + slack_const.CONVERSATIONS_OPEN
     data = {"users": slack_id}
-    return requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    return requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
 
 
 def send_channel_message(channel, access_token, text="Managr", block_set=[]):
@@ -109,7 +120,11 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     data["text"] = text
     data["blocks"] = block_set
 
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, blocks=block_set)
 
 
@@ -123,7 +138,11 @@ def publish_view(slack_id, access_token, view):
     data["user_id"] = slack_id
     data["view"] = view
 
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, data)
 
 
@@ -139,7 +158,11 @@ def send_ephemeral_message(channel, access_token, slack_id, text="Managr", block
     data["blocks"] = block_set
     data["user"] = slack_id
 
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, blocks=block_set)
 
 
@@ -154,7 +177,11 @@ def update_channel_message(channel, message_timestamp, access_token, text="Manag
 
     data["text"] = text
     data["blocks"] = block_set
-    res = requests.post(url, data=json.dumps(data), headers=slack_auth.auth_headers(access_token),)
+    res = requests.post(
+        url,
+        data=json.dumps(data),
+        headers=slack_auth.auth_headers(access_token),
+    )
     return _handle_response(res, blocks=block_set if block_set else [])
 
 
@@ -249,4 +276,3 @@ def get_channel_info(access_token, channel_id):
     url += "?" + urlencode(q)
     res = requests.get(url, headers=slack_auth.encode_header(access_token))
     return _handle_response(res)
-

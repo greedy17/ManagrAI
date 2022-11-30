@@ -1135,7 +1135,7 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-      let object = this.OPPORTUNITY
+      let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
       // if (this.userCRM === 'HUBSPOT') {
       //   object = this.DEAL
       // } else if (this.userCRM === 'SALESFORCE') {
@@ -1144,7 +1144,7 @@ export default {
       this.newCustomForm = this.customForm
       await this.listPicklists({
         crmObject: object,
-        picklistFor: 'StageName',
+        picklistFor: this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage',
       })
       if (this.userCRM == 'SALESFORCE') {
         this.getCustomObjects()
@@ -1442,7 +1442,7 @@ export default {
       this.selectingStage = !this.selectingStage
       this.loadingStages = true
       try {
-        await this.listPicklists({ crmObject: this.OPPORTUNITY, picklistFor: 'StageName' })
+        await this.listPicklists({ crmObject: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL, picklistFor: this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage' })
       } catch (e) {
         this.$modal.close('add-stage-modal')
         this.$toast('Failed to retreive stages', {
@@ -1739,8 +1739,26 @@ export default {
         }
       }
 
+      
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+      let fieldsCheck = []
+      fields.forEach(field => {
+        if (field === '6407b7a1-a877-44e2-979d-1effafec5034' || field === '6407b7a1-a877-44e2-979d-1effafec5035' || field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af2' || field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1') {
+          return
+        }
+        fieldsCheck.push(field)
+      })
+      if (!fieldsCheck.length && this.newCustomForm.formType === 'STAGE_GATING') {
+        this.$toast('Please add fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       if (
         this.customResource !== 'Opportunity' &&

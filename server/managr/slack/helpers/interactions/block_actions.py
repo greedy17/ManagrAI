@@ -369,8 +369,11 @@ def process_stage_selected(payload, context):
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
-        selected_value = action["selected_option"]["value"]
-
+        selected_value = (
+            action["selected_option"]["value"]
+            if user.crm == "SALESFORCE"
+            else action["selected_option"]["text"]["text"]
+        )
         # delete all existing stage forms
         workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
         stage_form = (
@@ -379,10 +382,13 @@ def process_stage_selected(payload, context):
             .first()
         )
         if stage_form:
+            resource = (
+                slack_const.FORM_RESOURCE_OPPORTUNITY
+                if user.crm == "SALESFORCE"
+                else slack_const.FORM_RESOURCE_DEAL
+            )
             workflow.add_form(
-                slack_const.FORM_RESOURCE_OPPORTUNITY,
-                slack_const.FORM_TYPE_STAGE_GATING,
-                stage=selected_value,
+                resource, slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value,
             )
         # gather and attach all forms
 
@@ -643,7 +649,8 @@ def process_meeting_selected_resource_option(payload, context):
             *get_block_set("create_modal_block_set", context,),
         ]
         try:
-            index, stage_block = block_finder("StageName", blocks)
+            stage_name = "StageName" if workflow.user.crm == "SALESFORCE" else "dealstage"
+            index, stage_block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             stage_block = None
@@ -987,7 +994,8 @@ def process_add_create_form(payload, context):
         }
         blocks = get_block_set("create_modal", context,)
         try:
-            index, block = block_finder("StageName", blocks)
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -1627,7 +1635,8 @@ def process_return_to_form_modal(payload, context):
     )
     if main_form and not from_workflow:
         try:
-            index, stage_block = block_finder("StageName", form_blocks)
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+            index, stage_block = block_finder(stage_name, form_blocks)
         except ValueError:
             # did not find the block
             stage_block = None
@@ -2949,9 +2958,11 @@ def process_view_recap(payload, context):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
         if form_fields:
-            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
+            form_fields = form_fields | form.template.customformfield_set.filter(
+                include_in_recap=True
+            )
         else:
-            form_fields = form.template.formfield_set.filter(include_in_recap=True)
+            form_fields = form.template.customformfield_set.filter(include_in_recap=True)
     blocks = []
     message_string_for_recap = ""
     for key, new_value in new_data.items():
