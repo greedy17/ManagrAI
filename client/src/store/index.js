@@ -5,6 +5,7 @@ import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
 import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
+import { ObjectField, CRMObjects } from '@/services/crm'
 
 Vue.use(Vuex)
 
@@ -100,9 +101,14 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllOpps({ commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
+  async loadAllOpps({ state, commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
     try {
-      const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      let res
+      if (state.user.crm === 'SALESFORCE') {
+        res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      } else {
+        res = await CRMObjects.api.getObjects('Deal')
+      }
       commit('SAVE_ALL_OPPS', res.results)
     } catch (e) {
       console.log(e)

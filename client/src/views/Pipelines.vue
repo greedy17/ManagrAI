@@ -2494,7 +2494,7 @@
 </template>
 <script>
 import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
-import { ObjectField } from '@/services/crm'
+import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -2723,6 +2723,7 @@ export default {
       return this.$store.state.user.organizationRef.hasProducts
     },
     allPicklistOptions() {
+      console.log('allPicklists', this.$store.state.allPicklistOptions)
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
@@ -2785,6 +2786,7 @@ export default {
       }
     },
     syncDay() {
+      console.log('user', this.$store.state.user)
       if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
         return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
           .substring(
@@ -2919,6 +2921,7 @@ export default {
     async getPricebookEntries(id) {
       try {
         this.loadingProducts = true
+        // change to CRMObjects
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
         ])
@@ -3112,7 +3115,16 @@ export default {
       this.inlineLoader = true
       this.editingInline = false
       try {
-        const res = await SObjects.api.updateResource({
+        // const res = await SObjects.api.updateResource({
+        //   form_data: formData,
+        //   resource_type: 'Opportunity',
+        //   form_type: 'UPDATE',
+        //   resource_id: id,
+        //   integration_ids: [integrationId],
+        //   from_workflow: this.selectedWorkflow ? true : false,
+        //   workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+        // })
+        const res = await CRMObjects.api.updateResource({
           form_data: formData,
           resource_type: 'Opportunity',
           form_type: 'UPDATE',
@@ -3121,6 +3133,7 @@ export default {
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
+        console.log('res inline update', res)
         if (this.filterText) {
           this.$store.dispatch('loadAllOpps', [
             ...this.filters,

@@ -62,7 +62,7 @@ class CRMObjectViewSet(
 
     def get_queryset(self):
         routes = model_routes(self.request.user.crm)
-        param_sobject = self.request.GET.get("sobject")
+        param_sobject = self.request.GET.get("crm_object")
         param_resource_id = json.loads(self.request.GET.get("resource_id", None))
         for_filter = json.loads(self.request.GET.get("for_filter", None))
         if param_sobject == "User":
