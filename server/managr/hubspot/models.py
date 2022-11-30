@@ -232,8 +232,8 @@ class HubspotAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["user"] = str(self.user.id)
-        data["hubspot_fields"] = {
-            key: self.hubspot_fields.filter(hubspot_object=key).values_list("name", flat=True)
+        data["object_fields"] = {
+            key: self.user.object_fields.filter(crm_object=key).values_list("api_name", flat=True)
             for key in self.hobjects.keys()
         }
         return HubspotAuthAccountAdapter(**data)

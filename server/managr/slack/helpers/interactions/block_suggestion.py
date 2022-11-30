@@ -227,10 +227,10 @@ def process_get_external_picklist_options(payload, context):
     # pass in limit for query
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-    data = user.salesforce_account.get_individual_picklist_values(
+    data = user.crm_account.get_individual_picklist_values(
         context.get("resource"), field=context.get("field")
     )
-    options = data.values
+    options = data.values if user.crm == "SALESFORCE" else data.values()
     if not len(options):
         logger.exception(
             f"No values found for picklist {context.get('resource')} with field {context.get('field')}"

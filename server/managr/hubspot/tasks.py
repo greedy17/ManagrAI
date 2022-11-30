@@ -203,6 +203,7 @@ def _generate_form_template(user_id, delete_forms):
             f.recreate_form()
         else:
             if settings.IN_DEV:
+                print(DEV_FORM_CONFIGS[resource])
                 f = OrgCustomSlackForm.objects.create(
                     form_type=form_type,
                     resource=resource,
@@ -421,6 +422,7 @@ def _process_add_call_to_hs(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "hubspot_account"):
         return logger.exception("User does not have a hubspot account cannot push to hs")
+    meeting_outcome = args[0][0] if len(args[0]) else "None"
     review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
@@ -438,6 +440,8 @@ def _process_add_call_to_hs(workflow_id, *args):
         hs_meeting_start_time=formatted_start,
         hs_meeting_end_time=formatted_end,
     )
+    if meeting_outcome != "None":
+        data["hs_meeting_outcome"] = meeting_outcome
     attempts = 1
     while True:
         hs = user.hubspot_account
