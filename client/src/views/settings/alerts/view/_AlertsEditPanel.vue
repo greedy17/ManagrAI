@@ -233,14 +233,18 @@ export default {
         'Required Field Empty',
         'Large Opportunities',
       ],
-      fields: CollectionManager.create({
-        ModelClass: ObjectField,
-        filters: {
-          // forAlerts: true,
-          // filterable: true,
-          page: 1,
-          crmObject: alert.resourceType,
-        },
+      // fields: CollectionManager.create({
+      //   ModelClass: ObjectField,
+      //   filters: {
+      //     // forAlerts: true,
+      //     // filterable: true,
+      //     page: 1,
+      //     crmObject: alert.resourceType,
+      //   },
+      //   pagination: { size: 1000 },
+      // }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
         pagination: { size: 1000 },
       }),
       recipientBindings: [
