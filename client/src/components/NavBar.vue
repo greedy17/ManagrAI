@@ -1,14 +1,20 @@
 <template>
   <div>
     <nav id="nav" v-if="userIsLoggedIn && !isOnboarding">
-      <router-link :to="{ name: 'ListTemplates' }">
+      <router-link v-if="userCRM" :to="{ name: 'ListTemplates' }">
+        <div class="logo">
+          <img style="height: 40px" src="@/assets/images/logo.png" />
+        </div>
+      </router-link>
+
+      <router-link v-else :to="{ name: 'Integrations' }">
         <div class="logo">
           <img style="height: 40px" src="@/assets/images/logo.png" />
         </div>
       </router-link>
 
       <div style="height: 100%" class="align-left">
-        <router-link active-class="active" :to="{ name: 'ListTemplates' }">
+        <router-link v-if="userCRM" active-class="active" :to="{ name: 'ListTemplates' }">
           <div class="tooltip">
             <img src="@/assets/images/workflows.svg" height="16px" alt="" />
             <span class="tooltiptext">Workflows</span>
@@ -16,7 +22,7 @@
         </router-link>
 
         <router-link
-          v-if="/*userCRM !== 'HUBSPOT'*/true"
+          v-if="userCRM === 'SALESFORCE' /*|| true*/"
           exact-active-class="active"
           :to="{ name: 'Pipelines' }"
         >
@@ -26,21 +32,21 @@
           </div>
         </router-link>
 
-        <router-link v-if="userCRM !== 'HUBSPOT'" exact-active-class="active" :to="{ name: 'Meetings' }">
+        <router-link v-if="userCRM === 'SALESFORCE'" exact-active-class="active" :to="{ name: 'Meetings' }">
           <div class="tooltip">
             <img src="@/assets/images/calendar.svg" height="16px" alt="" />
             <span class="tooltiptext">Meetings</span>
           </div>
         </router-link>
 
-        <router-link exact-active-class="active" :to="{ name: 'Notes' }">
+        <router-link v-if="userCRM" exact-active-class="active" :to="{ name: 'Notes' }">
           <div class="tooltip">
             <img src="@/assets/images/notebook.svg" height="16px" alt="" />
             <span class="tooltiptext">Note Templates</span>
           </div>
         </router-link>
         <router-link
-          v-if="isTeamLead || isAdmin"
+          v-if="(isTeamLead || isAdmin) && userCRM"
           exact-active-class="active"
           :to="{ name: 'UpdateOpportunity' }"
         >
@@ -58,7 +64,7 @@
         </router-link>
         <router-link
           exact-active-class="active"
-          v-if="routeName === 'InviteUsers'"
+          v-if="routeName === 'InviteUsers' && userCRM"
           :to="{ name: 'InviteUsers' }"
         >
           <div class="tooltip">
@@ -67,7 +73,7 @@
           </div>
         </router-link>
 
-        <router-link exact-active-class="active" v-else :to="{ name: 'InviteUsers' }">
+        <router-link exact-active-class="active" v-else-if="userCRM" :to="{ name: 'InviteUsers' }">
           <div class="tooltip">
             <img src="@/assets/images/profile.svg" height="16px" alt="" />
             <span class="tooltiptext">Profile</span>
