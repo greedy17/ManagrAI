@@ -17,7 +17,7 @@ from managr.hubspot.models import HSObjectFieldsOperation, HObjectField, HSResou
 from managr.hubspot.serializers import HObjectFieldSerializer
 from managr.crm.models import ObjectField
 from managr.crm.routes import adapter_routes as adapter_routes
-from managr.crm.serializers import ObjectFieldSerializer
+from managr.crm.serializers import BaseContactSerializer, ObjectFieldSerializer
 from managr.hubspot.routes import routes as routes
 from managr.hubspot import constants as hs_consts
 from managr.crm.exceptions import TokenExpired, CannotRetreiveObjectType, UnhandledCRMError
@@ -25,7 +25,6 @@ from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.hubspot.adapter.models import HubspotContactAdapter
-from managr.crm.models import BaseAccount, BaseContact, BaseOpportunity
 
 
 logger = logging.getLogger("managr")
@@ -412,6 +411,7 @@ def _process_add_products_to_hs(workflow_id, non_meeting=False, *args):
 
 CALL_ASSOCIATIONS = {"company": 8, "deal": 212, "contact": 10}
 NOTE_ASSOCIATIONS = {"company": 190, "deal": 214, "contact": 202}
+RESOURCE_ASSOCIATIONS = {"deal": {"contact": 4}}
 
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
@@ -592,6 +592,40 @@ def _process_create_new_hs_contacts(workflow_id, *args):
                     sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     attempts += 1
+        if workflow.resource_type == slack_consts.FORM_RESOURCE_DEAL and res and res.integration_id:
+            while True:
+                hs = user.hubspot_account
+                hs_adapter = hs.adapter_class
+                logger.info(f"Adding Contact Role")
+                try:
+
+                    hs_adapter.associate_objects(
+                        "contacts",
+                        res.integration_id,
+                        workflow.resource_type,
+                        workflow.resource.integration_id,
+                        RESOURCE_ASSOCIATIONS["deal"]["contact"],
+                    )
+                    attempts = 1
+                    break
+                except TokenExpired as e:
+                    if attempts >= 5:
+                        return logger.exception(
+                            f"Failed to refresh user token for Salesforce operation add contact to sf failed"
+                        )
+
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        hs.regenerate_token()
+                        attempts += 1
+        try:
+            serializer = BaseContactSerializer(data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Failed to create contact in DB because of {e}")
+            return
     return
 
 

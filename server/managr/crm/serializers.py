@@ -80,7 +80,7 @@ class BaseContactSerializer(serializers.ModelSerializer):
             data.update({"email": ""})
         if owner:
             user = User.objects.get(id=imported_by)
-            data.update({"owner": user})
+            data.update({"owner": user.id})
         if account:
             acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by
