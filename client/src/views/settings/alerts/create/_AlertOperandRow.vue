@@ -271,7 +271,7 @@ export default {
       selectedOperand: '',
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
-        pagination: { size: 300 },
+        pagination: { size: 1000 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
@@ -450,7 +450,7 @@ export default {
           ...this.objectFields.filters,
           forAlerts: true,
           filterable: true,
-          salesforceObject: val,
+          crmObject: val,
         }
         this.objectFields.refresh()
       },
@@ -459,7 +459,7 @@ export default {
   async created() {
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      salesforceObject: this.resourceType,
+      crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
   },
@@ -493,7 +493,9 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
+          console.log('objectFields', this.objectFields.list)
           const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          console.log('hsPicklist', hsPicklist)
           this.picklistOpts = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
