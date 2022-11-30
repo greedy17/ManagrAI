@@ -16,7 +16,7 @@
         </router-link>
 
         <router-link
-          v-if="userCRM !== 'HUBSPOT'"
+          v-if="/*userCRM !== 'HUBSPOT'*/true"
           exact-active-class="active"
           :to="{ name: 'Pipelines' }"
         >

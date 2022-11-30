@@ -27,6 +27,10 @@ export class ObjectField extends Model {
     }
 }
 
+export class CRMObjects extends Model {
+  static api = ObjectFieldAPI.create(CRMObjects)
+}
+
 const INTEGER = 'INTEGER'
 const STRING = 'STRING'
 const DATE = 'DATE'
