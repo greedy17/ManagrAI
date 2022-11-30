@@ -46,6 +46,7 @@ class HubspotAuthAccountAdapter:
         self.hubspot_id = kwargs.get("hubspot_id", None)
         self.user = kwargs.get("user", None)
         self.hubspot_fields = kwargs.get("hubspot_fields", None)
+        self.object_fields = kwargs.get("object_fields", {})
 
     @property
     def internal_user(self):
@@ -170,39 +171,6 @@ class HubspotAuthAccountAdapter:
             res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
-    # def format_validation_rules(
-    #     self, hubspot_account_id, user_id, res_data=[],
-    # ):
-    #     records = res_data["records"]
-    #     return list(
-    #         map(
-    #             lambda rule: HubspotValidationAdapter.create_from_api(
-    #                 {**rule, "salesforce_account": hubspot_account_id, "imported_by": user_id}
-    #             ),
-    #             records,
-    #         )
-    #     )
-
-    # def format_picklist_values(
-    #     self, hubspot_account_id, user_id, resource, res_data=[],
-    # ):
-    #     fields = res_data["picklistFieldValues"]
-    #     return list(
-    #         map(
-    #             lambda field: HubspotPicklistAdapter.create_from_api(
-    #                 {
-    #                     "values": field[1]["values"],
-    #                     "salesforce_account": hubspot_account_id,
-    #                     "picklist_for": field[0],
-    #                     "imported_by": user_id,
-    #                     "salesforce_object": resource,
-    #                     "integration_source": "SALESFORCE",
-    #                 }
-    #             ),
-    #             fields.items(),
-    #         )
-    #     )
-
     @staticmethod
     def get_authorization():
         query = urlencode(hubspot_consts.AUTHORIZATION_QUERY_PARAMS)
@@ -222,6 +190,7 @@ class HubspotAuthAccountAdapter:
     @staticmethod
     def get_user_info(access_token, email):
         with Client as client:
+            print(client.get)
             res = client.get(
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
@@ -325,6 +294,18 @@ class HubspotAuthAccountAdapter:
                 else [{"Name": item["properties"]["name"], "Id": item["id"]} for item in res]
             )
             return res
+
+    def get_individual_picklist_values(self, resource, field_name):
+        url = f"{hubspot_consts.BASE_URL}{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}/{field_name}"
+        with Client as client:
+            res = client.get(
+                url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+            res_obj = {}
+            for item in res["options"]:
+                res_obj[item["label"]] = {"value": item["value"], "label": item["label"]}
+            return res_obj
 
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
@@ -512,6 +493,7 @@ class CompanyAdapter:
         resource_fields = user.object_fields.filter(crm_object="Company").values_list(
             "api_name", flat=True
         )
+
         url = hubspot_consts.HUBSPOT_OBJECTS_URI("companies", resource_fields, self.integration_id)
         with Client as client:
             r = client.get(
@@ -647,9 +629,7 @@ class DealAdapter:
 
     def get_current_values(self):
         user = self.internal_user
-        resource_fields = user.object_fields.filter(crm_object="Deal").values_list(
-            "api_name", flat=True
-        )
+        resource_fields = user.crm_account.adapter_class.object_fields.get("Deal")
         url = hubspot_consts.HUBSPOT_OBJECTS_URI("deals", resource_fields, self.integration_id)
         with Client as client:
             r = client.get(
