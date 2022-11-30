@@ -108,6 +108,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "close_date",
             "forecast_category",
             "account",
+            "account_ref",
             "stage",
             "owner",
             "owner_ref",
