@@ -271,6 +271,12 @@ class BaseContact(TimeStampModel, IntegrationModel):
         return "Contact"
 
     @property
+    def name(self):
+        """returns full name for use with blocksets"""
+        email = self.email if self.email else "N/A"
+        return email
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])

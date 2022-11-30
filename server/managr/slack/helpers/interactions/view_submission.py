@@ -178,8 +178,9 @@ def process_zoom_meeting_data(payload, context):
     state = swap_public_fields(view["state"]["values"])
     task_type = private_metadata.get("task_type", None)
     if not task_type:
+        task_name = "managr_task_type"
         task_selection = [
-            value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+            value.get("selected_option") for value in state.get(task_name, {}).values()
         ][0]
         task_type = task_selection.get("value") if task_selection is not None else None
     # if we had a next page the form data for the review was already saved

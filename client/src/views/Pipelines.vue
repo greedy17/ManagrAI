@@ -2494,7 +2494,7 @@
 </template>
 <script>
 import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
-import { ObjectField } from '@/services/crm'
+import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -2544,6 +2544,7 @@ export default {
       productId: null,
       productIntegrationId: null,
       productRefCopy: {},
+      hsPicklistOpts: {},
       pricebookId: null,
       noteTitle: null,
       noteValue: null,
@@ -2560,7 +2561,7 @@ export default {
           crmObject: this.crmObject,
         },
       }),
-      crmObject: null,
+   
       currentProducts: [],
       createProductForm: null,
       addingProduct: false,
@@ -2711,18 +2712,24 @@ export default {
     }
   },
   computed: {
+    crmObject(){
+      return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    },
     extraPipelineFields() {
       let extras = []
       extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : []
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
     allPicklistOptions() {
+      if (this.userCRM === 'HUBSPOT') {
+        return this.hsPicklistOpts
+      }
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
@@ -2804,7 +2811,7 @@ export default {
     },
   },
   async created() {
-    this.crmObject = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    this.objectFields.refresh()
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
@@ -2813,8 +2820,10 @@ export default {
     this.selectList()
   },
   mounted() {
-    this.resourceSync()
-    this.objectFields.refresh()
+    // this.resourceSync()
+    if (this.userCRM === 'HUBSPOT') {
+      this.getAllHSPicklists()
+    }
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -2861,6 +2870,19 @@ export default {
       }
       setTimeout(() => {
         this.inlineUpdate(formData, oppId, oppIntId)
+      }, 500)
+    },
+    async getAllHSPicklists() {
+      this.objectFields.refresh()
+      const picklistOpts = {}
+      setTimeout(() => {
+        for (let i = 0; i < this.objectFields.list.length; i++) {
+          const field = this.objectFields.list[i]
+          if (field.options.length) {
+            picklistOpts[field.id] = field.options
+          }
+        }
+        this.hsPicklistOpts = picklistOpts
       }, 500)
     },
     cancelEditProduct() {
@@ -2919,6 +2941,7 @@ export default {
     async getPricebookEntries(id) {
       try {
         this.loadingProducts = true
+        // change to CRMObjects
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
         ])
@@ -3112,7 +3135,16 @@ export default {
       this.inlineLoader = true
       this.editingInline = false
       try {
-        const res = await SObjects.api.updateResource({
+        // const res = await SObjects.api.updateResource({
+        //   form_data: formData,
+        //   resource_type: 'Opportunity',
+        //   form_type: 'UPDATE',
+        //   resource_id: id,
+        //   integration_ids: [integrationId],
+        //   from_workflow: this.selectedWorkflow ? true : false,
+        //   workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+        // })
+        const res = await CRMObjects.api.updateResource({
           form_data: formData,
           resource_type: 'Opportunity',
           form_type: 'UPDATE',
@@ -4395,7 +4427,6 @@ export default {
       this.dropdownValue = val
     },
     filtersAndOppFields() {
-      console.log('this.updateOppForm', this.updateOppForm)
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -4462,7 +4493,6 @@ export default {
         }
         
         if (stageGateForms.length) {
-          console.log('this.stageGateForms', this.stageGateForms)
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)

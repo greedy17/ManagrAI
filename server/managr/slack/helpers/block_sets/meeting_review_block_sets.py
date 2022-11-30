@@ -519,12 +519,10 @@ def meeting_review_modal_block_set(context):
         except Exception as e:
             print(e)
     blocks = []
-    action_query = (
-        f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource=Task&field=Type"
-    )
-
+    action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
     blocks.append(
-        block_builders.external_select("Note Type", action_query, block_id="managr_task_type")
+        block_builders.external_select(type_text, action_query, block_id="managr_task_type")
     )
     # additional validations
 

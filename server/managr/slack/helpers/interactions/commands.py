@@ -288,10 +288,15 @@ def get_notes_command(context):
             return
     user = slack.user
     access_token = user.organization.slack_integration.access_token
+    options = (
+        ["Contact", "Opportunity", "Account", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Contact", "Deal", "Company"]
+    )
     block_context = {
         "u": str(user.id),
         "type": "command",
-        "options": "%".join(["Contact", "Opportunity", "Account", "Lead"]),
+        "options": "%".join(options),
         "action_id": "GET_NOTES",
     }
     blocks = get_block_set("pick_resource_modal_block_set", context=block_context)

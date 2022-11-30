@@ -63,4 +63,33 @@ export class ObjectFieldAPI extends ModelAPI {
                 results: data.results.map(this.cls.fromAPI),
             }))
     }
+
+    async getObjects(crm_object, page = 1, for_filter = false, filters = false, resource_id = false,) {
+      try {
+        const res = await this.client.get('crm-objects/', { params: { crm_object: crm_object, page: page, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 20, } })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async getCurrentValues(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get(ObjectFieldAPI.ENDPOINT + 'crm-objects/get-current-values/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async updateResource(formData) {
+      try {
+        const res = await this.client.post(ObjectFieldAPI.ENDPOINT + 'crm-objects/update/', formData)
+        console.log('res updateResource HS', res)
+        return res.data
+      } catch (e) {
+        return apiErrorHandler({ apiName: 'Salesforce API' })(e)
+      }
+    }
 }
