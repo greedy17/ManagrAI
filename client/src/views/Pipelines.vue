@@ -2544,6 +2544,7 @@ export default {
       productId: null,
       productIntegrationId: null,
       productRefCopy: {},
+      hsPicklistOpts: {},
       pricebookId: null,
       noteTitle: null,
       noteValue: null,
@@ -2560,7 +2561,7 @@ export default {
           crmObject: this.crmObject,
         },
       }),
-      crmObject: null,
+   
       currentProducts: [],
       createProductForm: null,
       addingProduct: false,
@@ -2711,19 +2712,24 @@ export default {
     }
   },
   computed: {
+    crmObject(){
+      return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    },
     extraPipelineFields() {
       let extras = []
       extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : []
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
     allPicklistOptions() {
-      console.log('allPicklists', this.$store.state.allPicklistOptions)
+      if (this.userCRM === 'HUBSPOT') {
+        return this.hsPicklistOpts
+      }
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
@@ -2786,7 +2792,6 @@ export default {
       }
     },
     syncDay() {
-      console.log('user', this.$store.state.user)
       if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
         return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
           .substring(
@@ -2806,7 +2811,7 @@ export default {
     },
   },
   async created() {
-    this.crmObject = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    this.objectFields.refresh()
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
@@ -2815,8 +2820,10 @@ export default {
     this.selectList()
   },
   mounted() {
-    this.resourceSync()
-    this.objectFields.refresh()
+    // this.resourceSync()
+    if (this.userCRM === 'HUBSPOT') {
+      this.getAllHSPicklists()
+    }
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -2863,6 +2870,19 @@ export default {
       }
       setTimeout(() => {
         this.inlineUpdate(formData, oppId, oppIntId)
+      }, 500)
+    },
+    async getAllHSPicklists() {
+      this.objectFields.refresh()
+      const picklistOpts = {}
+      setTimeout(() => {
+        for (let i = 0; i < this.objectFields.list.length; i++) {
+          const field = this.objectFields.list[i]
+          if (field.options.length) {
+            picklistOpts[field.id] = field.options
+          }
+        }
+        this.hsPicklistOpts = picklistOpts
       }, 500)
     },
     cancelEditProduct() {
@@ -3133,7 +3153,6 @@ export default {
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
-        console.log('res inline update', res)
         if (this.filterText) {
           this.$store.dispatch('loadAllOpps', [
             ...this.filters,
@@ -4408,7 +4427,6 @@ export default {
       this.dropdownValue = val
     },
     filtersAndOppFields() {
-      console.log('this.updateOppForm', this.updateOppForm)
       this.filterFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -4475,7 +4493,6 @@ export default {
         }
         
         if (stageGateForms.length) {
-          console.log('this.stageGateForms', this.stageGateForms)
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
