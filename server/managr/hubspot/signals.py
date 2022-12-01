@@ -12,7 +12,7 @@ from . import constants as hs_consts
 logger = logging.getLogger("managr")
 
 
-# @receiver(post_save, sender=CompletedTask)
+@receiver(post_save, sender=CompletedTask)
 def update_succesful_hubspot_operations(sender, instance=None, created=False, **kwargs):
     """When A background task is completed from the hs sync"""
     if created:

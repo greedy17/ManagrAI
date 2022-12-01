@@ -8,14 +8,13 @@ from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
 from background_task import background
-
 from managr.api.decorators import log_all_exceptions
 
 from managr.core.models import User
 
 from managr.hubspot.models import HSObjectFieldsOperation, HObjectField, HSResourceSync
-from managr.hubspot.serializers import HObjectFieldSerializer
 from managr.crm.models import ObjectField
+from managr.salesforce.background import _send_recap
 from managr.crm.routes import adapter_routes as adapter_routes
 from managr.crm.serializers import BaseContactSerializer, ObjectFieldSerializer
 from managr.hubspot.routes import routes as routes
@@ -202,7 +201,6 @@ def _generate_form_template(user_id, delete_forms):
             f.recreate_form()
         else:
             if settings.IN_DEV:
-                print(DEV_FORM_CONFIGS[resource])
                 f = OrgCustomSlackForm.objects.create(
                     form_type=form_type,
                     resource=resource,
@@ -327,12 +325,12 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 hs.regenerate_token()
                 attempts += 1
         except Exception as e:
-            # if len(user.slack_integration.recap_receivers):
-            #     _send_recap(update_form_ids, None, True)
+            if len(user.slack_integration.recap_receivers):
+                _send_recap(update_form_ids, None, True)
             raise e
     value_update = workflow.resource.update_database_values(data)
-    # if user.has_slack_integration and len(user.slack_integration.recap_receivers):
-    #     _send_recap(update_form_ids, None, True)
+    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
+        _send_recap(update_form_ids, None, True)
     return res
 
 
@@ -758,8 +756,11 @@ def _process_create_new_hs_resource(form_ids, *args):
                 hs.regenerate_token()
                 attempts += 1
         except UnhandledCRMError as e:
-            return logger.exception(f"Create failed for {e}")
+            logger.exception(f"Create failed for {e}")
+            raise UnhandledCRMError(str(e))
         except Exception as e:
-            return logger.exception(f"Create failed for {e}")
+            logger.exception(f"Create failed for {e}")
+            raise Exception(str(e))
 
     return
+

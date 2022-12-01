@@ -315,13 +315,43 @@ class AlertOperand(TimeStampModel):
         operator = self.operand_operator
         if self.data_type == "DATE":
             # try converting value to int
-            value = int(
-                (
-                    self.group.template.config_run_against_date(config_id)
-                    + timezone.timedelta(days=int(self.operand_value))
+            if operator == "=":
+                value = (
+                    int(
+                        (
+                            self.group.template.config_run_against_date(config_id)
+                            + timezone.timedelta(days=int(self.operand_value))
+                        )
+                        .replace(hour=00)
+                        .timestamp()
+                    )
+                    * 1000
                 )
-                # .strftime("%Y-%m-%dT00:00:00Z")
-                .timestamp()
+                end_value = (
+                    int(
+                        (
+                            self.group.template.config_run_against_date(config_id)
+                            + timezone.timedelta(days=int(self.operand_value))
+                        )
+                        .replace(hour=23)
+                        .timestamp()
+                    )
+                ) * 1000
+
+                return {
+                    "highValue": end_value,
+                    "value": value,
+                    "operator": "BETWEEN",
+                    "propertyName": self.operand_identifier,
+                }
+            value = (
+                int(
+                    (
+                        self.group.template.config_run_against_date(config_id)
+                        + timezone.timedelta(days=int(self.operand_value))
+                    ).timestamp()
+                )
+                * 1000
             )
         elif self.data_type == "DATETIME":
             value = int(
