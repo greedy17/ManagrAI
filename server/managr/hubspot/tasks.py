@@ -788,7 +788,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
     error = False
     error_message = None
     for form in forms:
-        form.save_form(data, False)
+        form.save_form(data)
         all_form_data = form.saved_data
         formatted_saved_data = process_text_field_format(
             str(user.id), form.template.resource, all_form_data
@@ -866,3 +866,4 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
         )
     except Exception as e:
         logger.exception(f"Failed To Bulk Update Salesforce Data {e}")
+    return

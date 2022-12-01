@@ -3029,16 +3029,11 @@ def process_submit_bulk_update(payload, context):
     selected_resources = [
         option["value"] for option in state["RESOURCES"]["SELECTED_RESOURCES"]["selected_options"]
     ]
-    selected_field = state["CRM_FIELDS"][
-        f"CHOOSE_CRM_FIELD?u={str(user.id)}&resource_type={context.get('resource_type')}"
-    ]["selected_option"]["value"]
-    bulk_update_value = get_crm_value(state)
-    data = {selected_field: bulk_update_value}
     channel = pm.get("channel_id")
     ts = pm.get("message_ts")
     resource_type = context.get("resource_type")
     BULK_UPDATE_FUNCTION(user.crm)(
-        str(user.id), selected_resources, data, ts, channel, resource_type
+        str(user.id), selected_resources, state, ts, channel, resource_type
     )
 
     block_set = [

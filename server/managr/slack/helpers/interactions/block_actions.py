@@ -2404,7 +2404,6 @@ def process_show_bulk_update_form(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_select_crm_field(payload, context):
-    print(context)
     user = User.objects.get(id=context.get("u"))
     pm = json.loads(payload["view"]["private_metadata"])
     view_id = payload["view"]["id"]
@@ -2422,7 +2421,6 @@ def process_select_crm_field(payload, context):
         pass
     index, block = block_finder("CRM_FIELDS", blocks)
     slack_field = field.to_slack_field()
-    slack_field["block_id"] = "CRM_FIELD"
     if f_block:
         blocks = [*blocks[:f_index], slack_field, *blocks[f_index + 1 :]]
     else:
