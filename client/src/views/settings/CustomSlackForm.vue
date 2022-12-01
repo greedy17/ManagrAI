@@ -200,7 +200,7 @@
           Deal - Stage related
         </p>
         <p @click="changeToCompany" :class="newResource == 'Company' ? 'green' : ''">Company</p>
-        <p @click="changeToHubspotContact" :class="newResource == 'Contact' ? 'green' : ''">
+        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">
           Contact
         </p>
       </section>
@@ -1491,6 +1491,11 @@ export default {
       this.storedField = null
     },
     changeToCompany() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToCompany
+        return
+      }
       this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
@@ -1514,6 +1519,11 @@ export default {
       this.storedField = null
     },
     changeToDeal() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToDeal
+        return
+      }
       this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
@@ -1550,13 +1560,13 @@ export default {
       this.newFormType = 'STAGE_GATING'
       this.newResource = 'Opportunity'
 
-      if (this.userCRM !== 'HUBSPOT') {
+      if (this.userCRM === 'SALESFORCE') {
         this.newResource = 'Opportunity'
         this.newCustomForm = this.allForms.find(
           (f) =>
             f.resource == this.OPPORTUNITY && f.formType == this.STAGE_GATING && f.stage == stage,
         )
-      } else {
+      } else if (this.userCRM === 'HUBSPOT') {
         this.newResource = 'Deal'
         this.newCustomForm = this.allForms.find(
           (f) => f.resource == this.DEAL && f.formType == this.STAGE_GATING && f.stage == stage,
@@ -1579,6 +1589,11 @@ export default {
       this.storedField = null
     },
     changeToHubspotContact() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToHubspotContact
+        return
+      }
       this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
@@ -1618,6 +1633,11 @@ export default {
     modalSave() {
       this.formChange = false
       this.onSave()
+      this.modalOpen = false
+      this.storedModalFunction()
+      setTimeout(() => {
+        // this.$router.go()
+      }, 400)
     },
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
@@ -1794,12 +1814,16 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
+          this.getAllForms()
           // if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
           //   this.$router.push({ name: 'Required' })
           // } else {
           //   this.$router.go()
           // }
         })
+    },
+    async getAllForms() {
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
     },
     async goToProducts() {
       if (
