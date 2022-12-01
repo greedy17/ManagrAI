@@ -95,6 +95,7 @@ class BaseContactSerializer(serializers.ModelSerializer):
 
 class BaseOpportunitySerializer(serializers.ModelSerializer):
     owner_ref = UserRefSerializer(source="owner", required=False)
+    account_ref = BaseAccountSerializer(source="account", required=False)
 
     class Meta:
         model = BaseOpportunity
@@ -106,7 +107,8 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "amount",
             "close_date",
             "forecast_category",
-            "company",
+            "account",
+            "account_ref",
             "stage",
             "owner",
             "owner_ref",
