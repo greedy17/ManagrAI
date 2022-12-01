@@ -8,7 +8,7 @@ CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
 def process_text_field_format(user_id, resource, saved_data):
     from managr.core.models import User
-    from managr.salesforce.models import ObjectField
+    from managr.crm.models import ObjectField
 
     user = User.objects.get(id=user_id)
     public_fields = ObjectField.objects.filter(
@@ -17,8 +17,7 @@ def process_text_field_format(user_id, resource, saved_data):
     fields = list(
         ObjectField.objects.for_user(user)
         .filter(
-            Q(salesforce_object=resource, data_type="TextArea")
-            | Q(data_type="String", length__gt=250)
+            Q(crm_object=resource, data_type="TextArea") | Q(data_type="String", length__gt=250)
         )
         .values_list("api_name", flat=True)
     )

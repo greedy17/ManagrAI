@@ -8,11 +8,9 @@ from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
 from background_task import background
-from managr.api.decorators import log_all_exceptions
-
+from managr.api.decorators import log_all_exceptions, slack_api_exceptions
 from managr.core.models import User
-
-from managr.hubspot.models import HSObjectFieldsOperation, HObjectField, HSResourceSync
+from managr.hubspot.models import HSObjectFieldsOperation, HSResourceSync
 from managr.crm.models import ObjectField
 from managr.salesforce.background import _send_recap
 from managr.crm.routes import adapter_routes as adapter_routes
@@ -24,19 +22,15 @@ from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
 from managr.hubspot.adapter.models import HubspotContactAdapter
-
+from managr.crm.utils import create_form_instance, process_text_field_format
+from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
 
 logger = logging.getLogger("managr")
 
 
 def replace_tags(description):
-    description = re.split("</.*?>", description)
-    while "" in description:
-        description.remove("")
-    description = "\n".join(description)
-    description = re.split("<br>", description)
-    description = "\r".join(description)
-    description = re.sub("<.*?>", "", description)
+    description = description.replace("\n", "<br>")
     return description
 
 
@@ -86,6 +80,14 @@ def emit_add_products_to_hs(workflow_id, *args):
 
 def emit_hs_update_resource_from_meeting(workflow_id, *args):
     return _process_update_resource_from_meeting(workflow_id, *args)
+
+
+def emit_process_slack_hs_bulk_update(
+    user, resource_ids, data, message_ts, channel_id, resource_type
+):
+    return _process_slack_bulk_update(
+        user, resource_ids, data, message_ts, channel_id, resource_type
+    )
 
 
 @background(schedule=0)
@@ -764,3 +766,103 @@ def _process_create_new_hs_resource(form_ids, *args):
 
     return
 
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_id, resource_type):
+    user = User.objects.get(id=user_id)
+    instance_data = {
+        "resource_type": resource_type,
+        "form_type": "UPDATE",
+        "user": user,
+        "stage_name": None,
+    }
+
+    bulk_form_ids = []
+    for id in resource_ids:
+        instance_data["resource_id"] = id
+        form_id = create_form_instance(**instance_data)
+        bulk_form_ids.extend(form_id)
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=bulk_form_ids)
+    success_opps = 0
+    error = False
+    error_message = None
+    for form in forms:
+        form.save_form(data, False)
+        all_form_data = form.saved_data
+        formatted_saved_data = process_text_field_format(
+            str(user.id), form.template.resource, all_form_data
+        )
+        attempts = 1
+
+        while True:
+            hs = user.hubspot_account
+            try:
+                resource = form.resource_object.update(all_form_data)
+                form.is_submitted = True
+                form.update_source = "slack-bulk"
+                form.submission_date = timezone.now()
+                form.save()
+                value_update = form.resource_object.update_database_values(all_form_data)
+                success_opps += 1
+                break
+            except UnhandledCRMError as e:
+                logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+
+            except TokenExpired as e:
+                if attempts >= 5:
+                    logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
+                    error = True
+                    error_message = str(e)
+                    break
+                else:
+                    if form.resource_object.owner == user:
+                        hs.regenerate_token()
+                    else:
+                        form.resource_object.owner.hubspot_account.regenerate_token()
+                    attempts += 1
+
+            except ConnectionResetError as e:
+                if attempts >= 5:
+                    logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
+                    error = True
+                    error_message = str(e)
+                    break
+                else:
+                    time.sleep(2)
+                    attempts += 1
+
+            except Exception as e:
+                logger.info(f"UPDATE ERROR {e}")
+                error = True
+                error_message = str(e)
+                break
+    if error:
+        block_set = [
+            block_builders.simple_section(
+                f":no_entry: Ugh-Ohhhh.. We've hit an error: {error_message}"
+            )
+        ]
+    else:
+        plural = f"Opportunities" if resource_type == "Opportunity" else f"{resource_type}s"
+        logger.info(
+            f"Successfully updated {success_opps}/{len(forms)} {plural} for user {user.email}"
+        )
+        block_set = [
+            block_builders.simple_section(
+                f":white_check_mark: Successfully bulk updated {success_opps}/{len(forms)} {plural}",
+                "mrkdwn",
+            )
+        ]
+    try:
+        res = slack_requests.update_channel_message(
+            channel_id,
+            message_ts,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+    except Exception as e:
+        logger.exception(f"Failed To Bulk Update Salesforce Data {e}")

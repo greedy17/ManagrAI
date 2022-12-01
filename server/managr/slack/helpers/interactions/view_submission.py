@@ -69,7 +69,11 @@ from managr.slack.helpers.exceptions import (
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 from managr.salesforce.adapter.models import PricebookEntryAdapter
-from managr.hubspot.tasks import _process_create_new_hs_resource, emit_add_update_to_hs
+from managr.hubspot.tasks import (
+    _process_create_new_hs_resource,
+    emit_add_update_to_hs,
+    emit_process_slack_hs_bulk_update,
+)
 from managr.crm.utils import CRM_SWITCHER
 
 logger = logging.getLogger("managr")
@@ -90,6 +94,13 @@ def background_create_resource(crm):
         return _process_create_new_resource
     else:
         return _process_create_new_hs_resource
+
+
+def BULK_UPDATE_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_process_slack_bulk_update
+    else:
+        return emit_process_slack_hs_bulk_update
 
 
 @log_all_exceptions
@@ -3018,20 +3029,25 @@ def process_submit_bulk_update(payload, context):
     selected_resources = [
         option["value"] for option in state["RESOURCES"]["SELECTED_RESOURCES"]["selected_options"]
     ]
-    selected_field = state["CRM_FIELDS"][f"CHOOSE_CRM_FIELD?u={str(user.id)}"]["selected_option"][
-        "value"
-    ]
+    selected_field = state["CRM_FIELDS"][
+        f"CHOOSE_CRM_FIELD?u={str(user.id)}&resource_type={context.get('resource_type')}"
+    ]["selected_option"]["value"]
     bulk_update_value = get_crm_value(state)
     data = {selected_field: bulk_update_value}
     channel = pm.get("channel_id")
     ts = pm.get("message_ts")
     resource_type = context.get("resource_type")
-    emit_process_slack_bulk_update(
+    BULK_UPDATE_FUNCTION(user.crm)(
         str(user.id), selected_resources, data, ts, channel, resource_type
     )
 
     block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+        *get_block_set(
+            "loading",
+            {
+                "message": f":rocket: We are saving your data to {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}..."
+            },
+        ),
     ]
     try:
         res = slack_requests.update_channel_message(
