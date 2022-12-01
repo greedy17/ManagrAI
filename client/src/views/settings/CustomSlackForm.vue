@@ -200,7 +200,7 @@
           Deal - Stage related
         </p>
         <p @click="changeToCompany" :class="newResource == 'Company' ? 'green' : ''">Company</p>
-        <p @click="changeToHubspotContact" :class="newResource == 'Contact' ? 'green' : ''">
+        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">
           Contact
         </p>
       </section>
@@ -1491,6 +1491,11 @@ export default {
       this.storedField = null
     },
     changeToCompany() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToCompany
+        return
+      }
       this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
@@ -1514,6 +1519,11 @@ export default {
       this.storedField = null
     },
     changeToDeal() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToDeal
+        return
+      }
       this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
@@ -1579,6 +1589,11 @@ export default {
       this.storedField = null
     },
     changeToHubspotContact() {
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToHubspotContact
+        return
+      }
       this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
@@ -1619,8 +1634,9 @@ export default {
       this.formChange = false
       this.onSave()
       this.modalOpen = false
+      this.storedModalFunction()
       setTimeout(() => {
-        this.$router.go()
+        // this.$router.go()
       }, 400)
     },
     camelize(str) {
@@ -1798,12 +1814,16 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
+          this.getAllForms()
           // if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
           //   this.$router.push({ name: 'Required' })
           // } else {
           //   this.$router.go()
           // }
         })
+    },
+    async getAllForms() {
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
     },
     async goToProducts() {
       if (
