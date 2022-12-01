@@ -1560,13 +1560,13 @@ export default {
       this.newFormType = 'STAGE_GATING'
       this.newResource = 'Opportunity'
 
-      if (this.userCRM !== 'HUBSPOT') {
+      if (this.userCRM === 'SALESFORCE') {
         this.newResource = 'Opportunity'
         this.newCustomForm = this.allForms.find(
           (f) =>
             f.resource == this.OPPORTUNITY && f.formType == this.STAGE_GATING && f.stage == stage,
         )
-      } else {
+      } else if (this.userCRM === 'HUBSPOT') {
         this.newResource = 'Deal'
         this.newCustomForm = this.allForms.find(
           (f) => f.resource == this.DEAL && f.formType == this.STAGE_GATING && f.stage == stage,
