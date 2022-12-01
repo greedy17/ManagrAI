@@ -1618,6 +1618,10 @@ export default {
     modalSave() {
       this.formChange = false
       this.onSave()
+      this.modalOpen = false
+      setTimeout(() => {
+        this.$router.go()
+      }, 400)
     },
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
