@@ -382,6 +382,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def update_recap_channel(self, request, *args, **kwargs):
         logger.info(f"UPDATE RECAP CHANNEL DATA: {request.data}")
+        recap_channel = request.data.get("recap_channel")
         slack_id = request.data.get("slack_id")
         if slack_id:
             slack = (
@@ -394,9 +395,8 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
-        if not slack.recap_channel:
-            slack.change_recap_channel(request.data.get("recap_channel"))
-        logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
+        if not slack.recap_channel or slack.recap_channel != recap_channel:
+            slack.change_recap_channel(recap_channel)
         if request.data.get("users", None):
             for user in request.data.get("users"):
                 user_acc = User.objects.filter(id=user).first()

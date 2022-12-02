@@ -189,7 +189,7 @@ def emit_update_current_db_values(user_id, resource_type, integration_id, verbos
 
 def emit_meeting_workflow_tracker(workflow_id):
     """Checks the workflow after 5 mins to ensure completion"""
-    schedule = timezone.now() + timezone.timedelta(minutes=5)
+    schedule = timezone.now() + timezone.timedelta(minutes=2)
     return _process_workflow_tracker(workflow_id, schedule=schedule)
 
 
