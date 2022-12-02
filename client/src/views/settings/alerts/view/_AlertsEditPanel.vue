@@ -103,7 +103,7 @@
     <div class="title">
       <h4 class="title__head">Slack Message</h4>
 
-      <section class="title__body" @click="test(messageTemplateForm)">
+      <section class="title__body">
         <p>Edit your slack message</p>
       </section>
 
@@ -245,6 +245,9 @@ export default {
       // }),
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
+        filters: {
+          crmObject: this.alert.resourceType
+        },
         pagination: { size: 1000 },
       }),
       recipientBindings: [
