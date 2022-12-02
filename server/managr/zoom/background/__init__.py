@@ -29,6 +29,7 @@ from managr.slack.helpers import block_builders
 from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.adapter.models import ContactAdapter
+from managr.hubspot.adapter.models import HubspotContactAdapter
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
@@ -208,7 +209,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             for p in zoom_participants
             if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
         ]
-
         if not len(should_register_this_meeting):
             return
 
@@ -219,7 +219,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             ):
                 memo[p.get("user_email")] = len(participants)
                 participants.append(p)
-
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -267,7 +266,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         if len(participants):
             # Reduce to set of unique participant emails
             participant_emails = set([p.get("user_email") for p in participants])
-
             meeting_contacts = []
 
             # find existing contacts
@@ -320,21 +318,29 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                         or participant["user_email"] == user.email
                     ):
                         del participants[index]
+            contact_adapter = ContactAdapter if user.crm == "SALESFORCE" else HubspotContactAdapter
+
             new_contacts = list(
                 filter(
                     lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
                     list(
                         map(
                             lambda participant: {
-                                **ContactAdapter(
+                                **contact_adapter(
                                     **dict(
                                         email=participant["user_email"],
                                         # these will only get stored if lastname and firstname are accessible from sf
                                         external_owner=user.crm_account.crm_id,
                                         secondary_data={
-                                            "FirstName": _split_first_name(participant["name"]),
-                                            "LastName": _split_last_name(participant["name"]),
-                                            "Email": participant["user_email"],
+                                            f"{'FirstName' if user.crm == 'SALESFORCE' else 'FirstName'}": _split_first_name(
+                                                participant["name"]
+                                            ),
+                                            f"{'LastName' if user.crm == 'SALESFORCE' else 'firstname'}": _split_last_name(
+                                                participant["name"]
+                                            ),
+                                            f"{'Email' if user.crm == 'SALESFORCE' else 'email'}": participant[
+                                                "user_email"
+                                            ],
                                         },
                                     )
                                 ).as_dict,
@@ -344,7 +350,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     ),
                 )
             )
-
+            print(new_contacts)
             meeting_contacts = [
                 *new_contacts,
                 *meeting_contacts,

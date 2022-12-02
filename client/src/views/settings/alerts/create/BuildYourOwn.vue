@@ -429,8 +429,15 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
-      fields: CollectionManager.create({
-        ModelClass: ObjectField,
+      // fields: CollectionManager.create({
+      //   ModelClass: ObjectField,
+      //   pagination: { size: 1000 },
+      // }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        filters: {
+          crmObject: alert.resourceType
+        },
         pagination: { size: 1000 },
       }),
       users: CollectionManager.create({ ModelClass: User }),
@@ -486,7 +493,7 @@ export default {
           this.selectedResourceType = val
         }
         if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
+          this.fields.filters.crmObject = this.selectedResourceType
           this.fields.filters.page = 1
           await this.fields.refresh()
         }
@@ -631,7 +638,6 @@ export default {
     //   this.channelOpts = results
     // },
     async listUserChannels(cursor) {
-      console.log('cursor', cursor)
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
@@ -639,7 +645,6 @@ export default {
         responseMetadata: { nextCursor: res.nextCursor },
       })
       this.userChannelOpts = results
-      console.log(res)
       setTimeout(() => {
         this.dropdownLoading = false
       }, 500)
