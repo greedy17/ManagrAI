@@ -1143,7 +1143,6 @@ def _process_create_new_contacts(workflow_id, *args):
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
-        logger.info(f"FORM {form}")
         data = form.saved_data
         if not data:
             # try and collect whatever data we have
@@ -1985,7 +1984,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
     error = False
     error_message = None
     for form in forms:
-        form.save_form(data, False)
+        form.save_form(data)
         all_form_data = form.saved_data
         formatted_saved_data = process_text_field_format(
             str(user.id), form.template.resource, all_form_data
@@ -2055,6 +2054,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
                 error_message = str(e)
                 break
     if error:
+        plural = f"Opportunities" if resource_type == "Opportunity" else f"{resource_type}s"
         logger.info(
             f"Did not successfully bulk update {success_opps}/{len(forms)} {plural} for user {user.email}"
         )

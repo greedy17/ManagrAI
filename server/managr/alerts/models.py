@@ -37,7 +37,7 @@ HUBSPOT_OPERATOR_CONVERTER = {
     "<": "LT",
     ">": "GT",
     "=": "EQ",
-    "!=": "NE",
+    "!=": "NEQ",
     "CONTAINS": "CONTAINS_TOKEN",
     "LIKE": "CONTAINS_TOKEN",
     "STARTSWITH": "CONTAINS_TOKEN",
@@ -94,10 +94,9 @@ class AlertTemplate(TimeStampModel):
             )
             return f"{user_crm.instance_url}{q[0]}"
         else:
-            operand_groups = [group.hs_query_str(config_id) for group in self.groups.all()]
-            operand_groups[0]["filters"].append(
-                {"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"}
-            )
+            operand_groups = [
+                group.hs_query_str(config_id, user_crm) for group in self.groups.all()
+            ]
             return (
                 hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
                 {"filterGroups": operand_groups, "limit": 100},
@@ -197,9 +196,10 @@ class AlertGroup(TimeStampModel):
             q_s = f"{self.group_condition} {q_s}"
         return q_s
 
-    def hs_query_str(self, config_id):
+    def hs_query_str(self, config_id, user_crm):
         """returns a grouped qs of operand rows (in ())"""
         q_s = [operand.hs_query_obj(config_id) for operand in self.operands.all()]
+        q_s.append({"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"})
         return {"filters": q_s}
 
     def delete(self, *args, **kwargs):

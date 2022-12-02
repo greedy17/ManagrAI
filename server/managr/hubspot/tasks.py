@@ -841,19 +841,21 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
                 error_message = str(e)
                 break
     if error:
+        logger.info(
+            f"Successfully updated {success_opps}/{len(forms)} {resource_type}s for user {user.email}"
+        )
         block_set = [
             block_builders.simple_section(
                 f":no_entry: Ugh-Ohhhh.. We've hit an error: {error_message}"
             )
         ]
     else:
-        plural = f"Opportunities" if resource_type == "Opportunity" else f"{resource_type}s"
         logger.info(
-            f"Successfully updated {success_opps}/{len(forms)} {plural} for user {user.email}"
+            f"Successfully updated {success_opps}/{len(forms)} {resource_type}s for user {user.email}"
         )
         block_set = [
             block_builders.simple_section(
-                f":white_check_mark: Successfully bulk updated {success_opps}/{len(forms)} {plural}",
+                f":white_check_mark: Successfully bulk updated {success_opps}/{len(forms)} {resource_type}s",
                 "mrkdwn",
             )
         ]
