@@ -100,7 +100,7 @@ class AlertTemplate(TimeStampModel):
             )
             return (
                 hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
-                {"filterGroups": operand_groups},
+                {"filterGroups": operand_groups, "limit": 100},
             )
 
     def manager_url_str(self, user_list, config_id):
