@@ -71,7 +71,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
-                    operandOperator: "BETWEEN",
+                    operandOperator: ">=",
                     operandValue: "-200",
                     operandType: "FIELD",
                     operandOrder: 0,
@@ -81,7 +81,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
-                    operandOperator: "BETWEEN",
+                    operandOperator: "<=",
                     operandValue: "-1",
                     operandType: "FIELD",
                     operandOrder: 1,
@@ -187,33 +187,13 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
         {
             groupCondition: "AND",
             newOperands: [
-                // {
-                //     operandCondition: "AND",
-                //     operandIdentifier: "ForecastCategoryName",
-                //     operandOperator: "<=",
-                //     operandValue: 'Commit',
-                //     operandType: "FIELD",
-                //     operandOrder: 0,
-                //     dataType: "STRING",
-                //     group: "",
-                // },
                 {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
-                    operandOperator: "BETWEEN",
-                    operandValue: "0",
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: "BETWEEN",
+                    operandOperator: "<=",
                     operandValue: "90",
                     operandType: "FIELD",
-                    operandOrder: 1,
+                    operandOrder: 0,
                     dataType: "DATE",
                     group: "",
                 },
@@ -307,22 +287,12 @@ const DEAL_REVIEW_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "LastModifiedDate", // Select your Amount
-                    operandOperator: "BETWEEN",
+                    operandIdentifier: "hs_lastmodifieddate", // Select your Amount
+                    operandOperator: "<=",
                     operandValue: "-6", // Amount is greater than
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATETIME",
-                    group: "",
-                },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "LastModifiedDate", // Select your Amount
-                    operandOperator: "BETWEEN",
-                    operandValue: "0", // Amount is greater than
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATETIME",
+                    dataType: "DATE",
                     group: "",
                 },
             ],
@@ -426,7 +396,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
-                    operandOperator: "BETWEEN",
+                    operandOperator: "<=",
                     operandValue: "7",
                     operandType: "FIELD",
                     operandOrder: 0,
@@ -436,7 +406,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
                 {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
-                    operandOperator: "BETWEEN",
+                    operandOperator: ">",
                     operandValue: "-1",
                     operandType: "FIELD",
                     operandOrder: 1,

@@ -22,7 +22,7 @@ from managr.slack.helpers.utils import (
 )
 
 from managr.slack.helpers import block_builders, block_sets
-from managr.salesforce.routes import routes as form_routes
+from managr.crm.utils import CRM_SWITCHER
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
 logger = logging.getLogger("managr")
@@ -638,7 +638,9 @@ def create_or_search_modal_block_set(context):
     # if an id is already passed (Aka this is recurrsive) get the resource
     if resource_id:
         resource = (
-            form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
+            CRM_SWITCHER[user.crm][resource_type]["model"]
+            .objects.filter(integration_id=resource_id)
+            .first()
         )
     action_id = (
         f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}&type=prep"

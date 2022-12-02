@@ -85,11 +85,11 @@ def swap_public_fields(state):
     return state
 
 
-def background_create_resource(current_form_ids, crm):
+def background_create_resource(crm):
     if crm == "SALESFORCE":
-        return _process_create_new_resource.now(current_form_ids)
+        return _process_create_new_resource
     else:
-        return _process_create_new_hs_resource.now(current_form_ids)
+        return _process_create_new_hs_resource
 
 
 @log_all_exceptions
@@ -402,18 +402,10 @@ def process_submit_resource_data(payload, context):
             if main_form.template.form_type == "UPDATE":
                 main_form.resource_object.update(all_form_data)
                 resource = main_form.resource_object
-                if len(custom_object_forms):
-                    sf.create_custom_object(
-                        custom_object_data_collector,
-                        sf.access_token,
-                        sf.instance_url,
-                        sf.salesforce_id,
-                        custom_object_forms.first().template.custom_object,
-                    )
-                break
             else:
                 create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
-                resource = background_create_resource(current_form_ids, user.crm)
+                resource_func = background_create_resource(user.crm)
+                resource = resource_func.now(current_form_ids)
                 new_resource = create_route[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )
@@ -442,11 +434,10 @@ def process_submit_resource_data(payload, context):
             )
             break
         except UnhandledCRMError as e:
-            has_error = True
             blocks = get_block_set(
                 "error_modal",
                 {
-                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{str(e)}_"
                 },
             )
             break

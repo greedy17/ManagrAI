@@ -190,7 +190,6 @@ class HubspotAuthAccountAdapter:
     @staticmethod
     def get_user_info(access_token, email):
         with Client as client:
-            print(client.get)
             res = client.get(
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
