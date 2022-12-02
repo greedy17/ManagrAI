@@ -375,7 +375,7 @@ class AlertOperand(TimeStampModel):
                 elif self.operand_operator == "ENDSWITH":
                     value = f"*{value}"
             else:
-                value = f"'{value}'"
+                value = f"{value}"
         q_s = {
             "value": value,
             "operator": HUBSPOT_OPERATOR_CONVERTER[operator],

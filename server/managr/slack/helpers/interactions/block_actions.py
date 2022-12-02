@@ -2365,7 +2365,8 @@ def process_show_bulk_update_form(payload, context):
             "Fields",
             options=fields,
             action_id=action_with_params(
-                slack_const.CHOOSE_CRM_FIELD, params=[f"u={str(user.id)}",],
+                slack_const.CHOOSE_CRM_FIELD,
+                params=[f"u={str(user.id)}", f"resource_type={config.template.resource_type}"],
             ),
             block_id="CRM_FIELDS",
         ),
@@ -2409,7 +2410,9 @@ def process_select_crm_field(payload, context):
     action = payload["actions"][0]
     blocks = payload["view"]["blocks"]
     selected_value = action["selected_option"]["value"]
-    field = user.salesforce_account.object_fields.filter(api_name=selected_value).first()
+    field = user.object_fields.filter(
+        api_name=selected_value, crm_object=context.get("resource_type")
+    ).first()
     try:
         f_index, f_block = block_finder("CRM_FIELD", blocks)
     except ValueError:
@@ -2418,7 +2421,6 @@ def process_select_crm_field(payload, context):
         pass
     index, block = block_finder("CRM_FIELDS", blocks)
     slack_field = field.to_slack_field()
-    slack_field["block_id"] = "CRM_FIELD"
     if f_block:
         blocks = [*blocks[:f_index], slack_field, *blocks[f_index + 1 :]]
     else:
