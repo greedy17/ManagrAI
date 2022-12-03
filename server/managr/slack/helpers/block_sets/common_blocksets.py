@@ -26,7 +26,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.gong.models import GongCall
 from managr.core.models import NylasAuthAccount, User
 
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,

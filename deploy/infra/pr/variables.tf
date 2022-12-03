@@ -135,6 +135,12 @@ variable "app_config" {
     outreach_client_id      = string
     outreach_secret         = string
     outreach_redirect_uri   = string
+
+    use_hubspot            = bool
+    hubspot_base_url       = string
+    hubspot_client_id      = string
+    hubspot_secret         = string
+    hubspot_redirect_uri   = string
   })
 }
 

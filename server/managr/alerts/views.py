@@ -28,7 +28,7 @@ from rest_framework.decorators import (
 )
 from managr.salesforce.routes import routes as model_routes
 
-from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
+from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
 
@@ -51,7 +51,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True)
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"

@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.DEAL_REVIEW" />
+  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.DEAL_REVIEW_HUBSPOT : allConfigs.DEAL_REVIEW" />
 </template>
 
 <script>
@@ -20,6 +20,11 @@ export default {
     return {
       allConfigs,
     }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>

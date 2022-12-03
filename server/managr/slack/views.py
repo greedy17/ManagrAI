@@ -382,6 +382,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def update_recap_channel(self, request, *args, **kwargs):
         logger.info(f"UPDATE RECAP CHANNEL DATA: {request.data}")
+        recap_channel = request.data.get("recap_channel")
         slack_id = request.data.get("slack_id")
         if slack_id:
             slack = (
@@ -394,16 +395,15 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
-        if not slack.recap_channel:
-            slack.change_recap_channel(request.data.get("recap_channel"))
-        logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
-        # if request.data.get("users", None):
-        # for user in request.data.get("users"):
-        #     user_acc = User.objects.filter(id=user).first()
-        #     if user_acc and hasattr(user_acc, "slack_integration"):
-        #         if slack_id not in user_acc.slack_integration.recap_receivers:
-        #             user_acc.slack_integration.recap_receivers.append(slack_id)
-        #             user_acc.slack_integration.save()
+        if not slack.recap_channel or slack.recap_channel != recap_channel:
+            slack.change_recap_channel(recap_channel)
+        if request.data.get("users", None):
+            for user in request.data.get("users"):
+                user_acc = User.objects.filter(id=user).first()
+                if user_acc and hasattr(user_acc, "slack_integration"):
+                    if slack_id not in user_acc.slack_integration.recap_receivers:
+                        user_acc.slack_integration.recap_receivers.append(slack_id)
+                        user_acc.slack_integration.save()
         return Response(status=status.HTTP_200_OK, data={"success": True})
 
     @action(
@@ -557,15 +557,14 @@ class SlackFormsViewSet(
         data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
-        print(data)
         data.update({"organization": self.request.user.organization_id})
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
-        instance.fields.clear()
+        instance.custom_fields.clear()
         for i, field in enumerate(fields):
-            instance.fields.add(field, through_defaults={"order": i})
+            instance.custom_fields.add(field, through_defaults={"order": i})
         instance.team = self.request.user.team
         instance.save()
         return Response(serializer.data)
@@ -586,10 +585,10 @@ class SlackFormsViewSet(
             print(e)
         serializer.save()
         instance = serializer.instance
-        instance.fields.clear()
+        instance.custom_fields.clear()
         fields_state = {}
         for i, field in enumerate(fields_ref):
-            instance.fields.add(
+            instance.custom_fields.add(
                 field["id"],
                 through_defaults={"order": i, "include_in_recap": field["includeInRecap"]},
             )
@@ -608,9 +607,9 @@ class SlackFormsViewSet(
             update_serializer = self.get_serializer(data=update_data, instance=form)
             update_serializer.is_valid(raise_exception=True)
             instance = update_serializer.instance
-            instance.fields.clear()
+            instance.custom_fields.clear()
             for i, field in enumerate(fields):
-                form.fields.add(field, through_defaults={"order": i})
+                form.custom_fields.add(field, through_defaults={"order": i})
             instance.config = fields_state
             instance.save()
         return Response(serializer.data)
@@ -625,6 +624,20 @@ class SlackFormsViewSet(
         serialized = self.get_serializer(orgs, many=True).data
         return Response(serialized)
 
+    @action(
+        methods=["GET"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="form-refresh",
+    )
+    def form_refresh(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        user = request.user
+        forms = OrgCustomSlackForm.objects.filter(organization=user.organization)
+        for form in forms:
+            form.recreate_form()
+        return Response(status=status.HTTP_200_OK)
+
 
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
@@ -634,7 +647,6 @@ class SlackFormsViewSet(
 )
 def update_resource(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account", "lead", "contact"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -648,11 +660,17 @@ def update_resource(request):
                 }
             )
     user = slack.user
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = ["opportunity"]
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
     resource_type = None
 
     if len(command_params):
@@ -707,7 +725,6 @@ def update_resource(request):
 )
 def create_resource(request):
     # list of accepted commands for this fake endpoint
-    allowed_commands = ["opportunity", "account", "lead", "contact"]
     slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
@@ -721,13 +738,18 @@ def create_resource(request):
                 }
             )
     user = slack.user
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
     text = request.data.get("text", "")
     if len(text):
         command_params = text.split(" ")
     else:
-        command_params = ["opportunity"]
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
     resource_type = None
-
     if len(command_params):
         if command_params[0] not in allowed_commands:
             return Response(
@@ -745,9 +767,8 @@ def create_resource(request):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
-
         if slack_form:
-
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
             context = {
                 "resource_type": resource_type,
                 "f": str(slack_form.id),
@@ -756,7 +777,7 @@ def create_resource(request):
             }
             blocks = get_block_set("create_modal", context,)
             try:
-                index, block = block_finder("StageName", blocks)
+                index, block = block_finder(stage_name, blocks)
             except ValueError:
                 # did not find the block
                 block = None

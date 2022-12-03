@@ -9,14 +9,14 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
-        <div class="header">
-          <div class="flex-row">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-height-small">
+        <div class="header-confirm">
+          <div class="flex-row-confirm">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
             <h3 class="invite-form__title">Are you sure?</h3>
           </div>
-          <div class="flex-row">
-            <h4 class="invite-form__subtitle">
+          <div class="flex-row-confirm">
+            <h4>
               By clicking Confirm, you will be removing this user from your organization.
             </h4>
           </div>
@@ -28,14 +28,11 @@
               <PulseLoadingSpinnerButton
                 @click="handleUninvite(uninviteId)"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
                 text="Confirm"
                 :loading="loading"
                 >Confirm</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem">
-                Cancel
-              </div>
             </template>
           </div>
         </div>
@@ -50,11 +47,20 @@
         }
       "
     >
-      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite">
+      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite" style="margin-top: 7.5rem;">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Invite Users via Slack</h3>
+            <h3 class="invite-form__title">Invite Slack Users</h3>
+          </div>
+          <div class="flex-row">
+            <img
+              @click="handleCancel"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="filter: invert(30%); cursor: pointer;"
+            />
           </div>
         </div>
 
@@ -70,7 +76,7 @@
                   v-model="selectedMember"
                   :options="slackMembers.members"
                   openDirection="below"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="realName"
@@ -103,7 +109,7 @@
                   v-model="selectedLevel"
                   :options="userTypes"
                   openDirection="below"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   selectLabel="Enter"
                   label="key"
                 >
@@ -127,18 +133,11 @@
               <PulseLoadingSpinnerButton
                 @click="handleInvite"
                 class="invite-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem; margin-top: 2rem;"
                 text="Invite"
                 :loading="loading"
                 >Invite</PulseLoadingSpinnerButton
               >
-              <div
-                class="cancel-button"
-                @click="handleCancel"
-                style="margin-right: 2.5rem; margin-bottom: 0.4rem"
-              >
-                Cancel
-              </div>
             </template>
           </div>
         </div>
@@ -366,6 +365,7 @@
           >
             <img src="@/assets/images/remove.svg" class="red" height="22px" alt="" />
           </div>
+          <div v-else style="width: 28px;"></div>
         </template>
       </div>
     </div>
@@ -752,8 +752,16 @@ input:focus {
   align-items: center;
 }
 .header {
-  margin-top: -1rem;
+  margin-top: -1.5rem;
   width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.header-confirm {
+  margin-top: -1.5rem;
+  width: 100%;
+  // display: flex;
+  // justify-content: space-around;
 }
 .complete {
   border-bottom: 2.9px solid $dark-green;
@@ -795,6 +803,7 @@ input:focus {
 }
 form {
   width: 100%;
+  min-height: 30vh;
   background-color: $white;
   height: 50vh;
   justify-content: space-evenly;
@@ -804,7 +813,7 @@ form {
   border-radius: 6px;
   color: white;
   border: none;
-  margin-top: 2.5rem;
+  margin-top: 1rem;
   width: 15vw;
   font-size: 16px;
   box-shadow: none;
@@ -843,6 +852,7 @@ form {
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
+    border-top: 1px solid $soft-gray;
   }
   &__actions-noslack {
     display: flex;
@@ -850,6 +860,10 @@ form {
     align-items: center;
     margin-top: 1rem;
   }
+}
+.form-height-small {
+  height: 30vh;
+  margin-top: 10rem;
 }
 .invite-list {
   &__container {
@@ -929,17 +943,30 @@ form {
   flex-direction: row;
   align-items: center;
   justify-self: start;
-  width: 90%;
-  margin: 0 auto;
+  // width: 90%;
+  margin: 0 5%;
   letter-spacing: 1px;
   h4 {
     font-size: 20px;
   }
 }
+.flex-row-confirm {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  width: 90%;
+  margin: 0 auto;
+  letter-spacing: 1px;
+  h4 {
+    font-size: 16px;
+    margin-bottom: 2rem;
+  }
+}
 .logo {
   height: 24px;
-  margin-left: 0.5rem;
-  margin-right: 0.25rem;
+  margin-left: 0.25rem;
+  margin-right: 0.5rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }

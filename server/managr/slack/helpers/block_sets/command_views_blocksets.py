@@ -23,9 +23,29 @@ from managr.slack.helpers.utils import (
 )
 from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
-from managr.salesforce.routes import routes as form_routes
+
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.alerts.models import AlertInstance
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+
+
+def resource_options(crm):
+    if crm == "SALESFORCE":
+        return [
+            block_builders.option("Opportunity", "Opportunity"),
+            block_builders.option("Account", "Account"),
+            block_builders.option("Lead", "Lead"),
+            block_builders.option("Contact", "Contact"),
+        ]
+    else:
+        return [
+            block_builders.option("Deal", "Deal"),
+            block_builders.option("Company", "Company"),
+            block_builders.option("Contact", "Contact"),
+        ]
 
 
 @block_set(required_context=["resource_type", "u"])
@@ -201,7 +221,7 @@ def alert_instance_block_set(context):
             .first()
             .id
         )
-        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name if form.resource_type not in ['Lead', 'Contact'] else form.resource_object.email}_"
         blocks = block_sets.get_block_set(
             "success_modal", {"u": str(user.id), "form_ids": str(form.id), "message": message,},
         )
@@ -223,15 +243,16 @@ def alert_instance_block_set(context):
                 style="primary",
             )
         ]
-        if hasattr(user, "gong_account"):
-            options.extend(
-                [block_builders.option("Call Details", "call_details"),]
-            )
-        if instance.template.resource_type != "Lead":
-            if hasattr(user, "outreach_account"):
-                options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
-            if hasattr(user, "salesloft_account"):
-                options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
+        if user.crm == "SALESFORCE":
+            if hasattr(user, "gong_account"):
+                options.extend(
+                    [block_builders.option("Call Details", "call_details"),]
+                )
+            if instance.template.resource_type != "Lead":
+                if hasattr(user, "outreach_account"):
+                    options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
+                if hasattr(user, "salesloft_account"):
+                    options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
 
         action_blocks.append(
             block_builders.static_select_input(
@@ -281,12 +302,7 @@ def update_modal_block_set(context, *args, **kwargs):
     blocks.append(
         block_builders.static_select(
             "Related to type",
-            [
-                block_builders.option("Opportunity", "Opportunity"),
-                block_builders.option("Account", "Account"),
-                block_builders.option("Lead", "Lead"),
-                block_builders.option("Contact", "Contact"),
-            ],
+            resource_options(user.crm),
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
@@ -422,9 +438,13 @@ def choose_opportunity_block_set(context):
 def actions_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
-    options = []
+    update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
+    options = [block_builders.option(update_label, "UPDATE_RESOURCE")]
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
+    if user.crm == "SALESFORCE":
+        for action in slack_const.SALESFORCE_ACTIONS:
+            options.append(block_builders.option(action[1], action[0]))
     if hasattr(user, "outreach_account"):
         options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
     if hasattr(user, "salesloft_account"):

@@ -85,6 +85,7 @@ data "template_file" "managr_app" {
     use_salesloft  = title(each.value.use_salesloft)
     use_gong       = title(each.value.use_gong)
     use_outreach   = title(each.value.use_outreach)
+    use_hubspot    = title(each.value.use_hubspot)
   }
 }
 
@@ -133,6 +134,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_salesloft  = title(each.value.env.use_salesloft)
     use_gong       = title(each.value.env.use_gong)
     use_outreach   = title(each.value.env.use_outreach)
+    use_hubspot    = title(each.value.env.use_hubspot)
   }
 }
 
@@ -313,5 +315,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     outreachClientId      = each.value.outreach_client_id
     outreachSecret        = each.value.outreach_secret
     outreachRedirectUri   = each.value.outreach_redirect_uri
+
+    hubspotBaseUrl       = each.value.hubspot_base_url
+    hubspotClientId      = each.value.hubspot_client_id
+    hubspotSecret        = each.value.hubspot_secret
+    hubspotRedirectUri   = each.value.hubspot_redirect_uri
   })
 }

@@ -43,7 +43,7 @@
 
           <PipelineNameSection
             v-else
-            :name="opp['secondary_data']['Name']"
+            :name="userCRM === 'SALESFORCE' ? opp['secondary_data']['Name'] : opp['secondary_data']['dealname']"
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
@@ -215,6 +215,9 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
+            </div>
           </div>
           <div v-else-if="field.dataType === 'DateTime'">
             <input
@@ -227,6 +230,9 @@
                   : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
               "
             />
+            <div v-if="editing" class="save">
+              <p>Press "Enter" to save</p>
+            </div>
           </div>
           <div
             v-else-if="
@@ -297,16 +303,18 @@
             </Multiselect>
           </div>
         </div> -->
-        <div class="limit-cell-height">
+        <div class="limit-cell-height" @click="test(field)">
           <PipelineField
             :index="i"
             style="direction: ltr"
             :apiName="field.apiName"
             :dataType="field.dataType"
             :fieldData="
-              field.apiName.includes('__c') || field.apiName.includes('__r')
+              userCRM === 'SALESFORCE' ?
+              (field.apiName.includes('__c') || field.apiName.includes('__r')
                 ? opp['secondary_data'][field.apiName]
-                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])
+                : opp['secondary_data'][field.apiName]
             "
             :referenceOpts="referenceOpts"
             :lastStageUpdate="opp['last_stage_update']"
@@ -342,10 +350,12 @@
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-            field.apiName.includes('__c')
-              ? opp['secondary_data'][field.apiName]
-              : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          "
+              userCRM === 'SALESFORCE' ?
+              (field.apiName.includes('__c')
+                ? opp['secondary_data'][field.apiName]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])
+                : opp['secondary_data'][field.apiName]
+            "
           :lastStageUpdate="opp['last_stage_update']"
           :referenceOpts="referenceOpts"
         />
@@ -463,7 +473,9 @@ export default {
         return
       }
     },
-    test(log) {},
+    test(log) {
+      console.log('log', log)
+    },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -478,6 +490,7 @@ export default {
       this.$emit('set-dropdown-value', item)
     },
     editInline(index) {
+      console.log('opp?', this.opp)
       this.editing = true
       this.$emit('current-inline-row', this.index, index)
       this.currentRow = this.index
@@ -643,6 +656,11 @@ export default {
       }
     },
   },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+  }
 }
 </script>
 

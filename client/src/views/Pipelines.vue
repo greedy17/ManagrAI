@@ -1176,7 +1176,7 @@
                 <p>Pricebook:</p>
                 <Multiselect
                   @select="getPricebookEntries($event.integration_id)"
-                  :options="pricebooks"
+                  :options="pricebooks ? pricebooks : []"
                   openDirection="below"
                   v-model="selectedPriceBook"
                   style="width: 40vw"
@@ -1335,7 +1335,7 @@
               </div>
             </div>
           </div>
-          <div v-if="hasProducts && currentProducts.length">
+          <div v-if="hasProducts && currentProducts && currentProducts.length">
             <section ref="allProducts" v-if="!editingProduct && viewingProducts">
               <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
                 <h4>
@@ -1532,12 +1532,12 @@
               Cancel
             </button>
             <button
-              v-if="!viewingProducts && currentProducts.length"
+              v-if="!viewingProducts && currentProducts && currentProducts.length"
               @click="toggleViewingProducts()"
               style="margin-left: 8px"
               class="select-btn1"
             >
-              View products <span>{{ currentProducts.length }}</span>
+              View products <span>{{ currentProducts ? currentProducts.length : 0 }}</span>
             </button>
             <button v-else-if="viewingProducts" @click="toggleViewingProducts()" class="cancel">
               Close products
@@ -1568,7 +1568,7 @@
         {{ !currentWorkflowName ? currentList : currentWorkflowName }}
       </h3> -->
       <section style="margin-top: -10px" class="flex-row-spread">
-        <div v-if="!workflowCheckList.length && !primaryCheckList.length" class="flex-row">
+        <div v-if="/*!workflowCheckList.length && !primaryCheckList.length*/true" class="flex-row">
           <small class="pipeline-header">View:</small>
           <button @click.stop="showList = !showList" class="text-button" style="cursor: pointer">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
@@ -1593,7 +1593,7 @@
             </p> -->
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button @click="allOpportunities" class="list-button">
-                All Opportunities
+                All {{this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'}}
                 <span class="green">
                   {{ allOpps.length }}
                 </span>
@@ -1626,7 +1626,6 @@
               {{ template.title }} <span class="green">{{ template.sobjectInstances.length }}</span>
             </button>
           </div>
-
           <div
             v-for="(filter, i) in activeFilters"
             :key="i"
@@ -1707,9 +1706,9 @@
                     alt=""
                   />
                 </button> -->
-                <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">
+                <!-- <button @click="changeFieldsSelected = !changeFieldsSelected" class="select-btn">
                   Bulk Update
-                </button>
+                </button> -->
                 <!-- <button @click="modifyForecast('add')" class="select-btn2">Start Tracking</button> -->
               </div>
             </div>
@@ -1723,7 +1722,7 @@
             <div class="flex-row-pad" v-if="advanceStageSelected">
               <p style="font-size: 14px">Select Stage:</p>
               <Multiselect
-                :options="apiPicklistOptions['StageName']"
+                :options="apiPicklistOptions /*&& apiPicklistOptions['StageName'] ? apiPicklistOptions['StageName'] : []*/"
                 @select="setStage($event.value)"
                 v-model="dropdownVal['StageName']"
                 openDirection="below"
@@ -1750,7 +1749,7 @@
             <div class="flex-row-pad" v-if="forecastSelected">
               <p style="font-size: 14px">Select Forecast:</p>
               <Multiselect
-                :options="apiPicklistOptions['ForecastCategoryName']"
+                :options="apiPicklistOptions /*&& apiPicklistOptions['ForecastCategoryName'] ? apiPicklistOptions['ForecastCategoryName'] : []*/"
                 @select="setForecast($event.value)"
                 v-model="dropdownVal['ForecastCategoryName']"
                 openDirection="below"
@@ -2495,6 +2494,7 @@
 </template>
 <script>
 import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -2544,6 +2544,7 @@ export default {
       productId: null,
       productIntegrationId: null,
       productRefCopy: {},
+      hsPicklistOpts: {},
       pricebookId: null,
       noteTitle: null,
       noteValue: null,
@@ -2554,12 +2555,13 @@ export default {
       savingCreateForm: false,
       productQueryOpts: {},
       objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 300 },
         filters: {
-          salesforceObject: 'Opportunity',
+          crmObject: this.crmObject,
         },
       }),
+   
       currentProducts: [],
       createProductForm: null,
       addingProduct: false,
@@ -2620,7 +2622,6 @@ export default {
       oppVal: null,
       originalList: null,
       daysForward: null,
-      // allOpps: null,
       loading: false,
       loadingAccounts: false,
       loadingProducts: false,
@@ -2711,25 +2712,31 @@ export default {
     }
   },
   computed: {
+    crmObject(){
+      return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    },
     extraPipelineFields() {
       let extras = []
       extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef.extraPipelineFields
+      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : []
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
     },
     allPicklistOptions() {
+      if (this.userCRM === 'HUBSPOT') {
+        return this.hsPicklistOpts
+      }
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
       return this.$store.state.apiPicklistOptions
     },
     pricebooks() {
-      return this.$store.state.pricebooks
+      return this.$store.state.pricebooks ? this.$store.state.pricebooks : []
     },
     noteTemplates() {
       return this.$store.state.templates
@@ -2748,6 +2755,9 @@ export default {
     },
     user() {
       return this.$store.state.user
+    },
+    userCRM() {
+      return this.$store.state.user.crm
     },
     filteredWorkflows: {
       get: function () {
@@ -2801,6 +2811,7 @@ export default {
     },
   },
   async created() {
+    this.objectFields.refresh()
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
@@ -2809,8 +2820,11 @@ export default {
     this.selectList()
   },
   mounted() {
-    this.resourceSync()
-    this.objectFields.refresh()
+    // this.resourceSync()
+    if (this.userCRM === 'HUBSPOT') {
+      this.getAllHSPicklists()
+      this.currentList = 'All Deals'
+    }
   },
   watch: {
     primaryCheckList: 'closeAll',
@@ -2858,6 +2872,20 @@ export default {
       setTimeout(() => {
         this.inlineUpdate(formData, oppId, oppIntId)
       }, 500)
+    },
+    async getAllHSPicklists() {
+      this.objectFields.refresh()
+      const picklistOpts = {}
+      setTimeout(() => {
+        for (let i = 0; i < this.objectFields.list.length; i++) {
+          const field = this.objectFields.list[i]
+          if (field.options.length) {
+            picklistOpts[field.id] = field.options
+          }
+        }
+        this.hsPicklistOpts = picklistOpts
+        console.log('this.hsPicklistOpts', this.hsPicklistOpts)
+      }, 1000)
     },
     cancelEditProduct() {
       this.dropdownProductVal = {}
@@ -2915,6 +2943,7 @@ export default {
     async getPricebookEntries(id) {
       try {
         this.loadingProducts = true
+        // change to CRMObjects
         const res = await SObjects.api.getObjects('PricebookEntry', 1, true, [
           ['EQUALS', 'Pricebook2Id', id],
         ])
@@ -2992,6 +3021,7 @@ export default {
       this.setUpdateValues(field, message)
     },
     changeCurrentRow(i, cell) {
+      console.log('hi', i, cell)
       this.currentInlineRow = i
       this.currentCell = cell
       this.dropdownVal = {}
@@ -3036,16 +3066,25 @@ export default {
       this.stageIntegrationId = integrationId
       this.dropdownLoading = true
       try {
-        const res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
+        let res
+        if (this.userCRM === 'SALESFORCE') {
+          res = await SObjects.api.getCurrentValues({
+            resourceType: 'Opportunity',
+            resourceId: id,
+          })
+        } 
+        this.currentVals = res ? res.current_values : {}
 
         const usersForCurrentOwner = this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+          (user) => {
+            if (user.salesforce_account_ref) {
+              return user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId']
+            } else if (user.hubspot_account_ref) {
+              return user.hubspot_account_ref.hubspot_id === this.currentVals['OwnerId']
+            }
+          }
         )
-        usersForCurrentOwner
+        usersForCurrentOwner.length
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
@@ -3074,6 +3113,7 @@ export default {
           value: eventVal ? eventVal : '',
           for_filter: filter ? [filter] : null,
         })
+        console.log('oh no', res)
         if (type === 'update') {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
@@ -3108,7 +3148,16 @@ export default {
       this.inlineLoader = true
       this.editingInline = false
       try {
-        const res = await SObjects.api.updateResource({
+        // const res = await SObjects.api.updateResource({
+        //   form_data: formData,
+        //   resource_type: 'Opportunity',
+        //   form_type: 'UPDATE',
+        //   resource_id: id,
+        //   integration_ids: [integrationId],
+        //   from_workflow: this.selectedWorkflow ? true : false,
+        //   workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
+        // })
+        const res = await CRMObjects.api.updateResource({
           form_data: formData,
           resource_type: 'Opportunity',
           form_type: 'UPDATE',
@@ -3129,6 +3178,7 @@ export default {
           if (this.selectedWorkflow) {
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
           }
+          console.log('storedFilters', this.storedFilters)
           if (this.storedFilters.length && !this.selectedWorkflow) {
             this.storedFilters[3].reversed
               ? this.sortOppsReverse(
@@ -3143,7 +3193,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -3297,10 +3347,22 @@ export default {
       this.activeFilters.push(this.currentFilter)
     },
     valueSelected(value, name) {
-      let users = this.allUsers.filter((user) => user.salesforce_account_ref)
+      let users = this.allUsers.filter((user) => {
+        if (user.salesforce_account_ref) {
+          return user.salesforce_account_ref
+        } else if (user.hubspot_account_ref) {
+          return user.hubspot_account_ref
+        }
+      })
       let user = null
       if (name === 'OwnerId') {
-        user = users.filter((user) => user.salesforce_account_ref.salesforce_id === value)
+        user = users.filter((user) => {
+          if (user.salesforce_account_ref) {
+            return user.salesforce_account_ref.salesforce_id === value
+          } else if (user.hubspot_account_ref) {
+            return user.hubspot_account_ref.hubspot_id === value
+          }
+        })
         this.filterValues.push(user[0].full_name)
       } else if (name === 'AccountId') {
         let account = this.allAccounts.filter((account) => account.id === value)
@@ -3582,68 +3644,6 @@ export default {
         }
       }
     },
-    // onCheckAllWorkflows() {
-    //   if (this.workflowCheckList.length < 1) {
-    //     for (let i = 0; i < this.filteredWorkflows.length; i++) {
-    //       this.workflowCheckList.push(this.filteredWorkflows[i].id)
-    //     }
-    //   } else if (
-    //     this.workflowCheckList.length > 0 &&
-    //     this.workflowCheckList.length < this.filteredWorkflows.length
-    //   ) {
-    //     for (let i = 0; i < this.filteredWorkflows.length; i++) {
-    //       !this.workflowCheckList.includes(this.filteredWorkflows[i].id)
-    //         ? this.workflowCheckList.push(this.filteredWorkflows[i].id)
-    //         : (this.workflowCheckList = this.workflowCheckList)
-    //     }
-    //   } else {
-    //     this.workflowCheckList = []
-    //   }
-    // },
-
-    // work here
-    async listPicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        this.$toast('Error gathering update picklist fields', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
-    },
-    async listStagePicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        this.$toast('Error gathering stage picklist fields', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
-    },
-    async listCreatePicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.createQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        this.$toast("Error gathering 'create' picklist fields", {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
-    },
     async updateWorkflow(id) {
       try {
         await AlertTemplate.api.runAlertTemplateNow(id, {
@@ -3711,17 +3711,27 @@ export default {
       this.dropdownProductVal = {}
       this.editingProduct = false
       try {
-        const res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-        this.currentProducts = res.current_products
+        let res
+        if (this.userCRM === 'SALESFORCE') {
+           res = await SObjects.api.getCurrentValues({
+            resourceType: 'Opportunity',
+            resourceId: id,
+          })
+        }
+        this.currentVals = res ? res.current_values : {}
+        this.currentProducts = res ? res.current_products : {}
 
         const usersForCurrentOwner = this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
+          (user) => {
+            if (user.salesforce_account_ref) {
+              return user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId']
+            } else if (user.hubspot_account_ref) {
+              return user.hubspot_account_ref.hubspot_id === this.currentVals['OwnerId']
+            }
+          }
         )
-        usersForCurrentOwner
+        console.log('usersForCurrentOwner', usersForCurrentOwner)
+        usersForCurrentOwner.length
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
@@ -3730,6 +3740,7 @@ export default {
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
 
+        console.log('down here?')
         // if (this.activeFilters.length) {
         //   this.getFilteredObjects()
         // }
@@ -3849,6 +3860,9 @@ export default {
       }
     },
     bulkUpdate() {
+      if (!this.selectedOpp || !this.oppVal || !this.oppNewValue) {
+        return
+      }
       if (this.selectedWorkflow) {
         this.onBulkUpdateWorkflow()
       } else {
@@ -4121,7 +4135,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4263,7 +4277,7 @@ export default {
           } else if (this.currentList === 'Closing next month') {
             this.stillNextMonth()
           }
-          this.$toast('Salesforce Update Successful', {
+          this.$toast(`${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -4275,7 +4289,7 @@ export default {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4303,7 +4317,8 @@ export default {
             ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
             : this.filters
         }
-        let updatedRes = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filter)
+        const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        let updatedRes = await SObjects.api.getObjectsForWorkflows(objectType, true, filter)
         this.allOpps = updatedRes.results
         this.originalList = updatedRes.results
         if (this.storedFilters.length) {
@@ -4318,7 +4333,7 @@ export default {
         this.$toast('Opportunity created successfully.', {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4326,7 +4341,7 @@ export default {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4416,13 +4431,13 @@ export default {
         if (this.createOppForm[i].dataType === 'Reference') {
           this.createReferenceOpts[this.createOppForm[i].apiName] = []
         }
-      }
 
-      if (this.hasProducts) {
-        for (let i = 0; i < this.createProductForm.length; i++) {
-          if (this.createProductForm[i].dataType === 'Reference') {
-            this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
-            this.productReferenceOpts[this.createProductForm[i].apiName] = []
+        if (this.hasProducts) {
+          for (let i = 0; i < this.createProductForm.length; i++) {
+            if (this.createProductForm[i].dataType === 'Reference') {
+              this.productRefCopy[this.createProductForm[i].apiName] = this.createProductForm[i]
+              this.productReferenceOpts[this.createProductForm[i].apiName] = []
+            }
           }
         }
       }
@@ -4467,6 +4482,8 @@ export default {
           )[0].id)
         : (this.accountSobjectId = null)
 
+      console.log('this.updateOppForm', this.updateOppForm)
+
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -4475,28 +4492,46 @@ export default {
           field.apiName !== 'AccountId' &&
           field.apiName !== 'OwnerId',
       )
+      console.log('sojme oppFields', this.oppFields)
     },
     async getAllForms() {
       this.loading = true
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
-        this.updateOppForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-        )
-        this.createOppForm = res
-          .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
-          .fieldsRef.filter(
-            (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+        let stageGateForms
+        if (this.userCRM === 'SALESFORCE') {
+          this.updateOppForm = res.filter(
+            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
           )
-
-        let stageGateForms = res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
-        )
-        this.createProductForm = res.filter(
-          (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )[0].fieldsRef
-
+          this.createOppForm = res
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+            .fieldsRef.filter(
+              (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+            )
+          stageGateForms = res.filter(
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+          )
+          this.createProductForm = res.filter(
+            (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+          )[0].fieldsRef
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.updateOppForm = res.filter(
+            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal',
+          )
+          this.createOppForm = res
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Deal')[0]
+            .fieldsRef.filter(
+              (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+            )
+          stageGateForms = res.filter(
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
+          )
+          // this.createProductForm = res.filter(
+          //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
+          // )[0].fieldsRef
+        }
+        
         if (stageGateForms.length) {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
@@ -4507,6 +4542,7 @@ export default {
           }
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
+        console.log('oppFormCopy', this.oppFormCopy)
         this.loading = false
       } catch (e) {
         console.log(e)
@@ -4592,6 +4628,7 @@ export default {
         })
         this.modalOpen = true
         if (res.length) {
+          this.notes = []
           for (let i = 0; i < res.length; i++) {
             this.notes.push(res[i])
             this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
@@ -4698,7 +4735,7 @@ export default {
     allOpportunities() {
       this.selectedWorkflow = false
       this.$store.dispatch('loadAllOpps')
-      this.currentList = 'All Opportunities'
+      this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
       this.showList = !this.showList
       this.closeFilterSelection()
     },
@@ -4981,6 +5018,22 @@ export default {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 2px;
   }
+  &__body::-webkit-scrollbar {
+    width: 2px; /* Mostly for vertical scrollbars */
+    height: 0px; /* Mostly for horizontal scrollbars */
+  }
+  &__body::-webkit-scrollbar-thumb {
+    background-color: $coral;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track {
+    box-shadow: inset 2px 2px 4px 0 $soft-gray;
+    border-radius: 0.3rem;
+  }
+  &__body::-webkit-scrollbar-track-piece {
+    margin-top: 0.25rem;
+  }
 }
 .basic-slide:focus,
 .basic-slide:active {
@@ -5080,11 +5133,6 @@ export default {
       height: 1rem;
       margin-right: 0.5rem;
       filter: invert(5%);
-    }
-
-    div {
-      display: flex;
-      align-items: center;
     }
   }
   &__body {
@@ -6232,4 +6280,104 @@ a {
   background: #fff;
   font-size: 14px;
 }
+// .results-2 {
+//   font-size: 11px;
+//   margin-right: 16px;
+//   color: $gray;
+// }
+// .note-templates {
+//   display: flex;
+//   justify-content: flex-end;
+//   font-size: 12px;
+//   padding: 12px 6px;
+//   margin-top: -34px;
+//   border: 1px solid $soft-gray;
+//   border-bottom-left-radius: 4px;
+//   border-bottom-right-radius: 4px;
+//   cursor: pointer;
+//   width: 40.25vw;
+
+//   &__content {
+//     display: flex;
+//     flex-direction: row;
+//     align-items: center;
+//   }
+//   img {
+//     filter: invert(50%);
+//     height: 12px;
+//   }
+//   &__content:hover {
+//     opacity: 0.6;
+//   }
+// }
+
+// .note-templates2 {
+//   display: flex;
+//   flex-direction: row;
+//   align-items: center;
+//   justify-content: flex-start;
+//   flex-wrap: wrap;
+//   gap: 24px;
+//   font-size: 12px;
+//   padding: 12px 6px;
+//   margin-top: -34px;
+//   border: 1px solid $soft-gray;
+//   border-bottom-left-radius: 4px;
+//   border-bottom-right-radius: 4px;
+//   width: 40.25vw;
+//   height: 80px;
+//   overflow: scroll;
+
+//   &__content {
+//     border-radius: 4px;
+//     border: 0.5px solid $base-gray;
+//     color: $base-gray;
+//     padding: 8px 6px;
+//     margin-bottom: 8px;
+//     cursor: pointer;
+//   }
+//   &__content:hover {
+//     opacity: 0.6;
+//   }
+// }
+// .close-template {
+//   position: absolute;
+//   bottom: 56px;
+//   right: 20px;
+//   z-index: 3;
+//   cursor: pointer;
+//   background-color: black;
+//   border-radius: 3px;
+//   opacity: 0.6;
+//   img {
+//     filter: invert(99%);
+//   }
+// }
+// .label {
+//   display: inline-block;
+//   padding: 6px;
+//   font-size: 14px;
+//   text-align: center;
+//   min-width: 80px;
+//   margin-top: 12px;
+//   background-color: $white-green;
+//   color: $dark-green;
+//   font-weight: bold;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+// }
+// .red-label {
+//   background-color: #fa646a;
+//   color: white;
+//   display: inline-block;
+//   padding: 6px;
+//   font-size: 14px;
+//   text-align: center;
+//   min-width: 80px;
+//   margin-top: 12px;
+//   margin-left: 2px;
+//   font-weight: bold;
+//   border-top-left-radius: 4px;
+//   border-top-right-radius: 4px;
+// }
 </style>

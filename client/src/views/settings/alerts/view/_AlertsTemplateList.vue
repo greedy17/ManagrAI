@@ -47,21 +47,36 @@
           </button>
         </div>
 
-        <section
-          class="workflow__modal__body"
-          :key="i"
-          v-for="(opp, i) in activeWorkflow.sobjectInstances"
-        >
-          <div class="title">
-            <div>
-              <h4>
-                {{ opp.Name }}
-              </h4>
-              <p>Stage: {{ opp.StageName }}</p>
-              <p>Close Date: {{ opp.CloseDate }}</p>
+        <div v-if="activeWorkflow.sobjectInstances && activeWorkflow.sobjectInstances.length">
+          <section
+            class="workflow__modal__body"
+            :key="opp.id"
+            v-for="opp in activeWorkflow.sobjectInstances"
+          >
+            <div class="title">
+              <div>
+                <h4>
+                  {{ opp.Name }}
+                </h4>
+                <p>Stage: {{ opp.StageName }}</p>
+                <p>Close Date: {{ opp.CloseDate }}</p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
+        <div v-else>
+          <section
+            class="workflow__modal__body"
+          >
+            <div class="title">
+              <div>
+                <h4>
+                  No Results
+                </h4>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </Modal>
 
@@ -81,11 +96,11 @@
             Open in Meetings
           </button>
         </div>
-        <div class="workflow__modal__body" v-for="(meeting, i) in meetings" :key="i">
+        <div class="workflow__modal__body" v-for="meeting in meetings" :key="meeting.id">
           <div class="title">
             <div>
               <h4>{{ meeting.meeting_ref.topic ? meeting.meeting_ref.topic : 'Meeting' }}</h4>
-              <p>Participants: {{ meeting.meeting_ref.participants.length }}</p>
+              <p>Participants: {{ meeting.meeting_ref.participants && meething.meeting_ref.participants.length }}</p>
               <p>
                 {{
                   meeting.meeting_ref.start_time
@@ -104,7 +119,50 @@
       </transition> -->
 
       <div v-if="editing" class="alert_cards">
-        <div :key="i" v-for="(alert, i) in leaderTemplatesFirst" class="card">
+        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
+            </div>
+
+            <div>
+              <p class="gray">Meeting Template</p>
+              <h4>Log Meeting</h4>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
+            <p style="height: 32px"></p>
+          </div>
+          <div class="added-collection__footer">
+            <div class="row__">
+              <button @click="goToLogZoom" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div>
+        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
+          <div class="added-collection__header">
+            <div id="gray">
+              <img src="@/assets/images/logo.png" height="28px" alt="" />
+            </div>
+
+            <div>
+              <p class="gray">Meeting Template</p>
+              <h4>Meeting Recaps</h4>
+            </div>
+          </div>
+
+          <div class="added-collection__body">
+            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
+            <p style="height: 32px"></p>
+          </div>
+          <div class="added-collection__footer">
+            <button @click="goToRecap" class="white_button">Activate</button>
+          </div>
+        </div>
+
+        <div :key="alert.id" v-for="alert in leaderTemplatesFirst" class="card">
           <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -116,7 +174,7 @@
               </h4>
               <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
             </div>
-            <p class="card-text">Results: {{ alert.sobjectInstances.length }}</p>
+            <p class="card-text" @click="test(alert)">Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}</p>
 
             <div class="card__body__between">
               <div class="row__">
@@ -217,8 +275,8 @@
         </div>
 
         <div
-          v-for="(config, i) in allConfigs"
-          :key="i"
+          v-for="config in filteredConfigs"
+          :key="config.id"
           class="card"
           v-show="!templateTitles.includes(config.title)"
         >
@@ -361,6 +419,9 @@ export default {
     }
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)
     },
@@ -551,6 +612,18 @@ export default {
         ? this.$store.state.user.slackAccount.zoomChannel
         : null
     },
+    filteredConfigs() {
+      let filtered = []
+      for (let key in this.allConfigs) {
+        if (this.allConfigs[key].crm === this.userCRM) {
+          filtered.push(this.allConfigs[key])
+        }
+      }
+      return filtered
+    },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     userLevel() {
       return this.$store.state.user.userLevel
     },
@@ -564,8 +637,10 @@ export default {
       const originalList = this.templates.list
       const leaders = []
       const own = []
-      for (let i = 0; i < originalList.length; i++) {
-        this.user.id !== originalList[i].user ? leaders.push(originalList[i]) : own.push(originalList[i])
+      if (originalList) {
+        for (let i = 0; i < originalList.length; i++) {
+          this.user.id !== originalList[i].user ? leaders.push(originalList[i]) : own.push(originalList[i])
+        }
       }
       return [...leaders, ...own]
     },

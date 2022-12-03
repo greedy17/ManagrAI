@@ -147,7 +147,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
 
   async getObjectsForWorkflows(sobject, for_filter = false, filters = false, resource_id = false,) {
-
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
       return res.data
@@ -168,6 +167,7 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async updateResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
+      console.log(res)
       return res.data
     } catch (e) {
       return apiErrorHandler({ apiName: 'Salesforce API' })(e)
@@ -356,7 +356,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/', {
         params: this.cls.toAPI(params),
-
       })
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {

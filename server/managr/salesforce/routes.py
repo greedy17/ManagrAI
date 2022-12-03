@@ -5,21 +5,23 @@ from managr.core import serializers as core_ser
 from managr.organization import serializers as org_ser
 from managr.opportunity import serializers as opp_ser
 from managr.salesforce import constants as sf_consts
+from managr.salesforce import serializers as sf_serializers
+from managr.crm import models as crm_models
 
 ACTION_CHOICE_RESOURCE = "ActionChoice"
 USER_RESOURCE = "User"
 routes = {
     sf_consts.RESOURCE_SYNC_ACCOUNT: {
-        "model": org_models.Account,
-        "serializer": org_ser.AccountSerializer,
+        "model": crm_models.BaseAccount,
+        "serializer": sf_serializers.AccountSerializer,
     },
     sf_consts.RESOURCE_SYNC_OPPORTUNITY: {
-        "model": opp_models.Opportunity,
-        "serializer": opp_ser.OpportunitySerializer,
+        "model": crm_models.BaseOpportunity,
+        "serializer": sf_serializers.OpportunitySerializer,
     },
     sf_consts.RESOURCE_SYNC_CONTACT: {
-        "model": org_models.Contact,
-        "serializer": org_ser.ContactSerializer,
+        "model": crm_models.BaseContact,
+        "serializer": sf_serializers.ContactSerializer,
     },
     sf_consts.RESOURCE_SYNC_LEAD: {"model": opp_models.Lead, "serializer": opp_ser.LeadSerializer,},
     ACTION_CHOICE_RESOURCE: {

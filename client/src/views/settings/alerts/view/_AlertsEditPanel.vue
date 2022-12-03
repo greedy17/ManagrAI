@@ -188,7 +188,7 @@ import AlertTemplate, {
   AlertOperandForm,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
-import { SObjectField } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
 const TABS = [
   { key: 'TEMPLATE', label: 'Workflow Title' },
@@ -233,13 +233,20 @@ export default {
         'Required Field Empty',
         'Large Opportunities',
       ],
-      fields: CollectionManager.create({
-        ModelClass: SObjectField,
+      // fields: CollectionManager.create({
+      //   ModelClass: ObjectField,
+      //   filters: {
+      //     // forAlerts: true,
+      //     // filterable: true,
+      //     page: 1,
+      //     crmObject: alert.resourceType,
+      //   },
+      //   pagination: { size: 1000 },
+      // }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
         filters: {
-          forAlerts: true,
-          filterable: true,
-          page: 1,
-          salesforceObject: alert.resourceType,
+          crmObject: this.alert.resourceType
         },
         pagination: { size: 1000 },
       }),

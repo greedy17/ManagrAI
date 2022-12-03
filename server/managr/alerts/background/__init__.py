@@ -34,8 +34,9 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
     CannotSendToChannel,
 )
-from managr.salesforce.routes import routes as model_routes
-from managr.salesforce.adapter.exceptions import (
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
@@ -47,6 +48,8 @@ from ..models import AlertTemplate, AlertInstance, AlertConfig
 from managr.core.models import User
 
 logger = logging.getLogger("managr")
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
 
 def emit_init_alert(config_id, invocation):
@@ -81,23 +84,24 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
     config = AlertConfig.objects.filter(id=config_id).first()
     template = config.template
     user_list = config.target_users
-    owners_list = [user.salesforce_account.salesforce_id for user in user_list]
+    owners_list = [user.crm_account.crm_id for user in user_list]
     alert_id = str(template.id)
     resource = template.resource_type
-    route = model_routes[resource]
-    model_class = route["model"]
     template_user = template.user
+    route = CRM_SWITCHER[template_user.crm][resource]
+    model_class = route["model"]
+
     user = template.get_users.filter(id=user_id).first()
     attempts = 1
     while True:
-        sf = template_user.salesforce_account
+        crm = template_user.crm_account
         url = (
             template.manager_url_str(owners_list, config_id)
             if len(user_list) > 1
             else template.url_str(user, config_id)
         )
         try:
-            res = sf.adapter_class.execute_alert_query(url, template.resource_type)
+            res = crm.adapter_class.execute_alert_query(url, template.resource_type)
             logger.info(f"Pulled total {len(res)} from request for {resource} matching alert query")
             break
         except TokenExpired:
@@ -106,7 +110,7 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
                     f"Failed to retrieve alerts for {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
-                sf.regenerate_token()
+                crm.regenerate_token()
                 attempts += 1
         except SFQueryOffsetError:
             return logger.warning(

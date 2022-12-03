@@ -1,11 +1,11 @@
 import functools
 import logging
 
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
-    UnhandledSalesforceError,
+    UnhandledCRMError,
     SFNotFoundError,
     InvalidRefreshToken,
     InvalidFieldError,
@@ -89,7 +89,7 @@ def sf_api_exceptions_wf(error_key):
                     )
                 w.failed_task_description.append(f"{operation_key} {str(e)}")
                 w.save()
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 from managr.salesforce.models import MeetingWorkflow
 
                 operation_key = f"Failed to {snake_to_space(error_key)}"
@@ -167,7 +167,7 @@ def sf_api_exceptions(rethrow=False):
                 if rethrow:
                     raise e
 
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 LOGGER.exception(f"{e}")
                 if rethrow:
                     raise e

@@ -3,12 +3,13 @@
     <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
       <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
       <ToggleCheckBox
+        v-if="userCRM !== 'HUBSPOT'"
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
+      <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
       <!-- <small @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
@@ -233,7 +234,8 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import {
   ALERT_DATA_TYPE_MAP,
   INPUT_TYPE_MAP,
@@ -268,8 +270,8 @@ export default {
       selectedOperator: '',
       selectedOperand: '',
       objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 300 },
+        ModelClass: ObjectField,
+        pagination: { size: 1000 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
@@ -448,7 +450,7 @@ export default {
           ...this.objectFields.filters,
           forAlerts: true,
           filterable: true,
-          salesforceObject: val,
+          crmObject: val,
         }
         this.objectFields.refresh()
       },
@@ -457,11 +459,14 @@ export default {
   async created() {
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      salesforceObject: this.resourceType,
+      crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     getInputType(type) {
       if (type && INPUT_TYPE_MAP[type.dataType]) {
         return INPUT_TYPE_MAP[type.dataType]
@@ -486,9 +491,16 @@ export default {
     },
     async listPicklists(query_params = {}) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.picklistOpts = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          console.log('objectFields', this.objectFields.list)
+          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          console.log('hsPicklist', hsPicklist)
+          this.picklistOpts = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.picklistOpts = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         console.log(e)
       }
@@ -505,6 +517,9 @@ export default {
     },
   },
   computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     selectedFieldTypeRaw() {
       if (this.form.field._operandIdentifier.value) {
         return this.form.field._operandIdentifier.value.dataType

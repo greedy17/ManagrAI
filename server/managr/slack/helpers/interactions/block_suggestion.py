@@ -4,9 +4,11 @@ import json
 from django.db.models import Q
 from managr.slack import constants as slack_const
 from managr.salesforce import constants as sf_consts
+from managr.hubspot import constants as hs_consts
 from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
+from managr.hubspot.models import Deal, Company, HubspotContact
 from managr.organization.models import (
     Organization,
     Account,
@@ -17,9 +19,9 @@ from managr.organization.models import (
 from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
-from managr.salesforce.adapter.exceptions import TokenExpired, InvalidFieldError
-
+from managr.crm.exceptions import TokenExpired, InvalidFieldError
 from managr.salesloft.models import Cadence, People
+from managr.crm.models import BaseOpportunity, BaseAccount, BaseContact
 
 logger = logging.getLogger("managr")
 
@@ -101,13 +103,13 @@ def process_get_local_resource_options(payload, context):
     field_id = context.get("field_id")
     # conver type to make sure it follows {label:str|num, values:str|num}
     additional_opts = [UnformattedSlackOptions(opt).as_slack_option for opt in additional_opts]
-    if resource == sf_consts.RESOURCE_SYNC_ACCOUNT:
+    if resource in [sf_consts.RESOURCE_SYNC_ACCOUNT, hs_consts.RESOURCE_SYNC_COMPANY]:
         return {
             "options": [
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in Account.objects.for_user(user).filter(name__icontains=value)[:50]
+                    for l in BaseAccount.objects.for_user(user).filter(name__icontains=value)[:50]
                 ],
             ],
         }
@@ -122,27 +124,30 @@ def process_get_local_resource_options(payload, context):
                 ],
             ],
         }
-    elif resource == sf_consts.RESOURCE_SYNC_CONTACT:
+    elif resource in [sf_consts.RESOURCE_SYNC_CONTACT, hs_consts.RESOURCE_SYNC_CONTACT]:
         return {
             "options": [
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in Contact.objects.for_user(user).filter(Q(email__icontains=value))[:50]
+                    for l in BaseContact.objects.for_user(user).filter(Q(email__icontains=value))[
+                        :50
+                    ]
                 ],
             ],
         }
-    elif resource == sf_consts.RESOURCE_SYNC_OPPORTUNITY:
+    elif resource in [sf_consts.RESOURCE_SYNC_OPPORTUNITY, hs_consts.RESOURCE_SYNC_DEAL]:
         return {
             "options": [
                 *additional_opts,
                 *[
                     l.as_slack_option
-                    for l in Opportunity.objects.for_user(user).filter(name__icontains=value)[:50]
+                    for l in BaseOpportunity.objects.for_user(user).filter(name__icontains=value)[
+                        :50
+                    ]
                 ],
             ],
         }
-
     elif resource == slack_const.SLACK_ACTION_RESOURCE_ACTION_CHOICE:
         return {
             "options": [
@@ -200,7 +205,8 @@ def process_get_picklist_options(payload, context):
 
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-    field = user.salesforce_account.object_fields.filter(id=context.get("field")).first()
+
+    field = user.object_fields.filter(id=context.get("field")).first()
     options = field.get_slack_options
     if not len(options):
         logger.exception(f"No values found for picklist {field.api_name}")
@@ -221,10 +227,10 @@ def process_get_external_picklist_options(payload, context):
     # pass in limit for query
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
-    data = user.salesforce_account.get_individual_picklist_values(
+    data = user.crm_account.get_individual_picklist_values(
         context.get("resource"), field=context.get("field")
     )
-    options = data.values
+    options = data.values if user.crm == "SALESFORCE" else data.values()
     if not len(options):
         logger.exception(
             f"No values found for picklist {context.get('resource')} with field {context.get('field')}"
@@ -243,6 +249,17 @@ def process_get_external_picklist_options(payload, context):
         }
 
 
+@processor(required_context=["u", "resource_id"])
+def process_get_deal_stage_options(payload, context):
+    deal = Deal.objects.get(id=context.get("resource_id"))
+    user = User.objects.get(id=context.get("u"))
+    stages = deal.get_deal_stage_options(user.hubspot_account.access_token)
+
+    return {
+        "options": [block_builders.option(opt.get("label"), opt.get("value")) for opt in stages]
+    }
+
+
 @processor(required_context=["u", "relationship", "fields"])
 def process_get_external_relationship_options(payload, context):
     user = User.objects.get(pk=context["u"])
@@ -256,12 +273,10 @@ def process_get_external_relationship_options(payload, context):
         fields = ["FirstName", "LastName", "Name"]
     attempts = 1
     while True:
-        sf_account = user.salesforce_account
-        sf_adapter = sf_account.adapter_class
-        if resource == "OpportunityLineItem" and attempts == 1:
-            fields.append("CurrencyIsoCode")
+        crm_account = user.crm_account
+        crm_adapter = crm_account.adapter_class
         try:
-            res = sf_adapter.list_relationship_data(
+            res = crm_adapter.list_relationship_data(
                 relationship, fields, value, resource, add_fields=add_fields
             )
             break
@@ -271,7 +286,7 @@ def process_get_external_relationship_options(payload, context):
                     f"Failed to retrieve reference data for {relationship} data for user {str(user.id)} after {attempts} tries"
                 )
             else:
-                sf_account.regenerate_token()
+                crm_account.regenerate_token()
                 attempts += 1
         except InvalidFieldError as e:
             if attempts >= 5:
@@ -405,6 +420,7 @@ def handle_block_suggestion(payload):
         slack_const.COMMAND_FORMS__CONVERT_LEAD: process_get_sobject_list,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_get_local_resource_options,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
+        slack_const.GET_DEAL_STAGE_OPTIONS: process_get_deal_stage_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

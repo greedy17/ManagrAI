@@ -6,17 +6,18 @@ from django.utils import timezone
 from django.db.models import Q
 
 from managr.api.decorators import log_all_exceptions
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     FieldValidationError,
     RequiredFieldError,
     TokenExpired,
-    UnhandledSalesforceError,
+    UnhandledCRMError,
     SFNotFoundError,
 )
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry, Account
+from managr.crm.routes import adapter_routes as crm_routes
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.background import emit_create_calendar_event
 from managr.outreach.tasks import emit_add_sequence_state
@@ -37,6 +38,8 @@ from managr.slack.helpers.utils import (
     send_loading_screen,
     get_crm_value,
 )
+from managr.crm.models import BaseOpportunity
+from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
@@ -66,6 +69,12 @@ from managr.slack.helpers.exceptions import (
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 from managr.salesforce.adapter.models import PricebookEntryAdapter
+from managr.hubspot.tasks import (
+    _process_create_new_hs_resource,
+    emit_add_update_to_hs,
+    emit_process_slack_hs_bulk_update,
+)
+from managr.crm.utils import CRM_SWITCHER
 
 logger = logging.getLogger("managr")
 
@@ -78,6 +87,20 @@ def swap_public_fields(state):
         state["meeting_type"] = state["meeting_title"]
         state.pop("meeting_title")
     return state
+
+
+def background_create_resource(crm):
+    if crm == "SALESFORCE":
+        return _process_create_new_resource
+    else:
+        return _process_create_new_hs_resource
+
+
+def BULK_UPDATE_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_process_slack_bulk_update
+    else:
+        return emit_process_slack_hs_bulk_update
 
 
 @log_all_exceptions
@@ -166,8 +189,9 @@ def process_zoom_meeting_data(payload, context):
     state = swap_public_fields(view["state"]["values"])
     task_type = private_metadata.get("task_type", None)
     if not task_type:
+        task_name = "managr_task_type"
         task_selection = [
-            value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+            value.get("selected_option") for value in state.get(task_name, {}).values()
         ][0]
         task_type = task_selection.get("value") if task_selection is not None else None
     # if we had a next page the form data for the review was already saved
@@ -183,7 +207,6 @@ def process_zoom_meeting_data(payload, context):
         current_form_ids.append(str(form.id))
         form.save_form(state)
     contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-
     ops = [
         # update
         f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}",
@@ -200,16 +223,16 @@ def process_zoom_meeting_data(payload, context):
             ops.append(
                 f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
             )
-
     # emit all events
     if len(workflow.operations_list):
         workflow.operations_list = [*workflow.operations_list, *ops]
     else:
         workflow.operations_list = ops
-
+    workflow.operations_list = ops
     ts, channel = workflow.slack_interaction.split("|")
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+        *get_block_set("loading", {"message": f":rocket: We are saving your data to {crm}..."}),
     ]
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
@@ -361,19 +384,11 @@ def process_submit_resource_data(payload, context):
 
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-    stage_forms = current_forms.filter(
-        template__form_type="STAGE_GATING", template__custom_object__isnull=True
-    )
-    custom_object_forms = current_forms.filter(template__custom_object__isnull=False)
+    stage_forms = current_forms.filter(template__form_type="STAGE_GATING")
     stage_form_data_collector = {}
     for form in stage_forms:
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-
-    custom_object_data_collector = {}
-    for custom_form in custom_object_forms:
-        custom_form.save_form(state)
-        custom_object_data_collector = {**custom_object_data_collector, **custom_form.saved_data}
 
     if not len(stage_forms):
         main_form.save_form(state)
@@ -385,23 +400,17 @@ def process_submit_resource_data(payload, context):
 
     attempts = 1
     while True:
-        sf = user.salesforce_account
+        crm = user.crm_account
         try:
             if main_form.template.form_type == "UPDATE":
-                main_form.resource_object.update_in_salesforce(all_form_data)
+                main_form.resource_object.update(all_form_data)
                 resource = main_form.resource_object
-                if len(custom_object_forms):
-                    sf.create_custom_object(
-                        custom_object_data_collector,
-                        sf.access_token,
-                        sf.instance_url,
-                        sf.salesforce_id,
-                        custom_object_forms.first().template.custom_object,
-                    )
                 break
             else:
-                resource = _process_create_new_resource.now(current_form_ids)
-                new_resource = model_routes[main_form.template.resource]["model"].objects.get(
+                create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
+                resource_func = background_create_resource(user.crm)
+                resource = resource_func.now(current_form_ids)
+                new_resource = create_route[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )
 
@@ -428,7 +437,7 @@ def process_submit_resource_data(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -462,7 +471,7 @@ def process_submit_resource_data(payload, context):
                 )
                 break
             else:
-                sf.regenerate_token()
+                crm.regenerate_token()
                 attempts += 1
 
         except ConnectionResetError:
@@ -482,20 +491,15 @@ def process_submit_resource_data(payload, context):
                 time.sleep(2)
                 attempts += 1
         except Exception as e:
-            if attempts >= 5:
-                logger.exception(
-                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
-                )
-                has_error = True
-                blocks = get_block_set(
-                    "error_modal",
-                    {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
-                )
-                break
-            else:
-                time.sleep(2)
-                attempts += 1
-
+            logger.exception(
+                f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
+            )
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
+            )
+            break
     if has_error:
         form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
         # if not len(stage_forms):
@@ -573,17 +577,20 @@ def process_submit_resource_data(payload, context):
         # update the channel message to clear it
         if main_form.template.form_type == "CREATE":
             text = f"Managr created {main_form.resource_type}"
-            message = f"Successfully created *{main_form.resource_type}* _{resource.name if resource.name else resource.email}_"
+            message = f"Successfully created *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
         else:
             text = f"Managr updated {main_form.resource_type}"
-            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{main_form.resource_object.name}_"
+            message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
         if len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(current_form_ids)
         if (
             all_form_data.get("meeting_comments") is not None
             and all_form_data.get("meeting_type") is not None
         ):
-            emit_add_update_to_sf(str(main_form.id))
+            if user.crm == "SALESFORCE":
+                emit_add_update_to_sf(str(main_form.id))
+            else:
+                emit_add_update_to_hs(str(main_form.id))
         current_forms.update(
             is_submitted=True, update_source="command", submission_date=timezone.now()
         )
@@ -878,7 +885,8 @@ def process_update_meeting_contact(payload, context):
     form.save_form(state)
     user_id = workflow.user.id if type else workflow.user_id
     # reconstruct the current data with the updated data
-    adapter = ContactAdapter.from_api(
+    adapter_class = crm_routes[workflow.user.crm]["Contact"]
+    adapter = adapter_class.from_api(
         {**contact.get("secondary_data", {}), **form.saved_data}, str(user_id)
     )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1135,7 +1143,7 @@ def process_create_task(payload, context):
             },
         }
 
-    except UnhandledSalesforceError as e:
+    except UnhandledCRMError as e:
 
         return {
             "response_action": "push",
@@ -1268,7 +1276,7 @@ def process_create_event(payload, context):
             },
         }
 
-    except UnhandledSalesforceError as e:
+    except UnhandledCRMError as e:
 
         return {
             "response_action": "push",
@@ -1748,7 +1756,7 @@ def process_update_product(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -1901,7 +1909,7 @@ def process_submit_product(payload, context):
     while True:
         sf = user.salesforce_account
         try:
-            opp = Opportunity.objects.get(id=main_form.resource_id)
+            opp = BaseOpportunity.objects.get(id=main_form.resource_id)
             try:
                 entry = PricebookEntry.objects.get(
                     integration_id=product_form.saved_data["PricebookEntryId"]
@@ -1951,7 +1959,7 @@ def process_submit_product(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -2076,7 +2084,8 @@ def process_submit_product(payload, context):
         )
     )
     try:
-        index, block = block_finder("StageName", blocks)
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        index, block = block_finder(stage_name, blocks)
     except ValueError:
         # did not find the block
         block = None
@@ -2269,7 +2278,7 @@ def process_meeting_convert_lead(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -2479,7 +2488,7 @@ def process_convert_lead(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -2660,15 +2669,15 @@ def process_submit_alert_resource_data(payload, context):
     )
     attempts = 1
     while True:
-        sf = user.salesforce_account
+        crm = user.crm_account
         try:
-            resource = main_form.resource_object.update_in_salesforce(all_form_data)
+            resource = main_form.resource_object.update(all_form_data)
             if len(custom_object_forms):
-                sf.create_custom_object(
+                crm.create_custom_object(
                     custom_object_data_collector,
-                    sf.access_token,
-                    sf.instance_url,
-                    sf.salesforce_id,
+                    crm.access_token,
+                    crm.instance_url,
+                    crm.salesforce_id,
                     custom_object_forms.first().template.custom_object,
                 )
             data = {
@@ -2713,7 +2722,7 @@ def process_submit_alert_resource_data(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -2825,7 +2834,10 @@ def process_submit_alert_resource_data(payload, context):
         all_form_data.get("meeting_comments") is not None
         and all_form_data.get("meeting_type") is not None
     ):
-        emit_add_update_to_sf(str(main_form.id))
+        if user.crm == "SALESFORCE":
+            emit_add_update_to_sf(str(main_form.id))
+        else:
+            emit_add_update_to_hs(str(main_form.id))
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
@@ -2901,7 +2913,7 @@ def process_submit_digest_resource_data(payload, context):
                 },
             )
             break
-        except UnhandledSalesforceError as e:
+        except UnhandledCRMError as e:
             has_error = True
             blocks = get_block_set(
                 "error_modal",
@@ -3017,20 +3029,20 @@ def process_submit_bulk_update(payload, context):
     selected_resources = [
         option["value"] for option in state["RESOURCES"]["SELECTED_RESOURCES"]["selected_options"]
     ]
-    selected_field = state["CRM_FIELDS"][f"CHOOSE_CRM_FIELD?u={str(user.id)}"]["selected_option"][
-        "value"
-    ]
-    bulk_update_value = get_crm_value(state)
-    data = {selected_field: bulk_update_value}
     channel = pm.get("channel_id")
     ts = pm.get("message_ts")
     resource_type = context.get("resource_type")
-    emit_process_slack_bulk_update(
-        str(user.id), selected_resources, data, ts, channel, resource_type
+    BULK_UPDATE_FUNCTION(user.crm)(
+        str(user.id), selected_resources, state, ts, channel, resource_type
     )
 
     block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+        *get_block_set(
+            "loading",
+            {
+                "message": f":rocket: We are saving your data to {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}..."
+            },
+        ),
     ]
     try:
         res = slack_requests.update_channel_message(
@@ -3044,9 +3056,10 @@ def process_submit_bulk_update(payload, context):
 
 def create_summary_object(api_names, resources, resource_type):
     object = {}
-    if resource_type == "Opportunity":
+    if resource_type in ["Opportunity", "Deal"]:
         amounts = [(resource.amount if resource.amount else 0) for resource in resources]
-        object["Amount"] = round(sum(amounts), 2)
+        amount_api = "Amount" if resource_type == "Opportunity" else "amount"
+        object[amount_api] = round(sum(amounts), 2)
     for resource in resources:
         for api_name in api_names:
             value = resource.secondary_data[api_name]
@@ -3080,7 +3093,7 @@ def process_get_summary(payload, context):
     api_name_obj = {}
     for value in values:
         api_name_obj[value["value"]] = value["text"]["text"]
-    resources = model_routes[config.template.resource_type]["model"].objects.filter(
+    resources = CRM_SWITCHER[u.crm][config.template.resource_type]["model"].objects.filter(
         id__in=instances
     )
     summary_object = create_summary_object(value_list, resources, config.template.resource_type)
@@ -3095,8 +3108,11 @@ def process_get_summary(payload, context):
         summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['Amount'])}"
         blocks.insert(1, block_builders.simple_section(summary_amount, "mrkdwn"))
         summary_object.pop("Amount")
+    if config.template.resource_type == "Deal":
+        summary_amount = f"*Total Amount:* ${'{:,}'.format(summary_object['amount'])}"
+        blocks.insert(1, block_builders.simple_section(summary_amount, "mrkdwn"))
+        summary_object.pop("amount")
     summary_text = ""
-
     for field in summary_object.keys():
         summary_text += f"\n\n*{api_name_obj[field]}:*\n"
         for key in summary_object[field]:

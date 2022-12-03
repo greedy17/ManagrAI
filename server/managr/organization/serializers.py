@@ -1,11 +1,6 @@
-import json
-from rest_framework import serializers, status, filters, permissions
-from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework.response import Response
+from rest_framework import serializers
 
 from managr.organization.models import ActionChoice
-from managr.slack.serializers import OrganizationSlackIntegrationSerializer
-from managr.utils.numbers import validate_phone_number
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.opportunity.models import Opportunity
@@ -39,6 +34,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "number_of_allowed_users",
             "ignore_email_ref",
         )
+
+    def get_ignore_emails(self, instance):
+        return instance.ignore_emails
 
     def get_ignore_emails(self, instance):
         return instance.ignore_emails
@@ -104,7 +102,6 @@ class AccountSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "organization",
-            "parent_integration_id",
             "integration_id",
             "integration_source",
             "imported_by",
@@ -115,10 +112,6 @@ class AccountSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
         owner = data.get("external_owner", None)
-        parent = data.get("parent_integration_id", None)
-
-        if not data.get("parent_integration_id", None):
-            data.update({"parent_integration_id": ""})
         if not data.get("external_owner", None):
             data.update({"external_owner": ""})
 
@@ -130,12 +123,6 @@ class AccountSerializer(serializers.ModelSerializer):
             )
             user = sf_account.user.id if sf_account else sf_account
             data.update({"owner": user})
-        if parent:
-            acct = Account.objects.filter(
-                integration_id=parent, organization__users__id=imported_by
-            ).first()
-            acct = acct.id if acct else acct
-            data.update({"parent": acct})
         org = Organization.objects.get(users__id=imported_by)
         data.update({"organization": org.id})
         # remove contacts from validation

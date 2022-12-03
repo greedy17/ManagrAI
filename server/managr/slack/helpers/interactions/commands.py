@@ -43,7 +43,10 @@ def update_resource(context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
-                "title": {"type": "plain_text", "text": "Update Salesforce"},
+                "title": {
+                    "type": "plain_text",
+                    "text": f"Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",
+                },
                 "blocks": blocks,
                 # "submit": {"type": "plain_text", "text": "Update", "emoji": True},
                 "private_metadata": json.dumps(context),
@@ -60,6 +63,11 @@ def update_resource(context):
 def create_resource(context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
+    options = (
+        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS
+        if user.crm == "SALESFORCE"
+        else slack_const.MEETING_RESOURCE_HUBSPOT_ATTACHMENT_OPTIONS
+    )
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(slack_id=user.slack_integration.id).first()
         if not slack:
@@ -70,12 +78,7 @@ def create_resource(context):
         blocks = [
             block_builders.static_select(
                 "Create a new...",
-                [
-                    *map(
-                        lambda resource: block_builders.option(resource, resource),
-                        slack_const.MEETING_RESOURCE_ATTACHMENT_OPTIONS,
-                    )
-                ],
+                [*map(lambda resource: block_builders.option(resource, resource), options,)],
                 action_id=action_with_params(
                     slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM, [f"u={str(user.id)}"]
                 ),
@@ -285,10 +288,15 @@ def get_notes_command(context):
             return
     user = slack.user
     access_token = user.organization.slack_integration.access_token
+    options = (
+        ["Contact", "Opportunity", "Account", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Contact", "Deal", "Company"]
+    )
     block_context = {
         "u": str(user.id),
         "type": "command",
-        "options": "%".join(["Contact", "Opportunity", "Account", "Lead"]),
+        "options": "%".join(options),
         "action_id": "GET_NOTES",
     }
     blocks = get_block_set("pick_resource_modal_block_set", context=block_context)

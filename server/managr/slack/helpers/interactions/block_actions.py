@@ -51,8 +51,10 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
-from managr.salesforce.routes import routes
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
 
 
@@ -102,9 +104,10 @@ def process_meeting_review(payload, context):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
+    crm = "Salesforce" if workflow.user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(workflow.user.id),
         trigger_id,
@@ -366,8 +369,11 @@ def process_stage_selected(payload, context):
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
-        selected_value = action["selected_option"]["value"]
-
+        selected_value = (
+            action["selected_option"]["value"]
+            if user.crm == "SALESFORCE"
+            else action["selected_option"]["text"]["text"]
+        )
         # delete all existing stage forms
         workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).delete()
         stage_form = (
@@ -376,10 +382,13 @@ def process_stage_selected(payload, context):
             .first()
         )
         if stage_form:
+            resource = (
+                slack_const.FORM_RESOURCE_OPPORTUNITY
+                if user.crm == "SALESFORCE"
+                else slack_const.FORM_RESOURCE_DEAL
+            )
             workflow.add_form(
-                slack_const.FORM_RESOURCE_OPPORTUNITY,
-                slack_const.FORM_TYPE_STAGE_GATING,
-                stage=selected_value,
+                resource, slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value,
             )
         # gather and attach all forms
 
@@ -640,7 +649,8 @@ def process_meeting_selected_resource_option(payload, context):
             *get_block_set("create_modal_block_set", context,),
         ]
         try:
-            index, stage_block = block_finder("StageName", blocks)
+            stage_name = "StageName" if workflow.user.crm == "SALESFORCE" else "dealstage"
+            index, stage_block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             stage_block = None
@@ -984,7 +994,8 @@ def process_add_create_form(payload, context):
         }
         blocks = get_block_set("create_modal", context,)
         try:
-            index, block = block_finder("StageName", blocks)
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -1045,10 +1056,13 @@ def process_stage_selected_command_form(payload, context):
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
-        selected_value = action["selected_option"]["value"]
+        selected_value = (
+            action["selected_option"]["value"]
+            if user.crm == "SALESFORCE"
+            else action["selected_option"]["text"]["text"]
+        )
         # blockfinder returns a tuple of its index in the block and the object
         index, action_block = block_finder(action["block_id"], blocks)
-
         # find all stages previous to it
         stage_form = (
             org.custom_slack_forms.for_user(user)
@@ -1113,9 +1127,10 @@ def process_show_update_resource_form(payload, context):
     view_type = "update" if is_update else "open"
     view_id = is_update["id"] if is_update else None
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         view_type,
         str(user.id),
         trigger_id,
@@ -1136,9 +1151,9 @@ def process_show_update_resource_form(payload, context):
         slack_form = OrgCustomSlackFormInstance.objects.create(
             template=template, resource_id=resource_id, user=user,
         )
-
         if slack_form:
-            current_stage = slack_form.resource_object.secondary_data.get("StageName")
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+            current_stage = slack_form.resource_object.secondary_data.get(stage_name)
             stage_template = (
                 OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
                 if current_stage
@@ -1158,7 +1173,7 @@ def process_show_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -1436,7 +1451,6 @@ def process_resource_selected_for_task(payload, context):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
-
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -1621,7 +1635,8 @@ def process_return_to_form_modal(payload, context):
     )
     if main_form and not from_workflow:
         try:
-            index, stage_block = block_finder("StageName", form_blocks)
+            stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+            index, stage_block = block_finder(stage_name, form_blocks)
         except ValueError:
             # did not find the block
             stage_block = None
@@ -1798,7 +1813,7 @@ def process_get_notes(payload, context):
             f"GET_NOTES?u={u.id}&resource_type={resource_type}"
         ]["selected_option"]["value"]
     )
-    resource = routes[resource_type]["model"].objects.get(id=resource_id)
+    resource = CRM_SWITCHER[u.crm][resource_type]["model"].objects.get(id=resource_id)
     note_data = (
         OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
         .filter(is_submitted=True)
@@ -1811,7 +1826,9 @@ def process_get_notes(payload, context):
         )
     )
     note_blocks = [
-        block_builders.header_block(f"Notes for {resource.name}")
+        block_builders.header_block(
+            f"Notes for {resource.name if resource_type not in ['Lead', 'Contact'] else resource.email}"
+        )
         if note_data
         else block_builders.header_block(
             f"No notes for {resource.name}, start leaving notes! :smiley:"
@@ -2076,9 +2093,10 @@ def process_show_alert_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(user.id),
         trigger_id,
@@ -2104,7 +2122,8 @@ def process_show_alert_update_resource_form(payload, context):
             template=template, resource_id=resource_id, user=user, alert_instance_id=alert_instance,
         )
     if slack_form:
-        current_stage = slack_form.resource_object.secondary_data.get("StageName")
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        current_stage = slack_form.resource_object.secondary_data.get(stage_name)
         stage_template = (
             OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
             if current_stage
@@ -2123,7 +2142,7 @@ def process_show_alert_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -2334,7 +2353,7 @@ def process_show_bulk_update_form(payload, context):
             "resource_id", flat=True
         )
     )
-    model_object = routes[config.template.resource_type]["model"]
+    model_object = CRM_SWITCHER[user.crm][config.template.resource_type]["model"]
     resource_list = model_object.objects.filter(id__in=config_list)
     resource_options = [resource.as_slack_option for resource in resource_list]
     form = user.team.team_forms.filter(
@@ -2346,7 +2365,8 @@ def process_show_bulk_update_form(payload, context):
             "Fields",
             options=fields,
             action_id=action_with_params(
-                slack_const.CHOOSE_CRM_FIELD, params=[f"u={str(user.id)}",],
+                slack_const.CHOOSE_CRM_FIELD,
+                params=[f"u={str(user.id)}", f"resource_type={config.template.resource_type}"],
             ),
             block_id="CRM_FIELDS",
         ),
@@ -2390,7 +2410,9 @@ def process_select_crm_field(payload, context):
     action = payload["actions"][0]
     blocks = payload["view"]["blocks"]
     selected_value = action["selected_option"]["value"]
-    field = user.salesforce_account.object_fields.filter(api_name=selected_value).first()
+    field = user.object_fields.filter(
+        api_name=selected_value, crm_object=context.get("resource_type")
+    ).first()
     try:
         f_index, f_block = block_finder("CRM_FIELD", blocks)
     except ValueError:
@@ -2399,7 +2421,6 @@ def process_select_crm_field(payload, context):
         pass
     index, block = block_finder("CRM_FIELDS", blocks)
     slack_field = field.to_slack_field()
-    slack_field["block_id"] = "CRM_FIELD"
     if f_block:
         blocks = [*blocks[:f_index], slack_field, *blocks[f_index + 1 :]]
     else:
@@ -2433,21 +2454,28 @@ def process_get_summary_fields(payload, context):
     form = user.team.team_forms.filter(
         form_type="UPDATE", resource=config.template.resource_type
     ).first()
-    fields = form.fields.all().exclude(
+    fields = form.custom_fields.all().exclude(
         Q(data_type__in=["Reference", "String", "TextArea"]) | Q(api_name="Amount")
     )
-    fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
-    blocks = [
-        block_builders.multi_static_select(
-            "Fields to Summarize",
-            options=fields_options,
-            action_id=action_with_params(
-                slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+    if len(fields):
+        fields_options = [block_builders.option(field.label, field.api_name) for field in fields]
+        blocks = [
+            block_builders.multi_static_select(
+                "Fields to Summarize",
+                options=fields_options,
+                action_id=action_with_params(
+                    slack_const.CHOOSE_CRM_FIELDS, params=[f"u={str(user.id)}",],
+                ),
+                block_id="CRM_FIELDS",
             ),
-            block_id="CRM_FIELDS",
-        ),
-        block_builders.context_block("*Amount total will be auto calculated"),
-    ]
+            block_builders.context_block("*Amount total will be auto calculated"),
+        ]
+    else:
+        blocks = [
+            block_builders.simple_section(
+                "You do not have any fields on your form that allow summarization"
+            )
+        ]
     data = {
         **context,
         "message_ts": payload["container"]["message_ts"],
@@ -2461,11 +2489,15 @@ def process_get_summary_fields(payload, context):
             "title": {"type": "plain_text", "text": "Workflow Summary"},
             "blocks": blocks,
             "private_metadata": json.dumps(data),
-            "submit": {"type": "plain_text", "text": "Get Summary", "emoji": True},
             "callback_id": slack_const.GET_SUMMARY,
         },
     }
-
+    if len(fields):
+        loading_view_data["view"]["submit"] = {
+            "type": "plain_text",
+            "text": "Get Summary",
+            "emoji": True,
+        }
     slack_requests.generic_request(
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
         loading_view_data,
@@ -2606,9 +2638,10 @@ def process_show_digest_update_resource_form(payload, context):
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     loading_view_data = send_loading_screen(
         access_token,
-        "Salesforce is being a bit slow :sleeping:… please give it a few seconds",
+        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
         "open",
         str(user.id),
         trigger_id,
@@ -2634,7 +2667,8 @@ def process_show_digest_update_resource_form(payload, context):
         prep_instance.form = slack_form
         prep_instance.save()
     if slack_form:
-        current_stage = slack_form.resource_object.secondary_data.get("StageName")
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        current_stage = slack_form.resource_object.secondary_data.get(stage_name)
         stage_template = (
             OrgCustomSlackForm.objects.filter(stage=current_stage).first()
             if current_stage
@@ -2654,7 +2688,7 @@ def process_show_digest_update_resource_form(payload, context):
     )
     if slack_form:
         try:
-            index, block = block_finder("StageName", blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
             block = None
@@ -2926,9 +2960,11 @@ def process_view_recap(payload, context):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
         if form_fields:
-            form_fields = form_fields | form.template.formfield_set.filter(include_in_recap=True)
+            form_fields = form_fields | form.template.customformfield_set.filter(
+                include_in_recap=True
+            )
         else:
-            form_fields = form.template.formfield_set.filter(include_in_recap=True)
+            form_fields = form.template.customformfield_set.filter(include_in_recap=True)
     blocks = []
     message_string_for_recap = ""
     for key, new_value in new_data.items():

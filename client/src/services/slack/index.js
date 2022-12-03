@@ -1,7 +1,7 @@
 import Model, { fields } from '@thinknimble/tn-models'
 import { objectToCamelCase } from '@/services/utils'
 import SlackAPI from './api'
-import { SObjectField } from '../salesforce'
+import { ObjectField } from '../crm'
 
 export class SlackListResponse {
   constructor({ channels = [], responseMetadata = {} } = {}) {
@@ -52,14 +52,15 @@ export class CustomSlackForm extends Model {
   static formType = new fields.Field({})
   static resource = new fields.Field({})
   static stage = new fields.CharField({})
+  static fieldsRef = new fields.ModelField({ ModelClass: ObjectField, many: true })
+  static customFields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
   static customObject = new fields.CharField({})
-  static fieldsRef = new fields.ModelField({ ModelClass: SObjectField, many: true })
   static fields = new fields.ArrayField({ type: new fields.CharField(), defaultVal: [] })
   static organization = new fields.Field({})
 
   static fromAPI(obj) {
     // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG
-
+    // console.log('obj', obj)
     let _refFields = obj['fields_ref'].map(ref => {
       return { ...ref['field_ref'], order: ref['order'], includeInRecap: ref['include_in_recap'] }
     })
@@ -108,11 +109,17 @@ const LEAD = 'Lead'
 const PRODUCT2 = 'Product2'
 const OPPORTUNITYLINEITEM = "OpportunityLineItem"
 const STAGE_GATING = 'STAGE_GATING'
-const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT, LEAD, PRODUCT2, OPPORTUNITYLINEITEM]
+const DEAL = 'Deal'
+const COMPANY = 'Company'
+const HUBSPOTCONTACT = 'Contact'
+const FORM_RESOURCES = [OPPORTUNITY, ACCOUNT, CONTACT, LEAD, PRODUCT2, OPPORTUNITYLINEITEM, DEAL, COMPANY, HUBSPOTCONTACT]
 const FORM_TYPES = [MEETING_REVIEW, CREATE, UPDATE]
 const MEETING_REVIEW_REQUIRED_FIELDS = {
   [ACCOUNT]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
   [OPPORTUNITY]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
+  [DEAL]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
+  [COMPANY]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
+  [HUBSPOTCONTACT]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
   [LEAD]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
   [CONTACT]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
   [PRODUCT2]: ['6407b7a1-a877-44e2-979d-1effafec5035', '0bb152b5-aac1-4ee0-9c25-51ae98d55af1', 'e286d1d5-5447-47e6-ad55-5f54fdd2b00d', 'fae88a10-53cc-470e-86ec-32376c041893', 'fd4207a6-fec0-4f0b-9ce1-6aaec31d39ed'],
@@ -123,6 +130,9 @@ export {
   CREATE,
   UPDATE,
   OPPORTUNITY,
+  DEAL,
+  COMPANY,
+  HUBSPOTCONTACT,
   CONTACT,
   ACCOUNT,
   PRODUCT2,

@@ -13,6 +13,8 @@ from managr.autonomous import views as auto_views
 from managr.salesloft import views as salesloft_views
 from managr.gong import views as gong_views
 from managr.outreach import views as outreach_views
+from managr.hubspot import views as hubspot_views
+from managr.crm import views as crm_views
 
 # from . import views
 
@@ -45,27 +47,15 @@ urlpatterns = [
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
     ),
-    path(
-        "users/nylas/authenticate/",
-        core_views.email_auth_token,
-        name="get_email_auth_token",
-    ),
-    path(
-        "users/nylas/revoke/",
-        core_views.revoke_access_token,
-        name="revoke_email_auth",
-    ),
+    path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
+    path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
     path(
         "users/salesloft/re-direct",
         salesloft_views.redirect_from_salesloft,
         name="redirect-from-salesloft",
     ),
-    path(
-        "users/gongaccount/re-direct",
-        gong_views.redirect_from_gong,
-        name="redirect-from-gong",
-    ),
+    path("users/gongaccount/re-direct", gong_views.redirect_from_gong, name="redirect-from-gong",),
     path(
         "users/outreach/re-direct",
         outreach_views.redirect_from_outreach,
@@ -74,11 +64,7 @@ urlpatterns = [
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("task-status/", core_views.get_task_status, name="get-task-status"),
-    path(
-        "get-file/<str:file_id>/",
-        core_views.GetFileView.as_view(),
-        name="get_file_from_nylas",
-    ),
+    path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
         "nylas/callback/accounts",
         core_views.NylasAccountWebhook.as_view(),
@@ -89,15 +75,9 @@ urlpatterns = [
         zoom_views.get_zoom_authentication,
         name="get_zoom_authentication",
     ),
+    path("users/zoom/authorization", zoom_views.get_zoom_auth_link, name="get_zoom_auth_link",),
     path(
-        "users/zoom/authorization",
-        zoom_views.get_zoom_auth_link,
-        name="get_zoom_auth_link",
-    ),
-    path(
-        "users/zoom/revoke",
-        zoom_views.revoke_zoom_access_token,
-        name="revoke_zoom_access_token",
+        "users/zoom/revoke", zoom_views.revoke_zoom_access_token, name="revoke_zoom_access_token",
     ),
     path(
         "users/salesloft/authenticate",
@@ -120,9 +100,7 @@ urlpatterns = [
         name="get-gong-authentication",
     ),
     path(
-        "users/gongaccount/authorization",
-        gong_views.get_gong_auth_link,
-        name="get-gong-auth-link",
+        "users/gongaccount/authorization", gong_views.get_gong_auth_link, name="get-gong-auth-link",
     ),
     path(
         "users/gongaccount/revoke",
@@ -144,20 +122,10 @@ urlpatterns = [
         outreach_views.revoke_outreach_access_token,
         name="revoke-outreach-access_token",
     ),
+    path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
+    path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
     path(
-        "zoom/webhooks/deauthorize",
-        zoom_views.zoom_deauth_webhook,
-        name="zoom_deauth",
-    ),
-    path(
-        "zoom/webhooks/meetings",
-        zoom_views.zoom_meetings_webhook,
-        name="get_zoom_auth_link",
-    ),
-    path(
-        "zoom/webhooks/recordings",
-        zoom_views.zoom_recordings_webhook,
-        name="get_zoom_recording",
+        "zoom/webhooks/recordings", zoom_views.zoom_recordings_webhook, name="get_zoom_recording",
     ),
     path("zoom/fake-recording", zoom_views.fake_recording, name="fake-recording"),
     path("users/zoom/schedule-meeting", zoom_views.schedule_zoom_meeting, name="schedule-meeting"),
@@ -166,91 +134,47 @@ urlpatterns = [
         sf_views.salesforce_auth_link,
         name="salesforce-authorization",
     ),
+    path("users/salesforce/authenticate", sf_views.authenticate, name="salesforce-authentication",),
+    path("users/salesforce/revoke", sf_views.revoke, name="salesforce-revoke",),
     path(
-        "users/salesforce/authenticate",
-        sf_views.authenticate,
-        name="salesforce-authentication",
+        "users/hubspot/authorization/",
+        hubspot_views.get_hubspot_auth_link,
+        name="get-hubspot-auth-link",
     ),
     path(
-        "users/salesforce/revoke",
-        sf_views.revoke,
-        name="salesforce-revoke",
+        "users/hubspot/authenticate",
+        hubspot_views.get_hubspot_authentication,
+        name="get-hubspot-authentication",
     ),
     path(
-        "zoom/fake-meeting",
-        zoom_views.init_fake_meeting,
-        name="init-meeting",
+        "users/hubspot/re-direct",
+        hubspot_views.redirect_from_hubspot,
+        name="redirect-from-hubspot",
     ),
     path(
-        "slack/commands/create-task",
-        slack_views.create_task,
-        name="create-task",
+        "users/hubspot/revoke",
+        hubspot_views.revoke_hubspot_access_token,
+        name="revoke-hubspot-access-token",
     ),
-    path(
-        "slack/commands/add-to-cadence",
-        slack_views.add_to_cadence,
-        name="add-to-cadence",
-    ),
+    path("zoom/fake-meeting", zoom_views.init_fake_meeting, name="init-meeting",),
+    path("slack/commands/create-task", slack_views.create_task, name="create-task",),
+    path("slack/commands/add-to-cadence", slack_views.add_to_cadence, name="add-to-cadence",),
     path(
         "slack/commands/schedule-meeting",
         slack_views.schedule_meeting_command,
         name="schedule-meeting",
     ),
-    path(
-        "slack/commands/notes",
-        slack_views.get_notes_command,
-        name="get-notes",
-    ),
-    path(
-        "slack/commands/actions",
-        slack_views.launch_action,
-        name="launch-action",
-    ),
-    path(
-        "slack/commands/digest",
-        slack_views.launch_digest,
-        name="launch-digest",
-    ),
-    path(
-        "slack/commands/create-resource",
-        slack_views.create_resource,
-        name="create-resource",
-    ),
-    path(
-        "slack/webhooks/events",
-        slack_views.slack_events,
-        name="slack-events",
-    ),
-    path(
-        "slack/commands/update-resource",
-        slack_views.update_resource,
-        name="update-resource",
-    ),
-    path(
-        "slack/commands/list-tasks",
-        slack_views.list_tasks,
-        name="list-tasks",
-    ),
-    path(
-        "auto/clear-stale-data",
-        auto_views.init_clear_stale_data,
-        name="clear-stale-data",
-    ),
-    path(
-        "auto/sync-resources",
-        auto_views.init_resource_sync,
-        name="resource-sync",
-    ),
-    path(
-        "auto/sync-fields",
-        auto_views.init_object_field_sync,
-        name="object-field-sync",
-    ),
-    path(
-        "auto/trigger-alerts",
-        auto_views.init_trigger_alerts,
-        name="trigger-alerts",
-    ),
+    path("slack/commands/notes", slack_views.get_notes_command, name="get-notes",),
+    path("slack/commands/actions", slack_views.launch_action, name="launch-action",),
+    path("slack/commands/digest", slack_views.launch_digest, name="launch-digest",),
+    path("slack/commands/create-resource", slack_views.create_resource, name="create-resource",),
+    path("slack/webhooks/events", slack_views.slack_events, name="slack-events",),
+    path("slack/commands/update-resource", slack_views.update_resource, name="update-resource",),
+    path("slack/commands/list-tasks", slack_views.list_tasks, name="list-tasks",),
+    path("auto/clear-stale-data", auto_views.init_clear_stale_data, name="clear-stale-data",),
+    path("auto/sync-resources", auto_views.init_resource_sync, name="resource-sync",),
+    path("auto/sync-fields", auto_views.init_object_field_sync, name="object-field-sync",),
+    path("auto/trigger-alerts", auto_views.init_trigger_alerts, name="trigger-alerts",),
 ]
 
 
@@ -261,6 +185,8 @@ router.register("organizations", organization_views.OrganizationViewSet, "organi
 router.register("accounts", organization_views.AccountViewSet, "accounts")
 router.register("contacts", organization_views.ContactViewSet, "contacts")
 router.register("action-choices", organization_views.ActionChoiceViewSet, "action-choices")
+router.register("crm-objects", crm_views.CRMObjectViewSet, "crm-objects")
+router.register("crm/fields", crm_views.ObjectFieldViewSet, "crm-fields")
 router.register("organization/teams", organization_views.TeamViewSet, "organization-teams")
 router.register("salesforce/fields", sf_views.SObjectFieldViewSet, "salesforce-fields")
 router.register("salesforce/sobject", sf_views.SalesforceSObjectViewSet, "salesforce-sobject")

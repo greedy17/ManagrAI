@@ -175,4 +175,10 @@ export default {
   font-weight: 400;
   font-size: 12px;
 }
+.yellow {
+  color: $yellow !important;
+  background-color: #fdf7e6;
+  border-radius: 6px;
+  padding: 5px 1px;
+}
 </style>

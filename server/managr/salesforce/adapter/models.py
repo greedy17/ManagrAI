@@ -23,29 +23,45 @@ logger = logging.getLogger("managr")
 
 class SObjectFieldAdapter:
     def __init__(self, data):
+        self.user = data.get("user", None)
+        self.crm_object = data.get("crm_object", None)
         self.api_name = data.get("api_name", None)
-        self.custom = data.get("custom", None)
-        self.createable = data.get("createable", None)
+        self.label = data.get("label", None)
         self.data_type = data.get("data_type", None)
-        self.label = data.get("label", "")
-        self.length = data.get("length", 0)
+        self.display_value = data.get("display_value", "")
+        self.options = data.get("options", [])
+        self.createable = data.get("createable", True)
         self.reference = data.get("reference", None)
         self.reference_to_infos = data.get("reference_to_infos", [])
         self.relationship_name = data.get("relationship_name", None)
-        self.updateable = data.get("updateable", None)
-        self.required = data.get("required", None)
-        self.unique = data.get("unique", None)
-        self.value = data.get("value", None)
-        self.filterable = data.get("filterable", None)
-        self.display_value = data.get("display_value", "")
-        self.options = data.get("options", [])
+        self.updateable = data.get("updateable", True)
+        self.filterable = data.get("filterable", True)
         self.integration_source = data.get("integration_source", "")
         self.integration_id = data.get("integration_id", "")
-        self.salesforce_account = data.get("salesforce_account", None)
-        self.salesforce_object = data.get("salesforce_object", None)
         self.imported_by = data.get("imported_by", None)
-        self.allow_multiple = data.get("allow_multiple", None)
-        self.default_filters = data.get("default_filters", [])
+        # self.api_name = data.get("api_name", None)
+        # self.custom = data.get("custom", None)
+        # self.createable = data.get("createable", None)
+        # self.data_type = data.get("data_type", None)
+        # self.label = data.get("label", "")
+        # self.length = data.get("length", 0)
+        # self.reference = data.get("reference", None)
+        # self.reference_to_infos = data.get("reference_to_infos", [])
+        # self.relationship_name = data.get("relationship_name", None)
+        # self.updateable = data.get("updateable", None)
+        # self.required = data.get("required", None)
+        # self.unique = data.get("unique", None)
+        # self.value = data.get("value", None)
+        # self.filterable = data.get("filterable", None)
+        # self.display_value = data.get("display_value", "")
+        # self.options = data.get("options", [])
+        # self.integration_source = data.get("integration_source", "")
+        # self.integration_id = data.get("integration_id", "")
+        # self.salesforce_account = data.get("salesforce_account", None)
+        # self.salesforce_object = data.get("salesforce_object", None)
+        # self.imported_by = data.get("imported_by", None)
+        # self.allow_multiple = data.get("allow_multiple", None)
+        # self.default_filters = data.get("default_filters", [])
 
     @staticmethod
     def from_api(data):
@@ -101,6 +117,7 @@ class SObjectPicklistAdapter:
     def __init__(self, data):
         self.values = data.get("values", [])
         self.field = data.get("field", None)
+        self.object_field = data.get("field", None)
         self.picklist_for = data.get("picklist_for", "")
         self.salesforce_account = data.get("salesforce_account", None)
         self.integration_source = data.get("integration_source", "")
@@ -145,6 +162,12 @@ class SalesforceAuthAccountAdapter:
         )  # TODO: Obsolete ready for delete pb 04/19/21 - default_record_id
         self.default_record_ids = kwargs.get("default_record_ids", {})
         self.exclude_fields = kwargs.get("exclude_fields", {})
+
+    @property
+    def internal_user(self):
+        from managr.core.models import User
+
+        return User.objects.get(id=self.user)
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -255,11 +278,7 @@ class SalesforceAuthAccountAdapter:
             # in addition to the static ones above
             if exclude in fields.keys():
                 del fields[exclude]
-        custom_additions = dict(
-            salesforce_account=sf_account_id,
-            salesforce_object=res_data["apiName"],
-            imported_by=user_id,
-        )
+        custom_additions = dict(user=user_id, crm_object=res_data["apiName"], imported_by=user_id,)
 
         data = [
             SObjectFieldAdapter.create_from_api({**f, **custom_additions}) for f in fields.values()
@@ -367,7 +386,6 @@ class SalesforceAuthAccountAdapter:
                 url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
             )
             res = self._handle_response(res)
-
             return {
                 "fields": self.format_field_options(
                     str(self.id), str(self.user), resource, res_data=res
@@ -525,7 +543,9 @@ class SalesforceAuthAccountAdapter:
 
     def list_resource_data(self, resource, offset, *args, **kwargs):
         # add extra fields to query string
-        extra_items = self.object_fields.get(resource)
+        extra_items = self.internal_user.object_fields.filter(crm_object=resource).values_list(
+            "api_name", flat=True
+        )
         from .routes import routes
 
         add_filters = kwargs.get("filter", None)
@@ -693,8 +713,6 @@ class AccountAdapter:
         self.integration_source = kwargs.get("integration_source", None)
         self.name = kwargs.get("name", None)
         self.organization = kwargs.get("organization", None)
-        self.parent = kwargs.get("parent", None)
-        self.parent_integration_id = kwargs.get("parent_integration_id", None)
         self.owner = kwargs.get("owner", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.imported_by = kwargs.get("imported_by", None)
@@ -763,7 +781,7 @@ class AccountAdapter:
         return vars(self)
 
     @staticmethod
-    def update_account(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
         )
@@ -908,12 +926,12 @@ class ContactAdapter:
             return r
 
     @staticmethod
-    def update_contact(data, access_token, custom_base, integration_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
         )
         url = sf_consts.SALESFORCE_WRITE_URI(
-            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, integration_id
+            custom_base, sf_consts.RESOURCE_SYNC_CONTACT, salesforce_id
         )
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Client as client:
@@ -1036,7 +1054,7 @@ class LeadAdapter:
             return r
 
     @staticmethod
-    def update_lead(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
         )
@@ -1115,8 +1133,6 @@ class OpportunityAdapter:
         self.close_date = kwargs.get("close_date", None)
         self.forecast_category = kwargs.get("forecast_category", None)
         self.owner = kwargs.get("owner", None)
-        self.last_stage_update = kwargs.get("last_stage_update", None)
-        self.last_activity_date = kwargs.get("last_activity_date", None)
         self.external_owner = kwargs.get("external_owner", None)
         self.external_account = kwargs.get("external_account", None)
         self.imported_by = kwargs.get("imported_by", None)
@@ -1136,7 +1152,6 @@ class OpportunityAdapter:
         owner="OwnerId",  # overwritten (ignored in reverse)
         external_account="AccountId",
         external_owner="OwnerId",
-        last_activity_date="LastActivityDate",
     )
 
     @staticmethod
@@ -1223,7 +1238,7 @@ class OpportunityAdapter:
         return formatted_data
 
     @staticmethod
-    def update_opportunity(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, salesforce_id, object_fields, custom_base):
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )
@@ -1709,7 +1724,7 @@ class OpportunityLineItemAdapter:
             return r
 
     @staticmethod
-    def update_opportunitylineitem(data, access_token, custom_base, salesforce_id, object_fields):
+    def update(data, access_token, custom_base, salesforce_id, object_fields):
         if "PricebookEntryId" in data.keys():
             data.pop("PricebookEntryId")
         json_data = json.dumps(

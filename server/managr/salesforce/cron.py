@@ -38,7 +38,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,

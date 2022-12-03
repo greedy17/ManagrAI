@@ -29,12 +29,13 @@ from managr.slack.helpers import block_builders
 from managr.organization.models import Contact, Account
 from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.adapter.models import ContactAdapter
+from managr.hubspot.adapter.models import HubspotContactAdapter
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.api import constants as api_consts
 from managr.api.decorators import LOGGER
-
+from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from ..models import ZoomAuthAccount
@@ -208,7 +209,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             for p in zoom_participants
             if not re.search(remove_users_with_these_domains_regex, p.get("user_email", ""))
         ]
-
         if not len(should_register_this_meeting):
             return
 
@@ -219,7 +219,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             ):
                 memo[p.get("user_email")] = len(participants)
                 participants.append(p)
-
         # If the user has their calendar connected through Nylas, find a
         # matching meeting and gather unique participant emails.
         calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
@@ -267,31 +266,36 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         if len(participants):
             # Reduce to set of unique participant emails
             participant_emails = set([p.get("user_email") for p in participants])
-
             meeting_contacts = []
 
             # find existing contacts
 
-            existing_contacts = Contact.objects.filter(
-                email__in=participant_emails, owner__organization__id=user.organization.id
+            existing_contacts = BaseContact.objects.filter(
+                email__in=participant_emails,
+                owner__organization__id=user.organization.id,
+                integration_source=user.crm,
             ).exclude(email=user.email)
             meeting_resource_data = dict(resource_id="", resource_type="")
-            opportunity = Opportunity.objects.filter(
+            opportunity = BaseOpportunity.objects.filter(
                 contacts__email__in=participant_emails, owner__id=user.id
             ).first()
             if opportunity:
                 meeting_resource_data["resource_id"] = str(opportunity.id)
-                meeting_resource_data["resource_type"] = "Opportunity"
+                meeting_resource_data["resource_type"] = (
+                    "Opportunity" if user.crm == "SALESFORCE" else "Deal"
+                )
                 existing_contacts = existing_contacts.filter(
                     opportunities__in=[str(opportunity.id)]
                 )
             else:
-                account = Account.objects.filter(
+                account = BaseAccount.objects.filter(
                     contacts__email__in=participant_emails, owner__id=user.id,
                 ).first()
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
-                    meeting_resource_data["resource_type"] = "Account"
+                    meeting_resource_data["resource_type"] = (
+                        "Account" if user.crm == "SALESFORCE" else "Company"
+                    )
                     existing_contacts = existing_contacts.filter(account=account.id)
                 else:
                     lead = Lead.objects.filter(
@@ -314,21 +318,29 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                         or participant["user_email"] == user.email
                     ):
                         del participants[index]
+            contact_adapter = ContactAdapter if user.crm == "SALESFORCE" else HubspotContactAdapter
+
             new_contacts = list(
                 filter(
                     lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
                     list(
                         map(
                             lambda participant: {
-                                **ContactAdapter(
+                                **contact_adapter(
                                     **dict(
                                         email=participant["user_email"],
                                         # these will only get stored if lastname and firstname are accessible from sf
-                                        external_owner=user.salesforce_account.salesforce_id,
+                                        external_owner=user.crm_account.crm_id,
                                         secondary_data={
-                                            "FirstName": _split_first_name(participant["name"]),
-                                            "LastName": _split_last_name(participant["name"]),
-                                            "Email": participant["user_email"],
+                                            f"{'FirstName' if user.crm == 'SALESFORCE' else 'FirstName'}": _split_first_name(
+                                                participant["name"]
+                                            ),
+                                            f"{'LastName' if user.crm == 'SALESFORCE' else 'firstname'}": _split_last_name(
+                                                participant["name"]
+                                            ),
+                                            f"{'Email' if user.crm == 'SALESFORCE' else 'email'}": participant[
+                                                "user_email"
+                                            ],
                                         },
                                     )
                                 ).as_dict,
@@ -338,7 +350,7 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     ),
                 )
             )
-
+            print(new_contacts)
             meeting_contacts = [
                 *new_contacts,
                 *meeting_contacts,

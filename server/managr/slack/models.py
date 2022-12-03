@@ -1,13 +1,17 @@
 import logging
+from re import template
 from django.conf import settings
+from datetime import datetime
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
-from managr.slack.helpers import block_builders
-from managr.salesforce.models import SObjectField
-from managr.salesforce.adapter.exceptions import TokenExpired, InvalidRefreshToken
+from django.forms import UUIDField
 
+from managr.slack.helpers import block_builders
+
+from managr.crm.exceptions import TokenExpired, InvalidRefreshToken
+from managr.core import constants as core_consts
 from . import constants as slack_consts
 
 from managr.core.models import TimeStampModel
@@ -195,6 +199,7 @@ class OrgCustomSlackForm(TimeStampModel):
         blank=True,
         help_text="if this is a special stage form the stage will appear here",
     )
+    custom_fields = models.ManyToManyField("crm.ObjectField", through="slack.CustomFormField")
     custom_object = models.CharField(
         max_length=255,
         null=True,
@@ -215,7 +220,7 @@ class OrgCustomSlackForm(TimeStampModel):
         unique_together = ["resource", "form_type", "team", "stage"]
 
     def generate_form_state(self):
-        form_fields = FormField.objects.filter(form=self)
+        form_fields = CustomFormField.objects.filter(form=self)
         state_object = {}
         for i, field in enumerate(form_fields):
             state_object[field.order] = field.field.api_name
@@ -223,27 +228,25 @@ class OrgCustomSlackForm(TimeStampModel):
         self.save()
 
     def recreate_form(self):
+        from managr.crm.models import ObjectField
+
         team_lead = self.team.team_lead
-        fields = SObjectField.objects.filter(
-            Q(
-                api_name__in=self.config.values(),
-                salesforce_object=self.resource,
-                salesforce_account=team_lead.salesforce_account,
-            )
+        fields = ObjectField.objects.filter(
+            Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
             | Q(is_public=True)
         )
-        self.fields.clear()
+        self.custom_fields.clear()
         for i, field in enumerate(self.config.items()):
             current_field = fields.filter(api_name=field[1]).first()
             if current_field:
-                self.fields.add(
+                self.custom_fields.add(
                     current_field.id,
                     through_defaults={"order": field[0], "include_in_recap": True,},
                 )
         return self.save()
 
     def to_slack_options(self):
-        filtered_fields = self.fields.filter(is_public=False)
+        filtered_fields = self.custom_fields.filter(is_public=False)
         options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
         return options
 
@@ -304,37 +307,49 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     @property
     def resource_object(self):
-        from managr.salesforce.routes import routes
+        from managr.salesforce.routes import routes as sf_routes
+        from managr.hubspot.routes import routes as hs_routes
 
+        routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
         route = routes[self.resource_type]
         model_class = route["model"]
+
         model_object = model_class.objects.filter(id=self.resource_id).first()
         return model_object
 
     def get_user_fields(self):
+        from managr.crm.models import ObjectField
+
+        # template_fields = (
+        #     self.template.formfield_set.all()
+        #     .values_list("field__api_name", "field__salesforce_object",)
+        #     .order_by("order")
+        # )
         template_fields = (
-            self.template.formfield_set.all()
-            .values_list("field__api_name", "field__salesforce_object",)
+            self.template.customformfield_set.all()
+            .values_list("field__api_name", "field__crm_object",)
             .order_by("order")
         )
         user_fields = []
         # hack to maintain order
         for field in template_fields:
             try:
-                f = SObjectField.objects.get(
+                # f = SObjectField.objects.get(
+                #     Q(api_name=field[0])
+                #     & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
+                #     & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+                # )
+                f = ObjectField.objects.get(
                     Q(api_name=field[0])
-                    & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
-                    & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
+                    & Q(Q(crm_object=field[1]) | Q(crm_object__isnull=True))
+                    & (Q(is_public=True) | Q(user=self.user))
                 )
-            except SObjectField.DoesNotExist:
+            except ObjectField.DoesNotExist:
                 logger.exception(f"GET USER FIELDS EXCEPTION DOES NOT EXIST: {field}")
             user_fields.append(f)
         if not template_fields:
             # user has not created form use all fields
-            user_fields = SObjectField.objects.filter(
-                salesforce_account=self.user.salesforce_account,
-                salesforce_object=self.resource_type,
-            )
+            user_fields = ObjectField.objects.filter(user=self.user, crm_object=self.resource_type,)
         return user_fields
 
     def generate_form_values(self, data=None):
@@ -362,9 +377,9 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                             else:
                                 try:
                                     if self.resource_object.owner == self.user:
-                                        self.user.salesforce_account.regenerate_token()
+                                        self.user.crm_account.regenerate_token()
                                     else:
-                                        self.resource_object.owner.salesforce_account.regenerate_token()
+                                        self.resource_object.owner.crm_account.regenerate_token()
                                     attempts += 1
                                 except InvalidRefreshToken:
                                     logger.exception(
@@ -374,7 +389,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                                     break
                         except Exception as e:
                             logger.exception(f"Failed pull current data from {e}")
-                            form_values = {}
+                            form_values = self.resource_object.secondary_data
                             break
                 else:
                     form_values = {}
@@ -405,7 +420,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
-                if str(field.id) == "0bb152b5-aac1-4ee0-9c25-51ae98d55af1":
+                if str(field.id) == "0bb152b5-aac1-4ee0-9c25-51ae98d55af2":
                     form_blocks.append(
                         block_builders.section_with_button_block(
                             "Insert",
@@ -418,7 +433,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.append({"type": "divider"})
             else:
                 generated_field = field.to_slack_field(
-                    val, user=self.user, resource=self.resource_type, *args, **kwargs
+                    val,
+                    user=self.user,
+                    resource=self.resource_type,
+                    **{**kwargs, "resource_id": self.resource_id},
                 )
                 if isinstance(generated_field, list):
                     form_blocks.extend(generated_field)
@@ -468,7 +486,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = bool(len(value.get("selected_options", [])))
                 elif value["type"] == "datepicker":
                     date = value.get("selected_date", None)
-                    current_value = date
+                    if self.user.crm == "HUBSPOT" and field == "closedate" and date is not None:
+                        current_value = date + "T18:00:00.000Z"
+                    else:
+                        current_value = date
                 vals[field] = current_value
         return vals
 
@@ -495,7 +516,20 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
 class FormField(TimeStampModel):
     field = models.ForeignKey(
-        "salesforce.SObjectField", on_delete=models.CASCADE, related_name="forms"
+        "salesforce.SObjectField",
+        on_delete=models.CASCADE,
+        related_name="forms",
+        null=True,
+        blank=True,
+    )
+    form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
+    order = models.IntegerField(default=0)
+    include_in_recap = models.BooleanField(default=True)
+
+
+class CustomFormField(TimeStampModel):
+    field = models.ForeignKey(
+        "crm.ObjectField", on_delete=models.CASCADE, related_name="forms", null=True, blank=True,
     )
     form = models.ForeignKey("slack.OrgCustomSlackForm", on_delete=models.CASCADE,)
     order = models.IntegerField(default=0)
