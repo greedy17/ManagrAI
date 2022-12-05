@@ -16,16 +16,24 @@ class CustomObjectField(admin.ModelAdmin):
 
 class CustomBaseOpportunity(admin.ModelAdmin):
     model = crm_models.BaseOpportunity
-    list_display = ("name", "owner", "object_type")
+    list_display = ("name", "owner")
+    list_filter = ("owner__organization", "owner")
+
+
+class CustomBaseAccount(admin.ModelAdmin):
+    model = crm_models.BaseAccount
+    list_display = ("name", "owner")
+    list_filter = ("owner__organization", "owner")
 
 
 class CustomBaseContact(admin.ModelAdmin):
     model = crm_models.BaseContact
     list_display = ("email", "owner")
+    list_filter = ("owner__organization", "owner")
 
 
 # Register your models here.
-admin.site.register(crm_models.BaseAccount)
+admin.site.register(crm_models.BaseAccount, CustomBaseAccount)
 admin.site.register(crm_models.BaseOpportunity, CustomBaseOpportunity)
 admin.site.register(crm_models.BaseContact, CustomBaseContact)
 admin.site.register(crm_models.ObjectField, CustomObjectField)

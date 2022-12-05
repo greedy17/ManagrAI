@@ -213,6 +213,7 @@ class AlertGroup(TimeStampModel):
             q_s.append(
                 {"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"}
             )
+            q_s.append({"value": False, "operator": "EQ", "propertyName": "hs_is_closed_won"})
         return {"filters": q_s}
 
     def delete(self, *args, **kwargs):
