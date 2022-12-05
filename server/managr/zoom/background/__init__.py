@@ -350,7 +350,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     ),
                 )
             )
-            print(new_contacts)
             meeting_contacts = [
                 *new_contacts,
                 *meeting_contacts,

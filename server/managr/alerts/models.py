@@ -213,7 +213,6 @@ class AlertGroup(TimeStampModel):
             q_s.append(
                 {"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"}
             )
-        print(q_s)
         return {"filters": q_s}
 
     def delete(self, *args, **kwargs):
@@ -723,7 +722,7 @@ class AlertInstance(TimeStampModel):
                     )
                     break
                 else:
-                    self.resource.owner.salesforce_account.regenerate_token()
+                    self.resource.owner.crm_account.regenerate_token()
                     attempts += 1
             except Exception as e:
                 return logger.warning(

@@ -329,9 +329,9 @@ def _generate_form_template(user_id, delete_forms):
                 note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af2").first()
                 for i, field in enumerate(public_fields):
                     if i == 0 and note_subject is not None:
-                        f.fields.add(note_subject, through_defaults={"order": i})
+                        f.custom_fields.add(note_subject, through_defaults={"order": i})
                     elif i == 1 and note is not None:
-                        f.fields.add(note, through_defaults={"order": i})
+                        f.custom_fields.add(note, through_defaults={"order": i})
                 f.save()
 
 
