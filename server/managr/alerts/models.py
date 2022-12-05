@@ -104,18 +104,26 @@ class AlertTemplate(TimeStampModel):
 
     def manager_url_str(self, user_list, config_id):
         """Generates Url Str for request when executing alert"""
-        user_sf = self.user.salesforce_account if hasattr(self.user, "salesforce_account") else None
-        operand_groups = [group.sf_query_str(config_id) for group in self.groups.all()]
-
-        operand_groups = f"AND ({' '.join(operand_groups)})"
-        q = sf_consts.SALESFORCE_MULTIPLE_OWNER_RESOURCE_QUERY_URI(
-            user_sf.salesforce_id,
-            self.resource_type,
-            ["Id"],
-            additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
-            user_list=user_list,
-        )
-        return f"{user_sf.instance_url}{q[0]}"
+        user_crm = self.user.crm_account if hasattr(self.user, "crm_account") else None
+        if user_crm == "SALESFORCE":
+            operand_groups = [group.sf_query_str(config_id) for group in self.groups.all()]
+            operand_groups = f"AND ({' '.join(operand_groups)})"
+            q = sf_consts.SALESFORCE_MULTIPLE_OWNER_RESOURCE_QUERY_URI(
+                user_crm.salesforce_id,
+                self.resource_type,
+                ["Id"],
+                additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+                user_list=user_list,
+            )
+            return f"{user_crm.instance_url}{q[0]}"
+        else:
+            operand_groups = [
+                group.hs_query_str(config_id, user_list, True) for group in self.groups.all()
+            ]
+            return (
+                hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
+                {"filterGroups": operand_groups, "limit": 100},
+            )
 
     @property
     def get_users(self):
@@ -196,10 +204,16 @@ class AlertGroup(TimeStampModel):
             q_s = f"{self.group_condition} {q_s}"
         return q_s
 
-    def hs_query_str(self, config_id, user_crm):
+    def hs_query_str(self, config_id, user_crm, multi_user=False):
         """returns a grouped qs of operand rows (in ())"""
         q_s = [operand.hs_query_obj(config_id) for operand in self.operands.all()]
-        q_s.append({"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"})
+        if multi_user:
+            q_s.append({"values": user_crm, "operator": "IN", "propertyName": "hubspot_owner_id"})
+        else:
+            q_s.append(
+                {"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"}
+            )
+        print(q_s)
         return {"filters": q_s}
 
     def delete(self, *args, **kwargs):
