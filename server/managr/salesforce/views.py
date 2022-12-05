@@ -78,7 +78,7 @@ from managr.crm.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
 )
-
+from managr.crm.models import ObjectField
 from .filters import SObjectFieldFilterSet, SalesforceSObjectFilterSet
 
 logger = logging.getLogger("managr")
@@ -252,7 +252,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         user = self.request.user
         sobject_id = request.GET.get("sobject_id", None)
         value = request.GET.get("value", None)
-        sobject_field = SObjectField.objects.get(id=sobject_id)
+        sobject_field = ObjectField.objects.get(id=sobject_id)
         for_meetings = self.request.GET.get("for_meetings", False)
         attempts = 1
         while True:

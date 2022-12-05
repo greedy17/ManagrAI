@@ -326,7 +326,15 @@ class SlackViewSet(viewsets.GenericViewSet,):
         organization_slack = request.user.organization.slack_integration
         channel_id = request.GET.get("channel_id", None)
         if organization_slack:
-            channel = slack_requests.get_channel_info(organization_slack.access_token, channel_id)
+            try:
+                channel = slack_requests.get_channel_info(
+                    organization_slack.access_token, channel_id
+                )
+            except Exception:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"success": False, "message": "Failed to retreive channel info"},
+                )
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
