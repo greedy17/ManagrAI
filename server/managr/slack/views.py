@@ -565,7 +565,9 @@ class SlackFormsViewSet(
         data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
-        data.update({"organization": self.request.user.organization_id})
+        data.update(
+            {"organization": self.request.user.organization_id, "team": self.request.user.team}
+        )
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

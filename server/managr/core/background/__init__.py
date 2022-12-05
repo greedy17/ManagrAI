@@ -304,7 +304,7 @@ def meeting_prep(processed_data, user_id):
         )
         existing_contacts = existing_contacts.filter(opportunities__in=[str(opportunity.id)])
     else:
-        account = Account.objects.filter(
+        account = BaseAccount.objects.filter(
             contacts__email__in=participant_emails, owner__id=user.id,
         ).first()
         if account:
@@ -347,7 +347,7 @@ def meeting_prep(processed_data, user_id):
                                         participant["name"]
                                     ),
                                     f"{'Email' if user.crm == 'SALESFORCE' else 'email'}": participant[
-                                        "user_email"
+                                        "email"
                                     ],
                                 },
                             )

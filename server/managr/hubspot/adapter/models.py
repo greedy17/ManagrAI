@@ -231,7 +231,7 @@ class HubspotAuthAccountAdapter:
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
-        logger.info(f"{url} was sent")
+        logger.info(f"{url} was sent with data: {data}")
         with Client as client:
             res = client.post(
                 url,
