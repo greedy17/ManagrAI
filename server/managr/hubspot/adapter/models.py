@@ -87,7 +87,8 @@ class HubspotAuthAccountAdapter:
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
         if settings.IN_DEV:
-            user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+            # user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+            user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         else:
             user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
