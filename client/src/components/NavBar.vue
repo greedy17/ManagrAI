@@ -1,6 +1,6 @@
 <template>
   <div>
-    <nav id="nav" v-if="userIsLoggedIn && !isOnboarding">
+    <nav id="nav" v-if="userIsLoggedIn">
       <router-link v-if="userCRM" :to="{ name: 'ListTemplates' }">
         <div class="logo">
           <img style="height: 40px" src="@/assets/images/logo.png" />
@@ -22,7 +22,7 @@
         </router-link>
 
         <router-link
-          v-if="userCRM === 'SALESFORCE' /*|| true*/"
+          v-if="userCRM === 'SALESFORCE' || true"
           exact-active-class="active"
           :to="{ name: 'Pipelines' }"
         >
