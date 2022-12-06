@@ -213,7 +213,6 @@ class AlertGroup(TimeStampModel):
             q_s.append(
                 {"value": user_crm.crm_id, "operator": "EQ", "propertyName": "hubspot_owner_id"}
             )
-            q_s.append({"value": False, "operator": "EQ", "propertyName": "hs_is_closed_won"})
         return {"filters": q_s}
 
     def delete(self, *args, **kwargs):
@@ -336,7 +335,7 @@ class AlertOperand(TimeStampModel):
                             self.group.template.config_run_against_date(config_id)
                             + timezone.timedelta(days=int(self.operand_value))
                         )
-                        .replace(hour=00)
+                        .replace(hour=00, minute=00, second=00)
                         .timestamp()
                     )
                     * 1000
