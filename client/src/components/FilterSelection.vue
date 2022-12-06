@@ -120,7 +120,7 @@
               type === 'Currency' || type === 'Double' || type === 'Phone'
                 ? parseInt(inputValue)
                 : type === 'Picklist' || type === 'MultiPicklist'
-                ? inputValue.value
+                ? (userCRM === 'SALESFORCE' ? inputValue.value : inputValue.id)
                 : apiName === 'OwnerId'
                 ? inputValue.salesforce_account_ref.salesforce_id
                 : apiName === 'AccountId'
@@ -149,15 +149,6 @@ export default {
 
   data() {
     return {
-      operators: [
-        { label: 'equals', value: 'EQUALS' },
-        { label: 'not equals', value: 'NOT_EQUALS' },
-        { label: 'greater than', value: 'GREATER_THAN' },
-        { label: 'greater or equal', value: 'GREATER_THAN_EQUALS' },
-        { label: 'less than', value: 'LESS_THAN' },
-        { label: 'less or equal', value: 'LESS_THAN_EQUALS' },
-        { label: 'contains', value: 'CONTAINS' },
-      ],
       selectedOperator: '',
       inputValue: null,
       counter: 0,
@@ -172,8 +163,27 @@ export default {
     owners: {},
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     closeFilters() {
       this.$emit('close-selection')
+    },
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    operators() {
+      return [
+        { label: 'equals', value: 'EQUALS' },
+        { label: 'not equals', value: 'NOT_EQUALS' },
+        { label: 'greater than', value: 'GREATER_THAN' },
+        { label: 'greater or equal', value: 'GREATER_THAN_EQUALS' },
+        { label: 'less than', value: 'LESS_THAN' },
+        { label: 'less or equal', value: 'LESS_THAN_EQUALS' },
+        { label: 'contains', value: 'CONTAINS' },
+      ]
     },
   },
 }

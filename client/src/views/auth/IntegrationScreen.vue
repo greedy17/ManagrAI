@@ -515,7 +515,12 @@ export default {
 
       let modelClass = this.selectedIntegrationSwitcher
       try {
-        const res = await modelClass.api.getAuthLink()
+        let res
+        if (integration === 'SLACK') {
+          res = this.onIntegrateSlack()
+        } else {
+          res = await modelClass.api.getAuthLink()
+        }
         if (res.link) {
           window.location.href = res.link
         }
@@ -567,10 +572,11 @@ export default {
             }
           } finally {
             this.generatingToken = false
+            return res
           }
         }
       } else {
-        if (!this.hasSlackIntegration) {
+        // if (!this.hasSlackIntegration) {
           try {
             let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.USER)
             if (res.link) {
@@ -579,8 +585,9 @@ export default {
           } catch (e) {
           } finally {
             this.generatingToken = false
+            return res
           }
-        }
+        // }
       }
     },
   },
