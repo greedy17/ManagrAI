@@ -250,7 +250,7 @@
 
               <div
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
-                v-if="field.apiName === 'StageName'"
+                v-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
               >
                 <div class="adding-stage-gate__body">
                   <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
@@ -913,7 +913,7 @@
               <div
                 ref="primaryStageForm"
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
-                v-if="field.apiName === 'StageName'"
+                v-if="field.apiName === 'StageName' || field.apiName === 'dealstage'"
               >
                 <div class="adding-stage-gate__body">
                   <!-- <h4 style="color: #fa646a; font-size: 16px">
@@ -1726,7 +1726,7 @@
               <Multiselect
                 :options="apiPicklistOptions /*&& apiPicklistOptions['StageName'] ? apiPicklistOptions['StageName'] : []*/"
                 @select="setStage($event.value)"
-                v-model="dropdownVal['StageName']"
+                :v-model="userCRM === 'SALESFORCE' ? dropdownVal['StageName'] : dropdownVal['dealstage']"
                 openDirection="below"
                 :loading="dropdownLoading"
                 style="width: 40.25vw"
@@ -2294,7 +2294,7 @@
                   >
                     <Multiselect
                       style="width: 23vw; font-size: 12px"
-                      v-if="field.apiName !== 'StageName'"
+                      v-if="(field.apiName !== 'StageName' || field.apiName === 'dealstage')"
                       :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
                       openDirection="below"
                       selectLabel="Enter"
@@ -2339,7 +2339,7 @@
                       </template>
                     </Multiselect>
                     <Multiselect
-                      v-else-if="(field.apiName === 'StageName')"
+                      v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
                       :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
                       openDirection="below"
                       selectLabel="Enter"
@@ -2845,7 +2845,7 @@ export default {
           this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
-          this.setUpdateValues('StageName', val.val)
+          this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', val.val)
         }
       },
     },
@@ -3071,7 +3071,7 @@ export default {
       }
     },
     async openStageForm(field, id, integrationId) {
-      this.setUpdateValues('StageName', field)
+      this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
       this.stageGateField = field
       this.stageFormOpen = true
       this.stageId = id
@@ -3423,10 +3423,10 @@ export default {
     sortOpps(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
       if (this.currentWorkflow) {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3461,10 +3461,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3508,10 +3508,10 @@ export default {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
 
       if (this.currentWorkflow) {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3546,10 +3546,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3987,7 +3987,7 @@ export default {
       if (val && !multi) {
         this.formData[key] = val
       }
-      if (key === 'StageName') {
+      if (key === 'StageName' || key === 'dealstage') {
         this.stagesWithForms.includes(val)
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
