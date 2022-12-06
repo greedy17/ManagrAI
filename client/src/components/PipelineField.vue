@@ -80,7 +80,8 @@ export default {
       if (!input || !input.match(pattern)) {
         return null
       }
-      return input.replace(pattern, '$2/$3/$1')
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
     },
     formatCash(money) {
       let cash = new Intl.NumberFormat('en-US', {
@@ -111,6 +112,9 @@ export default {
       let date = new Date()
       return date
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    }
   },
   mounted() {
     if (this.referenceOpts && this.dataType === 'Reference') {

@@ -101,13 +101,19 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllOpps({ state, commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
+  async loadAllOpps({ state, commit }, filters = []) {
     try {
       let res
       if (state.user.crm === 'SALESFORCE') {
+        if (!filters.length) {
+          filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost']]
+        }
         res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
       } else {
-        res = await CRMObjects.api.getObjects('Deal')
+        if (!filters.length) {
+          filters = [['NOT_EQUALS', 'dealstage', 'closedwon'], ['NOT_EQUALS', 'dealstage', 'closedlost']]
+        }
+        res = await CRMObjects.api.getObjects('Deal', 1, true, filters)
       }
       commit('SAVE_ALL_OPPS', res.results)
     } catch (e) {
