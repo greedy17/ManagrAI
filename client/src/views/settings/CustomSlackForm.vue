@@ -1820,6 +1820,7 @@ export default {
           // } else {
           //   this.$router.go()
           // }
+          this.formChange = false
         })
     },
     async getAllForms() {

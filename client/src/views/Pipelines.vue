@@ -198,6 +198,7 @@
               <Multiselect
                 v-model="currentVals[field.apiName]"
                 :options="
+                  userCRM === 'HUBSPOT' ? field.options : 
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
                     : createReferenceOpts[field.apiName]
@@ -205,7 +206,7 @@
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                    (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                       ? $event.value
                       : $event.id,
                     field.dataType === 'MultiPicklist' ? true : false,
@@ -249,7 +250,7 @@
 
               <div
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
-                v-if="field.apiName === 'StageName'"
+                v-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
               >
                 <div class="adding-stage-gate__body">
                   <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
@@ -696,9 +697,9 @@
           </div>
         </div>
         <div class="flex-end-opp">
-          <div v-if="hasProducts">
+          <div v-if="(hasProducts && userCRM === 'SALESFORCE')">
             <button
-              v-if="!addingProduct"
+              v-if="(!addingProduct)"
               @click="addProduct"
               style="margin-bottom: 0.75rem"
               class="select-btn1"
@@ -733,7 +734,7 @@
               <img src="@/assets/images/logo.png" height="24px" alt="" />
             </span>
 
-            <h3>Update Opportunity</h3>
+            <h3>Update {{userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'}}</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -853,6 +854,7 @@
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
+                  userCRM === 'HUBSPOT' ? field.options : 
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
@@ -901,7 +903,7 @@
                         ? currentAccount
                         : field.apiName === 'OwnerId'
                         ? currentOwner
-                        : `${currentVals[field.apiName]}` !== 'null'
+                        : currentVals.length && `${currentVals[field.apiName]}` !== 'null'
                         ? `${currentVals[field.apiName]}`
                         : `${field.referenceDisplayLabel}`
                     }}
@@ -911,7 +913,7 @@
               <div
                 ref="primaryStageForm"
                 :class="stageGateField ? 'adding-stage-gate' : 'hide'"
-                v-if="field.apiName === 'StageName'"
+                v-if="field.apiName === 'StageName' || field.apiName === 'dealstage'"
               >
                 <div class="adding-stage-gate__body">
                   <!-- <h4 style="color: #fa646a; font-size: 16px">
@@ -1518,7 +1520,7 @@
         </div>
 
         <div class="flex-end-opp">
-          <div v-if="hasProducts" class="row">
+          <div v-if="hasProducts && userCRM === 'SALESFORCE'" class="row">
             <button
               style="padding: 10px; margin-right: 4px"
               v-if="!addingProduct"
@@ -1580,7 +1582,7 @@
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
-              <p>Opportunities</p>
+              <p>{{userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'}}</p>
             </div>
             <!-- <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -1724,7 +1726,7 @@
               <Multiselect
                 :options="apiPicklistOptions /*&& apiPicklistOptions['StageName'] ? apiPicklistOptions['StageName'] : []*/"
                 @select="setStage($event.value)"
-                v-model="dropdownVal['StageName']"
+                :v-model="userCRM === 'SALESFORCE' ? dropdownVal['StageName'] : dropdownVal['dealstage']"
                 openDirection="below"
                 :loading="dropdownLoading"
                 style="width: 40.25vw"
@@ -1940,11 +1942,11 @@
             <input type="search" placeholder="search" v-model="workflowFilterText" />
           </div>
 
-          <!-- <button @click="createOppInstance()" class="add-button">
+          <button @click="createOppInstance()" class="add-button">
        
             
             Create Opportunity
-          </button> -->
+          </button>
         </div>
       </section>
 
@@ -2292,11 +2294,11 @@
                   >
                     <Multiselect
                       style="width: 23vw; font-size: 12px"
-                      v-if="field.apiName !== 'StageName'"
-                      :options="allPicklistOptions[field.id]"
+                      v-if="(field.apiName !== 'StageName' || field.apiName === 'dealstage')"
+                      :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
                       openDirection="below"
                       selectLabel="Enter"
-                      track-by="value"
+                      :track-by="field.apiName === 'dealstage' ? 'id' : 'value'"
                       label="label"
                       v-model="dropdownVal[field.apiName]"
                       :multiple="field.dataType === 'MultiPicklist' ? true : false"
@@ -2305,7 +2307,7 @@
                           field.apiName === 'ForecastCategory'
                             ? 'ForecastCategoryName'
                             : field.apiName,
-                          $event.value,
+                            field.apiName === 'dealstage' ? $event.id : $event.value,
 
                           field.dataType === 'MultiPicklist' ? true : false,
                         )
@@ -2337,8 +2339,8 @@
                       </template>
                     </Multiselect>
                     <Multiselect
-                      v-else-if="field.apiName === 'StageName'"
-                      :options="allPicklistOptions[field.id]"
+                      v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
+                      :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
                       openDirection="below"
                       selectLabel="Enter"
                       style="width: 23vw; font-size: 13px"
@@ -2535,16 +2537,17 @@ export default {
       loadingNext: false,
       viewingProducts: false,
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
-      stageGateCopy: {},
+      stageGateCopy: [],
       stageReferenceOpts: {},
       currentSelectedProduct: null,
-      savingProduct: null,
+      savingProduct: false,
       productName: null,
       editingProduct: false,
       productId: null,
       productIntegrationId: null,
       productRefCopy: {},
       hsPicklistOpts: {},
+      apiHSPicklistOpts: {},
       pricebookId: null,
       noteTitle: null,
       noteValue: null,
@@ -2561,11 +2564,10 @@ export default {
           crmObject: this.crmObject,
         },
       }),
-   
       currentProducts: [],
-      createProductForm: null,
+      createProductForm: [],
       addingProduct: false,
-      hasNextOriginal: null,
+      hasNextOriginal: false,
       integrationId: null,
       hasNext: false,
       hasPrev: false,
@@ -2581,7 +2583,6 @@ export default {
         6: 'Saturday',
       },
       currentInlineRow: null,
-      inlineResourceId: null,
       stageFormOpen: false,
       closeInline: 0,
       inlineLoader: false,
@@ -2598,7 +2599,6 @@ export default {
       currentOwner: null,
       currentAccount: null,
       updatingOpps: false,
-      oppInstanceId: null,
       oppId: null,
       primaryCheckList: [],
       workflowCheckList: [],
@@ -2620,7 +2620,7 @@ export default {
       newStage: null,
       newForecast: null,
       oppVal: null,
-      originalList: null,
+      originalList: [],
       daysForward: null,
       loading: false,
       loadingAccounts: false,
@@ -2633,7 +2633,7 @@ export default {
         filters: { forPipeline: true },
       }),
       users: CollectionManager.create({ ModelClass: User }),
-      currentWorkflow: null,
+      currentWorkflow: [],
       selectedWorkflow: false,
       modalOpen: false,
       editOpModalOpen: false,
@@ -2649,13 +2649,11 @@ export default {
       showWorkflowList: true,
       showPopularList: true,
       notes: [],
-      updateOppForm: null,
-      oppFormCopy: null,
-      createOppForm: null,
-      updateContactForm: null,
+      updateOppForm: [],
+      oppFormCopy: [],
+      createOppForm: [],
       oppFields: [],
       instanceId: null,
-      contactInstanceId: null,
       dropdownValue: {},
       formData: {},
       updateProductData: {},
@@ -2670,8 +2668,8 @@ export default {
       stagePicklistQueryOpts: {},
       setFilters: {},
       instanceIds: [],
-      allAccounts: null,
-      allUsers: null,
+      allAccounts: [],
+      allUsers: [],
       filtering: false,
       filterSelected: false,
       activeFilters: [],
@@ -2692,7 +2690,6 @@ export default {
       forecastList: [],
       stageIntegrationId: null,
       stageId: null,
-      allOppsForWorkflows: null,
       selectedPriceBook: null,
       pricebookPage: 1,
       savedPricebookEntryId: '',
@@ -2733,6 +2730,9 @@ export default {
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
+      if (this.userCRM === 'HUBSPOT') {
+        return this.apiHSPicklistOpts
+      }
       return this.$store.state.apiPicklistOptions
     },
     pricebooks() {
@@ -2811,6 +2811,12 @@ export default {
     },
   },
   async created() {
+    if (this.userCRM === 'HUBSPOT') {
+      this.filters = [
+        ['NOT_EQUALS', 'dealstage', 'closedwon'],
+        ['NOT_EQUALS', 'dealstage', 'closedlost'],
+      ]
+    }
     this.objectFields.refresh()
     this.getAllForms()
     this.getUsers()
@@ -2839,7 +2845,7 @@ export default {
           this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
-          this.setUpdateValues('StageName', val.val)
+          this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', val.val)
         }
       },
     },
@@ -2876,6 +2882,7 @@ export default {
     async getAllHSPicklists() {
       this.objectFields.refresh()
       const picklistOpts = {}
+      const apiPicklistOpts = {}
       setTimeout(() => {
         for (let i = 0; i < this.objectFields.list.length; i++) {
           const field = this.objectFields.list[i]
@@ -2883,8 +2890,14 @@ export default {
             picklistOpts[field.id] = field.options
           }
         }
+        for (let i = 0; i < this.oppFields.length; i++) {
+          const field = this.oppFields[i]
+          if (field.options.length) {
+            apiPicklistOpts[field.apiName] = field.options
+          }
+        }
         this.hsPicklistOpts = picklistOpts
-        console.log('this.hsPicklistOpts', this.hsPicklistOpts)
+        this.apiHSPicklistOpts = apiPicklistOpts
       }, 1000)
     },
     cancelEditProduct() {
@@ -3021,7 +3034,6 @@ export default {
       this.setUpdateValues(field, message)
     },
     changeCurrentRow(i, cell) {
-      console.log('hi', i, cell)
       this.currentInlineRow = i
       this.currentCell = cell
       this.dropdownVal = {}
@@ -3035,10 +3047,10 @@ export default {
       this.forecastList = list.map((opp) => opp.integration_id)
     },
     async modifyForecast(action) {
+      const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
       try {
         await User.api.modifyForecast(action, this.forecastList)
-
-        this.$toast('Opportunities added to Tracker.', {
+        this.$toast(oppOrDeal + ' added to Tracker.', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -3046,7 +3058,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$toast('Error adding opportunities.', {
+        this.$toast('Error adding ' + oppOrDeal, {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -3059,7 +3071,7 @@ export default {
       }
     },
     async openStageForm(field, id, integrationId) {
-      this.setUpdateValues('StageName', field)
+      this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
       this.stageGateField = field
       this.stageFormOpen = true
       this.stageId = id
@@ -3067,12 +3079,10 @@ export default {
       this.dropdownLoading = true
       try {
         let res
-        if (this.userCRM === 'SALESFORCE') {
-          res = await SObjects.api.getCurrentValues({
-            resourceType: 'Opportunity',
-            resourceId: id,
-          })
-        } 
+        res = await SObjects.api.getCurrentValues({
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceId: id,
+        })
         this.currentVals = res ? res.current_values : {}
 
         const usersForCurrentOwner = this.allUsers.filter(
@@ -3113,7 +3123,6 @@ export default {
           value: eventVal ? eventVal : '',
           for_filter: filter ? [filter] : null,
         })
-        console.log('oh no', res)
         if (type === 'update') {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
@@ -3159,7 +3168,7 @@ export default {
         // })
         const res = await CRMObjects.api.updateResource({
           form_data: formData,
-          resource_type: 'Opportunity',
+          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           form_type: 'UPDATE',
           resource_id: id,
           integration_ids: [integrationId],
@@ -3178,7 +3187,6 @@ export default {
           if (this.selectedWorkflow) {
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
           }
-          console.log('storedFilters', this.storedFilters)
           if (this.storedFilters.length && !this.selectedWorkflow) {
             this.storedFilters[3].reversed
               ? this.sortOppsReverse(
@@ -3231,9 +3239,13 @@ export default {
       this.operatorValue = null
       this.currentOperator = []
       this.filterValues = []
-      this.filters = [
+      this.filters = this.userCRM === 'SALESFORCE' ? [
         ['NOT_EQUALS', 'StageName', 'Closed Won'],
         ['NOT_EQUALS', 'StageName', 'Closed Lost'],
+      ] :
+      [
+        ['NOT_EQUALS', 'dealstage', 'closedwon'],
+        ['NOT_EQUALS', 'dealstage', 'closedlost'],
       ]
     },
     closeListSelect() {
@@ -3262,7 +3274,7 @@ export default {
         //   res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
         // }
         else {
-          this.$store.dispatch('loadAllOpps', this.filters)
+          this.$store.dispatch('loadAllOpps', [...this.filters])
         }
         if (this.selectedWorkflow) {
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3411,10 +3423,10 @@ export default {
     sortOpps(dT, field, apiName) {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
       if (this.currentWorkflow) {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3449,10 +3461,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3496,10 +3508,10 @@ export default {
       let newField = this.capitalizeFirstLetter(this.camelize(field))
 
       if (this.currentWorkflow) {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3534,10 +3546,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = a['secondary_data']['StageName']
-            const nameB = b['secondary_data']['StageName']
+            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3677,7 +3689,7 @@ export default {
       this.noteTitle = null
       try {
         const res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
       } catch (e) {
@@ -3712,12 +3724,10 @@ export default {
       this.editingProduct = false
       try {
         let res
-        if (this.userCRM === 'SALESFORCE') {
-           res = await SObjects.api.getCurrentValues({
-            resourceType: 'Opportunity',
-            resourceId: id,
-          })
-        }
+        res = await SObjects.api.getCurrentValues({
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceId: id,
+        })
         this.currentVals = res ? res.current_values : {}
         this.currentProducts = res ? res.current_products : {}
 
@@ -3730,7 +3740,6 @@ export default {
             }
           }
         )
-        console.log('usersForCurrentOwner', usersForCurrentOwner)
         usersForCurrentOwner.length
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
@@ -3740,7 +3749,6 @@ export default {
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
 
-        console.log('down here?')
         // if (this.activeFilters.length) {
         //   this.getFilteredObjects()
         // }
@@ -3765,12 +3773,11 @@ export default {
     async oppInstance(id) {
       try {
         const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'UPDATE',
           resourceId: id,
         })
         this.currentVals = res.current_values
-        this.oppInstanceId = res.form_id
       } catch (e) {
         this.$toast('Error building update form, close modal and try again.', {
           timeout: 2000,
@@ -3785,7 +3792,7 @@ export default {
       this.stageGateId = null
       try {
         const res = await SObjects.api.createFormInstance({
-          resourceType: 'Opportunity',
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
           stageName: field ? field : this.stageGateField,
         })
@@ -3885,7 +3892,7 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: 'Opportunity',
+            resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
             form_type: 'UPDATE',
             resource_ids: this.primaryCheckList,
           })
@@ -3912,7 +3919,7 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: 'Opportunity',
+            resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
             form_type: 'UPDATE',
             resource_ids: this.workflowCheckList,
           })
@@ -3980,7 +3987,7 @@ export default {
       if (val && !multi) {
         this.formData[key] = val
       }
-      if (key === 'StageName') {
+      if (key === 'StageName' || key === 'dealstage') {
         this.stagesWithForms.includes(val)
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
@@ -4097,9 +4104,9 @@ export default {
     async updateStageForm() {
       this.dropdownLoading = true
       try {
-        const res = await SObjects.api.updateResource({
+        const res = await CRMObjects.api.updateResource({
           form_data: this.formData,
-          resource_type: 'Opportunity',
+          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           form_type: 'UPDATE',
           resource_id: this.stageId,
           integration_ids: [this.stageIntegrationId],
@@ -4160,7 +4167,7 @@ export default {
     async createProduct(id = this.integrationId) {
       if (this.addingProduct) {
         try {
-          const res = await SObjects.api.createResource({
+          const res = await CRMObjects.api.createResource({
             integration_ids: [id],
             form_type: 'CREATE',
             resource_type: 'OpportunityLineItem',
@@ -4195,7 +4202,7 @@ export default {
     async updateProduct() {
       this.savingProduct = true
       try {
-        const res = await SObjects.api.updateResource({
+        const res = await CRMObjects.api.updateResource({
           form_data: this.updateProductData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
@@ -4206,7 +4213,7 @@ export default {
           stage_name: null,
         })
         const res2 = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: this.oppId,
         })
         this.currentProducts = res2.current_products
@@ -4237,14 +4244,14 @@ export default {
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
-        const res = await SObjects.api.updateResource({
+        const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: this.formData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
-          resource_type: 'Opportunity',
+          resource_type: this.userCRM === 'SALEFORCE' ? 'Opportunity' : 'Deal',
           resource_id: this.oppId,
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
@@ -4302,10 +4309,10 @@ export default {
     async createResource(product) {
       this.savingCreateForm = true
       try {
-        let res = await SObjects.api.createResource({
+        let res = await CRMObjects.api.createResource({
           form_data: this.formData,
           form_type: 'CREATE',
-          resource_type: 'Opportunity',
+          resource_type: this.userCRM === 'SALEFORCE' ? 'Opportunity' : 'Deal',
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (product) {
@@ -4330,7 +4337,7 @@ export default {
               )
             : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
         }
-        this.$toast('Opportunity created successfully.', {
+        this.$toast(objectType + ' created successfully.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -4482,8 +4489,6 @@ export default {
           )[0].id)
         : (this.accountSobjectId = null)
 
-      console.log('this.updateOppForm', this.updateOppForm)
-
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -4492,7 +4497,6 @@ export default {
           field.apiName !== 'AccountId' &&
           field.apiName !== 'OwnerId',
       )
-      console.log('sojme oppFields', this.oppFields)
     },
     async getAllForms() {
       this.loading = true
@@ -4542,7 +4546,6 @@ export default {
           }
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        console.log('oppFormCopy', this.oppFormCopy)
         this.loading = false
       } catch (e) {
         console.log(e)
