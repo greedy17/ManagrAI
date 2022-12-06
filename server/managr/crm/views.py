@@ -10,6 +10,7 @@ from rest_framework import (
     viewsets,
 )
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from managr.crm.models import ObjectField
@@ -159,7 +160,7 @@ class CRMObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-        print('here?', data)
+        print("here?", data)
         if data["success"]:
             return Response(data=data)
         else:
@@ -281,3 +282,80 @@ class CRMObjectViewSet(
                 #     user.activity.add_workflow_activity(str(main_form.id), title)
                 return Response(data=data)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="create-bulk-form-instance",
+    )
+    def create_bulk_form_instance(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        user = self.request.user
+        resource_id = self.request.GET.get("resource_id", None)
+        resource = "Opportunity" if self.request.crm == "SALESFORCE" else "Deal"
+        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
+            Q(resource=resource, form_type="UPDATE")
+        )
+        template = template_list.first()
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template, user=user, resource_id=resource_id
+        )
+        attempts = 1
+        while True:
+            try:
+
+                data = {
+                    "form_id": str(slack_form.id),
+                    "success": True,
+                }
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    break
+                else:
+                    user.crm_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+                data = {"error": str(e), "success": False}
+                break
+        return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="notes",
+    )
+    def get_resource_notes(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
+        resource_id = self.request.GET.get("resource_id")
+        new_stage = (
+            "saved_data__StageName"
+            if self.request.user.crm == "SALESFORCE"
+            else "saved_data__dealname"
+        )
+        pre_stage = (
+            "previous_data__StageName"
+            if self.request.user.crm == "SALESFORCE"
+            else "previous_data__dealstage"
+        )
+        note_data = (
+            OrgCustomSlackFormInstance.objects.filter(resource_id=resource_id)
+            .filter(is_submitted=True)
+            .values(
+                "submission_date",
+                "saved_data__meeting_type",
+                "saved_data__meeting_comments",
+                new_stage,
+                pre_stage,
+            )
+        )
+        if note_data:
+            print("NOTE DATA", note_data)
+            return Response(data=note_data)
+        return Response(data=[])
