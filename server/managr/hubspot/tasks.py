@@ -146,6 +146,12 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
             values = hs.get_deal_stages("deals")
             pipelines = {pipeline["id"]: pipeline for pipeline in values}
             field.options = [pipelines]
+        if field.api_name == "pipeline":
+            values = hs.get_deal_stages("deals")
+            pipelines = [
+                {"value": pipeline["id"], "label": pipeline["label"]} for pipeline in values
+            ]
+            field.options = pipelines
         if existing:
             serializer = ObjectFieldSerializer(data=field.as_dict, instance=existing)
         else:
