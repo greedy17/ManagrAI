@@ -690,6 +690,8 @@ class AlertInstance(TimeStampModel):
                                 field = user.object_fields.filter(
                                     api_name=v, crm_object=self.template.resource_type
                                 ).first()
+                                if field.api_name == "closedate":
+                                    binding_map[binding] = binding_map[binding][0:10]
                                 if (
                                     user.crm == "HUBSPOT"
                                     and field
