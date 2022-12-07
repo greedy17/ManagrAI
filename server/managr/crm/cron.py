@@ -4,7 +4,8 @@ import math
 from django.utils import timezone
 
 from managr.core.models import User
-from managr.crm.models import CrmObjectFieldsOperation, CrmResourceSync
+from managr.salesforce.models import SFResourceSync, SFObjectFieldsOperation
+from managr.hubspot.models import HSResourceSync, HSObjectFieldsOperation
 from managr.crm.background import _process_stale_data_for_delete
 
 logger = logging.getLogger("managr")
@@ -33,13 +34,17 @@ def queue_stale_crm_data_for_delete(cutoff=1440):
     cutoff = timezone.now() - timezone.timedelta(minutes=cutoff)
 
     for i in range(0, pages):
-        users = qs[i * limit : i + 1 * limit].select_related("salesforce_account")
+        users = qs[i * limit : i + 1 * limit]
         for user in users:
             # only run this for users with a successful latest flow
 
-            flows = CrmResourceSync.objects.filter(user=user)
+            flows_model = SFResourceSync if user.crm == "SALESFORCE" else HSResourceSync
+            flows = flows_model.objects.filter(user=user)
             latest_flow = not flows.latest("datetime_created").in_progress if flows else False
-            field_flows = CrmObjectFieldsOperation.objects.filter(user=user)
+            field_model = (
+                SFObjectFieldsOperation if user.crm == "SALESFORCE" else HSObjectFieldsOperation
+            )
+            field_flows = field_model.objects.filter(user=user)
             latest_field_flow = (
                 not field_flows.latest("datetime_created").in_progress if field_flows else False
             )
@@ -57,25 +62,24 @@ def queue_stale_crm_data_for_delete(cutoff=1440):
                 )
                 resource_items = [
                     "objectfield",
-                    "objectvalidation",
-                    "objectpicklist",
                 ]
+                if user.crm == "SALESFORCE":
+                    resource_items.extend(
+                        ["sobjectvalidation", "sobjectpicklist",]
+                    )
             elif latest_flow and not latest_field_flow:
                 logger.info(
                     f"skipping clear field data (resources only) for user {user.email} with id {str(user.id)} because the latest resource flow was not successful"
                 )
-                resource_items.extend(["base_opportunity", "base_account", "base_contact"])
+                resource_items.extend(["baseopportunity", "baseaccount", "basecontact"])
             else:
                 resource_items.extend(
-                    [
-                        "objectfield",
-                        "objectvalidation",
-                        "objectpicklist",
-                        "base_opportunity",
-                        "base_account",
-                        "base_contact",
-                    ]
+                    ["objectfield", "baseopportunity", "baseaccount", "basecontact",]
                 )
+                if user.crm == "SALESFORCE":
+                    resource_items.extend(
+                        ["sobjectvalidation", "sobjectpicklist",]
+                    )
 
             for r in resource_items:
                 try:

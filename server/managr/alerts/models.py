@@ -328,18 +328,18 @@ class AlertOperand(TimeStampModel):
         operator = self.operand_operator
         if self.data_type == "DATE":
             # try converting value to int
-            if operator == "=":
-                value = (
-                    int(
-                        (
-                            self.group.template.config_run_against_date(config_id)
-                            + timezone.timedelta(days=int(self.operand_value))
-                        )
-                        .replace(hour=00, minute=00, second=00)
-                        .timestamp()
+            value = (
+                int(
+                    (
+                        self.group.template.config_run_against_date(config_id)
+                        + timezone.timedelta(days=int(self.operand_value))
                     )
-                    * 1000
+                    .replace(hour=00, minute=00, second=00)
+                    .timestamp()
                 )
+                * 1000
+            )
+            if operator == "=":
                 end_value = (
                     int(
                         (
@@ -357,15 +357,18 @@ class AlertOperand(TimeStampModel):
                     "operator": "BETWEEN",
                     "propertyName": self.operand_identifier,
                 }
-            value = (
-                int(
-                    (
-                        self.group.template.config_run_against_date(config_id)
-                        + timezone.timedelta(days=int(self.operand_value))
-                    ).timestamp()
+            elif operator in ["<", "<="]:
+                value = (
+                    int(
+                        (
+                            self.group.template.config_run_against_date(config_id)
+                            + timezone.timedelta(days=int(self.operand_value))
+                        )
+                        .replace(hour=23, minute=59, second=00)
+                        .timestamp()
+                    )
+                    * 1000
                 )
-                * 1000
-            )
         elif self.data_type == "DATETIME":
             value = int(
                 (
@@ -687,6 +690,32 @@ class AlertInstance(TimeStampModel):
                                 field = user.object_fields.filter(
                                     api_name=v, crm_object=self.template.resource_type
                                 ).first()
+                                if field.api_name == "closedate":
+                                    binding_map[binding] = binding_map[binding][0:10]
+                                if (
+                                    user.crm == "HUBSPOT"
+                                    and field
+                                    and field.data_type == "Picklist"
+                                ):
+                                    if field.api_name == "dealstage":
+                                        option_stages = field.options[0].get(
+                                            current_values.secondary_data.get("pipeline")
+                                        )
+                                        value_option = [
+                                            option
+                                            for option in option_stages["stages"]
+                                            if option["id"] == current_values.secondary_data.get(v)
+                                        ]
+                                    else:
+                                        value_option = [
+                                            option
+                                            for option in field.options
+                                            if option["value"]
+                                            == current_values.secondary_data.get(v)
+                                        ]
+                                    binding_map[binding] = (
+                                        value_option[0]["label"] if len(value_option) else "~None~"
+                                    )
                                 if field and field.data_type == "DateTime":
                                     binding_map[binding] = binding_map[binding][0:10]
                                 if field and field.data_type == "Reference":

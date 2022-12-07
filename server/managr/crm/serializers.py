@@ -158,6 +158,8 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
 
 
 class ObjectFieldSerializer(serializers.ModelSerializer):
+    options_ref = serializers.SerializerMethodField("get_options_ref")
+
     class Meta:
         model = ObjectField
         fields = (
@@ -175,6 +177,7 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "reference_to_infos",
             "relationship_name",
             "options",
+            "options_ref",
             "integration_source",
             "integration_id",
             "is_public",
@@ -182,3 +185,12 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "filterable",
             "reference_display_label",
         )
+
+    def get_options_ref(self, instance, *args, **kwargs):
+        if instance.api_name == "dealstage":
+            options = []
+            for pipeline in instance.options[0].values():
+                options.append(pipeline["stages"])
+        else:
+            options = instance.options
+        return options

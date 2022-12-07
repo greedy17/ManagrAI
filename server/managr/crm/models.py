@@ -423,18 +423,28 @@ class ObjectField(TimeStampModel, IntegrationModel):
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
             if self.api_name in ["StageName", "dealstage"]:
+                if self.api_name == "dealstage":
+                    resource = BaseOpportunity.objects.get(id=kwargs.get("resource_id"))
+                    stages = self.options[0].get(resource.secondary_data["pipeline"])["stages"]
+                    stage_options = list(
+                        map(
+                            lambda option: block_builders.option(option["label"], option["id"]),
+                            stages,
+                        )
+                    )
+                    options = stage_options
+                else:
+                    options = self.get_slack_options
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
-                        filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
-                        ),
+                        filter(lambda opt: opt.get("value", None) == value, options,),
                     ),
                 )
 
                 block = block_builders.static_select(
                     f"*{self.reference_display_label}*",
-                    self.get_slack_options,
+                    options,
                     action_id=action_id,
                     initial_option=initial_option,
                     block_id=self.api_name,
