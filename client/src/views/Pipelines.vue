@@ -192,8 +192,9 @@
                 field.dataType === 'MultiPicklist' ||
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
+              
             >
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
+              <label class="label" @click="test(field)">{{ field.referenceDisplayLabel }}</label>
 
               <Multiselect
                 v-model="currentVals[field.apiName]"
@@ -2289,6 +2290,50 @@
                     />
                   </div>
 
+                  <Multiselect
+                    v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
+                    :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    style="width: 23vw; font-size: 13px"
+                    track-by="value"
+                    label="label"
+                    @select="
+                      setDropdownValue({
+                        val: field.apiName === 'StageName' ? $event.value : $event.id,
+                        oppId: opp.id,
+                        oppIntegrationId: opp.integration_id,
+                      })
+                    "
+                    v-model="dropdownVal[field.apiName]"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.apiName === 'StageName' ?
+                          opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] :
+                          ((
+                              field.apiName.includes('__c')
+                                ? opp['secondary_data'][field.apiName]
+                                : opp['secondary_data'][
+                                    capitalizeFirstLetter(camelize(field.apiName))
+                                  ]
+                            )
+                              ? field.apiName.includes('__c')
+                                ? opp['secondary_data'][field.apiName]
+                                : opp['secondary_data'][
+                                    capitalizeFirstLetter(camelize(field.apiName))
+                                  ]
+                              : field.referenceDisplayLabel)
+                        }}
+                      </p>
+                    </template>
+                  </Multiselect>
+
                   <div
                     v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
                   >
@@ -2334,36 +2379,6 @@
                                     capitalizeFirstLetter(camelize(field.apiName))
                                   ]
                               : field.referenceDisplayLabel
-                          }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                    <Multiselect
-                      v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
-                      :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
-                      openDirection="below"
-                      selectLabel="Enter"
-                      style="width: 23vw; font-size: 13px"
-                      track-by="value"
-                      label="label"
-                      @select="
-                        setDropdownValue({
-                          val: $event.value,
-                          oppId: opp.id,
-                          oppIntegrationId: opp.integration_id,
-                        })
-                      "
-                      v-model="dropdownVal[field.apiName]"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{
-                            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                           }}
                         </p>
                       </template>
@@ -2458,7 +2473,7 @@
                   </div>
                 </div>
                 <div class="inline-edit__footer">
-                  <small>ESC to cancel</small>
+                  <small @click="test(dropdownVal)">ESC to cancel</small>
                   <button
                     @click="inlineUpdate(formData, opp.id, opp.integrationId)"
                     class="add-button"
@@ -2841,6 +2856,7 @@ export default {
     task: 'checkAndClearInterval',
     dropdownValue: {
       handler(val) {
+        console.log('some data', this.stagesWithForms, val)
         if (this.stagesWithForms.includes(val.val)) {
           this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
@@ -3072,6 +3088,7 @@ export default {
     },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
+      console.log('openStageForm', field)
       this.stageGateField = field
       this.stageFormOpen = true
       this.stageId = id
@@ -3080,7 +3097,7 @@ export default {
       try {
         let res
         res = await SObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: 'Opportunity',//this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -3689,7 +3706,7 @@ export default {
       this.noteTitle = null
       try {
         const res = await SObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: 'Opportunity', //this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
       } catch (e) {
@@ -3725,7 +3742,7 @@ export default {
       try {
         let res
         res = await SObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: 'Opportunity', //this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -3770,32 +3787,15 @@ export default {
       this.addingProduct = false
       this.stageGateField = null
     },
-    async oppInstance(id) {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
-          formType: 'UPDATE',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-      } catch (e) {
-        this.$toast('Error building update form, close modal and try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
-    },
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
-        const res = await SObjects.api.createFormInstance({
+        const res = await CRMObjects.api.createBulkFormInstance({ // SObjects.api.createFormInstance({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
           stageName: field ? field : this.stageGateField,
         })
+        console.log('hey res', res)
         this.stageGateId = res.form_id
       } catch (e) {
         this.$toast('Error creating stage form', {
@@ -3978,6 +3978,7 @@ export default {
       }
     },
     setUpdateValues(key, val, multi) {
+      console.log('key and val', key, val)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -3987,10 +3988,13 @@ export default {
       if (val && !multi) {
         this.formData[key] = val
       }
+      console.log('key', key)
       if (key === 'StageName' || key === 'dealstage') {
+        console.log('this.stageWithForms', this.stagesWithForms, val)
         this.stagesWithForms.includes(val)
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
+        console.log('stageGateField', this.stageGateField)
       }
     },
     setUpdateValidationValues(key, val) {
@@ -4213,7 +4217,7 @@ export default {
           stage_name: null,
         })
         const res2 = await SObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: 'Opportunity', //this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: this.oppId,
         })
         this.currentProducts = res2.current_products
@@ -4468,6 +4472,7 @@ export default {
 
     setDropdownValue(val) {
       // this.dropdownValue = {}
+      console.log('val here?', val)
       this.dropdownValue = val
     },
     filtersAndOppFields() {
@@ -4528,6 +4533,7 @@ export default {
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
+          console.log('res?', res)
           stageGateForms = res.filter(
             (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
           )
@@ -4535,15 +4541,40 @@ export default {
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           // )[0].fieldsRef
         }
+
+        console.log('stageGateForms', stageGateForms)
         
         if (stageGateForms.length) {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
-          this.stagesWithForms = stages
-          for (const field of stageGateForms) {
-            this.stageValidationFields[field.stage] = field.fieldsRef
+          console.log('stages', stages)
+          let newStages = []
+          if (this.userCRM === 'HUBSPOT') {
+            for (let i = 0; i < stages.length; i++) {
+              const stage = stages[i]
+              const eachWord = stage.split(' ')
+              let actualStage = ''
+              for (let j = 0; j < eachWord.length; j++) {
+                actualStage += eachWord[j].toLowerCase()
+              }
+              newStages.push(actualStage)
+            }
+          } else {
+            newStages = stages
           }
+          this.stagesWithForms = newStages
+          console.log('stageGateForms', stageGateForms)
+          for (const field of stageGateForms) {
+            console.log('field!!', field)
+            let stage = ''
+            const eachWord = field.stage.split(' ')
+            for (let j = 0; j < eachWord.length; j++) {
+              stage += eachWord[j].toLowerCase()
+            }
+            this.stageValidationFields[stage] = field.fieldsRef
+          }
+          console.log('stageValidationFields', this.stageValidationFields)
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.loading = false

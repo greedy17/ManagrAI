@@ -104,4 +104,14 @@ export class ObjectFieldAPI extends ModelAPI {
         return apiErrorHandler({ apiName: 'Salesforce API' })(e)
       }
     }
+
+    async createBulkFormInstance(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/create-bulk-form-instance/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
 }
