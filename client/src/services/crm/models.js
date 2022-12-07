@@ -19,6 +19,7 @@ export class ObjectField extends Model {
     static filterable = new fields.CharField({ readOnly: true })
     static order = new fields.IntegerField()
     static options = new fields.Field()
+    static optionsRef = new fields.Field()
     static includeInRecap = new fields.Field()
     static integrationSource = new fields.CharField()
 
