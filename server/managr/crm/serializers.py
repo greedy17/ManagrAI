@@ -177,6 +177,7 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "reference_to_infos",
             "relationship_name",
             "options",
+            "options_ref",
             "integration_source",
             "integration_id",
             "is_public",
