@@ -428,7 +428,7 @@ export default {
       if (this.selectedOperand) {
         this.form.field._operandValue.value = this.selectedOperand
         if (this.dealStageCheck) {
-          this.form.field.operandValue.value = this.selectedOperand.label
+          this.form.field.operandValue.value = this.selectedOperand.id
           this.dealStageCheck = false
         } else {
           this.form.field.operandValue.value = this.selectedOperand.value
