@@ -283,6 +283,7 @@ export default {
       NON_FIELD_ALERT_OPTS,
       negativeOperand: false,
       positiveOperand: false,
+      dealStageCheck: false,
       MyOperand: 'Negative',
       intOpts: [
         { label: 'Greater or equal to', value: '>=' },
@@ -426,7 +427,12 @@ export default {
     selectedOperand: function () {
       if (this.selectedOperand) {
         this.form.field._operandValue.value = this.selectedOperand
-        this.form.field.operandValue.value = this.selectedOperand.value
+        if (this.dealStageCheck) {
+          this.form.field.operandValue.value = this.selectedOperand.label
+          this.dealStageCheck = false
+        } else {
+          this.form.field.operandValue.value = this.selectedOperand.value
+        }
       } else {
         this.form.field._operandValue.value = null
         this.form.field.operandValue.value = null
@@ -493,10 +499,16 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          console.log('objectFields', this.objectFields.list)
           const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
-          console.log('hsPicklist', hsPicklist)
           this.picklistOpts = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
+          if (query_params.picklistFor === 'dealstage') {
+            this.dealStageCheck = true
+            let dealStage = []
+            for (let i = 0; i < hsPicklist[0].optionsRef.length; i++) {
+              dealStage = [...dealStage, ...hsPicklist[0].optionsRef[i]]
+            }
+            this.picklistOpts = dealStage
+          }
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.picklistOpts = res.length ? res[0]['values'] : []
