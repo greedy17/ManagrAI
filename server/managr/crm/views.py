@@ -379,3 +379,58 @@ class CRMObjectViewSet(
             print("NOTE DATA", note_data)
             return Response(data=note_data)
         return Response(data=[])
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-current-values",
+    )
+    def get_current_values(self, request, *args, **kwargs):
+        user = request.user
+        routes = model_routes(user.crm)
+        resource_type = request.GET.get("resource_type")
+        resource_id = request.GET.get("resource_id", None)
+        route = routes[resource_type]
+        model_class = route["model"]
+        model_object = model_class.objects.filter(id=resource_id).first()
+        attempts = 1
+        while True:
+            try:
+                current_values = model_object.get_current_values()
+                data = {
+                    "current_values": current_values.secondary_data,
+                    "success": True,
+                }
+                break
+            except TokenExpired as e:
+                if attempts >= 5:
+                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    data = {"error": str(e), "success": False}
+                    break
+                else:
+                    if model_object.owner == user:
+                        user.crm_account.regenerate_token()
+                    else:
+                        model_object.owner.crm_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+                data = {"error": str(e), "success": False}
+                break
+        if data["success"] is True and user.organization.has_products and user.crm == 'SALESFORCE':
+            current_products = user.crm_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{model_object.integration_id}'",
+                ],
+            )
+            product_values = [product.integration_id for product in current_products]
+            internal_products = routes["OpportunityLineItem"]["model"].objects.filter(
+                integration_id__in=product_values
+            )
+            product_as_dict = [item.adapter_class.as_dict for item in internal_products]
+            data["current_products"] = product_as_dict
+        return Response(data=data)

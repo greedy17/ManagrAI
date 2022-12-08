@@ -51,7 +51,7 @@
 
         <div v-show="showIcons" class="flex-row">
           <div>
-            <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
+            <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
               <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
             </button>
             <!-- <span class="tooltiptext">Expand</span> -->
@@ -317,6 +317,8 @@
                 : opp['secondary_data'][field.apiName]
             "
             :referenceOpts="referenceOpts"
+            :field="field"
+            :opp="opp"
             :lastStageUpdate="opp['last_stage_update']"
           />
         </div>
@@ -510,8 +512,8 @@ export default {
         this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
-    emitCreateForm() {
-      this.$emit('create-form')
+    emitCreateForm(opp) {
+      this.$emit('create-form', opp)
     },
     emitGetNotes() {
       this.$emit('get-notes')

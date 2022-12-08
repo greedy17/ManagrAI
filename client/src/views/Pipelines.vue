@@ -194,11 +194,12 @@
               "
               
             >
-              <label class="label" @click="test(field)">{{ field.referenceDisplayLabel }}</label>
+              <label class="label" @click="test(field.options[0][savedOpp.secondary_data.pipeline])">{{ field.referenceDisplayLabel }}</label>
 
               <Multiselect
                 v-model="currentVals[field.apiName]"
                 :options="
+                  field.apiName === 'dealstage' ? field.options[0][savedOpp.secondary_data.pipeline].stages :
                   userCRM === 'HUBSPOT' ? field.options : 
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
@@ -244,7 +245,7 @@
                 <template v-slot:placeholder>
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
-                    {{ `${field.referenceDisplayLabel}` }}
+                    {{ field.apiName === 'dealstage' ? field.options[0][savedOpp['secondary_data'].pipeline].stages.filter(stage => stage.id === savedOpp['secondary_data'][field.apiName])[0].label :`${field.referenceDisplayLabel}` }}
                   </p>
                 </template>
               </Multiselect>
@@ -855,6 +856,7 @@
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
+                  field.apiName === 'dealstage' ? field.options[0][savedOpp.secondary_data.pipeline].stages :
                   userCRM === 'HUBSPOT' ? field.options : 
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                     ? allPicklistOptions[field.id]
@@ -900,13 +902,14 @@
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
-                      field.apiName === 'AccountId'
-                        ? currentAccount
-                        : field.apiName === 'OwnerId'
-                        ? currentOwner
-                        : currentVals && `${currentVals[field.apiName]}` !== 'null'
-                        ? `${currentVals[field.apiName]}`
-                        : `${field.referenceDisplayLabel}`
+                      field.apiName === 'dealstage' ? field.options[0][savedOpp['secondary_data'].pipeline].stages.filter(stage => stage.id === savedOpp['secondary_data'][field.apiName])[0].label :
+                        field.apiName === 'AccountId'
+                          ? currentAccount
+                          : field.apiName === 'OwnerId'
+                          ? currentOwner
+                          : currentVals && `${currentVals[field.apiName]}` !== 'null'
+                          ? `${currentVals[field.apiName]}`
+                          : `${field.referenceDisplayLabel}`
                     }}
                   </p>
                 </template>
@@ -2197,7 +2200,7 @@
             :key="i"
             v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : allOpps"
             @create-form="
-              createFormInstance(opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
+              createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
             "
             @get-notes="getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name)"
             @checked-box="
@@ -2239,7 +2242,7 @@
           >
             <div class="cell-name"></div>
             <div
-              @click="test(allOpps)"
+              @click="test(opp)"
               class="table-cell"
               :key="i"
               v-for="(field, i) in oppFields"
@@ -2294,7 +2297,7 @@
 
                   <Multiselect
                     v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
-                    :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
+                    :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options[0][opp.secondary_data.pipeline].stages"
                     openDirection="below"
                     selectLabel="Enter"
                     style="width: 23vw; font-size: 13px"
@@ -2318,7 +2321,7 @@
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.apiName === 'StageName' ?
                           opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] :
-                          field.apiName === 'dealstage' ? opp['secondary_data'][field.apiName] :
+                          field.apiName === 'dealstage' ? field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label :
                           ((
                               field.apiName.includes('__c')
                                 ? opp['secondary_data'][field.apiName]
@@ -2342,7 +2345,7 @@
                   >
                     <Multiselect
                       style="width: 23vw; font-size: 12px"
-                      v-if="(field.apiName !== 'StageName' || field.apiName === 'dealstage')"
+                      v-if="(field.apiName !== 'StageName' || field.apiName !== 'dealstage')"
                       :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
                       openDirection="below"
                       selectLabel="Enter"
@@ -2476,7 +2479,7 @@
                   </div>
                 </div>
                 <div class="inline-edit__footer">
-                  <small @click="test(dropdownVal)">ESC to cancel</small>
+                  <small @click="test(field)">ESC to cancel</small>
                   <button
                     @click="inlineUpdate(formData, opp.id, opp.integrationId)"
                     class="add-button"
@@ -2554,7 +2557,9 @@ export default {
       currentCell: null,
       loadingNext: false,
       viewingProducts: false,
+      savedOpp: null,
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
+      dealStages: [],
       stageGateCopy: [],
       stageReferenceOpts: {},
       currentSelectedProduct: null,
@@ -3726,7 +3731,7 @@ export default {
         console.log(e)
       }
     },
-    async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
+    async createFormInstance(opp, id, integrationId, pricebookId, alertInstanceId = null) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.viewingProducts = false
       this.addingProduct = false
@@ -3752,6 +3757,7 @@ export default {
       this.productIntegrationId = null
       this.dropdownProductVal = {}
       this.editingProduct = false
+      this.savedOpp = opp
       try {
         let res
         res = await CRMObjects.api.getCurrentValues({ //SObjects.api.getCurrentValues({
@@ -3804,13 +3810,11 @@ export default {
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
-        console.log('field', field)
         const res = await CRMObjects.api.createFormInstance({ // SObjects.api.createFormInstance({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
           stageName: field ? field : this.stageGateField,
         })
-        console.log('hey res', res)
         this.stageGateId = res.form_id
       } catch (e) {
         this.$toast('Error creating stage form', {
