@@ -287,31 +287,40 @@ class CRMObjectViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="create-bulk-form-instance",
+        url_path="create-form-instance",
     )
-    def create_bulk_form_instance(self, request, *args, **kwargs):
+    def create_form_instance(self, request, *args, **kwargs):
         from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
         user = self.request.user
+        form_type = self.request.GET.get("form_type")
+        resource_type = self.request.GET.get("resource_type")
         resource_id = self.request.GET.get("resource_id", None)
-        resource = "Opportunity" if self.request.crm == "SALESFORCE" else "Deal"
+        stage_name = self.request.GET.get("stage_name", None)
         template_list = OrgCustomSlackForm.objects.for_user(user).filter(
-            Q(resource=resource, form_type="UPDATE")
+            Q(resource=resource_type, form_type=form_type)
         )
-        template = template_list.first()
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, resource_id=resource_id
+        template = (
+            template_list.filter(stage=stage_name).first() if stage_name else template_list.first()
+        )
+        slack_form = (
+            OrgCustomSlackFormInstance.objects.create(
+                template=template, user=user, resource_id=resource_id
+            )
+            if form_type == "UPDATE"
+            else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
         )
         attempts = 1
         while True:
             try:
-
+                current_values = slack_form.generate_form_values()
                 data = {
                     "form_id": str(slack_form.id),
+                    "current_values": current_values,
                     "success": True,
                 }
                 break
-            except TokenExpired:
+            except TokenExpired as e:
                 if attempts >= 5:
                     logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
                     break
@@ -322,6 +331,17 @@ class CRMObjectViewSet(
                 logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
                 data = {"error": str(e), "success": False}
                 break
+        if data["success"] is True and (resource_type == "Opportunity" and form_type == "UPDATE"):
+            current_products = user.crm_account.list_resource_data(
+                "OpportunityLineItem",
+                0,
+                filter=[
+                    "AND IsDeleted = false",
+                    f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
+                ],
+            )
+            product_values = [product.as_dict for product in current_products]
+            data["current_products"] = product_values
         return Response(data=data)
 
     @action(
