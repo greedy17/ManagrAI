@@ -320,25 +320,16 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     def get_user_fields(self):
         from managr.crm.models import ObjectField
 
-        # template_fields = (
-        #     self.template.formfield_set.all()
-        #     .values_list("field__api_name", "field__salesforce_object",)
-        #     .order_by("order")
-        # )
         template_fields = (
             self.template.customformfield_set.all()
             .values_list("field__api_name", "field__crm_object",)
             .order_by("order")
         )
+        print(template_fields)
         user_fields = []
         # hack to maintain order
         for field in template_fields:
             try:
-                # f = SObjectField.objects.get(
-                #     Q(api_name=field[0])
-                #     & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
-                #     & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
-                # )
                 f = ObjectField.objects.get(
                     Q(api_name=field[0])
                     & Q(Q(crm_object=field[1]) | Q(crm_object__isnull=True))
