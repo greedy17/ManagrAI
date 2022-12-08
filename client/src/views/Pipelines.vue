@@ -215,12 +215,12 @@
                 "
                 @open="
                   field.dataType === 'Reference'
-                    ? getCreateReferenceOpts(field.apiName, field.id)
+                    ? getCreateReferenceOpts(field.apiName, field.id, field.options)
                     : null
                 "
                 @search-change="
                   field.dataType === 'Reference'
-                    ? getReferenceFieldList(field.apiName, field.id, 'create1', $event)
+                    ? getReferenceFieldList(field.apiName, field.id, 'create1', field.options, $event)
                     : null
                 "
                 :multiple="field.dataType === 'MultiPicklist' ? true : false"
@@ -851,7 +851,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
+              <label class="label" @click="test(currentVals[field.apiName])">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -871,11 +871,11 @@
                 "
                 @search-change="
                   field.dataType === 'Reference'
-                    ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                    ? getReferenceFieldList(field.apiName, field.id, 'update', field.options, $event)
                     : null
                 "
                 @open="
-                  field.dataType === 'Reference' ? getReferenceOpts(field.apiName, field.id) : null
+                  field.dataType === 'Reference' ? getReferenceOpts(field.apiName, field.id, field.options) : null
                 "
                 :loading="dropdownLoading"
                 openDirection="below"
@@ -904,7 +904,7 @@
                         ? currentAccount
                         : field.apiName === 'OwnerId'
                         ? currentOwner
-                        : currentVals.length && `${currentVals[field.apiName]}` !== 'null'
+                        : currentVals && `${currentVals[field.apiName]}` !== 'null'
                         ? `${currentVals[field.apiName]}`
                         : `${field.referenceDisplayLabel}`
                     }}
@@ -1874,7 +1874,7 @@
                     @select="oppNewValue = $event.value"
                     @open="
                       selectedOpp.dataType === 'Reference'
-                        ? getReferenceOpts(selectedOpp.apiName, selectedOpp.id)
+                        ? getReferenceOpts(selectedOpp.apiName, selectedOpp.id, field.options)
                         : null
                     "
                     openDirection="below"
@@ -1991,6 +1991,7 @@
                 "
                 @select="
                   setUpdateValidationValues(
+                    /*field.apiName === 'dealstage' ? $event.id :*/
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
@@ -2238,6 +2239,7 @@
           >
             <div class="cell-name"></div>
             <div
+              @click="test(allOpps)"
               class="table-cell"
               :key="i"
               v-for="(field, i) in oppFields"
@@ -2262,7 +2264,7 @@
                     <textarea
                       id="user-input-wide-inline"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2283,7 +2285,7 @@
                       id="user-input-inline"
                       type="text"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2300,7 +2302,7 @@
                     label="label"
                     @select="
                       setDropdownValue({
-                        val: field.apiName === 'StageName' ? $event.value : $event.id,
+                        val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? $event.label : $event.id,
                         oppId: opp.id,
                         oppIntegrationId: opp.integration_id,
                       })
@@ -2316,6 +2318,7 @@
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.apiName === 'StageName' ?
                           opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] :
+                          field.apiName === 'dealstage' ? opp['secondary_data'][field.apiName] :
                           ((
                               field.apiName.includes('__c')
                                 ? opp['secondary_data'][field.apiName]
@@ -2367,13 +2370,13 @@
                           <img src="@/assets/images/search.svg" alt="" />
                           {{
                             (
-                              field.apiName.includes('__c')
+                              field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                                 ? opp['secondary_data'][field.apiName]
                                 : opp['secondary_data'][
                                     capitalizeFirstLetter(camelize(field.apiName))
                                   ]
                             )
-                              ? field.apiName.includes('__c')
+                              ? field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                                 ? opp['secondary_data'][field.apiName]
                                 : opp['secondary_data'][
                                     capitalizeFirstLetter(camelize(field.apiName))
@@ -2389,7 +2392,7 @@
                       type="date"
                       id="user-input-inline"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2401,7 +2404,7 @@
                       type="datetime-local"
                       id="user-input-inline"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2420,7 +2423,7 @@
                       id="user-input-inline"
                       type="number"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2454,7 +2457,7 @@
                       style="width: 23vw; font-size: 13px"
                       v-model="dropdownVal[field.apiName]"
                       :options="referenceOpts[field.apiName]"
-                      @open="getCreateReferenceOpts(field.apiName, field.id)"
+                      @open="getCreateReferenceOpts(field.apiName, field.id, field.options)"
                       :loading="dropdownLoading"
                       openDirection="below"
                       selectLabel="Enter"
@@ -2857,7 +2860,11 @@ export default {
     dropdownValue: {
       handler(val) {
         console.log('some data', this.stagesWithForms, val)
-        if (this.stagesWithForms.includes(val.val)) {
+        let loweredVal = ''
+        if (this.userCRM === 'HUBSPOT') {
+          loweredVal = val.val.split(' ').join('').toLowerCase()
+        }
+        if (this.stagesWithForms.includes(val.val) || this.stagesWithForms.includes(loweredVal)) {
           this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
@@ -3096,8 +3103,8 @@ export default {
       this.dropdownLoading = true
       try {
         let res
-        res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity',//this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+        res = await CRMObjects.api.getCurrentValues({ //SObjects.api.getCurrentValues({
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -3132,14 +3139,20 @@ export default {
       this.stageId = null
       this.stageIntegrationId = null
     },
-    async getReferenceFieldList(key, val, type, eventVal, filter) {
-      let res
+    async getReferenceFieldList(key, val, type, eventVal, options, filter) {
+      console.log('params', key, val, type, eventVal, filter)
+      let res = []
       try {
-        res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: val,
-          value: eventVal ? eventVal : '',
-          for_filter: filter ? [filter] : null,
-        })
+        console.log('options', options)
+        if (options && options.length) {
+          res = options
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjects.api.getSobjectPicklistValues({
+            sobject_id: val,
+            value: eventVal ? eventVal : '',
+            for_filter: filter ? [filter] : null,
+          })
+        }
         if (type === 'update') {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
@@ -3705,8 +3718,8 @@ export default {
       this.noteValue = null
       this.noteTitle = null
       try {
-        const res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity', //this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+        const res = await CRMObjects.api.getCurrentValues({ //SObjects.api.getCurrentValues({
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
       } catch (e) {
@@ -3741,11 +3754,12 @@ export default {
       this.editingProduct = false
       try {
         let res
-        res = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity', //this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+        res = await CRMObjects.api.getCurrentValues({ //SObjects.api.getCurrentValues({
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
+        console.log('this.currentVals', this.currentVals)
         this.currentProducts = res ? res.current_products : {}
 
         const usersForCurrentOwner = this.allUsers.filter(
@@ -3790,7 +3804,8 @@ export default {
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
-        const res = await CRMObjects.api.createBulkFormInstance({ // SObjects.api.createFormInstance({
+        console.log('field', field)
+        const res = await CRMObjects.api.createFormInstance({ // SObjects.api.createFormInstance({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
           stageName: field ? field : this.stageGateField,
@@ -3988,10 +4003,9 @@ export default {
       if (val && !multi) {
         this.formData[key] = val
       }
-      console.log('key', key)
       if (key === 'StageName' || key === 'dealstage') {
         console.log('this.stageWithForms', this.stagesWithForms, val)
-        this.stagesWithForms.includes(val)
+        this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val.split(' ').join('').toLowerCase())
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
         console.log('stageGateField', this.stageGateField)
@@ -4216,8 +4230,8 @@ export default {
           resource_id: this.productId,
           stage_name: null,
         })
-        const res2 = await SObjects.api.getCurrentValues({
-          resourceType: 'Opportunity', //this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+        const res2 = await CRMObjects.api.getCurrentValues({ //SObjects.api.getCurrentValues({
+          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: this.oppId,
         })
         this.currentProducts = res2.current_products
@@ -4453,17 +4467,17 @@ export default {
         }
       }
     },
-    async getReferenceOpts(name, id) {
+    async getReferenceOpts(name, id, options = []) {
       this.dropdownLoading = true
-      this.referenceOpts[name] = await this.getReferenceFieldList(name, id, 'update')
+      this.referenceOpts[name] = await this.getReferenceFieldList(name, id, 'update', undefined, options)
     },
     async getStageReferenceOpts(name, id) {
       this.dropdownLoading = true
       this.stageReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'stage')
     },
-    async getCreateReferenceOpts(name, id) {
+    async getCreateReferenceOpts(name, id, options = []) {
       this.dropdownLoading = true
-      this.createReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'create')
+      this.createReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'create', undefined, options)
     },
     async getProductReferenceOpts(name, id) {
       this.dropdownLoading = true
@@ -4657,7 +4671,7 @@ export default {
 
     async getNotes(id) {
       try {
-        const res = await SObjects.api.getNotes({
+        const res = await CRMObjects.api.getNotes({ //SObjects.api.getNotes({
           resourceId: id,
         })
         this.modalOpen = true
