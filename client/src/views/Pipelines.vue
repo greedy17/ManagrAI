@@ -420,7 +420,8 @@
                       v-else-if="
                         field.dataType === 'Phone' ||
                         field.dataType === 'Double' ||
-                        field.dataType === 'Currency'
+                        field.dataType === 'Currency' ||
+                        field.dataType === 'Int'
                       "
                     >
                       <label class="red-label"
@@ -488,7 +489,8 @@
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
-                field.dataType === 'Currency'
+                field.dataType === 'Currency' ||
+                field.dataType === 'Int'
               "
               class="col"
             >
@@ -680,7 +682,8 @@
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
-                    field.dataType === 'Currency'
+                    field.dataType === 'Currency' ||
+                    field.dataType === 'Int'
                   "
                 >
                   <p>{{ field.referenceDisplayLabel }}</p>
@@ -865,6 +868,7 @@
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.apiName === 'dealstage' ? $event.label :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -1090,7 +1094,8 @@
                       v-else-if="
                         field.dataType === 'Phone' ||
                         field.dataType === 'Double' ||
-                        field.dataType === 'Currency'
+                        field.dataType === 'Currency' ||
+                        field.dataType === 'Int'
                       "
                     >
                       <label class="red-label"
@@ -1159,7 +1164,8 @@
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
-                field.dataType === 'Currency'
+                field.dataType === 'Currency' ||
+                field.dataType === 'Int'
               "
             >
               <label class="label">{{ field.referenceDisplayLabel }}</label>
@@ -1325,7 +1331,8 @@
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
-                    field.dataType === 'Currency'
+                    field.dataType === 'Currency' ||
+                    field.dataType === 'Int'
                   "
                 >
                   <p>{{ field.referenceDisplayLabel }}</p>
@@ -1500,7 +1507,8 @@
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
-                    field.dataType === 'Currency'
+                    field.dataType === 'Currency' ||
+                    field.dataType === 'Int'
                   "
                 >
                   <p>{{ field.referenceDisplayLabel }}</p>
@@ -1956,8 +1964,8 @@
 
       <div class="adding-stage-gate2" v-if="stageFormOpen">
         <div class="adding-stage-gate2__header">
-          <div>
-            <p>
+          <div @click="test(stageValidationFields)">
+            <p @click="test(stageGateField)">
               These fields are required to advance to
               <span
                 style="color: #fa646a; background-color: #ffd4d4; border-radius: 4px; padding: 6px"
@@ -1983,7 +1991,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
+              <label class="red-label" @click="test(stageReferenceOpts)">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <Multiselect
                 :options="
                   field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -1996,6 +2004,7 @@
                   setUpdateValidationValues(
                     /*field.apiName === 'dealstage' ? $event.id :*/
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.apiName === 'dealstage' ? $event.label :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -2127,7 +2136,8 @@
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
-                field.dataType === 'Currency'
+                field.dataType === 'Currency' ||
+                field.dataType === 'Int'
               "
             >
               <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
@@ -2358,9 +2368,8 @@
                           field.apiName === 'ForecastCategory'
                             ? 'ForecastCategoryName'
                             : field.apiName,
-                            field.apiName === 'dealstage' ? $event.id : $event.value,
-
-                          field.dataType === 'MultiPicklist' ? true : false,
+                            field.apiName === 'dealstage' ? $event.label : $event.value,
+                            field.dataType === 'MultiPicklist' ? true : false,
                         )
                       "
                     >
@@ -2418,7 +2427,8 @@
                     v-else-if="
                       field.dataType === 'Phone' ||
                       field.dataType === 'Double' ||
-                      field.dataType === 'Currency'
+                      field.dataType === 'Currency' ||
+                      field.dataType === 'Int'
                     "
                     class="inline-row"
                   >
@@ -4009,7 +4019,7 @@ export default {
       }
       if (key === 'StageName' || key === 'dealstage') {
         console.log('this.stageWithForms', this.stagesWithForms, val)
-        this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val.split(' ').join('').toLowerCase())
+        this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val ? val.split(' ').join('').toLowerCase() : '')
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
         console.log('stageGateField', this.stageGateField)
@@ -4266,6 +4276,7 @@ export default {
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
+        console.log('this.formData', this.formData)
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: this.formData,
@@ -4568,29 +4579,32 @@ export default {
           let stages = stageGateForms.map((field) => field.stage)
           console.log('stages', stages)
           let newStages = []
-          if (this.userCRM === 'HUBSPOT') {
-            for (let i = 0; i < stages.length; i++) {
-              const stage = stages[i]
-              const eachWord = stage.split(' ')
-              let actualStage = ''
-              for (let j = 0; j < eachWord.length; j++) {
-                actualStage += eachWord[j].toLowerCase()
-              }
-              newStages.push(actualStage)
-            }
+          if (/*this.userCRM === 'HUBSPOT'*/false) {
+            // for (let i = 0; i < stages.length; i++) {
+            //   const stage = stages[i]
+            //   const eachWord = stage.split(' ')
+            //   let actualStage = ''
+            //   for (let j = 0; j < eachWord.length; j++) {
+            //     actualStage += eachWord[j].toLowerCase()
+            //   }
+            //   newStages.push(actualStage)
+            // }
           } else {
+            console.log('stages', stages)
             newStages = stages
           }
           this.stagesWithForms = newStages
           console.log('stageGateForms', stageGateForms)
           for (const field of stageGateForms) {
-            console.log('field!!', field)
-            let stage = ''
-            const eachWord = field.stage.split(' ')
-            for (let j = 0; j < eachWord.length; j++) {
-              stage += eachWord[j].toLowerCase()
-            }
-            this.stageValidationFields[stage] = field.fieldsRef
+            // console.log('field!!', field)
+            // let stage = ''
+            // const eachWord = field.stage.split(' ')
+            // for (let j = 0; j < eachWord.length; j++) {
+            //   stage += eachWord[j].toLowerCase()
+            // }
+            // this.stageValidationFields[stage] = field.fieldsRef
+            this.stageValidationFields[field.stage] = field.fieldsRef
+            console.log('this.stageValidationFields', this.stageValidationFields)
           }
           console.log('stageValidationFields', this.stageValidationFields)
         }
