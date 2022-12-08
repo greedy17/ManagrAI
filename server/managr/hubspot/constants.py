@@ -131,7 +131,12 @@ def HUBSPOT_OWNERS_URI(email=None):
 
 def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):
     fields = set(fields)
-    return {"properties": list(fields), "filters": filters, "limit": limit}
+    return {
+        "properties": list(fields),
+        "filters": filters,
+        "limit": limit,
+        "sorts": [{"propertyName": "hs_lastmodifieddate", "direction": "DESCENDING"}],
+    }
 
 
 def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):

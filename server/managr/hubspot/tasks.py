@@ -144,11 +144,14 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
         ).first()
         if field.api_name == "dealstage":
             values = hs.get_deal_stages("deals")
-            sales_pipeline = [
-                pipeline["stages"] for pipeline in values if pipeline["label"] == "Sales Pipeline"
+            pipelines = {pipeline["id"]: pipeline for pipeline in values}
+            field.options = [pipelines]
+        if field.api_name == "pipeline":
+            values = hs.get_deal_stages("deals")
+            pipelines = [
+                {"value": pipeline["id"], "label": pipeline["label"]} for pipeline in values
             ]
-            if len(sales_pipeline):
-                field.options = sales_pipeline[0]
+            field.options = pipelines
         if existing:
             serializer = ObjectFieldSerializer(data=field.as_dict, instance=existing)
         else:
@@ -254,7 +257,6 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
         try:
             res = hs.list_resource_data(resource)
 
-            logger.info(f"Pulled total {len(res)} from request for {resource}")
             attempts = 1
             break
         except TokenExpired:
@@ -841,19 +843,21 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
                 error_message = str(e)
                 break
     if error:
+        logger.info(
+            f"Successfully updated {success_opps}/{len(forms)} {resource_type}s for user {user.email}"
+        )
         block_set = [
             block_builders.simple_section(
                 f":no_entry: Ugh-Ohhhh.. We've hit an error: {error_message}"
             )
         ]
     else:
-        plural = f"Opportunities" if resource_type == "Opportunity" else f"{resource_type}s"
         logger.info(
-            f"Successfully updated {success_opps}/{len(forms)} {plural} for user {user.email}"
+            f"Successfully updated {success_opps}/{len(forms)} {resource_type}s for user {user.email}"
         )
         block_set = [
             block_builders.simple_section(
-                f":white_check_mark: Successfully bulk updated {success_opps}/{len(forms)} {plural}",
+                f":white_check_mark: Successfully bulk updated {success_opps}/{len(forms)} {resource_type}s",
                 "mrkdwn",
             )
         ]

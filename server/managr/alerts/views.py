@@ -74,7 +74,7 @@ def create_configs_for_target(target, template_user, config):
         users = User.objects.filter(id=target)
     new_configs = []
     for user in users:
-        if user.has_salesforce_integration:
+        if user.crm_account is not None:
             config_copy = copy(config)
             config_copy["alert_targets"] = [str(user.id)]
             if user.has_slack_integration:

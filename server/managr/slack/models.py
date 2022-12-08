@@ -389,7 +389,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                                     break
                         except Exception as e:
                             logger.exception(f"Failed pull current data from {e}")
-                            form_values = {}
+                            form_values = self.resource_object.secondary_data
                             break
                 else:
                     form_values = {}

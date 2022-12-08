@@ -189,7 +189,7 @@ def emit_update_current_db_values(user_id, resource_type, integration_id, verbos
 
 def emit_meeting_workflow_tracker(workflow_id):
     """Checks the workflow after 5 mins to ensure completion"""
-    schedule = timezone.now() + timezone.timedelta(minutes=5)
+    schedule = timezone.now() + timezone.timedelta(minutes=2)
     return _process_workflow_tracker(workflow_id, schedule=schedule)
 
 
@@ -329,9 +329,9 @@ def _generate_form_template(user_id, delete_forms):
                 note = public_fields.filter(id="0bb152b5-aac1-4ee0-9c25-51ae98d55af2").first()
                 for i, field in enumerate(public_fields):
                     if i == 0 and note_subject is not None:
-                        f.fields.add(note_subject, through_defaults={"order": i})
+                        f.custom_fields.add(note_subject, through_defaults={"order": i})
                     elif i == 1 and note is not None:
-                        f.fields.add(note, through_defaults={"order": i})
+                        f.custom_fields.add(note, through_defaults={"order": i})
                 f.save()
 
 
@@ -1143,7 +1143,6 @@ def _process_create_new_contacts(workflow_id, *args):
     for form in contact_forms:
         # if the resource is an account we set it to that account
         # if it is an opp we create a contact role as well
-        logger.info(f"FORM {form}")
         data = form.saved_data
         if not data:
             # try and collect whatever data we have
@@ -1985,7 +1984,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
     error = False
     error_message = None
     for form in forms:
-        form.save_form(data, False)
+        form.save_form(data)
         all_form_data = form.saved_data
         formatted_saved_data = process_text_field_format(
             str(user.id), form.template.resource, all_form_data
@@ -2055,6 +2054,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
                 error_message = str(e)
                 break
     if error:
+        plural = f"Opportunities" if resource_type == "Opportunity" else f"{resource_type}s"
         logger.info(
             f"Did not successfully bulk update {success_opps}/{len(forms)} {plural} for user {user.email}"
         )

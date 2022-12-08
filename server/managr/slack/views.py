@@ -326,7 +326,15 @@ class SlackViewSet(viewsets.GenericViewSet,):
         organization_slack = request.user.organization.slack_integration
         channel_id = request.GET.get("channel_id", None)
         if organization_slack:
-            channel = slack_requests.get_channel_info(organization_slack.access_token, channel_id)
+            try:
+                channel = slack_requests.get_channel_info(
+                    organization_slack.access_token, channel_id
+                )
+            except Exception:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"success": False, "message": "Failed to retreive channel info"},
+                )
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
@@ -382,6 +390,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def update_recap_channel(self, request, *args, **kwargs):
         logger.info(f"UPDATE RECAP CHANNEL DATA: {request.data}")
+        recap_channel = request.data.get("recap_channel")
         slack_id = request.data.get("slack_id")
         if slack_id:
             slack = (
@@ -394,9 +403,8 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
-        if not slack.recap_channel:
-            slack.change_recap_channel(request.data.get("recap_channel"))
-        logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
+        if not slack.recap_channel or slack.recap_channel != recap_channel:
+            slack.change_recap_channel(recap_channel)
         if request.data.get("users", None):
             for user in request.data.get("users"):
                 user_acc = User.objects.filter(id=user).first()
@@ -557,7 +565,9 @@ class SlackFormsViewSet(
         data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
-        data.update({"organization": self.request.user.organization_id})
+        data.update(
+            {"organization": self.request.user.organization_id, "team": self.request.user.team}
+        )
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

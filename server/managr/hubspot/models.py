@@ -12,7 +12,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 from background_task.models import CompletedTask, Task
-
+from managr.crm.models import BaseOpportunity
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -70,6 +70,9 @@ class HSSyncOperation(TimeStampModel):
         blank=True,
         help_text="List of failed tasks as that failed from task runner for uncaught exceptions after 5 tries",
     )
+
+    class Meta:
+        ordering = ["-datetime_created"]
 
     @property
     def status(self):

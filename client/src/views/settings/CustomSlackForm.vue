@@ -1422,14 +1422,27 @@ export default {
             crmObject: this.DEAL,
             search: 'Deal Stage',
           })
-          let dealStage
+          let dealStages = []
           for (let i = 0; i < res.length; i++) {
             if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
+              dealStages = res[i]
               break
             }
           }
-          this.stages = dealStage ? dealStage.options : []
+          let dealStage = []
+          if (dealStages.optionsRef.length) {
+            // const items = dealStages.options[0]
+            // for (let key in items) {
+            //   // dealStage = [...dealStage, items[key].stages]
+            //   for (let j = 0; j < items[key].stages.length; j++) {
+            //     dealStage.push(items[key].stages[j])
+            //   }
+            // }
+            for (let i = 0; i < dealStages.optionsRef.length; i++) {
+              dealStage = [...dealStage, ...dealStages.optionsRef[i]]
+            }
+          }
+          this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.stages = res.length ? res[0]['values'] : []
