@@ -1,6 +1,9 @@
 import json
 import logging
 import time
+import random
+import pytz
+from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters,
@@ -24,10 +27,13 @@ from managr.crm.exceptions import (
     RequiredFieldError,
     UnhandledCRMError,
     SFNotFoundError,
+    InvalidRefreshToken,
 )
-from managr.salesforce.background import _send_instant_alert
+from managr.salesforce.background import _send_instant_alert, _process_pipeline_sf_sync
+from managr.salesforce.models import SFResourceSync
+from managr.hubspot.models import HSResourceSync
 from .utils import create_form_instance, process_text_field_format
-
+from managr.hubspot.tasks import _process_pipeline_hs_sync
 from managr.slack.models import OrgCustomSlackFormInstance
 
 # Create your views here.
@@ -418,7 +424,7 @@ class CRMObjectViewSet(
                 logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
                 data = {"error": str(e), "success": False}
                 break
-        if data["success"] is True and user.organization.has_products and user.crm == 'SALESFORCE':
+        if data["success"] is True and user.organization.has_products and user.crm == "SALESFORCE":
             current_products = user.crm_account.list_resource_data(
                 "OpportunityLineItem",
                 0,
@@ -433,4 +439,76 @@ class CRMObjectViewSet(
             )
             product_as_dict = [item.adapter_class.as_dict for item in internal_products]
             data["current_products"] = product_as_dict
+        return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="resource-sync",
+    )
+    def resource_sync(self, request, *args, **kwargs):
+        user = self.request.user
+        operations = (
+            ["Account", "Opportunity", "OpportunityLineItem"]
+            if user.crm == "SALESFORCE"
+            else ["Deal"]
+        )
+        currenttime = datetime.now()
+        to_sync_ids = []
+        synced_ids = []
+        sync_class = SFResourceSync if user.crm == "SALESFORCE" else HSResourceSync
+        type = "SALESFORCE_RESOURCE_SYNC" if user.crm == "SALESFORCE" else "HUBSPOT_RESOURCE_SYNC"
+        sync = sync_class.objects.create(
+            user=user, operations_list=operations, operation_type=type,
+        )
+        user_timezone = pytz.timezone(user.timezone)
+
+        current = (
+            pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
+        )
+        user.salesforce_account.last_sync_time = current
+        user.salesforce_account.save()
+        to_sync_ids.append(str(sync.id))
+        sync_function = (
+            _process_pipeline_sf_sync if user.crm == "SALESFORCE" else _process_pipeline_hs_sync
+        )
+        sync_function(str(sync.id))
+        attempts = 1
+        logger.info(f"TO SYNC: {to_sync_ids}")
+        logger.info(f"SYNCED: {synced_ids}")
+        has_error = False
+        while True:
+            for index, id in enumerate(to_sync_ids):
+                resource_sync = sync_class.objects.get(id=id)
+                try:
+                    if len(resource_sync.operations) < 1:
+                        has_error = True
+                        break
+                    if resource_sync.status == "Completed":
+                        synced_ids.append(id)
+                        to_sync_ids.pop(index)
+                        logger.info(f"IN LOOP TO SYNC: {to_sync_ids}")
+                        logger.info(f"IN LOOP SYNCED: {synced_ids}")
+                        if len(to_sync_ids) == 0:
+                            break
+                        else:
+                            continue
+                    else:
+                        attempts += 1
+                        sleep = 1 * 1.15 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                except InvalidRefreshToken:
+                    has_error = True
+                    break
+                except Exception as e:
+                    if attempts >= 5:
+                        has_error = True
+                        logger.exception(f"Failed to receive complete status from sync from {e}")
+                        break
+                    else:
+                        attempts += 1
+            if len(to_sync_ids) == 0 or has_error:
+                break
+        data = {"success": False} if has_error else {"success": True}
         return Response(data=data)

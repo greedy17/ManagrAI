@@ -64,7 +64,7 @@ from .background import (
     emit_add_update_to_sf,
     _send_instant_alert,
     emit_process_update_resources_in_salesforce,
-    _process_pipeline_sync,
+    _process_pipeline_sf_sync,
     emit_meeting_workflow_tracker,
     create_form_instance,
     emit_process_bulk_update,

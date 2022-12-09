@@ -92,6 +92,14 @@ def emit_process_slack_hs_bulk_update(
 
 @background(schedule=0)
 @log_all_exceptions
+def _process_pipeline_hs_sync(sync_id):
+    sync = HSResourceSync.objects.get(id=sync_id)
+    sync.begin_tasks()
+    return sync.id
+
+
+@background(schedule=0)
+@log_all_exceptions
 def _process_gen_next_hubspot_field_sync(user_id, operations_list):
     user = User.objects.filter(id=user_id).first()
     if not user:
