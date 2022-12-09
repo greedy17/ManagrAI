@@ -5993,9 +5993,10 @@ h3 {
 }
 .opp-modal {
   width: 42vw;
+  height: 80vh;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+  // flex-wrap: wrap;
   gap: 0.25rem;
   padding: 8px;
   overflow-y: scroll;
