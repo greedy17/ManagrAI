@@ -467,8 +467,8 @@ class CRMObjectViewSet(
         current = (
             pytz.utc.localize(currenttime).astimezone(user_timezone).strftime("%Y-%m-%d %H:%M:%S")
         )
-        user.salesforce_account.last_sync_time = current
-        user.salesforce_account.save()
+        user.crm_account.last_sync_time = current
+        user.crm_account.save()
         to_sync_ids.append(str(sync.id))
         sync_function = (
             _process_pipeline_sf_sync if user.crm == "SALESFORCE" else _process_pipeline_hs_sync

@@ -4391,7 +4391,7 @@ export default {
           this.loading = true
         }, 300)
         try {
-          await SObjects.api.resourceSync()
+          await CRMObjects.api.resourceSync()
           this.$toast('Daily sync complete', {
             timeout: 2000,
             position: 'top-left',
@@ -4415,7 +4415,7 @@ export default {
     },
     async manualSync() {
       try {
-        await SObjects.api.resourceSync()
+        await CRMObjects.api.resourceSync()
         this.$toast('Sync complete', {
           timeout: 2000,
           position: 'top-left',

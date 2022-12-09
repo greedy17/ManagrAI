@@ -132,4 +132,12 @@ export class ObjectFieldAPI extends ModelAPI {
         apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
       }
     }
+    async resourceSync() {
+      try {
+        const res = await this.client.get('crm-objects/resource-sync/')
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+      }
+    }
 }
