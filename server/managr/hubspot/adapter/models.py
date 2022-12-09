@@ -234,6 +234,8 @@ class HubspotAuthAccountAdapter:
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         # logger.info(f"{url} was sent with data: {data}")
         with Client as client:
+            print(url)
+            print(data)
             res = client.post(
                 url,
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),

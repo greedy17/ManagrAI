@@ -424,15 +424,23 @@ class ObjectField(TimeStampModel, IntegrationModel):
             action_id = None
             if self.api_name in ["StageName", "dealstage"]:
                 if self.api_name == "dealstage":
-                    resource = BaseOpportunity.objects.get(id=kwargs.get("resource_id"))
-                    stages = self.options[0].get(resource.secondary_data["pipeline"])["stages"]
-                    stage_options = list(
-                        map(
-                            lambda option: block_builders.option(option["label"], option["id"]),
-                            stages,
+                    resource_id = kwargs.get("resource_id", None)
+                    pipeline_id = kwargs.get("pipeline_id", None)
+                    if resource_id or pipeline_id:
+                        pipeline = pipeline_id
+                        if resource_id:
+                            resource = BaseOpportunity.objects.get(id=resource_id)
+                            pipeline = resource.secondary_data["pipeline"]
+                        stages = self.options[0].get(pipeline)["stages"]
+                        stage_options = list(
+                            map(
+                                lambda option: block_builders.option(option["label"], option["id"]),
+                                stages,
+                            )
                         )
-                    )
-                    options = stage_options
+                        options = stage_options
+                    else:
+                        options = [block_builders.option("None", "None")]
                 else:
                     options = self.get_slack_options
                 initial_option = dict(
