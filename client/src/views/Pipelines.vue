@@ -465,7 +465,7 @@
                 </div>
               </div>
               <div v-else>
-                <label class="label" @click="test(pipelineOptions)">Select Pipeline for Stage</label>
+                <label class="label">Select Pipeline for Stage</label>
                 <Multiselect
                   v-model="savedPipeline"
                   :options="pipelineOptions"
@@ -1158,7 +1158,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="label" @click="test(currentVals[field.apiName])">{{ field.referenceDisplayLabel }}</label>
+              <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
@@ -1241,7 +1241,7 @@
                         (field.dataType === 'Reference' && field.apiName !== 'AccountId')
                       "
                     >
-                      <label class="red-label" @click="test(field)">{{ field.referenceDisplayLabel }}:</label>
+                      <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
                       <Multiselect
                         :options="
                           (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
@@ -2267,8 +2267,8 @@
 
       <div class="adding-stage-gate2" v-if="stageFormOpen">
         <div class="adding-stage-gate2__header">
-          <div @click="test(stageValidationFields)">
-            <p @click="test(stageGateField)">
+          <div>
+            <p>
               These fields are required to advance to
               <span
                 style="color: #fa646a; background-color: #ffd4d4; border-radius: 4px; padding: 6px"
@@ -2294,7 +2294,7 @@
                 (field.dataType === 'Reference' && field.apiName !== 'AccountId')
               "
             >
-              <label class="red-label" @click="test(stageReferenceOpts)">{{ field.referenceDisplayLabel }} <span>*</span></label>
+              <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <Multiselect
                 :options="
                   (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
@@ -2555,7 +2555,6 @@
           >
             <div class="cell-name"></div>
             <div
-              @click="test(opp)"
               class="table-cell"
               :key="i"
               v-for="(field, i) in oppFields"
@@ -2792,7 +2791,7 @@
                   </div>
                 </div>
                 <div class="inline-edit__footer">
-                  <small @click="test(field)">ESC to cancel</small>
+                  <small>ESC to cancel</small>
                   <button
                     @click="inlineUpdate(formData, opp.id, opp.integrationId)"
                     class="add-button"
@@ -3179,7 +3178,6 @@ export default {
     task: 'checkAndClearInterval',
     dropdownValue: {
       handler(val) {
-        console.log('some data', this.stagesWithForms, val)
         let loweredVal = ''
         if (this.userCRM === 'HUBSPOT') {
           loweredVal = val.val.split(' ').join('').toLowerCase()
@@ -3422,7 +3420,6 @@ export default {
     },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
-      console.log('openStageForm', field)
       this.stageGateField = field
       this.stageFormOpen = true
       this.stageId = id
@@ -3467,10 +3464,8 @@ export default {
       this.stageIntegrationId = null
     },
     async getReferenceFieldList(key, val, type, eventVal, options, filter) {
-      console.log('params', key, val, type, eventVal, filter)
       let res = []
       try {
-        console.log('options', options)
         if (options && options.length) {
           res = options
         } else if (this.userCRM === 'SALESFORCE') {
@@ -4089,7 +4084,6 @@ export default {
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
-        console.log('this.currentVals', this.currentVals)
         this.currentProducts = res ? res.current_products : {}
 
         const usersForCurrentOwner = this.allUsers.filter(
@@ -4321,7 +4315,6 @@ export default {
       }
     },
     setUpdateValues(key, val, multi) {
-      console.log('key and val', key, val)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -4332,11 +4325,9 @@ export default {
         this.formData[key] = val
       }
       if (key === 'StageName' || key === 'dealstage') {
-        console.log('this.stageWithForms', this.stagesWithForms, val)
         this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val ? val.split(' ').join('').toLowerCase() : '')
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
-        console.log('stageGateField', this.stageGateField)
       }
     },
     setUpdateValidationValues(key, val) {
@@ -4590,7 +4581,6 @@ export default {
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
-        console.log('this.formData', this.formData)
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: this.formData,
@@ -4818,8 +4808,6 @@ export default {
     },
 
     setDropdownValue(val) {
-      // this.dropdownValue = {}
-      console.log('val here?', val)
       this.dropdownValue = val
     },
     filtersAndOppFields() {
@@ -4880,7 +4868,6 @@ export default {
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
-          console.log('res?', res)
           stageGateForms = res.filter(
             (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
           )
@@ -4888,43 +4875,15 @@ export default {
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           // )[0].fieldsRef
         }
-
-        console.log('stageGateForms', stageGateForms)
         
         if (stageGateForms.length) {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
-          console.log('stages', stages)
-          let newStages = []
-          if (/*this.userCRM === 'HUBSPOT'*/false) {
-            // for (let i = 0; i < stages.length; i++) {
-            //   const stage = stages[i]
-            //   const eachWord = stage.split(' ')
-            //   let actualStage = ''
-            //   for (let j = 0; j < eachWord.length; j++) {
-            //     actualStage += eachWord[j].toLowerCase()
-            //   }
-            //   newStages.push(actualStage)
-            // }
-          } else {
-            console.log('stages', stages)
-            newStages = stages
-          }
-          this.stagesWithForms = newStages
-          console.log('stageGateForms', stageGateForms)
+          this.stagesWithForms = stages
           for (const field of stageGateForms) {
-            // console.log('field!!', field)
-            // let stage = ''
-            // const eachWord = field.stage.split(' ')
-            // for (let j = 0; j < eachWord.length; j++) {
-            //   stage += eachWord[j].toLowerCase()
-            // }
-            // this.stageValidationFields[stage] = field.fieldsRef
             this.stageValidationFields[field.stage] = field.fieldsRef
-            console.log('this.stageValidationFields', this.stageValidationFields)
           }
-          console.log('stageValidationFields', this.stageValidationFields)
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
         this.loading = false
