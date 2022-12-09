@@ -303,7 +303,7 @@
             </Multiselect>
           </div>
         </div> -->
-        <div class="limit-cell-height" @click="test(field)">
+        <div class="limit-cell-height">
           <PipelineField
             :index="i"
             style="direction: ltr"
@@ -492,7 +492,6 @@ export default {
       this.$emit('set-dropdown-value', item)
     },
     editInline(index) {
-      console.log('opp?', this.opp)
       this.editing = true
       this.$emit('current-inline-row', this.index, index)
       this.currentRow = this.index
