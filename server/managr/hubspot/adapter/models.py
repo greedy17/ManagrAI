@@ -475,7 +475,7 @@ class CompanyAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base=None):
         json_data = json.dumps(
             {
                 "properties": CompanyAdapter.to_api(
@@ -623,7 +623,7 @@ class DealAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base=None):
         json_data = json.dumps(
             {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
         )
@@ -751,7 +751,7 @@ class HubspotContactAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base=None):
         json_data = json.dumps(
             {
                 "properties": HubspotContactAdapter.to_api(
