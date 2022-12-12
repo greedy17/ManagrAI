@@ -125,10 +125,11 @@ class CRMObjectViewSet(
         attempts = 1
         while True:
             sf = user.crm_account
+            model_route = model_routes(user.crm)
             try:
                 if main_form.template.resource == "OpportunityLineItem":
                     all_form_data["OpportunityId"] = opp_ref
-                resource = model_routes[main_form.resource_type]["model"].create(
+                resource = model_route[main_form.resource_type]["model"].create(
                     all_form_data, user.id
                 )
                 data = {"success": True, "integration_id": resource.integration_id}
@@ -166,7 +167,6 @@ class CRMObjectViewSet(
             except Exception as e:
                 data = {"success": False, "error": str(e)}
                 break
-        print("here?", data)
         if data["success"]:
             return Response(data=data)
         else:
@@ -200,7 +200,6 @@ class CRMObjectViewSet(
         data = None
         for id in integration_ids:
             form_ids = create_form_instance(**instance_data)
-
             all_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
             main_form = all_forms.filter(template__form_type="UPDATE").first()
             stage_form_data_collector = {}

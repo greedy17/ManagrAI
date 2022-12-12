@@ -263,7 +263,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                     sobject_field.display_value_keys["api_name"],
                     sobject_field.display_value_keys["name_fields"],
                     value,
-                    sobject_field.salesforce_object,
+                    sobject_field.crm_object,
                     include_owner=for_meetings,
                 )
                 break
