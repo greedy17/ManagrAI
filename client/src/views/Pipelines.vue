@@ -2515,7 +2515,7 @@
             @create-form="
               createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
             "
-            @get-notes="getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name)"
+            @get-notes="getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)"
             @checked-box="
               selectedWorkflow ? selectWorkflowCheckbox(opp.id) : selectPrimaryCheckbox(opp.id)
             "
@@ -4035,10 +4035,11 @@ export default {
       this.addOppModalOpen = !this.addOppModalOpen
       this.savedPipeline = null
     },
-    async createFormInstanceForNotes(id, name) {
+    async createFormInstanceForNotes(id, name, integrationId) {
       this.formData = {}
       this.selectedresourceName = name
       this.oppId = id
+      this.integrationId = integrationId
       this.noteValue = null
       this.noteTitle = null
       try {
