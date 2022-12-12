@@ -4,8 +4,9 @@ from django.db import models
 from managr.core.models import TimeStampModel, IntegrationModel
 from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.slack.helpers import block_builders
-
+from managr.core.models import User
 from managr.crm.routes import adapter_routes as adapters
+from managr.crm.routes import model_routes
 from managr.crm import constants as crm_consts
 from managr.slack import constants as slack_consts
 
@@ -90,15 +91,18 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
-    def create(self, data):
-        token = self.owner.crm_account.access_token
-        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+    @staticmethod
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        token = user.crm_account.access_token
+        object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.create(data, token, self.integration_id, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+        res = adapters[user.crm][resource_type].create(data, token, object_fields)
+        serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
+        serializer.is_valid()
+        serializer.save()
+        return serializer.instance
 
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
@@ -211,15 +215,20 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
-    def create(self, data):
-        token = self.owner.crm_account.access_token
-        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+    @staticmethod
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        token = user.crm_account.access_token
+        object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.create(data, token, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+        res = adapters[user.crm][resource_type].create(
+            data, token, object_fields, user_id, user.crm_account.instance_url
+        )
+        serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
+        serializer.is_valid()
+        serializer.save()
+        return serializer.instance
 
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
@@ -312,15 +321,18 @@ class BaseContact(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
-    def create(self, data):
-        token = self.owner.crm_account.access_token
-        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+    @staticmethod
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        token = user.crm_account.access_token
+        object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.create(data, token, self.integration_id, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+        res = adapters[user.crm][resource_type].create(data, token, object_fields)
+        serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
+        serializer.is_valid()
+        serializer.save()
+        return serializer.instance
 
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
@@ -419,6 +431,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
         return self.label
 
     def to_slack_field(self, value=None, *args, **kwargs):
+        print(self.data_type)
+        print(value)
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None

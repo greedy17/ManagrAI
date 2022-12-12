@@ -167,7 +167,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   async updateResource(formData) {
     try {
       const res = await this.client.post(SObjectFormBuilderAPI.ENDPOINT + 'sobject/update/', formData)
-      console.log(res)
       return res.data
     } catch (e) {
       return apiErrorHandler({ apiName: 'Salesforce API' })(e)

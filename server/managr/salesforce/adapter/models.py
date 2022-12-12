@@ -796,7 +796,7 @@ class AccountAdapter:
             return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base):
         json_data = json.dumps(
             AccountAdapter.to_api(data, AccountAdapter.integration_mapping, object_fields)
         )
@@ -906,7 +906,7 @@ class ContactAdapter:
         return formatted_data
 
     @staticmethod
-    def create(data, access_token, custom_base, object_fields, user_id=None):
+    def create(data, access_token, object_fields, user_id, custom_base):
         json_data = json.dumps(
             ContactAdapter.to_api(data, ContactAdapter.integration_mapping, object_fields)
         )
@@ -1030,7 +1030,7 @@ class LeadAdapter:
         return formatted_data
 
     @staticmethod
-    def create(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base):
         logger.info(f"UNFORMATED DATA: {data}")
         json_data = json.dumps(
             LeadAdapter.to_api(data, LeadAdapter.integration_mapping, object_fields)
@@ -1253,7 +1253,7 @@ class OpportunityAdapter:
             return SalesforceAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base):
         json_data = json.dumps(
             OpportunityAdapter.to_api(data, OpportunityAdapter.integration_mapping, object_fields)
         )
@@ -1700,7 +1700,7 @@ class OpportunityLineItemAdapter:
         return formatted_data
 
     @staticmethod
-    def create(data, access_token, custom_base, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base):
         json_data = json.dumps(
             OpportunityLineItemAdapter.to_api(
                 data, OpportunityLineItemAdapter.integration_mapping, object_fields

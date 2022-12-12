@@ -22,7 +22,7 @@
         </router-link>
 
         <router-link
-          v-if="userCRM === 'SALESFORCE' /*|| true*/"
+          v-if="userCRM"
           exact-active-class="active"
           :to="{ name: 'Pipelines' }"
         >
@@ -45,6 +45,7 @@
             <span class="tooltiptext">Note Templates</span>
           </div>
         </router-link>
+        <!-- <div style="width: 60px; height: 1px; border-bottom: 1px solid rgb(230 230 230);"></div> -->
         <router-link
           v-if="(isTeamLead || isAdmin) && userCRM"
           exact-active-class="active"

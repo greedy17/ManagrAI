@@ -789,7 +789,6 @@ def create_resource(request):
             blocks = get_block_set("create_modal", context,)
             try:
                 index, block = block_finder(stage_name, blocks)
-                print(block)
             except ValueError:
                 # did not find the block
                 block = None
@@ -808,7 +807,6 @@ def create_resource(request):
                     ).first()
                     if pipeline_field:
                         pipeline_block = pipeline_field.to_slack_field(None, user, "Deal")
-                        print(pipeline_block)
                 pipeline_block = {
                     **pipeline_block,
                     "accessory": {

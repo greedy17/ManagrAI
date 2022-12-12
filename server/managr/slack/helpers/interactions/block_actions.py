@@ -976,7 +976,6 @@ def process_managr_action(payload, context):
 
 @processor(required_context="u")
 def process_add_create_form(payload, context):
-    print("here")
     user = User.objects.get(id=context.get("u"))
     resource_type = payload["view"]["state"]["values"]["ATTACH_RESOURCE_SECTION"][
         f"COMMAND_FORMS__PROCESS_ADD_CREATE_FORM?u={context.get('u')}"
@@ -1146,7 +1145,6 @@ def process_stage_selected_command_form(payload, context):
 
 @processor(required_context=["u", "f"])
 def process_pipeline_selected_command_form(payload, context):
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     type = context.get("type", None)
     user = User.objects.get(id=context.get("u"))
