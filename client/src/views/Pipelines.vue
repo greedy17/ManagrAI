@@ -4589,7 +4589,7 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
-          resource_type: this.userCRM === 'SALEFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resource_id: this.oppId,
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
@@ -4652,7 +4652,7 @@ export default {
         let res = await CRMObjects.api.createResource({
           form_data: this.formData,
           form_type: 'CREATE',
-          resource_type: this.userCRM === 'SALEFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (product) {
