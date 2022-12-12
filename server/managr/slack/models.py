@@ -325,7 +325,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             .values_list("field__api_name", "field__crm_object",)
             .order_by("order")
         )
-        print(template_fields)
         user_fields = []
         # hack to maintain order
         for field in template_fields:
@@ -436,8 +435,10 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         return form_blocks
 
     def get_values(self, state):
+        print(state)
         vals = dict()
         for field, data in state.items():
+            print(field)
             for value in data.values():
                 current_value = None
                 if value["type"] == "external_select" or value["type"] == "static_select":
@@ -475,6 +476,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     current_value = value["value"]
                 elif value["type"] == "checkboxes":
                     current_value = bool(len(value.get("selected_options", [])))
+                    print(current_value)
                 elif value["type"] == "datepicker":
                     date = value.get("selected_date", None)
                     if self.user.crm == "HUBSPOT" and field == "closedate" and date is not None:

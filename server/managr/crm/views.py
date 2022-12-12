@@ -129,9 +129,8 @@ class CRMObjectViewSet(
             try:
                 if main_form.template.resource == "OpportunityLineItem":
                     all_form_data["OpportunityId"] = opp_ref
-                resource = model_route[main_form.resource_type]["model"].create(
-                    all_form_data, user.id
-                )
+                resource_model = model_route[main_form.resource_type]["model"]
+                resource = resource_model.create(all_form_data, str(user.id), resource_type)
                 data = {"success": True, "integration_id": resource.integration_id}
                 break
             except FieldValidationError as e:
@@ -165,6 +164,7 @@ class CRMObjectViewSet(
                     time.sleep(2)
                     attempts += 1
             except Exception as e:
+                logger.info(f"Error {e}")
                 data = {"success": False, "error": str(e)}
                 break
         if data["success"]:
