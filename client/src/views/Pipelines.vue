@@ -207,7 +207,7 @@
                     @select="
                       setUpdateValues(
                         field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                        field.apiName === 'dealstage' ? $event.label :
+                        field.apiName === 'dealstage' ? $event.id :
                         (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                           ? $event.value
                           : $event.id,
@@ -1175,7 +1175,7 @@
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.apiName === 'dealstage' ? $event.label :
+                    field.apiName === 'dealstage' ? $event.id :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -2672,7 +2672,7 @@
                           field.apiName === 'ForecastCategory'
                             ? 'ForecastCategoryName'
                             : field.apiName,
-                            field.apiName === 'dealstage' ? $event.label : $event.value,
+                            field.apiName === 'dealstage' ? $event.id : $event.value,
                             field.dataType === 'MultiPicklist' ? true : false,
                         )
                       "
@@ -3353,10 +3353,17 @@ export default {
     //   }, 100)
     // },
     getFilteredOpps() {
-      this.$store.dispatch('loadAllOpps', [
-        ...this.filters,
-        ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-      ])
+      if (this.userCRM === 'SALESFORCE') {
+        this.$store.dispatch('loadAllOpps', [
+          ...this.filters,
+          ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+        ])
+      } else {
+        this.$store.dispatch('loadAllOpps', [
+          ...this.filters,
+          ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+        ])
+      }
 
       if (this.currentList === 'Closing this month') {
         this.stillThisMonth()
@@ -3470,16 +3477,11 @@ export default {
       let res = []
       try {
         this.referenceLoading = true
-        // if (options && options.length) {
-        //   res = options
-        // } else if (this.userCRM === 'SALESFORCE') {
-          res = await SObjects.api.getSobjectPicklistValues({
-            sobject_id: val,
-            value: eventVal ? eventVal : '',
-            for_filter: filter ? [filter] : null,
-          })
-          console.log('important res', res)
-        // }
+        res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: val,
+          value: eventVal ? eventVal : '',
+          for_filter: filter ? [filter] : null,
+        })
         if (type === 'update') {
           this.referenceOpts[key] = res
         } else if (type === 'createProduct') {
@@ -3525,10 +3527,17 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
         if (this.filterText) {
-          this.$store.dispatch('loadAllOpps', [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          if (this.userCRM === 'SALESFORCE') {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          }
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
@@ -4323,7 +4332,6 @@ export default {
         this.formData[key] = val
       }
       if (key === 'StageName' || key === 'dealstage') {
-        console.log('stage data', this.stagesWithForms, val)
         this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val ? val.split(' ').join('').toLowerCase() : '')
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
@@ -4449,10 +4457,17 @@ export default {
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (this.filterText) {
-          this.$store.dispatch('loadAllOpps', [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          if (this.userCRM === 'SALESFORCE') {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          }
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
@@ -4592,10 +4607,17 @@ export default {
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (this.filterText) {
-          this.$store.dispatch('loadAllOpps', [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          if (this.userCRM === 'SALESFORCE') {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          }
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
@@ -4647,6 +4669,9 @@ export default {
     async createResource(product) {
       this.savingCreateForm = true
       try {
+        // if (this.userCRM === 'HUBSPOT' && this.formData.dealstage) {
+        //   this.formData.dealstage = this.formData.dealstage.split(' ').join('').toLowerCase()
+        // }
         let res = await CRMObjects.api.createResource({
           form_data: this.formData,
           form_type: 'CREATE',
@@ -4663,9 +4688,17 @@ export default {
             : this.filters
         }
         const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
-        let updatedRes = await SObjects.api.getObjectsForWorkflows(objectType, true, filter)
-        this.allOpps = updatedRes.results
-        this.originalList = updatedRes.results
+        if (this.userCRM === 'SALESFORCE') {
+          this.$store.dispatch('loadAllOpps', [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+        } else {
+          this.$store.dispatch('loadAllOpps', [
+            ...this.filters,
+            ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+          ])
+        }
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
             ? this.sortOppsReverse(
@@ -4678,17 +4711,18 @@ export default {
         this.$toast(objectType + ' created successfully.', {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
         this.savedOpp = null
         this.savedPipeline = null
       } catch (e) {
+        console.log(e)
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4879,7 +4913,11 @@ export default {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
-          this.stagesWithForms = stages
+          const newStages = []
+          for (let i = 0; i < stages.length; i++) {
+            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          }
+          this.stagesWithForms = newStages
           for (const field of stageGateForms) {
             this.stageValidationFields[field.stage] = field.fieldsRef
           }
