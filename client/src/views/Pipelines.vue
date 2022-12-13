@@ -3524,6 +3524,9 @@ export default {
       this.inlineLoader = true
       this.editingInline = false
       try {
+        if (formData.closedate) {
+          formData.closedate = formData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           form_data: formData,
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
@@ -4468,6 +4471,9 @@ export default {
     async updateStageForm() {
       this.dropdownLoading = true
       try {
+        if (this.formData.closedate) {
+          this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           form_data: this.formData,
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
@@ -4573,6 +4579,9 @@ export default {
     async updateProduct() {
       this.savingProduct = true
       try {
+        if (this.updateProductData.closedate) {
+          this.updateProductData.closedate = this.updateProductData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           form_data: this.updateProductData,
           from_workflow: this.selectedWorkflow ? true : false,
@@ -4615,6 +4624,9 @@ export default {
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
+        if (this.formData.closedate) {
+          this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: this.formData,
