@@ -607,7 +607,7 @@ def initial_alert_message(context):
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Grid View", "open_in_pipeline", url=f"{url}/{template}",
+                    "Grid View", "open_in_pipeline", url=f"{url}/{template}", style="primary",
                 ),
             ]
         ),
