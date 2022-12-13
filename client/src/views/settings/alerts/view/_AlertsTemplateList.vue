@@ -192,7 +192,7 @@
                   <span class="tooltiptext">Send to Slack</span>
                 </div>
 
-                <button v-if="(userCRM === 'SALESFORCE' || userCRM)" @click="openList(alert)" style="margin-right: 8px" class="img-border">
+                <button v-if="(userCRM === 'SALESFORCE' /*|| userCRM*/)" @click="openList(alert)" style="margin-right: 8px" class="img-border">
                   <img
                     src="@/assets/images/listed.svg"
                     style="filter: invert(40%)"
