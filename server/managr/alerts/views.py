@@ -215,7 +215,7 @@ class AlertTemplateViewSet(
                         users = [*users, *config.target_users]
                     res_data = []
                     for user in users:
-                        if hasattr(user, "salesforce_account"):
+                        if hasattr(user, "crm"):
                             res = crm.adapter_class.execute_alert_query(
                                 template.url_str(user, config.id), template.resource_type
                             )
