@@ -192,7 +192,7 @@
                   <span class="tooltiptext">Send to Slack</span>
                 </div>
 
-                <button @click="openList(alert)" style="margin-right: 8px" class="img-border">
+                <button v-if="userCRM === 'SALESFORCE'" @click="openList(alert)" style="margin-right: 8px" class="img-border">
                   <img
                     src="@/assets/images/listed.svg"
                     style="filter: invert(40%)"
@@ -235,7 +235,7 @@
             <p class="card-text">Meetings: {{ meetings.length }}</p>
 
             <div class="card__body__between">
-              <button @click="openMeetings" class="img-border">
+              <button v-if="userCRM === 'SALESFORCE'" @click="openMeetings" class="img-border">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -243,6 +243,7 @@
                   alt=""
                 />
               </button>
+              <div v-else style="width: 5px; height: 5px;"></div>
 
               <button @click="goToLogZoom" class="white_button">Change Channel</button>
               <!-- <small>{{ currentZoomChannel }}</small> -->
@@ -259,7 +260,7 @@
             <p class="card-text">Meetings: {{ meetings.length }}</p>
 
             <div class="card__body__between">
-              <button @click="openMeetings" class="img-border">
+              <button v-if="userCRM === 'SALESFORCE'" @click="openMeetings" class="img-border">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -267,6 +268,7 @@
                   alt=""
                 />
               </button>
+              <div v-else style="width: 5px; height: 5px;"></div>
 
               <button @click="goToRecap" class="white_button">Change Channel</button>
               <!-- <small> {{ currentRecapChannel }}</small> -->
