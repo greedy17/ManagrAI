@@ -56,7 +56,7 @@
             <div class="title" @click="test(opp)">
               <div>
                 <h4>
-                  {{ opp.Name }}
+                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
                 </h4>
                 <p>Stage: {{ userCRM === 'SALESFORCE' ? opp.StageName : hsStages[opp.dealstage].label }}</p>
                 <p>Close Date: {{ userCRM === 'SALESFORCE' ? opp.CloseDate : opp.closedate.split('T')[0] }}</p>
