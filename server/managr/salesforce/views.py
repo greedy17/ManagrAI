@@ -217,13 +217,13 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_pipeline_fields(self, request, *args, **kwargs):
         user = self.request.user
-        sf = user.salesforce_account
+        crm = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
-            if id not in sf.extra_pipeline_fields:
-                sf.extra_pipeline_fields.append(id)
-        sf.save()
+            if id not in crm.extra_pipeline_fields:
+                crm.extra_pipeline_fields.append(id)
+        crm.save()
         return Response()
 
     @action(
