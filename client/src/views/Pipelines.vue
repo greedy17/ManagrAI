@@ -3101,9 +3101,7 @@ export default {
     },
     filteredWorkflows: {
       get: function () {
-        return this.currentWorkflow.filter((opp) =>
-          opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
-        )
+        return this.currentWorkflow.filter((opp) => opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()))
       },
       set: function (newvalue) {
         this.currentWorkflow = newvalue
@@ -3155,9 +3153,18 @@ export default {
       this.filters = [
         ['NOT_EQUALS', 'dealstage', 'closedwon'],
         ['NOT_EQUALS', 'dealstage', 'closedlost'],
+        ['NOT_EQUALS', 'dealstage', '3b3df8bd-1824-4c5b-ba5a-2b72fcfae459'],
+        ['NOT_EQUALS', 'dealstage', '1266efd0-fbc5-4bea-8379-ac3c83099bfb'],
+        ['NOT_EQUALS', 'dealstage', '9968680e-7687-46d1-8130-4d9779a8dc78'],
+        ['NOT_EQUALS', 'dealstage', '2698871c-0f35-473c-bf88-76663cfbfca2'],
+        ['NOT_EQUALS', 'dealstage', '792b4ff5-9e2d-4013-a621-04226a31a9d0'],
+        ['NOT_EQUALS', 'dealstage', '45bd76d3-8eab-401c-b3ab-86782dd7077d'],
+        ['NOT_EQUALS', 'dealstage', '4dca2a38-1ffd-4025-9ffd-89b2ccd8d308'],
+        ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
     this.objectFields.refresh()
+    this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
@@ -3604,6 +3611,14 @@ export default {
       [
         ['NOT_EQUALS', 'dealstage', 'closedwon'],
         ['NOT_EQUALS', 'dealstage', 'closedlost'],
+        ['NOT_EQUALS', 'dealstage', '3b3df8bd-1824-4c5b-ba5a-2b72fcfae459'],
+        ['NOT_EQUALS', 'dealstage', '1266efd0-fbc5-4bea-8379-ac3c83099bfb'],
+        ['NOT_EQUALS', 'dealstage', '9968680e-7687-46d1-8130-4d9779a8dc78'],
+        ['NOT_EQUALS', 'dealstage', '2698871c-0f35-473c-bf88-76663cfbfca2'],
+        ['NOT_EQUALS', 'dealstage', '792b4ff5-9e2d-4013-a621-04226a31a9d0'],
+        ['NOT_EQUALS', 'dealstage', '45bd76d3-8eab-401c-b3ab-86782dd7077d'],
+        ['NOT_EQUALS', 'dealstage', '4dca2a38-1ffd-4025-9ffd-89b2ccd8d308'],
+        ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     },
     closeListSelect() {
@@ -3621,7 +3636,12 @@ export default {
       try {
         let res
         if (this.filterText) {
-          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
+          let textFilters 
+          if (this.userCRM === 'SALESFORCE') {
+            textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
+          } else {
+            textFilters = [...this.filters, ['CONTAINS', 'dealname', this.filterText.toLowerCase()]]
+          }
           this.$store.dispatch('loadAllOpps', textFilters)
         }
         // else if (this.workflowFilterText) {
@@ -4740,7 +4760,30 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          this.currentWorkflow = res.data.results
+          const results = res.data.results
+          const closedList = [
+            'Closed Won',
+            'Closed Lost',
+            'closedwon', 
+            'closedlost', 
+            '3b3df8bd-1824-4c5b-ba5a-2b72fcfae459',
+            '1266efd0-fbc5-4bea-8379-ac3c83099bfb',
+            '9968680e-7687-46d1-8130-4d9779a8dc78',
+            '2698871c-0f35-473c-bf88-76663cfbfca2',
+            '792b4ff5-9e2d-4013-a621-04226a31a9d0',
+            '45bd76d3-8eab-401c-b3ab-86782dd7077d',
+            '4dca2a38-1ffd-4025-9ffd-89b2ccd8d308',
+            '1aee0da2-e076-423c-ac92-559d324215e3',
+          ]
+          if (this.userCRM === 'SALESFORCE') {
+            this.currentWorkflow = results.filter(opp => {
+              return !closedList.includes(opp['secondary_data'].StageName)
+            })
+          } else {
+            this.currentWorkflow = results.filter(opp => {
+              return !closedList.includes(opp['secondary_data'].dealstage)
+            })
+          }
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
           }
