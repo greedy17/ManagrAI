@@ -4867,8 +4867,10 @@ export default {
           field.apiName !== 'meeting_type' &&
           field.apiName !== 'meeting_comments' &&
           field.apiName !== 'Name' &&
+          field.apiName !== 'dealname' &&
           field.apiName !== 'AccountId' &&
-          field.apiName !== 'OwnerId',
+          field.apiName !== 'OwnerId' &&
+          field.apiName !== 'hubspot_owner_id'
       )
     },
     async getAllForms() {
