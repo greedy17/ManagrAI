@@ -867,7 +867,7 @@ export default {
         this.loading = true
         this.loaderText = 'Pulling your calendar events...'
         setTimeout(() => {
-          this.loaderText = 'Mapping to Salesforce...'
+          this.loaderText = `Mapping to ${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'}...`
           this.getMeetingList()
           setTimeout(() => {
             this.loading = false

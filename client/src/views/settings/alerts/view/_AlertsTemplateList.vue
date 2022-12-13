@@ -53,13 +53,13 @@
             :key="opp.id"
             v-for="opp in activeWorkflow.sobjectInstances"
           >
-            <div class="title">
+            <div class="title" @click="test(opp)">
               <div>
                 <h4>
                   {{ opp.Name }}
                 </h4>
-                <p>Stage: {{ opp.StageName }}</p>
-                <p>Close Date: {{ opp.CloseDate }}</p>
+                <p>Stage: {{ userCRM === 'SALESFORCE' ? opp.StageName : hsStages[opp.dealstage].label }}</p>
+                <p>Close Date: {{ userCRM === 'SALESFORCE' ? opp.CloseDate : opp.closedate.split('T')[0] }}</p>
               </div>
             </div>
           </section>
@@ -192,7 +192,7 @@
                   <span class="tooltiptext">Send to Slack</span>
                 </div>
 
-                <button @click="openList(alert)" style="margin-right: 8px" class="img-border">
+                <button v-if="(userCRM)" @click="openList(alert)" style="margin-right: 8px" class="img-border">
                   <img
                     src="@/assets/images/listed.svg"
                     style="filter: invert(40%)"
@@ -235,7 +235,7 @@
             <p class="card-text">Meetings: {{ meetings.length }}</p>
 
             <div class="card__body__between">
-              <button @click="openMeetings" class="img-border">
+              <button v-if="userCRM === 'SALESFORCE'" @click="openMeetings" class="img-border">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -243,6 +243,7 @@
                   alt=""
                 />
               </button>
+              <div v-else style="width: 5px; height: 5px;"></div>
 
               <button @click="goToLogZoom" class="white_button">Change Channel</button>
               <!-- <small>{{ currentZoomChannel }}</small> -->
@@ -259,7 +260,7 @@
             <p class="card-text">Meetings: {{ meetings.length }}</p>
 
             <div class="card__body__between">
-              <button @click="openMeetings" class="img-border">
+              <button v-if="userCRM === 'SALESFORCE'" @click="openMeetings" class="img-border">
                 <img
                   src="@/assets/images/listed.svg"
                   style="filter: invert(40%)"
@@ -267,6 +268,7 @@
                   alt=""
                 />
               </button>
+              <div v-else style="width: 5px; height: 5px;"></div>
 
               <button @click="goToRecap" class="white_button">Change Channel</button>
               <!-- <small> {{ currentRecapChannel }}</small> -->
@@ -356,6 +358,7 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
+import { ObjectField } from '@/services/crm'
 
 import AlertTemplate, { AlertGroup } from '@/services/alerts/'
 import allConfigs from '../configs'
@@ -401,6 +404,7 @@ export default {
       currentZoomChannel: '',
       currentRecapChannel: '',
       clicked: [],
+      hsStages: {},
       pageLoaded: false,
     }
   },
@@ -411,6 +415,9 @@ export default {
     }
     if (this.hasRecapChannel) {
       this.getRecapChannel()
+    }
+    if (this.userCRM === 'HUBSPOT') {
+      this.getHSStages()
     }
   },
   beforeUpdate() {
@@ -444,6 +451,29 @@ export default {
       noSeconds = noSeconds.split(':')
       noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
       return noSeconds
+    },
+    async getHSStages() {
+      const res = await ObjectField.api.listFields({
+        crmObject: this.DEAL,
+        search: 'Deal Stage',
+      })
+      let dealStages = []
+      for (let i = 0; i < res.length; i++) {
+        if (res[i].apiName === 'dealstage') {
+          dealStages = res[i]
+          break
+        }
+      }
+      let dealStage = {}
+      if (dealStages.optionsRef.length) {
+        for (let i = 0; i < dealStages.optionsRef.length; i++) {
+          for (let j = 0; j < dealStages.optionsRef[i].length; j++) {
+            const stage = dealStages.optionsRef[i][j]
+            dealStage[stage.id] = stage
+          }
+        }
+      }
+      this.hsStages = dealStage ? dealStage : {}
     },
     openList(alert) {
       this.activeWorkflow = alert
