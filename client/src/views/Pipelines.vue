@@ -2619,7 +2619,7 @@
                     label="label"
                     @select="
                       setDropdownValue({
-                        val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? $event.label : $event.id,
+                        val: field.apiName === 'StageName' ? $event.value : $event.id,
                         oppId: opp.id,
                         oppIntegrationId: opp.integration_id,
                       })
@@ -4781,6 +4781,7 @@ export default {
             })
           } else {
             this.currentWorkflow = results.filter(opp => {
+              console.log('opp', opp)
               return !closedList.includes(opp['secondary_data'].dealstage)
             })
           }
