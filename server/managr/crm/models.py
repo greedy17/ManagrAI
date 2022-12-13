@@ -431,8 +431,6 @@ class ObjectField(TimeStampModel, IntegrationModel):
         return self.label
 
     def to_slack_field(self, value=None, *args, **kwargs):
-        print(self.data_type)
-        print(value)
         if self.data_type == "Picklist":
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
@@ -596,7 +594,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "Boolean":
             initial_value = (
                 [block_builders.option(self.reference_display_label, "true")]
-                if value is True
+                if value in [True, "true"]
                 else None
             )
             return block_builders.checkbox_block(
