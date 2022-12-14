@@ -1958,7 +1958,7 @@
             <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
             <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
-              ><img src="@/assets/images/close.svg" @click="removeFilter(filter, i + 2)" alt=""
+              ><img src="@/assets/images/close.svg" @click="removeFilter(filter, userCRM === 'SALESFORCE' ? i + 2 : i + 10)" alt=""
             /></span>
           </div>
 
@@ -3773,7 +3773,7 @@ export default {
     },
     removeFilter(name, index) {
       if (this.activeFilters.length > 1) {
-        this.activeFilters.splice(index - 2, 1)
+        this.userCRM === 'SALESFORCE' ? this.activeFilters.splice(index - 2, 1) : this.activeFilters.splice(index - 10, 1)
       } else {
         this.activeFilters = []
       }
