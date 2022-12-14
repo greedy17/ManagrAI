@@ -2553,7 +2553,7 @@
             :key="opp.id"
             v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : allOpps"
             :style="`top: ${screenHeight < 900 ? (j + 1) * 10 : (j + 1) * 7}vh;`"
-            class="table-row-overlay top-height"
+            class="table-row-overlay"
           >
             <div class="cell-name"></div>
             <div
@@ -5418,87 +5418,6 @@ export default {
   margin: 10px;
 }
 
-.basic-slide {
-  display: inline-block;
-  width: 34vw;
-  padding: 9px 0 10px 16px;
-  font-family: $base-font-family !important;
-  font-weight: 400;
-  color: $base-gray;
-  background: $white;
-  border: 1px solid $soft-gray !important;
-  border: 0;
-  border-radius: 3px;
-  outline: 0;
-  text-indent: 70px; // Arbitrary.
-  transition: all 0.3s ease-in-out;
-
-  &::-webkit-input-placeholder {
-    color: #efefef;
-    text-indent: 0;
-    font-weight: 300;
-  }
-
-  + label {
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 9px 8px;
-    font-size: 15px;
-    text-align: center;
-    width: 80px;
-    // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
-    background: $white-green;
-    color: $dark-green;
-    transition: all 0.3s ease-in-out;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 2px;
-  }
-  &__body::-webkit-scrollbar {
-    width: 2px; /* Mostly for vertical scrollbars */
-    height: 0px; /* Mostly for horizontal scrollbars */
-  }
-  &__body::-webkit-scrollbar-thumb {
-    background-color: $coral;
-    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track {
-    box-shadow: inset 2px 2px 4px 0 $soft-gray;
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track-piece {
-    margin-top: 0.25rem;
-  }
-}
-.basic-slide:focus,
-.basic-slide:active {
-  color: $base-gray;
-  text-indent: 0;
-  background: #fff;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-
-  &::-webkit-input-placeholder {
-    color: #aaa;
-  }
-  + label {
-    transform: translateX(-100%);
-  }
-}
-
-.form-label {
-  color: $dark-green;
-  // background-color: $white-green;
-  border-radius: 4px;
-  padding: 4px;
-  margin-bottom: 4px;
-  margin-left: -2px;
-  width: fit-content;
-}
-
 .col {
   display: flex;
   flex-direction: column;
@@ -5516,18 +5435,6 @@ export default {
   }
 }
 
-.light-green-bg {
-  background-color: $white-green;
-  color: $dark-green !important;
-  border: 1px solid $dark-green !important;
-}
-.note-border {
-  border: 1px solid $very-light-gray;
-  border-radius: 6px;
-  padding: 4px;
-  margin: 0px 6px;
-  font-size: 12px;
-}
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
 }
@@ -5729,62 +5636,10 @@ export default {
     filter: invert(70%);
   }
 }
-.results {
-  margin: 0;
-  padding-left: 3px;
-  width: 50vw;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  font-size: 18px;
-  letter-spacing: 0.5px;
-  height: 24px;
-}
-.pagination {
-  width: 100vw;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  margin: 8px 0px 0px 0px;
-
-  h6 {
-    span {
-      letter-spacing: 0.5px;
-      color: $gray;
-    }
-  }
-  &-num {
-    margin-right: 8px;
-    font-size: 11px;
-    border-radius: 6px;
-    border: none;
-    background-color: $dark-green;
-    color: white;
-    padding: 6px 8px;
-  }
-  &-num2 {
-    margin-right: 8px;
-    font-size: 11px;
-    border-radius: 6px;
-    border: none;
-    background-color: $very-light-gray;
-    color: $white;
-    padding: 3px 6px;
-  }
-}
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-.height-s {
-  height: 36px;
-  margin-top: 8px;
-}
-.between {
-  justify-content: space-between;
-  width: 100%;
 }
 select {
   -webkit-appearance: none !important;
@@ -6014,8 +5869,6 @@ h3 {
 .table-row {
   display: table-row;
   left: 0;
-}
-.top-height {
 }
 .table-row-overlay {
   top: 10vh;
@@ -6604,11 +6457,6 @@ a {
       brightness(93%) contrast(89%);
   }
 }
-.results-2 {
-  font-size: 11px;
-  margin-right: 16px;
-  color: $gray;
-}
 .note-templates {
   display: flex;
   justify-content: flex-end;
@@ -6719,104 +6567,4 @@ a {
   background: #fff;
   font-size: 14px;
 }
-// .results-2 {
-//   font-size: 11px;
-//   margin-right: 16px;
-//   color: $gray;
-// }
-// .note-templates {
-//   display: flex;
-//   justify-content: flex-end;
-//   font-size: 12px;
-//   padding: 12px 6px;
-//   margin-top: -34px;
-//   border: 1px solid $soft-gray;
-//   border-bottom-left-radius: 4px;
-//   border-bottom-right-radius: 4px;
-//   cursor: pointer;
-//   width: 40.25vw;
-
-//   &__content {
-//     display: flex;
-//     flex-direction: row;
-//     align-items: center;
-//   }
-//   img {
-//     filter: invert(50%);
-//     height: 12px;
-//   }
-//   &__content:hover {
-//     opacity: 0.6;
-//   }
-// }
-
-// .note-templates2 {
-//   display: flex;
-//   flex-direction: row;
-//   align-items: center;
-//   justify-content: flex-start;
-//   flex-wrap: wrap;
-//   gap: 24px;
-//   font-size: 12px;
-//   padding: 12px 6px;
-//   margin-top: -34px;
-//   border: 1px solid $soft-gray;
-//   border-bottom-left-radius: 4px;
-//   border-bottom-right-radius: 4px;
-//   width: 40.25vw;
-//   height: 80px;
-//   overflow: scroll;
-
-//   &__content {
-//     border-radius: 4px;
-//     border: 0.5px solid $base-gray;
-//     color: $base-gray;
-//     padding: 8px 6px;
-//     margin-bottom: 8px;
-//     cursor: pointer;
-//   }
-//   &__content:hover {
-//     opacity: 0.6;
-//   }
-// }
-// .close-template {
-//   position: absolute;
-//   bottom: 56px;
-//   right: 20px;
-//   z-index: 3;
-//   cursor: pointer;
-//   background-color: black;
-//   border-radius: 3px;
-//   opacity: 0.6;
-//   img {
-//     filter: invert(99%);
-//   }
-// }
-// .label {
-//   display: inline-block;
-//   padding: 6px;
-//   font-size: 14px;
-//   text-align: center;
-//   min-width: 80px;
-//   margin-top: 12px;
-//   background-color: $white-green;
-//   color: $dark-green;
-//   font-weight: bold;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-// }
-// .red-label {
-//   background-color: #fa646a;
-//   color: white;
-//   display: inline-block;
-//   padding: 6px;
-//   font-size: 14px;
-//   text-align: center;
-//   min-width: 80px;
-//   margin-top: 12px;
-//   margin-left: 2px;
-//   font-weight: bold;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-// }
 </style>
