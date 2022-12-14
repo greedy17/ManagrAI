@@ -3058,7 +3058,7 @@ export default {
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : []
+      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : this.$store.state.user.hubspotAccountRef.extraPipelineFields
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
