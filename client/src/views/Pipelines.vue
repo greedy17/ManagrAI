@@ -3168,7 +3168,6 @@ export default {
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
-    console.log('templates', this.templates)
   },
   beforeMount() {
     this.selectList()
