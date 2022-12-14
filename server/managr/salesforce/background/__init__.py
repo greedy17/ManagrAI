@@ -1375,7 +1375,7 @@ def _process_create_new_resource(form_ids, *args):
                 "api_name", flat=True
             )
             res = adapter.create(
-                data, sf.access_token, sf.instance_url, object_fields, str(user.id),
+                data, sf.access_token, object_fields, str(user.id), sf.instance_url
             )
             serializer = model_routes.get(resource)["serializer"](data=res.as_dict)
             serializer.is_valid(raise_exception=True)
