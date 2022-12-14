@@ -3841,7 +3841,7 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.allOpps.sort(function (a, b) {
+          this.currentWorkflow.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
@@ -3944,7 +3944,7 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.allOpps.sort(function (a, b) {
+          this.currentWorkflow.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
