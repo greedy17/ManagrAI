@@ -33,6 +33,7 @@ export default class User extends Model {
   static slackRef = new fields.Field()
   static slackAccount = new fields.Field()
   static hubspotAccount = new fields.Field()
+  static hubspotAccountRef = new fields.Field()
   static hasHubspotIntegration = new fields.Field({ readOnly: true })
   static crm = new fields.CharField()
   static zoomRef = new fields.Field()

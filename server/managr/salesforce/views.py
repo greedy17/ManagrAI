@@ -234,7 +234,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def remove_pipeline_fields(self, request, *args, **kwargs):
         user = self.request.user
-        sf = user.salesforce_account
+        sf = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
