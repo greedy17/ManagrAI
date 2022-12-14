@@ -3802,12 +3802,18 @@ export default {
       })
     },
     sortOpps(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-      if (this.currentWorkflow) {
-        if (field === 'Stage' || field === 'dealstage') {
+      let newField 
+      if (this.userCRM === 'SALESFORCE') {
+        newField = this.capitalizeFirstLetter(this.camelize(field))
+      } else {
+        newField = field
+      }
+      const userCRM = this.userCRM
+      if (this.currentWorkflow.length) {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3834,6 +3840,12 @@ export default {
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
         } else {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
@@ -3842,10 +3854,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage' || field === 'dealstage') {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3868,6 +3880,12 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
@@ -3886,13 +3904,19 @@ export default {
       this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortOppsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
+      let newField
+      if (this.userCRM === 'SALESFORCE') {
+        newField = this.capitalizeFirstLetter(this.camelize(field))
+      } else {
+        newField = field
+      }
 
-      if (this.currentWorkflow) {
-        if (field === 'Stage' || field === 'dealstage') {
+      const userCRM = this.userCRM
+      if (this.currentWorkflow.length) {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3915,6 +3939,12 @@ export default {
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
@@ -3927,10 +3957,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage' || field === 'dealstage') {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3952,6 +3982,12 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
