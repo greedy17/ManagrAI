@@ -22,7 +22,7 @@
         </router-link>
 
         <router-link
-          v-if="userCRM"
+          v-if="userCRM === 'SALESFORCE'"
           exact-active-class="active"
           :to="{ name: 'Pipelines' }"
         >
