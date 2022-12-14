@@ -234,8 +234,6 @@ class HubspotAuthAccountAdapter:
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         # logger.info(f"{url} was sent with data: {data}")
         with Client as client:
-            print(url)
-            print(data)
             res = client.post(
                 url,
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -556,7 +554,7 @@ class DealAdapter:
     @staticmethod
     def additional_filters():
         """pass custom additional filters to the url"""
-        return [{"propertyName": "hs_is_closed", "value": False, "operator": "EQ",}]
+        return [{"propertyName": "is_closed", "value": False, "operator": "EQ",}]
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
