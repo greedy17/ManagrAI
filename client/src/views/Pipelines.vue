@@ -3168,7 +3168,6 @@ export default {
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
-    console.log('this.templates', this.templates)
   },
   beforeMount() {
     this.selectList()
@@ -4794,7 +4793,6 @@ export default {
             })
           } else {
             this.currentWorkflow = results.filter(opp => {
-              console.log('opp', opp)
               return !closedList.includes(opp['secondary_data'].dealstage)
             })
           }
