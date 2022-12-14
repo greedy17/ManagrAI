@@ -7,7 +7,8 @@
           dataType !== 'Date' &&
           dataType !== 'DateTime' &&
           dataType !== 'Reference' &&
-          apiName !== 'StageName'
+          apiName !== 'StageName' &&
+          apiName !== 'dealstage'
         "
         v-html="fieldData ? fieldData : 'Empty'"
         class="blank"
@@ -41,7 +42,17 @@
             : ''
         }}</span>
       </p>
-
+      <p
+        class="flex-columned blank"
+        :class="!fieldData ? 'gray' : ''"
+        v-else-if="apiName === 'dealstage'"
+      >
+        {{field && opp ? 
+          field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label
+          :
+          fieldData ? fieldData : 'Empty'
+        }}
+      </p>
       <p class="blank" :class="!fieldData ? 'gray' : ''" v-else>
         {{ fieldData ? formatCash(fieldData) : 'Empty' }}
       </p>
@@ -132,6 +143,8 @@ export default {
     lastStageUpdate: {},
     index: {},
     referenceOpts: {},
+    field: {},
+    opp: {},
   },
 }
 </script>

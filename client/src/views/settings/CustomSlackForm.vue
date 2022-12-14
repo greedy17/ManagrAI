@@ -1822,6 +1822,7 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
+            this.removedFields = []
             // this.$router.go()
           }, 300)
         })

@@ -51,6 +51,7 @@ from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
 from managr.gong.exceptions import InvalidRequest
+from managr.crm.models import ObjectField
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 
@@ -655,16 +656,16 @@ def process_meeting_selected_resource_option(payload, context):
             # did not find the block
             stage_block = None
             pass
-
-        if stage_block:
-            stage_block = {
-                **stage_block,
-                "accessory": {
-                    **stage_block["accessory"],
-                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(workflow.user.id)}&f={str(workflow.forms.filter(template__form_type='CREATE', template__resource=resource_type).first().id)}",
-                },
-            }
-            blocks = [*blocks[:index], stage_block, *blocks[index + 1 :]]
+        else:
+            if stage_block:
+                stage_block = {
+                    **stage_block,
+                    "accessory": {
+                        **stage_block["accessory"],
+                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(workflow.user.id)}&f={str(workflow.forms.filter(template__form_type='CREATE', template__resource=resource_type).first().id)}",
+                    },
+                }
+                blocks = [*blocks[:index], stage_block, *blocks[index + 1 :]]
 
         external_id = f"create_modal_block_set.{str(uuid.uuid4())}"
 
@@ -1000,16 +1001,42 @@ def process_add_create_form(payload, context):
             # did not find the block
             block = None
             pass
-
-        if block:
-            block = {
-                **block,
+        if user.crm == "HUBSPOT" and resource_type == "Deal":
+            try:
+                pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+            except ValueError:
+                # did not find the block
+                pipeline_index = False
+                pipeline_block = None
+                pass
+            if pipeline_block is None:
+                pipeline_field = ObjectField.objects.filter(
+                    crm_object="Deal", api_name="pipeline", user=user
+                ).first()
+                if pipeline_field:
+                    pipeline_block = pipeline_field.to_slack_field(None, user, "Deal")
+            pipeline_block = {
+                **pipeline_block,
                 "accessory": {
-                    **block["accessory"],
-                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                    **pipeline_block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}&field={str(pipeline_field.id)}",
                 },
             }
-            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+            if block:
+                if pipeline_index:
+                    del blocks[index]
+                else:
+                    blocks[index] = pipeline_block
+        else:
+            if block:
+                block = {
+                    **block,
+                    "accessory": {
+                        **block["accessory"],
+                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                    },
+                }
+                blocks = [*blocks[:index], block, *blocks[index + 1 :]]
         access_token = user.organization.slack_integration.access_token
         private_metadata = {**context}
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -1101,6 +1128,72 @@ def process_stage_selected_command_form(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_button_message},
             "private_metadata": json.dumps(private_metadata),
+            "external_id": f"{view_type}.{str(uuid.uuid4())}",
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(f"Failed To Generate Slack {e}")
+    except InvalidBlocksFormatException as e:
+        return logger.exception(f"Failed To Generate Slack  {e}")
+    except UnHandeledBlocksException as e:
+        return logger.exception(f"Failed To Generate Slack  {e}")
+    except InvalidAccessToken as e:
+        return logger.exception(f"Failed To Generate Slack Workflow Interaction for user {e}")
+
+
+@processor(required_context=["u", "f"])
+def process_pipeline_selected_command_form(payload, context):
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    type = context.get("type", None)
+    user = User.objects.get(id=context.get("u"))
+    org = user.organization
+    access_token = org.slack_integration.access_token
+    trigger_id = payload["trigger_id"]
+    view = payload["view"]
+    view_id = payload["view"]["id"]
+    private_metadata = json.loads(payload["view"]["private_metadata"])
+    blocks = view["blocks"]
+    # get the forms associated with this slack
+    stage_field = user.object_fields.filter(api_name="dealstage", crm_object="Deal").first()
+    external_id = payload.get("view", {}).get("external_id", None)
+    try:
+        view_type, __unique_id = external_id.split(".")
+    except ValueError:
+        view_type = external_id
+        pass
+
+    if len(payload["actions"]):
+        action = payload["actions"][0]
+        blocks = payload["view"]["blocks"]
+        selected_value = action["selected_option"]["value"]
+        # blockfinder returns a tuple of its index in the block and the object
+        index, action_block = block_finder(action["block_id"], blocks)
+        # find all stages previous to it
+        pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+        stage_block = stage_field.to_slack_field(pipeline_id=selected_value)
+        stage_block = {
+            **stage_block,
+            "accessory": {
+                **stage_block["accessory"],
+                "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={context.get('f')}",
+            },
+        }
+    blocks[pipeline_index] = stage_block
+    updated_view_title = view["title"]
+    submit_button_message = "Create"
+    callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    data = {
+        "trigger_id": trigger_id,
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": callback_id,
+            "title": updated_view_title,
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": submit_button_message},
+            "private_metadata": json.dumps(context),
             "external_id": f"{view_type}.{str(uuid.uuid4())}",
         },
     }
@@ -3455,6 +3548,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM: process_show_alert_update_resource_form,
         slack_const.PROCESS_SHOW_DIGEST_UPDATE_RESOURCE_FORM: process_show_digest_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
+        slack_const.COMMAND_FORMS__PIPELINE_SELECTED: process_pipeline_selected_command_form,
         slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM: process_add_create_form,
         slack_const.COMMAND_FORMS__CONVERT_LEAD: process_show_convert_lead_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,

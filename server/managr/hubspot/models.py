@@ -222,6 +222,7 @@ class HubspotAuthAccount(TimeStampModel):
     hobjects = JSONField(
         default=getHobjectDefaults, help_text="All resources we are retrieving", max_length=500,
     )
+    extra_pipeline_fields = ArrayField(models.CharField(max_length=255), default=list, blank=True)
 
     class Meta:
         ordering = ["-datetime_created"]

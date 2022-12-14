@@ -230,7 +230,7 @@ def _process_gen_next_sync(user_id, operations_list):
 
 @background(schedule=0)
 @log_all_exceptions
-def _process_pipeline_sync(sync_id):
+def _process_pipeline_sf_sync(sync_id):
     sync = SFResourceSync.objects.get(id=sync_id)
     sync.begin_tasks()
     return sync.id

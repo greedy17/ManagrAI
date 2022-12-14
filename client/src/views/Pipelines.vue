@@ -121,9 +121,9 @@
     >
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
-          <div class="flex-row">
+          <div class="flex-row" @click="test(/*stageValidationFields*/stageGateField)">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
-            <h3>Create Opportunity</h3>
+            <h3>{{userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal'}}</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -133,460 +133,100 @@
           />
         </div>
         <div class="opp-modal">
-          <section :key="field.id" v-for="field in createOppForm">
-            <div
-              v-if="
-                field.dataType === 'TextArea' ||
-                (field.dataType === 'String' && field.apiName === 'NextStep')
-              "
-            >
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-              <textarea
-                id="user-input"
-                cols="30"
-                rows="4"
-                :disabled="savingCreateForm"
-                style="width: 40.25vw; border-radius: 0.4rem"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              >
-              </textarea>
-            </div>
-            <div class="col" v-else-if="field.dataType === 'String'">
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-              <input
-                :disabled="savingCreateForm"
-                id="user-input"
-                type="text"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.apiName === 'AccountId'">
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-              <Multiselect
-                v-model="selectedAccount"
-                :options="allAccounts"
-                @search-change="getAccounts($event)"
-                @select="setUpdateValues(field.apiName, $event.id, false)"
-                openDirection="below"
-                style="width: 40.25vw"
-                selectLabel="Enter"
-                track-by="id"
-                label="name"
-                :loading="dropdownLoading || loadingAccounts"
-              >
-                <template v-slot:noResult>
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template v-slot:placeholder>
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select Account
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-            <div
-              v-else-if="
-                field.dataType === 'Picklist' ||
-                field.dataType === 'MultiPicklist' ||
-                (field.dataType === 'Reference' && field.apiName !== 'AccountId')
-              "
-            >
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-
-              <Multiselect
-                v-model="currentVals[field.apiName]"
-                :options="
-                  userCRM === 'HUBSPOT' ? field.options : 
-                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? allPicklistOptions[field.id]
-                    : createReferenceOpts[field.apiName]
-                "
-                @select="
-                  setUpdateValues(
-                    field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
-                      ? $event.value
-                      : $event.id,
-                    field.dataType === 'MultiPicklist' ? true : false,
-                  )
-                "
-                @open="
-                  field.dataType === 'Reference'
-                    ? getCreateReferenceOpts(field.apiName, field.id)
-                    : null
-                "
-                @search-change="
-                  field.dataType === 'Reference'
-                    ? getReferenceFieldList(field.apiName, field.id, 'create1', $event)
-                    : null
-                "
-                :multiple="field.dataType === 'MultiPicklist' ? true : false"
-                openDirection="below"
-                style="width: 40.25vw"
-                selectLabel="Enter"
-                :track-by="
-                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? 'value'
-                    : 'id'
-                "
-                :label="
-                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                    ? 'label'
-                    : 'name'
-                "
-              >
-                <template v-slot:noResult>
-                  <p class="multi-slot">No results ? Try loading more</p>
-                </template>
-                <template v-slot:placeholder>
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    {{ `${field.referenceDisplayLabel}` }}
-                  </p>
-                </template>
-              </Multiselect>
-
+          <div>
+            <section :key="field.id" v-for="field in createOppForm">
               <div
-                :class="stageGateField ? 'adding-stage-gate' : 'hide'"
-                v-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
+                v-if="
+                  field.dataType === 'TextArea' ||
+                  (field.dataType === 'String' && field.apiName === 'NextStep')
+                "
               >
-                <div class="adding-stage-gate__body">
-                  <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
-                    <p>{{ stageGateField }} required</p>
-                    <div
-                      v-if="
-                        field.dataType === 'Picklist' ||
-                        field.dataType === 'MultiPicklist' ||
-                        (field.dataType === 'Reference' && field.apiName !== 'AccountId')
-                      "
-                    >
-                      <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
-                      <Multiselect
-                        :options="
-                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                            ? allPicklistOptions[field.id]
-                            : stageReferenceOpts[field.apiName]
-                            ? stageReferenceOpts[field.apiName]
-                            : []
-                        "
-                        @select="
-                          setUpdateValidationValues(
-                            field.apiName === 'ForecastCategory'
-                              ? 'ForecastCategoryName'
-                              : field.apiName,
-                            field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                              ? $event.value
-                              : $event.id,
-                          )
-                        "
-                        @open="
-                          field.dataType === 'Reference'
-                            ? getStageReferenceOpts(field.apiName, field.id)
-                            : null
-                        "
-                        openDirection="below"
-                        :loading="dropdownLoading"
-                        v-model="dropdownVal[field.apiName]"
-                        style="width: 40vw"
-                        selectLabel="Enter"
-                        :multiple="field.dataType === 'MultiPicklist' ? true : false"
-                        :track-by="
-                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                            ? 'value'
-                            : 'id'
-                        "
-                        :label="
-                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
-                            ? 'label'
-                            : 'name'
-                        "
-                      >
-                        <template v-slot:noResult>
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                        <template v-slot:placeholder>
-                          <p class="slot-icon">
-                            <img src="@/assets/images/search.svg" alt="" />
-                            {{ field.apiName }}
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                    <div v-else-if="field.apiName === 'AccountId'">
-                      <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
-                      <Multiselect
-                        v-model="selectedAccount"
-                        :options="allAccounts"
-                        @search-change="getAccounts($event)"
-                        @select="setUpdateValidationValues(field.apiName, $event.id)"
-                        openDirection="below"
-                        style="width: 40.25vw"
-                        selectLabel="Enter"
-                        track-by="integration_id"
-                        label="name"
-                        :loading="dropdownLoading || loadingAccounts"
-                      >
-                        <template v-slot:noResult>
-                          <p class="multi-slot">No results.</p>
-                        </template>
-
-                        <template v-slot:placeholder>
-                          <p class="slot-icon">
-                            <img src="@/assets/images/search.svg" alt="" />
-                            Accounts
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                    <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
-                      <label class="red-label"
-                        >{{ field.referenceDisplayLabel }} <span>*</span></label
-                      >
-                      <input
-                        id="user-input"
-                        type="text"
-                        :placeholder="currentVals[field.apiName]"
-                        :disabled="savingCreateForm"
-                        v-model="currentVals[field.apiName]"
-                        @input="
-                          ;(value = $event.target.value),
-                            setUpdateValidationValues(field.apiName, value)
-                        "
-                      />
-                    </div>
-
-                    <div
-                      v-else-if="
-                        field.dataType === 'TextArea' ||
-                        (field.length > 250 && field.dataType === 'String')
-                      "
-                    >
-                      <label class="red-label"
-                        >{{ field.referenceDisplayLabel }} <span>*</span></label
-                      >
-                      <textarea
-                        id="user-input"
-                        cols="30"
-                        rows="2"
-                        :disabled="savingCreateForm"
-                        :placeholder="currentVals[field.apiName]"
-                        style="width: 40.25vw; border-radius: 6px; padding: 7px"
-                        v-model="currentVals[field.apiName]"
-                        @input="
-                          ;(value = $event.target.value),
-                            setUpdateValidationValues(field.apiName, value)
-                        "
-                      >
-                      </textarea>
-                    </div>
-                    <div v-else-if="field.dataType === 'Date'">
-                      <label class="red-label"
-                        >{{ field.referenceDisplayLabel }} <span>*</span></label
-                      >
-                      <input
-                        type="text"
-                        :disabled="savingCreateForm"
-                        onfocus="(this.type='date')"
-                        onblur="(this.type='text')"
-                        :placeholder="currentVals[field.apiName]"
-                        v-model="currentVals[field.apiName]"
-                        id="user-input"
-                        @input="
-                          ;(value = $event.target.value),
-                            setUpdateValidationValues(field.apiName, value)
-                        "
-                      />
-                    </div>
-                    <div v-else-if="field.dataType === 'DateTime'">
-                      <label class="red-label"
-                        >{{ field.referenceDisplayLabel }} <span>*</span></label
-                      >
-                      <input
-                        type="datetime-local"
-                        id="start"
-                        :disabled="savingCreateForm"
-                        v-model="currentVals[field.apiName]"
-                        @input="
-                          ;(value = $event.target.value),
-                            setUpdateValidationValues(field.apiName, value)
-                        "
-                      />
-                    </div>
-                    <div
-                      v-else-if="
-                        field.dataType === 'Phone' ||
-                        field.dataType === 'Double' ||
-                        field.dataType === 'Currency'
-                      "
-                    >
-                      <label class="red-label"
-                        >{{ field.referenceDisplayLabel }} <span>*</span></label
-                      >
-                      <input
-                        id="user-input"
-                        type="number"
-                        :disabled="savingCreateForm"
-                        v-model="currentVals[field.apiName]"
-                        :placeholder="currentVals[field.apiName]"
-                        @input="
-                          ;(value = $event.target.value),
-                            setUpdateValidationValues(field.apiName, value)
-                        "
-                      />
-                    </div>
-                    <div v-else-if="field.dataType === 'Boolean'">
-                      <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
-
-                      <Multiselect
-                        v-model="dropdownVal[field.apiName]"
-                        :options="booleans"
-                        @select="setUpdateValidationValues(field.apiName, $event)"
-                        openDirection="below"
-                        style="width: 40vw"
-                        selectLabel="Enter"
-                      >
-                        <template v-slot:noResult>
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                        <template v-slot:placeholder>
-                          <p class="slot-icon">
-                            <img src="@/assets/images/search.svg" alt="" />
-                            {{ currentVals[field.apiName] }}
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col" v-else-if="field.dataType === 'Date'">
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-              <input
-                type="date"
-                id="user-input"
-                :disabled="savingCreateForm"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div class="col" v-else-if="field.dataType === 'DateTime'">
-              <label class="label">
-                {{ field.referenceDisplayLabel }}
-              </label>
-              <input
-                type="datetime-local"
-                id="start"
-                :disabled="savingCreateForm"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div
-              v-else-if="
-                field.dataType === 'Phone' ||
-                field.dataType === 'Double' ||
-                field.dataType === 'Currency'
-              "
-              class="col"
-            >
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-              <input
-                id="user-input"
-                type="number"
-                :disabled="savingCreateForm"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-              />
-            </div>
-            <div v-else-if="field.dataType === 'Boolean'">
-              <label class="label">{{ field.referenceDisplayLabel }}</label>
-
-              <Multiselect
-                v-model="dropdownVal[field.apiName]"
-                :options="booleans"
-                @select="setUpdateValues(field.apiName, $event)"
-                openDirection="below"
-                style="width: 40.25vw"
-                selectLabel="Enter"
-              >
-                <template v-slot:noResult>
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template v-slot:placeholder>
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    {{ currentVals[field.apiName] }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div>
-          </section>
-          <div ref="product" class="adding-product" v-if="addingProduct">
-            <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
-            <!-- <h3 style="color: #41b883">Add Product</h3> -->
-
-            <div class="adding-product__body">
-              <div>
-                <p>Pricebook:</p>
-                <Multiselect
-                  @select="getPricebookEntries($event.integration_id)"
-                  :options="pricebooks"
-                  openDirection="below"
-                  v-model="selectedPriceBook"
-                  style="width: 40vw"
-                  selectLabel="Enter"
-                  label="name"
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
+                <textarea
+                  id="user-input"
+                  cols="30"
+                  rows="4"
+                  :disabled="savingCreateForm"
+                  style="width: 40.25vw; border-radius: 0.4rem"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
                 >
+                </textarea>
+              </div>
+              <div class="col" v-else-if="field.dataType === 'String'">
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
+                <input
+                  :disabled="savingCreateForm"
+                  id="user-input"
+                  type="text"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                />
+              </div>
+              <div v-else-if="field.apiName === 'AccountId'">
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
+                <Multiselect
+                  v-model="selectedAccount"
+                  :options="allAccounts"
+                  @search-change="getAccounts($event)"
+                  @select="setUpdateValues(field.apiName, $event.id, false)"
+                  openDirection="below"
+                  style="width: 40.25vw"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :loading="dropdownLoading || loadingAccounts"
+                >
+                  <template v-slot:noResult>
+                    <p class="multi-slot">No results.</p>
+                  </template>
+  
                   <template v-slot:placeholder>
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      {{ 'Pricebook' }}
+                      Select Account
                     </p>
                   </template>
                 </Multiselect>
               </div>
-              <div v-for="(field, i) in createProductForm" :key="i">
-                <div
-                  v-if="
-                    field.dataType === 'Picklist' ||
-                    field.dataType === 'MultiPicklist' ||
-                    field.dataType === 'Reference'
-                  "
-                >
-                  <p>
-                    {{
-                      field.referenceDisplayLabel === 'PricebookEntry'
-                        ? 'Products'
-                        : field.referenceDisplayLabel
-                    }}:
-                  </p>
+              <div
+                v-else-if="
+                  field.apiName === 'dealstage' || field.apiName === 'Stage Name'
+                "
+              >
+                <div v-if="savedPipeline">
+                  <label class="label">{{ field.referenceDisplayLabel }}</label>
+    
                   <Multiselect
+                    v-model="currentVals[field.apiName]"
                     :options="
-                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      field.apiName === 'dealstage' ? field.options[0][savedPipeline.id].stages :
+                      userCRM === 'HUBSPOT' && field.dataType !== 'Reference' ? field.options : 
+                      (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
-                        : productReferenceOpts[field.apiName]
+                        : createReferenceOpts[field.apiName]
                     "
                     @select="
-                      setCreateValues(
-                        field.apiName === 'ForecastCategory'
-                          ? 'ForecastCategoryName'
-                          : field.apiName,
-                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      setUpdateValues(
+                        field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                        field.apiName === 'dealstage' ? $event.id :
+                        (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                           ? $event.value
-                          : field.apiName === 'PricebookEntryId'
-                          ? $event.integration_id
                           : $event.id,
+                        field.dataType === 'MultiPicklist' ? true : false,
                       )
                     "
                     @open="
                       field.dataType === 'Reference'
-                        ? getProductReferenceOpts(field.apiName, field.id)
+                        ? getCreateReferenceOpts(field.apiName, field.id, field.options)
                         : null
                     "
-                    :loading="loadingProducts"
+                    @search-change="
+                      field.dataType === 'Reference'
+                        ? getReferenceFieldList(field.apiName, field.id, 'create1', field.options, $event)
+                        : null
+                    "
+                    :multiple="field.dataType === 'MultiPicklist' ? true : false"
                     openDirection="below"
-                    v-model="dropdownVal[field.apiName]"
-                    style="width: 40vw"
+                    style="width: 40.25vw"
                     selectLabel="Enter"
                     :track-by="
                       field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
@@ -598,99 +238,772 @@
                         ? 'label'
                         : 'name'
                     "
+                    :loading="referenceLoading"
                   >
                     <template v-slot:noResult>
-                      <p class="multi-slot">No results. Try loading more</p>
-                    </template>
-                    <template v-slot:afterList>
-                      <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
-                        Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                      </p>
+                      <p class="multi-slot">No results ? Try loading more</p>
                     </template>
                     <template v-slot:placeholder>
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
-                        {{ field.referenceDisplayLabel }}
+                        {{ `${field.referenceDisplayLabel}` }}
+                      </p>
+                    </template>
+                  </Multiselect>
+    
+                  <div
+                    :class="stageGateField ? 'adding-stage-gate' : 'hide'"
+                    v-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
+                  >
+                    <div class="adding-stage-gate__body">
+                      <p>{{ stageGateField }} required</p>
+                      <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
+                        <div
+                          v-if="
+                            field.dataType === 'Picklist' ||
+                            field.dataType === 'MultiPicklist' ||
+                            (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                          "
+                        >
+                          <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
+                          <Multiselect
+                            :options="
+                              (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
+                                ? allPicklistOptions[field.id]
+                                : stageReferenceOpts[field.apiName]
+                                ? stageReferenceOpts[field.apiName]
+                                : []
+                            "
+                            @select="
+                              setUpdateValidationValues(
+                                field.apiName === 'ForecastCategory'
+                                  ? 'ForecastCategoryName'
+                                  : field.apiName,
+                                field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                                  ? $event.value
+                                  : $event.id,
+                              )
+                            "
+                            @open="
+                              field.dataType === 'Reference'
+                                ? getStageReferenceOpts(field.apiName, field.id)
+                                : null
+                            "
+                            openDirection="below"
+                            :loading="dropdownLoading"
+                            v-model="dropdownVal[field.apiName]"
+                            style="width: 40vw"
+                            selectLabel="Enter"
+                            :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                            :track-by="
+                              field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                                ? 'value'
+                                : 'id'
+                            "
+                            :label="
+                              field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                                ? 'label'
+                                : 'name'
+                            "
+                          >
+                            <template v-slot:noResult>
+                              <p class="multi-slot">No results.</p>
+                            </template>
+                            <template v-slot:placeholder>
+                              <p class="slot-icon">
+                                <img src="@/assets/images/search.svg" alt="" />
+                                {{ field.apiName }}
+                              </p>
+                            </template>
+                          </Multiselect>
+                        </div>
+                        <div v-else-if="field.apiName === 'AccountId'">
+                          <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
+                          <Multiselect
+                            v-model="selectedAccount"
+                            :options="allAccounts"
+                            @search-change="getAccounts($event)"
+                            @select="setUpdateValidationValues(field.apiName, $event.id)"
+                            openDirection="below"
+                            style="width: 40.25vw"
+                            selectLabel="Enter"
+                            track-by="integration_id"
+                            label="name"
+                            :loading="dropdownLoading || loadingAccounts"
+                          >
+                            <template v-slot:noResult>
+                              <p class="multi-slot">No results.</p>
+                            </template>
+    
+                            <template v-slot:placeholder>
+                              <p class="slot-icon">
+                                <img src="@/assets/images/search.svg" alt="" />
+                                Accounts
+                              </p>
+                            </template>
+                          </Multiselect>
+                        </div>
+                        <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
+                          <label class="red-label"
+                            >{{ field.referenceDisplayLabel }} <span>*</span></label
+                          >
+                          <input
+                            id="user-input"
+                            type="text"
+                            :placeholder="currentVals[field.apiName]"
+                            :disabled="savingCreateForm"
+                            v-model="currentVals[field.apiName]"
+                            @input="
+                              ;(value = $event.target.value),
+                                setUpdateValidationValues(field.apiName, value)
+                            "
+                          />
+                        </div>
+    
+                        <div
+                          v-else-if="
+                            field.dataType === 'TextArea' ||
+                            (field.length > 250 && field.dataType === 'String')
+                          "
+                        >
+                          <label class="red-label"
+                            >{{ field.referenceDisplayLabel }} <span>*</span></label
+                          >
+                          <textarea
+                            id="user-input"
+                            cols="30"
+                            rows="2"
+                            :disabled="savingCreateForm"
+                            :placeholder="currentVals[field.apiName]"
+                            style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                            v-model="currentVals[field.apiName]"
+                            @input="
+                              ;(value = $event.target.value),
+                                setUpdateValidationValues(field.apiName, value)
+                            "
+                          >
+                          </textarea>
+                        </div>
+                        <div v-else-if="field.dataType === 'Date'">
+                          <label class="red-label"
+                            >{{ field.referenceDisplayLabel }} <span>*</span></label
+                          >
+                          <input
+                            type="text"
+                            :disabled="savingCreateForm"
+                            onfocus="(this.type='date')"
+                            onblur="(this.type='text')"
+                            :placeholder="currentVals[field.apiName]"
+                            v-model="currentVals[field.apiName]"
+                            id="user-input"
+                            @input="
+                              ;(value = $event.target.value),
+                                setUpdateValidationValues(field.apiName, value)
+                            "
+                          />
+                        </div>
+                        <div v-else-if="field.dataType === 'DateTime'">
+                          <label class="red-label"
+                            >{{ field.referenceDisplayLabel }} <span>*</span></label
+                          >
+                          <input
+                            type="datetime-local"
+                            id="start"
+                            :disabled="savingCreateForm"
+                            v-model="currentVals[field.apiName]"
+                            @input="
+                              ;(value = $event.target.value),
+                                setUpdateValidationValues(field.apiName, value)
+                            "
+                          />
+                        </div>
+                        <div
+                          v-else-if="
+                            field.dataType === 'Phone' ||
+                            field.dataType === 'Double' ||
+                            field.dataType === 'Currency' ||
+                            field.dataType === 'Int'
+                          "
+                        >
+                          <label class="red-label"
+                            >{{ field.referenceDisplayLabel }} <span>*</span></label
+                          >
+                          <input
+                            id="user-input"
+                            type="number"
+                            :disabled="savingCreateForm"
+                            v-model="currentVals[field.apiName]"
+                            :placeholder="currentVals[field.apiName]"
+                            @input="
+                              ;(value = $event.target.value),
+                                setUpdateValidationValues(field.apiName, value)
+                            "
+                          />
+                        </div>
+                        <div v-else-if="field.dataType === 'Boolean'">
+                          <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
+    
+                          <Multiselect
+                            v-model="dropdownVal[field.apiName]"
+                            :options="booleans"
+                            @select="setUpdateValidationValues(field.apiName, $event)"
+                            openDirection="below"
+                            style="width: 40vw"
+                            selectLabel="Enter"
+                          >
+                            <template v-slot:noResult>
+                              <p class="multi-slot">No results.</p>
+                            </template>
+                            <template v-slot:placeholder>
+                              <p class="slot-icon">
+                                <img src="@/assets/images/search.svg" alt="" />
+                                {{ currentVals[field.apiName] }}
+                              </p>
+                            </template>
+                          </Multiselect>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <label class="label">Select Pipeline for Stage</label>
+                  <Multiselect
+                    v-model="savedPipeline"
+                    :options="pipelineOptions"
+                    @open="getPipelineOptions(field.options[0])"
+                    @select="setUpdateValues(field.apiName, field.apiName === 'dealstage' ? $event.id : $event.value)"
+                    openDirection="below"
+                    style="width: 40.25vw"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="label"
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results.</p>
+                    </template>
+    
+                    <template v-slot:placeholder>
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        Select Pipeline
                       </p>
                     </template>
                   </Multiselect>
                 </div>
-
-                <div class="col" v-else-if="field.dataType === 'String'">
-                  <p>{{ field.referenceDisplayLabel }}</p>
-                  <input
-                    id="user-input"
-                    type="text"
-                    style="width: 40vw"
-                    :disabled="savingCreateForm"
-                    :placeholder="currentVals[field.apiName]"
-                    v-model="currentVals[field.apiName]"
-                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
-                  />
-                </div>
-
-                <div
-                  v-else-if="
-                    field.dataType === 'TextArea' ||
-                    (field.length > 250 && field.dataType === 'String')
+              </div>
+              <div
+                v-else-if="
+                  field.dataType === 'Picklist' ||
+                  field.dataType === 'MultiPicklist' ||
+                  (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                "
+                
+              >
+                <label class="label" @click="test(field)">{{ field.referenceDisplayLabel }}</label>
+  
+                <Multiselect
+                  v-model="currentVals[field.apiName]"
+                  :options="
+                    field.apiName === 'dealstage' ? field.options[0][savedOpp.secondary_data.pipeline].stages :
+                    userCRM === 'HUBSPOT' && field.dataType !== 'Reference' ? field.options : 
+                    (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
+                      ? allPicklistOptions[field.id]
+                      : createReferenceOpts[field.apiName]
                   "
+                  @select="
+                    setUpdateValues(
+                      field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
+                        ? $event.value
+                        : $event.id,
+                      field.dataType === 'MultiPicklist' ? true : false,
+                    )
+                  "
+                  @open="
+                    field.dataType === 'Reference'
+                      ? getCreateReferenceOpts(field.apiName, field.id, field.options)
+                      : null
+                  "
+                  @search-change="
+                    field.dataType === 'Reference'
+                      ? getReferenceFieldList(field.apiName, field.id, 'create1', field.options, $event)
+                      : null
+                  "
+                  :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                  openDirection="below"
+                  style="width: 40.25vw"
+                  selectLabel="Enter"
+                  :track-by="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'value'
+                      : 'id'
+                  "
+                  :label="
+                    field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      ? 'label'
+                      : 'name'
+                  "
+                  :loading="referenceLoading"
                 >
-                  <p>{{ field.referenceDisplayLabel }}</p>
-                  <textarea
-                    id="user-input"
-                    ccols="30"
-                    rows="2"
-                    :disabled="savingCreateForm"
-                    :placeholder="currentVals[field.apiName]"
-                    style="width: 40.25vw; border-radius: 6px; padding: 7px"
-                    v-model="currentVals[field.apiName]"
-                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                  <template v-slot:noResult>
+                    <p class="multi-slot">No results ? Try loading more</p>
+                  </template>
+                  <template v-slot:placeholder>
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ `${field.referenceDisplayLabel}` }}
+                    </p>
+                  </template>
+                </Multiselect>
+  
+                <div
+                  :class="stageGateField ? 'adding-stage-gate' : 'hide'"
+                  v-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
+                >
+                  <div class="adding-stage-gate__body">
+                    <p>{{ stageGateField }} required</p>
+                    <div v-for="(field, i) in stageValidationFields[stageGateField]" :key="i">
+                      <div
+                        v-if="
+                          field.dataType === 'Picklist' ||
+                          field.dataType === 'MultiPicklist' ||
+                          (field.dataType === 'Reference' && field.apiName !== 'AccountId')
+                        "
+                      >
+                        <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
+                        <Multiselect
+                          :options="
+                            (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
+                              ? allPicklistOptions[field.id]
+                              : stageReferenceOpts[field.apiName]
+                              ? stageReferenceOpts[field.apiName]
+                              : []
+                          "
+                          @select="
+                            setUpdateValidationValues(
+                              field.apiName === 'ForecastCategory'
+                                ? 'ForecastCategoryName'
+                                : field.apiName,
+                              field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                                ? $event.value
+                                : $event.id,
+                            )
+                          "
+                          @open="
+                            field.dataType === 'Reference'
+                              ? getStageReferenceOpts(field.apiName, field.id)
+                              : null
+                          "
+                          openDirection="below"
+                          :loading="dropdownLoading"
+                          v-model="dropdownVal[field.apiName]"
+                          style="width: 40vw"
+                          selectLabel="Enter"
+                          :multiple="field.dataType === 'MultiPicklist' ? true : false"
+                          :track-by="
+                            field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                              ? 'value'
+                              : 'id'
+                          "
+                          :label="
+                            field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                              ? 'label'
+                              : 'name'
+                          "
+                        >
+                          <template v-slot:noResult>
+                            <p class="multi-slot">No results.</p>
+                          </template>
+                          <template v-slot:placeholder>
+                            <p class="slot-icon">
+                              <img src="@/assets/images/search.svg" alt="" />
+                              {{ field.apiName }}
+                            </p>
+                          </template>
+                        </Multiselect>
+                      </div>
+                      <div v-else-if="field.apiName === 'AccountId'">
+                        <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
+                        <Multiselect
+                          v-model="selectedAccount"
+                          :options="allAccounts"
+                          @search-change="getAccounts($event)"
+                          @select="setUpdateValidationValues(field.apiName, $event.id)"
+                          openDirection="below"
+                          style="width: 40.25vw"
+                          selectLabel="Enter"
+                          track-by="integration_id"
+                          label="name"
+                          :loading="dropdownLoading || loadingAccounts"
+                        >
+                          <template v-slot:noResult>
+                            <p class="multi-slot">No results.</p>
+                          </template>
+  
+                          <template v-slot:placeholder>
+                            <p class="slot-icon">
+                              <img src="@/assets/images/search.svg" alt="" />
+                              Accounts
+                            </p>
+                          </template>
+                        </Multiselect>
+                      </div>
+                      <div v-else-if="field.dataType === 'String' && field.apiName !== 'NextStep'">
+                        <label class="red-label"
+                          >{{ field.referenceDisplayLabel }} <span>*</span></label
+                        >
+                        <input
+                          id="user-input"
+                          type="text"
+                          :placeholder="currentVals[field.apiName]"
+                          :disabled="savingCreateForm"
+                          v-model="currentVals[field.apiName]"
+                          @input="
+                            ;(value = $event.target.value),
+                              setUpdateValidationValues(field.apiName, value)
+                          "
+                        />
+                      </div>
+  
+                      <div
+                        v-else-if="
+                          field.dataType === 'TextArea' ||
+                          (field.length > 250 && field.dataType === 'String')
+                        "
+                      >
+                        <label class="red-label"
+                          >{{ field.referenceDisplayLabel }} <span>*</span></label
+                        >
+                        <textarea
+                          id="user-input"
+                          cols="30"
+                          rows="2"
+                          :disabled="savingCreateForm"
+                          :placeholder="currentVals[field.apiName]"
+                          style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                          v-model="currentVals[field.apiName]"
+                          @input="
+                            ;(value = $event.target.value),
+                              setUpdateValidationValues(field.apiName, value)
+                          "
+                        >
+                        </textarea>
+                      </div>
+                      <div v-else-if="field.dataType === 'Date'">
+                        <label class="red-label"
+                          >{{ field.referenceDisplayLabel }} <span>*</span></label
+                        >
+                        <input
+                          type="text"
+                          :disabled="savingCreateForm"
+                          onfocus="(this.type='date')"
+                          onblur="(this.type='text')"
+                          :placeholder="currentVals[field.apiName]"
+                          v-model="currentVals[field.apiName]"
+                          id="user-input"
+                          @input="
+                            ;(value = $event.target.value),
+                              setUpdateValidationValues(field.apiName, value)
+                          "
+                        />
+                      </div>
+                      <div v-else-if="field.dataType === 'DateTime'">
+                        <label class="red-label"
+                          >{{ field.referenceDisplayLabel }} <span>*</span></label
+                        >
+                        <input
+                          type="datetime-local"
+                          id="start"
+                          :disabled="savingCreateForm"
+                          v-model="currentVals[field.apiName]"
+                          @input="
+                            ;(value = $event.target.value),
+                              setUpdateValidationValues(field.apiName, value)
+                          "
+                        />
+                      </div>
+                      <div
+                        v-else-if="
+                          field.dataType === 'Phone' ||
+                          field.dataType === 'Double' ||
+                          field.dataType === 'Currency' ||
+                          field.dataType === 'Int'
+                        "
+                      >
+                        <label class="red-label"
+                          >{{ field.referenceDisplayLabel }} <span>*</span></label
+                        >
+                        <input
+                          id="user-input"
+                          type="number"
+                          :disabled="savingCreateForm"
+                          v-model="currentVals[field.apiName]"
+                          :placeholder="currentVals[field.apiName]"
+                          @input="
+                            ;(value = $event.target.value),
+                              setUpdateValidationValues(field.apiName, value)
+                          "
+                        />
+                      </div>
+                      <div v-else-if="field.dataType === 'Boolean'">
+                        <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
+  
+                        <Multiselect
+                          v-model="dropdownVal[field.apiName]"
+                          :options="booleans"
+                          @select="setUpdateValidationValues(field.apiName, $event)"
+                          openDirection="below"
+                          style="width: 40vw"
+                          selectLabel="Enter"
+                        >
+                          <template v-slot:noResult>
+                            <p class="multi-slot">No results.</p>
+                          </template>
+                          <template v-slot:placeholder>
+                            <p class="slot-icon">
+                              <img src="@/assets/images/search.svg" alt="" />
+                              {{ currentVals[field.apiName] }}
+                            </p>
+                          </template>
+                        </Multiselect>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col" v-else-if="field.dataType === 'Date'">
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
+                <input
+                  type="date"
+                  id="user-input"
+                  :disabled="savingCreateForm"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                />
+              </div>
+              <div class="col" v-else-if="field.dataType === 'DateTime'">
+                <label class="label">
+                  {{ field.referenceDisplayLabel }}
+                </label>
+                <input
+                  type="datetime-local"
+                  id="start"
+                  :disabled="savingCreateForm"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                />
+              </div>
+              <div
+                v-else-if="
+                  field.dataType === 'Phone' ||
+                  field.dataType === 'Double' ||
+                  field.dataType === 'Currency' ||
+                  field.dataType === 'Int'
+                "
+                class="col"
+              >
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
+                <input
+                  id="user-input"
+                  type="number"
+                  :disabled="savingCreateForm"
+                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                />
+              </div>
+              <div v-else-if="field.dataType === 'Boolean'">
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
+  
+                <Multiselect
+                  v-model="dropdownVal[field.apiName]"
+                  :options="booleans"
+                  @select="setUpdateValues(field.apiName, $event)"
+                  openDirection="below"
+                  style="width: 40.25vw"
+                  selectLabel="Enter"
+                >
+                  <template v-slot:noResult>
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template v-slot:placeholder>
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ currentVals[field.apiName] }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
+            </section>
+            <div ref="product" class="adding-product" v-if="addingProduct">
+              <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
+              <!-- <h3 style="color: #41b883">Add Product</h3> -->
+  
+              <div class="adding-product__body">
+                <div>
+                  <p>Pricebook:</p>
+                  <Multiselect
+                    @select="getPricebookEntries($event.integration_id)"
+                    :options="pricebooks"
+                    openDirection="below"
+                    v-model="selectedPriceBook"
+                    style="width: 40vw"
+                    selectLabel="Enter"
+                    label="name"
                   >
-                  </textarea>
+                    <template v-slot:placeholder>
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ 'Pricebook' }}
+                      </p>
+                    </template>
+                  </Multiselect>
                 </div>
-                <div class="col" v-else-if="field.dataType === 'Date'">
-                  <p>{{ field.referenceDisplayLabel }}</p>
-                  <input
-                    type="text"
-                    onfocus="(this.type='date')"
-                    onblur="(this.type='text')"
-                    style="width: 40vw"
-                    :disabled="savingCreateForm"
-                    :placeholder="currentVals[field.apiName]"
-                    v-model="currentVals[field.apiName]"
-                    id="user-input"
-                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
-                  />
-                </div>
-                <div class="col" v-else-if="field.dataType === 'DateTime'">
-                  <p>{{ field.referenceDisplayLabel }}</p>
-                  <input
-                    type="datetime-local"
-                    id="start"
-                    style="width: 40vw"
-                    :disabled="savingCreateForm"
-                    v-model="currentVals[field.apiName]"
-                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
-                  />
-                </div>
-                <div
-                  class="col"
-                  v-else-if="
-                    field.dataType === 'Phone' ||
-                    field.dataType === 'Double' ||
-                    field.dataType === 'Currency'
-                  "
-                >
-                  <p>{{ field.referenceDisplayLabel }}</p>
-                  <input
-                    id="user-input"
-                    type="number"
-                    style="width: 40vw"
-                    :disabled="savingCreateForm"
-                    v-model="currentVals[field.apiName]"
-                    :placeholder="currentVals[field.apiName]"
-                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
-                  />
+                <div v-for="(field, i) in createProductForm" :key="i">
+                  <div
+                    v-if="
+                      field.dataType === 'Picklist' ||
+                      field.dataType === 'MultiPicklist' ||
+                      field.dataType === 'Reference'
+                    "
+                  >
+                    <p>
+                      {{
+                        field.referenceDisplayLabel === 'PricebookEntry'
+                          ? 'Products'
+                          : field.referenceDisplayLabel
+                      }}:
+                    </p>
+                    <Multiselect
+                      :options="
+                        (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
+                          ? allPicklistOptions[field.id]
+                          : productReferenceOpts[field.apiName]
+                      "
+                      @select="
+                        setCreateValues(
+                          field.apiName === 'ForecastCategory'
+                            ? 'ForecastCategoryName'
+                            : field.apiName,
+                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                            ? $event.value
+                            : field.apiName === 'PricebookEntryId'
+                            ? $event.integration_id
+                            : $event.id,
+                        )
+                      "
+                      @open="
+                        field.dataType === 'Reference'
+                          ? getProductReferenceOpts(field.apiName, field.id)
+                          : null
+                      "
+                      :loading="loadingProducts"
+                      openDirection="below"
+                      v-model="dropdownVal[field.apiName]"
+                      style="width: 40vw"
+                      selectLabel="Enter"
+                      :track-by="
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? 'value'
+                          : 'id'
+                      "
+                      :label="
+                        field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          ? 'label'
+                          : 'name'
+                      "
+                    >
+                      <template v-slot:noResult>
+                        <p class="multi-slot">No results. Try loading more</p>
+                      </template>
+                      <template v-slot:afterList>
+                        <p v-if="showLoadMore" @click="loadMore" class="multi-slot__more">
+                          Load more <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                        </p>
+                      </template>
+                      <template v-slot:placeholder>
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          {{ field.referenceDisplayLabel }}
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </div>
+  
+                  <div class="col" v-else-if="field.dataType === 'String'">
+                    <p>{{ field.referenceDisplayLabel }}</p>
+                    <input
+                      id="user-input"
+                      type="text"
+                      style="width: 40vw"
+                      :disabled="savingCreateForm"
+                      :placeholder="currentVals[field.apiName]"
+                      v-model="currentVals[field.apiName]"
+                      @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                    />
+                  </div>
+  
+                  <div
+                    v-else-if="
+                      field.dataType === 'TextArea' ||
+                      (field.length > 250 && field.dataType === 'String')
+                    "
+                  >
+                    <p>{{ field.referenceDisplayLabel }}</p>
+                    <textarea
+                      id="user-input"
+                      ccols="30"
+                      rows="2"
+                      :disabled="savingCreateForm"
+                      :placeholder="currentVals[field.apiName]"
+                      style="width: 40.25vw; border-radius: 6px; padding: 7px"
+                      v-model="currentVals[field.apiName]"
+                      @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                    >
+                    </textarea>
+                  </div>
+                  <div class="col" v-else-if="field.dataType === 'Date'">
+                    <p>{{ field.referenceDisplayLabel }}</p>
+                    <input
+                      type="text"
+                      onfocus="(this.type='date')"
+                      onblur="(this.type='text')"
+                      style="width: 40vw"
+                      :disabled="savingCreateForm"
+                      :placeholder="currentVals[field.apiName]"
+                      v-model="currentVals[field.apiName]"
+                      id="user-input"
+                      @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                    />
+                  </div>
+                  <div class="col" v-else-if="field.dataType === 'DateTime'">
+                    <p>{{ field.referenceDisplayLabel }}</p>
+                    <input
+                      type="datetime-local"
+                      id="start"
+                      style="width: 40vw"
+                      :disabled="savingCreateForm"
+                      v-model="currentVals[field.apiName]"
+                      @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                    />
+                  </div>
+                  <div
+                    class="col"
+                    v-else-if="
+                      field.dataType === 'Phone' ||
+                      field.dataType === 'Double' ||
+                      field.dataType === 'Currency' ||
+                      field.dataType === 'Int'
+                    "
+                  >
+                    <p>{{ field.referenceDisplayLabel }}</p>
+                    <input
+                      id="user-input"
+                      type="number"
+                      style="width: 40vw"
+                      :disabled="savingCreateForm"
+                      v-model="currentVals[field.apiName]"
+                      :placeholder="currentVals[field.apiName]"
+                      @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -716,9 +1029,8 @@
 
           <div v-if="!savingCreateForm" style="display: flex; align-items: center">
             <button class="add-button" @click="createResource(addingProduct ? true : false)">
-              Create Opportunity
+              {{userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal'}}
             </button>
-            <p @click="resetAddOpp" class="cancel">Cancel</p>
           </div>
           <div v-else>
             <PipelineLoader />
@@ -854,14 +1166,16 @@
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
-                  userCRM === 'HUBSPOT' ? field.options : 
-                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                  field.apiName === 'dealstage' ? field.options[0][savedOpp.secondary_data.pipeline].stages :
+                  userCRM === 'HUBSPOT' && field.dataType !== 'Reference' ? field.options : 
+                  (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                     ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
                 "
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.apiName === 'dealstage' ? $event.id :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -870,11 +1184,11 @@
                 "
                 @search-change="
                   field.dataType === 'Reference'
-                    ? getReferenceFieldList(field.apiName, field.id, 'update', $event)
+                    ? getReferenceFieldList(field.apiName, field.id, 'update', field.options, $event)
                     : null
                 "
                 @open="
-                  field.dataType === 'Reference' ? getReferenceOpts(field.apiName, field.id) : null
+                  field.dataType === 'Reference' ? getReferenceOpts(field.apiName, field.id, field.options) : null
                 "
                 :loading="dropdownLoading"
                 openDirection="below"
@@ -899,13 +1213,14 @@
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
-                      field.apiName === 'AccountId'
-                        ? currentAccount
-                        : field.apiName === 'OwnerId'
-                        ? currentOwner
-                        : currentVals.length && `${currentVals[field.apiName]}` !== 'null'
-                        ? `${currentVals[field.apiName]}`
-                        : `${field.referenceDisplayLabel}`
+                      field.apiName === 'dealstage' ? field.options[0][savedOpp['secondary_data'].pipeline].stages.filter(stage => stage.id === savedOpp['secondary_data'][field.apiName])[0].label :
+                        field.apiName === 'AccountId'
+                          ? currentAccount
+                          : field.apiName === 'OwnerId'
+                          ? currentOwner
+                          : currentVals && `${currentVals[field.apiName]}` !== 'null'
+                          ? `${currentVals[field.apiName]}`
+                          : `${field.referenceDisplayLabel}`
                     }}
                   </p>
                 </template>
@@ -933,7 +1248,7 @@
                       <label class="red-label">{{ field.referenceDisplayLabel }}:</label>
                       <Multiselect
                         :options="
-                          field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                          (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                             ? allPicklistOptions[field.id]
                             : stageReferenceOpts[field.apiName]
                             ? stageReferenceOpts[field.apiName]
@@ -1086,7 +1401,8 @@
                       v-else-if="
                         field.dataType === 'Phone' ||
                         field.dataType === 'Double' ||
-                        field.dataType === 'Currency'
+                        field.dataType === 'Currency' ||
+                        field.dataType === 'Int'
                       "
                     >
                       <label class="red-label"
@@ -1155,7 +1471,8 @@
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
-                field.dataType === 'Currency'
+                field.dataType === 'Currency' ||
+                field.dataType === 'Int'
               "
             >
               <label class="label">{{ field.referenceDisplayLabel }}</label>
@@ -1210,7 +1527,7 @@
                   </p>
                   <Multiselect
                     :options="
-                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
                     "
@@ -1321,7 +1638,8 @@
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
-                    field.dataType === 'Currency'
+                    field.dataType === 'Currency' ||
+                    field.dataType === 'Int'
                   "
                 >
                   <p>{{ field.referenceDisplayLabel }}</p>
@@ -1384,7 +1702,7 @@
                   </p>
                   <Multiselect
                     :options="
-                      field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                      (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
                     "
@@ -1496,7 +1814,8 @@
                   v-else-if="
                     field.dataType === 'Phone' ||
                     field.dataType === 'Double' ||
-                    field.dataType === 'Currency'
+                    field.dataType === 'Currency' ||
+                    field.dataType === 'Int'
                   "
                 >
                   <p>{{ field.referenceDisplayLabel }}</p>
@@ -1873,7 +2192,7 @@
                     @select="oppNewValue = $event.value"
                     @open="
                       selectedOpp.dataType === 'Reference'
-                        ? getReferenceOpts(selectedOpp.apiName, selectedOpp.id)
+                        ? getReferenceOpts(selectedOpp.apiName, selectedOpp.id, field.options)
                         : null
                     "
                     openDirection="below"
@@ -1943,9 +2262,7 @@
           </div>
 
           <button @click="createOppInstance()" class="add-button">
-       
-            
-            Create Opportunity
+            {{userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal'}}
           </button>
         </div>
       </section>
@@ -1982,7 +2299,7 @@
               <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
               <Multiselect
                 :options="
-                  field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
+                  (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                     ? allPicklistOptions[field.id]
                     : stageReferenceOpts[field.apiName]
                     ? stageReferenceOpts[field.apiName]
@@ -1990,7 +2307,9 @@
                 "
                 @select="
                   setUpdateValidationValues(
+                    /*field.apiName === 'dealstage' ? $event.id :*/
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                    field.apiName === 'dealstage' ? $event.label :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -2122,7 +2441,8 @@
               v-else-if="
                 field.dataType === 'Phone' ||
                 field.dataType === 'Double' ||
-                field.dataType === 'Currency'
+                field.dataType === 'Currency' ||
+                field.dataType === 'Int'
               "
             >
               <label class="red-label">{{ field.referenceDisplayLabel }} <span>*</span></label>
@@ -2195,9 +2515,9 @@
             :key="i"
             v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : allOpps"
             @create-form="
-              createFormInstance(opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
+              createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
             "
-            @get-notes="getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name)"
+            @get-notes="getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)"
             @checked-box="
               selectedWorkflow ? selectWorkflowCheckbox(opp.id) : selectPrimaryCheckbox(opp.id)
             "
@@ -2261,7 +2581,7 @@
                     <textarea
                       id="user-input-wide-inline"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2282,19 +2602,64 @@
                       id="user-input-inline"
                       type="text"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
                     />
                   </div>
 
+                  <Multiselect
+                    v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
+                    :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options[0][opp.secondary_data.pipeline].stages"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    style="width: 23vw; font-size: 13px"
+                    track-by="value"
+                    label="label"
+                    @select="
+                      setDropdownValue({
+                        val: field.apiName === 'StageName' ? $event.value : $event.id,
+                        oppId: opp.id,
+                        oppIntegrationId: opp.integration_id,
+                      })
+                    "
+                    v-model="dropdownVal[field.apiName]"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ field.apiName === 'StageName' ?
+                          opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] :
+                          field.apiName === 'dealstage' ? field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label :
+                          ((
+                              field.apiName.includes('__c')
+                                ? opp['secondary_data'][field.apiName]
+                                : opp['secondary_data'][
+                                    capitalizeFirstLetter(camelize(field.apiName))
+                                  ]
+                            )
+                              ? field.apiName.includes('__c')
+                                ? opp['secondary_data'][field.apiName]
+                                : opp['secondary_data'][
+                                    capitalizeFirstLetter(camelize(field.apiName))
+                                  ]
+                              : field.referenceDisplayLabel)
+                        }}
+                      </p>
+                    </template>
+                  </Multiselect>
+
                   <div
                     v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
                   >
                     <Multiselect
                       style="width: 23vw; font-size: 12px"
-                      v-if="(field.apiName !== 'StageName' || field.apiName === 'dealstage')"
+                      v-if="(field.apiName !== 'StageName' || field.apiName !== 'dealstage')"
                       :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
                       openDirection="below"
                       selectLabel="Enter"
@@ -2308,8 +2673,7 @@
                             ? 'ForecastCategoryName'
                             : field.apiName,
                             field.apiName === 'dealstage' ? $event.id : $event.value,
-
-                          field.dataType === 'MultiPicklist' ? true : false,
+                            field.dataType === 'MultiPicklist' ? true : false,
                         )
                       "
                     >
@@ -2322,48 +2686,18 @@
                           <img src="@/assets/images/search.svg" alt="" />
                           {{
                             (
-                              field.apiName.includes('__c')
+                              field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                                 ? opp['secondary_data'][field.apiName]
                                 : opp['secondary_data'][
                                     capitalizeFirstLetter(camelize(field.apiName))
                                   ]
                             )
-                              ? field.apiName.includes('__c')
+                              ? field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                                 ? opp['secondary_data'][field.apiName]
                                 : opp['secondary_data'][
                                     capitalizeFirstLetter(camelize(field.apiName))
                                   ]
                               : field.referenceDisplayLabel
-                          }}
-                        </p>
-                      </template>
-                    </Multiselect>
-                    <Multiselect
-                      v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
-                      :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options"
-                      openDirection="below"
-                      selectLabel="Enter"
-                      style="width: 23vw; font-size: 13px"
-                      track-by="value"
-                      label="label"
-                      @select="
-                        setDropdownValue({
-                          val: $event.value,
-                          oppId: opp.id,
-                          oppIntegrationId: opp.integration_id,
-                        })
-                      "
-                      v-model="dropdownVal[field.apiName]"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          {{
-                            opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                           }}
                         </p>
                       </template>
@@ -2374,7 +2708,7 @@
                       type="date"
                       id="user-input-inline"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2386,7 +2720,7 @@
                       type="datetime-local"
                       id="user-input-inline"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2397,7 +2731,8 @@
                     v-else-if="
                       field.dataType === 'Phone' ||
                       field.dataType === 'Double' ||
-                      field.dataType === 'Currency'
+                      field.dataType === 'Currency' ||
+                      field.dataType === 'Int'
                     "
                     class="inline-row"
                   >
@@ -2405,7 +2740,7 @@
                       id="user-input-inline"
                       type="number"
                       :value="
-                        field.apiName.includes('__c')
+                        field.apiName.includes('__c') || userCRM === 'HUBSPOT'
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
@@ -2439,7 +2774,7 @@
                       style="width: 23vw; font-size: 13px"
                       v-model="dropdownVal[field.apiName]"
                       :options="referenceOpts[field.apiName]"
-                      @open="getCreateReferenceOpts(field.apiName, field.id)"
+                      @open="getCreateReferenceOpts(field.apiName, field.id, field.options)"
                       :loading="dropdownLoading"
                       openDirection="below"
                       selectLabel="Enter"
@@ -2536,7 +2871,12 @@ export default {
       currentCell: null,
       loadingNext: false,
       viewingProducts: false,
+      referenceLoading: false,
+      savedOpp: null,
+      savedPipeline: null,
+      pipelineOptions: [],
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
+      dealStages: [],
       stageGateCopy: [],
       stageReferenceOpts: {},
       currentSelectedProduct: null,
@@ -2761,9 +3101,7 @@ export default {
     },
     filteredWorkflows: {
       get: function () {
-        return this.currentWorkflow.filter((opp) =>
-          opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
-        )
+        return this.currentWorkflow.filter((opp) => opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()))
       },
       set: function (newvalue) {
         this.currentWorkflow = newvalue
@@ -2815,9 +3153,18 @@ export default {
       this.filters = [
         ['NOT_EQUALS', 'dealstage', 'closedwon'],
         ['NOT_EQUALS', 'dealstage', 'closedlost'],
+        ['NOT_EQUALS', 'dealstage', '3b3df8bd-1824-4c5b-ba5a-2b72fcfae459'],
+        ['NOT_EQUALS', 'dealstage', '1266efd0-fbc5-4bea-8379-ac3c83099bfb'],
+        ['NOT_EQUALS', 'dealstage', '9968680e-7687-46d1-8130-4d9779a8dc78'],
+        ['NOT_EQUALS', 'dealstage', '2698871c-0f35-473c-bf88-76663cfbfca2'],
+        ['NOT_EQUALS', 'dealstage', '792b4ff5-9e2d-4013-a621-04226a31a9d0'],
+        ['NOT_EQUALS', 'dealstage', '45bd76d3-8eab-401c-b3ab-86782dd7077d'],
+        ['NOT_EQUALS', 'dealstage', '4dca2a38-1ffd-4025-9ffd-89b2ccd8d308'],
+        ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
     this.objectFields.refresh()
+    this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
@@ -2841,7 +3188,11 @@ export default {
     task: 'checkAndClearInterval',
     dropdownValue: {
       handler(val) {
-        if (this.stagesWithForms.includes(val.val)) {
+        let loweredVal = ''
+        if (this.userCRM === 'HUBSPOT') {
+          loweredVal = val.val.split(' ').join('').toLowerCase()
+        }
+        if (this.stagesWithForms.includes(val.val) || this.stagesWithForms.includes(loweredVal)) {
           this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
@@ -2853,6 +3204,13 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    getPipelineOptions(field) {
+      const tempPipelineOpts = []
+      for (let key in field) {
+        tempPipelineOpts.push(field[key])
+      }
+      this.pipelineOptions = tempPipelineOpts
     },
     closeInlineEditor() {
       this.editingInline = false
@@ -3002,10 +3360,17 @@ export default {
     //   }, 100)
     // },
     getFilteredOpps() {
-      this.$store.dispatch('loadAllOpps', [
-        ...this.filters,
-        ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-      ])
+      if (this.userCRM === 'SALESFORCE') {
+        this.$store.dispatch('loadAllOpps', [
+          ...this.filters,
+          ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+        ])
+      } else {
+        this.$store.dispatch('loadAllOpps', [
+          ...this.filters,
+          ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+        ])
+      }
 
       if (this.currentList === 'Closing this month') {
         this.stillThisMonth()
@@ -3079,7 +3444,7 @@ export default {
       this.dropdownLoading = true
       try {
         let res
-        res = await SObjects.api.getCurrentValues({
+        res = await CRMObjects.api.getCurrentValues({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
@@ -3115,9 +3480,10 @@ export default {
       this.stageId = null
       this.stageIntegrationId = null
     },
-    async getReferenceFieldList(key, val, type, eventVal, filter) {
-      let res
+    async getReferenceFieldList(key, val, type, eventVal, options, filter) {
+      let res = []
       try {
+        this.referenceLoading = true
         res = await SObjects.api.getSobjectPicklistValues({
           sobject_id: val,
           value: eventVal ? eventVal : '',
@@ -3146,6 +3512,7 @@ export default {
       } finally {
         setTimeout(() => {
           this.dropdownLoading = false
+          this.referenceLoading = false
         }, 300)
         return res
       }
@@ -3157,15 +3524,9 @@ export default {
       this.inlineLoader = true
       this.editingInline = false
       try {
-        // const res = await SObjects.api.updateResource({
-        //   form_data: formData,
-        //   resource_type: 'Opportunity',
-        //   form_type: 'UPDATE',
-        //   resource_id: id,
-        //   integration_ids: [integrationId],
-        //   from_workflow: this.selectedWorkflow ? true : false,
-        //   workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
-        // })
+        if (formData.closedate) {
+          formData.closedate = formData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           form_data: formData,
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
@@ -3176,10 +3537,17 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
         if (this.filterText) {
-          this.$store.dispatch('loadAllOpps', [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          if (this.userCRM === 'SALESFORCE') {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          }
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
@@ -3246,6 +3614,14 @@ export default {
       [
         ['NOT_EQUALS', 'dealstage', 'closedwon'],
         ['NOT_EQUALS', 'dealstage', 'closedlost'],
+        ['NOT_EQUALS', 'dealstage', '3b3df8bd-1824-4c5b-ba5a-2b72fcfae459'],
+        ['NOT_EQUALS', 'dealstage', '1266efd0-fbc5-4bea-8379-ac3c83099bfb'],
+        ['NOT_EQUALS', 'dealstage', '9968680e-7687-46d1-8130-4d9779a8dc78'],
+        ['NOT_EQUALS', 'dealstage', '2698871c-0f35-473c-bf88-76663cfbfca2'],
+        ['NOT_EQUALS', 'dealstage', '792b4ff5-9e2d-4013-a621-04226a31a9d0'],
+        ['NOT_EQUALS', 'dealstage', '45bd76d3-8eab-401c-b3ab-86782dd7077d'],
+        ['NOT_EQUALS', 'dealstage', '4dca2a38-1ffd-4025-9ffd-89b2ccd8d308'],
+        ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     },
     closeListSelect() {
@@ -3263,7 +3639,12 @@ export default {
       try {
         let res
         if (this.filterText) {
-          const textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
+          let textFilters 
+          if (this.userCRM === 'SALESFORCE') {
+            textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
+          } else {
+            textFilters = [...this.filters, ['CONTAINS', 'dealname', this.filterText.toLowerCase()]]
+          }
           this.$store.dispatch('loadAllOpps', textFilters)
         }
         // else if (this.workflowFilterText) {
@@ -3677,18 +4058,21 @@ export default {
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
+      this.savedOpp = null
     },
     resetAddOpp() {
       this.addOppModalOpen = !this.addOppModalOpen
+      this.savedPipeline = null
     },
-    async createFormInstanceForNotes(id, name) {
+    async createFormInstanceForNotes(id, name, integrationId) {
       this.formData = {}
       this.selectedresourceName = name
       this.oppId = id
+      this.integrationId = integrationId
       this.noteValue = null
       this.noteTitle = null
       try {
-        const res = await SObjects.api.getCurrentValues({
+        const res = await CRMObjects.api.getCurrentValues({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
@@ -3696,7 +4080,7 @@ export default {
         console.log(e)
       }
     },
-    async createFormInstance(id, integrationId, pricebookId, alertInstanceId = null) {
+    async createFormInstance(opp, id, integrationId, pricebookId, alertInstanceId = null) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.viewingProducts = false
       this.addingProduct = false
@@ -3722,9 +4106,10 @@ export default {
       this.productIntegrationId = null
       this.dropdownProductVal = {}
       this.editingProduct = false
+      this.savedOpp = opp
       try {
         let res
-        res = await SObjects.api.getCurrentValues({
+        res = await CRMObjects.api.getCurrentValues({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: id,
         })
@@ -3770,28 +4155,10 @@ export default {
       this.addingProduct = false
       this.stageGateField = null
     },
-    async oppInstance(id) {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
-          formType: 'UPDATE',
-          resourceId: id,
-        })
-        this.currentVals = res.current_values
-      } catch (e) {
-        this.$toast('Error building update form, close modal and try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }
-    },
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
-        const res = await SObjects.api.createFormInstance({
+        const res = await CRMObjects.api.createFormInstance({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
           stageName: field ? field : this.stageGateField,
@@ -3988,7 +4355,7 @@ export default {
         this.formData[key] = val
       }
       if (key === 'StageName' || key === 'dealstage') {
-        this.stagesWithForms.includes(val)
+        this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val ? val.split(' ').join('').toLowerCase() : '')
           ? (this.stageGateField = val)
           : (this.stageGateField = null)
       }
@@ -4054,7 +4421,7 @@ export default {
           this.loading = true
         }, 300)
         try {
-          await SObjects.api.resourceSync()
+          await CRMObjects.api.resourceSync()
           this.$toast('Daily sync complete', {
             timeout: 2000,
             position: 'top-left',
@@ -4078,7 +4445,7 @@ export default {
     },
     async manualSync() {
       try {
-        await SObjects.api.resourceSync()
+        await CRMObjects.api.resourceSync()
         this.$toast('Sync complete', {
           timeout: 2000,
           position: 'top-left',
@@ -4104,6 +4471,9 @@ export default {
     async updateStageForm() {
       this.dropdownLoading = true
       try {
+        if (this.formData.closedate) {
+          this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           form_data: this.formData,
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
@@ -4113,10 +4483,17 @@ export default {
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (this.filterText) {
-          this.$store.dispatch('loadAllOpps', [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          if (this.userCRM === 'SALESFORCE') {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          }
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
@@ -4202,6 +4579,9 @@ export default {
     async updateProduct() {
       this.savingProduct = true
       try {
+        if (this.updateProductData.closedate) {
+          this.updateProductData.closedate = this.updateProductData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           form_data: this.updateProductData,
           from_workflow: this.selectedWorkflow ? true : false,
@@ -4212,7 +4592,7 @@ export default {
           resource_id: this.productId,
           stage_name: null,
         })
-        const res2 = await SObjects.api.getCurrentValues({
+        const res2 = await CRMObjects.api.getCurrentValues({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resourceId: this.oppId,
         })
@@ -4244,6 +4624,9 @@ export default {
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
+        if (this.formData.closedate) {
+          this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
+        }
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: this.formData,
@@ -4251,15 +4634,22 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
-          resource_type: this.userCRM === 'SALEFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resource_id: this.oppId,
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (this.filterText) {
-          this.$store.dispatch('loadAllOpps', [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          if (this.userCRM === 'SALESFORCE') {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch('loadAllOpps', [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          }
         } else {
           this.$store.dispatch('loadAllOpps', [...this.filters])
         }
@@ -4291,6 +4681,8 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
+          this.savedOpp = null
+          this.savedPipeline = null
         }, 750)
       } catch (e) {
         this.$toast(`${e.response.data.error}`, {
@@ -4309,10 +4701,13 @@ export default {
     async createResource(product) {
       this.savingCreateForm = true
       try {
+        // if (this.userCRM === 'HUBSPOT' && this.formData.dealstage) {
+        //   this.formData.dealstage = this.formData.dealstage.split(' ').join('').toLowerCase()
+        // }
         let res = await CRMObjects.api.createResource({
           form_data: this.formData,
           form_type: 'CREATE',
-          resource_type: this.userCRM === 'SALEFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           stage_name: this.stageGateField ? this.stageGateField : null,
         })
         if (product) {
@@ -4325,9 +4720,17 @@ export default {
             : this.filters
         }
         const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
-        let updatedRes = await SObjects.api.getObjectsForWorkflows(objectType, true, filter)
-        this.allOpps = updatedRes.results
-        this.originalList = updatedRes.results
+        if (this.userCRM === 'SALESFORCE') {
+          this.$store.dispatch('loadAllOpps', [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+        } else {
+          this.$store.dispatch('loadAllOpps', [
+            ...this.filters,
+            ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+          ])
+        }
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
             ? this.sortOppsReverse(
@@ -4340,15 +4743,18 @@ export default {
         this.$toast(objectType + ' created successfully.', {
           timeout: 2000,
           position: 'top-left',
-          type: 'error',
+          type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.savedOpp = null
+        this.savedPipeline = null
       } catch (e) {
+        console.log(e)
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4366,7 +4772,31 @@ export default {
           let res = await AlertTemplate.api.runAlertTemplateNow(id ? id : this.id, {
             fromWorkflow: true,
           })
-          this.currentWorkflow = res.data.results
+          const results = res.data.results
+          const closedList = [
+            'Closed Won',
+            'Closed Lost',
+            'closedwon', 
+            'closedlost', 
+            '3b3df8bd-1824-4c5b-ba5a-2b72fcfae459',
+            '1266efd0-fbc5-4bea-8379-ac3c83099bfb',
+            '9968680e-7687-46d1-8130-4d9779a8dc78',
+            '2698871c-0f35-473c-bf88-76663cfbfca2',
+            '792b4ff5-9e2d-4013-a621-04226a31a9d0',
+            '45bd76d3-8eab-401c-b3ab-86782dd7077d',
+            '4dca2a38-1ffd-4025-9ffd-89b2ccd8d308',
+            '1aee0da2-e076-423c-ac92-559d324215e3',
+          ]
+          if (this.userCRM === 'SALESFORCE') {
+            this.currentWorkflow = results.filter(opp => {
+              return !closedList.includes(opp['secondary_data'].StageName)
+            })
+          } else {
+            this.currentWorkflow = results.filter(opp => {
+              console.log('opp', opp)
+              return !closedList.includes(opp['secondary_data'].dealstage)
+            })
+          }
           if (this.currentWorkflow.length < 1) {
             this.updateWorkflow(id ? id : this.id)
           }
@@ -4449,17 +4879,17 @@ export default {
         }
       }
     },
-    async getReferenceOpts(name, id) {
+    async getReferenceOpts(name, id, options = []) {
       this.dropdownLoading = true
-      this.referenceOpts[name] = await this.getReferenceFieldList(name, id, 'update')
+      this.referenceOpts[name] = await this.getReferenceFieldList(name, id, 'update', '', options)
     },
     async getStageReferenceOpts(name, id) {
       this.dropdownLoading = true
       this.stageReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'stage')
     },
-    async getCreateReferenceOpts(name, id) {
+    async getCreateReferenceOpts(name, id, options = []) {
       this.dropdownLoading = true
-      this.createReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'create')
+      this.createReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'create', '', options)
     },
     async getProductReferenceOpts(name, id) {
       this.dropdownLoading = true
@@ -4467,7 +4897,6 @@ export default {
     },
 
     setDropdownValue(val) {
-      // this.dropdownValue = {}
       this.dropdownValue = val
     },
     filtersAndOppFields() {
@@ -4494,8 +4923,10 @@ export default {
           field.apiName !== 'meeting_type' &&
           field.apiName !== 'meeting_comments' &&
           field.apiName !== 'Name' &&
+          field.apiName !== 'dealname' &&
           field.apiName !== 'AccountId' &&
-          field.apiName !== 'OwnerId',
+          field.apiName !== 'OwnerId' &&
+          field.apiName !== 'hubspot_owner_id'
       )
     },
     async getAllForms() {
@@ -4540,7 +4971,11 @@ export default {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
-          this.stagesWithForms = stages
+          const newStages = []
+          for (let i = 0; i < stages.length; i++) {
+            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          }
+          this.stagesWithForms = newStages
           for (const field of stageGateForms) {
             this.stageValidationFields[field.stage] = field.fieldsRef
           }
@@ -4626,7 +5061,7 @@ export default {
 
     async getNotes(id) {
       try {
-        const res = await SObjects.api.getNotes({
+        const res = await CRMObjects.api.getNotes({
           resourceId: id,
         })
         this.modalOpen = true
@@ -5653,9 +6088,10 @@ h3 {
 }
 .opp-modal {
   width: 42vw;
+  height: 80vh;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+  // flex-wrap: wrap;
   gap: 0.25rem;
   padding: 8px;
   overflow-y: scroll;

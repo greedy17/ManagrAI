@@ -104,4 +104,40 @@ export class ObjectFieldAPI extends ModelAPI {
         return apiErrorHandler({ apiName: 'Salesforce API' })(e)
       }
     }
+
+    async createFormInstance(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/create-form-instance/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async getNotes(resourceId) {
+      let id = objectToSnakeCase(resourceId)
+      try {
+        const res = await this.client.get('crm-objects/notes/', { params: id })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async getCurrentValues(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/get-current-values/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async resourceSync() {
+      try {
+        const res = await this.client.get('crm-objects/resource-sync/')
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+      }
+    }
 }

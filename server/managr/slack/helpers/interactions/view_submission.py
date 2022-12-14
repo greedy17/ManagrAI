@@ -389,10 +389,10 @@ def process_submit_resource_data(payload, context):
     for form in stage_forms:
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+    print(all_form_data)
     formatted_saved_data = process_text_field_format(
         str(user.id), main_form.template.resource, all_form_data
     )

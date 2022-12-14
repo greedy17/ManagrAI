@@ -64,7 +64,7 @@ from .background import (
     emit_add_update_to_sf,
     _send_instant_alert,
     emit_process_update_resources_in_salesforce,
-    _process_pipeline_sync,
+    _process_pipeline_sf_sync,
     emit_meeting_workflow_tracker,
     create_form_instance,
     emit_process_bulk_update,
@@ -217,13 +217,13 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_pipeline_fields(self, request, *args, **kwargs):
         user = self.request.user
-        sf = user.salesforce_account
+        crm = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
-            if id not in sf.extra_pipeline_fields:
-                sf.extra_pipeline_fields.append(id)
-        sf.save()
+            if id not in crm.extra_pipeline_fields:
+                crm.extra_pipeline_fields.append(id)
+        crm.save()
         return Response()
 
     @action(
@@ -256,14 +256,14 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         for_meetings = self.request.GET.get("for_meetings", False)
         attempts = 1
         while True:
-            sf_account = user.salesforce_account
-            sf_adapter = sf_account.adapter_class
+            crm_account = user.crm_account
+            crm_adapter = crm_account.adapter_class
             try:
-                res = sf_adapter.list_relationship_data(
+                res = crm_adapter.list_relationship_data(
                     sobject_field.display_value_keys["api_name"],
                     sobject_field.display_value_keys["name_fields"],
                     value,
-                    sobject_field.salesforce_object,
+                    sobject_field.crm_object,
                     include_owner=for_meetings,
                 )
                 break
@@ -274,7 +274,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                     )
                 else:
                     try:
-                        sf_account.regenerate_token()
+                        crm_account.regenerate_token()
                         attempts += 1
                     except InvalidRefreshToken:
                         return Response(

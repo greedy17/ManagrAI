@@ -4,8 +4,9 @@ from django.db import models
 from managr.core.models import TimeStampModel, IntegrationModel
 from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.slack.helpers import block_builders
-
+from managr.core.models import User
 from managr.crm.routes import adapter_routes as adapters
+from managr.crm.routes import model_routes
 from managr.crm import constants as crm_consts
 from managr.slack import constants as slack_consts
 
@@ -90,15 +91,18 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
-    def create(self, data):
-        token = self.owner.crm_account.access_token
-        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+    @staticmethod
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        token = user.crm_account.access_token
+        object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.create(data, token, self.integration_id, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+        res = adapters[user.crm][resource_type].create(data, token, object_fields)
+        serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
+        serializer.is_valid()
+        serializer.save()
+        return serializer.instance
 
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
@@ -211,15 +215,20 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
-    def create(self, data):
-        token = self.owner.crm_account.access_token
-        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+    @staticmethod
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        token = user.crm_account.access_token
+        object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.create(data, token, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+        res = adapters[user.crm][resource_type].create(
+            data, token, object_fields, user_id, user.crm_account.instance_url
+        )
+        serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
+        serializer.is_valid()
+        serializer.save()
+        return serializer.instance
 
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
@@ -312,15 +321,18 @@ class BaseContact(TimeStampModel, IntegrationModel):
         self.save()
         return res
 
-    def create(self, data):
-        token = self.owner.crm_account.access_token
-        object_fields = self.owner.object_fields.filter(crm_object=self.object_type).values_list(
+    @staticmethod
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        token = user.crm_account.access_token
+        object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = self.adapter_class.create(data, token, self.integration_id, object_fields)
-        self.is_stale = True
-        self.save()
-        return res
+        res = adapters[user.crm][resource_type].create(data, token, object_fields)
+        serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
+        serializer.is_valid()
+        serializer.save()
+        return serializer.instance
 
     def update_database_values(self, data):
         data.pop("meeting_comments", None)
@@ -424,15 +436,23 @@ class ObjectField(TimeStampModel, IntegrationModel):
             action_id = None
             if self.api_name in ["StageName", "dealstage"]:
                 if self.api_name == "dealstage":
-                    resource = BaseOpportunity.objects.get(id=kwargs.get("resource_id"))
-                    stages = self.options[0].get(resource.secondary_data["pipeline"])["stages"]
-                    stage_options = list(
-                        map(
-                            lambda option: block_builders.option(option["label"], option["id"]),
-                            stages,
+                    resource_id = kwargs.get("resource_id", None)
+                    pipeline_id = kwargs.get("pipeline_id", None)
+                    if resource_id or pipeline_id:
+                        pipeline = pipeline_id
+                        if resource_id:
+                            resource = BaseOpportunity.objects.get(id=resource_id)
+                            pipeline = resource.secondary_data["pipeline"]
+                        stages = self.options[0].get(pipeline)["stages"]
+                        stage_options = list(
+                            map(
+                                lambda option: block_builders.option(option["label"], option["id"]),
+                                stages,
+                            )
                         )
-                    )
-                    options = stage_options
+                        options = stage_options
+                    else:
+                        options = [block_builders.option("None", "None")]
                 else:
                     options = self.get_slack_options
                 initial_option = dict(
@@ -574,7 +594,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "Boolean":
             initial_value = (
                 [block_builders.option(self.reference_display_label, "true")]
-                if value is True
+                if value in [True, "true"]
                 else None
             )
             return block_builders.checkbox_block(

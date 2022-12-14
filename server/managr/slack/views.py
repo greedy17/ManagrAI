@@ -68,6 +68,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
+from managr.crm.models import ObjectField
 
 logger = logging.getLogger("managr")
 
@@ -792,16 +793,42 @@ def create_resource(request):
                 # did not find the block
                 block = None
                 pass
-
-            if block:
-                block = {
-                    **block,
+            if user.crm == "HUBSPOT" and resource_type == "Deal":
+                try:
+                    pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+                except ValueError:
+                    # did not find the block
+                    pipeline_index = False
+                    pipeline_block = None
+                    pass
+                if pipeline_block is None:
+                    pipeline_field = ObjectField.objects.filter(
+                        crm_object="Deal", api_name="pipeline", user=user
+                    ).first()
+                    if pipeline_field:
+                        pipeline_block = pipeline_field.to_slack_field(None, user, "Deal")
+                pipeline_block = {
+                    **pipeline_block,
                     "accessory": {
-                        **block["accessory"],
-                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                        **pipeline_block["accessory"],
+                        "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}&field={str(pipeline_field.id)}",
                     },
                 }
-                blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+                if block:
+                    if pipeline_index:
+                        del blocks[index]
+                    else:
+                        blocks[index] = pipeline_block
+            else:
+                if block:
+                    block = {
+                        **block,
+                        "accessory": {
+                            **block["accessory"],
+                            "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                        },
+                    }
+                    blocks = [*blocks[:index], block, *blocks[index + 1 :]]
             access_token = user.organization.slack_integration.access_token
 
             url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN

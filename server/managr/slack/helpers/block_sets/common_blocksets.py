@@ -78,10 +78,10 @@ def direct_to_block_set(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Open", "complete_in_slack", action_id=slack_context, style="primary"
+                    "Open", "complete_in_slack", action_id=slack_context,
                 ),
                 block_builders.simple_button_block(
-                    "Grid View", "complete_in_managr", url=managr_url,
+                    "Grid View", "complete_in_managr", url=managr_url, style="primary"
                 ),
             ]
         ),
@@ -607,7 +607,7 @@ def initial_alert_message(context):
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Grid View", "open_in_pipeline", url=f"{url}/{template}",
+                    "Grid View", "open_in_pipeline", url=f"{url}/{template}", style="primary",
                 ),
             ]
         ),
