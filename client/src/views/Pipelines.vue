@@ -1944,7 +1944,7 @@
               v-for="template in templates.list"
               :key="template.id"
             >
-              {{ template.title }} <span class="green">{{ template.sobjectInstances.length }}</span>
+              {{ template.title }} <span class="green">{{ templates.sobjectInstances ? template.sobjectInstances.length : 'N/A' }}</span>
             </button>
           </div>
           <div
@@ -3168,6 +3168,7 @@ export default {
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
+    console.log('this.templates', this.templates)
   },
   beforeMount() {
     this.selectList()
