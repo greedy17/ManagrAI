@@ -121,7 +121,7 @@
     >
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
-          <div class="flex-row" @click="test(/*stageValidationFields*/stageGateField)">
+          <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
             <h3>{{userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal'}}</h3>
           </div>
@@ -207,7 +207,7 @@
                     @select="
                       setUpdateValues(
                         field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                        field.apiName === 'dealstage' ? $event.id :
+                        field.apiName === 'dealstage' ? [$event.label, $event.id] :
                         (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                           ? $event.value
                           : $event.id,
@@ -472,7 +472,7 @@
                     v-model="savedPipeline"
                     :options="pipelineOptions"
                     @open="getPipelineOptions(field.options[0])"
-                    @select="setUpdateValues(field.apiName, field.apiName === 'dealstage' ? $event.id : $event.value)"
+                    @select="setUpdateValues(field.apiName, field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.value)"
                     openDirection="below"
                     style="width: 40.25vw"
                     selectLabel="Enter"
@@ -500,7 +500,7 @@
                 "
                 
               >
-                <label class="label" @click="test(field)">{{ field.referenceDisplayLabel }}</label>
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
   
                 <Multiselect
                   v-model="currentVals[field.apiName]"
@@ -514,6 +514,7 @@
                   @select="
                     setUpdateValues(
                       field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      field.apiName === 'dealstage' ? [$event.label, $event.id] :
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                         ? $event.value
                         : $event.id,
@@ -1175,7 +1176,7 @@
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.apiName === 'dealstage' ? $event.id :
+                    field.apiName === 'dealstage' ? [$event.label, $event.id] :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -2619,7 +2620,7 @@
                     label="label"
                     @select="
                       setDropdownValue({
-                        val: field.apiName === 'StageName' ? $event.value : $event.id,
+                        val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                         oppId: opp.id,
                         oppIntegrationId: opp.integration_id,
                       })
@@ -2672,7 +2673,7 @@
                           field.apiName === 'ForecastCategory'
                             ? 'ForecastCategoryName'
                             : field.apiName,
-                            field.apiName === 'dealstage' ? $event.id : $event.value,
+                            field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.value,
                             field.dataType === 'MultiPicklist' ? true : false,
                         )
                       "
@@ -2874,6 +2875,7 @@ export default {
       referenceLoading: false,
       savedOpp: null,
       savedPipeline: null,
+      storedStageName: '',
       pipelineOptions: [],
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
       dealStages: [],
@@ -3188,12 +3190,10 @@ export default {
     task: 'checkAndClearInterval',
     dropdownValue: {
       handler(val) {
-        let loweredVal = ''
-        if (this.userCRM === 'HUBSPOT') {
-          loweredVal = val.val.split(' ').join('').toLowerCase()
-        }
-        if (this.stagesWithForms.includes(val.val) || this.stagesWithForms.includes(loweredVal)) {
-          this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
+        const newVal = this.userCRM === 'SALESFORCE' ? val.val : val.val[0]
+        let loweredVal = newVal.split(' ').join('').toLowerCase()
+        if (this.stagesWithForms.includes(newVal) || this.stagesWithForms.includes(loweredVal)) {
+          this.openStageForm(newVal, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
           this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', val.val)
@@ -3437,7 +3437,10 @@ export default {
     },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
-      this.stageGateField = field
+      this.stageGateField = this.userCRM === 'SALESFORCE' ? field : field.split(' ').join('').toLowerCase()
+      if (this.userCRM === 'HUBSPOT') {
+        this.storedStageName = field
+      }
       this.stageFormOpen = true
       this.stageId = id
       this.stageIntegrationId = integrationId
@@ -4197,7 +4200,7 @@ export default {
         const res = await CRMObjects.api.createFormInstance({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
-          stageName: field ? field : this.stageGateField,
+          stageName: field ? field : this.storedStageName ? this.storedStageName : this.stageGateField,
         })
         this.stageGateId = res.form_id
       } catch (e) {
@@ -4381,6 +4384,15 @@ export default {
       }
     },
     setUpdateValues(key, val, multi) {
+      let valLabel
+      let valId
+      if (Array.isArray(val)) {
+        valLabel = val[0]
+        valId = val[1]
+      } else {
+        valLabel = val
+        valId = val
+      }
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -4388,12 +4400,15 @@ export default {
       }
 
       if (val && !multi) {
-        this.formData[key] = val
+        this.formData[key] = valId
       }
       if (key === 'StageName' || key === 'dealstage') {
-        this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val ? val.split(' ').join('').toLowerCase() : '')
-          ? (this.stageGateField = val)
+        this.stagesWithForms.includes(valLabel) || this.stagesWithForms.includes(valLabel ? valLabel.split(' ').join('').toLowerCase() : '')
+          ? (this.stageGateField = this.userCRM === 'SALESFORCE' ? valLabel : valLabel.split(' ').join('').toLowerCase())
           : (this.stageGateField = null)
+          if (this.userCRM === 'HUBSPOT' && (this.stagesWithForms.includes(valLabel) || this.stagesWithForms.includes(valLabel ? valLabel.split(' ').join('').toLowerCase() : ''))) {
+            this.storedStageName = valLabel
+          }
       }
     },
     setUpdateValidationValues(key, val) {
@@ -4510,14 +4525,23 @@ export default {
         if (this.formData.closedate) {
           this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
         }
+        let newFormData = {}
+        if (this.storedStageName) {
+          newFormData = this.formData
+          newFormData.stage_name = this.storedStageName
+          this.formData.stage_name = this.storedStageName
+        } else  {
+          newFormData = this.formData
+        }
         const res = await CRMObjects.api.updateResource({
-          form_data: this.formData,
+          form_data: newFormData,
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           form_type: 'UPDATE',
           resource_id: this.stageId,
           integration_ids: [this.stageIntegrationId],
-          stage_name: this.stageGateField ? this.stageGateField : null,
+          stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
         })
+        this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
             this.$store.dispatch('loadAllOpps', [
@@ -4580,15 +4604,23 @@ export default {
     async createProduct(id = this.integrationId) {
       if (this.addingProduct) {
         try {
+          let newFormData = {}
+          if (this.storedStageName) {
+            newFormData = this.createData
+            newFormData.stage_name = this.storedStageName
+            this.createData.stage_name = this.storedStageName
+          } else  {
+            newFormData = this.createData
+          }
           const res = await CRMObjects.api.createResource({
             integration_ids: [id],
             form_type: 'CREATE',
             resource_type: 'OpportunityLineItem',
-            stage_name: this.stageGateField ? this.stageGateField : null,
+            stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
             resource_id: this.oppId,
-            form_data: this.createData,
+            form_data: newFormData,
           })
-
+          this.storedStageName = ''
           this.$toast('Product created successfully', {
             timeout: 2000,
             position: 'top-left',
@@ -4663,17 +4695,26 @@ export default {
         if (this.formData.closedate) {
           this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
         }
+        let newFormData = {}
+        if (this.storedStageName) {
+          newFormData = this.formData
+          newFormData.stage_name = this.storedStageName
+          this.formData.stage_name = this.storedStageName
+        } else  {
+          newFormData = this.formData
+        }
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
-          form_data: this.formData,
+          form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resource_id: this.oppId,
-          stage_name: this.stageGateField ? this.stageGateField : null,
+          stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
         })
+        this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
             this.$store.dispatch('loadAllOpps', [
@@ -4740,12 +4781,21 @@ export default {
         // if (this.userCRM === 'HUBSPOT' && this.formData.dealstage) {
         //   this.formData.dealstage = this.formData.dealstage.split(' ').join('').toLowerCase()
         // }
+        let newFormData = {}
+        if (this.storedStageName) {
+          newFormData = this.formData
+          newFormData.stage_name = this.storedStageName
+          this.formData.stage_name = this.storedStageName
+        } else  {
+          newFormData = this.formData
+        }
         let res = await CRMObjects.api.createResource({
-          form_data: this.formData,
+          form_data: newFormData,
           form_type: 'CREATE',
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
-          stage_name: this.stageGateField ? this.stageGateField : null,
+          stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
         })
+        this.storedStageName = ''
         if (product) {
           this.createProduct(res.integration_id)
         }
@@ -4874,12 +4924,12 @@ export default {
         this.workList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
-            ? this.sortWorkflowsReverse(
+            ? this.sortOppsReverse(
                 this.storedFilters[0],
                 this.storedFilters[1],
                 this.storedFilters[2],
               )
-            : this.sortWorkflows(
+            : this.sortOpps(
                 this.storedFilters[0],
                 this.storedFilters[1],
                 this.storedFilters[2],
@@ -5006,13 +5056,21 @@ export default {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
-          const newStages = []
-          for (let i = 0; i < stages.length; i++) {
-            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          let newStages = []
+          if (this.userCRM === 'HUBSPOT') {
+            for (let i = 0; i < stages.length; i++) {
+              newStages.push(stages[i].split(' ').join('').toLowerCase())
+            }
+          } else {
+            newStages = stages
           }
           this.stagesWithForms = newStages
           for (const field of stageGateForms) {
-            this.stageValidationFields[field.stage] = field.fieldsRef
+            if (this.userCRM === 'SALESFORCE') {
+              this.stageValidationFields[field.stage] = field.fieldsRef
+            } else {
+              this.stageValidationFields[field.stage.split(' ').join('').toLowerCase()] = field.fieldsRef
+            }
           }
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
