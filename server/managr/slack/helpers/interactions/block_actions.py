@@ -100,6 +100,7 @@ def show_initial_meeting_interaction(payload, context):
 
 @processor()
 def process_meeting_review(payload, context):
+    print(context)
     trigger_id = payload["trigger_id"]
     workflow_id = payload["actions"][0]["value"]
     workflow = MeetingWorkflow.objects.get(id=workflow_id)

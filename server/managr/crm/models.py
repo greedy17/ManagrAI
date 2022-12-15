@@ -179,6 +179,17 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
             return "Deal"
 
     @property
+    def last_stage_update(self):
+        from managr.salesforce.adapter.models import OpportunityAdapter
+
+        if self.user.crm == "SALESFORCE":
+            return OpportunityAdapter._format_stage_update(
+                self.secondary_data.get("OpportunityHistories", None)
+            )
+        else:
+            return None
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])

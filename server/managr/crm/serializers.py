@@ -117,6 +117,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "imported_by",
             "contacts",
             "secondary_data",
+            "last_stage_update",
         )
 
     def _format_date_time_from_api(self, d):
