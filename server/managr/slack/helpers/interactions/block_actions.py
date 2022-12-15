@@ -651,21 +651,54 @@ def process_meeting_selected_resource_option(payload, context):
         ]
         try:
             stage_name = "StageName" if workflow.user.crm == "SALESFORCE" else "dealstage"
-            index, stage_block = block_finder(stage_name, blocks)
+            index, block = block_finder(stage_name, blocks)
         except ValueError:
             # did not find the block
-            stage_block = None
+            block = None
             pass
+        if (
+            workflow.user.crm == "HUBSPOT"
+            and resource_type == "Deal"
+            and context["action"] == "CREATE_NEW"
+        ):
+            slack_form = workflow.forms.filter(
+                template__form_type=slack_const.FORM_TYPE_CREATE
+            ).first()
+            try:
+                pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+            except ValueError:
+                # did not find the block
+                pipeline_index = False
+                pipeline_block = None
+                pass
+            if pipeline_block is None:
+                pipeline_field = ObjectField.objects.filter(
+                    crm_object="Deal", api_name="pipeline", user=workflow.user
+                ).first()
+                if pipeline_field:
+                    pipeline_block = pipeline_field.to_slack_field(None, workflow.user, "Deal")
+            pipeline_block = {
+                **pipeline_block,
+                "accessory": {
+                    **pipeline_block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(workflow.user.id)}&f={str(slack_form.id)}&field={str(pipeline_field.id)}",
+                },
+            }
+            if block:
+                if pipeline_index:
+                    del blocks[index]
+                else:
+                    blocks[index] = pipeline_block
         else:
-            if stage_block:
-                stage_block = {
-                    **stage_block,
+            if block:
+                block = {
+                    **block,
                     "accessory": {
-                        **stage_block["accessory"],
-                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(workflow.user.id)}&f={str(workflow.forms.filter(template__form_type='CREATE', template__resource=resource_type).first().id)}",
+                        **block["accessory"],
+                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(workflow.user.id)}&f={str(slack_form.id)}",
                     },
                 }
-                blocks = [*blocks[:index], stage_block, *blocks[index + 1 :]]
+                blocks = [*blocks[:index], block, *blocks[index + 1 :]]
 
         external_id = f"create_modal_block_set.{str(uuid.uuid4())}"
 

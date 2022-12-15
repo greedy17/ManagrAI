@@ -21,7 +21,7 @@
       </div>
 
       <div
-        v-if="type === 'Currency' || type === 'Double' || type === 'Phone'"
+        v-if="(type === 'Currency' || type === 'Double' || type === 'Phone' || type === 'Int')"
         class="filter-selection__body"
       >
         <input
@@ -40,7 +40,7 @@
           :placeholder="'Select ' + `${filterName}`"
           style="max-width: 20vw"
           v-model="inputValue"
-          :options="dropdowns[apiName]"
+          :options="apiName === 'dealstage' ? dealstageDropdown : dropdowns[apiName]"
           @select="$emit('value-selected', $event.value)"
           openDirection="below"
           selectLabel="Enter"
@@ -173,6 +173,15 @@ export default {
   computed: {
     userCRM() {
       return this.$store.state.user.crm
+    },
+    dealstageDropdown() {
+      let dealStages = []
+      if (this.apiName === 'dealstage') {
+        for (let key in this.dropdowns[this.apiName][0]) {
+          dealStages = [...dealStages, ...this.dropdowns[this.apiName][0][key].stages]
+        }
+      }
+      return dealStages
     },
     operators() {
       return [
