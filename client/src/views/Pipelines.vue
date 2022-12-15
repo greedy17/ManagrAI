@@ -2310,7 +2310,7 @@
                   setUpdateValidationValues(
                     /*field.apiName === 'dealstage' ? $event.id :*/
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.apiName === 'dealstage' ? $event.label :
+                    field.apiName === 'dealstage' ? [$event.label, $event.id] :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -3193,7 +3193,7 @@ export default {
         const newVal = this.userCRM === 'SALESFORCE' ? val.val : val.val[0]
         let loweredVal = newVal.split(' ').join('').toLowerCase()
         if (this.stagesWithForms.includes(newVal) || this.stagesWithForms.includes(loweredVal)) {
-          this.openStageForm(newVal, val.oppId, val.oppIntegrationId)
+          this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
           this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', val.val)
@@ -3437,6 +3437,9 @@ export default {
     },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
+      if (Array.isArray(field)) {
+        field = field[0]
+      }
       this.stageGateField = this.userCRM === 'SALESFORCE' ? field : field.split(' ').join('').toLowerCase()
       if (this.userCRM === 'HUBSPOT') {
         this.storedStageName = field
