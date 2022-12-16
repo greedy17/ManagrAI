@@ -108,12 +108,12 @@ const actions = {
         if (!filters.length) {
           filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost']]
         }
-        res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+        res = await CRMObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
       } else {
         if (!filters.length) {
           filters = [['NOT_EQUALS', 'dealstage', 'closedwon'], ['NOT_EQUALS', 'dealstage', 'closedlost']]
         }
-        res = await CRMObjects.api.getObjects('Deal', 1, true, filters)
+        res = await CRMObjects.api.getObjectsForWorkflows('Deal', true, filters)
       }
       commit('SAVE_ALL_OPPS', res.results)
     } catch (e) {

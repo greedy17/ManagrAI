@@ -96,8 +96,8 @@ class BaseContactSerializer(serializers.ModelSerializer):
 class BaseOpportunitySerializer(serializers.ModelSerializer):
     owner_ref = UserRefSerializer(source="owner", required=False)
     account_ref = BaseAccountSerializer(source="account", required=False)
-
-    class Meta:
+    
+    class Meta: 
         model = BaseOpportunity
         fields = (
             "id",
@@ -117,6 +117,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "imported_by",
             "contacts",
             "secondary_data",
+            "last_stage_update",
         )
 
     def _format_date_time_from_api(self, d):
@@ -139,7 +140,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             data.update({"external_owner": "N/A"})
         if owner:
             user = User.objects.get(id=imported_by)
-            data.update({"owner": user})
+            data.update({"owner": user.id})
         if account:
             acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by
