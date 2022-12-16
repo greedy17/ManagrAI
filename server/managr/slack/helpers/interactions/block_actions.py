@@ -31,7 +31,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
-from managr.slack.background import emit_send_paginated_alerts
+from managr.slack.background import emit_send_paginated_alerts, emit_send_paginated_inline_alerts
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import (
@@ -278,63 +278,6 @@ def process_edit_meeting_contact(payload, context):
         },
     }
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    # trigger_id = payload["trigger_id"]
-
-    # salesforce_account = meeting.zoom_account.user.salesforce_account
-
-    # view = payload["view"]
-    # # retrieve original blocks, view will use the same blocks but change the submit action
-    # blocks = view["blocks"]
-    # view_id = view["id"]
-    # title = view["title"]
-    # actions = payload["actions"]
-    # callback_id = None
-    # submit_button_text = None
-    # selected_action_block = actions[0] if len(actions) else None
-    # if selected_action_block:
-    #     action = process_action_id(selected_action_block["action_id"])
-    #     block_id = selected_action_block["block_id"]
-    #     index, selected_block = block_finder(block_id, blocks)
-    #     if (
-    #         action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-    #         and selected_block["elements"][0]["value"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-    #     ):
-    #         selected_block["elements"][0]["text"]["text"] = "Cancel Edit Contact"
-    #         selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
-    #         blocks[index] = selected_block
-    #         callback_id = slack_const.ZOOM_MEETING__EDIT_CONTACT
-    #         submit_button_text = "Edit Contact"
-    #         # change the block to show it is selected
-    #     elif (
-    #         action["true_id"] == slack_const.ZOOM_MEETING__EDIT_CONTACT
-    #         and selected_block["elements"][0]["value"]
-    #         == slack_const.ZOOM_MEETING__CANCEL_EDIT_CONTACT
-    #     ):
-    #         selected_block["elements"][0]["text"]["text"] = "Click To Select For Editing"
-    #         selected_block["elements"][0]["value"] = slack_const.ZOOM_MEETING__EDIT_CONTACT
-    #         blocks[index] = selected_block
-    #         callback_id = None
-    #         submit_button_text = None
-    #         # change the block to show it is selected
-
-    # data = {
-    #     "trigger_id": trigger_id,
-    #     "view_id": view_id,
-    #     "view": {
-    #         "close": {"type": "plain_text", "text": "Close", "emoji": True},
-    #         "type": "modal",
-    #         "title": title,
-    #         "blocks": blocks,
-    #         "private_metadata": json.dumps(
-    #             {"w": context.get("w"), "tracking_id": context.get("tracking_id"),}
-    #         ),
-    #     },
-    # }
-    # if callback_id:
-    #     data["view"]["callback_id"] = callback_id
-
-    # if submit_button_text:
-    #     data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -820,41 +763,6 @@ def process_create_or_search_selected(payload, context):
     if type is False:
         workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
         workflow.save()
-
-
-@processor()
-def process_restart_flow(payload, context):
-    workflow_id = payload["actions"][0]["value"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    organization = workflow.user.organization
-    access_token = organization.slack_integration.access_token
-    ts, channel = workflow.slack_interaction.split("|")
-    try:
-        res = slack_requests.update_channel_message(
-            channel,
-            ts,
-            access_token,
-            block_set=get_block_set("initial_meeting_interaction", context={"w": workflow_id}),
-        )
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-    workflow.save()
 
 
 @processor(required_context="u")
@@ -2212,6 +2120,72 @@ def process_paginate_alerts(payload, context):
 
 
 @slack_api_exceptions(rethrow=True)
+@processor()
+def process_switch_alert_message(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user = User.objects.get(id=context.get("u"))
+    config_id = context.get("config_id")
+    config = AlertConfig.objects.get(id=config_id)
+    invocation = context.get("invocation")
+    form = user.team.team_forms.filter(
+        form_type="UPDATE", resource=config.template.resource_type
+    ).first()
+    switch_to = context.get("switch_to")
+    if context.get("switch_to") == "inline":
+        fields = form.to_slack_options()
+        blocks = [
+            get_block_set(
+                "initial_inline_blockset",
+                context={
+                    "u": str(user.id),
+                    "invocation": invocation,
+                    "config_id": str(config_id),
+                    "channel": channel_id,
+                    "switch_to": f"{'message' if switch_to == 'inline' else 'inline'}",
+                },
+            )
+        ]
+        blocks.append(
+            block_builders.static_select(
+                "Choose Field",
+                fields,
+                action_id=action_with_params(
+                    slack_const.PROCESS_INLINE_FIELD_SELECTED,
+                    params=[
+                        f"invocation={invocation}",
+                        f"config_id={config_id}",
+                        f"u={str(user.id)}",
+                    ],
+                ),
+            ),
+        )
+        slack_requests.update_channel_message(
+            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+        )
+    else:
+        process_paginate_alerts(payload, context)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_inline_field_selected(payload, context):
+    emit_send_paginated_inline_alerts(payload, context)
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:2]
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
 @processor(required_context=["resource_type", "u"])
 def process_show_alert_update_resource_form(payload, context):
     from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
@@ -2627,62 +2601,6 @@ def process_get_summary_fields(payload, context):
     slack_requests.generic_request(
         slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
         loading_view_data,
-        access_token=user.organization.slack_integration.access_token,
-    )
-    return
-
-
-def get_random_deal_score(opp_name):
-    scores = {
-        "engage": ["Engagement is very high", "Engagement is low"],
-        "stage": ["Stage recently advanced", "Stage hasn't advanced recently"],
-        "close_date": ["Close Date has moved to this week", "Close date was pushed back"],
-        "update": [
-            "Opp was updated within the last 7 days",
-            "Opp was last updated more than a week ago",
-        ],
-    }
-    score = 0
-    score_text = ""
-    for score_key in scores.keys():
-        k = random.randint(0, 1)
-        score_text += f"\t-{scores[score_key][k]}\n"
-        if k == 0:
-            score += 25
-    score_text = f"*{opp_name}* has a deal score of *{score}*\n" + score_text
-    return score_text
-
-
-@slack_api_exceptions(rethrow=True)
-@processor()
-def process_get_deal_score(payload, context):
-    user = User.objects.get(id=context.get("u"))
-    config_id = context.get("config_id")
-    config = AlertConfig.objects.get(id=config_id)
-    instances = list(
-        AlertInstance.objects.filter(config_id=config.id, invocation=context.get("invocation"))
-    )[0:7]
-    deal_text = ""
-    for instance in instances:
-        instance_text = get_random_deal_score(instance.resource.name)
-        deal_text += f"\n{instance_text}"
-    blocks = [
-        block_builders.header_block(f"{config.template.resource_type} Deal Score"),
-        {"type": "divider"},
-        block_builders.simple_section(deal_text, "mrkdwn"),
-    ]
-    view_data = {
-        "trigger_id": payload["trigger_id"],
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": f"Deal Score"},
-            "blocks": blocks,
-        },
-    }
-
-    slack_requests.generic_request(
-        slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
-        view_data,
         access_token=user.organization.slack_integration.access_token,
     )
     return
@@ -3571,7 +3489,6 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_meeting_selected_resource_option,
         slack_const.ZOOM_MEETING__PROCESS_NO_CHANGES: process_no_changes_made,
         slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
-        slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW: process_restart_flow,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
@@ -3589,6 +3506,8 @@ def handle_block_actions(payload):
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
+        slack_const.PROCESS_SWITCH_ALERT_MESSAGE: process_switch_alert_message,
+        slack_const.PROCESS_INLINE_FIELD_SELECTED: process_inline_field_selected,
         slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
         slack_const.PAGINATE_TASKS: process_paginate_tasks,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,
@@ -3612,8 +3531,8 @@ def handle_block_actions(payload):
         slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
         slack_const.GET_SUMMARY: process_get_summary_fields,
-        slack_const.GET_DEAL_SCORE: process_get_deal_score,
     }
+
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
