@@ -469,21 +469,54 @@
               </div>
             </template>
           </Multiselect>
-          <section class="space-between" v-else>
-            <h4 style="cursor: pointer" @click="customResource = null">
-              <img
-                style="margin-right: 8px; margin-top: -16px"
-                src="@/assets/images/left.svg"
-                height="13px"
-                alt=""
-              />
-              Back
-            </h4>
-
-            <div class="row__">
-              <h4 style="margin-right: 16px">
-                {{ selectedCustomObjectName + ' Form' }}
+          <section v-else>
+            <div class="space-between">
+              <h4 style="cursor: pointer" @click="customResource = null">
+                <img
+                  style="margin-right: 8px; margin-top: -16px"
+                  src="@/assets/images/left.svg"
+                  height="13px"
+                  alt=""
+                />
+                Back
               </h4>
+  
+              <div class="row__">
+                <h4 style="margin-right: 16px">
+                  {{ selectedCustomObjectName + ' Form' }}
+                </h4>
+              </div>
+            </div>
+            <div id="formSection">
+              <draggable
+                v-model="addedFields"
+                group="fields"
+                @start="drag = true"
+                @end="drag = false"
+                class="drag-section"
+              >
+                <div v-for="field in addedFields" :key="field.id">
+                  <div v-if="!unshownIds.includes(field.id)">
+                    <div class="drag-item">
+                      <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                        <img src="@/assets/images/drag.svg" alt="" />
+                        {{ field.label }}
+                      </p>
+                      <img
+                        src="@/assets/images/remove.svg"
+                        alt=""
+                        id="remove"
+                        :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                        @click="
+                          () => {
+                            onRemoveField(field)
+                          }
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
+              </draggable>
             </div>
           </section>
         </div>
@@ -1209,6 +1242,7 @@ export default {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
+      console.log('hit', this.customFields)
       if (!this.customFields) {
         return
       }
@@ -1292,8 +1326,8 @@ export default {
     this.getStageForms()
   },
   methods: {
-    test() {
-      console.log(this.customFields)
+    test(log) {
+      console.log('log', log)
     },
     customLabel(prop) {
       return `${prop.label}`
@@ -1354,6 +1388,7 @@ export default {
 
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
+        console.log('inside if before', this.customResource)
         this.customFields = CollectionManager.create({
           ModelClass: ObjectField,
           pagination: { size: 500 },
@@ -1361,6 +1396,8 @@ export default {
             crmObject: this.customResource,
           },
         })
+        this.customFields.refresh()
+        console.log('inside if after', this.customFields)
       }
       this.formFields.refresh()
     },
@@ -1415,7 +1452,9 @@ export default {
       this.closeCustomModal()
     },
     watcherCustomResource() {
+      console.log('before', this.formFields)
       this.formFields.refresh()
+      console.log('after', this.formFields)
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
@@ -1649,6 +1688,11 @@ export default {
     },
     changeToCompany() {
       this.customObjectView = false
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToCompany
+        return
+      }
       this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
@@ -1674,6 +1718,11 @@ export default {
     },
     changeToDeal() {
       this.customObjectView = false
+      if (this.formChange) {
+        this.modalOpen = !this.modalOpen
+        this.storedModalFunction = this.changeToDeal
+        return
+      }
       this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
@@ -1738,19 +1787,6 @@ export default {
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
-    changeToHubspotContact() {
-      this.customObjectView = false
-      this.filterText = ''
-      this.newResource = 'Contact'
-      this.newFormType = 'UPDATE'
-      const form = this.allForms.find(
-        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
-      )
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
       )
       this.storedField = null
     },
