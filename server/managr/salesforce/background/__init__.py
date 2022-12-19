@@ -2206,7 +2206,13 @@ def _process_slack_inline_sf_update(payload, context):
     for key in state:
         block_id_values = key.split(".")
         form = OrgCustomSlackFormInstance.objects.get(alert_instance_id=block_id_values[2])
+        saved_data_ref = None
+        if len(form.saved_data):
+            saved_data_ref = form.saved_data
         form.save_form({value: state[key]})
+        if saved_data_ref:
+            form.saved_data.update(saved_data_ref)
+            form.save()
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     if not user:
@@ -2216,6 +2222,7 @@ def _process_slack_inline_sf_update(payload, context):
     config_id = context.get("config_id")
     instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
     blocks = payload.get("message").get("blocks")[:2]
+    blocks.append({"type": "divider"})
     success_resources = 0
     failed_resources = 0
     error = False

@@ -146,6 +146,7 @@ def _process_send_paginated_inline_alerts(payload, context):
         api_name=value, user=user, crm_object=instances.first().template.resource_type
     )
     blocks = payload.get("message").get("blocks")[:2]
+    blocks.append({"type": "divider"})
     template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(
@@ -227,6 +228,7 @@ def _prcocess_send_next_page_paginated_inline_alerts(payload, context):
         api_name=value, user=user, crm_object=instances.first().template.resource_type
     )
     blocks = payload.get("message").get("blocks")[:2]
+    blocks.append({"type": "divider"})
     template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(
