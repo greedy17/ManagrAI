@@ -272,6 +272,7 @@
                                 ? allPicklistOptions[field.id]
                                 : stageReferenceOpts[field.apiName]
                                 ? stageReferenceOpts[field.apiName]
+                                : field.options.length ? field.options
                                 : []
                             "
                             @select="
@@ -510,6 +511,9 @@
                     (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                       ? allPicklistOptions[field.id]
                       : createReferenceOpts[field.apiName]
+                      ? createReferenceOpts[field.apiName]
+                      : field.options.length ? field.options
+                      : []
                   "
                   @select="
                     setUpdateValues(
@@ -579,6 +583,7 @@
                               ? allPicklistOptions[field.id]
                               : stageReferenceOpts[field.apiName]
                               ? stageReferenceOpts[field.apiName]
+                              : field.options.length ? field.options
                               : []
                           "
                           @select="
@@ -877,6 +882,9 @@
                         (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                           ? allPicklistOptions[field.id]
                           : productReferenceOpts[field.apiName]
+                          ? productReferenceOpts[field.apiName]
+                          : field.options.length ? field.options
+                          : []
                       "
                       @select="
                         setCreateValues(
@@ -1172,6 +1180,9 @@
                   (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                     ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
+                    ? referenceOpts[field.apiName]
+                    : field.options.length ? field.options
+                    : []
                 "
                 @select="
                   setUpdateValues(
@@ -1253,6 +1264,7 @@
                             ? allPicklistOptions[field.id]
                             : stageReferenceOpts[field.apiName]
                             ? stageReferenceOpts[field.apiName]
+                            : field.options.length ? field.options
                             : []
                         "
                         @select="
@@ -1531,6 +1543,9 @@
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
+                        ? productReferenceOpts[field.apiName]
+                        : field.options.length ? field.options
+                        : []
                     "
                     @select="
                       setCreateValues(
@@ -1706,6 +1721,9 @@
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
+                        ? productReferenceOpts[field.apiName]
+                        : field.options.length ? field.options
+                        : []
                     "
                     @select="
                       setProductValues(
@@ -2304,6 +2322,9 @@
                     ? allPicklistOptions[field.id]
                     : stageReferenceOpts[field.apiName]
                     ? stageReferenceOpts[field.apiName]
+                    : referenceOpts[field.apiName]
+                    ? referenceOpts[field.apiName]
+                    : field.options.length ? field.options
                     : []
                 "
                 @select="
@@ -5085,8 +5106,8 @@ export default {
     },
     async getUsers() {
       try {
-        const res = await SObjects.api.getObjectsForWorkflows('User')
-        this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
+        const res = await CRMObjects.api.getObjectsForWorkflows('User')
+        this.allUsers = res.results.filter((user) => this.userCRM === 'SALESFORCE' ? user.has_salesforce_integration : user.has_hubspot_integration)
       } catch (e) {
         this.$toast('Error gathering users!', {
           timeout: 2000,
