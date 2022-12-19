@@ -872,8 +872,8 @@ def _process_slack_inline_update(payload, context):
             saved_data_ref = form.saved_data
         form.save_form({value: state[key]})
         if saved_data_ref:
-            form.saved_data.update(saved_data_ref)
-            form.save()
+            saved_data_ref.update(form.saved_data)
+            form.save_form(saved_data_ref, False)
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     if not user:

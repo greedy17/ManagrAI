@@ -1,6 +1,7 @@
 from django.conf import settings
 import logging
 import json
+import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
 from .exceptions import CustomAPIException
@@ -246,6 +247,7 @@ class HubspotAuthAccountAdapter:
                 has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
                 if has_next_page and page <= 5:
                     data["after"] = has_next_page
+                    time.sleep(5.00)
                     with Client as client:
                         res = client.post(
                             url,

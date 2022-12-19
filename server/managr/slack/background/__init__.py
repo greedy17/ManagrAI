@@ -184,6 +184,7 @@ def _process_send_paginated_inline_alerts(payload, context):
             ] = f"{slack_const.ALERT_INLINE_STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}"
         blocks.append(field_block)
     if len(blocks):
+        blocks.append({"type": "divider"})
         blocks = [
             *blocks,
             *custom_inline_paginator_block(instances, invocation, config_id, value),
@@ -209,13 +210,12 @@ def _prcocess_send_next_page_paginated_inline_alerts(payload, context):
         form = OrgCustomSlackFormInstance.objects.filter(
             alert_instance_id=block_id_values[2]
         ).first()
-        saved_data_ref = None
         if len(form.saved_data):
             saved_data_ref = form.saved_data
         form.save_form({value: state[key]})
         if saved_data_ref:
-            form.saved_data.update(saved_data_ref)
-            form.save()
+            saved_data_ref.update(form.saved_data)
+            form.save_form(saved_data_ref, False)
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     if not user:
@@ -268,6 +268,8 @@ def _prcocess_send_next_page_paginated_inline_alerts(payload, context):
             ] = f"{slack_const.ALERT_INLINE_STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}"
         blocks.append(field_block)
     if len(blocks):
+        blocks.append({"type": "divider"})
+
         blocks = [
             *blocks,
             *custom_inline_paginator_block(instances, invocation, config_id, value),
