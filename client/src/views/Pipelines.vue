@@ -2304,6 +2304,8 @@
                     ? allPicklistOptions[field.id]
                     : stageReferenceOpts[field.apiName]
                     ? stageReferenceOpts[field.apiName]
+                    : referenceOpts[field.apiName]
+                    ? referenceOpts[field.apiName]
                     : []
                 "
                 @select="
@@ -3170,6 +3172,8 @@ export default {
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
+    // const testHS = await this.getReferenceFieldList("hubspot_team_id", "29b37d79-7f81-47f9-acfb-eac018ed4769", 'create', '', [])
+    // console.log('testHS', testHS)
   },
   beforeMount() {
     this.selectList()
@@ -5085,8 +5089,8 @@ export default {
     },
     async getUsers() {
       try {
-        const res = await SObjects.api.getObjectsForWorkflows('User')
-        this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
+        const res = await CRMObjects.api.getObjectsForWorkflows('User')
+        this.allUsers = res.results.filter((user) => this.userCRM === 'SALESFORCE' ? user.has_salesforce_integration : user.has_hubspot_integration)
       } catch (e) {
         this.$toast('Error gathering users!', {
           timeout: 2000,
