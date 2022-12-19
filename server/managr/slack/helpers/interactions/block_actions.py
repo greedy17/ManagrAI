@@ -2267,7 +2267,7 @@ def process_submit_inline_alert_data(payload, context):
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
 
-    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    loading_block = get_block_set("loading", {"message": "Submitting data..."})
     blocks = payload.get("message").get("blocks")[:2]
     blocks.extend(loading_block)
     slack_requests.update_channel_message(

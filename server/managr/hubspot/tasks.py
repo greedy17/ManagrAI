@@ -957,11 +957,12 @@ def _process_slack_inline_update(payload, context):
 
     blocks.extend(block_set)
     try:
-        slack_requests.generic_request(
+        res = slack_requests.generic_request(
             payload["response_url"],
             {"replace_original": True, "blocks": blocks},
             access_token=access_token,
         )
+        print(res)
     except Exception as e:
         logger.exception(f"Failed to update inline alert message {e}")
     return
