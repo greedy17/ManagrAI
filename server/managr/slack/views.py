@@ -68,6 +68,7 @@ from managr.slack.helpers.exceptions import (
     InvalidBlocksException,
     InvalidAccessToken,
 )
+from managr.crm.models import ObjectField
 
 logger = logging.getLogger("managr")
 
@@ -222,17 +223,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
             channel = res.get("channel", {}).get("id")
             user_slack.channel = channel
             user_slack.save()
-            if not user_slack.is_onboarded:
-                slack_requests.send_channel_message(
-                    user_slack.channel,
-                    user_slack.user.organization.slack_integration.access_token,
-                    text="Welcome to Managr!",
-                    block_set=[
-                        block_builders.simple_section(
-                            f"Click this link to activate your account:\n{request.user.activation_link}"
-                        )
-                    ],
-                )
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
@@ -326,7 +316,15 @@ class SlackViewSet(viewsets.GenericViewSet,):
         organization_slack = request.user.organization.slack_integration
         channel_id = request.GET.get("channel_id", None)
         if organization_slack:
-            channel = slack_requests.get_channel_info(organization_slack.access_token, channel_id)
+            try:
+                channel = slack_requests.get_channel_info(
+                    organization_slack.access_token, channel_id
+                )
+            except Exception:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"success": False, "message": "Failed to retreive channel info"},
+                )
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
@@ -382,6 +380,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
     )
     def update_recap_channel(self, request, *args, **kwargs):
         logger.info(f"UPDATE RECAP CHANNEL DATA: {request.data}")
+        recap_channel = request.data.get("recap_channel")
         slack_id = request.data.get("slack_id")
         if slack_id:
             slack = (
@@ -394,16 +393,15 @@ class SlackViewSet(viewsets.GenericViewSet,):
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"success": False, "message": "Couldn't find your Slack account"},
                 )
-        if not slack.recap_channel:
-            slack.change_recap_channel(request.data.get("recap_channel"))
-        logger.info(f"NEW RECAP CHANNEL FOR {slack.user.id}: {slack.recap_channel}")
-        # if request.data.get("users", None):
-        # for user in request.data.get("users"):
-        #     user_acc = User.objects.filter(id=user).first()
-        #     if user_acc and hasattr(user_acc, "slack_integration"):
-        #         if slack_id not in user_acc.slack_integration.recap_receivers:
-        #             user_acc.slack_integration.recap_receivers.append(slack_id)
-        #             user_acc.slack_integration.save()
+        if not slack.recap_channel or slack.recap_channel != recap_channel:
+            slack.change_recap_channel(recap_channel)
+        if request.data.get("users", None):
+            for user in request.data.get("users"):
+                user_acc = User.objects.filter(id=user).first()
+                if user_acc and hasattr(user_acc, "slack_integration"):
+                    if slack_id not in user_acc.slack_integration.recap_receivers:
+                        user_acc.slack_integration.recap_receivers.append(slack_id)
+                        user_acc.slack_integration.save()
         return Response(status=status.HTTP_200_OK, data={"success": True})
 
     @action(
@@ -557,7 +555,9 @@ class SlackFormsViewSet(
         data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
-        data.update({"organization": self.request.user.organization_id})
+        data.update(
+            {"organization": self.request.user.organization_id, "team": self.request.user.team}
+        )
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -782,16 +782,42 @@ def create_resource(request):
                 # did not find the block
                 block = None
                 pass
-
-            if block:
-                block = {
-                    **block,
+            if user.crm == "HUBSPOT" and resource_type == "Deal":
+                try:
+                    pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+                except ValueError:
+                    # did not find the block
+                    pipeline_index = False
+                    pipeline_block = None
+                    pass
+                if pipeline_block is None:
+                    pipeline_field = ObjectField.objects.filter(
+                        crm_object="Deal", api_name="pipeline", user=user
+                    ).first()
+                    if pipeline_field:
+                        pipeline_block = pipeline_field.to_slack_field(None, user, "Deal")
+                pipeline_block = {
+                    **pipeline_block,
                     "accessory": {
-                        **block["accessory"],
-                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                        **pipeline_block["accessory"],
+                        "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}&field={str(pipeline_field.id)}",
                     },
                 }
-                blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+                if block:
+                    if pipeline_index:
+                        del blocks[index]
+                    else:
+                        blocks[index] = pipeline_block
+            else:
+                if block:
+                    block = {
+                        **block,
+                        "accessory": {
+                            **block["accessory"],
+                            "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
+                        },
+                    }
+                    blocks = [*blocks[:index], block, *blocks[index + 1 :]]
             access_token = user.organization.slack_integration.access_token
 
             url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN

@@ -103,7 +103,7 @@
     <div class="title">
       <h4 class="title__head">Slack Message</h4>
 
-      <section class="title__body" @click="test(messageTemplateForm)">
+      <section class="title__body">
         <p>Edit your slack message</p>
       </section>
 
@@ -233,13 +233,20 @@ export default {
         'Required Field Empty',
         'Large Opportunities',
       ],
-      fields: CollectionManager.create({
-        ModelClass: ObjectField,
+      // fields: CollectionManager.create({
+      //   ModelClass: ObjectField,
+      //   filters: {
+      //     // forAlerts: true,
+      //     // filterable: true,
+      //     page: 1,
+      //     crmObject: alert.resourceType,
+      //   },
+      //   pagination: { size: 1000 },
+      // }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
         filters: {
-          // forAlerts: true,
-          // filterable: true,
-          page: 1,
-          crmObject: alert.resourceType,
+          crmObject: this.alert.resourceType
         },
         pagination: { size: 1000 },
       }),

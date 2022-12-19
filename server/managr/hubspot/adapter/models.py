@@ -46,6 +46,7 @@ class HubspotAuthAccountAdapter:
         self.hubspot_id = kwargs.get("hubspot_id", None)
         self.user = kwargs.get("user", None)
         self.hubspot_fields = kwargs.get("hubspot_fields", None)
+        self.object_fields = kwargs.get("object_fields", {})
 
     @property
     def internal_user(self):
@@ -87,6 +88,7 @@ class HubspotAuthAccountAdapter:
         res = cls.authenticate(code)
         if settings.IN_DEV:
             user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+            # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         else:
             user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
@@ -170,39 +172,6 @@ class HubspotAuthAccountAdapter:
             res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
-    # def format_validation_rules(
-    #     self, hubspot_account_id, user_id, res_data=[],
-    # ):
-    #     records = res_data["records"]
-    #     return list(
-    #         map(
-    #             lambda rule: HubspotValidationAdapter.create_from_api(
-    #                 {**rule, "salesforce_account": hubspot_account_id, "imported_by": user_id}
-    #             ),
-    #             records,
-    #         )
-    #     )
-
-    # def format_picklist_values(
-    #     self, hubspot_account_id, user_id, resource, res_data=[],
-    # ):
-    #     fields = res_data["picklistFieldValues"]
-    #     return list(
-    #         map(
-    #             lambda field: HubspotPicklistAdapter.create_from_api(
-    #                 {
-    #                     "values": field[1]["values"],
-    #                     "salesforce_account": hubspot_account_id,
-    #                     "picklist_for": field[0],
-    #                     "imported_by": user_id,
-    #                     "salesforce_object": resource,
-    #                     "integration_source": "SALESFORCE",
-    #                 }
-    #             ),
-    #             fields.items(),
-    #         )
-    #     )
-
     @staticmethod
     def get_authorization():
         query = urlencode(hubspot_consts.AUTHORIZATION_QUERY_PARAMS)
@@ -249,7 +218,7 @@ class HubspotAuthAccountAdapter:
 
     def list_resource_data(self, resource, *args, **kwargs):
         # add extra fields to query string
-        from ..routes import routes
+        from .routes import routes
 
         resource_fields = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
@@ -260,9 +229,10 @@ class HubspotAuthAccountAdapter:
         )
         resource_class = routes.get(resource)
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
+        add_filters = [*add_filters, *resource_class.additional_filters()]
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
-        logger.info(f"{url} was sent")
+        # logger.info(f"{url} was sent with data: {data}")
         with Client as client:
             res = client.post(
                 url,
@@ -271,24 +241,25 @@ class HubspotAuthAccountAdapter:
             )
             res = self._handle_response(res)
             saved_response = res
-            logger.info(
-                f"Request returned {len(res.get('results'))} number of results for {resource} with limit {limit}"
-            )
+            page = 1
             while True:
-                has_next_page = res.get("paging", None)
-                if has_next_page:
-                    logger.info(f"Request returned a next page")
-                    next_page_url = has_next_page.get("next").get("link")
+                has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
+                if has_next_page and page <= 5:
+                    data["after"] = has_next_page
                     with Client as client:
-                        res = client.get(
-                            next_page_url,
+                        res = client.post(
+                            url,
                             headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                            data=json.dumps(data),
                         )
                         res = self._handle_response(res)
                         saved_response["results"] = [*saved_response["results"], *res["results"]]
-
+                        page += 1
                 else:
                     break
+            logger.info(
+                f"Request a total of {len(res.get('results'))} results for {resource} after {page} page/s for {self.internal_user.email}"
+            )
             res = self._format_resource_response(saved_response, resource)
             return res
 
@@ -325,6 +296,18 @@ class HubspotAuthAccountAdapter:
                 else [{"Name": item["properties"]["name"], "Id": item["id"]} for item in res]
             )
             return res
+
+    def get_individual_picklist_values(self, resource, field_name):
+        url = f"{hubspot_consts.BASE_URL}{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}/{field_name}"
+        with Client as client:
+            res = client.get(
+                url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+            res_obj = {}
+            for item in res["options"]:
+                res_obj[item["label"]] = {"value": item["value"], "label": item["label"]}
+            return res_obj
 
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
@@ -415,6 +398,11 @@ class CompanyAdapter:
         external_owner="hubspot_owner_id",
     )
 
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return []
+
     @property
     def internal_user(self):
         try:
@@ -485,7 +473,7 @@ class CompanyAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base=None):
         json_data = json.dumps(
             {
                 "properties": CompanyAdapter.to_api(
@@ -512,6 +500,7 @@ class CompanyAdapter:
         resource_fields = user.object_fields.filter(crm_object="Company").values_list(
             "api_name", flat=True
         )
+
         url = hubspot_consts.HUBSPOT_OBJECTS_URI("companies", resource_fields, self.integration_id)
         with Client as client:
             r = client.get(
@@ -561,6 +550,11 @@ class DealAdapter:
         for k, v in DealAdapter.integration_mapping.items():
             reverse[v] = k
         return reverse
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return [{"propertyName": "is_closed", "value": False, "operator": "EQ",}]
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
@@ -627,7 +621,7 @@ class DealAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base=None):
         json_data = json.dumps(
             {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
         )
@@ -647,9 +641,7 @@ class DealAdapter:
 
     def get_current_values(self):
         user = self.internal_user
-        resource_fields = user.object_fields.filter(crm_object="Deal").values_list(
-            "api_name", flat=True
-        )
+        resource_fields = user.crm_account.adapter_class.object_fields.get("Deal")
         url = hubspot_consts.HUBSPOT_OBJECTS_URI("deals", resource_fields, self.integration_id)
         with Client as client:
             r = client.get(
@@ -681,6 +673,11 @@ class HubspotContactAdapter:
         external_owner="hubspot_owner_id",
         external_account="company",
     )
+
+    @staticmethod
+    def additional_filters():
+        """pass custom additional filters to the url"""
+        return []
 
     @property
     def internal_user(self):
@@ -752,7 +749,7 @@ class HubspotContactAdapter:
             return HubspotAuthAccountAdapter._handle_response(r)
 
     @staticmethod
-    def create(data, access_token, object_fields, user_id):
+    def create(data, access_token, object_fields, user_id, custom_base=None):
         json_data = json.dumps(
             {
                 "properties": HubspotContactAdapter.to_api(

@@ -271,7 +271,7 @@ export default {
       selectedOperand: '',
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
-        pagination: { size: 300 },
+        pagination: { size: 1000 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       // used by dropdown as a ref field to retrieve obj of selected opt
@@ -283,6 +283,7 @@ export default {
       NON_FIELD_ALERT_OPTS,
       negativeOperand: false,
       positiveOperand: false,
+      dealStageCheck: false,
       MyOperand: 'Negative',
       intOpts: [
         { label: 'Greater or equal to', value: '>=' },
@@ -426,7 +427,12 @@ export default {
     selectedOperand: function () {
       if (this.selectedOperand) {
         this.form.field._operandValue.value = this.selectedOperand
-        this.form.field.operandValue.value = this.selectedOperand.value
+        if (this.dealStageCheck) {
+          this.form.field.operandValue.value = this.selectedOperand.id
+          this.dealStageCheck = false
+        } else {
+          this.form.field.operandValue.value = this.selectedOperand.value
+        }
       } else {
         this.form.field._operandValue.value = null
         this.form.field.operandValue.value = null
@@ -450,7 +456,7 @@ export default {
           ...this.objectFields.filters,
           forAlerts: true,
           filterable: true,
-          salesforceObject: val,
+          crmObject: val,
         }
         this.objectFields.refresh()
       },
@@ -459,7 +465,7 @@ export default {
   async created() {
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      salesforceObject: this.resourceType,
+      crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
   },
@@ -495,6 +501,14 @@ export default {
         if (this.userCRM === 'HUBSPOT') {
           const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
           this.picklistOpts = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
+          if (query_params.picklistFor === 'dealstage') {
+            this.dealStageCheck = true
+            let dealStage = []
+            for (let i = 0; i < hsPicklist[0].optionsRef.length; i++) {
+              dealStage = [...dealStage, ...hsPicklist[0].optionsRef[i]]
+            }
+            this.picklistOpts = dealStage
+          }
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.picklistOpts = res.length ? res[0]['values'] : []

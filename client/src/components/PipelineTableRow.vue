@@ -43,7 +43,7 @@
 
           <PipelineNameSection
             v-else
-            :name="opp['secondary_data']['Name']"
+            :name="userCRM === 'SALESFORCE' ? opp['secondary_data']['Name'] : opp['secondary_data']['dealname']"
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
@@ -51,7 +51,7 @@
 
         <div v-show="showIcons" class="flex-row">
           <div>
-            <button @click="emitCreateForm" class="name-cell-edit-note-button-1">
+            <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
               <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
             </button>
             <!-- <span class="tooltiptext">Expand</span> -->
@@ -310,11 +310,15 @@
             :apiName="field.apiName"
             :dataType="field.dataType"
             :fieldData="
-              field.apiName.includes('__c') || field.apiName.includes('__r')
+              userCRM === 'SALESFORCE' ?
+              (field.apiName.includes('__c') || field.apiName.includes('__r')
                 ? opp['secondary_data'][field.apiName]
-                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])
+                : opp['secondary_data'][field.apiName]
             "
             :referenceOpts="referenceOpts"
+            :field="field"
+            :opp="opp"
             :lastStageUpdate="opp['last_stage_update']"
           />
         </div>
@@ -348,10 +352,12 @@
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-            field.apiName.includes('__c')
-              ? opp['secondary_data'][field.apiName]
-              : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-          "
+              userCRM === 'SALESFORCE' ?
+              (field.apiName.includes('__c')
+                ? opp['secondary_data'][field.apiName]
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])
+                : opp['secondary_data'][field.apiName]
+            "
           :lastStageUpdate="opp['last_stage_update']"
           :referenceOpts="referenceOpts"
         />
@@ -469,7 +475,9 @@ export default {
         return
       }
     },
-    test(log) {},
+    test(log) {
+      console.log('log', log)
+    },
     checkSelect() {
       this.primaryCheckList.includes(this.opp.id)
         ? (this.isSelected = true)
@@ -503,8 +511,8 @@ export default {
         this.$emit('inline-edit', this.formData, this.opp.id, this.opp.integration_id, dataType)
       }, 500)
     },
-    emitCreateForm() {
-      this.$emit('create-form')
+    emitCreateForm(opp) {
+      this.$emit('create-form', opp)
     },
     emitGetNotes() {
       this.$emit('get-notes')
@@ -649,6 +657,11 @@ export default {
       }
     },
   },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+  }
 }
 </script>
 

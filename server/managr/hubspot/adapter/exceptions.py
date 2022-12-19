@@ -183,5 +183,4 @@ class CustomAPIException:
             )
 
         else:
-
-            raise UnhandledCRMError(f"hubspot returned {self.param} {self.message}")
+            raise UnhandledCRMError(f"HubSpot error: {self.message}")

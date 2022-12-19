@@ -187,16 +187,6 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
         {
             groupCondition: "AND",
             newOperands: [
-                // {
-                //     operandCondition: "AND",
-                //     operandIdentifier: "ForecastCategoryName",
-                //     operandOperator: "<=",
-                //     operandValue: 'Commit',
-                //     operandType: "FIELD",
-                //     operandOrder: 0,
-                //     dataType: "STRING",
-                //     group: "",
-                // },
                 {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
@@ -297,12 +287,12 @@ const DEAL_REVIEW_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "LastModifiedDate", // Select your Amount
+                    operandIdentifier: "hs_lastmodifieddate", // Select your Amount
                     operandOperator: "<=",
                     operandValue: "-6", // Amount is greater than
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATETIME",
+                    dataType: "DATE",
                     group: "",
                 },
             ],

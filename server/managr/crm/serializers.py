@@ -80,7 +80,7 @@ class BaseContactSerializer(serializers.ModelSerializer):
             data.update({"email": ""})
         if owner:
             user = User.objects.get(id=imported_by)
-            data.update({"owner": user})
+            data.update({"owner": user.id})
         if account:
             acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by
@@ -95,8 +95,9 @@ class BaseContactSerializer(serializers.ModelSerializer):
 
 class BaseOpportunitySerializer(serializers.ModelSerializer):
     owner_ref = UserRefSerializer(source="owner", required=False)
-
-    class Meta:
+    account_ref = BaseAccountSerializer(source="account", required=False)
+    
+    class Meta: 
         model = BaseOpportunity
         fields = (
             "id",
@@ -106,7 +107,8 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "amount",
             "close_date",
             "forecast_category",
-            "company",
+            "account",
+            "account_ref",
             "stage",
             "owner",
             "owner_ref",
@@ -115,6 +117,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "imported_by",
             "contacts",
             "secondary_data",
+            "last_stage_update",
         )
 
     def _format_date_time_from_api(self, d):
@@ -137,7 +140,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             data.update({"external_owner": "N/A"})
         if owner:
             user = User.objects.get(id=imported_by)
-            data.update({"owner": user})
+            data.update({"owner": user.id})
         if account:
             acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by
@@ -156,6 +159,8 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
 
 
 class ObjectFieldSerializer(serializers.ModelSerializer):
+    options_ref = serializers.SerializerMethodField("get_options_ref")
+
     class Meta:
         model = ObjectField
         fields = (
@@ -173,6 +178,7 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "reference_to_infos",
             "relationship_name",
             "options",
+            "options_ref",
             "integration_source",
             "integration_id",
             "is_public",
@@ -180,3 +186,12 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "filterable",
             "reference_display_label",
         )
+
+    def get_options_ref(self, instance, *args, **kwargs):
+        if instance.api_name == "dealstage":
+            options = []
+            for pipeline in instance.options[0].values():
+                options.append(pipeline["stages"])
+        else:
+            options = instance.options
+        return options

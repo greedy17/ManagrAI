@@ -69,7 +69,11 @@ from managr.slack.helpers.exceptions import (
 from managr.api.decorators import slack_api_exceptions
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_meeting_paginator_block
 from managr.salesforce.adapter.models import PricebookEntryAdapter
-from managr.hubspot.tasks import _process_create_new_hs_resource, emit_add_update_to_hs
+from managr.hubspot.tasks import (
+    _process_create_new_hs_resource,
+    emit_add_update_to_hs,
+    emit_process_slack_hs_bulk_update,
+)
 from managr.crm.utils import CRM_SWITCHER
 
 logger = logging.getLogger("managr")
@@ -85,11 +89,18 @@ def swap_public_fields(state):
     return state
 
 
-def background_create_resource(current_form_ids, crm):
+def background_create_resource(crm):
     if crm == "SALESFORCE":
-        return _process_create_new_resource.now(current_form_ids)
+        return _process_create_new_resource
     else:
-        return _process_create_new_hs_resource.now(current_form_ids)
+        return _process_create_new_hs_resource
+
+
+def BULK_UPDATE_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_process_slack_bulk_update
+    else:
+        return emit_process_slack_hs_bulk_update
 
 
 @log_all_exceptions
@@ -178,8 +189,9 @@ def process_zoom_meeting_data(payload, context):
     state = swap_public_fields(view["state"]["values"])
     task_type = private_metadata.get("task_type", None)
     if not task_type:
+        task_name = "managr_task_type"
         task_selection = [
-            value.get("selected_option") for value in state.get("managr_task_type", {}).values()
+            value.get("selected_option") for value in state.get(task_name, {}).values()
         ][0]
         task_type = task_selection.get("value") if task_selection is not None else None
     # if we had a next page the form data for the review was already saved
@@ -298,6 +310,24 @@ def process_next_page_slack_commands_form(payload, context):
 
 @log_all_exceptions
 @processor(required_context=["f"])
+def process_alert_inline_stage_submitted(payload, context):
+    state = payload["view"]["state"]["values"]
+    form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    stage_form = OrgCustomSlackFormInstance.objects.get(id=context.get("stage_form_id"))
+    stage_form.save_form(state)
+    if len(form.saved_data):
+        form.saved_data.update(stage_form.saved_data)
+    else:
+        form.saved_data = stage_form.saved_data
+    form.is_submitted = True
+    form.submission_date = timezone.now()
+    form.update_source = "slack-inline"
+    form.save()
+    return {"response_action": "clear"}
+
+
+@log_all_exceptions
+@processor(required_context=["f"])
 def process_add_products_form(payload, context):
     # get context
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
@@ -372,20 +402,11 @@ def process_submit_resource_data(payload, context):
 
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-    stage_forms = current_forms.filter(
-        template__form_type="STAGE_GATING", template__custom_object__isnull=True
-    )
-    custom_object_forms = current_forms.filter(template__custom_object__isnull=False)
+    stage_forms = current_forms.filter(template__form_type="STAGE_GATING")
     stage_form_data_collector = {}
     for form in stage_forms:
         form.save_form(state)
         stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-
-    custom_object_data_collector = {}
-    for custom_form in custom_object_forms:
-        custom_form.save_form(state)
-        custom_object_data_collector = {**custom_object_data_collector, **custom_form.saved_data}
-
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
@@ -401,18 +422,11 @@ def process_submit_resource_data(payload, context):
             if main_form.template.form_type == "UPDATE":
                 main_form.resource_object.update(all_form_data)
                 resource = main_form.resource_object
-                if len(custom_object_forms):
-                    sf.create_custom_object(
-                        custom_object_data_collector,
-                        sf.access_token,
-                        sf.instance_url,
-                        sf.salesforce_id,
-                        custom_object_forms.first().template.custom_object,
-                    )
                 break
             else:
                 create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
-                resource = background_create_resource(current_form_ids, user.crm)
+                resource_func = background_create_resource(user.crm)
+                resource = resource_func.now(current_form_ids)
                 new_resource = create_route[main_form.template.resource]["model"].objects.get(
                     integration_id=resource.integration_id
                 )
@@ -3032,20 +3046,20 @@ def process_submit_bulk_update(payload, context):
     selected_resources = [
         option["value"] for option in state["RESOURCES"]["SELECTED_RESOURCES"]["selected_options"]
     ]
-    selected_field = state["CRM_FIELDS"][f"CHOOSE_CRM_FIELD?u={str(user.id)}"]["selected_option"][
-        "value"
-    ]
-    bulk_update_value = get_crm_value(state)
-    data = {selected_field: bulk_update_value}
     channel = pm.get("channel_id")
     ts = pm.get("message_ts")
     resource_type = context.get("resource_type")
-    emit_process_slack_bulk_update(
-        str(user.id), selected_resources, data, ts, channel, resource_type
+    BULK_UPDATE_FUNCTION(user.crm)(
+        str(user.id), selected_resources, state, ts, channel, resource_type
     )
 
     block_set = [
-        *get_block_set("loading", {"message": ":rocket: We are saving your data to Salesforce..."}),
+        *get_block_set(
+            "loading",
+            {
+                "message": f":rocket: We are saving your data to {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}..."
+            },
+        ),
     ]
     try:
         res = slack_requests.update_channel_message(
@@ -3147,6 +3161,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_DIGEST_ATTACH_RESOURCE: process_digest_attach_resource,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
+        slack_const.ALERT_INLINE_STAGE_SUBMITTED: process_alert_inline_stage_submitted,
         slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA: process_submit_alert_resource_data,
         slack_const.PROCESS_SUBMIT_DIGEST_RESOURCE_DATA: process_submit_digest_resource_data,
         slack_const.COMMAND_CREATE_TASK: process_create_task,

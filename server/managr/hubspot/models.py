@@ -12,7 +12,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 from background_task.models import CompletedTask, Task
-
+from managr.crm.models import BaseOpportunity
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -70,6 +70,9 @@ class HSSyncOperation(TimeStampModel):
         blank=True,
         help_text="List of failed tasks as that failed from task runner for uncaught exceptions after 5 tries",
     )
+
+    class Meta:
+        ordering = ["-datetime_created"]
 
     @property
     def status(self):
@@ -219,6 +222,7 @@ class HubspotAuthAccount(TimeStampModel):
     hobjects = JSONField(
         default=getHobjectDefaults, help_text="All resources we are retrieving", max_length=500,
     )
+    extra_pipeline_fields = ArrayField(models.CharField(max_length=255), default=list, blank=True)
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -232,8 +236,8 @@ class HubspotAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["user"] = str(self.user.id)
-        data["hubspot_fields"] = {
-            key: self.hubspot_fields.filter(hubspot_object=key).values_list("name", flat=True)
+        data["object_fields"] = {
+            key: self.user.object_fields.filter(crm_object=key).values_list("api_name", flat=True)
             for key in self.hobjects.keys()
         }
         return HubspotAuthAccountAdapter(**data)

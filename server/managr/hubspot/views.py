@@ -68,7 +68,7 @@ def get_hubspot_authentication(request):
             if len(form_check) > 0
             else timezone.now()
         )
-        emit_generate_hs_form_template(str(res.user), schedule=scheduled_time)
+        emit_generate_hs_form_template(str(res.user), schedule=schedule)
     sync_operations = [*user.hubspot_account.resource_sync_opts]
     sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
     emit_gen_next_hubspot_sync(str(user.id), sync_operations, sync_time)

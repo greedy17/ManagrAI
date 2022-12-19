@@ -320,11 +320,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     def get_user_fields(self):
         from managr.crm.models import ObjectField
 
-        # template_fields = (
-        #     self.template.formfield_set.all()
-        #     .values_list("field__api_name", "field__salesforce_object",)
-        #     .order_by("order")
-        # )
         template_fields = (
             self.template.customformfield_set.all()
             .values_list("field__api_name", "field__crm_object",)
@@ -334,11 +329,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         # hack to maintain order
         for field in template_fields:
             try:
-                # f = SObjectField.objects.get(
-                #     Q(api_name=field[0])
-                #     & Q(Q(salesforce_object=field[1]) | Q(salesforce_object__isnull=True))
-                #     & (Q(is_public=True) | Q(salesforce_account=self.user.salesforce_account))
-                # )
                 f = ObjectField.objects.get(
                     Q(api_name=field[0])
                     & Q(Q(crm_object=field[1]) | Q(crm_object__isnull=True))
@@ -389,7 +379,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                                     break
                         except Exception as e:
                             logger.exception(f"Failed pull current data from {e}")
-                            form_values = {}
+                            form_values = self.resource_object.secondary_data
                             break
                 else:
                     form_values = {}
@@ -420,7 +410,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     form_blocks.extend(generated_field)
                 else:
                     form_blocks.append(generated_field)
-                if str(field.id) == "0bb152b5-aac1-4ee0-9c25-51ae98d55af1":
+                if str(field.id) == "0bb152b5-aac1-4ee0-9c25-51ae98d55af2":
                     form_blocks.append(
                         block_builders.section_with_button_block(
                             "Insert",

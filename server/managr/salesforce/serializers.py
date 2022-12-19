@@ -172,11 +172,14 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
         if instance.resource_type and instance.user.crm is not None:
             routes = sf_routes if instance.user.crm == "SALESFORCE" else hs_routes
             resource_type = instance.resource_type
-            serializer = routes[resource_type]["serializer"]
-            resource = routes[resource_type]["model"].objects.filter(id=instance.resource_id)
-            if len(resource):
-                return serializer(instance=resource.first()).data
-            else:
+            try:
+                serializer = routes[resource_type]["serializer"]
+                resource = routes[resource_type]["model"].objects.filter(id=instance.resource_id)
+                if len(resource):
+                    return serializer(instance=resource.first()).data
+                else:
+                    return None
+            except KeyError:
                 return None
         else:
             return None
@@ -315,6 +318,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "contacts",
             "is_stale",
             "secondary_data",
+            "last_stage_update",
         )
 
     def _format_date_time_from_api(self, d):

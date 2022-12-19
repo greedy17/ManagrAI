@@ -895,33 +895,10 @@ class SalesforceAuthAccount(TimeStampModel):
         data = self.__dict__
         data["id"] = str(data["id"])
         data["user"] = str(self.user.id)
-        data["object_fields"] = dict(
-            ## TODO: Use loop from sobjects
-            Account=self.object_fields.filter(salesforce_object="Account").values_list(
-                "api_name", flat=True
-            ),
-            Opportunity=self.object_fields.filter(salesforce_object="Opportunity").values_list(
-                "api_name", flat=True
-            ),
-            Contact=self.object_fields.filter(salesforce_object="Contact").values_list(
-                "api_name", flat=True
-            ),
-            Lead=self.object_fields.filter(salesforce_object="Lead").values_list(
-                "api_name", flat=True
-            ),
-            Pricebook2=self.object_fields.filter(salesforce_object="Pricebook2").values_list(
-                "api_name", flat=True
-            ),
-            Product2=self.object_fields.filter(salesforce_object="Product2").values_list(
-                "api_name", flat=True
-            ),
-            PricebookEntry=self.object_fields.filter(
-                salesforce_object="PricebookEntry"
-            ).values_list("api_name", flat=True),
-            OpportunityLineItem=self.object_fields.filter(
-                salesforce_object="OpportunityLineItem"
-            ).values_list("api_name", flat=True),
-        )
+        data["object_fields"] = {
+            key: self.user.object_fields.filter(crm_object=key).values_list("api_name", flat=True)
+            for key in self.sobjects.keys()
+        }
         return SalesforceAuthAccountAdapter(**data)
 
     @property

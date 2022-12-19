@@ -122,6 +122,24 @@
         </section>
       </div>
     </Modal>
+    <Modal v-if="confirmDeleteModal">
+      <div class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img src="@/assets/images/warning.svg" class="logo2" alt="" />
+            <p>Would you like to delete this stage form?</p>
+          </div>
+        </div>
+        <section class="modal-buttons">
+          <div class="">
+            <button @click="closeDeleteModal" class="cancel">Cancel</button>
+          </div>
+          <div class="">
+            <button @click="deleteForm(activeForm)" class="save">Delete</button>
+          </div>
+        </section>
+      </div>
+    </Modal>
 
     <div v-if="userCRM !== 'HUBSPOT'" class="alerts-header">
       <section class="row__ light-gray">
@@ -201,7 +219,7 @@
           Deal - Stage related
         </p>
         <p @click="changeToCompany" :class="newResource == 'Company' ? 'green' : ''">Company</p>
-        <p @click="changeToHubspotContact" :class="newResource == 'Contact' ? 'green' : ''">
+        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">
           Contact
         </p>
       </section>
@@ -678,8 +696,10 @@ export default {
       productSelected: false,
       addingProducts: false,
       customObjectView: false,
+      confirmDeleteModal: false,
       modalOpen: false,
       formChange: false,
+      storedField: null,
       formStages: [],
       stages: [],
       timeout: null,
@@ -1406,7 +1426,7 @@ export default {
       this.currentlySelectedStage = null
     },
     async deleteForm(form) {
-      if (form.id && form.id.length) {
+      if (form && form.id && form.id.length) {
         const id = form.id
 
         SlackOAuth.api
@@ -1430,18 +1450,30 @@ export default {
               bodyClassName: ['custom'],
             })
           })
-          .finally(() => {})
+          .finally(() => {
+            
+          })
       } else {
         const forms = this.allForms.filter((f) => {
-          return f.id !== form.id
+          if (form) {
+            return f.id !== form.id
+          }
         })
         this.allForms = [...forms]
+        if (this.storedField) {
+          this.$router.go()
+        }
       }
     },
     closeModal() {
       this.modalOpen = false
       this.formChange = false
       this.storedModalFunction()
+    },
+    closeDeleteModal() {
+      this.addedFields = [this.storedField]
+      this.storedField = null
+      this.confirmDeleteModal = false
     },
     setNewForm() {
       this.addForm(this.selectedStage)
@@ -1530,14 +1562,27 @@ export default {
             crmObject: this.DEAL,
             search: 'Deal Stage',
           })
-          let dealStage
+          let dealStages = []
           for (let i = 0; i < res.length; i++) {
             if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
+              dealStages = res[i]
               break
             }
           }
-          this.stages = dealStage ? dealStage.options : []
+          let dealStage = []
+          if (dealStages.optionsRef.length) {
+            // const items = dealStages.options[0]
+            // for (let key in items) {
+            //   // dealStage = [...dealStage, items[key].stages]
+            //   for (let j = 0; j < items[key].stages.length; j++) {
+            //     dealStage.push(items[key].stages[j])
+            //   }
+            // }
+            for (let i = 0; i < dealStages.optionsRef.length; i++) {
+              dealStage = [...dealStage, ...dealStages.optionsRef[i]]
+            }
+          }
+          this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           this.stages = res.length ? res[0]['values'] : []
@@ -1600,6 +1645,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.ACCOUNT && f.formType == this.UPDATE,
       )
+      this.storedField = null
     },
     changeToCompany() {
       this.customObjectView = false
@@ -1609,6 +1655,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.COMPANY && f.formType == this.UPDATE,
       )
+      this.storedField = null
     },
     changeToOpportunity() {
       this.customObjectView = false
@@ -1623,6 +1670,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
       )
+      this.storedField = null
     },
     changeToDeal() {
       this.customObjectView = false
@@ -1632,6 +1680,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.DEAL && f.formType == this.UPDATE,
       )
+      this.storedField = null
     },
     // changeToStage(stage = '') {
     //   this.newResource = this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'
@@ -1649,6 +1698,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.OPPORTUNITYLINEITEM && f.formType == this.CREATE,
       )
+      this.storedField = null
     },
     changeToStage(stage = '') {
       this.customObjectView = false
@@ -1662,18 +1712,19 @@ export default {
       this.newFormType = 'STAGE_GATING'
       this.newResource = 'Opportunity'
 
-      if (this.userCRM !== 'HUBSPOT') {
+      if (this.userCRM === 'SALESFORCE') {
         this.newResource = 'Opportunity'
         this.newCustomForm = this.allForms.find(
           (f) =>
             f.resource == this.OPPORTUNITY && f.formType == this.STAGE_GATING && f.stage == stage,
         )
-      } else {
+      } else if (this.userCRM === 'HUBSPOT') {
         this.newResource = 'Deal'
         this.newCustomForm = this.allForms.find(
           (f) => f.resource == this.DEAL && f.formType == this.STAGE_GATING && f.stage == stage,
         )
       }
+      this.storedField = null
     },
     changeToContact() {
       this.customObjectView = false
@@ -1688,6 +1739,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
       )
+      this.storedField = null
     },
     changeToHubspotContact() {
       this.customObjectView = false
@@ -1700,6 +1752,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
       )
+      this.storedField = null
     },
     changeToLead() {
       this.customObjectView = false
@@ -1712,6 +1765,7 @@ export default {
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
       this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
+      this.storedField = null
     },
     switchFormType() {
       if (this.formChange) {
@@ -1729,6 +1783,11 @@ export default {
     modalSave() {
       this.formChange = false
       this.onSave()
+      this.modalOpen = false
+      this.storedModalFunction()
+      setTimeout(() => {
+        // this.$router.go()
+      }, 400)
     },
     camelize(str) {
       return str[0] + str.slice(1).toLowerCase()
@@ -1803,6 +1862,12 @@ export default {
       // remove from the array if  it exists
 
       this.addedFields = [...this.addedFields.filter((f) => f.id != field.id)]
+
+      if (!this.addedFields.length) {
+        this.storedField = field
+        this.confirmDeleteModal = true
+        return
+      }
 
       // if it exists in the current fields add it to remove field
 
@@ -1904,17 +1969,23 @@ export default {
             bodyClassName: ['custom'],
           })
           setTimeout(() => {
-            this.$router.go()
+            this.removedFields = []
+            // this.$router.go()
           }, 300)
         })
         .finally(() => {
           this.savingForm = false
+          this.getAllForms()
           // if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
           //   this.$router.push({ name: 'Required' })
           // } else {
           //   this.$router.go()
           // }
+          this.formChange = false
         })
+    },
+    async getAllForms() {
+      this.allForms = await SlackOAuth.api.getOrgCustomForm()
     },
     async goToProducts() {
       if (

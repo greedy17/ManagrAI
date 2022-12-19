@@ -63,4 +63,90 @@ export class ObjectFieldAPI extends ModelAPI {
                 results: data.results.map(this.cls.fromAPI),
             }))
     }
+
+    async getObjects(crm_object, page = 1, for_filter = false, filters = false, resource_id = false,) {
+      try {
+        const res = await this.client.get('crm-objects/', { params: { crm_object: crm_object, page: page, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 20, } })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async getObjectsForWorkflows(crm_object, for_filter = false, filters = false, resource_id = false,) {
+      try {
+        const res = await this.client.get('crm-objects/', { params: { crm_object: crm_object, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async getCurrentValues(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/get-current-values/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async createResource(formData) {
+      try {
+        const newFormData = formData
+        if (formData.form_data.dealstage) {
+          newFormData.form_data.stage_name = formData.form_data.dealstage
+        }
+        const res = await this.client.post('crm-objects/create/', newFormData)
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async updateResource(formData) {
+      try {
+        const res = await this.client.post('crm-objects/update/', formData)
+        return res.data
+      } catch (e) {
+        return apiErrorHandler({ apiName: 'Salesforce API' })(e)
+      }
+    }
+
+    async createFormInstance(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/create-form-instance/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async getNotes(resourceId) {
+      let id = objectToSnakeCase(resourceId)
+      try {
+        const res = await this.client.get('crm-objects/notes/', { params: id })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async getCurrentValues(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/get-current-values/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async resourceSync() {
+      try {
+        const res = await this.client.get('crm-objects/resource-sync/')
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+      }
+    }
 }

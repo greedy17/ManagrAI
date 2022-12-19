@@ -1,15 +1,10 @@
 import pytz
 import json
 import logging
-
 from datetime import datetime, date
-
 from django.db.models import Q
-
 from managr.utils.sites import get_site_url
-from managr.core.models import User, Notification, MeetingPrepInstance
-from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Account, Contact, OpportunityLineItem
+from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.models import MeetingWorkflow, SObjectField
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
@@ -20,9 +15,8 @@ from managr.slack.helpers.utils import (
     get_random_no_update_message,
     get_random_update_message,
 )
-
 from managr.slack.helpers import block_builders, block_sets
-from managr.salesforce.routes import routes as form_routes
+from managr.crm.utils import CRM_SWITCHER
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
 logger = logging.getLogger("managr")
@@ -314,13 +308,6 @@ def meeting_contacts_block_set(context):
 
 
 @block_set(required_context=["w"])
-def direct_to_meeting_block_set(context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    blocks = []
-    return blocks
-
-
-@block_set(required_context=["w"])
 def edit_meeting_contacts_block_set(context):
     type = context.get("type", None)
     if type:
@@ -519,12 +506,10 @@ def meeting_review_modal_block_set(context):
         except Exception as e:
             print(e)
     blocks = []
-    action_query = (
-        f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource=Task&field=Type"
-    )
-
+    action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
     blocks.append(
-        block_builders.external_select("Note Type", action_query, block_id="managr_task_type")
+        block_builders.external_select(type_text, action_query, block_id="managr_task_type")
     )
     # additional validations
 
@@ -640,7 +625,9 @@ def create_or_search_modal_block_set(context):
     # if an id is already passed (Aka this is recurrsive) get the resource
     if resource_id:
         resource = (
-            form_routes[resource_type]["model"].objects.filter(integration_id=resource_id).first()
+            CRM_SWITCHER[user.crm][resource_type]["model"]
+            .objects.filter(integration_id=resource_id)
+            .first()
         )
     action_id = (
         f"{slack_const.GET_LOCAL_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}&type=prep"
@@ -710,23 +697,6 @@ def create_modal_block_set(context, *args, **kwargs):
 
 
 @block_set(required_context=["w"])
-def disregard_meeting_review_block_set(context, *args, **kwargs):
-    """Shows a modal to create/select a resource"""
-    w = MeetingWorkflow.objects.get(id=context.get("w"))
-    topic = w.meeting.topic
-    blocks = [
-        block_builders.section_with_button_block(
-            "Review",
-            str(w.id),
-            f":thumbsup: okay, you can always come back to review *{topic}* :calendar:",
-            action_id=slack_const.ZOOM_MEETING__RESTART_MEETING_FLOW,
-        )
-    ]
-
-    return blocks
-
-
-@block_set(required_context=["w"])
 def final_meeting_interaction_block_set(context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     meeting = workflow.meeting
@@ -767,61 +737,6 @@ def no_changes_interaction_block_set(context):
             f":+1: Got it! No updated needed for meeting *{topic}* ", "mrkdwn",
         ),
     ]
-
-    return blocks
-
-
-@block_set(required_context=["w"])
-def meeting_summary_blockset(context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    review = meeting.zoom_meeting_review
-    summary = meeting.zoom_meeting_review.meeting_review_summary
-    user_timezone = workflow.user.timezone
-    start_time = meeting.start_time
-
-    formatted_start = (
-        datetime.strftime(start_time.astimezone(pytz.timezone(user_timezone)), "%m/%d/%Y")
-        if start_time
-        else start_time
-    )
-
-    blocks = [
-        block_builders.simple_section(
-            f"Review for {workflow.user.first_name} {workflow.user.last_name}'s meeting with *Meeting Topic {meeting.topic}* For {workflow.resource_type} {workflow.resource.name}",
-            "mrkdwn",
-        ),
-    ]
-    meeting_type = review.meeting_type
-    meeting_start = formatted_start
-    stage_component = list(filter(lambda comp: comp.type == "stage", summary))
-    forecast_component = list(filter(lambda comp: comp.type == "forecast", summary))
-    close_date_component = list(filter(lambda comp: comp.type == "close_date", summary))
-    duration_component = list(filter(lambda comp: comp.type == "duration", summary))
-    attendance_component = list(filter(lambda comp: comp.type == "attendance", summary))
-    amount_component = list(filter(lambda comp: comp.type == "amount", summary))
-    stage_message = (
-        stage_component[0].rendered_message_delta
-        if stage_component[0].rendered_message_delta
-        else stage_component[0].rendered_message
-    )
-    amount_message = (
-        amount_component[0].rendered_message_delta
-        if amount_component[0].rendered_message_delta
-        else amount_component[0].rendered_message
-    )
-    close_date_message = (
-        close_date_component[0].rendered_message_delta
-        if close_date_component[0].rendered_message_delta
-        else close_date_component[0].rendered_message
-    )
-
-    review_str = f"*Meeting Type:* {meeting_type}\n*Meeting Date:* {meeting_start}\n*Stage Update:* {stage_message}\n*Forecast:* {forecast_component[0].rendered_message}\n*Amount:* {amount_message} \n*Close Date:* {close_date_message}\n"
-    if review.next_step not in ["", None]:
-        review_str = f"{review_str}*Next Step:* {review.next_step}\n"
-
-    review_str = f"{review_str}*Managr Insights:* {attendance_component[0].rendered_message} {duration_component[0].rendered_message}\n*Meeting Comments:*\n {review.meeting_comments}"
-    blocks.append(block_builders.simple_section(review_str, "mrkdwn"))
 
     return blocks
 

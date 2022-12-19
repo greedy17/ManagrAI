@@ -1,3 +1,3 @@
-import { ObjectField } from './models'
+import { ObjectField, CRMObjects } from './models'
 
-export { ObjectField }
+export { ObjectField, CRMObjects }

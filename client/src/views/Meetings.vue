@@ -530,24 +530,47 @@ export default {
       let stages = []
       if (this.userCRM === 'HUBSPOT') {
         try {
-          console.log('sanity 2')
+          // let res = await ObjectField.api.listFields({
+          //   crmObject: this.DEAL,
+          //   search: 'Deal Stage',
+          // })
+          // console.log('res please', res)
+          // let dealStage
+          // for (let i = 0; i < res.length; i++) {
+          //   if (res[i].apiName === 'dealstage') {
+          //     dealStage = res[i]
+          //     break
+          //   }
+          // }
+          // if (dealStage) {
+          //   // stages = dealStage
+          //   return dealStage.options
+          // }
           let res = await ObjectField.api.listFields({
             crmObject: this.DEAL,
             search: 'Deal Stage',
           })
-          console.log('res please', res)
-          let dealStage
+          let dealStages = []
           for (let i = 0; i < res.length; i++) {
             if (res[i].apiName === 'dealstage') {
-              dealStage = res[i]
+              dealStages = res[i]
               break
             }
           }
-          if (dealStage) {
-            // stages = dealStage
-            console.log('dealStage', dealStage.options)
-            return dealStage.options
+          let dealStage = []
+          if (dealStages.optionsRef.length) {
+            // const items = dealStages.options[0]
+            // for (let key in items) {
+            //   // dealStage = [...dealStage, items[key].stages]
+            //   for (let j = 0; j < items[key].stages.length; j++) {
+            //     dealStage.push(items[key].stages[j])
+            //   }
+            // }
+            for (let i = 0; i < dealStages.optionsRef.length; i++) {
+              dealStage = [...dealStage, ...dealStages.optionsRef[i]]
+            }
           }
+          return dealStage && dealStage.length ? dealStage : []
         } catch (e) {
           console.log(e)
         }
@@ -844,7 +867,7 @@ export default {
         this.loading = true
         this.loaderText = 'Pulling your calendar events...'
         setTimeout(() => {
-          this.loaderText = 'Mapping to Salesforce...'
+          this.loaderText = `Mapping to ${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'}...`
           this.getMeetingList()
           setTimeout(() => {
             this.loading = false

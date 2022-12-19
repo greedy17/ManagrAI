@@ -7,7 +7,8 @@
           dataType !== 'Date' &&
           dataType !== 'DateTime' &&
           dataType !== 'Reference' &&
-          apiName !== 'StageName'
+          apiName !== 'StageName' &&
+          apiName !== 'dealstage'
         "
         v-html="fieldData ? fieldData : 'Empty'"
         class="blank"
@@ -41,7 +42,17 @@
             : ''
         }}</span>
       </p>
-
+      <p
+        class="flex-columned blank"
+        :class="!fieldData ? 'gray' : ''"
+        v-else-if="apiName === 'dealstage'"
+      >
+        {{field && opp ? 
+          field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label
+          :
+          fieldData ? fieldData : 'Empty'
+        }}
+      </p>
       <p class="blank" :class="!fieldData ? 'gray' : ''" v-else>
         {{ fieldData ? formatCash(fieldData) : 'Empty' }}
       </p>
@@ -80,7 +91,8 @@ export default {
       if (!input || !input.match(pattern)) {
         return null
       }
-      return input.replace(pattern, '$2/$3/$1')
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
     },
     formatCash(money) {
       let cash = new Intl.NumberFormat('en-US', {
@@ -111,6 +123,9 @@ export default {
       let date = new Date()
       return date
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    }
   },
   mounted() {
     if (this.referenceOpts && this.dataType === 'Reference') {
@@ -128,6 +143,8 @@ export default {
     lastStageUpdate: {},
     index: {},
     referenceOpts: {},
+    field: {},
+    opp: {},
   },
 }
 </script>
