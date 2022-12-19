@@ -272,6 +272,7 @@
                                 ? allPicklistOptions[field.id]
                                 : stageReferenceOpts[field.apiName]
                                 ? stageReferenceOpts[field.apiName]
+                                : field.options.length ? field.options
                                 : []
                             "
                             @select="
@@ -510,6 +511,9 @@
                     (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                       ? allPicklistOptions[field.id]
                       : createReferenceOpts[field.apiName]
+                      ? createReferenceOpts[field.apiName]
+                      : field.options.length ? field.options
+                      : []
                   "
                   @select="
                     setUpdateValues(
@@ -579,6 +583,7 @@
                               ? allPicklistOptions[field.id]
                               : stageReferenceOpts[field.apiName]
                               ? stageReferenceOpts[field.apiName]
+                              : field.options.length ? field.options
                               : []
                           "
                           @select="
@@ -877,6 +882,9 @@
                         (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                           ? allPicklistOptions[field.id]
                           : productReferenceOpts[field.apiName]
+                          ? productReferenceOpts[field.apiName]
+                          : field.options.length ? field.options
+                          : []
                       "
                       @select="
                         setCreateValues(
@@ -1172,6 +1180,9 @@
                   (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                     ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
+                    ? referenceOpts[field.apiName]
+                    : field.options.length ? field.options
+                    : []
                 "
                 @select="
                   setUpdateValues(
@@ -1253,6 +1264,7 @@
                             ? allPicklistOptions[field.id]
                             : stageReferenceOpts[field.apiName]
                             ? stageReferenceOpts[field.apiName]
+                            : field.options.length ? field.options
                             : []
                         "
                         @select="
@@ -1531,6 +1543,9 @@
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
+                        ? productReferenceOpts[field.apiName]
+                        : field.options.length ? field.options
+                        : []
                     "
                     @select="
                       setCreateValues(
@@ -1706,6 +1721,9 @@
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
+                        ? productReferenceOpts[field.apiName]
+                        : field.options.length ? field.options
+                        : []
                     "
                     @select="
                       setProductValues(
@@ -2306,6 +2324,7 @@
                     ? stageReferenceOpts[field.apiName]
                     : referenceOpts[field.apiName]
                     ? referenceOpts[field.apiName]
+                    : field.options.length ? field.options
                     : []
                 "
                 @select="
@@ -3172,8 +3191,6 @@ export default {
     this.getAllForms()
     this.getUsers()
     this.templates.refresh()
-    // const testHS = await this.getReferenceFieldList("hubspot_team_id", "29b37d79-7f81-47f9-acfb-eac018ed4769", 'create', '', [])
-    // console.log('testHS', testHS)
   },
   beforeMount() {
     this.selectList()
