@@ -310,6 +310,22 @@ def process_next_page_slack_commands_form(payload, context):
 
 @log_all_exceptions
 @processor(required_context=["f"])
+def process_alert_inline_stage_submitted(payload, context):
+    # get context
+    state = payload["view"]["state"]["values"]
+    form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    stage_form = OrgCustomSlackFormInstance.objects.get(id=context.get("stage_form_id"))
+    stage_form.save_form(state)
+    if len(form.saved_data):
+        form.saved_data.update(stage_form.saved_data)
+    else:
+        form.saved_data = stage_form.saved_data
+    form.save()
+    return {"response_action": "clear"}
+
+
+@log_all_exceptions
+@processor(required_context=["f"])
 def process_add_products_form(payload, context):
     # get context
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
@@ -3143,6 +3159,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_DIGEST_ATTACH_RESOURCE: process_digest_attach_resource,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
+        slack_const.ALERT_INLINE_STAGE_SUBMITTED: process_alert_inline_stage_submitted,
         slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA: process_submit_alert_resource_data,
         slack_const.PROCESS_SUBMIT_DIGEST_RESOURCE_DATA: process_submit_digest_resource_data,
         slack_const.COMMAND_CREATE_TASK: process_create_task,
