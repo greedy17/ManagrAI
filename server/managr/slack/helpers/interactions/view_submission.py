@@ -311,7 +311,6 @@ def process_next_page_slack_commands_form(payload, context):
 @log_all_exceptions
 @processor(required_context=["f"])
 def process_alert_inline_stage_submitted(payload, context):
-    # get context
     state = payload["view"]["state"]["values"]
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
     stage_form = OrgCustomSlackFormInstance.objects.get(id=context.get("stage_form_id"))
@@ -320,6 +319,9 @@ def process_alert_inline_stage_submitted(payload, context):
         form.saved_data.update(stage_form.saved_data)
     else:
         form.saved_data = stage_form.saved_data
+    form.is_submitted = True
+    form.submission_date = timezone.now()
+    form.update_source = "slack-inline"
     form.save()
     return {"response_action": "clear"}
 

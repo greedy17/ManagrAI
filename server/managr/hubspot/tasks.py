@@ -969,7 +969,6 @@ def _process_slack_inline_update(payload, context):
             {"replace_original": True, "blocks": blocks},
             access_token=access_token,
         )
-        print(res)
     except Exception as e:
         logger.exception(f"Failed to update inline alert message {e}")
     return
