@@ -211,6 +211,10 @@ def emit_process_bulk_update(data, user, verbose_name):
     return _processs_bulk_update(data, user, verbose_name=verbose_name)
 
 
+def emit_process_slack_inline_sf_update(payload, context):
+    _process_slack_inline_sf_update(payload, context)
+
+
 # SF Resource Sync Tasks
 
 
@@ -2186,4 +2190,117 @@ def _processs_bulk_update(data, user):
             # if from_workflow:
             #     user.activity.increment_untouched_count("workflows")
             #     user.activity.add_workflow_activity(str(main_form.id), title)
+    return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_slack_inline_sf_update(payload, context):
+    from managr.alerts.models import AlertInstance
+
+    value = context.get("api_name")
+    state = payload["state"]["values"]
+    to_delete_keys = [id for id in state.keys() if value not in id]
+    for id in to_delete_keys:
+        del state[id]
+    for key in state:
+        block_id_values = key.split(".")
+        form = OrgCustomSlackFormInstance.objects.get(alert_instance_id=block_id_values[2])
+        form.save_form({value: state[key]})
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    config_id = context.get("config_id")
+    instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
+    blocks = payload.get("message").get("blocks")[:2]
+    success_resources = 0
+    failed_resources = 0
+    error = False
+    error_message = None
+    for instance in instances:
+        form = instance.form_instance.all().first()
+        data = form.saved_data
+        if len(data):
+            attempts = 1
+            while True:
+                hs = user.salesforce_account
+                try:
+                    resource = form.resource_object.update(data)
+                    form.is_submitted = True
+                    form.update_source = "slack-inline"
+                    form.submission_date = timezone.now()
+                    form.save()
+                    value_update = form.resource_object.update_database_values(data)
+                    success_resources += 1
+                    break
+                except UnhandledCRMError as e:
+                    logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
+                    error = True
+                    error_message = str(e)
+                    failed_resources += 1
+                    break
+
+                except TokenExpired as e:
+                    if attempts >= 5:
+                        logger.info(f"UPDATE REFRESHING TOKEN ERROR {e}")
+                        error = True
+                        error_message = str(e)
+                        failed_resources += 1
+                        break
+                    else:
+                        if form.resource_object.owner == user:
+                            sf.regenerate_token()
+                        else:
+                            form.resource_object.owner.salesforce_account.regenerate_token()
+                        attempts += 1
+
+                except ConnectionResetError as e:
+                    if attempts >= 5:
+                        logger.info(f"UPDATE CONNECTION RESET ERROR {e}")
+                        error = True
+                        error_message = str(e)
+                        failed_resources += 1
+                        break
+                    else:
+                        time.sleep(2)
+                        attempts += 1
+
+                except Exception as e:
+                    logger.info(f"UPDATE ERROR {e}")
+                    error = True
+                    error_message = str(e)
+                    failed_resources += 1
+                    break
+    if error:
+        logger.info(
+            f"Successfully updated {success_resources}/{failed_resources + success_resources} {instances.first().template.resource_type}s for user {user.email}"
+        )
+        block_set = [
+            block_builders.simple_section(
+                f":no_entry: Ugh-Ohhhh.. We've hit an error: {error_message}"
+            )
+        ]
+    else:
+        logger.info(
+            f"Successfully updated {success_resources}/{failed_resources + success_resources} {instances.first().template.resource_type}s for user {user.email}"
+        )
+        block_set = [
+            block_builders.simple_section(
+                f":white_check_mark: Successfully bulk updated {success_resources}/{failed_resources + success_resources} {instances.first().template.resource_type}s",
+                "mrkdwn",
+            )
+        ]
+
+    blocks.extend(block_set)
+    try:
+        slack_requests.generic_request(
+            payload["response_url"],
+            {"replace_original": True, "blocks": blocks},
+            access_token=access_token,
+        )
+    except Exception as e:
+        logger.exception(f"Failed to update inline alert message {e}")
     return

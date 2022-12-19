@@ -2,20 +2,16 @@ import json
 import uuid
 import logging
 import pytz
-import random
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
-
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_meeting_paginator_block,
 )
-from managr.organization.models import Organization, Account, Pricebook2, PricebookEntry, Contact
-from managr.opportunity.models import Opportunity, Lead
+from managr.organization.models import Organization, Pricebook2, PricebookEntry
 from managr.slack import constants as slack_const
-from managr.opportunity import constants as opp_consts
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.utils import (
     process_action_id,
@@ -31,14 +27,20 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.interactions.commands import get_action
 from managr.slack.models import OrgCustomSlackFormInstance, UserSlackIntegration, OrgCustomSlackForm
-from managr.slack.background import emit_send_paginated_alerts, emit_send_paginated_inline_alerts
+from managr.slack.background import (
+    emit_send_paginated_alerts,
+    emit_send_paginated_inline_alerts,
+    emit_send_next_page_paginated_inline_alerts,
+)
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.background import (
     emit_meeting_workflow_tracker,
     check_for_display_value,
     replace_tags,
+    emit_process_slack_inline_sf_update,
 )
+from managr.hubspot.tasks import emit_process_slack_inline_hs_update
 from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -57,6 +59,13 @@ from managr.hubspot.routes import routes as hs_routes
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
+
+
+def INLINE_UPDATE_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_process_slack_inline_sf_update
+    else:
+        return emit_process_slack_inline_hs_update
 
 
 #########################################################
@@ -1082,6 +1091,51 @@ def process_stage_selected_command_form(payload, context):
         return logger.exception(f"Failed To Generate Slack  {e}")
     except InvalidAccessToken as e:
         return logger.exception(f"Failed To Generate Slack Workflow Interaction for user {e}")
+
+
+@processor(required_context=["u", "f"])
+def process_alert_inline_stage_selected(payload, context):
+    selected_stage_text = payload["actions"][0]["selected_option"]["text"]["text"]
+    user = User.objects.get(id=context.get("u"))
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    stage_form_template = (
+        user.organization.custom_slack_forms.for_user(user)
+        .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_stage_text)
+        .first()
+    )
+    if stage_form_template:
+        stage_form = OrgCustomSlackFormInstance.objects.create(
+            user=user, template=stage_form_template, resource_id=form.resource_id
+        )
+        blocks = []
+        blocks.extend(stage_form.generate_form())
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "private_metadata": json.dumps({**context, "stage_form_id": str(stage_form.id)}),
+                "callback_id": slack_const.ALERT_INLINE_STAGE_SUBMITTED,
+                "title": {"type": "plain_text", "text": f"Update {form.resource_type}"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Save"},
+            },
+        }
+        try:
+            slack_requests.generic_request(
+                url, data, access_token=user.organization.slack_integration.access_token
+            )
+
+        except InvalidBlocksException as e:
+            return logger.exception(f"Failed To Generate Blocks {e}")
+        except InvalidBlocksFormatException as e:
+            return logger.exception(f"Failed To Generate Blocks {e}")
+        except UnHandeledBlocksException as e:
+            return logger.exception(f"Failed To Generate Blocks {e}")
+        except InvalidAccessToken as e:
+            return logger.exception(f"Failed To send slack {e}")
+    return
 
 
 @processor(required_context=["u", "f"])
@@ -2121,6 +2175,24 @@ def process_paginate_alerts(payload, context):
 
 @slack_api_exceptions(rethrow=True)
 @processor()
+def process_paginate_inline_alerts(payload, context):
+    emit_send_next_page_paginated_inline_alerts(payload, context)
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:2]
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
 def process_switch_alert_message(payload, context):
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
@@ -2176,6 +2248,25 @@ def process_inline_field_selected(payload, context):
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:2]
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_submit_inline_alert_data(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    update_function = INLINE_UPDATE_FUNCTION(user.crm)
+    update_function(payload, context)
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+
     loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
     blocks = payload.get("message").get("blocks")[:2]
     blocks.extend(loading_block)
@@ -3506,8 +3597,11 @@ def handle_block_actions(payload):
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
+        slack_const.PAGINATE_INLINE_ALERTS: process_paginate_inline_alerts,
         slack_const.PROCESS_SWITCH_ALERT_MESSAGE: process_switch_alert_message,
         slack_const.PROCESS_INLINE_FIELD_SELECTED: process_inline_field_selected,
+        slack_const.ALERT_INLINE_STAGE_SELECTED: process_alert_inline_stage_selected,
+        slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA: process_submit_inline_alert_data,
         slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
         slack_const.PAGINATE_TASKS: process_paginate_tasks,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,

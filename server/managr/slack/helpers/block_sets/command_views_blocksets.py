@@ -136,12 +136,12 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
     return blocks
 
 
-def custom_inline_paginator_block(pagination_object, invocation, channel, config_id):
+def custom_inline_paginator_block(pagination_object, invocation, config_id, api_name):
     next_page = pagination_object.get("next_page", None)
     prev_page = pagination_object.get("previous_page", None)
     blocks = []
     button_blocks = []
-    page_context = {"invocation": invocation, "channel": channel, "config_id": config_id}
+    page_context = {"invocation": invocation, "config_id": config_id, "api_name": api_name}
 
     if prev_page:
         prev_page_button = block_builders.simple_button_block(
@@ -160,7 +160,10 @@ def custom_inline_paginator_block(pagination_object, invocation, channel, config
         button_blocks.append(next_page_button)
     else:
         next_page_button = block_builders.simple_button_block(
-            "Submit", str(next_page), action_id=None, style="primary"
+            "Submit",
+            str(next_page),
+            action_id=f"{slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA}?{urlencode({**page_context})}",
+            style="primary",
         )
         button_blocks.append(next_page_button)
     if len(button_blocks):
