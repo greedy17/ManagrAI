@@ -317,6 +317,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "contacts",
             "is_stale",
             "secondary_data",
+            "last_stage_update",
         )
 
     def _format_date_time_from_api(self, d):

@@ -319,6 +319,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
 
     def get_user_fields(self):
         from managr.crm.models import ObjectField
+
         template_fields = (
             self.template.customformfield_set.all()
             .values_list("field__api_name", "field__crm_object",)

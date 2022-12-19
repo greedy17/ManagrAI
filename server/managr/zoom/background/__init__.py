@@ -1,19 +1,13 @@
 import logging
 import json
 import re
-import pytz
 import uuid
 import random
 from datetime import datetime
-
 from django.conf import settings
-from django.db.models import Q
 
 from background_task import background
-from rest_framework.exceptions import ValidationError
-
 from managr.core.calendars import calendar_participants_from_zoom_meeting
-
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -25,22 +19,17 @@ from managr.slack.helpers.exceptions import (
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers.utils import action_with_params
 from managr.slack.helpers import block_builders
-
-from managr.organization.models import Contact, Account
-from managr.opportunity.models import Opportunity, Lead
+from managr.opportunity.models import Lead
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.hubspot.adapter.models import HubspotContactAdapter
 from managr.salesforce.models import MeetingWorkflow
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
-from managr.api import constants as api_consts
-from managr.api.decorators import LOGGER
 from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
-from ..serializers import ZoomMeetingSerializer
 
 logger = logging.getLogger("managr")
 
@@ -73,10 +62,6 @@ def emit_process_past_zoom_meeting(user_id, meeting_uuid, send_slack=True):
 
 def emit_kick_off_slack_interaction(user_id, managr_meeting_id, schedule=0):
     return _kick_off_slack_interaction(user_id, managr_meeting_id, schedule=schedule)
-
-
-def emit_send_meeting_summary(workflow_id):
-    return _send_meeting_summary(workflow_id)
 
 
 def emit_process_schedule_zoom_meeting(user, zoom_data):
@@ -479,78 +464,6 @@ def to_float(amount):
         return "{:.2f}".format(float(amount))
     except ValueError:
         return None
-
-
-@background(schedule=0)
-def _send_meeting_summary(workflow_id):
-
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
-    organization = user.organization
-    # only send meeting reviews for opps if the leadership box is selected or owner is selected
-    send_summ_to_leadership = (
-        workflow.forms.filter(template__form_type="UPDATE")
-        .first()
-        .saved_data.get("__send_recap_to_leadership")
-    )
-    send_summ_to_owner = (
-        workflow.forms.filter(template__form_type="UPDATE")
-        .first()
-        .saved_data.get("__send_recap_to_reps")
-    )
-    if hasattr(workflow.meeting, "zoom_meeting_review") and workflow.resource_type == "Opportunity":
-        slack_access_token = organization.slack_integration.access_token
-
-        query = Q()
-        if send_summ_to_leadership is not None:
-            manager_list = send_summ_to_leadership.split(";")
-            query |= Q(user_level="MANAGER", id__in=manager_list)
-        if send_summ_to_owner is not None:
-            rep_list = send_summ_to_owner.split(";")
-            query |= Q(id__in=rep_list)
-
-        user_list = (
-            organization.users.filter(query)
-            .filter(is_active=True)
-            .distinct()
-            .select_related("slack_integration")
-        )
-        for u in user_list:
-            if hasattr(u, "slack_integration"):
-                try:
-                    slack_requests.send_channel_message(
-                        u.slack_integration.channel,
-                        slack_access_token,
-                        text=f"Meeting Review Summary For {user.email} from meeting",
-                        block_set=get_block_set("meeting_summary", {"w": workflow_id}),
-                    )
-                except InvalidBlocksException as e:
-                    logger.exception(
-                        f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
-                    )
-                    continue
-                except InvalidBlocksFormatException as e:
-                    logger.exception(
-                        f"Failed To Generate  Summary Interaction for user {str(workflow.id)} email {user.email} {e}"
-                    )
-                    continue
-                except UnHandeledBlocksException as e:
-                    logger.exception(
-                        f"Failed To Generate  SummaryInteraction for user {str(workflow.id)} email {user.email} {e}"
-                    )
-                    continue
-                except InvalidAccessToken as e:
-                    logger.exception(
-                        f"Failed To Generate  SummaryInteraction for workflow {str(workflow.id)} for user  email {user.email} {e}"
-                    )
-                    continue
-
-                except Exception as e:
-                    logger.exception(
-                        f"Failed to Generate Summary Interaction for workflow  workflow {str(workflow.id)} for user  email {workflow.user.email} {e}"
-                    )
-                    continue
-    return
 
 
 @background(schedule=0)
