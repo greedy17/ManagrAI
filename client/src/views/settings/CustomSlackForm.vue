@@ -1,6 +1,6 @@
 <template>
   <div class="slack-form-builder">
-    <!-- <Modal v-if="customObjectView" dimmed>
+    <Modal v-if="customObjectModalView" dimmed>
       <div class="opp-modal-container">
         <div v-if="modalLoading">
           <Loader :loaderText="loaderText" />
@@ -14,19 +14,18 @@
             <img
               src="@/assets/images/close.svg"
               style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
-              @click="closeCustomModal"
+              @click="toggleCustomObjectModalView"
               alt=""
             />
           </div>
           <div class="opp-modal">
             <section>
               <div style="display: flex; justify-content: center">
-               
                 <Multiselect
                   @input="getCustomObjectFields"
                   :options="customObjects"
                   openDirection="below"
-                  style="width: 20vw; margin-top: 2rem; margin-left: 1rem"
+                  style="width: 40vw; margin-left: 1rem"
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
@@ -36,14 +35,14 @@
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
                   </template>
-
+      
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       Select Custom Object
                     </p>
                   </template>
-
+      
                   <template slot="option" slot-scope="props">
                     <div>
                       <span class="option__title">{{
@@ -103,7 +102,7 @@
           </div>
         </div>
       </div>
-    </Modal> -->
+    </Modal>
     <Modal v-if="modalOpen">
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
@@ -428,47 +427,87 @@
         </div>
 
         <div v-else>
-          <Multiselect
-            v-if="!customResource"
-            @input="getCustomObjectFields"
-            :options="customObjects"
-            openDirection="below"
-            style="width: 40vw; margin-left: 1rem"
-            selectLabel="Enter"
-            :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
-            :customLabel="customLabel"
-            :value="currentlySelectedStage"
-            v-model="selectedCustomObject"
-          >
-            <template slot="noResult">
-              <p class="multi-slot">No results.</p>
-            </template>
-
-            <template slot="placeholder">
-              <p class="slot-icon">
-                <img src="@/assets/images/search.svg" alt="" />
-                Select Custom Object
-              </p>
-            </template>
-
-            <template slot="option" slot-scope="props">
-              <div>
-                <span class="option__title">{{
-                  userCRM === 'SALESFORCE' ? props.option.label : props.option.label
-                }}</span
-                ><span
-                  v-if="
-                    currentStagesWithForms.includes(
-                      userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
-                    )
-                  "
-                  class="option__small"
-                >
-                  edit
-                </span>
-              </div>
-            </template>
-          </Multiselect>
+          <div v-if="!customResource">
+            <!-- customForms -->
+            <div v-if="customForms.length">
+              <Multiselect
+                @input="() => customResource = selectedCustomObjectName"
+                :options="customForms"
+                openDirection="below"
+                style="width: 40vw; margin-left: 1rem"
+                selectLabel="Enter"
+                :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+                label="customObject"
+                :value="currentlySelectedStage"
+                v-model="selectedCustomObject"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+    
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Custom Object
+                  </p>
+                </template>
+    
+                <template slot="option" slot-scope="props">
+                  <div>
+                    <span class="option__title">{{props.option.customObject}}</span
+                    >
+                  </div>
+                </template>
+              </Multiselect>
+              <button
+                @click="toggleCustomObjectModalView"
+                class="custom-object-button"
+              >
+                Add Another Custom Object
+              </button>
+            </div>
+            <Multiselect
+              v-else
+              @input="getCustomObjectFields"
+              :options="customObjects"
+              openDirection="below"
+              style="width: 40vw; margin-left: 1rem"
+              selectLabel="Enter"
+              :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+              :customLabel="customLabel"
+              :value="currentlySelectedStage"
+              v-model="selectedCustomObject"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+  
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  Select Custom Object
+                </p>
+              </template>
+  
+              <template slot="option" slot-scope="props">
+                <div>
+                  <span class="option__title">{{
+                    userCRM === 'SALESFORCE' ? props.option.label : props.option.label
+                  }}</span
+                  ><span
+                    v-if="
+                      currentStagesWithForms.includes(
+                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
+                      )
+                    "
+                    class="option__small"
+                  >
+                    edit
+                  </span>
+                </div>
+              </template>
+            </Multiselect>
+          </div>
           <section v-else>
             <div class="space-between">
               <h4 style="cursor: pointer" @click="customResource = null">
@@ -481,7 +520,7 @@
                 Back
               </h4>
   
-              <div class="row__">
+              <div @click="test(customForm)" class="row__">
                 <h4 style="margin-right: 16px">
                   {{ selectedCustomObjectName + ' Form' }}
                 </h4>
@@ -729,6 +768,7 @@ export default {
       productSelected: false,
       addingProducts: false,
       customObjectView: false,
+      customObjectModalView: false,
       confirmDeleteModal: false,
       modalOpen: false,
       formChange: false,
@@ -1238,6 +1278,9 @@ export default {
     formLength() {
       return this.formStages.length
     },
+    customForms() {
+      return this.allForms.filter(form => form.customObject)
+    },
     filteredFields() {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
@@ -1305,6 +1348,7 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      console.log('allForms', this.allForms)
       let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
       // if (this.userCRM === 'HUBSPOT') {
       //   object = this.DEAL
@@ -1330,7 +1374,7 @@ export default {
       console.log('log', log)
     },
     customLabel(prop) {
-      return `${prop.label}`
+      return prop.customObject ? `${prop.customObject}` : `${prop.label}`
     },
     searchFields() {
       this.formFields = CollectionManager.create({
@@ -1383,6 +1427,9 @@ export default {
     toggleCustomObjectView() {
       this.customObjectView = !this.customObjectView
     },
+    toggleCustomObjectModalView() {
+      this.customObjectModalView = !this.customObjectModalView
+    },
     closeCustomModal() {
       // this.customObjectView = false
 
@@ -1398,6 +1445,7 @@ export default {
         })
         this.customFields.refresh()
         console.log('inside if after', this.customFields)
+        this.addedFields = []
       }
       this.formFields.refresh()
     },
@@ -1405,10 +1453,47 @@ export default {
       if (!this.selectedCustomObject) {
         return
       }
+      // work here
       this.selectedCustomObjectName = this.selectedCustomObject.name
       try {
         this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
+        const customForm = {
+          config: {},
+          customFields: [],
+          customObject: this.selectedCustomObjectName,
+          fields: [],
+          fieldsRef: [],
+          formType: "UPDATE",
+          id: "",
+          organization: this.allForms[0].organization,
+          resource: "CustomObject",
+          stage: "",
+        }
+        this.addedFields = []
+        let fields = new Set([...this.addedFields.map((f) => f.id)])
+        fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+        let currentFormFields = this.addedFields.map((field) => {
+          return field.id
+        })
+        if (
+          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
+          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
+        ) {
+          let fieldsToAdd =
+            this.userCRM === 'SALESFORCE'
+              ? [this.noteTitle, this.noteSubject]
+              : [this.noteTitleHubspot, this.noteSubjectHubspot]
+          let copyArray = this.addedFields
+          this.addedFields = fieldsToAdd.concat(copyArray)
+        }
+        this.changeCustomObjectName()
+        let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+        const res = await SlackOAuth.api.postOrgCustomForm({
+          customForm,
+          fields: fields,
+          fields_ref: fields_ref,
+        })
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
         }, 400)
@@ -1458,7 +1543,18 @@ export default {
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
-      this.customObjects = res.sobjects
+      console.log('customForms', this.customForms)
+      const names = []
+      for (let i = 0; i < this.customForms.length; i++) {
+        const form = this.customForms[i]
+        names.push(form.customObject)
+      }
+      const filteredCustomObjects = res.sobjects.filter(co => {
+        if (!names.includes(co.name)) {
+          return co
+        }
+      })
+      this.customObjects = filteredCustomObjects
     },
     clearStageData() {
       this.selectedForm = null
@@ -1880,6 +1976,8 @@ export default {
     },
     changeCustomObjectName() {
       this.newCustomForm.customObject = this.customResource
+      this.newCustomForm.resource = "CustomObject"
+      console.log('this.newCustomForm', this.newCustomForm)
     },
     goBack() {
       if (this.fromAdmin) {
@@ -1916,6 +2014,7 @@ export default {
       if (!this.newCustomForm) {
         this.newCustomForm = this.customForm
       }
+      console.log('newCustomForm', this.newCustomForm)
       if (
         (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
         this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -1976,7 +2075,9 @@ export default {
         return
       }
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+      console.log('customResource up here', this.customResource)
       if (
+        this.customResource &&
         this.customResource !== 'Opportunity' &&
         this.customResource !== 'Deal' &&
         this.customResource !== 'Lead' &&
@@ -1986,6 +2087,7 @@ export default {
       ) {
         this.changeCustomObjectName()
       }
+      console.log('customForm before update', this.newCustomForm)
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.newCustomForm,

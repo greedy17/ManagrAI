@@ -258,6 +258,7 @@ SALESFORCE_FORM_RESOURCES = [
 FORM_RESOURCE_DEAL = "Deal"
 FORM_RESOURCE_COMPANY = "Company"
 FORM_RESOURCE_HUBSPOTCONTACT = "Contact"
+FORM_RESOURCE_CUSTOMOBJECT = "CustomObject"
 
 FORM_RESOURCES = (
     (
@@ -268,6 +269,7 @@ FORM_RESOURCES = (
             (FORM_RESOURCE_CONTACT, "Contact"),
             (FORM_RESOURCE_LEAD, "Lead"),
             (FORM_RESOURCE_OPPORTUNITYLINEITEM, "OpportunityLineItem"),
+            (FORM_RESOURCE_CUSTOMOBJECT, "CustomObject"),
         ),
     ),
     (
@@ -276,6 +278,7 @@ FORM_RESOURCES = (
             (FORM_RESOURCE_DEAL, "Deal"),
             (FORM_RESOURCE_COMPANY, "Company"),
             (FORM_RESOURCE_HUBSPOTCONTACT, "Contact"),
+            (FORM_RESOURCE_CUSTOMOBJECT, "CustomObject"),
         ),
     ),
 )
