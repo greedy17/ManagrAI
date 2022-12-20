@@ -360,7 +360,11 @@ def _generate_team_form_templates(user_id):
             stage=form.stage,
         )
         if len(f.config):
-            f.recreate_form()
+            try:
+                f.recreate_form()
+            except Exception as e:
+                logger.exception(f"Couldn't recreate team form due to: {e}")
+                continue
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
