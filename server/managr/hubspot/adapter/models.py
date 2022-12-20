@@ -1,6 +1,7 @@
 from django.conf import settings
 import logging
 import json
+import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
 from .exceptions import CustomAPIException
@@ -87,8 +88,8 @@ class HubspotAuthAccountAdapter:
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
         if settings.IN_DEV:
-            user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
-            # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
+            # user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+            user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         else:
             user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
@@ -195,6 +196,7 @@ class HubspotAuthAccountAdapter:
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
+            print("HUBSPOT GET USER INFO RESPONSE", res.json())
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
@@ -246,6 +248,7 @@ class HubspotAuthAccountAdapter:
                 has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
                 if has_next_page and page <= 5:
                     data["after"] = has_next_page
+                    time.sleep(5.00)
                     with Client as client:
                         res = client.post(
                             url,
