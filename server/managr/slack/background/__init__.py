@@ -210,6 +210,7 @@ def _prcocess_send_next_page_paginated_inline_alerts(payload, context):
         form = OrgCustomSlackFormInstance.objects.filter(
             alert_instance_id=block_id_values[2]
         ).first()
+        saved_data_ref = None
         if len(form.saved_data):
             saved_data_ref = form.saved_data
         form.save_form({value: state[key]})
