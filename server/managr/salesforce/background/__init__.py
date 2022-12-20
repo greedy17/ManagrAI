@@ -725,9 +725,9 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
             res = OpportunityLineItemAdapter.create(
                 data,
                 sf.access_token,
-                sf.instance_url,
                 adapter.object_fields.get("OpportunityLineItem", {}),
                 user.id,
+                sf.instance_url,
             )
             attempts = 1
             product_form.is_submitted = True

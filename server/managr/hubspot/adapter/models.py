@@ -320,7 +320,22 @@ class HubspotAuthAccountAdapter:
                 url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
             res = self._handle_response(res)
-
+            saved_response = res
+            while True:
+                has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
+                if has_next_page:
+                    data["after"] = has_next_page
+                    time.sleep(5.00)
+                    with Client as client:
+                        res = client.post(
+                            url,
+                            headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                            data=json.dumps(data),
+                        )
+                        res = self._handle_response(res)
+                        saved_response["results"] = [*saved_response["results"], *res["results"]]
+                else:
+                    break
             res = self._format_resource_response(res, resource)
             return res
 

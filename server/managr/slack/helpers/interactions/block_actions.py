@@ -608,14 +608,12 @@ def process_meeting_selected_resource_option(payload, context):
             # did not find the block
             block = None
             pass
+        slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE).first()
         if (
             workflow.user.crm == "HUBSPOT"
             and resource_type == "Deal"
             and context["action"] == "CREATE_NEW"
         ):
-            slack_form = workflow.forms.filter(
-                template__form_type=slack_const.FORM_TYPE_CREATE
-            ).first()
             try:
                 pipeline_index, pipeline_block = block_finder("pipeline", blocks)
             except ValueError:

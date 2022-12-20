@@ -1015,7 +1015,9 @@ class SalesforceAuthAccount(TimeStampModel):
                     # get the field and make it into a string
                     try:
                         field_str = e.args[0].replace("'", "")
-                        fields = self.object_fields.filter(crm_object=resource, api_name=field_str)
+                        fields = self.user.object_fields.filter(
+                            crm_object=resource, api_name=field_str
+                        )
                         if fields.count():
                             fields.delete()
                         exclude_fields = self.exclude_fields if not None else {}
