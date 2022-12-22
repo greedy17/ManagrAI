@@ -683,7 +683,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         blank=True,
     )
     opportunity = models.ForeignKey(
-        "opportunity.Opportunity",
+        "crm.BaseOpportunity",
         related_name="opportunity_line_item",
         on_delete=models.CASCADE,
         null=True,
