@@ -67,7 +67,6 @@
                   <button class="add-button" @click="() => null">
                     Save
                   </button>
-                  <!-- <p @click="toggleCustomObjectView" class="cancel">Cancel</p> -->
                 </div>
               </div>
             </section>
@@ -295,30 +294,6 @@
               <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
             </div>
           </div>
-          <!-- <button
-            v-if="
-              selectedForm &&
-              (customResource === 'Opportunity' || customResource === 'Deal') &&
-              !selectedForm.customFields.length &&
-              !addedFields.length
-            "
-            @click="toggleCustomObjectView"
-            class="custom-object-button"
-          >
-            Use Custom Object
-          </button> -->
-          <!-- <button
-            v-else-if="
-              selectedForm &&
-              customResource &&
-              customResource !== 'Opportunity' &&
-              customResource !== 'Deal'
-            "
-            @click="removeCustomObject"
-            class="custom-object-button__remove"
-          >
-            Remove Custom Object
-          </button> -->
         </section>
 
         <div>
@@ -665,10 +640,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    managrFields: {
-      type: Array,
-      default: () => [],
-    },
     fromAdmin: {
       type: Boolean,
       default: false,
@@ -685,10 +656,7 @@ export default {
       currentlySelectedForm: null,
       customObjects: [],
       createdCustomObjects: [],
-      verboseName: '',
       pulseLoading: false,
-      // checker: this.$store.state.customObject.checker,
-      // task: this.$store.state.customObject.task,
       oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...'],
       selectedCustomObject: null,
@@ -700,10 +668,8 @@ export default {
       allForms: [],
       filterText: '',
       COfilterText: '',
-      dropdownLoading: false,
       modalLoading: false,
       loaderText: '',
-      currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 500 },
@@ -712,46 +678,20 @@ export default {
         },
       }),
       customFields: null,
-      formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
       customResource: null,
       removeCustomObj: false,
       newCustomForm: this.customForm,
-      customSlackFormConfig: [],
-      formHasChanges: false,
       savingForm: false,
       addedFields: [],
-      formChanges: false,
-      typeChanges: false,
-      resourceChanges: false,
       removedFields: [],
       ...FORM_CONSTS,
       Pagination,
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,
-      requiredFields: [],
-      formsByType: [],
-      // requiredProductFields: ['PricebookEntryId', 'Quantity'],
-      requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
-      requiredLeadFields: ['LastName', 'Company', 'Status'],
       nameValue: '',
-      amountValue: '',
-      closeValue: '',
-      priceValue: '',
-      quantityValue: '',
-      lineValue: '',
-      lastNameValue: '',
-      leadLastNameValue: '',
-      companyValue: '',
-      accountNameValue: '',
-      statusValue: '',
-      stageValue: '',
-      addingFieldValue: '',
-      addingFields: false,
-      productSelected: false,
-      addingProducts: false,
       customObjectView: false,
       customObjectModalView: false,
       confirmDeleteModal: false,
@@ -846,194 +786,6 @@ export default {
         datetimeCreated: '2020-08-03 11:39:23.632256Z',
         lastEdited: '2020-08-03 11:39:23.632256Z',
       },
-      // noteTitle: {
-      //   _fields: {
-      //     length: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     id: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     apiName: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     custom: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     createable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     dataType: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     label: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     reference: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceToInfos: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     updateable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     required: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     unique: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     value: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     displayValue: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceDisplayLabel: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     filterable: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     order: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     includeInRecap: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //   },
-      //   length: 30,
-      //   id: '6407b7a1-a877-44e2-979d-1effafec5035',
-      //   apiName: 'meeting_type',
-      //   custom: true,
-      //   createable: true,
-      //   dataType: 'String',
-      //   label: 'Note Subject',
-      //   reference: 'false',
-      //   referenceToInfos: [],
-      //   updateable: true,
-      //   required: false,
-      //   unique: false,
-      //   value: '',
-      //   displayValue: '',
-      //   referenceDisplayLabel: 'Note Subject',
-      //   filterable: 'false',
-      //   order: null,
-      //   includeInRecap: true,
-      // },
-      // noteSubject: {
-      //   _fields: {
-      //     length: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     id: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     apiName: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     custom: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     createable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     dataType: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     label: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     reference: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceToInfos: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     updateable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     required: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     unique: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     value: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     displayValue: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceDisplayLabel: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     filterable: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     order: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     includeInRecap: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //   },
-      //   length: 255,
-      //   id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
-      //   apiName: 'meeting_comments',
-      //   custom: true,
-      //   createable: true,
-      //   dataType: 'String',
-      //   label: 'Notes',
-      //   reference: 'false',
-      //   referenceToInfos: [],
-      //   updateable: true,
-      //   required: false,
-      //   unique: false,
-      //   value: '',
-      //   displayValue: '',
-      //   referenceDisplayLabel: 'Notes',
-      //   filterable: 'false',
-      //   order: null,
-      //   includeInRecap: true,
-      // },
     }
   },
   watch: {
@@ -1377,21 +1129,6 @@ export default {
         this.$router.go()
       }, 300)
     },
-    removeCustomObject() {
-      this.removeCustomObj = true
-      this.customResource = this.resource
-      this.newResource = this.resource
-      this.selectedCustomObjectName = null
-      this.newCustomForm.customObject = ''
-      this.addedFields = []
-      this.formFields = CollectionManager.create({
-        ModelClass: ObjectField,
-        pagination: { size: 500 },
-        filters: {
-          crmObject: this.resource,
-        },
-      })
-    },
     checkAndClearInterval() {
       if (this.task && this.task.completed) {
         this.stopChecker()
@@ -1400,10 +1137,6 @@ export default {
         this.loaderText = ''
         this.modalLoading = false
       } else {
-        // this.timeout = setTimeout(function() {
-        //   this.checkTask()
-        //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        // }.bind(this), 2000)
         return
       }
     },
@@ -1417,8 +1150,6 @@ export default {
       this.customObjectModalView = !this.customObjectModalView
     },
     closeCustomModal() {
-      // this.customObjectView = false
-
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
         this.customFields = CollectionManager.create({
@@ -1490,13 +1221,6 @@ export default {
             }, 1000)
           }, 2000)
         }, 400)
-        // const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
-        //   this.verboseName = res.verbose_name
-        //   // this.timeout = setTimeout(function() {
-        //   //   this.checkTask()
-        //   //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        //   // }.bind(this), 2000)
-        // })
       } catch (e) {
         console.log(e)
       }
@@ -1516,14 +1240,6 @@ export default {
       setTimeout(() => {
         this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
       }, 400)
-    },
-    async checkTask() {
-      try {
-        clearTimeout(this.timeout)
-        this.task = await User.api.checkTasks(this.verboseName)
-      } catch (e) {
-        console.log(e)
-      }
     },
     changeLoaderText() {
       let newIndex
@@ -1661,15 +1377,6 @@ export default {
         this.selectedStage = n.label
       }
     },
-    updateForm(event) {
-      this.selectedForm = event
-      let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
-
-      if (~index) {
-        this.allForms[index] = this.selectedForm
-        this.allForms = [...this.allForms]
-      }
-    },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
       if (this.currentStagesWithForms.includes(stage)) {
@@ -1706,13 +1413,6 @@ export default {
           }
           let dealStage = []
           if (dealStages.optionsRef.length) {
-            // const items = dealStages.options[0]
-            // for (let key in items) {
-            //   // dealStage = [...dealStage, items[key].stages]
-            //   for (let j = 0; j < items[key].stages.length; j++) {
-            //     dealStage.push(items[key].stages[j])
-            //   }
-            // }
             for (let i = 0; i < dealStages.optionsRef.length; i++) {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
@@ -1724,27 +1424,6 @@ export default {
         }
       } catch (e) {
         console.log(e)
-      }
-    },
-    async onAddForm() {
-      this.selectingStage = !this.selectingStage
-      this.loadingStages = true
-      try {
-        await this.listPicklists({
-          crmObject: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL,
-          picklistFor: this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage',
-        })
-      } catch (e) {
-        this.$modal.close('add-stage-modal')
-        this.$toast('Failed to retreive stages', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loadingStages = false
       }
     },
     getStageForms() {
@@ -1827,9 +1506,6 @@ export default {
       )
       this.storedField = null
     },
-    // changeToStage(stage = '') {
-    //   this.newResource = this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'
-    // },
     changeToProducts() {
       this.customObjectView = false
       if (this.formChange) {
@@ -1921,19 +1597,6 @@ export default {
         // this.$router.go()
       }, 400)
     },
-    camelize(str) {
-      return str[0] + str.slice(1).toLowerCase()
-    },
-    lowerCase(word1, word2) {
-      return (word1 + ' ' + word2)
-        .toLowerCase()
-        .split(' ')
-        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
-        .join(' ')
-    },
-    productSelect() {
-      this.productSelected = !this.productSelected
-    },
     getActionChoices() {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
@@ -1942,14 +1605,6 @@ export default {
           this.actionChoices = res.results
         })
         .finally((this.loadingMeetingTypes = false))
-    },
-    async onFieldsNextPage() {
-      this.dropdownLoading = true
-      await this.formFields.addNextPage().then(() => {
-        setTimeout(() => {
-          this.dropdownLoading = false
-        }, 1000)
-      })
     },
     canRemoveField(field) {
       // If form is create required fields cannot be removed
@@ -1982,12 +1637,6 @@ export default {
       } else {
         this.$router.push({ name: 'Required' })
       }
-    },
-    goToUpdateOpp() {
-      this.$router.push({ name: 'UpdateOpportunity' })
-    },
-    goToValidations() {
-      this.$emit('cancel-selected')
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -2115,62 +1764,6 @@ export default {
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
     },
-    async goToProducts() {
-      if (
-        (this.resource == 'Opportunity' || this.resource == 'Account') &&
-        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
-      ) {
-        if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$toast('Please enter a meeting type', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-          return
-        }
-      }
-      this.savingForm = true
-
-      let fields = new Set([...this.addedFields.map((f) => f.id)])
-      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
-      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-
-      try {
-        const res = await SlackOAuth.api.postOrgCustomForm({
-          ...this.customForm,
-          fields: fields,
-          removedFields: this.removedFields,
-          fields_ref: fields_ref,
-        })
-        this.$emit('update:selectedForm', res)
-        this.$store.dispatch('refreshCurrentUser')
-        this.$toast('Form added successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.savingForm = false
-        if (this.fromAdmin && this.formType !== 'UPDATE') {
-          this.$router.push({ name: 'Staff' })
-        } else {
-          this.$router.push({ name: 'ProductForm' })
-        }
-      } catch (e) {
-        console.log('error', e)
-        this.$toast('Form submission failed', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.savingForm = false
-      }
-    },
   },
 }
 </script>
@@ -2216,26 +1809,6 @@ export default {
     cursor: pointer;
     color: $light-gray-blue;
   }
-}
-::v-deep .sortable-ghost {
-  border: 1px dashed $very-light-gray;
-  border-radius: 6px;
-  padding-left: 8px;
-}
-.save--button {
-  position: absolute;
-  right: 40vw;
-  z-index: 15;
-  top: 4vh;
-}
-.delete {
-  background-color: $coral;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-  padding: 8px 16px;
-  margin-right: 2.75vw;
 }
 .red-text {
   color: $coral;
@@ -2295,19 +1868,6 @@ input[type='checkbox'] + label::before {
   border: 1px solid rgb(182, 180, 180);
   border-radius: 4px;
   margin-right: 0.5em;
-}
-.form-type {
-  padding: 6px 12px 6px 4px;
-  img {
-    padding-top: 2px;
-  }
-  transition: all 0.2s;
-}
-.form-type:hover {
-  opacity: 0.8;
-  cursor: pointer;
-  border-radius: 6px;
-  transform: translateY(-10%);
 }
 .search-bar {
   background-color: white;
@@ -2470,24 +2030,6 @@ input[type='search']:focus {
     }
   }
 }
-
-// #formSection::-webkit-scrollbar {
-//   width: 4px;
-//   height: 0px;
-// }
-// #formSection::-webkit-scrollbar-thumb {
-//   background-color: $soft-gray;
-//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// #formSection::-webkit-scrollbar-track {
-//   box-shadow: inset 2px 2px 4px 0 $off-white;
-//   border-radius: 0.3rem;
-// }
-// #formSection::-webkit-scrollbar-track-piece {
-//   margin-top: 12px;
-// }
-
 #formField {
   width: 100%;
   display: flex;
@@ -2504,12 +2046,6 @@ input[type='search']:focus {
     cursor: grab;
   }
 }
-
-.tab-text {
-  color: $base-gray !important;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-}
 //////END TAB STYLE//////
 
 .sticky {
@@ -2518,36 +2054,6 @@ input[type='search']:focus {
   background-color: red;
   padding-top: 0px;
   margin-top: 0;
-}
-
-.card {
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    img {
-      margin: 0;
-      padding: 0;
-    }
-  }
-  &__img {
-    background-color: white;
-    border-radius: 100%;
-    padding: 6px 8px 2px 4px;
-    box-shadow: 1px 1px 1px $very-light-gray;
-  }
-}
-.overlap {
-  z-index: 2;
-  margin-left: -12px;
-  box-shadow: 1px 1px 0.5px 0.5px $very-light-gray;
-  // background-color: white;
-}
-.extra-padding {
-  padding: 5px 4px 3px 4px;
-}
-.section-title {
-  letter-spacing: 0.5px;
 }
 .multi-slot {
   display: flex;
@@ -2580,28 +2086,8 @@ input[type='search']:focus {
     }
   }
 }
-.invert {
-  filter: invert(80%);
-  height: 1rem;
-}
-.invert2 {
-  filter: invert(80%);
-}
-// .img-border {
-//   display: flex;
-//   align-items: center;
-//   justify-content: flex-start;
-//   background-color: white;
-//   border: 1px solid $soft-gray;
-//   border-radius: 4px;
-//   cursor: pointer;
-//   padding: 4px;
-// }
 .margin-right {
   margin-right: 2.75vw;
-}
-.label {
-  font-size: 0.85rem;
 }
 .gray {
   color: $light-gray-blue;
@@ -2618,74 +2104,8 @@ input[type='search']:focus {
   border-radius: 4px;
   font-weight: bold;
 }
-.default_button {
-  padding: 0.5rem 1rem;
-  margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: $dark-green;
-  background: white;
-
-  img {
-    height: 0.75rem;
-    filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(75%) contrast(94%);
-  }
-}
-.recommend {
-  position: absolute;
-  bottom: 20vh;
-  left: 34vw;
-  z-index: 5;
-  background-color: white;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  box-shadow: 1px 2px 2px $very-light-gray;
-  height: 40vh;
-  width: 30vw;
-  &__header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 2px solid #e8e8e8;
-    height: 4rem;
-    padding: 1rem;
-
-    letter-spacing: 0.5px;
-    img {
-      height: 1rem;
-      filter: invert(30%);
-    }
-  }
-
-  &__body {
-    height: 5rem;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-evenly;
-    flex-direction: row;
-    margin-top: -0.5rem;
-    font-size: 14px;
-    padding: 0.5rem;
-  }
-}
-.drop {
-  border: 2px solid $soft-gray;
-  border-radius: 0.25rem;
-  color: $very-light-gray;
-  padding: 0.25rem 0.5rem;
-  max-height: 2rem;
-}
 .invisible {
   visibility: hidden;
-}
-.white-background {
-  background-color: white;
-  border-radius: 0.25rem;
-  height: 1.7rem;
-  width: 1.7rem;
-  margin-right: 0.25rem;
 }
 #drag {
   filter: invert(60%);
@@ -2699,30 +2119,7 @@ input[type='search']:focus {
   align-items: center !important;
   border-radius: 0.2rem;
 }
-.center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-.centered {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: row;
-}
 .drag-section {
-}
-.header-img {
-  padding: 5px 8px;
-  border-radius: 4px;
-  margin-left: 4px;
-}
-.active {
-  background-color: $off-white;
-  img {
-    filter: invert(50%);
-  }
 }
 .slack-form-builder {
   display: flex;
@@ -2745,24 +2142,8 @@ input[type='search']:focus {
     filter: invert(70%);
   }
 }
-.primary-button {
-  padding: 0.4rem 1.5rem;
-  box-shadow: none;
-  font-weight: 400;
-}
-.primary-button:disabled {
-  background-color: $soft-gray;
-}
 img:hover {
   cursor: pointer;
-}
-.close {
-  padding: 0.5rem 1.5rem;
-  background: transparent;
-  color: $very-light-gray;
-  border: 2px solid $soft-gray;
-  border-radius: 0.25rem;
-  opacity: 0.8;
 }
 .save {
   padding: 8px 20px;
@@ -2783,34 +2164,6 @@ img:hover {
   margin-right: 8px;
   cursor: pointer;
 }
-.custom-object-button__remove {
-  padding: 8px 20px;
-  font-size: 13px;
-  background-color: white;
-  color: $coral;
-  border: 1px solid $coral;
-  border-radius: 0.25rem;
-  margin-right: 8px;
-  cursor: pointer;
-}
-.mar-left {
-  margin-left: 4vw;
-  margin-top: 6px;
-}
-.right {
-  width: 16vw;
-}
-.white_button {
-  padding: 8px 20px;
-  font-size: 14px;
-  background-color: white;
-  color: $base-gray;
-  border: none;
-  border-radius: 0.25rem;
-  margin-right: 3vw;
-  border: 1px solid $soft-gray;
-  cursor: pointer;
-}
 :disabled {
   padding: 12px 20px;
   background-color: $soft-gray;
@@ -2821,64 +2174,6 @@ img:hover {
   margin-left: 0.5rem;
   opacity: 0.8;
   cursor: text;
-}
-.disabled__ {
-  background-color: transparent;
-  font-size: 14px;
-  color: $dark-green;
-  border: none;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-.example--footer {
-  position: sticky;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: auto;
-  bottom: 0;
-  background-color: white;
-  outline: 1px solid white;
-  z-index: 2;
-}
-.example-text {
-  position: absolute;
-  bottom: 180px;
-  left: 50px;
-  opacity: 0.1;
-  filter: alpha(opacity=50);
-  font-size: 3.5rem;
-  transform: rotate(-45deg);
-}
-.collection_fields {
-  background-color: $white;
-  padding: 4px 16px 0px 16px;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  overflow: auto;
-  height: 260px;
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-.stage_fields {
-  background-color: $white;
-  border-radius: 0.5rem;
-  height: 74vh;
-  width: 36vw;
-  overflow-y: scroll;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  border: 1px solid #e8e8e8;
-}
-.opportunity__row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
 }
 .row__ {
   display: flex;
@@ -2896,13 +2191,6 @@ img:hover {
   justify-content: flex-start;
   align-items: center;
 }
-
-.drop-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
 .opp-modal-container {
   display: flex;
   flex-direction: column;
@@ -2912,7 +2200,6 @@ img:hover {
   height: 70vh;
   border-radius: 0.5rem;
   padding: 1rem;
-  // border: 1px solid #e8e8e8;
 }
 .modal-container {
   background-color: $white;
@@ -2923,7 +2210,6 @@ img:hover {
   max-height: 80vh;
   align-items: center;
   border-radius: 0.5rem;
-  // border: 1px solid #e8e8e8;
   z-index: 20;
 }
 .rel {
@@ -2949,9 +2235,6 @@ img:hover {
   top: 0;
   padding: 0px 6px 8px -2px;
 }
-// .border-bottom {
-//   border-bottom: 1.25px solid $soft-gray;
-// }
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -2970,19 +2253,6 @@ img:hover {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
   }
-}
-.modal-label {
-  display: flex;
-  align-items: flex-start;
-  padding: 6px 0px;
-  font-size: 12.5px;
-  min-width: 80px;
-  margin-top: 12px;
-  letter-spacing: 1px;
-  color: $light-gray-blue;
-  border: none;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
 }
 .add-button {
   display: flex;
