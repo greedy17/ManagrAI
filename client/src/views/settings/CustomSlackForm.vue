@@ -20,12 +20,12 @@
           </div>
           <div class="opp-modal">
             <section>
-              <div style="display: flex; justify-content: center">
+              <div style="display: flex; justify-content: center; height: 50vh;">
                 <Multiselect
                   @input="getCustomObjectFields"
                   :options="customObjects"
                   openDirection="below"
-                  style="width: 40vw; margin-left: 1rem"
+                  style="width: 94%; margin-left: 1rem"
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
@@ -61,41 +61,13 @@
                     </div>
                   </template>
                 </Multiselect>
-                <div v-if="selectedCustomObject" class="field-section">
-                  <div class="search-bar">
-                    <img
-                      src="@/assets/images/search.svg"
-                      style="height: 18px; cursor: pointer"
-                      alt=""
-                    />
-                    <input
-                      type="search"
-                      placeholder="Search Custom Object Fields"
-                      v-model="COfilterText"
-                    />
-                  </div>
-
-                  <div class="field-section__fields">
-                    <div style="height: 45vh; overflow: scroll">
-                      <p
-                        v-for="(field, i) in COfilteredFields "
-                        :key="field.id"
-                      >
-                        <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
-                        <label :for="i"></label>
-                        {{ field.label }}
-                        <span v-if="field.required" class="red-text">required</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex-end-opp">
-                  <div v-if="true" style="display: flex; align-items: center">
-                    <button class="add-button" @click="() => null">
-                      Save
-                    </button>
-                    <p @click="toggleCustomObjectView" class="cancel">Cancel</p>
-                  </div>
+              </div>
+              <div class="flex-end-opp">
+                <div v-if="true" style="display: flex; align-items: center">
+                  <button class="add-button" @click="() => null">
+                    Save
+                  </button>
+                  <!-- <p @click="toggleCustomObjectView" class="cancel">Cancel</p> -->
                 </div>
               </div>
             </section>
@@ -428,7 +400,7 @@
 
         <div v-else>
           <div v-if="!customResource">
-            <div v-if="createdCustomObjects.length">
+            <div v-if="createdCustomObjects.length" style="width: 100%; display: flex; justify-content: space-between;">
               <Multiselect
                 @input="getCreatedCO"
                 :options="createdCustomObjects"
@@ -462,7 +434,7 @@
                 @click="toggleCustomObjectModalView"
                 class="custom-object-button"
               >
-                Add Another Custom Object
+                Add Custom Object
               </button>
             </div>
             <Multiselect
@@ -1499,7 +1471,7 @@ export default {
         let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
         this.addedFields = []
         const res = await SlackOAuth.api.postOrgCustomForm({
-          ...customForm,
+          ...this.newCustomForm,
           fields: fields,
           fields_ref: fields_ref,
         })
@@ -3078,5 +3050,14 @@ img:hover {
   padding: 4px 6px 3px 6px;
   border-radius: 6px;
   background-color: white;
+}
+
+.flex-end-opp {
+  width: 100%;
+  padding: 4px 12px 4px 0px;
+  height: 4rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 </style>

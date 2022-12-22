@@ -217,7 +217,7 @@ class OrgCustomSlackForm(TimeStampModel):
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "team", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage", "custom_object"]
 
     def generate_form_state(self):
         form_fields = CustomFormField.objects.filter(form=self)
