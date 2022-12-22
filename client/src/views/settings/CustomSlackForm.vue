@@ -20,12 +20,13 @@
           </div>
           <div class="opp-modal">
             <section>
-              <div style="display: flex; justify-content: center; height: 50vh;">
+              <div style="display: flex; justify-content: center;">
                 <Multiselect
                   @input="getCustomObjectFields"
                   :options="customObjects"
                   openDirection="below"
-                  style="width: 94%; margin-left: 1rem"
+                  style="width: 94%; margin-left: 1rem;"
+                  :max-height="400"
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
@@ -61,13 +62,6 @@
                     </div>
                   </template>
                 </Multiselect>
-              </div>
-              <div class="flex-end-opp">
-                <div v-if="true" style="display: flex; align-items: center">
-                  <button class="add-button" @click="() => null">
-                    Save
-                  </button>
-                </div>
               </div>
             </section>
           </div>
