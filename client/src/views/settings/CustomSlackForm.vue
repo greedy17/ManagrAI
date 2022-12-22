@@ -1140,12 +1140,6 @@ export default {
         return
       }
     },
-    toggleCustomObjectView() {
-      this.customObjectView = !this.customObjectView
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == 'CustomObject' && f.formType == this.UPDATE,
-      )
-    },
     toggleCustomObjectModalView() {
       this.customObjectModalView = !this.customObjectModalView
     },
@@ -1445,6 +1439,12 @@ export default {
           })
       })
       this.formStages = [...forms]
+    },
+    toggleCustomObjectView() {
+      this.customObjectView = true
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == 'CustomObject' && f.formType == this.UPDATE,
+      )
     },
     changeToAccount() {
       this.customObjectView = false
