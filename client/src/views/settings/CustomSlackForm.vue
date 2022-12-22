@@ -29,7 +29,7 @@
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
-                  :value="currentlySelectedStage"
+                  :value="currentlySelectedCO"
                   v-model="selectedCustomObject"
                 >
                   <template slot="noResult">
@@ -184,7 +184,7 @@
           Products
         </p>
         <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
-          Custom Object
+          Custom
         </p>
       </section>
       <div class="save-refresh-section">
@@ -428,17 +428,16 @@
 
         <div v-else>
           <div v-if="!customResource">
-            <!-- customForms -->
-            <div v-if="customForms.length">
+            <div v-if="createdCustomObjects.length">
               <Multiselect
-                @input="() => customResource = selectedCustomObjectName"
-                :options="customForms"
+                @input="getCreatedCO"
+                :options="createdCustomObjects"
                 openDirection="below"
                 style="width: 40vw; margin-left: 1rem"
                 selectLabel="Enter"
                 :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
-                label="customObject"
-                :value="currentlySelectedStage"
+                label="name"
+                :value="currentlySelectedCO"
                 v-model="selectedCustomObject"
               >
                 <template slot="noResult">
@@ -454,7 +453,7 @@
     
                 <template slot="option" slot-scope="props">
                   <div>
-                    <span class="option__title">{{props.option.customObject}}</span
+                    <span class="option__title">{{props.option.name}}</span
                     >
                   </div>
                 </template>
@@ -475,7 +474,7 @@
               selectLabel="Enter"
               :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
               :customLabel="customLabel"
-              :value="currentlySelectedStage"
+              :value="currentlySelectedCO"
               v-model="selectedCustomObject"
             >
               <template slot="noResult">
@@ -520,10 +519,16 @@
                 Back
               </h4>
   
-              <div @click="test(customForm)" class="row__">
+              <div class="row__">
                 <h4 style="margin-right: 16px">
                   {{ selectedCustomObjectName + ' Form' }}
                 </h4>
+                <div
+                  class="margin-right"
+                  @click.prevent="deleteForm(newCustomForm)"
+                >
+                  <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
+                </div>
               </div>
             </div>
             <div id="formSection">
@@ -701,6 +706,7 @@ export default {
       addingForm: false,
       currentlySelectedForm: null,
       customObjects: [],
+      createdCustomObjects: [],
       verboseName: '',
       pulseLoading: false,
       // checker: this.$store.state.customObject.checker,
@@ -710,6 +716,7 @@ export default {
       selectedCustomObject: null,
       selectedCustomObjectName: null,
       currentlySelectedStage: null,
+      currentlySelectedCO: null,
       selectedForm: null,
       selectedStage: null,
       allForms: null,
@@ -1285,7 +1292,6 @@ export default {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
-      console.log('hit', this.customFields)
       if (!this.customFields) {
         return
       }
@@ -1348,7 +1354,6 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-      console.log('allForms', this.allForms)
       let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
       // if (this.userCRM === 'HUBSPOT') {
       //   object = this.DEAL
@@ -1426,6 +1431,9 @@ export default {
     },
     toggleCustomObjectView() {
       this.customObjectView = !this.customObjectView
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == 'CustomObject' && f.formType == this.UPDATE,
+      )
     },
     toggleCustomObjectModalView() {
       this.customObjectModalView = !this.customObjectModalView
@@ -1435,7 +1443,6 @@ export default {
 
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
-        console.log('inside if before', this.customResource)
         this.customFields = CollectionManager.create({
           ModelClass: ObjectField,
           pagination: { size: 500 },
@@ -1444,8 +1451,6 @@ export default {
           },
         })
         this.customFields.refresh()
-        console.log('inside if after', this.customFields)
-        this.addedFields = []
       }
       this.formFields.refresh()
     },
@@ -1453,7 +1458,6 @@ export default {
       if (!this.selectedCustomObject) {
         return
       }
-      // work here
       this.selectedCustomObjectName = this.selectedCustomObject.name
       try {
         this.modalLoading = true
@@ -1470,32 +1474,43 @@ export default {
           resource: "CustomObject",
           stage: "",
         }
-        this.addedFields = []
-        let fields = new Set([...this.addedFields.map((f) => f.id)])
-        fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+        this.newCustomForm = customForm
         let currentFormFields = this.addedFields.map((field) => {
           return field.id
         })
-        if (
-          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
-          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
-        ) {
-          let fieldsToAdd =
-            this.userCRM === 'SALESFORCE'
-              ? [this.noteTitle, this.noteSubject]
-              : [this.noteTitleHubspot, this.noteSubjectHubspot]
-          let copyArray = this.addedFields
-          this.addedFields = fieldsToAdd.concat(copyArray)
+
+        if (this.newCustomForm.formType == 'UPDATE') {
+          if (
+            currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
+            currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
+          ) {
+            let fieldsToAdd =
+              this.userCRM === 'SALESFORCE'
+                ? [this.noteTitle, this.noteSubject]
+                : [this.noteTitleHubspot, this.noteSubjectHubspot]
+            let copyArray = this.addedFields
+            this.addedFields = fieldsToAdd.concat(copyArray)
+          }
         }
-        this.changeCustomObjectName()
+
+        let fields = new Set([...this.addedFields.map((f) => f.id)])
+        fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
+        
         let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
+        this.addedFields = []
         const res = await SlackOAuth.api.postOrgCustomForm({
-          customForm,
+          ...customForm,
           fields: fields,
           fields_ref: fields_ref,
         })
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+          setTimeout(() => {
+            this.loaderText = 'Reloading page, please be patient...'
+            setTimeout(() => {
+              this.$router.go()
+            }, 1000)
+          }, 2000)
         }, 400)
         // const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
         //   this.verboseName = res.verbose_name
@@ -1507,6 +1522,22 @@ export default {
       } catch (e) {
         console.log(e)
       }
+    },
+    getCreatedCO() {
+      if (!this.selectedCustomObject) {
+        return
+      }
+      this.selectedCustomObjectName = this.selectedCustomObject.name
+
+      this.modalLoading = true
+      this.loaderText = this.loaderTextList[0]
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == 'CustomObject' && f.formType == 'UPDATE' && f.customObject == this.selectedCustomObjectName,
+      )
+      this.changeCustomObjectName()
+      setTimeout(() => {
+        this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+      }, 400)
     },
     async checkTask() {
       try {
@@ -1537,24 +1568,25 @@ export default {
       this.closeCustomModal()
     },
     watcherCustomResource() {
-      console.log('before', this.formFields)
       this.formFields.refresh()
-      console.log('after', this.formFields)
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
-      console.log('customForms', this.customForms)
       const names = []
       for (let i = 0; i < this.customForms.length; i++) {
         const form = this.customForms[i]
         names.push(form.customObject)
       }
+      const createdCustomObjects = []
       const filteredCustomObjects = res.sobjects.filter(co => {
         if (!names.includes(co.name)) {
           return co
+        } else {
+          createdCustomObjects.push(co)
         }
       })
       this.customObjects = filteredCustomObjects
+      this.createdCustomObjects = createdCustomObjects
     },
     clearStageData() {
       this.selectedForm = null
@@ -1635,8 +1667,6 @@ export default {
           crmObject: this.customResource,
         },
       })
-
-      console.log(this.formFields)
     },
     setStage(n) {
       if (this.userCRM === 'SALESFORCE') {
@@ -1666,14 +1696,6 @@ export default {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
-
-        // this.$toast('This stage has a form', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'default',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
       }
       let newForm = SlackOAuth.customSlackForm.create({
         resource: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL,
@@ -1971,13 +1993,10 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
-      // this.formFields.filters = { salesforceObject: this.resource }
-      // this.formFields.refresh()
     },
     changeCustomObjectName() {
       this.newCustomForm.customObject = this.customResource
       this.newCustomForm.resource = "CustomObject"
-      console.log('this.newCustomForm', this.newCustomForm)
     },
     goBack() {
       if (this.fromAdmin) {
@@ -2014,7 +2033,6 @@ export default {
       if (!this.newCustomForm) {
         this.newCustomForm = this.customForm
       }
-      console.log('newCustomForm', this.newCustomForm)
       if (
         (this.newResource == 'Opportunity' || this.newResource == 'Account') &&
         this.newCustomForm.formType == FORM_CONSTS.MEETING_REVIEW
@@ -2075,7 +2093,6 @@ export default {
         return
       }
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-      console.log('customResource up here', this.customResource)
       if (
         this.customResource &&
         this.customResource !== 'Opportunity' &&
@@ -2087,7 +2104,6 @@ export default {
       ) {
         this.changeCustomObjectName()
       }
-      console.log('customForm before update', this.newCustomForm)
       SlackOAuth.api
         .postOrgCustomForm({
           ...this.newCustomForm,
@@ -2110,15 +2126,11 @@ export default {
             this.removedFields = []
             // this.$router.go()
           }, 300)
+          this.addedFields = fields_ref
         })
         .finally(() => {
           this.savingForm = false
           this.getAllForms()
-          // if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
-          //   this.$router.push({ name: 'Required' })
-          // } else {
-          //   this.$router.go()
-          // }
           this.formChange = false
         })
     },
