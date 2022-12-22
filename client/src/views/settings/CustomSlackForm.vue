@@ -156,7 +156,13 @@
           Products
         </p>
         <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
-          Custom
+          Custom Object
+          <span 
+            v-if="customForms && customForms.length" 
+            class="option__small" 
+            style="margin-left: 0; font-size: .7rem"
+            >active
+          </span>
         </p>
       </section>
       <div class="save-refresh-section">
@@ -691,7 +697,7 @@ export default {
       currentlySelectedCO: null,
       selectedForm: null,
       selectedStage: null,
-      allForms: null,
+      allForms: [],
       filterText: '',
       COfilterText: '',
       dropdownLoading: false,
