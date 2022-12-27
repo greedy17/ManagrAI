@@ -1,6 +1,7 @@
 from django.conf import settings
 import logging
 import json
+import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
 from .exceptions import CustomAPIException
@@ -16,7 +17,7 @@ logger = logging.getLogger("managr")
 DATA_TYPE_OBJ = {
     "calculation_score": "Int",
     "text": "String",
-    "checkbox": "Boolean",
+    "checkbox": "MultiPicklist",
     "radio": "Picklist",
     "booleancheckbox": "Boolean",
     "calculation_read_time": "DateTime",
@@ -57,7 +58,7 @@ class HubspotAuthAccountAdapter:
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code == 200 or response.status_code == 201:
+        elif response.status_code in [200, 201, 207]:
             if response.status_code == 204:
                 return {}
             try:
@@ -86,6 +87,7 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
+        print("HUBSPOT AUTHENTICATE RES", res)
         if settings.IN_DEV:
             user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
             # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
@@ -195,6 +197,7 @@ class HubspotAuthAccountAdapter:
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
+            print("HUBSPOT GET USER INFO RESPONSE", res.json())
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
@@ -234,8 +237,6 @@ class HubspotAuthAccountAdapter:
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         # logger.info(f"{url} was sent with data: {data}")
         with Client as client:
-            print(url)
-            print(data)
             res = client.post(
                 url,
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -248,6 +249,7 @@ class HubspotAuthAccountAdapter:
                 has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
                 if has_next_page and page <= 5:
                     data["after"] = has_next_page
+                    time.sleep(5.00)
                     with Client as client:
                         res = client.post(
                             url,
@@ -319,7 +321,22 @@ class HubspotAuthAccountAdapter:
                 url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
             res = self._handle_response(res)
-
+            saved_response = res
+            while True:
+                has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
+                if has_next_page:
+                    data["after"] = has_next_page
+                    time.sleep(5.00)
+                    with Client as client:
+                        res = client.post(
+                            url,
+                            headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                            data=json.dumps(data),
+                        )
+                        res = self._handle_response(res)
+                        saved_response["results"] = [*saved_response["results"], *res["results"]]
+                else:
+                    break
             res = self._format_resource_response(res, resource)
             return res
 
@@ -556,7 +573,7 @@ class DealAdapter:
     @staticmethod
     def additional_filters():
         """pass custom additional filters to the url"""
-        return [{"propertyName": "hs_is_closed", "value": False, "operator": "EQ",}]
+        return [{"propertyName": "is_closed", "value": False, "operator": "EQ",}]
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
@@ -673,7 +690,7 @@ class HubspotContactAdapter:
         email="email",
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
-        external_account="company",
+        external_account="associatedcompanyid",
     )
 
     @staticmethod

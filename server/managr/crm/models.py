@@ -9,6 +9,7 @@ from managr.crm.routes import adapter_routes as adapters
 from managr.crm.routes import model_routes
 from managr.crm import constants as crm_consts
 from managr.slack import constants as slack_consts
+from managr.salesforce.adapter.models import OpportunityAdapter
 
 # Create your models here.
 class BaseAccountQuerySet(models.QuerySet):
@@ -179,6 +180,15 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
             return "Deal"
 
     @property
+    def last_stage_update(self):
+        if self.owner.crm == "SALESFORCE":
+            return OpportunityAdapter._format_stage_update(
+                self.secondary_data.get("OpportunityHistories", None)
+            )
+        else:
+            return None
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
@@ -226,7 +236,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
             data, token, object_fields, user_id, user.crm_account.instance_url
         )
         serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return serializer.instance
 
@@ -533,16 +543,6 @@ class ObjectField(TimeStampModel, IntegrationModel):
                     block_id=self.api_name,
                     initial_options=None,
                 )
-            # elif (
-            #     self.api_name == "PricebookEntryId"
-            #     and self.salesforce_object == "OpportunityLineItem"
-            # ):
-            #     user_id = str(kwargs.get("user").id)
-            #     resource = self.relationship_name
-            #     action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}&pricebook={kwargs.get('Pricebook2Id')}"
-            #     return block_builders.external_select(
-            #         "*Products*", action_query, block_id=self.api_name, initial_option=None,
-            #     )
             else:
                 if self.api_name == "PricebookEntryId":
                     display_name = "Products"

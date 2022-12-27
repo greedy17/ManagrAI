@@ -683,7 +683,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         blank=True,
     )
     opportunity = models.ForeignKey(
-        "opportunity.Opportunity",
+        "crm.BaseOpportunity",
         related_name="opportunity_line_item",
         on_delete=models.CASCADE,
         null=True,
@@ -736,7 +736,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
             object_fields = user.object_fields.filter(crm_object="OpportunityLineItem").values_list(
                 "api_name", flat=True
             )
-            res = OpportunityLineItemAdapter.create(data, token, base_url, object_fields, user_id)
+            res = OpportunityLineItemAdapter.create(data, token, object_fields, user_id, base_url)
             from managr.salesforce.routes import routes
 
             serializer = routes["OpportunityLineItem"]["serializer"](data=res.as_dict)

@@ -121,7 +121,7 @@
     >
       <div class="opp-modal-container">
         <div class="flex-row-spread header">
-          <div class="flex-row" @click="test(/*stageValidationFields*/stageGateField)">
+          <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
             <h3>{{userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal'}}</h3>
           </div>
@@ -207,7 +207,7 @@
                     @select="
                       setUpdateValues(
                         field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                        field.apiName === 'dealstage' ? $event.id :
+                        field.apiName === 'dealstage' ? [$event.label, $event.id] :
                         (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                           ? $event.value
                           : $event.id,
@@ -272,6 +272,7 @@
                                 ? allPicklistOptions[field.id]
                                 : stageReferenceOpts[field.apiName]
                                 ? stageReferenceOpts[field.apiName]
+                                : field.options.length ? field.options
                                 : []
                             "
                             @select="
@@ -472,7 +473,7 @@
                     v-model="savedPipeline"
                     :options="pipelineOptions"
                     @open="getPipelineOptions(field.options[0])"
-                    @select="setUpdateValues(field.apiName, field.apiName === 'dealstage' ? $event.id : $event.value)"
+                    @select="setUpdateValues(field.apiName, field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.value)"
                     openDirection="below"
                     style="width: 40.25vw"
                     selectLabel="Enter"
@@ -500,7 +501,7 @@
                 "
                 
               >
-                <label class="label" @click="test(field)">{{ field.referenceDisplayLabel }}</label>
+                <label class="label">{{ field.referenceDisplayLabel }}</label>
   
                 <Multiselect
                   v-model="currentVals[field.apiName]"
@@ -510,10 +511,14 @@
                     (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                       ? allPicklistOptions[field.id]
                       : createReferenceOpts[field.apiName]
+                      ? createReferenceOpts[field.apiName]
+                      : field.options.length ? field.options
+                      : []
                   "
                   @select="
                     setUpdateValues(
                       field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      field.apiName === 'dealstage' ? [$event.label, $event.id] :
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && field.apiName !== 'dealstage'
                         ? $event.value
                         : $event.id,
@@ -578,6 +583,7 @@
                               ? allPicklistOptions[field.id]
                               : stageReferenceOpts[field.apiName]
                               ? stageReferenceOpts[field.apiName]
+                              : field.options.length ? field.options
                               : []
                           "
                           @select="
@@ -876,6 +882,9 @@
                         (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                           ? allPicklistOptions[field.id]
                           : productReferenceOpts[field.apiName]
+                          ? productReferenceOpts[field.apiName]
+                          : field.options.length ? field.options
+                          : []
                       "
                       @select="
                         setCreateValues(
@@ -1171,11 +1180,14 @@
                   (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                     ? allPicklistOptions[field.id]
                     : referenceOpts[field.apiName]
+                    ? referenceOpts[field.apiName]
+                    : field.options.length ? field.options
+                    : []
                 "
                 @select="
                   setUpdateValues(
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.apiName === 'dealstage' ? $event.id :
+                    field.apiName === 'dealstage' ? [$event.label, $event.id] :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -1252,6 +1264,7 @@
                             ? allPicklistOptions[field.id]
                             : stageReferenceOpts[field.apiName]
                             ? stageReferenceOpts[field.apiName]
+                            : field.options.length ? field.options
                             : []
                         "
                         @select="
@@ -1530,6 +1543,9 @@
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
+                        ? productReferenceOpts[field.apiName]
+                        : field.options.length ? field.options
+                        : []
                     "
                     @select="
                       setCreateValues(
@@ -1705,6 +1721,9 @@
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : productReferenceOpts[field.apiName]
+                        ? productReferenceOpts[field.apiName]
+                        : field.options.length ? field.options
+                        : []
                     "
                     @select="
                       setProductValues(
@@ -1944,7 +1963,7 @@
               v-for="template in templates.list"
               :key="template.id"
             >
-              {{ template.title }} <span class="green">{{ template.sobjectInstances.length }}</span>
+              {{ template.title }} <span class="green">{{ template.sobjectInstances ? template.sobjectInstances.length : 'N/A' }}</span>
             </button>
           </div>
           <div
@@ -1958,7 +1977,7 @@
             <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
             <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
             <span v-if="hoveredIndex === i" class="selected-filters__close"
-              ><img src="@/assets/images/close.svg" @click="removeFilter(filter, i + 2)" alt=""
+              ><img src="@/assets/images/close.svg" @click="removeFilter(filter, userCRM === 'SALESFORCE' ? i + 2 : i + 10)" alt=""
             /></span>
           </div>
 
@@ -2303,13 +2322,16 @@
                     ? allPicklistOptions[field.id]
                     : stageReferenceOpts[field.apiName]
                     ? stageReferenceOpts[field.apiName]
+                    : referenceOpts[field.apiName]
+                    ? referenceOpts[field.apiName]
+                    : field.options.length ? field.options
                     : []
                 "
                 @select="
                   setUpdateValidationValues(
                     /*field.apiName === 'dealstage' ? $event.id :*/
                     field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                    field.apiName === 'dealstage' ? $event.label :
+                    field.apiName === 'dealstage' ? [$event.label, $event.id] :
                     field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'
                       ? $event.value
                       : $event.id,
@@ -2553,7 +2575,7 @@
             :key="opp.id"
             v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : allOpps"
             :style="`top: ${screenHeight < 900 ? (j + 1) * 10 : (j + 1) * 7}vh;`"
-            class="table-row-overlay top-height"
+            class="table-row-overlay"
           >
             <div class="cell-name"></div>
             <div
@@ -2619,7 +2641,7 @@
                     label="label"
                     @select="
                       setDropdownValue({
-                        val: field.apiName === 'StageName' ? $event.value : $event.id,
+                        val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                         oppId: opp.id,
                         oppIntegrationId: opp.integration_id,
                       })
@@ -2672,7 +2694,7 @@
                           field.apiName === 'ForecastCategory'
                             ? 'ForecastCategoryName'
                             : field.apiName,
-                            field.apiName === 'dealstage' ? $event.id : $event.value,
+                            field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.value,
                             field.dataType === 'MultiPicklist' ? true : false,
                         )
                       "
@@ -2874,6 +2896,7 @@ export default {
       referenceLoading: false,
       savedOpp: null,
       savedPipeline: null,
+      storedStageName: '',
       pipelineOptions: [],
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
       dealStages: [],
@@ -3058,7 +3081,7 @@ export default {
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : []
+      return this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef.extraPipelineFields : this.$store.state.user.hubspotAccountRef.extraPipelineFields
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
@@ -3188,11 +3211,9 @@ export default {
     task: 'checkAndClearInterval',
     dropdownValue: {
       handler(val) {
-        let loweredVal = ''
-        if (this.userCRM === 'HUBSPOT') {
-          loweredVal = val.val.split(' ').join('').toLowerCase()
-        }
-        if (this.stagesWithForms.includes(val.val) || this.stagesWithForms.includes(loweredVal)) {
+        const newVal = this.userCRM === 'SALESFORCE' ? val.val : val.val[0]
+        let loweredVal = newVal.split(' ').join('').toLowerCase()
+        if (this.stagesWithForms.includes(newVal) || this.stagesWithForms.includes(loweredVal)) {
           this.openStageForm(val.val, val.oppId, val.oppIntegrationId)
           this.editingInline = false
         } else {
@@ -3437,7 +3458,13 @@ export default {
     },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
-      this.stageGateField = field
+      if (Array.isArray(field)) {
+        field = field[0]
+      }
+      this.stageGateField = this.userCRM === 'SALESFORCE' ? field : field.split(' ').join('').toLowerCase()
+      if (this.userCRM === 'HUBSPOT') {
+        this.storedStageName = field
+      }
       this.stageFormOpen = true
       this.stageId = id
       this.stageIntegrationId = integrationId
@@ -3773,7 +3800,7 @@ export default {
     },
     removeFilter(name, index) {
       if (this.activeFilters.length > 1) {
-        this.activeFilters.splice(index - 2, 1)
+        this.userCRM === 'SALESFORCE' ? this.activeFilters.splice(index - 2, 1) : this.activeFilters.splice(index - 10, 1)
       } else {
         this.activeFilters = []
       }
@@ -3802,12 +3829,18 @@ export default {
       })
     },
     sortOpps(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
-      if (this.currentWorkflow) {
-        if (field === 'Stage' || field === 'dealstage') {
+      let newField 
+      if (this.userCRM === 'SALESFORCE') {
+        newField = this.capitalizeFirstLetter(this.camelize(field))
+      } else {
+        newField = field
+      }
+      const userCRM = this.userCRM
+      if (this.currentWorkflow.length) {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3834,6 +3867,12 @@ export default {
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
         } else {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
@@ -3842,10 +3881,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage' || field === 'dealstage') {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
@@ -3868,6 +3907,12 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
@@ -3886,13 +3931,19 @@ export default {
       this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
     },
     sortOppsReverse(dT, field, apiName) {
-      let newField = this.capitalizeFirstLetter(this.camelize(field))
+      let newField
+      if (this.userCRM === 'SALESFORCE') {
+        newField = this.capitalizeFirstLetter(this.camelize(field))
+      } else {
+        newField = field
+      }
 
-      if (this.currentWorkflow) {
-        if (field === 'Stage' || field === 'dealstage') {
+      const userCRM = this.userCRM
+      if (this.currentWorkflow.length) {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3915,6 +3966,12 @@ export default {
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
           this.currentWorkflow = this.currentWorkflow.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.currentWorkflow.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
@@ -3927,10 +3984,10 @@ export default {
           })
         }
       } else {
-        if (field === 'Stage' || field === 'dealstage') {
+        if (field === 'Stage' || field === 'Deal Stage') {
           this.allOpps.sort(function (a, b) {
-            const nameA = this.userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
-            const nameB = this.userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
+            const nameA = userCRM === 'SALESFORCE' ? a['secondary_data']['StageName'] : a['secondary_data']['dealstage']
+            const nameB = userCRM === 'SALESFORCE' ? b['secondary_data']['StageName'] : b['secondary_data']['dealstage']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
@@ -3952,6 +4009,12 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
+          this.allOpps.sort(function (a, b) {
+            const nameA = a['secondary_data'][`${apiName}`]
+            const nameB = b['secondary_data'][`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
           this.allOpps.sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
@@ -4161,7 +4224,7 @@ export default {
         const res = await CRMObjects.api.createFormInstance({
           resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           formType: 'STAGE_GATING',
-          stageName: field ? field : this.stageGateField,
+          stageName: field ? field : this.storedStageName ? this.storedStageName : this.stageGateField,
         })
         this.stageGateId = res.form_id
       } catch (e) {
@@ -4345,6 +4408,15 @@ export default {
       }
     },
     setUpdateValues(key, val, multi) {
+      let valLabel
+      let valId
+      if (Array.isArray(val)) {
+        valLabel = val[0]
+        valId = val[1]
+      } else {
+        valLabel = val
+        valId = val
+      }
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -4352,12 +4424,15 @@ export default {
       }
 
       if (val && !multi) {
-        this.formData[key] = val
+        this.formData[key] = valId
       }
       if (key === 'StageName' || key === 'dealstage') {
-        this.stagesWithForms.includes(val) || this.stagesWithForms.includes(val ? val.split(' ').join('').toLowerCase() : '')
-          ? (this.stageGateField = val)
+        this.stagesWithForms.includes(valLabel) || this.stagesWithForms.includes(valLabel ? valLabel.split(' ').join('').toLowerCase() : '')
+          ? (this.stageGateField = this.userCRM === 'SALESFORCE' ? valLabel : valLabel.split(' ').join('').toLowerCase())
           : (this.stageGateField = null)
+          if (this.userCRM === 'HUBSPOT' && (this.stagesWithForms.includes(valLabel) || this.stagesWithForms.includes(valLabel ? valLabel.split(' ').join('').toLowerCase() : ''))) {
+            this.storedStageName = valLabel
+          }
       }
     },
     setUpdateValidationValues(key, val) {
@@ -4474,14 +4549,23 @@ export default {
         if (this.formData.closedate) {
           this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
         }
+        let newFormData = {}
+        if (this.storedStageName) {
+          newFormData = this.formData
+          newFormData.stage_name = this.storedStageName
+          this.formData.stage_name = this.storedStageName
+        } else  {
+          newFormData = this.formData
+        }
         const res = await CRMObjects.api.updateResource({
-          form_data: this.formData,
+          form_data: newFormData,
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           form_type: 'UPDATE',
           resource_id: this.stageId,
           integration_ids: [this.stageIntegrationId],
-          stage_name: this.stageGateField ? this.stageGateField : null,
+          stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
         })
+        this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
             this.$store.dispatch('loadAllOpps', [
@@ -4544,15 +4628,23 @@ export default {
     async createProduct(id = this.integrationId) {
       if (this.addingProduct) {
         try {
+          let newFormData = {}
+          if (this.storedStageName) {
+            newFormData = this.createData
+            newFormData.stage_name = this.storedStageName
+            this.createData.stage_name = this.storedStageName
+          } else  {
+            newFormData = this.createData
+          }
           const res = await CRMObjects.api.createResource({
             integration_ids: [id],
             form_type: 'CREATE',
             resource_type: 'OpportunityLineItem',
-            stage_name: this.stageGateField ? this.stageGateField : null,
+            stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
             resource_id: this.oppId,
-            form_data: this.createData,
+            form_data: newFormData,
           })
-
+          this.storedStageName = ''
           this.$toast('Product created successfully', {
             timeout: 2000,
             position: 'top-left',
@@ -4627,17 +4719,26 @@ export default {
         if (this.formData.closedate) {
           this.formData.closedate = this.formData.closedate + 'T18:00:00.000Z'
         }
+        let newFormData = {}
+        if (this.storedStageName) {
+          newFormData = this.formData
+          newFormData.stage_name = this.storedStageName
+          this.formData.stage_name = this.storedStageName
+        } else  {
+          newFormData = this.formData
+        }
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
-          form_data: this.formData,
+          form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
           resource_id: this.oppId,
-          stage_name: this.stageGateField ? this.stageGateField : null,
+          stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
         })
+        this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
             this.$store.dispatch('loadAllOpps', [
@@ -4704,12 +4805,21 @@ export default {
         // if (this.userCRM === 'HUBSPOT' && this.formData.dealstage) {
         //   this.formData.dealstage = this.formData.dealstage.split(' ').join('').toLowerCase()
         // }
+        let newFormData = {}
+        if (this.storedStageName) {
+          newFormData = this.formData
+          newFormData.stage_name = this.storedStageName
+          this.formData.stage_name = this.storedStageName
+        } else  {
+          newFormData = this.formData
+        }
         let res = await CRMObjects.api.createResource({
-          form_data: this.formData,
+          form_data: newFormData,
           form_type: 'CREATE',
           resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
-          stage_name: this.stageGateField ? this.stageGateField : null,
+          stage_name: this.storedStageName ? this.storedStageName : this.stageGateField ? this.stageGateField : null,
         })
+        this.storedStageName = ''
         if (product) {
           this.createProduct(res.integration_id)
         }
@@ -4793,7 +4903,6 @@ export default {
             })
           } else {
             this.currentWorkflow = results.filter(opp => {
-              console.log('opp', opp)
               return !closedList.includes(opp['secondary_data'].dealstage)
             })
           }
@@ -4839,12 +4948,12 @@ export default {
         this.workList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
-            ? this.sortWorkflowsReverse(
+            ? this.sortOppsReverse(
                 this.storedFilters[0],
                 this.storedFilters[1],
                 this.storedFilters[2],
               )
-            : this.sortWorkflows(
+            : this.sortOpps(
                 this.storedFilters[0],
                 this.storedFilters[1],
                 this.storedFilters[2],
@@ -4971,13 +5080,21 @@ export default {
           this.stageGateCopy = stageGateForms[0].fieldsRef
           // this.stageGateCopy = stageGateForms[stageGateForms.length-1].fieldsRef
           let stages = stageGateForms.map((field) => field.stage)
-          const newStages = []
-          for (let i = 0; i < stages.length; i++) {
-            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          let newStages = []
+          if (this.userCRM === 'HUBSPOT') {
+            for (let i = 0; i < stages.length; i++) {
+              newStages.push(stages[i].split(' ').join('').toLowerCase())
+            }
+          } else {
+            newStages = stages
           }
           this.stagesWithForms = newStages
           for (const field of stageGateForms) {
-            this.stageValidationFields[field.stage] = field.fieldsRef
+            if (this.userCRM === 'SALESFORCE') {
+              this.stageValidationFields[field.stage] = field.fieldsRef
+            } else {
+              this.stageValidationFields[field.stage.split(' ').join('').toLowerCase()] = field.fieldsRef
+            }
           }
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
@@ -4989,8 +5106,8 @@ export default {
     },
     async getUsers() {
       try {
-        const res = await SObjects.api.getObjectsForWorkflows('User')
-        this.allUsers = res.results.filter((user) => user.has_salesforce_integration)
+        const res = await CRMObjects.api.getObjectsForWorkflows('User')
+        this.allUsers = res.results.filter((user) => this.userCRM === 'SALESFORCE' ? user.has_salesforce_integration : user.has_hubspot_integration)
       } catch (e) {
         this.$toast('Error gathering users!', {
           timeout: 2000,
@@ -5418,87 +5535,6 @@ export default {
   margin: 10px;
 }
 
-.basic-slide {
-  display: inline-block;
-  width: 34vw;
-  padding: 9px 0 10px 16px;
-  font-family: $base-font-family !important;
-  font-weight: 400;
-  color: $base-gray;
-  background: $white;
-  border: 1px solid $soft-gray !important;
-  border: 0;
-  border-radius: 3px;
-  outline: 0;
-  text-indent: 70px; // Arbitrary.
-  transition: all 0.3s ease-in-out;
-
-  &::-webkit-input-placeholder {
-    color: #efefef;
-    text-indent: 0;
-    font-weight: 300;
-  }
-
-  + label {
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 9px 8px;
-    font-size: 15px;
-    text-align: center;
-    width: 80px;
-    // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
-    background: $white-green;
-    color: $dark-green;
-    transition: all 0.3s ease-in-out;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 2px;
-  }
-  &__body::-webkit-scrollbar {
-    width: 2px; /* Mostly for vertical scrollbars */
-    height: 0px; /* Mostly for horizontal scrollbars */
-  }
-  &__body::-webkit-scrollbar-thumb {
-    background-color: $coral;
-    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track {
-    box-shadow: inset 2px 2px 4px 0 $soft-gray;
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track-piece {
-    margin-top: 0.25rem;
-  }
-}
-.basic-slide:focus,
-.basic-slide:active {
-  color: $base-gray;
-  text-indent: 0;
-  background: #fff;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-
-  &::-webkit-input-placeholder {
-    color: #aaa;
-  }
-  + label {
-    transform: translateX(-100%);
-  }
-}
-
-.form-label {
-  color: $dark-green;
-  // background-color: $white-green;
-  border-radius: 4px;
-  padding: 4px;
-  margin-bottom: 4px;
-  margin-left: -2px;
-  width: fit-content;
-}
-
 .col {
   display: flex;
   flex-direction: column;
@@ -5516,18 +5552,6 @@ export default {
   }
 }
 
-.light-green-bg {
-  background-color: $white-green;
-  color: $dark-green !important;
-  border: 1px solid $dark-green !important;
-}
-.note-border {
-  border: 1px solid $very-light-gray;
-  border-radius: 6px;
-  padding: 4px;
-  margin: 0px 6px;
-  font-size: 12px;
-}
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
 }
@@ -5729,62 +5753,10 @@ export default {
     filter: invert(70%);
   }
 }
-.results {
-  margin: 0;
-  padding-left: 3px;
-  width: 50vw;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  font-size: 18px;
-  letter-spacing: 0.5px;
-  height: 24px;
-}
-.pagination {
-  width: 100vw;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  margin: 8px 0px 0px 0px;
-
-  h6 {
-    span {
-      letter-spacing: 0.5px;
-      color: $gray;
-    }
-  }
-  &-num {
-    margin-right: 8px;
-    font-size: 11px;
-    border-radius: 6px;
-    border: none;
-    background-color: $dark-green;
-    color: white;
-    padding: 6px 8px;
-  }
-  &-num2 {
-    margin-right: 8px;
-    font-size: 11px;
-    border-radius: 6px;
-    border: none;
-    background-color: $very-light-gray;
-    color: $white;
-    padding: 3px 6px;
-  }
-}
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-.height-s {
-  height: 36px;
-  margin-top: 8px;
-}
-.between {
-  justify-content: space-between;
-  width: 100%;
 }
 select {
   -webkit-appearance: none !important;
@@ -6014,8 +5986,6 @@ h3 {
 .table-row {
   display: table-row;
   left: 0;
-}
-.top-height {
 }
 .table-row-overlay {
   top: 10vh;
@@ -6604,11 +6574,6 @@ a {
       brightness(93%) contrast(89%);
   }
 }
-.results-2 {
-  font-size: 11px;
-  margin-right: 16px;
-  color: $gray;
-}
 .note-templates {
   display: flex;
   justify-content: flex-end;
@@ -6719,104 +6684,4 @@ a {
   background: #fff;
   font-size: 14px;
 }
-// .results-2 {
-//   font-size: 11px;
-//   margin-right: 16px;
-//   color: $gray;
-// }
-// .note-templates {
-//   display: flex;
-//   justify-content: flex-end;
-//   font-size: 12px;
-//   padding: 12px 6px;
-//   margin-top: -34px;
-//   border: 1px solid $soft-gray;
-//   border-bottom-left-radius: 4px;
-//   border-bottom-right-radius: 4px;
-//   cursor: pointer;
-//   width: 40.25vw;
-
-//   &__content {
-//     display: flex;
-//     flex-direction: row;
-//     align-items: center;
-//   }
-//   img {
-//     filter: invert(50%);
-//     height: 12px;
-//   }
-//   &__content:hover {
-//     opacity: 0.6;
-//   }
-// }
-
-// .note-templates2 {
-//   display: flex;
-//   flex-direction: row;
-//   align-items: center;
-//   justify-content: flex-start;
-//   flex-wrap: wrap;
-//   gap: 24px;
-//   font-size: 12px;
-//   padding: 12px 6px;
-//   margin-top: -34px;
-//   border: 1px solid $soft-gray;
-//   border-bottom-left-radius: 4px;
-//   border-bottom-right-radius: 4px;
-//   width: 40.25vw;
-//   height: 80px;
-//   overflow: scroll;
-
-//   &__content {
-//     border-radius: 4px;
-//     border: 0.5px solid $base-gray;
-//     color: $base-gray;
-//     padding: 8px 6px;
-//     margin-bottom: 8px;
-//     cursor: pointer;
-//   }
-//   &__content:hover {
-//     opacity: 0.6;
-//   }
-// }
-// .close-template {
-//   position: absolute;
-//   bottom: 56px;
-//   right: 20px;
-//   z-index: 3;
-//   cursor: pointer;
-//   background-color: black;
-//   border-radius: 3px;
-//   opacity: 0.6;
-//   img {
-//     filter: invert(99%);
-//   }
-// }
-// .label {
-//   display: inline-block;
-//   padding: 6px;
-//   font-size: 14px;
-//   text-align: center;
-//   min-width: 80px;
-//   margin-top: 12px;
-//   background-color: $white-green;
-//   color: $dark-green;
-//   font-weight: bold;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-// }
-// .red-label {
-//   background-color: #fa646a;
-//   color: white;
-//   display: inline-block;
-//   padding: 6px;
-//   font-size: 14px;
-//   text-align: center;
-//   min-width: 80px;
-//   margin-top: 12px;
-//   margin-left: 2px;
-//   font-weight: bold;
-//   border-top-left-radius: 4px;
-//   border-top-right-radius: 4px;
-// }
 </style>

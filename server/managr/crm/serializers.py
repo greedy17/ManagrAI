@@ -43,9 +43,9 @@ class BaseAccountSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         imported_by = data.get("imported_by")
         org = Organization.objects.get(users__id=imported_by)
-        user = org.user.all().get(id=imported_by)
+        user = org.users.all().get(id=imported_by)
         data.update({"organization": org.id})
-        data.update({"owner": user})
+        data.update({"owner": user.id})
         # remove contacts from validation
         internal_data = super().to_internal_value(data)
         return internal_data
@@ -82,10 +82,8 @@ class BaseContactSerializer(serializers.ModelSerializer):
             user = User.objects.get(id=imported_by)
             data.update({"owner": user.id})
         if account:
-            acct = BaseAccount.objects.filter(
-                integration_id=account, organization__users__id=imported_by
-            ).first()
-            acct = acct.id if acct else acct
+            acct = BaseAccount.objects.filter(integration_id=account, owner=imported_by).first()
+            acct = acct.id if acct else account
             data.update({"account": acct})
 
         # remove contacts from validation
@@ -117,6 +115,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             "imported_by",
             "contacts",
             "secondary_data",
+            "last_stage_update",
         )
 
     def _format_date_time_from_api(self, d):
@@ -139,7 +138,7 @@ class BaseOpportunitySerializer(serializers.ModelSerializer):
             data.update({"external_owner": "N/A"})
         if owner:
             user = User.objects.get(id=imported_by)
-            data.update({"owner": user})
+            data.update({"owner": user.id})
         if account:
             acct = BaseAccount.objects.filter(
                 integration_id=account, organization__users__id=imported_by

@@ -21,7 +21,7 @@
       </div>
 
       <div
-        v-if="type === 'Currency' || type === 'Double' || type === 'Phone'"
+        v-if="(type === 'Currency' || type === 'Double' || type === 'Phone' || type === 'Int')"
         class="filter-selection__body"
       >
         <input
@@ -40,7 +40,7 @@
           :placeholder="'Select ' + `${filterName}`"
           style="max-width: 20vw"
           v-model="inputValue"
-          :options="dropdowns[apiName]"
+          :options="apiName === 'dealstage' ? dealstageDropdown : dropdowns[apiName]"
           @select="$emit('value-selected', $event.value)"
           openDirection="below"
           selectLabel="Enter"
@@ -55,12 +55,12 @@
 
       <div v-else-if="type === 'Reference'" class="filter-selection__body">
         <Multiselect
-          v-if="apiName === 'OwnerId'"
+          v-if="(apiName === 'OwnerId' || apiName === 'hubspot_owner_id')"
           placeholder="Select Owner"
           style="max-width: 20vw"
           v-model="inputValue"
           @select="
-            $emit('value-selected', `${$event.salesforce_account_ref.salesforce_id}`, apiName)
+            $emit('value-selected', apiName === 'OwnerId' ? `${$event.salesforce_account_ref.salesforce_id}` : `${$event.hubspot_account_ref.hubspot_id}`, apiName)
           "
           :options="owners"
           openDirection="below"
@@ -121,8 +121,8 @@
                 ? parseInt(inputValue)
                 : type === 'Picklist' || type === 'MultiPicklist'
                 ? (userCRM === 'SALESFORCE' ? inputValue.value : inputValue.id)
-                : apiName === 'OwnerId'
-                ? inputValue.salesforce_account_ref.salesforce_id
+                : apiName === 'OwnerId' || apiName === 'hubspot_owner_id'
+                ? (userCRM === 'SALESFORCE' ? inputValue.salesforce_account_ref.salesforce_id : inputValue.hubspot_account_ref.hubspot_id)
                 : apiName === 'AccountId'
                 ? inputValue.id
                 : inputValue,
@@ -173,6 +173,15 @@ export default {
   computed: {
     userCRM() {
       return this.$store.state.user.crm
+    },
+    dealstageDropdown() {
+      let dealStages = []
+      if (this.apiName === 'dealstage') {
+        for (let key in this.dropdowns[this.apiName][0]) {
+          dealStages = [...dealStages, ...this.dropdowns[this.apiName][0][key].stages]
+        }
+      }
+      return dealStages
     },
     operators() {
       return [
