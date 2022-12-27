@@ -394,6 +394,76 @@ def process_get_pricebook_entry_options(payload, context):
     }
 
 
+def CRM_FILTERS(crm, crm_id):
+    filters = {
+        "HUBSPOT": [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": crm_id,},],
+        "SALESFORCE": [],
+    }
+    return filters[crm]
+
+
+def CRM_RESOURCE_FILTER(crm, resource, value):
+    if resource == slack_const.FORM_RESOURCE_DEAL:
+        property_name = "dealname"
+    elif resource == slack_const.FORM_RESOURCE_COMPANY:
+        property_name = "name"
+    elif resource == slack_const.FORM_RESOURCE_CONTACT:
+        property_name = "email" if crm == "HUBSPOT" else "Email"
+    return {
+        "propertyName": property_name,
+        "value": f"*{value}*",
+        "operator": "CONTAINS_TOKEN",
+    }
+
+
+def RESOURCE_OPTIONS(resource, options):
+    if resource in [slack_const.FORM_RESOURCE_COMPANY, slack_const.FORM_RESOURCE_DEAL]:
+        return {
+            "options": [
+                block_builders.option(option.name, option.integration_id) for option in options
+            ]
+        }
+    return
+
+
+@processor(required_context=["u", "resource_type"])
+def process_get_crm_resource_options(payload, context):
+    user = User.objects.get(pk=context["u"])
+    value = payload["value"]
+    resource = context.get("resource_type")
+    attempts = 1
+    while True:
+        crm_account = user.crm_account
+        crm_adapter = crm_account.adapter_class
+        try:
+            filters = CRM_FILTERS(user.crm, user.crm_account.crm_id)
+            if value:
+                filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
+            res = crm_adapter.list_resource_data(resource, filters=filters)
+            break
+        except TokenExpired:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to retrieve resource options for user {str(user.id)} after {attempts} tries"
+                )
+            else:
+                crm_account.regenerate_token()
+                attempts += 1
+        except InvalidFieldError as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to retrieve resource options for user {str(user.id)} beacuse of {e}"
+                )
+            else:
+                attempts += 1
+        except Exception as e:
+            return logger.exception(
+                f"Failed to retrieve resource options for user {str(user.id)} after {attempts} tries"
+            )
+    options = RESOURCE_OPTIONS(resource, res)
+    return options
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -422,6 +492,7 @@ def handle_block_suggestion(payload):
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_get_local_resource_options,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
         slack_const.GET_DEAL_STAGE_OPTIONS: process_get_deal_stage_options,
+        slack_const.GET_CRM_RESOURCE_OPTIONS: process_get_crm_resource_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

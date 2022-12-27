@@ -573,7 +573,7 @@ class DealAdapter:
     @staticmethod
     def additional_filters():
         """pass custom additional filters to the url"""
-        return [{"propertyName": "is_closed", "value": False, "operator": "EQ",}]
+        return [{"propertyName": "hs_is_closed", "value": False, "operator": "EQ",}]
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
