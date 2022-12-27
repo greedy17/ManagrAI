@@ -1,4 +1,3 @@
-import json
 import logging
 import requests
 import textwrap
@@ -53,20 +52,35 @@ from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
+
+from managr.salesforce.cron import (
+    queue_users_sf_resource,
+    queue_users_sf_fields,
+)
+from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
 from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
 
 
-def GET_COMMAND_OBJECTS():
-    from managr.salesforce.cron import (
-        queue_users_sf_resource,
-        queue_users_sf_fields,
-    )
+def field_syncs():
+    queue_users_sf_fields()
+    queue_users_hs_fields()
+    return
 
+
+def resource_syncs():
+    queue_users_sf_resource()
+    queue_users_hs_resource()
+    return
+
+
+def GET_COMMAND_OBJECTS():
+    field_sync = field_syncs
+    resource_sync = resource_syncs
     commands = {
-        "SALESFORCE_FIELDS": queue_users_sf_fields,
-        "SALESFORCE_RESOURCES": queue_users_sf_resource,
+        "SALESFORCE_FIELDS": field_sync,
+        "SALESFORCE_RESOURCES": resource_sync,
         "PULL_USAGE_DATA": pull_usage_data,
     }
     return commands
@@ -371,6 +385,7 @@ class UserViewSet(
 
         user = request.user
         res = user.current_forecast.get_current_values()
+        logger.info(f"FORECAST VALUES ENDPOINT: {res}")
         opps = []
         for item in res:
             serializer = OpportunitySerializer(data=item.as_dict)
@@ -875,6 +890,8 @@ def get_task_status(request):
                 data = {"completed": True}
         except CompletedTask.DoesNotExist:
             data = {"completed": False}
+        except Exception as e:
+            logger.exception(f"Uncaught exception on task status: {e}")
     logger.info(f"Task status for: {verbose_name}, {data}")
     return Response(data=data)
 

@@ -71,18 +71,20 @@
 
           <div v-if="form.field.recurrenceFrequency.value !== 'MONTHLY'">
             <div class="week-row">
-              <span
-                v-for="(day, i) in weeklyOpts"
-                :key="i"
-                :class="form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''"
-              >
+              <span v-for="(day, i) in weeklyOpts" :key="i">
                 <input
                   type="checkbox"
                   :id="day.value"
                   :value="day.value"
                   v-model="form.field.recurrenceDays.value"
                 />
-                <label :for="day.value">{{ day.key.charAt(0) }}</label>
+                <label
+                  :for="day.value"
+                  :class="
+                    form.field.recurrenceDays.value.includes(day.value) ? 'active-option' : ''
+                  "
+                  >{{ day.key.charAt(0) }}</label
+                >
               </span>
             </div>
           </div>
@@ -174,10 +176,15 @@
                   <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                  <p
+                    v-if="userChannelOpts.nextCursor"
+                    class="multi-slot__more"
+                    @click="listUserChannels(userChannelOpts.nextCursor)"
+                  >
                     Load More
                     <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
                   </p>
+                  <p v-else></p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">
@@ -206,7 +213,7 @@
             style="width: 25vw"
             selectLabel="Enter"
             track-by="id"
-            label="fullName"
+            :custom-label="fullOrEmailLabel"
             :multiple="true"
             :closeOnSelect="false"
             :loading="dropdownLoading"
@@ -308,14 +315,14 @@
             />
           </template>
         </FormField>
-        <div style="margin-right: 8px" class="end">
+        <div style="margin-right: 8px" class="start">
           <Multiselect
             placeholder="Select field"
             v-model="crmValue"
             @input="bindText(`${selectedResourceType}.${$event.apiName}`, `${$event.label}`)"
             :options="fields.list"
             openDirection="above"
-            style="width: 18vw; margin-right: 4px"
+            style="width: 48vw; margin-left: 12px"
             selectLabel="Enter"
             track-by="apiName"
             label="referenceDisplayLabel"
@@ -366,7 +373,8 @@ import Modal from '@/components/Modal'
 import AlertTemplate, { AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
@@ -387,7 +395,7 @@ export default {
       updatedAlert: this.oldAlert,
       addingFields: false,
       frequencies: ['WEEKLY', 'MONTHLY'],
-      resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
+      resources: [],
       dropdownLoading: false,
       selectedDay: null,
       selectedChannel: null,
@@ -396,7 +404,10 @@ export default {
       channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
-      message: 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }',
+      message:
+        this.userCRM === 'SALESFORCE'
+          ? 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }'
+          : 'Hey { __Recipient.full_name }, your deal { Deal.Name }',
       templateBounce: true,
       selectedUsers: null,
       fieldBounce: true,
@@ -418,7 +429,17 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      // fields: CollectionManager.create({
+      //   ModelClass: ObjectField,
+      //   pagination: { size: 1000 },
+      // }),
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        filters: {
+          crmObject: alert.resourceType
+        },
+        pagination: { size: 1000 },
+      }),
       users: CollectionManager.create({ ModelClass: User }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
@@ -457,6 +478,10 @@ export default {
       await this.users.refresh()
       await this.listUserChannels()
     }
+    this.resources =
+      this.userCRM === 'SALESFORCE'
+        ? ['Opportunity', 'Account', 'Contact', 'Lead']
+        : ['Deal', 'Contact', 'Company']
   },
   watch: {
     alertIsValid: 'activateSave',
@@ -468,7 +493,7 @@ export default {
           this.selectedResourceType = val
         }
         if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
+          this.fields.filters.crmObject = this.selectedResourceType
           this.fields.filters.page = 1
           await this.fields.refresh()
         }
@@ -509,6 +534,12 @@ export default {
     scrollToElement() {
       this.$refs.bottom ? this.$refs.bottom.scrollIntoView({ behavior: 'smooth' }) : null
     },
+    fullOrEmailLabel(props) {
+      if (!props.fullName.trim()) {
+        return props.email
+      }
+      return props.fullName
+    },
     changeFrequency() {
       this.alertFrequency == 'WEEKLY'
         ? (this.alertFrequency = 'MONTHLY')
@@ -543,7 +574,7 @@ export default {
     },
     setDefaultChannel() {
       this.directToUsers
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = 'default')
+        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = ['default'])
         : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
     },
     positiveDay(num) {
@@ -606,7 +637,7 @@ export default {
     //   })
     //   this.channelOpts = results
     // },
-    async listUserChannels(cursor = null) {
+    async listUserChannels(cursor) {
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
       const results = new SlackListResponse({
@@ -624,7 +655,7 @@ export default {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = res.channel.id
+        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = [res.channel.id]
         this.channelCreated = !this.channelCreated
       } else {
         console.log(res.error)
@@ -773,7 +804,7 @@ export default {
       if (this.editor.selection.lastRange) {
         start = this.editor.selection.lastRange.index
       }
-      this.editor.insertText(start, `${title}: { ${val} } \n \n`)
+      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
     },
     onNextPage() {
       this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
@@ -845,52 +876,6 @@ export default {
         this.dropdownLoading = false
       }, 1000)
     },
-    setOldAlertValues() {
-      if (this.oldAlert) {
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value =
-          this.oldAlert.configsRef[0].recipientType
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value =
-          this.oldAlert.configsRef[0].recipients
-        this.alertTemplateForm.field.resourceType.value = this.oldAlert.resourceType
-        this.alertTemplateForm.field.title.value = this.oldAlert.title
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value =
-          this.oldAlert.configsRef[0].recurrenceDay
-        this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value =
-          this.oldAlert.configsRef[0].recurrenceDays
-        this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value =
-          this.oldAlert.configsRef[0].alertTargetsRef.map((target) => target.value)
-        this.alertTemplateForm.field.alertMessages.groups[0].field.body =
-          this.oldAlert.messageTemplateRef.body
-
-        // for (let i = 0; i < this.oldAlert.groupsRef.length; i++) {
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandCondition.value =
-        //     this.oldAlert.groupsRef[i].operandsRef[i].operandCondition
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandIdentifier.value =
-        //     this.oldAlert.groupsRef[i].operandsRef[i].operandIdentifier
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandOrder.value = this.oldAlert.groupsRef[i].operandsRef[i].operandOrder
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandType.value = this.oldAlert.groupsRef[i].operandsRef[i].operandType
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandOperator.value = this.oldAlert.groupsRef[i].operandsRef[i].operandOperator
-
-        //   this.alertTemplateForm.field.alertGroups.groups[i].fields.alertOperands.group[
-        //     i
-        //   ].fields.operandValue.value = this.oldAlert.groupsRef[i].operandsRef[i].operandValue
-        // }
-      }
-    },
   },
   computed: {
     hasRecapChannel() {
@@ -925,6 +910,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     alertFrequency: {
       get() {
         return this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceFrequency.value
@@ -950,7 +938,8 @@ export default {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       'Hey { __Recipient.full_name },'
-    this.alertTemplateForm.field.resourceType.value = 'Opportunity'
+    this.alertTemplateForm.field.resourceType.value =
+      this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.repsPipeline()
     this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
   },
@@ -1238,6 +1227,12 @@ input::placeholder {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+}
+.start {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
 .flex-end {
   display: flex;
@@ -1690,6 +1685,9 @@ textarea {
   margin-top: 16px;
 
   span {
+    transition: all 0.2s;
+  }
+  label {
     cursor: pointer;
     color: $light-gray-blue;
     margin-right: 8px;
@@ -1701,9 +1699,9 @@ textarea {
     border-radius: 100%;
     border: 1px solid $soft-gray;
     transition: all 0.2s;
-    input {
-      display: none;
-    }
+  }
+  input {
+    display: none;
   }
 
   span:hover {

@@ -14,17 +14,19 @@ from django.conf import settings
 
 from django.db.models import Q
 from django.utils import timezone
-from managr.salesforce.adapter.exceptions import TokenExpired
+from managr.crm.exceptions import TokenExpired
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core.models import User, MeetingPrepInstance
 from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.core import constants as core_consts
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
+from managr.hubspot.adapter.models import HubspotContactAdapter
 from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_meeting_paginator_block,
     custom_task_paginator_block,
 )
+from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
 from managr.meetings.models import Meeting
 from managr.meetings.serializers import MeetingSerializer
 from managr.slack.helpers import requests as slack_requests
@@ -288,24 +290,28 @@ def meeting_prep(processed_data, user_id):
         participant_emails = set([p.get("email") for p in participants])
         meeting_contacts = []
     # find existing contacts
-    existing_contacts = Contact.objects.filter(
+    existing_contacts = BaseContact.objects.filter(
         email__in=participant_emails, owner__organization__id=user.organization.id
     ).exclude(email=user.email)
     meeting_resource_data = dict(resource_id="", resource_type="")
-    opportunity = Opportunity.objects.filter(
+    opportunity = BaseOpportunity.objects.filter(
         contacts__email__in=participant_emails, owner__id=user.id
     ).first()
     if opportunity:
         meeting_resource_data["resource_id"] = str(opportunity.id)
-        meeting_resource_data["resource_type"] = "Opportunity"
+        meeting_resource_data["resource_type"] = (
+            "Opportunity" if user.crm == "SALESFORCE" else "Deal"
+        )
         existing_contacts = existing_contacts.filter(opportunities__in=[str(opportunity.id)])
     else:
-        account = Account.objects.filter(
+        account = BaseAccount.objects.filter(
             contacts__email__in=participant_emails, owner__id=user.id,
         ).first()
         if account:
             meeting_resource_data["resource_id"] = str(account.id)
-            meeting_resource_data["resource_type"] = "Account"
+            meeting_resource_data["resource_type"] = (
+                "Account" if user.crm == "SALESFORCE" else "Company"
+            )
             existing_contacts = existing_contacts.filter(account=account.id)
         else:
             lead = Lead.objects.filter(email__in=participant_emails, owner__id=user.id).first()
@@ -321,21 +327,28 @@ def meeting_prep(processed_data, user_id):
         for index, participant in enumerate(participants):
             if participant["email"] == contact.email or participant["email"] == User.email:
                 del participants[index]
+    contact_adapter = ContactAdapter if user.crm == "SALESFORCE" else HubspotContactAdapter
     new_contacts = list(
         filter(
             lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
             list(
                 map(
                     lambda participant: {
-                        **ContactAdapter(
+                        **contact_adapter(
                             **dict(
                                 email=participant["email"],
                                 # these will only get stored if lastname and firstname are accessible from sf
-                                external_owner=user.salesforce_account.salesforce_id,
+                                external_owner=user.crm_account.crm_id,
                                 secondary_data={
-                                    "FirstName": _split_first_name(participant["name"]),
-                                    "LastName": _split_last_name(participant["name"]),
-                                    "Email": participant["email"],
+                                    f"{'FirstName' if user.crm == 'SALESFORCE' else 'FirstName'}": _split_first_name(
+                                        participant["name"]
+                                    ),
+                                    f"{'LastName' if user.crm == 'SALESFORCE' else 'firstname'}": _split_last_name(
+                                        participant["name"]
+                                    ),
+                                    f"{'Email' if user.crm == 'SALESFORCE' else 'email'}": participant[
+                                        "email"
+                                    ],
                                 },
                             )
                         ).as_dict,

@@ -3,11 +3,9 @@
     <CustomSlackForm
       :formType="UPDATE"
       :customForm="
-        (this.selectedForm = this.allForms.find(
-          (f) => f.resource == OPPORTUNITY && f.formType == UPDATE,
-        ))
+        (this.selectedForm = this.allForms.find((f) => f.resource == currentResource && f.formType == UPDATE))
       "
-      :resource="OPPORTUNITY"
+      :resource="currentResource"
       v-on:update:selectedForm="updateForm($event)"
       :loading="formFields.refreshing"
       :stageForms="formStages"
@@ -21,6 +19,7 @@ import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
@@ -47,9 +46,10 @@ export default {
       search: '',
       fieldParam: null,
       loading: false,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
+      formFields: CollectionManager.create({ ModelClass: ObjectField }),
       stageDropDownOpen: false,
       isVisible: false,
+      currentResource: '',
       validations: CollectionManager.create({
         ModelClass: SObjectValidation,
         pagination: Pagination.create({ size: 2 }),
@@ -62,10 +62,15 @@ export default {
 
   async created() {
     try {
+      if (this.userCRM === 'HUBSPOT') {
+        this.currentResource = this.DEAL
+      } else if (this.userCRM === 'SALESFORCE') {
+        this.currentResource = this.OPPORTUNITY
+      }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
       await this.listPicklists({
-        salesforceObject: this.Opportunity,
+        salesforceObject: this.currentResource,
         picklistFor: 'StageName',
       })
     } catch (error) {
@@ -79,6 +84,9 @@ export default {
 
   computed: {
     ...mapState(['user']),
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
   methods: {
     async listFields(query_params = {}) {
@@ -96,6 +104,7 @@ export default {
       }
     },
     updateForm(event) {
+      console.log(event)
       this.selectedForm = event
 
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
@@ -122,9 +131,15 @@ export default {
     },
     async listPicklists(query_params = {}) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.stages = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          const form = this.allForms.find((f) => f.resource == this.currentResource && f.formType == this.UPDATE)
+          const hsPicklist = form.fieldsRef.filter(item => query_params.picklistFor === item.apiName)
+          this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.stages = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         console.log(e)
       }

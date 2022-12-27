@@ -15,7 +15,7 @@ from managr.slack.serializers import (
     UserFrontEndSlackIntegrationSerializer,
 )
 from managr.zoom.serializers import ZoomAuthSerializer
-
+from managr.hubspot.serializers import HubspotAuthAccountSerializer
 from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast, NoteTemplate
 
 
@@ -49,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
     nylas_ref = NylasAuthAccountSerializer(source="nylas", read_only=True)
     salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
+    hubspot_account_ref = HubspotAuthAccountSerializer(source="hubspot_account", read_only=True)
     slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
@@ -85,6 +86,9 @@ class UserSerializer(serializers.ModelSerializer):
             "nylas_ref",
             "salesforce_account",
             "salesforce_account_ref",
+            "hubspot_account",
+            "hubspot_account_ref",
+            "has_hubspot_integration",
             "slack_ref",
             "slack_account",
             "zoom_account",
@@ -103,6 +107,7 @@ class UserSerializer(serializers.ModelSerializer):
             "forecast",
             "team",
             "is_team_lead",
+            "crm",
         )
 
     read_only_fields = (

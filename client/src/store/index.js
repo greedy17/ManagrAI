@@ -5,6 +5,7 @@ import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
 import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
+import { ObjectField, CRMObjects } from '@/services/crm'
 
 Vue.use(Vuex)
 
@@ -29,6 +30,11 @@ const state = {
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
+  customObject: {
+    task: null,
+    verboseName: null,
+    checker: null,
+  },
 }
 
 const mutations = {
@@ -64,7 +70,10 @@ const mutations = {
   },
   SAVE_API_PICKLISTS(state, apiPicklistOptions) {
     state.apiPicklistOptions = apiPicklistOptions;
-  }
+  },
+  UPDATE_CUSTOM_OBJECT: (state, payload) => {
+    state.customObject = payload
+  },
 
 }
 
@@ -92,9 +101,20 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllOpps({ commit }, filters = [['NOT_EQUALS', 'StageName', 'Closed Won'],['NOT_EQUALS', 'StageName', 'Closed Lost'],]) {
+  async loadAllOpps({ state, commit }, filters = []) {
     try {
-      const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      let res
+      if (state.user.crm === 'SALESFORCE') {
+        if (!filters.length) {
+          filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost']]
+        }
+        res = await CRMObjects.api.getObjectsForWorkflows('Opportunity', true, filters)
+      } else {
+        if (!filters.length) {
+          filters = [['NOT_EQUALS', 'dealstage', 'closedwon'], ['NOT_EQUALS', 'dealstage', 'closedlost']]
+        }
+        res = await CRMObjects.api.getObjectsForWorkflows('Deal', true, filters)
+      }
       commit('SAVE_ALL_OPPS', res.results)
     } catch (e) {
       console.log(e)
@@ -139,6 +159,28 @@ const actions = {
     } finally {
 
       commit('SAVE_API_PICKLISTS', obj)
+    }
+  },
+  async checkTask({ commit }, vbName) {
+    try {
+      const task = await User.api.checkTasks(vbName)
+      commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task})
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async setCustomObject({ commit, dispatch }, name) {
+    try {
+      await SObjects.api.getCustomObjectFields(name).then((res) => {
+        const vbName = res.verbose_name
+        state.customObject.checker = setInterval(() => {
+          dispatch('checkTask', vbName)
+          // this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        }, 2000)
+        commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task: null})
+      })
+    } catch (e) {
+      console.log(e)
     }
   },
   updateUser({ commit }, payload) {

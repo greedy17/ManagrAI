@@ -9,9 +9,10 @@ from background_task.models import CompletedTask, Task
 from managr.core import factories as core_factories
 from managr.organization import factories as org_factories
 from managr.salesforce.models import SalesforceAuthAccount, SFResourceSync, SObjectField
-from managr.salesforce.adapter.exceptions import CannotRetreiveObjectType
+from managr.crm.exceptions import CannotRetreiveObjectType
 from managr.slack.models import OrgCustomSlackForm, FormField
 from managr.slack import constants as slack_consts
+from managr.crm.models import ObjectField
 
 
 # Create your tests here.
@@ -256,14 +257,14 @@ class SfSyncTestCase(TestCase):
                 form_type=form_type, resource=resource, organization=self.admin_user.organization
             )
 
-            public_fields = SObjectField.objects.filter(
+            public_fields = ObjectField.objects.filter(
                 is_public=True,
                 id__in=slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, []),
             )
             for i, field in enumerate(public_fields):
-                f.fields.add(field, through_defaults={"order": i})
+                f.custom_fields.add(field, through_defaults={"order": i})
             f.save()
             self.assertEquals(
-                f.formfield_set.count(),
+                f.customformfield_set.count(),
                 len(slack_consts.DEFAULT_PUBLIC_FORM_FIELDS.get(resource, {}).get(form_type, [])),
             )

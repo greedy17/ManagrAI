@@ -22,7 +22,7 @@ from rest_framework import (
     viewsets,
 )
 
-from managr.salesforce.background import emit_generate_team_form_templates
+from managr.salesforce.background import emit_generate_form_template
 
 from rest_framework import viewsets, mixins, generics, status, filters, permissions
 from rest_framework.decorators import action
@@ -445,7 +445,7 @@ class TeamViewSet(
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            emit_generate_team_form_templates(request.data.get("team_lead"))
+            emit_generate_form_template(request.data.get("team_lead"), False)
         except Exception as e:
             print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})

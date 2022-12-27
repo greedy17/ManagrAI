@@ -114,10 +114,15 @@
                   <p class="multi-slot">No results. Try loading more</p>
                 </template>
                 <template slot="afterList">
-                  <p class="multi-slot__more" @click="listUserChannels(userChannelOpts.nextCursor)">
+                  <p
+                    v-if="userChannelOpts.nextCursor"
+                    class="multi-slot__more"
+                    @click="listUserChannels(userChannelOpts.nextCursor)"
+                  >
                     Load More
-                    <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                    <img src="@/assets/images/plusOne.svg" alt="" />
                   </p>
+                  <p v-else></p>
                 </template>
                 <template slot="placeholder">
                   <p class="slot-icon">

@@ -440,7 +440,6 @@ export default {
   },
 
   mounted() {
-    this.setPicklist()
     setTimeout(() => {
       console.log(this.forecastOpps)
     }, 3000)
@@ -563,15 +562,56 @@ export default {
     async getStagesAndForecast() {
       this.loading = true
       try {
-        let res = await SObjectPicklist.api.listPicklists({
-          picklistFor: 'StageName',
-          salesforceObject: 'Opportunity',
-        })
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          // res = await ObjectField.api.listFields({
+          //   crmObject: this.DEAL,
+          //   search: 'Deal Stage',
+          // })
+          // let dealStage
+          // for (let i = 0; i < res.length; i++) {
+          //   if (res[i].apiName === 'dealstage') {
+          //     dealStage = res[i]
+          //     break
+          //   }
+          // }
+          // this.stages = dealStage ? dealStage.options : []
+          res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStages = []
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStages = res[i]
+              break
+            }
+          }
+          let dealStage = []
+          if (dealStages.optionsRef.length) {
+            // const items = dealStages.options[0]
+            // for (let key in items) {
+            //   // dealStage = [...dealStage, items[key].stages]
+            //   for (let j = 0; j < items[key].stages.length; j++) {
+            //     dealStage.push(items[key].stages[j])
+            //   }
+            // }
+            for (let i = 0; i < dealStages.optionsRef.length; i++) {
+              dealStage = [...dealStage, ...dealStages.optionsRef[i]]
+            }
+          }
+          this.stages = dealStage && dealStage.length ? dealStage : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists({
+            picklistFor: 'StageName',
+            salesforceObject: 'Opportunity',
+          })
+          this.stages = res.length ? res[0]['values'] : []
+        }
         let res2 = await SObjectPicklist.api.listPicklists({
           picklistFor: 'ForecastCategoryName',
           salesforceObject: 'Opportunity',
         })
-        this.stages = res.length ? res[0]['values'] : []
         this.stages ? (this.stages = this.stages.map((stage) => stage.value)) : []
         this.forecasts = res2.length ? res2[0]['values'] : []
         this.forecasts ? (this.forecasts = this.forecasts.map((forecast) => forecast.value)) : []
@@ -585,22 +625,6 @@ export default {
         })
       } finally {
         this.loading = false
-      }
-    },
-    async listPicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    setPicklist() {
-      for (let i in this.picklistQueryOpts) {
-        this.picklistQueryOpts[i] = this.listPicklists(i, {
-          picklistFor: i,
-          salesforceObject: 'Opportunity',
-        })
       }
     },
     applyFilter() {
@@ -734,6 +758,9 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    userCRM() {
+      return this.$store.state.user.crm
     },
   },
 }

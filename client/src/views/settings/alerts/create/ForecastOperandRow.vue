@@ -202,9 +202,14 @@ export default {
     },
     async listPicklists(query_params = {}) {
       try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-
-        this.picklistOpts = res.length ? res[0]['values'] : []
+        let res
+        if (this.userCRM === 'HUBSPOT') {
+          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          this.picklistOpts = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
+        } else if (this.userCRM === 'SALESFORCE') {
+          res = await SObjectPicklist.api.listPicklists(query_params)
+          this.picklistOpts = res.length ? res[0]['values'] : []
+        }
       } catch (e) {
         console.log(e)
       }

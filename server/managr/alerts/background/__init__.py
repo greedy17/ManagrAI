@@ -34,8 +34,9 @@ from managr.slack.helpers.exceptions import (
     InvalidAccessToken,
     CannotSendToChannel,
 )
-from managr.salesforce.routes import routes as model_routes
-from managr.salesforce.adapter.exceptions import (
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
@@ -47,6 +48,8 @@ from ..models import AlertTemplate, AlertInstance, AlertConfig
 from managr.core.models import User
 
 logger = logging.getLogger("managr")
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
 
 def emit_init_alert(config_id, invocation):
@@ -81,23 +84,24 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
     config = AlertConfig.objects.filter(id=config_id).first()
     template = config.template
     user_list = config.target_users
-    owners_list = [user.salesforce_account.salesforce_id for user in user_list]
+    owners_list = [user.crm_account.crm_id for user in user_list]
     alert_id = str(template.id)
     resource = template.resource_type
-    route = model_routes[resource]
-    model_class = route["model"]
     template_user = template.user
+    route = CRM_SWITCHER[template_user.crm][resource]
+    model_class = route["model"]
+
     user = template.get_users.filter(id=user_id).first()
     attempts = 1
     while True:
-        sf = template_user.salesforce_account
+        crm = template_user.crm_account
         url = (
             template.manager_url_str(owners_list, config_id)
             if len(user_list) > 1
             else template.url_str(user, config_id)
         )
         try:
-            res = sf.adapter_class.execute_alert_query(url, template.resource_type)
+            res = crm.adapter_class.execute_alert_query(url, template.resource_type)
             logger.info(f"Pulled total {len(res)} from request for {resource} matching alert query")
             break
         except TokenExpired:
@@ -106,7 +110,7 @@ def _process_check_alert(config_id, user_id, invocation, run_time):
                     f"Failed to retrieve alerts for {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
-                sf.regenerate_token()
+                crm.regenerate_token()
                 attempts += 1
         except SFQueryOffsetError:
             return logger.warning(
@@ -246,28 +250,6 @@ def _process_send_alert(invocation, channel, config_id):
     alert_page_instances = custom_paginator(alert_instances)
     access_token = template.user.organization.slack_integration.access_token
     text = template.title
-    # blocks = [
-    #     block_builders.section_with_button_block(
-    #         "Open in Pipeline",
-    #         "OPEN_IN_PIPELINE",
-    #         f"*{len(alert_instances)} results for workflow {text}*",
-    #         url=ALERT_PIPELINE_URL,
-    #     ),
-    # ]
-
-    # for alert_instance in alert_page_instances.get("results", []):
-    #     blocks = [
-    #         *blocks,
-    #         *get_block_set(
-    #             "alert_instance", {"instance_id": str(alert_instance.id), "current_page": 1}
-    #         ),
-    #     ]
-    #     alert_instance.rendered_text = (
-    #         f"~{alert_instance.render_text()}~"
-    #         if alert_instance.completed
-    #         else alert_instance.render_text()
-    #     )
-    #     alert_instance.save()
     blocks = [
         *get_block_set(
             "initial_alert_blockset",
@@ -282,10 +264,6 @@ def _process_send_alert(invocation, channel, config_id):
         block_builders.context_block(f"Owned by {instance_user.full_name}"),
     ]
     if len(blocks):
-        # blocks = [
-        #     *blocks,
-        #     *custom_paginator_block(alert_page_instances, invocation, channel, config_id),
-        # ]
         try:
             slack_requests.send_channel_message(
                 channel_id, access_token, text=text, block_set=blocks

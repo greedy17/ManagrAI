@@ -4,7 +4,6 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 
-
 SF_API_VERSION = (
     settings.SALESFORCE_API_VERSION if hasattr(settings, "SALESFORCE_API_VERSION") else ""
 )
@@ -521,3 +520,14 @@ MEETING_REVIEW_ACC_PUBLIC_FIELD_IDS = [
     "6407b7a1-a877-44e2-979d-1effafec5035",
     "0bb152b5-aac1-4ee0-9c25-51ae98d55af1",
 ]
+
+SALESFORCE_FORM_REQUIRED_FIELDS = {
+    RESOURCE_SYNC_OPPORTUNITY: {
+        "CREATE": ["Name", "Stage", "CloseDate"],
+        "UPDATE": ["Name", "Stage", "CloseDate"],
+    },
+    RESOURCE_SYNC_ACCOUNT: {"CREATE": ["AccountName"], "UPDATE": []},
+    RESOURCE_SYNC_CONTACT: {"CREATE": ["LastName"], "UPDATE": []},
+    RESOURCE_SYNC_OPPORTUNITYLINEITEM: {"CREATE": [], "UPDATE": []},
+    RESOURCE_SYNC_LEAD: {"CREATE": ["LastName", "Company", "Status"], "UPDATE": []},
+}

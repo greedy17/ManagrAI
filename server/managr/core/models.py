@@ -73,7 +73,7 @@ class UserQuerySet(models.QuerySet):
     # TODO pb 10/15/20: Ideally, we are trying to attach user roles so that
     #       INTEGRATION can assume roles for managr
     def for_user(self, user):
-        if user.is_superuser:
+        if user.is_superuser or user.is_staff:
             return self.all()
         elif user.is_active:
             if user.user_level == core_consts.USER_LEVEL_MANAGER:
@@ -199,6 +199,7 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
         help_text="Object for reminder setting",
     )
+    crm = models.CharField(choices=core_consts.CRM_CHOICES, max_length=25, null=True, blank=True,)
     team = models.ForeignKey(
         "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
     )
@@ -284,7 +285,7 @@ class User(AbstractUser, TimeStampModel):
                 nylas.revoke()
             except Exception as e:
                 logger.info(
-                    "Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
+                    f"Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
                 )
                 pass
         self.delete()
@@ -299,6 +300,15 @@ class User(AbstractUser, TimeStampModel):
             return not zoom_acct.is_revoked
         else:
             return False
+
+    @property
+    def crm_account(self):
+        if self.crm is None:
+            return None
+        elif self.crm == "SALESFORCE":
+            return self.salesforce_account
+        else:
+            return self.hubspot_account
 
     @property
     def has_slack_integration(self):
@@ -323,6 +333,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def has_outreach_integration(self):
         return hasattr(self, "outreach_account")
+
+    @property
+    def has_hubspot_integration(self):
+        return hasattr(self, "hubspot_account")
 
     @property
     def is_team_lead(self):

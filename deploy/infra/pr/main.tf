@@ -127,6 +127,7 @@ data "template_file" "managr_app" {
     use_salesloft  = title(var.app_config.use_salesloft)
     use_gong       = title(var.app_config.use_gong)
     use_outreach   = title(var.app_config.use_outreach)
+    use_hubspot    = title(var.app_config.use_hubspot)
   }
 }
 
@@ -299,6 +300,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     outreachClientId      = var.app_config.outreach_client_id
     outreachSecret        = var.app_config.outreach_secret
     outreachRedirectUri   = var.app_config.outreach_redirect_uri
+
+    hubspotBaseUrl       = each.value.hubspot_base_url
+    hubspotClientId      = each.value.hubspot_client_id
+    hubspotSecret        = each.value.hubspot_secret
+    hubspotRedirectUri   = each.value.hubspot_redirect_uri
   })
 }
 

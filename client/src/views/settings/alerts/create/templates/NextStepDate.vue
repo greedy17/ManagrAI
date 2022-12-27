@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :selectField="true" :config="allConfigs.UPCOMING_NEXT_STEP" />
+  <PopularWorkflows :selectField="true" :config="userCRM === 'HUBSPOT' ? allConfigs.UPCOMING_NEXT_STEP_HUBSPOT : allConfigs.UPCOMING_NEXT_STEP" />
 </template>
 
 <script>
@@ -20,6 +20,11 @@ export default {
     return {
       allConfigs,
     }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>

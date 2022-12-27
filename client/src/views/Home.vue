@@ -62,7 +62,6 @@ export default {
   },
   async created() {
     this.templates.refresh()
-    console.log(this.templates)
   },
   computed: {
     meetings() {

@@ -327,12 +327,14 @@
                   </template>
                   <template slot="afterList">
                     <p
+                      v-if="userChannelOpts.nextCursor"
                       class="multi-slot__more"
                       @click="listUserChannels(userChannelOpts.nextCursor)"
                     >
                       Load More
                       <img src="@/assets/images/plusOne.svg" alt="" />
                     </p>
+                    <p v-else></p>
                   </template>
                   <template slot="placeholder">
                     <p class="slot-icon">
@@ -374,6 +376,7 @@ import FormField from '@/components/forms/FormField'
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { SObjectField } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import { INPUT_TYPE_MAP } from '@/services/salesforce/models'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
@@ -389,7 +392,7 @@ export default {
   data() {
     return {
       objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
+        ModelClass: ObjectField,
         pagination: { size: 200 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
@@ -411,7 +414,7 @@ export default {
       selectUsersBool: false,
       directToUsers: true,
       alertTemplateForm: new AlertTemplateForm(),
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
+      fields: CollectionManager.create({ ModelClass: ObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -441,7 +444,7 @@ export default {
     }
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      salesforceObject: this.resourceType,
+      crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
   },
@@ -454,7 +457,7 @@ export default {
           this.selectedResourceType = val
         }
         if (this.selectedResourceType) {
-          this.fields.filters.salesforceObject = this.selectedResourceType
+          this.fields.filters.crmObject = this.selectedResourceType
           this.fields.filters.page = 1
           await this.fields.refresh()
         }
@@ -466,7 +469,7 @@ export default {
           ...this.objectFields.filters,
           forAlerts: true,
           filterable: true,
-          salesforceObject: val,
+          crmObject: val,
         }
         this.objectFields.refresh()
       },
@@ -517,7 +520,7 @@ export default {
     test() {},
     setDefaultChannel() {
       this.directToUsers
-        ? (this.config.newConfigs[0].recipients = 'default')
+        ? (this.config.newConfigs[0].recipients = ['default'])
         : (this.config.newConfigs[0].recipients = null)
     },
     verifySubmit() {
@@ -580,7 +583,7 @@ export default {
       const res = await SlackOAuth.api.createChannel(name)
       if (res.channel) {
         this.alertTemplateForm.field.alertConfig.groups[0].field._recipients.value = res.channel
-        this.config.newConfigs[0].recipients = res.channel.id
+        this.config.newConfigs[0].recipients = [res.channel.id]
         this.channelCreated = !this.channelCreated
       } else {
         this.channelName = ''

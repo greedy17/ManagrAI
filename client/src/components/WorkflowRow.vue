@@ -274,7 +274,9 @@
             class="inline-row"
           >
             <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, Number($event.target.value), field.dataType)"
+              v-on:keyup.enter="
+                setUpdateValues(field.apiName, Number($event.target.value), field.dataType)
+              "
               id="user-input"
               type="number"
               :value="
@@ -420,7 +422,7 @@ export default {
         : (this.isSelected = false)
     },
     emitDropdown(val, opp) {
-      const item = {val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id}
+      const item = { val: val.value, oppId: opp.id, oppIntegrationId: opp.integration_id }
       this.$emit('set-dropdown-value', item)
     },
     closeInline() {

@@ -10,16 +10,34 @@ import managr.core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0024_meetingprepinstance_form'),
+        ("core", "0024_meetingprepinstance_form"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserActivity',
+            name="UserActivity",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('clicks', django.contrib.postgres.fields.jsonb.JSONField(default=managr.core.models.defaultClickActivity)),
-                ('user', models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "clicks",
+                    django.contrib.postgres.fields.jsonb.JSONField(
+                        default=managr.core.models.defaultClickActivity
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="activity",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

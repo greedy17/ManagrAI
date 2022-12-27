@@ -57,7 +57,7 @@ export class MeetingWorkflowAPI extends ModelAPI {
     try {
       const response = await this.client.get(MeetingWorkflowAPI.ENDPOINT + 'admin/', { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'Error getting meetings' })(e)
     }
   }
@@ -121,7 +121,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'fields/', {
         params: this.cls.toAPI(params),
       })
-      console.log(res.data)
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
@@ -148,7 +147,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
   }
 
   async getObjectsForWorkflows(sobject, for_filter = false, filters = false, resource_id = false,) {
-
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'sobject/', { params: { sobject: sobject, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
       return res.data
@@ -357,7 +355,6 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     try {
       const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/', {
         params: this.cls.toAPI(params),
-
       })
       return res.data.results.map(f => this.cls.fromAPI(f))
     } catch (e) {

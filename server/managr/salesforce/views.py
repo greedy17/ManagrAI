@@ -64,21 +64,21 @@ from .background import (
     emit_add_update_to_sf,
     _send_instant_alert,
     emit_process_update_resources_in_salesforce,
-    _process_pipeline_sync,
+    _process_pipeline_sf_sync,
     emit_meeting_workflow_tracker,
     create_form_instance,
     emit_process_bulk_update,
 )
 from managr.salesforce import constants as sf_consts
-from managr.salesforce.adapter.exceptions import (
+from managr.crm.exceptions import (
     TokenExpired,
     FieldValidationError,
     RequiredFieldError,
-    UnhandledSalesforceError,
+    UnhandledCRMError,
     SFNotFoundError,
     InvalidRefreshToken,
 )
-
+from managr.crm.models import ObjectField
 from .filters import SObjectFieldFilterSet, SalesforceSObjectFilterSet
 
 logger = logging.getLogger("managr")
@@ -103,7 +103,8 @@ def authenticate(request):
             *serializer.instance.field_sync_opts,
             *serializer.instance.validation_sync_opts,
         ]
-
+        request.user.crm = "SALESFORCE"
+        request.user.save()
         scheduled_time = timezone.now()
         formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_object_field_sync(str(request.user.id), operations, False, formatted_time)
@@ -216,13 +217,13 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def update_pipeline_fields(self, request, *args, **kwargs):
         user = self.request.user
-        sf = user.salesforce_account
+        crm = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
-            if id not in sf.extra_pipeline_fields:
-                sf.extra_pipeline_fields.append(id)
-        sf.save()
+            if id not in crm.extra_pipeline_fields:
+                crm.extra_pipeline_fields.append(id)
+        crm.save()
         return Response()
 
     @action(
@@ -233,7 +234,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def remove_pipeline_fields(self, request, *args, **kwargs):
         user = self.request.user
-        sf = user.salesforce_account
+        sf = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
@@ -251,18 +252,18 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         user = self.request.user
         sobject_id = request.GET.get("sobject_id", None)
         value = request.GET.get("value", None)
-        sobject_field = SObjectField.objects.get(id=sobject_id)
+        sobject_field = ObjectField.objects.get(id=sobject_id)
         for_meetings = self.request.GET.get("for_meetings", False)
         attempts = 1
         while True:
-            sf_account = user.salesforce_account
-            sf_adapter = sf_account.adapter_class
+            crm_account = user.crm_account
+            crm_adapter = crm_account.adapter_class
             try:
-                res = sf_adapter.list_relationship_data(
+                res = crm_adapter.list_relationship_data(
                     sobject_field.display_value_keys["api_name"],
                     sobject_field.display_value_keys["name_fields"],
                     value,
-                    sobject_field.salesforce_object,
+                    sobject_field.crm_object,
                     include_owner=for_meetings,
                 )
                 break
@@ -273,7 +274,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                     )
                 else:
                     try:
-                        sf_account.regenerate_token()
+                        crm_account.regenerate_token()
                         attempts += 1
                     except InvalidRefreshToken:
                         return Response(
@@ -391,6 +392,7 @@ class SalesforceSObjectViewSet(
             )
         )
         if note_data:
+            print("NOTE DATA", note_data)
             return Response(data=note_data)
         return Response(data=[])
 
@@ -405,6 +407,46 @@ class SalesforceSObjectViewSet(
         task = emit_process_bulk_update(request.data, str(request.user.id), verbose_name)
         data = {"verbose_name": verbose_name}
         return Response(data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="create-bulk-form-instance",
+    )
+    def create_bulk_form_instance(self, request, *args, **kwargs):
+        from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+
+        user = self.request.user
+        resource_id = self.request.GET.get("resource_id", None)
+        template_list = OrgCustomSlackForm.objects.for_user(user).filter(
+            Q(resource="Opportunity", form_type="UPDATE")
+        )
+        template = template_list.first()
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            template=template, user=user, resource_id=resource_id
+        )
+        attempts = 1
+        while True:
+            try:
+
+                data = {
+                    "form_id": str(slack_form.id),
+                    "success": True,
+                }
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.info(f"CREATE FORM INSTANCE TOKEN EXPIRED ERROR ---- {e}")
+                    break
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.info(f"CREATE FORM INSTANCE ERROR ---- {e}")
+                data = {"error": str(e), "success": False}
+                break
+        return Response(data=data)
 
     @action(
         methods=["get"],
@@ -579,7 +621,7 @@ class SalesforceSObjectViewSet(
                             str(user.id), all_form_data
                         )
                     else:
-                        resource = main_form.resource_object.update_in_salesforce(all_form_data)
+                        resource = main_form.resource_object.update(all_form_data)
                         if len(custom_object_forms):
                             sf.create_custom_object(
                                 custom_object_data_collector,
@@ -603,7 +645,7 @@ class SalesforceSObjectViewSet(
 
                     data = {"success": False, "error": str(e)}
                     break
-                except UnhandledSalesforceError as e:
+                except UnhandledCRMError as e:
                     logger.info(f"UPDATE UNHANDLED SF ERROR {e}")
                     data = {"success": False, "error": str(e)}
                     break
@@ -639,7 +681,7 @@ class SalesforceSObjectViewSet(
                     break
             if data["success"]:
                 if all_form_data.get("meeting_comments", None) is not None:
-                    emit_add_update_to_sf(str(main_form.id))
+                    (str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
                 ):
@@ -709,7 +751,7 @@ class SalesforceSObjectViewSet(
             except RequiredFieldError as e:
                 data = {"success": False, "error": str(e)}
                 break
-            except UnhandledSalesforceError as e:
+            except UnhandledCRMError as e:
                 data = {"success": False, "error": str(e)}
                 break
 
@@ -904,6 +946,7 @@ class SalesforceSObjectViewSet(
             [f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{object}"],
             schedule_time=formatted_time,
             verbose_name=verbose_name,
+            priority=1,
         )
         return Response(data={"verbose_name": task.verbose_name})
 

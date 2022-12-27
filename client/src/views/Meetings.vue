@@ -305,6 +305,7 @@
 </template>
 <script>
 import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
@@ -472,6 +473,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
@@ -485,13 +489,20 @@ export default {
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
-      return this.$store.state.apiPicklistOptions
+      console.log('state', this.$store.state)
+      if (this.userCRM === 'HUBSPOT') {
+        console.log('hi')
+        return this.getHubspotOptions()
+      } else {
+        return this.$store.state.apiPicklistOptions
+      }
     },
     pricebooks() {
       return this.$store.state.pricebooks
     },
   },
   created() {
+    // this.resourceType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.getAllForms()
     this.templates.refresh()
   },
@@ -514,6 +525,59 @@ export default {
     //   resType !== this.resourceType ? i = this.resourceType : i = resType
     //   return i
     // },
+    async getHubspotOptions() {
+      console.log('sanity')
+      let stages = []
+      if (this.userCRM === 'HUBSPOT') {
+        try {
+          // let res = await ObjectField.api.listFields({
+          //   crmObject: this.DEAL,
+          //   search: 'Deal Stage',
+          // })
+          // console.log('res please', res)
+          // let dealStage
+          // for (let i = 0; i < res.length; i++) {
+          //   if (res[i].apiName === 'dealstage') {
+          //     dealStage = res[i]
+          //     break
+          //   }
+          // }
+          // if (dealStage) {
+          //   // stages = dealStage
+          //   return dealStage.options
+          // }
+          let res = await ObjectField.api.listFields({
+            crmObject: this.DEAL,
+            search: 'Deal Stage',
+          })
+          let dealStages = []
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].apiName === 'dealstage') {
+              dealStages = res[i]
+              break
+            }
+          }
+          let dealStage = []
+          if (dealStages.optionsRef.length) {
+            // const items = dealStages.options[0]
+            // for (let key in items) {
+            //   // dealStage = [...dealStage, items[key].stages]
+            //   for (let j = 0; j < items[key].stages.length; j++) {
+            //     dealStage.push(items[key].stages[j])
+            //   }
+            // }
+            for (let i = 0; i < dealStages.optionsRef.length; i++) {
+              dealStage = [...dealStage, ...dealStages.optionsRef[i]]
+            }
+          }
+          return dealStage && dealStage.length ? dealStage : []
+        } catch (e) {
+          console.log(e)
+        }
+      }
+      console.log('stages', stages)
+      return stages
+    },
     cancelEditProduct() {
       this.dropdownProductVal = {}
       this.editingProduct = !this.editingProduct
@@ -803,7 +867,9 @@ export default {
         this.loading = true
         this.loaderText = 'Pulling your calendar events...'
         setTimeout(() => {
-          this.loaderText = 'Mapping to Salesforce...'
+          this.loaderText = `Mapping to ${
+            this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'
+          }...`
           this.getMeetingList()
           setTimeout(() => {
             this.loading = false
@@ -832,8 +898,7 @@ export default {
     },
     async getMeetingList() {
       try {
-        const res = await MeetingWorkflows.api.getMeetingList()
-        this.meetings = res.results
+        this.$store.dispatch('loadMeetings')
       } catch (e) {
         this.$toast('Error gathering Meetings!', {
           timeout: 2000,
@@ -848,8 +913,12 @@ export default {
     async mapOpp(workflow, resource, resourceType) {
       this.meetingLoading = true
       try {
+        let newResourceType = resourceType
+        if (newResourceType === 'Opportunity') {
+          newResourceType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        }
         const res = await MeetingWorkflows.api
-          .mapMeeting(workflow, resource, resourceType)
+          .mapMeeting(workflow, resource, newResourceType)
           .then(() => {
             this.$store.dispatch('loadMeetings')
           })
@@ -932,30 +1001,6 @@ export default {
     },
     closeListSelect() {
       this.showList = false
-    },
-    async listPicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.picklistQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listStagePicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.stagePicklistQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async listCreatePicklists(type, query_params) {
-      try {
-        const res = await SObjectPicklist.api.listPicklists(query_params)
-        this.createQueryOpts[type] = res.length ? res[0]['values'] : []
-      } catch (e) {
-        console.log(e)
-      }
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
@@ -1077,7 +1122,6 @@ export default {
         })
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
-
         this.currentOwner = this.allUsers.filter(
           (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
         )[0].full_name
@@ -1370,33 +1414,45 @@ export default {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
-        this.updateOppForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-        )
-        let stageGateForms = res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
-        )
+        console.log('check res', res)
+
+        this.updateOppForm =
+          this.userCRM === 'SALESFORCE'
+            ? res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity')
+            : res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal')
+
+        let stageGateForms =
+          this.userCRM === 'SALESFORCE'
+            ? res.filter((obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity')
+            : res.filter((obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal')
         this.createContactForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
-        )[0].fieldsRef
+        )[0]
+        this.createContactForm = this.createContactForm ? this.createContactForm.fieldsRef : []
         this.updateContactForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
-        )[0].fieldsRef
-        this.updateAccountForm = res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
-        )[0].fieldsRef
+        )[0]
+        this.updateContactForm = this.updateContactForm ? this.updateContactForm.fieldsRef : []
+        this.updateAccountForm =
+          this.userCRM === 'SALESFORCE'
+            ? res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Account')[0]
+                .fieldsRef
+            : res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Company')[0]
+        this.updateAccountForm = this.updateAccountForm ? this.updateAccountForm.fieldsRef : []
         this.updateLeadForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Lead',
-        )[0].fieldsRef
+        )[0]
+        this.updateLeadForm = this.updateLeadForm ? this.updateLeadForm.fieldsRef : []
         this.createProductForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
-        )[0].fieldsRef
+        )[0]
+        this.createProductForm = this.createProductForm ? this.createProductForm.fieldsRef : []
 
         let stages = stageGateForms.map((field) => field.stage)
         this.stagesWithForms = stages
-        this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        this.resourceFields = this.updateOppForm[0].fieldsRef
-        this.stageGateCopy = stageGateForms.length ? stageGateForms[0].fieldsRef : []
+        this.oppFormCopy = this.updateOppForm[0] ? this.updateOppForm[0].fieldsRef : []
+        this.resourceFields = this.updateOppForm[0] ? this.updateOppForm[0].fieldsRef : []
+        this.stageGateCopy = stageGateForms[0] ? stageGateForms[0].fieldsRef : []
 
         for (const field of stageGateForms) {
           this.stageValidationFields[field.stage] = field.fieldsRef

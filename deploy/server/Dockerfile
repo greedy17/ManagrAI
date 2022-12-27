@@ -106,7 +106,13 @@ ENV SECRET_KEY='secret123' \
   OUTREACH_BASE_URL='' \
   OUTREACH_CLIENT_ID='' \
   OUTREACH_SECRET='' \
-  OUTREACH_REDIRECT_URI=''
+  OUTREACH_REDIRECT_URI='' \
+  USE_HUBSPOT=False \
+  HUBSPOT_BASE_URL='' \
+  HUBSPOT_CLIENT_ID='' \
+  HUBSPOT_SECRET='' \
+  HUBSPOT_REDIRECT_URI=''
+
 
 # Set the name of the working directory inside the docker container
 WORKDIR /app

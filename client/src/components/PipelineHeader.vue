@@ -9,7 +9,7 @@
 
     <div
       @click="
-        $emit('sort-opps', 'String', 'Name', 'name'),
+        $emit('sort-opps', 'String', userCRM === 'SALESFORCE' ? 'Name' : 'dealname', userCRM === 'SALESFORCE' ? 'name' : 'dealname'),
           (sortingForward = false),
           (nameSort = 1),
           (sortingIndex = null),
@@ -29,7 +29,7 @@
 
     <div
       @click="
-        $emit('sort-opps-reverse', 'String', 'Name', 'name'),
+        $emit('sort-opps-reverse', 'String', userCRM === 'SALESFORCE' ? 'Name' : 'dealname', userCRM === 'SALESFORCE' ? 'name' : 'dealname'),
           (sortingForward = true),
           (nameSort = 2),
           (sortingIndex = null),
@@ -265,7 +265,11 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
-
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+  },
   methods: {
     async removeField(id) {
       try {

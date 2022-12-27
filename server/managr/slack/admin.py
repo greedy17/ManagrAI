@@ -2,7 +2,10 @@ from django.contrib import admin
 from django.urls import resolve
 from django.forms.models import ModelChoiceField
 from . import models as slack_models
+from . import constants as slack_consts
 from managr.salesforce import models as sf_models
+from managr.crm import models as crm_models
+from managr.hubspot.models import HObjectField
 from django.db.models import Q
 from managr.core.models import User
 
@@ -18,21 +21,21 @@ class CustomFormFieldInline(admin.StackedInline):
         parent = self.get_parent_object_from_request(request)
         if parent:
             if db_field.name == "field":
-                queryset = sf_models.SObjectField.objects.filter(
+                queryset = crm_models.ObjectField.objects.filter(
                     (
-                        Q(salesforce_account__user__organization=parent.organization)
-                        & Q(salesforce_object=parent.resource)
-                        & Q(salesforce_account__user__team_lead_of=parent.team)
+                        Q(user__organization=parent.organization)
+                        & Q(crm_object=parent.resource)
+                        & Q(user__team_lead_of=parent.team)
                     )
                     | Q(is_public=True)
-                )
+                ).order_by("label")
                 return ModelChoiceField(queryset)
         else:
-            queryset = sf_models.SObjectField.objects.all()
+            queryset = crm_models.ObjectField.objects.all()
             return ModelChoiceField(queryset)
         return super(CustomFormField, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-    model = slack_models.FormField
+    model = slack_models.CustomFormField
     fields = (
         "field",
         "order",
@@ -40,13 +43,15 @@ class CustomFormFieldInline(admin.StackedInline):
     extra = 0
 
 
-class CustomFormField(admin.ModelAdmin):
+class CustomFormFieldAdmin(admin.ModelAdmin):
     model = slack_models.FormField
-    list_display = (
-        "field",
-        "form",
-        "order",
-    )
+    list_display = ("form", "order")
+    ordering = ("-datetime_created",)
+
+
+class CustomFormField(admin.ModelAdmin):
+    model = slack_models.CustomFormField
+    list_display = ("form", "order")
     ordering = ("-datetime_created",)
 
 
@@ -74,4 +79,5 @@ admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)
 admin.site.register(slack_models.OrgCustomSlackFormInstance, CustomOrgSlackFormsInstance)
 admin.site.register(slack_models.OrganizationSlackIntegration)
 admin.site.register(slack_models.UserSlackIntegration)
-admin.site.register(slack_models.FormField, CustomFormField)
+admin.site.register(slack_models.FormField, CustomFormFieldAdmin)
+admin.site.register(slack_models.CustomFormField, CustomFormField)

@@ -13,7 +13,7 @@ from . import constants as sf_consts
 logger = logging.getLogger("managr")
 
 
-@receiver(post_save, sender=CompletedTask)
+# @receiver(post_save, sender=CompletedTask)
 def update_succesful_operations(sender, instance=None, created=False, **kwargs):
     """When A background task is completed from the sf sync"""
     if created:

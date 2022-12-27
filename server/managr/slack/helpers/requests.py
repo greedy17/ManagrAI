@@ -167,7 +167,7 @@ def generic_request(url, data, access_token=None):
         if access_token
         else slack_auth.json_headers(),
     )
-    if "view" in data.keys():
+    if data is None or "view" in data.keys():
         blocks = original_data.get("view", {}).get("blocks", []) if data else []
     else:
         blocks = data.get("blocks")
@@ -239,7 +239,7 @@ def list_user_channels(access_token, user, limit=100, cursor=None, types=[]):
 
     url += "?" + urlencode(q)
     res = requests.get(url, headers=slack_auth.encode_header(access_token))
-    logger.info(f"SLACK LIST CHANNEL INFO -----------------------------\nURL: {url}")
+    # logger.info(f"SLACK LIST CHANNEL INFO -----------------------------\nURL: {url}")
     return _handle_response(res)
 
 
@@ -249,4 +249,3 @@ def get_channel_info(access_token, channel_id):
     url += "?" + urlencode(q)
     res = requests.get(url, headers=slack_auth.encode_header(access_token))
     return _handle_response(res)
-

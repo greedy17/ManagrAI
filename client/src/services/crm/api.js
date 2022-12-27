@@ -1,0 +1,152 @@
+import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
+import { apiClient, apiErrorHandler } from '@/services/api'
+import { objectToSnakeCase } from '@/services/utils'
+
+export class ObjectFieldAPI extends ModelAPI {
+    static ENDPOINT = 'crm/'
+
+    static FILTERS_MAP = {
+        page: ApiFilter.create({ key: 'page' }),
+        pageSize: ApiFilter.create({ key: 'page_size' }),
+    }
+    get client() {
+        return apiClient()
+    }
+
+    async listFields(query_params = {}) {
+        let filterMaps = {
+            ...ObjectFieldAPI.FILTERS_MAP,
+            createable: ApiFilter.create({ key: 'createable' }),
+            updateable: ApiFilter.create({ key: 'updateable' }),
+            crmObject: ApiFilter.create({ key: 'crm_object' }),
+
+            search: ApiFilter.create({ key: 'search' }),
+        }
+
+        let params = ApiFilter.buildParams(filterMaps, { ...query_params })
+        try {
+            const res = await this.client.get(ObjectFieldAPI.ENDPOINT + 'fields/', {
+                params: this.cls.toAPI(params),
+            })
+            return res.data.results.map(f => this.cls.fromAPI(f))
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Zoom Auth Link' })(e)
+        }
+    }
+
+    async list({ filters = {}, pagination = {} } = {}) {
+        // list method that works with collection manager for pagination
+        let filtersMap = {
+            ...ObjectFieldAPI.FILTERS_MAP,
+            createable: ApiFilter.create({ key: 'createable' }),
+            updateable: ApiFilter.create({ key: 'updateable' }),
+            crmObject: ApiFilter.create({ key: 'crm_object' }),
+            search: ApiFilter.create({ key: 'search' }),
+            forAlerts: ApiFilter.create({ key: 'for_alerts' }),
+            filterable: ApiFilter.create({ key: 'filterable' }),
+        }
+
+        const url = ObjectFieldAPI.ENDPOINT + 'fields/'
+
+        const options = {
+            params: ApiFilter.buildParams(filtersMap, {
+                ...filters,
+                page: pagination.page,
+                pageSize: pagination.size,
+            }),
+        }
+        return this.client
+            .get(url, options)
+            .then(response => response.data)
+            .then(data => ({
+                ...data,
+                results: data.results.map(this.cls.fromAPI),
+            }))
+    }
+
+    async getObjects(crm_object, page = 1, for_filter = false, filters = false, resource_id = false,) {
+      try {
+        const res = await this.client.get('crm-objects/', { params: { crm_object: crm_object, page: page, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 20, } })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async getObjectsForWorkflows(crm_object, for_filter = false, filters = false, resource_id = false,) {
+      try {
+        const res = await this.client.get('crm-objects/', { params: { crm_object: crm_object, resource_id: resource_id, for_filter: for_filter, filters: JSON.stringify(filters), page_size: 500, } })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async getCurrentValues(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/get-current-values/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async createResource(formData) {
+      try {
+        const newFormData = formData
+        if (formData.form_data.dealstage) {
+          newFormData.form_data.stage_name = formData.form_data.dealstage
+        }
+        const res = await this.client.post('crm-objects/create/', newFormData)
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+
+    async updateResource(formData) {
+      try {
+        const res = await this.client.post('crm-objects/update/', formData)
+        return res.data
+      } catch (e) {
+        return apiErrorHandler({ apiName: 'Salesforce API' })(e)
+      }
+    }
+
+    async createFormInstance(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/create-form-instance/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async getNotes(resourceId) {
+      let id = objectToSnakeCase(resourceId)
+      try {
+        const res = await this.client.get('crm-objects/notes/', { params: id })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async getCurrentValues(formData) {
+      let d = objectToSnakeCase(formData)
+      try {
+        const res = await this.client.get('crm-objects/get-current-values/', { params: d })
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+      }
+    }
+    async resourceSync() {
+      try {
+        const res = await this.client.get('crm-objects/resource-sync/')
+        return res.data
+      } catch (e) {
+        apiErrorHandler({ apiName: 'Error syncing resources' })(e)
+      }
+    }
+}

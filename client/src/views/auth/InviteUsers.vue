@@ -10,7 +10,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -30,14 +30,11 @@
               <PulseLoadingSpinnerButton
                 @click="changeAdminSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
                 text="Confirm"
                 :loading="pulseLoading"
                 >Confirm</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleConfirmCancel" style="margin-right: 2.5rem">
-                Cancel
-              </div>
             </template>
           </div>
         </div>
@@ -53,11 +50,20 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
         <div class="modal-header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Change Organization's Admin</h3>
+            <h3 class="invite-form__title">Change Admin</h3>
+          </div>
+          <div class="flex-row">
+            <img
+              @click="handleCancel"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="filter: invert(30%); cursor: pointer;"
+            />
           </div>
         </div>
 
@@ -72,7 +78,7 @@
                   v-model="newAdmin"
                   :options="team.list /* do not show the current admin */"
                   openDirection="below"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   selectLabel="Enter"
                   label="email"
                 >
@@ -97,12 +103,9 @@
               <div
                 @click="handleConfirm"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
               >
-                Confirm
-              </div>
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
-                Cancel
+                Save
               </div>
             </template>
           </div>
@@ -119,16 +122,25 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem;">
         <div class="modal-header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
             <h3 class="invite-form__title">Create a Team</h3>
           </div>
+          <div class="flex-row">
+            <img
+              @click="handleCancel"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="filter: invert(30%); cursor: pointer;"
+            />
+          </div>
         </div>
 
         <div
-          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
+          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem; margin-bottom: 1rem;"
         >
           <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
@@ -136,7 +148,7 @@
                 <input
                   placeholder="Team Name"
                   v-model="teamName"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   class="template-input modal-input"
                   type="text"
                   name=""
@@ -156,7 +168,7 @@
                     isAdmin ? team.list.filter((user) => user.id !== getUser.id) : team.list
                   "
                   openDirection="below"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   selectLabel="Enter"
                   label="email"
                 >
@@ -181,14 +193,11 @@
               <PulseLoadingSpinnerButton
                 @click="createTeamSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 1.75rem"
+                style="width: 5rem; margin-right: 5%; height: 1.75rem"
                 text="Save"
                 :loading="pulseLoading"
                 >Save</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
-                Cancel
-              </div>
             </template>
           </div>
         </div>
@@ -225,7 +234,7 @@
                   @select="updateAvailableUsers($event)"
                   :options="teamsList"
                   openDirection="below"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   selectLabel="Enter"
                   track-by="id"
                   label="name"
@@ -258,7 +267,7 @@
                   v-model="selectedUsers"
                   :options="usersList"
                   openDirection="below"
-                  style="width: 26vw"
+                  style="width: 33vw"
                   selectLabel="Enter"
                   label="email"
                   :multiple="true"
@@ -284,14 +293,11 @@
               <PulseLoadingSpinnerButton
                 @click="editTeamSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 1rem; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
                 text="Save"
                 :loading="pulseLoading"
                 >Save</PulseLoadingSpinnerButton
               >
-              <div class="cancel-button" @click="handleCancel" style="margin-right: 2.5rem">
-                Cancel
-              </div>
             </template>
           </div>
         </div>
@@ -627,7 +633,6 @@ export default {
       this.pulseLoading = true
       if (!this.newAdmin || !this.newAdmin.id === this.getUser.id) {
         setTimeout(() => {
-          console.log('Please choose a new admin')
           this.$toast('Please choose a new admin', {
             timeout: 2000,
             position: 'top-left',
@@ -898,9 +903,9 @@ export default {
   border-bottom-right-radius: 4px;
 }
 .header {
-  background-color: $soft-gray;
+  // background-color: $soft-gray;
   width: 100%;
-  border-bottom: 1px solid $soft-gray;
+  // border-bottom: 1px solid $soft-gray;
   position: relative;
   height: 20vh;
   border-top-right-radius: 4px;
@@ -923,7 +928,9 @@ export default {
 }
 .modal-header {
   width: 100%;
-  margin-top: -1rem;
+  margin-top: -1.5rem;
+  display: flex;
+  justify-content: space-between;
 }
 .options {
   // border: 1px solid $soft-gray;
@@ -1510,6 +1517,7 @@ input[type='checkbox'] + label::before {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    border-top: 1px solid $soft-gray;
   }
   &__actions-noslack {
     display: flex;
@@ -1544,13 +1552,13 @@ input[type='checkbox'] + label::before {
 .modal-form {
   width: 100%;
   background-color: $white;
-  height: 50vh;
+  height: 40vh;
   // justify-content: space-evenly;
 }
 .modal-button {
   @include primary-button();
   box-shadow: none;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   height: 2.5rem;
   width: 19rem;
   font-size: 14px;
@@ -1560,8 +1568,8 @@ input[type='checkbox'] + label::before {
   flex-direction: row;
   align-items: center;
   justify-self: start;
-  width: 90%;
-  margin: 0 auto;
+  // width: 90%;
+  margin: 0 5%;
   letter-spacing: 1px;
   h4 {
     // font-size: 20px;
@@ -1569,13 +1577,16 @@ input[type='checkbox'] + label::before {
 }
 .logo {
   height: 24px;
-  margin-left: 0.5rem;
-  margin-right: 0.25rem;
+  margin-left: 0.25rem;
+  margin-right: 0.5rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
 .confirm-form {
   width: 37vw;
-  height: 40vh;
+  height: 33vh;
+}
+.form-margin-small {
+  margin-top: 10rem;
 }
 </style>

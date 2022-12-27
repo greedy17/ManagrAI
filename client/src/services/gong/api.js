@@ -23,7 +23,7 @@ export default class GongAccountAPI extends ModelAPI {
   }
   async authenticate(code) {
     try {
-      const res = await this.client.post(GongAccountAPI.ENDPOINT + 'authenticate', { code: code})
+      const res = await this.client.post(GongAccountAPI.ENDPOINT + 'authenticate', { code: code })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)

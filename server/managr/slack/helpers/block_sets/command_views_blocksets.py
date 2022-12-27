@@ -23,9 +23,29 @@ from managr.slack.helpers.utils import (
 )
 from managr.slack.helpers import block_builders, block_sets
 from managr.utils.misc import snake_to_space
-from managr.salesforce.routes import routes as form_routes
+
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.alerts.models import AlertInstance
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+
+
+def resource_options(crm):
+    if crm == "SALESFORCE":
+        return [
+            block_builders.option("Opportunity", "Opportunity"),
+            block_builders.option("Account", "Account"),
+            block_builders.option("Lead", "Lead"),
+            block_builders.option("Contact", "Contact"),
+        ]
+    else:
+        return [
+            block_builders.option("Deal", "Deal"),
+            block_builders.option("Company", "Company"),
+            block_builders.option("Contact", "Contact"),
+        ]
 
 
 @block_set(required_context=["resource_type", "u"])
@@ -116,6 +136,43 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
     return blocks
 
 
+def custom_inline_paginator_block(pagination_object, invocation, config_id, api_name):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = []
+    button_blocks = []
+    page_context = {"invocation": invocation, "config_id": config_id, "api_name": api_name}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="danger",
+            action_id=f"{slack_const.PAGINATE_INLINE_ALERTS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Save + Continue",
+            str(next_page),
+            action_id=f"{slack_const.PAGINATE_INLINE_ALERTS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    else:
+        next_page_button = block_builders.simple_button_block(
+            "Submit",
+            str(next_page),
+            action_id=f"{slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA}?{urlencode({**page_context})}",
+            style="primary",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
 def custom_meeting_paginator_block(pagination_object, invocation, channel):
     next_page = pagination_object.get("next_page", None)
     prev_page = pagination_object.get("previous_page", None)
@@ -194,14 +251,14 @@ def alert_instance_block_set(context):
     in_channel = False
     if config and config.recipient_type == "SLACK_CHANNEL":
         in_channel = True
-    if instance.form_instance.all().first():
+    if instance.form_instance.all().first() and instance.form_instance.all().first().is_submitted:
         form = OrgCustomSlackFormInstance.objects.get(
             id=instance.form_instance.all()
             .exclude(template__resource="OpportunityLineItem")
             .first()
             .id
         )
-        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name}_"
+        message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name if form.resource_type not in ['Lead', 'Contact'] else form.resource_object.email}_"
         blocks = block_sets.get_block_set(
             "success_modal", {"u": str(user.id), "form_ids": str(form.id), "message": message,},
         )
@@ -223,15 +280,16 @@ def alert_instance_block_set(context):
                 style="primary",
             )
         ]
-        if hasattr(user, "gong_account"):
-            options.extend(
-                [block_builders.option("Call Details", "call_details"),]
-            )
-        if instance.template.resource_type != "Lead":
-            if hasattr(user, "outreach_account"):
-                options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
-            if hasattr(user, "salesloft_account"):
-                options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
+        if user.crm == "SALESFORCE":
+            if hasattr(user, "gong_account"):
+                options.extend(
+                    [block_builders.option("Call Details", "call_details"),]
+                )
+            if instance.template.resource_type != "Lead":
+                if hasattr(user, "outreach_account"):
+                    options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
+                if hasattr(user, "salesloft_account"):
+                    options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
 
         action_blocks.append(
             block_builders.static_select_input(
@@ -281,12 +339,7 @@ def update_modal_block_set(context, *args, **kwargs):
     blocks.append(
         block_builders.static_select(
             "Related to type",
-            [
-                block_builders.option("Opportunity", "Opportunity"),
-                block_builders.option("Account", "Account"),
-                block_builders.option("Lead", "Lead"),
-                block_builders.option("Contact", "Contact"),
-            ],
+            resource_options(user.crm),
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
@@ -422,9 +475,13 @@ def choose_opportunity_block_set(context):
 def actions_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
-    options = []
+    update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
+    options = [block_builders.option(update_label, "UPDATE_RESOURCE")]
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
+    if user.crm == "SALESFORCE":
+        for action in slack_const.SALESFORCE_ACTIONS:
+            options.append(block_builders.option(action[1], action[0]))
     if hasattr(user, "outreach_account"):
         options.append(block_builders.option("Add To Sequence", "ADD_SEQUENCE"))
     if hasattr(user, "salesloft_account"):
@@ -491,3 +548,46 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
             ),
         )
     return blocks
+
+
+@block_set(required_context=["u"])
+def initial_inline_blockset(context, *args, **kwargs):
+    switch_to = context.get("switch_to")
+    user = User.objects.get(id=context.get("u"))
+    invocation = context.get("invocation")
+    config_id = context.get("config_id")
+    action_blocks = [
+        block_builders.simple_button_block(
+            f"Switch to {'Message' if switch_to == 'message' else 'In-Line'}",
+            "switch_inline",
+            action_id=action_with_params(
+                slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
+                params=[
+                    f"invocation={invocation}",
+                    f"config_id={config_id}",
+                    f"u={str(user.id)}",
+                    f"switch_to={'message' if switch_to == 'inline' else 'message'}",
+                    f"channel={context.get('channel')}",
+                ],
+            ),
+        ),
+        block_builders.simple_button_block(
+            "Update in Bulk",
+            "bulk_update",
+            action_id=action_with_params(
+                slack_const.PROCESS_BULK_UPDATE,
+                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
+            ),
+        ),
+    ]
+    action_blocks.append(
+        block_builders.simple_button_block(
+            "Get Summary",
+            "get_summary",
+            action_id=action_with_params(
+                slack_const.GET_SUMMARY,
+                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
+            ),
+        )
+    )
+    return block_builders.actions_block(action_blocks)

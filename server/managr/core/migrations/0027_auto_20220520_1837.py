@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0026_userforecast'),
+        ("core", "0026_userforecast"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userforecast',
-            name='state',
+            model_name="userforecast",
+            name="state",
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict, null=True),
         ),
     ]

@@ -2,6 +2,7 @@ from django.utils import timezone
 
 from django.core.management.base import BaseCommand, CommandError
 from managr.salesforce.cron import queue_users_sf_fields
+from managr.hubspot.cron import queue_users_hs_fields
 
 
 class Command(BaseCommand):
@@ -15,5 +16,5 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         queue_users_sf_fields(force_all=options.get("force", None))
+        queue_users_hs_fields(force_all=options.get("force", None))

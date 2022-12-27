@@ -26,9 +26,9 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
-from managr.salesforce.routes import routes as model_routes
+from managr.crm.routes import model_routes
 
-from managr.salesforce.adapter.exceptions import TokenExpired, SFQueryOffsetError
+from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
 
 from rest_framework.response import Response
 
@@ -51,7 +51,7 @@ def create_configs_for_target(target, template_user, config):
         elif target == "REPS":
             target = "REP"
         users = User.objects.filter(
-            Q(organization=template_user.organization, user_level=target, is_active=True)
+            Q(organization=template_user.organization, user_level=target, is_active=True,)
         )
     elif target == "SELF":
         config["recipient_type"] = "SLACK_CHANNEL"
@@ -74,7 +74,7 @@ def create_configs_for_target(target, template_user, config):
         users = User.objects.filter(id=target)
     new_configs = []
     for user in users:
-        if user.has_salesforce_integration:
+        if user.crm_account is not None:
             config_copy = copy(config)
             config_copy["alert_targets"] = [str(user.id)]
             if user.has_slack_integration:
@@ -194,16 +194,16 @@ class AlertTemplateViewSet(
         obj = self.get_object()
         data = self.request.data
         from_workflow = data.get("from_workflow", False)
-        if from_workflow:
+        if isinstance(from_workflow, dict):
             config = obj.configs.all().first()
             template = config.template
             attempts = 1
             while True:
-                sf = self.request.user.salesforce_account
+                crm = self.request.user.crm_account
                 try:
                     if template.user != self.request.user:
-                        if hasattr(self.request.user, "salesforce_account"):
-                            res = sf.adapter_class.execute_alert_query(
+                        if hasattr(self.request.user, "crm"):
+                            res = crm.adapter_class.execute_alert_query(
                                 template.url_str(self.request.user, config.id),
                                 template.resource_type,
                             )
@@ -215,8 +215,8 @@ class AlertTemplateViewSet(
                         users = [*users, *config.target_users]
                     res_data = []
                     for user in users:
-                        if hasattr(user, "salesforce_account"):
-                            res = sf.adapter_class.execute_alert_query(
+                        if hasattr(user, "crm"):
+                            res = crm.adapter_class.execute_alert_query(
                                 template.url_str(user, config.id), template.resource_type
                             )
                             res_data.extend([item.integration_id for item in res])
@@ -230,7 +230,7 @@ class AlertTemplateViewSet(
                         )
                         break
                     else:
-                        sf.regenerate_token()
+                        crm.regenerate_token()
                         attempts += 1
                 except SFQueryOffsetError:
                     return logger.warning(
@@ -240,10 +240,29 @@ class AlertTemplateViewSet(
                     return logger.warning(
                         f"Failed retreive data for {template.title} for user {str(user.id)} because of {e}"
                     )
-            model = model_routes[template.resource_type]["model"]
+            model = model_routes(self.request.user.crm)[template.resource_type]["model"]
             queryset = model.objects.filter(integration_id__in=res_data)
-            serialized = model_routes[template.resource_type]["serializer"](queryset, many=True)
+            serialized = model_routes(self.request.user.crm)[template.resource_type]["serializer"](
+                queryset, many=True
+            )
             return Response({"results": serialized.data})
+        elif isinstance(from_workflow, bool) and from_workflow is True:
+            config = (
+                obj.configs.all().filter(alert_targets__contains=[self.request.user.id]).first()
+            )
+            template = config.template
+            template.invocation = template.invocation + 1
+            template.last_invocation_datetime = timezone.now()
+            template.save()
+            users = config.target_users
+            user = str(template.user.id) if len(users) > 1 else str(users.first().id)
+            run_time = datetime.now(pytz.utc)
+            _process_check_alert(
+                str(config.id),
+                str(request.user.id),
+                template.invocation,
+                run_time.strftime("%Y-%m-%dT%H:%M%z"),
+            )
         else:
             for config in obj.configs.all():
                 template = config.template
@@ -259,7 +278,7 @@ class AlertTemplateViewSet(
                     template.invocation,
                     run_time.strftime("%Y-%m-%dT%H:%M%z"),
                 )
-            return Response()
+        return Response()
 
 
 class AlertMessageTemplateViewSet(
