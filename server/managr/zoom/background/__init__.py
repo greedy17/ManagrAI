@@ -143,19 +143,28 @@ def sync_contacts(contacts, user_id):
             continue
         serializer.save()
         # if contact.secondary_data["associatedcompanyid"]
-        if (
-            isinstance(item.secondary_data["num_associated_deals"], str)
-            and len(item.secondary_data["num_associated_deals"]) > 0
-        ):
-            associated_deals = user.crm_account.adapter_class.get_associated_resource(
-                "Contact", "Deal", item.integration_id
-            )["results"][0]["to"]
-            filtered_ids = [deal["id"] for deal in associated_deals]
-            synced_deals = BaseOpportunity.objects.filter(integration_id__in=filtered_ids)
-            for deal in synced_deals:
-                deal.contacts.add(serializer.instance)
-                deal.save()
+        if user.crm == "HUBSPOT":
+            if (
+                isinstance(item.secondary_data["num_associated_deals"], str)
+                and len(item.secondary_data["num_associated_deals"]) > 0
+            ):
+                associated_deals = user.crm_account.adapter_class.get_associated_resource(
+                    "Contact", "Deal", item.integration_id
+                )["results"][0]["to"]
+                filtered_ids = [deal["id"] for deal in associated_deals]
+                synced_deals = BaseOpportunity.objects.filter(integration_id__in=filtered_ids)
+                for deal in synced_deals:
+                    deal.contacts.add(serializer.instance)
+                    deal.save()
     return
+
+
+def CONTACT_FILTERS(crm, emails):
+    if crm == "HUBSPOT":
+        return [{"propertyName": "email", "operator": "IN", "values": emails,}]
+    else:
+        email_string = "','".join(emails)
+        return [f"AND Email IN ('{email_string}')"]
 
 
 @background(schedule=0)
@@ -289,30 +298,22 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         if len(participants):
             # Reduce to set of unique participant emails
             participant_emails = set([p.get("user_email") for p in participants])
-            if user.crm == "HUBSPOT":
-                attempts = 1
-                while True:
-                    try:
-                        hubspot_contacts = user.crm_account.adapter_class.list_resource_data(
-                            "Contact",
-                            filters=[
-                                {
-                                    "propertyName": "email",
-                                    "operator": "IN",
-                                    "values": list(participant_emails),
-                                }
-                            ],
-                        )
+            attempts = 1
+            while True:
+                try:
+                    crm_contacts = user.crm_account.adapter_class.list_resource_data(
+                        "Contact", filter=CONTACT_FILTERS(user.crm, list(participant_emails)),
+                    )
+                    break
+                except CRMTokenExpired:
+                    if attempts >= 5:
                         break
-                    except CRMTokenExpired:
-                        if attempts >= 5:
-                            break
-                        else:
-                            sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                            time.sleep(sleep)
-                            user.crm_account.regenerate_token()
-                            attempts += 1
-                sync_contacts(hubspot_contacts, str(user.id))
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        user.crm_account.regenerate_token()
+                        attempts += 1
+            sync_contacts(crm_contacts, str(user.id))
             meeting_contacts = []
 
             # find existing contacts

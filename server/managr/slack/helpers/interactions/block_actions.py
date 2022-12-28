@@ -1233,7 +1233,7 @@ def process_show_update_resource_form(payload, context):
         try:
             resource_res = user.crm_account.adapter_class.list_resource_data(
                 resource_type,
-                filters=[
+                filter=[
                     {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id}
                 ],
             )

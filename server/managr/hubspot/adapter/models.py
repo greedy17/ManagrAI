@@ -227,7 +227,7 @@ class HubspotAuthAccountAdapter:
             "api_name", flat=True
         )
         add_filters = kwargs.get(
-            "filters",
+            "filter",
             [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
         )
         resource_class = routes.get(resource)

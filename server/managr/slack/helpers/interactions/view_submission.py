@@ -685,7 +685,7 @@ def process_zoom_meeting_attach_resource(payload, context):
             try:
                 resource_res = user.crm_account.adapter_class.list_resource_data(
                     meeting_resource,
-                    filters=[
+                    filter=[
                         {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id}
                     ],
                 )
