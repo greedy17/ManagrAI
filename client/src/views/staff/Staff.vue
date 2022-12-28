@@ -154,7 +154,7 @@
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
                 <h4>
-                  {{ modalInfo.template_ref.resource }} {{ modalInfo.template_ref.form_type }} by
+                  {{ modalInfo.template_ref ? modalInfo.template_ref.resource : '--' }} {{ modalInfo.template_ref ? modalInfo.template_ref.form_type : '' }} by
                   {{ getUserName(modalInfo.user) }}
                 </h4>
               </div>
@@ -1208,6 +1208,7 @@ export default {
       this.page = 'MeetingWorkflow'
     },
     openModal(name, data) {
+      console.log('hi there', data)
       this.modalName = name
       this.modalInfo = data
       this.editOpModalOpen = true
