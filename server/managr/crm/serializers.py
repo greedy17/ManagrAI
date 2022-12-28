@@ -83,7 +83,7 @@ class BaseContactSerializer(serializers.ModelSerializer):
             data.update({"owner": user.id})
         if account:
             acct = BaseAccount.objects.filter(integration_id=account, owner=imported_by).first()
-            acct = acct.id if acct else account
+            acct = acct.id if acct else None
             data.update({"account": acct})
 
         # remove contacts from validation
