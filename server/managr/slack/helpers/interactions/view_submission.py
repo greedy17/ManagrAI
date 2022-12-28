@@ -654,11 +654,7 @@ def process_submit_resource_data(payload, context):
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
     type = context.get("type", None)
-    workflow = (
-        MeetingPrepInstance.objects.get(id=context.get("w"))
-        if type
-        else MeetingWorkflow.objects.get(id=context.get("w"))
-    )
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -675,13 +671,48 @@ def process_zoom_meeting_attach_resource(payload, context):
     state_values = payload["view"]["state"]["values"]
     meeting_resource = context.get("resource")
     if context.get("action") == "EXISTING":
-
         selected_action = [
             val.get("selected_option", {}).get("value", [])
             for val in state_values["select_existing"].values()
         ]
-        selected_action = selected_action[0] if len(selected_action) else None
-        workflow.resource_id = selected_action
+        integration_id = selected_action[0] if len(selected_action) else None
+        try:
+            resource = CRM_SWITCHER[user.crm][meeting_resource]["model"].objects.get(
+                integration_id=integration_id
+            )
+            resource_id = resource.id
+        except CRM_SWITCHER[user.crm][meeting_resource]["model"].DoesNotExist:
+            try:
+                resource_res = user.crm_account.adapter_class.list_resource_data(
+                    meeting_resource,
+                    filters=[
+                        {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id}
+                    ],
+                )
+                serializer = CRM_SWITCHER[user.crm][meeting_resource]["serializer"](
+                    data=resource_res[0].as_dict
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                resource_id = serializer.instance.id
+            except Exception as e:
+                logger.exception(
+                    f"Failed to sync new resource with id {integration_id} for {user.email}"
+                )
+                return {
+                    "response_action": "push",
+                    "view": {
+                        "type": "modal",
+                        "title": {"type": "plain_text", "text": "An Error Occured"},
+                        "blocks": get_block_set(
+                            "error_modal",
+                            {
+                                "message": f":no_entry: We could not sync the {meeting_resource} because of :\n *Error* : _{e}_"
+                            },
+                        ),
+                    },
+                }
+        workflow.resource_id = resource_id
         workflow.resource_type = meeting_resource
         workflow.save()
         # update the forms to the correct type

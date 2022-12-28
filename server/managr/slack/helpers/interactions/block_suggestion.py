@@ -407,23 +407,37 @@ def CRM_RESOURCE_FILTER(crm, resource, value):
         property_name = "dealname"
     elif resource == slack_const.FORM_RESOURCE_COMPANY:
         property_name = "name"
-    elif resource == slack_const.FORM_RESOURCE_CONTACT:
+    elif resource in [slack_const.FORM_RESOURCE_CONTACT, slack_const.FORM_RESOURCE_LEAD]:
         property_name = "email" if crm == "HUBSPOT" else "Email"
-    return {
-        "propertyName": property_name,
-        "value": f"*{value}*",
-        "operator": "CONTAINS_TOKEN",
-    }
+    elif resource in [slack_const.FORM_RESOURCE_OPPORTUNITY, slack_const.FORM_RESOURCE_ACCOUNT]:
+        property_name = "Name"
+    filter = (
+        {"propertyName": property_name, "value": f"*{value}*", "operator": "CONTAINS_TOKEN",}
+        if crm == "HUBSPOT"
+        else f"{property_name} LIKE '%{value}%'"
+    )
+    return filter
 
 
 def RESOURCE_OPTIONS(resource, options):
-    if resource in [slack_const.FORM_RESOURCE_COMPANY, slack_const.FORM_RESOURCE_DEAL]:
+    if resource in [
+        slack_const.FORM_RESOURCE_COMPANY,
+        slack_const.FORM_RESOURCE_DEAL,
+        slack_const.FORM_RESOURCE_ACCOUNT,
+        slack_const.FORM_RESOURCE_OPPORTUNITY,
+    ]:
         return {
             "options": [
                 block_builders.option(option.name, option.integration_id) for option in options
             ]
         }
-    return
+    elif resource in [slack_const.FORM_RESOURCE_CONTACT, slack_const.FORM_RESOURCE_LEAD]:
+        return {
+            "options": [
+                block_builders.option(option.email, option.integration_id) for option in options
+            ]
+        }
+    return []
 
 
 @processor(required_context=["u", "resource_type"])
@@ -439,7 +453,7 @@ def process_get_crm_resource_options(payload, context):
             filters = CRM_FILTERS(user.crm, user.crm_account.crm_id)
             if value:
                 filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
-            res = crm_adapter.list_resource_data(resource, filters=filters)
+            res = crm_adapter.list_resource_data(resource, filters=filters, limit=20)
             break
         except TokenExpired:
             if attempts >= 5:

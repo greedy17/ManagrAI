@@ -541,7 +541,7 @@ class SalesforceAuthAccountAdapter:
     #         res = self._format_resource_response(saved_response, resource)
     #         return res
 
-    def list_resource_data(self, resource, offset, *args, **kwargs):
+    def list_resource_data(self, resource, offset=None, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
