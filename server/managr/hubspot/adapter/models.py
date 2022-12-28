@@ -17,7 +17,7 @@ logger = logging.getLogger("managr")
 DATA_TYPE_OBJ = {
     "calculation_score": "Int",
     "text": "String",
-    "checkbox": "Boolean",
+    "checkbox": "MultiPicklist",
     "radio": "Picklist",
     "booleancheckbox": "Boolean",
     "calculation_read_time": "DateTime",
@@ -58,7 +58,7 @@ class HubspotAuthAccountAdapter:
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code == 200 or response.status_code == 201:
+        elif response.status_code in [200, 201, 207]:
             if response.status_code == 204:
                 return {}
             try:
@@ -89,8 +89,8 @@ class HubspotAuthAccountAdapter:
         res = cls.authenticate(code)
         print("HUBSPOT AUTHENTICATE RES", res)
         if settings.IN_DEV:
-            # user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
-            user_res = cls.get_user_info(res["access_token"], user.email)["results"]
+            user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+            # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         else:
             user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         data = {
@@ -690,7 +690,7 @@ class HubspotContactAdapter:
         email="email",
         owner="hubspot_owner_id",
         external_owner="hubspot_owner_id",
-        external_account="company",
+        external_account="associatedcompanyid",
     )
 
     @staticmethod

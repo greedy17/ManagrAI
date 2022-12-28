@@ -106,6 +106,12 @@
           </div>
         </div>
         <div class="card" v-else>
+          <div class="card__header og-bg" style="padding-left: 18px; padding-right: 18px">
+            <img style="height: 30px; width: auto;" src="@/assets/images/salesforce.png" />
+            <img style="height: 30px" src="@/assets/images/hubspot-single-logo.svg" />
+            <!-- <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 32px" />
+            <img src="@/assets/images/outlookMail.png" style="height: 32px" /> -->
+          </div>
           <div
             class="card__body"
             v-if="
@@ -115,38 +121,45 @@
           >
             <PipelineLoader />
           </div>
-          <div class="card__body" v-else>
-            <h3 class="card__title">CRM</h3>
-            <p class="card-text">Select a CRM you would like to link</p>
-            <div>
-              <Multiselect
-                placeholder="Select CRM"
-                @input="onGetAuthLink($event.value)"
-                :v-model="selectedCRM"
-                :options="crmList"
-                openDirection="below"
-                style="width: 21rem"
-                selectLabel="Enter"
-                track-by="value"
-                label="label"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results. Try loading more</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select CRM
-                  </p>
-                </template>
-              </Multiselect>
-              <!-- <PulseLoadingSpinnerButton
-                @click="selectedCRM ? onGetAuthLink(selectedCRM.value) : () => null"
-                class="orange_button"
-                text="Connect"
-                :loading="generatingToken && selectedIntegration == selectedCRM.value"
-                >Connect</PulseLoadingSpinnerButton
-              > -->
+          <div v-else>
+            <div class="card__body">
+              <div style="display: flex;">
+                <h3 class="card__title">CRM</h3>
+                <span class="required" v-if="!userCRM">
+                  <img src="@/assets/images/required.svg" height="14px" alt=""
+                /></span>
+              </div>
+              <p class="card-text">Select a CRM you would like to link</p>
+              <div>
+                <Multiselect
+                  placeholder="Select CRM"
+                  @input="onGetAuthLink($event.value)"
+                  :v-model="selectedCRM"
+                  :options="crmList"
+                  openDirection="below"
+                  style="width: 14rem"
+                  selectLabel="Enter"
+                  track-by="value"
+                  label="label"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results. Try loading more</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select CRM
+                    </p>
+                  </template>
+                </Multiselect>
+                <!-- <PulseLoadingSpinnerButton
+                  @click="selectedCRM ? onGetAuthLink(selectedCRM.value) : () => null"
+                  class="orange_button"
+                  text="Connect"
+                  :loading="generatingToken && selectedIntegration == selectedCRM.value"
+                  >Connect</PulseLoadingSpinnerButton
+                > -->
+              </div>
             </div>
           </div>
         </div>
@@ -843,6 +856,11 @@ export default {
   background: rgb(181, 222, 255);
   background: linear-gradient(90deg, rgba(181, 222, 255, 1) 1%, rgba(127, 196, 251, 1) 100%);
   border: 1px solid $very-light-blue;
+}
+.og-bg{
+  background: rgb(233, 233, 233);
+  background: linear-gradient(90deg, rgba(233, 233, 233, 1) 1%, rgb(227, 231, 235) 100%);
+  border: 1px solid rgba(233, 233, 233, 1);
 }
 .lg-bg {
   background: rgb(140, 255, 191);
