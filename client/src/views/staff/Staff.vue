@@ -497,15 +497,14 @@
               <h4>Pull Usage Data</h4>
             </div>
             <div>
-              <button
+              <!-- <button
                 class="green_button sized copy-margin"
                 v-clipboard:copy="formatCopyObject(contentModalInfo)"
                 v-clipboard:success="onCopy"
                 v-clipboard:error="onError"
               >
-                <!-- <img src="@/assets/images/copy.svg" class="invert" style="height: 1.25rem" alt="" /> -->
                 Copy All
-              </button>
+              </button> -->
             </div>
           </div>
           <section class="note-section" v-for="(content, i) in contentModalInfo" :key="i">
@@ -648,7 +647,8 @@
             <p class="multi-slot">No results.</p>
           </template>
         </Multiselect>
-        <button class="green_button sized" @click="runCommand">></button>
+        <PipelineLoader v-if="commandButtonLoading" class="sized"/>
+        <button v-else class="green_button sized" @click="runCommand">></button>
       </div>
       <h3>Organizations</h3>
       <Multiselect
@@ -880,6 +880,7 @@ export default {
     CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
   },
   data() {
     return {
@@ -921,6 +922,7 @@ export default {
       orgSlackFormInstances: null,
       selectedCommand: '',
       loading: true,
+      commandButtonLoading: false,
       editOpModalOpen: false,
       modalInfo: null,
       displayCommandModal: false,
@@ -1016,6 +1018,7 @@ export default {
         return
       }
       try {
+        this.commandButtonLoading = true
         const res = await User.api.callCommand(this.selectedCommand.value)
         if (res.data) {
           const newResContent = []
@@ -1056,12 +1059,14 @@ export default {
             })
           }
         }
+        this.commandButtonLoading = false
       } catch (e) {
         console.log(e)
         this.$toast('Something went wrong. Please try again.', {
           type: 'error',
           timeout: 3000,
         })
+        this.commandButtonLoading = false
       }
     },
     async getSlackFormInstance() {
@@ -1446,7 +1451,7 @@ input[type='search']:focus {
   background-color: $white;
   overflow: auto;
   width: 60vw;
-  min-height: 48vh;
+  height: 88vh;
   align-items: center;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
