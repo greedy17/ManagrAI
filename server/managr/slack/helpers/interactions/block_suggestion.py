@@ -396,7 +396,7 @@ def process_get_pricebook_entry_options(payload, context):
 
 def CRM_FILTERS(crm, crm_id):
     filters = {
-        "HUBSPOT": [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": crm_id,},],
+        "HUBSPOT": [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": crm_id,},],
         "SALESFORCE": [],
     }
     return filters[crm]
@@ -414,7 +414,7 @@ def CRM_RESOURCE_FILTER(crm, resource, value):
     filter = (
         {"propertyName": property_name, "value": f"*{value}*", "operator": "CONTAINS_TOKEN",}
         if crm == "HUBSPOT"
-        else f"{property_name} LIKE '%{value}%'"
+        else f"AND {property_name} LIKE '%{value}%'"
     )
     return filter
 
@@ -450,10 +450,12 @@ def process_get_crm_resource_options(payload, context):
         crm_account = user.crm_account
         crm_adapter = crm_account.adapter_class
         try:
-            filters = CRM_FILTERS(user.crm, user.crm_account.crm_id)
+            filters = CRM_FILTERS(user.crm, list(crm_account.crm_user_ids))
             if value:
                 filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
-            res = crm_adapter.list_resource_data(resource, filter=filters, limit=20)
+            res = crm_adapter.list_resource_data(
+                resource, filter=filters, owners=list(crm_account.crm_user_ids), limit=20
+            )
             break
         except TokenExpired:
             if attempts >= 5:

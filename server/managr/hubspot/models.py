@@ -298,6 +298,12 @@ class HubspotAuthAccount(TimeStampModel):
             )
         return []
 
+    @property
+    def crm_user_ids(self):
+        return HubspotAuthAccount.objects.filter(
+            user__organization=self.user.organization
+        ).values_list("hubspot_id", flat=True)
+
     def regenerate_token(self):
         res = self.adapter_class.refresh()
         self.access_token = res.get("access_token", None)

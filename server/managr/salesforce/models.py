@@ -964,6 +964,12 @@ class SalesforceAuthAccount(TimeStampModel):
             )
         return []
 
+    @property
+    def crm_user_ids(self):
+        return SalesforceAuthAccount.objects.filter(
+            user__organization=self.user.organization
+        ).values_list("salesforce_id", flat=True)
+
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
