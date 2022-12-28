@@ -30,7 +30,15 @@ class UserRefSerializer(serializers.ModelSerializer):
 class HubspotAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = HubspotAuthAccount
-        fields = ("id", "user", "access_token", "refresh_token", "hubspot_id", "hobjects", "extra_pipeline_fields")
+        fields = (
+            "id",
+            "user",
+            "access_token",
+            "refresh_token",
+            "hubspot_id",
+            "hobjects",
+            "extra_pipeline_fields",
+        )
 
 
 class CompanySerializer(serializers.ModelSerializer):
