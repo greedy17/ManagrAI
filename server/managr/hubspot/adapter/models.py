@@ -227,7 +227,7 @@ class HubspotAuthAccountAdapter:
             "api_name", flat=True
         )
         add_filters = kwargs.get(
-            "filters",
+            "filter",
             [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
         )
         resource_class = routes.get(resource)
@@ -573,7 +573,7 @@ class DealAdapter:
     @staticmethod
     def additional_filters():
         """pass custom additional filters to the url"""
-        return [{"propertyName": "is_closed", "value": False, "operator": "EQ",}]
+        return [{"propertyName": "hs_is_closed", "value": False, "operator": "EQ",}]
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):
