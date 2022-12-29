@@ -77,7 +77,7 @@ def direct_to_block_set(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Open", "complete_in_slack", action_id=slack_context, style="primary"
+                    "Log Meeting", "complete_in_slack", action_id=slack_context, style="primary"
                 ),
             ]
         ),
