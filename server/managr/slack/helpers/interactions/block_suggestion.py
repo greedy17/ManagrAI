@@ -450,12 +450,13 @@ def process_get_crm_resource_options(payload, context):
         crm_account = user.crm_account
         crm_adapter = crm_account.adapter_class
         try:
-            filters = CRM_FILTERS(user.crm, list(crm_account.crm_user_ids))
+            crm_id = (
+                crm_account.crm_id if user.user_level == "REP" else list(crm_account.crm_user_ids)
+            )
+            filters = CRM_FILTERS(user.crm, crm_id)
             if value:
                 filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
-            res = crm_adapter.list_resource_data(
-                resource, filter=filters, owners=list(crm_account.crm_user_ids), limit=20
-            )
+            res = crm_adapter.list_resource_data(resource, filter=filters, owners=crm_id, limit=20)
             break
         except TokenExpired:
             if attempts >= 5:
