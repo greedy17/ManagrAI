@@ -124,7 +124,11 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     # make a set to remove duplicates
     fields = set(fields)
     if resource not in REMOVE_OWNER_ID:
-        additional_filters.insert(0, f"OwnerId = '{owner_id}'")
+        if isinstance(owner_id, list):
+            owners = "','".join(owner_id)
+            additional_filters.insert(0, f"OwnerId IN ('{owners}')")
+        else:
+            additional_filters.insert(0, f"OwnerId = '{owner_id}'")
     field_list = SEPARATE_FIELDS(fields)
     url_list = []
     for idx, field_string in enumerate(field_list):

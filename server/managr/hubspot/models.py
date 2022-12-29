@@ -11,15 +11,8 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
-from background_task.models import CompletedTask, Task
-from managr.crm.models import BaseOpportunity
+from background_task.models import CompletedTask
 from managr.core.models import TimeStampModel, IntegrationModel
-from managr.slack.helpers.exceptions import (
-    UnHandeledBlocksException,
-    InvalidBlocksFormatException,
-    InvalidBlocksException,
-    InvalidAccessToken,
-)
 from managr.slack import constants as slack_consts
 from .adapter.models import HubspotAuthAccountAdapter, DealAdapter
 from .adapter.exceptions import (
@@ -310,6 +303,12 @@ class HubspotAuthAccount(TimeStampModel):
                 )
             )
         return []
+
+    @property
+    def crm_user_ids(self):
+        return HubspotAuthAccount.objects.filter(
+            user__organization=self.user.organization
+        ).values_list("hubspot_id", flat=True)
 
     def regenerate_token(self):
         res = self.adapter_class.refresh()

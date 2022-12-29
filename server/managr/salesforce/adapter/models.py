@@ -541,22 +541,24 @@ class SalesforceAuthAccountAdapter:
     #         res = self._format_resource_response(saved_response, resource)
     #         return res
 
-    def list_resource_data(self, resource, offset, *args, **kwargs):
+    def list_resource_data(self, resource, offset=None, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
         )
         from .routes import routes
 
+        owners = kwargs.get("owners", None)
         add_filters = kwargs.get("filter", None)
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
         additional_filters = (
             resource_class.additional_filters() if add_filters is None else add_filters
         )
+        owner_id = owners if owners else self.salesforce_id
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
         url_list = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
-            self.salesforce_id,
+            owner_id,
             resource,
             extra_items,
             relationships,
