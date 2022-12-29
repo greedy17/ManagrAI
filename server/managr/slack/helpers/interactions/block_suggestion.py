@@ -395,6 +395,8 @@ def process_get_pricebook_entry_options(payload, context):
 
 
 def CRM_FILTERS(crm, crm_id):
+    if isinstance(crm_id, str) and crm == "HUBSPOT":
+        crm_id = [crm_id]
     filters = {
         "HUBSPOT": [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": crm_id,},],
         "SALESFORCE": [],
