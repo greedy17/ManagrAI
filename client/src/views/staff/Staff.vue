@@ -13,110 +13,76 @@
         <div v-if="modalName === 'task'">
           <h2 class="modal-container__header">{{ modalInfo.fields.task_name }}</h2>
           <div class="modal-container__body">
-            <div class="note-section__body" style="margin-bottom: 1rem">
+            <div class="" style="margin-bottom: 1rem">
               <div>
-                <div class="underline">Task Params:</div>
-                <div class="bottom-margin">
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Task Params:</span>
                   {{ modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null' }}
                 </div>
-              </div>
-              <div>
-                <div class="underline">Task Hash:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null' }}
+                <div>
+                  <span class="">Task Hash:</span>
+                    {{ modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null' }} |
                 </div>
-              </div>
-              <div>
-                <div class="underline">Verbose Name:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null' }}
+                <div>
+                  <span class="">Verbose Name:</span>
+                    {{ modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null' }} |
                 </div>
-              </div>
-              <div>
-                <div class="underline">Priority:</div>
-                <div class="bottom-margin">
-                  {{
-                    modalInfo.fields.priority || modalInfo.fields.priority === 0
-                      ? modalInfo.fields.priority
-                      : 'Null'
-                  }}
+                <div>
+                  <span class="">Priority:</span>
+                    {{
+                      modalInfo.fields.priority || modalInfo.fields.priority === 0
+                        ? modalInfo.fields.priority
+                        : 'Null'
+                    }} |
+                  <span class="">Run At:</span>
+                    {{ modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null' }} |
+                  <span class="">Repeat:</span>
+                    {{
+                      modalInfo.fields.repeat || modalInfo.fields.repeat === 0
+                        ? modalInfo.fields.repeat
+                        : 'Null'
+                    }} |
+                  <span class="">Repeat Until:</span>
+                    {{ modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null' }} |
                 </div>
-              </div>
-              <div>
-                <div class="underline">Run At:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null' }}
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Queue:</span>
+                    {{ modalInfo.fields.queue ? modalInfo.fields.queue : 'Null' }} |
+                  <span class="">Attempts:</span>
+                  {{ modalInfo.fields.attempts }}
                 </div>
-              </div>
-              <div>
-                <div class="underline">Repeat:</div>
-                <div class="bottom-margin">
-                  {{
-                    modalInfo.fields.repeat || modalInfo.fields.repeat === 0
-                      ? modalInfo.fields.repeat
-                      : 'Null'
-                  }}
-                </div>
-              </div>
-              <div>
-                <div class="underline">Repeat Until:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null' }}
-                </div>
-              </div>
-              <div>
-                <div class="underline">Queue:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.queue ? modalInfo.fields.queue : 'Null' }}
-                </div>
-              </div>
-              <div>
-                <div class="underline">Attempts:</div>
-                <div class="bottom-margin">{{ modalInfo.fields.attempts }}</div>
               </div>
               <div v-if="modalInfo.fields.failed_at">
-                <div>
-                  <div class="underline">Failed At:</div>
-                  <div class="bottom-margin">
+                <div class="separator"></div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Failed At:</span>
                     {{ modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null' }}
-                  </div>
                 </div>
-                <div>
-                  <div class="underline">Last Error:</div>
-                  <div class="bottom-margin">
+                <div style="margin-bottom: 0.5rem; color: #fa646a;">
+                  <span class="" style="color: black">Last Error:</span>
+                  <div style="margin-left: 0.5rem;">
                     {{ modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null' }}
                   </div>
                 </div>
               </div>
+              <div class="separator"></div>
               <div>
-                <div class="underline">Locked By:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null' }}
-                </div>
+                <span class="">Locked By:</span>
+                  {{ modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null' }} |
+                <span class="">Locked At:</span>
+                  {{ modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null' }} |
               </div>
               <div>
-                <div class="underline">Locked At:</div>
-                <div class="bottom-margin">
-                  {{ modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null' }}
-                </div>
-              </div>
-              <div>
-                <div class="underline">Creator Content Type:</div>
-                <div class="bottom-margin">
+                <span class="">Creator Content Type:</span>
                   {{
                     modalInfo.fields.creator_content_type
                       ? modalInfo.fields.creator_content_type
                       : 'Null'
-                  }}
-                </div>
-              </div>
-              <div>
-                <div class="underline">Creator Object ID:</div>
-                <div>
+                  }} |
+                <span class="">Creator Object ID:</span>
                   {{
                     modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'
                   }}
-                </div>
               </div>
             </div>
           </div>
