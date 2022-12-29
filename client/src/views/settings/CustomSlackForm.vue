@@ -662,6 +662,7 @@ export default {
       allForms: [],
       filterText: '',
       COfilterText: '',
+      reloadCustomObject: false,
       modalLoading: false,
       loaderText: '',
       formFields: CollectionManager.create({
@@ -1130,6 +1131,9 @@ export default {
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
+        if (this.reloadCustomObject) {
+          this.$router.go()
+        }
       } else {
         return
       }
@@ -1200,14 +1204,15 @@ export default {
           fields: fields,
           fields_ref: fields_ref,
         })
+        this.reloadCustomObject = true
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
-          setTimeout(() => {
-            this.loaderText = 'Reloading page, please be patient...'
-            setTimeout(() => {
-              this.$router.go()
-            }, 1000)
-          }, 2000)
+          // setTimeout(() => {
+          //   this.loaderText = 'Reloading page, please be patient...'
+          //   setTimeout(() => {
+          //     this.$router.go()
+          //   }, 1000)
+          // }, 2000)
         }, 400)
       } catch (e) {
         console.log(e)
