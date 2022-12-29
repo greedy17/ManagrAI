@@ -1311,6 +1311,7 @@ def process_show_update_resource_form(payload, context):
         )
         show_submit_button_if_fields_added = False
     if user.organization.has_products and resource_type == "Opportunity":
+        buttons = []
         params = [
             f"f={str(slack_form.id)}",
             f"u={str(user.id)}",
@@ -1318,20 +1319,24 @@ def process_show_update_resource_form(payload, context):
         ]
         if slack_form.resource_object.secondary_data["Pricebook2Id"]:
             params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
-        blocks.append(
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Add Product",
-                        "ADD_PRODUCT",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
-                        ),
-                    )
-                ],
-                block_id="ADD_PRODUCT_BUTTON",
-            ),
+        buttons.append(
+            block_builders.simple_button_block(
+                "Add Product",
+                "ADD_PRODUCT",
+                action_id=action_with_params(slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,),
+            )
         )
+        if len(user.crm_account.custom_objects) > 0:
+            buttons.append(
+                block_builders.simple_button_block(
+                    "Add Custom Object",
+                    "ADD_CUSTOM_OBJECT",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM, params=params,
+                    ),
+                )
+            )
+        blocks.append(block_builders.actions_block(buttons, block_id="ADD_EXTRA_OBJECTS_BUTTON",),)
         current_products = user.salesforce_account.list_resource_data(
             "OpportunityLineItem",
             0,

@@ -916,7 +916,7 @@ class SalesforceAuthAccount(TimeStampModel):
             ]
         )
         custom = set(self.sobjects.keys())
-        return list(object_list - custom)
+        return list(custom - object_list)
 
     @property
     def crm_id(self):
