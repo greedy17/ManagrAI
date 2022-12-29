@@ -255,7 +255,7 @@ def _process_send_alert(invocation, channel, config_id):
             "initial_alert_blockset",
             {
                 "channel": channel,
-                "template": str(alert_instances[0].template.id),
+                "user": str(template.user.id),
                 "config_id": config_id,
                 "invocation": invocation,
                 "title": f"*New Task:* {len(alert_instances)} {template.title}",

@@ -581,8 +581,8 @@ def initial_alert_message(context):
     title = context.get("title")
     invocation = context.get("invocation")
     channel = context.get("channel")
-    template = context.get("template")
     config_id = context.get("config_id")
+    user = context.get("user")
     if settings.IN_DEV:
         url = "http://localhost:8080/pipelines"
     elif settings.IN_STAGING:
@@ -607,7 +607,17 @@ def initial_alert_message(context):
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Grid View", "open_in_pipeline", url=f"{url}/{template}",
+                    "In-Line View",
+                    "switch_inline",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
+                        params=[
+                            f"invocation={invocation}",
+                            f"config_id={config_id}",
+                            f"u={user}",
+                            f"switch_to={'inline'}",
+                        ],
+                    ),
                 ),
             ]
         ),
