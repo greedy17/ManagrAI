@@ -1169,7 +1169,7 @@ export default {
           customObject: this.selectedCustomObjectName,
           fields: [],
           fieldsRef: [],
-          formType: "UPDATE",
+          formType: "CREATE",
           id: "",
           organization: this.allForms[0].organization,
           resource: "CustomObject",
@@ -1227,7 +1227,7 @@ export default {
       this.modalLoading = true
       this.loaderText = this.loaderTextList[0]
       this.newCustomForm = this.allForms.find(
-        (f) => f.resource == 'CustomObject' && f.formType == 'UPDATE' && f.customObject == this.selectedCustomObjectName,
+        (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
       )
       this.changeCustomObjectName()
       setTimeout(() => {
