@@ -590,7 +590,7 @@ def initial_alert_message(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Open",
+                    "View Message",
                     "update_in_slack",
                     action_id=action_with_params(
                         slack_const.PAGINATE_ALERTS,
@@ -603,7 +603,7 @@ def initial_alert_message(context):
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "In-Line View",
+                    "In-Line Edit",
                     "switch_inline",
                     action_id=action_with_params(
                         slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
