@@ -172,20 +172,28 @@
                     : 'Not Submitted'
                 }}
               </p>
-              <p class="note-section__body">
-                <span class="underline">Workflow ID:</span>
-                {{ modalInfo.workflow ? modalInfo.workflow : 'None' }}
-                <span class="underline">Update Source:</span>
-                {{ modalInfo.update_source ? modalInfo.update_source : 'None' }}
-                <span class="underline">User ID:</span>
-                {{ modalInfo.user ? modalInfo.user : 'None' }}
-                <span class="underline">Template ID:</span>
-                {{ modalInfo.template ? modalInfo.template : 'None' }}
-                <span class="underline">Saved Data:</span>
-                {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }}
-                <span class="underline">Previous Data:</span>
-                {{ modalInfo.previous_data ? modalInfo.previous_data : 'None' }}
-              </p>
+              <div>
+                <div>
+                  <span class="">Workflow ID:</span>
+                  {{ modalInfo.workflow ? modalInfo.workflow : 'None' }} |
+                  <span class="">Update Source:</span>
+                  {{ modalInfo.update_source ? modalInfo.update_source : 'None' }} |
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">User ID:</span>
+                  {{ modalInfo.user ? modalInfo.user : 'None' }} |
+                  <span class="">Template ID:</span>
+                  {{ modalInfo.template ? modalInfo.template : 'None' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Saved Data:</span>
+                  {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }}
+                </div>
+                <div>
+                  <span class="">Previous Data:</span>
+                  {{ modalInfo.previous_data ? modalInfo.previous_data : 'None' }}
+                </div>
+              </div>
             </section>
           </div>
         </div>
@@ -214,9 +222,9 @@
                     : 'None'
                 }}
               </p>
-              <br />
-              <p class="note-section__date">
-                End Time:
+              <!-- <br /> -->
+              <p class="note-section__date" style="margin-top: -10px;">
+                End Time: <span style="color: white;">{{' . '}}</span>
                 {{
                   modalInfo.meeting_ref.end_time
                     ? `${weekDay(modalInfo.meeting_ref.end_time)} ${formatDateTime(
@@ -225,56 +233,76 @@
                     : 'None'
                 }}
               </p>
-              <p class="note-section__body">
-                <span class="underline">Meeting UUID: </span
-                >{{
-                  modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'None'
-                }}
-                <span class="underline">Account ID: </span
-                >{{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None' }}
-                <span class="underline">Host ID: </span
-                >{{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'None' }}
-                <span class="underline">Operator ID: </span
-                >{{
-                  modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'None'
-                }}
-                <span class="underline">Status: </span
-                >{{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'None' }}
-                <span class="underline">Timezone: </span
-                >{{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'None' }}
-                <span class="underline">Start URL: </span
-                >{{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'None' }}
-                <span class="underline">Duration: </span
-                >{{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'None' }}
-                <span class="underline">Original Duration: </span
-                >{{
-                  modalInfo.meeting_ref.original_duration
-                    ? modalInfo.meeting_ref.original_duration
-                    : 'None'
-                }}
-                <span class="underline">Total Minutes: </span
-                >{{
-                  modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'None'
-                }}
-                <span class="underline">Recurrence: </span
-                >{{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None' }}
-                <span class="underline">Join URL: </span
-                >{{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'None' }}
-                <span class="underline">Operator: </span
-                >{{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'None' }}
-                <span class="underline">Operation: </span
-                >{{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
-                <span class="underline">Participants: </span
-                >{{
-                  modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'None'
-                }}
-                <span class="underline">Type: </span
-                >{{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'None' }}
-                <span class="underline">Zoom Account: </span
-                >{{
-                  modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'None'
-                }}
-              </p>
+              <div>
+                <div>
+                  <span class="">Meeting UUID: </span
+                  >{{
+                    modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'None'
+                  }} |
+                  <span class="">Account ID: </span
+                  >{{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None' }} |
+                </div>
+                <div>
+                  <span class="">Host ID: </span
+                  >{{ modalInfo.meeting_ref.host_id ? modalInfo.meeting_ref.host_id : 'None' }} |
+                  <span class="">Operator ID: </span
+                  >{{
+                    modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'None'
+                  }} |
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Status: </span
+                  >{{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'None' }} |
+                  <span class="">Timezone: </span
+                  >{{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'None' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Start URL: </span
+                  >{{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'None' }}
+                </div>
+                <div>
+                  <span class="">Duration: </span
+                  >{{ modalInfo.meeting_ref.duration ? modalInfo.meeting_ref.duration : 'None' }} |
+                  <span class="">Original Duration: </span
+                  >{{
+                    modalInfo.meeting_ref.original_duration
+                      ? modalInfo.meeting_ref.original_duration
+                      : 'None'
+                  }} |
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Total Minutes: </span
+                  >{{
+                    modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'None'
+                  }} |
+                  <span class="">Recurrence: </span
+                  >{{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Join URL: </span
+                  >{{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'None' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Operator: </span
+                  >{{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'None' }} |
+                  <span class="">Operation: </span
+                  >{{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Participants: </span
+                  >{{
+                    modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'None'
+                  }}
+                </div>
+                <div>
+                  <span class="">Type: </span
+                  >{{ modalInfo.meeting_ref.type ? modalInfo.meeting_ref.type : 'None' }} |
+                  <span class="">Zoom Account: </span
+                  >{{
+                    modalInfo.meeting_ref.zoom_account ? modalInfo.meeting_ref.zoom_account : 'None'
+                  }}
+                </div>
+              </div>
             </section>
             <section v-else>
               <p>No Info to Display</p>
