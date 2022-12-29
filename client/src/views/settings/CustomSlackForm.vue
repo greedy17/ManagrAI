@@ -1193,16 +1193,9 @@ export default {
             this.addedFields = fieldsToAdd.concat(copyArray)
           }
         }
-
-        let fields = new Set([...this.addedFields.map((f) => f.id)])
-        fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
-        
-        let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
         this.addedFields = []
         const res = await SlackOAuth.api.postOrgCustomForm({
           ...this.newCustomForm,
-          fields: fields,
-          fields_ref: fields_ref,
         })
         this.reloadCustomObject = true
         setTimeout(() => {
@@ -1229,7 +1222,6 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
       )
-      this.changeCustomObjectName()
       setTimeout(() => {
         this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
       }, 400)
