@@ -901,6 +901,78 @@ def process_add_products_form(payload, context):
         )
 
 
+@slack_api_exceptions(rethrow=True)
+def process_add_custom_object_form(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    selected_object = payload["actions"][0]["selected_option"]["value"]
+    template = (
+        OrgCustomSlackForm.objects.for_user(user).filter(custom_object=selected_object).first()
+    )
+    if template:
+        form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+        blocks = form.generate_form()
+
+    data = {
+        "view_id": payload["view"]["id"],
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Create Custom Object"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
+            "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+def process_pick_custom_object(payload, context):
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    custom_objects = user.crm_account.custom_objects
+    options = [
+        block_builders.option(custom_object, custom_object) for custom_object in custom_objects
+    ]
+    action_id = action_with_params(
+        slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM, [f"u={str(user.id)}"]
+    )
+    blocks = [
+        block_builders.static_select(
+            "Choose a custom object to add", options=options, action_id=action_id
+        )
+    ]
+    data = {
+        "view_id": payload["view"]["id"],
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Add Custom Object"},
+            "blocks": blocks,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
 #########################################################
 # COMMAND ACTIONS
 #########################################################
@@ -1332,7 +1404,7 @@ def process_show_update_resource_form(payload, context):
                     "Add Custom Object",
                     "ADD_CUSTOM_OBJECT",
                     action_id=action_with_params(
-                        slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM, params=params,
+                        slack_const.PROCESS_PICK_CUSTOM_OBJECT, params=params,
                     ),
                 )
             )
@@ -3643,6 +3715,8 @@ def handle_block_actions(payload):
         slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
+        slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM: process_add_custom_object_form,
+        slack_const.PROCESS_PICK_CUSTOM_OBJECT: process_pick_custom_object,
         slack_const.VIEW_RECAP: process_view_recap,
         slack_const.PROCESS_SELECT_RESOURCE: process_select_resource,
         slack_const.PROCESS_LEAD_INPUT_SWITCH: process_lead_input_switch,
