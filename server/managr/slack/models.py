@@ -231,9 +231,16 @@ class OrgCustomSlackForm(TimeStampModel):
         from managr.crm.models import ObjectField
 
         team_lead = self.team.team_lead
-        fields = ObjectField.objects.filter(
-            Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
-            | Q(is_public=True)
+        fields = (
+            ObjectField.objects.filter(
+                Q(api_name__in=self.config.values(), crm_object=self.custom_object, user=team_lead,)
+                | Q(is_public=True)
+            )
+            if self.resource == "CustomObject"
+            else ObjectField.objects.filter(
+                Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
+                | Q(is_public=True)
+            )
         )
         self.custom_fields.clear()
         for i, field in enumerate(self.config.items()):

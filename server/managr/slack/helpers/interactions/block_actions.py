@@ -911,7 +911,12 @@ def process_add_custom_object_form(payload, context):
     if template:
         form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
         blocks = form.generate_form()
-
+        if context.get("w", None):
+            workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+            form.workflow = workflow
+            form.save()
+            print(form.workflow)
+    context = {**context, "f": str(form.id)}
     data = {
         "view_id": payload["view"]["id"],
         "trigger_id": payload["trigger_id"],
@@ -920,7 +925,8 @@ def process_add_custom_object_form(payload, context):
             "title": {"type": "plain_text", "text": "Create Custom Object"},
             "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
-            "callback_id": slack_const.PROCESS_SUBMIT_PRODUCT,
+            "private_metadata": json.dumps(context),
+            "callback_id": slack_const.SUBMIT_CUSTOM_OBJECT_DATA,
         },
     }
     try:
@@ -943,9 +949,10 @@ def process_pick_custom_object(payload, context):
     options = [
         block_builders.option(custom_object, custom_object) for custom_object in custom_objects
     ]
-    action_id = action_with_params(
-        slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM, [f"u={str(user.id)}"]
-    )
+    params = [f"u={str(user.id)}"]
+    if context.get("w", None):
+        params.append(f"w={str(context.get('w'))}")
+    action_id = action_with_params(slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM, params=params)
     blocks = [
         block_builders.static_select(
             "Choose a custom object to add", options=options, action_id=action_id
