@@ -1176,23 +1176,7 @@ export default {
           stage: "",
         }
         this.newCustomForm = customForm
-        let currentFormFields = this.addedFields.map((field) => {
-          return field.id
-        })
 
-        if (this.newCustomForm.formType == 'UPDATE') {
-          if (
-            currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
-            currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
-          ) {
-            let fieldsToAdd =
-              this.userCRM === 'SALESFORCE'
-                ? [this.noteTitle, this.noteSubject]
-                : [this.noteTitleHubspot, this.noteSubjectHubspot]
-            let copyArray = this.addedFields
-            this.addedFields = fieldsToAdd.concat(copyArray)
-          }
-        }
         this.addedFields = []
         const res = await SlackOAuth.api.postOrgCustomForm({
           ...this.newCustomForm,
