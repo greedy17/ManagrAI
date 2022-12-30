@@ -169,7 +169,7 @@ const NINETY_DAY_PIPELINE = {
             " Opportunity.StageName ",
             " Opportunity.LastActivityDate ",
         ],
-        body: "<strong>{ Opportunity.Name }</strong> has a Close Date of <strong>{ Opportunity.CloseDate }</strong> \n \n <strong>Stage</strong>: { Opportunity.StageName } \n \n <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
+        body: "<strong>{ Opportunity.Name }</strong> has a Close Date of <strong>{ Opportunity.CloseDate }</strong> <br><br> <strong>Stage</strong>: { Opportunity.StageName } <br><br> <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
     },
     newConfigs: [
         {
@@ -228,7 +228,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
             " Deal.closedate ",
             " Deal.dealstage ",
         ],
-        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage }",
+        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> <br><br <strong>Stage</strong>: { Deal.dealstage }",
     },
     newConfigs: [
         {
