@@ -924,7 +924,29 @@ class SalesforceSObjectViewSet(
     )
     def get_custom_objects(self, request, *args, **kwargs):
         user = request.user
-        objects = user.salesforce_account.list_objects()
+        attempts = 1
+        while True:
+            try:
+                objects = user.salesforce_account.list_objects()
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve all object from Salesforce for user {str(user.id)} after {attempts} tries"
+                    )
+                else:
+                    try:
+                        user.crm_account.regenerate_token()
+                        attempts += 1
+                    except InvalidRefreshToken:
+                        return Response(
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            data={
+                                "error": "There was a problem with your connection to Salesforce, please reconnect to SFDC"
+                            },
+                        )
+            except Exception as e:
+                logger.exception("Error fetching all Salesforce Objects")
         return Response(data={"sobjects": objects})
 
     @action(

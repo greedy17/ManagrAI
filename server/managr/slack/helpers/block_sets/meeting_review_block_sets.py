@@ -541,22 +541,27 @@ def meeting_review_modal_block_set(context):
             f"w={str(workflow.id)}",
             "type=meeting",
         ]
+        buttons = []
         if slack_form.resource_object.secondary_data["Pricebook2Id"]:
             params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
-        blocks.append(
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Add Product",
-                        "ADD_PRODUCT",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
-                        ),
-                    )
-                ],
-                block_id="ADD_PRODUCT_BUTTON",
-            ),
+        buttons.append(
+            block_builders.simple_button_block(
+                "Add Product",
+                "ADD_PRODUCT",
+                action_id=action_with_params(slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,),
+            )
         )
+        if len(user.crm_account.custom_objects) > 0:
+            buttons.append(
+                block_builders.simple_button_block(
+                    "Add Custom Object",
+                    "ADD_CUSTOM_OBJECT",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_PICK_CUSTOM_OBJECT, params=params,
+                    ),
+                )
+            )
+        blocks.append(block_builders.actions_block(buttons, block_id="ADD_EXTRA_OBJECTS_BUTTON",),)
         if current_products:
             for product in current_products:
                 product_block = block_sets.get_block_set(

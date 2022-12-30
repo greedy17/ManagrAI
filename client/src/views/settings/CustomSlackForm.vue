@@ -1,6 +1,6 @@
 <template>
   <div class="slack-form-builder">
-    <Modal v-if="customObjectModal" dimmed>
+    <Modal v-if="customObjectModalView" dimmed>
       <div class="opp-modal-container">
         <div v-if="modalLoading">
           <Loader :loaderText="loaderText" />
@@ -14,45 +14,36 @@
             <img
               src="@/assets/images/close.svg"
               style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
-              @click="closeCustomModal"
+              @click="toggleCustomObjectModalView"
               alt=""
             />
           </div>
           <div class="opp-modal">
             <section>
-              <div style="display: flex; justify-content: center">
-                <!-- <label class="modal-label">Label</label>
-                <textarea
-                  id="user-input"
-                  cols="30"
-                  rows="4"
-                  :disabled="false"
-                  style="width: 40.25vw; border-radius: 0.4rem"
-                  @input="() => null"
-                >
-                </textarea> -->
+              <div style="display: flex; justify-content: center;">
                 <Multiselect
                   @input="getCustomObjectFields"
                   :options="customObjects"
                   openDirection="below"
-                  style="width: 20vw; margin-top: 2rem; margin-left: 1rem"
+                  style="width: 94%; margin-left: 1rem;"
+                  :max-height="400"
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
-                  :value="currentlySelectedStage"
+                  :value="currentlySelectedCO"
                   v-model="selectedCustomObject"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
                   </template>
-
+      
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       Select Custom Object
                     </p>
                   </template>
-
+      
                   <template slot="option" slot-scope="props">
                     <div>
                       <span class="option__title">{{
@@ -71,42 +62,6 @@
                     </div>
                   </template>
                 </Multiselect>
-                <!-- <div v-if="selectedCustomObject" class="field-section">
-                  <div class="search-bar">
-                    <img
-                      src="@/assets/images/search.svg"
-                      style="height: 18px; cursor: pointer"
-                      alt=""
-                    />
-                    <input
-                      type="search"
-                      placeholder="Search Custom Object Fields"
-                      v-model="COfilterText"
-                    />
-                  </div>
-
-                  <div class="field-section__fields">
-                    <div style="height: 45vh; overflow: scroll">
-                      <p
-                        v-for="(field, i) in COfilteredFields /*customFields.list*/"
-                        :key="field.id"
-                      >
-                        <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
-                        <label :for="i"></label>
-                        {{ field.label }}
-                        <span v-if="field.required" class="red-text">required</span>
-                      </p>
-                    </div>
-                  </div>
-                </div> -->
-                <!-- <div class="flex-end-opp">
-                  <div v-if="true" style="display: flex; align-items: center">
-                    <button class="add-button" @click="() => null">
-                      Save
-                    </button>
-                    <p @click="toggleCustomObjectModal" class="cancel">Cancel</p>
-                  </div>
-                </div> -->
               </div>
             </section>
           </div>
@@ -154,33 +109,67 @@
       <section class="row__ light-gray">
         <p
           @click="changeToOpportunity"
-          :class="newResource == 'Opportunity' && newFormType !== 'STAGE_GATING' ? 'green' : ''"
+          :class="
+            newResource == 'Opportunity' && newFormType !== 'STAGE_GATING' && !customObjectView
+              ? 'green'
+              : ''
+          "
         >
           Opportunity
         </p>
         <p
           @click="changeToStage"
-          :class="newResource == 'Opportunity' && newFormType == 'STAGE_GATING' ? 'green' : ''"
+          :class="
+            newResource == 'Opportunity' && newFormType == 'STAGE_GATING' && !customObjectView
+              ? 'green'
+              : ''
+          "
         >
           Opp - Stage related
         </p>
-        <p @click="changeToAccount" :class="newResource == 'Account' ? 'green' : ''">Account</p>
-        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
-        <p @click="changeToLead" :class="newResource == 'Lead' ? 'green' : ''">Lead</p>
-        <p @click="changeToProducts" :class="newResource == 'OpportunityLineItem' ? 'green' : ''">
+        <p
+          @click="changeToAccount"
+          :class="newResource == 'Account' && !customObjectView ? 'green' : ''"
+        >
+          Account
+        </p>
+        <p
+          @click="changeToContact"
+          :class="newResource == 'Contact' && !customObjectView ? 'green' : ''"
+        >
+          Contact
+        </p>
+        <p @click="changeToLead" :class="newResource == 'Lead' && !customObjectView ? 'green' : ''">
+          Lead
+        </p>
+        <p
+          @click="changeToProducts"
+          :class="newResource == 'OpportunityLineItem' && !customObjectView ? 'green' : ''"
+        >
           Products
+        </p>
+        <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
+          Custom Object
+          <span 
+            v-if="customForms && customForms.length" 
+            class="option__small" 
+            style="margin-left: 0; font-size: .7rem"
+            >active
+          </span>
         </p>
       </section>
       <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
+          <img src="@/assets/images/refresh.svg" />
+        </button>
         <PulseLoadingSpinnerButton
           v-else
           @click="refreshForms"
           class="img-button"
           text="Refresh"
           :loading="pulseLoading"
-          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
-        >
+          ><img src="@/assets/images/refresh.svg"
+        /></PulseLoadingSpinnerButton>
         <button @click="onSave" class="save">Save Form</button>
       </div>
     </div>
@@ -205,21 +194,23 @@
         </p>
       </section>
       <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms"><img src="@/assets/images/refresh.svg" /></button>
+        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
+          <img src="@/assets/images/refresh.svg" />
+        </button>
         <PulseLoadingSpinnerButton
           v-else
           @click="refreshForms"
           class="img-button"
           text="Refresh"
           :loading="pulseLoading"
-          ><img src="@/assets/images/refresh.svg" /></PulseLoadingSpinnerButton
-        >
+          ><img src="@/assets/images/refresh.svg"
+        /></PulseLoadingSpinnerButton>
         <button @click="onSave" class="save">Save Form</button>
       </div>
     </div>
 
     <section class="wrapper">
-      <div v-if="newFormType !== 'STAGE_GATING'" class="tab-content">
+      <div v-if="newFormType !== 'STAGE_GATING' && !customObjectView" class="tab-content">
         <section>
           <div v-if="newResource !== 'OpportunityLineItem'" class="tab-content__div">
             <div class="row">
@@ -271,7 +262,7 @@
         </section>
       </div>
 
-      <div v-else class="tab-content">
+      <div v-else-if="!customObjectView" class="tab-content">
         <section style="margin-top: -16px" class="space-between">
           <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
             <img
@@ -297,30 +288,6 @@
               <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
             </div>
           </div>
-          <!-- <button
-            v-if="
-              selectedForm &&
-              (customResource === 'Opportunity' || customResource === 'Deal') &&
-              !selectedForm.customFields.length &&
-              !addedFields.length
-            "
-            @click="toggleCustomObjectModal"
-            class="custom-object-button"
-          >
-            Use Custom Object
-          </button> -->
-          <!-- <button
-            v-else-if="
-              selectedForm &&
-              customResource &&
-              customResource !== 'Opportunity' &&
-              customResource !== 'Deal'
-            "
-            @click="removeCustomObject"
-            class="custom-object-button__remove"
-          >
-            Remove Custom Object
-          </button> -->
         </section>
 
         <div>
@@ -400,28 +367,213 @@
           </draggable>
         </div>
       </div>
-    </section>
-    <div class="field-section">
-      <div class="search-bar">
-        <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-        <input
-          @input="searchFields"
-          type="search"
-          :placeholder="`Search ${newResource} Fields`"
-          v-model="filterText"
-        />
-      </div>
 
-      <div class="field-section__fields">
-        <div>
-          <p v-for="(field, i) in filteredFields" :key="field.id">
-            <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
-            <label :for="i"></label>
-            {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
-            <!-- <span v-if="field.required" class="red-text">required</span> -->
-          </p>
+      <div class="tab-content" v-else>
+        <div v-if="modalLoading">
+          <Loader :loaderText="loaderText" />
+        </div>
+
+        <div v-else>
+          <div v-if="!customResource">
+            <div v-if="createdCustomObjects.length" style="width: 100%; display: flex; justify-content: space-between;">
+              <Multiselect
+                @input="getCreatedCO"
+                :options="createdCustomObjects"
+                openDirection="below"
+                style="width: 40vw; margin-left: 1rem"
+                selectLabel="Enter"
+                :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+                label="name"
+                :value="currentlySelectedCO"
+                v-model="selectedCustomObject"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+    
+                <template slot="placeholder">
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Select Custom Object
+                  </p>
+                </template>
+    
+                <template slot="option" slot-scope="props">
+                  <div>
+                    <span class="option__title">{{props.option.name}}</span
+                    >
+                  </div>
+                </template>
+              </Multiselect>
+              <button
+                @click="toggleCustomObjectModalView"
+                class="custom-object-button"
+              >
+                Add Custom Object
+              </button>
+            </div>
+            <Multiselect
+              v-else
+              @input="getCustomObjectFields"
+              :options="customObjects"
+              openDirection="below"
+              style="width: 40vw; margin-left: 1rem"
+              selectLabel="Enter"
+              :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+              :customLabel="customLabel"
+              :value="currentlySelectedCO"
+              v-model="selectedCustomObject"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+  
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  Select Custom Object
+                </p>
+              </template>
+  
+              <template slot="option" slot-scope="props">
+                <div>
+                  <span class="option__title">{{
+                    userCRM === 'SALESFORCE' ? props.option.label : props.option.label
+                  }}</span
+                  ><span
+                    v-if="
+                      currentStagesWithForms.includes(
+                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
+                      )
+                    "
+                    class="option__small"
+                  >
+                    edit
+                  </span>
+                </div>
+              </template>
+            </Multiselect>
+          </div>
+          <section v-else>
+            <div class="space-between">
+              <h4 style="cursor: pointer" @click="customResource = null">
+                <img
+                  style="margin-right: 8px; margin-top: -16px"
+                  src="@/assets/images/left.svg"
+                  height="13px"
+                  alt=""
+                />
+                Back
+              </h4>
+  
+              <div class="row__">
+                <h4 style="margin-right: 16px">
+                  {{ selectedCustomObjectName + ' Form' }}
+                </h4>
+                <div
+                  class="margin-right"
+                  @click.prevent="deleteForm(newCustomForm)"
+                >
+                  <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
+                </div>
+              </div>
+            </div>
+            <div id="formSection">
+              <draggable
+                v-model="addedFields"
+                group="fields"
+                @start="drag = true"
+                @end="drag = false"
+                class="drag-section"
+              >
+                <div v-for="field in addedFields" :key="field.id">
+                  <div v-if="!unshownIds.includes(field.id)">
+                    <div class="drag-item">
+                      <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
+                        <img src="@/assets/images/drag.svg" alt="" />
+                        {{ field.label }}
+                      </p>
+                      <img
+                        src="@/assets/images/remove.svg"
+                        alt=""
+                        id="remove"
+                        :class="unshownIds.includes(field.id) ? 'invisible' : ''"
+                        @click="
+                          () => {
+                            onRemoveField(field)
+                          }
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
+              </draggable>
+            </div>
+          </section>
         </div>
       </div>
+    </section>
+
+    <div class="field-section">
+      <section v-if="!customObjectView">
+        <div class="search-bar">
+          <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+          <input
+            @input="searchFields"
+            type="search"
+            :placeholder="`Search ${newResource} Fields`"
+            v-model="filterText"
+          />
+        </div>
+
+        <div class="field-section__fields">
+          <div>
+            <p v-for="(field, i) in filteredFields" :key="field.id">
+              <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+              <label :for="i"></label>
+              {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
+              <!-- <span v-if="field.required" class="red-text">required</span> -->
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section v-else>
+        <div v-if="selectedCustomObject || customResource">
+          <div class="search-bar">
+            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <input
+              type="search"
+              :placeholder="`Search ${selectedCustomObjectName} Fields`"
+              v-model="COfilterText"
+            />
+          </div>
+
+          <div class="field-section__fields">
+            <div>
+              <p v-for="(field, i) in COfilteredFields" :key="field.id">
+                <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+                <label :for="i"></label>
+                {{ field.label }}
+                <span v-if="field.required" class="red-text">required</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="search-bar">
+            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
+            <input type="search" placeholder="Search Object Fields" />
+          </div>
+
+          <div class="field-section__fields">
+            <div>
+              <p>Nothing here. Try selecting an object</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -482,10 +634,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    managrFields: {
-      type: Array,
-      default: () => [],
-    },
     fromAdmin: {
       type: Boolean,
       default: false,
@@ -501,24 +649,22 @@ export default {
       addingForm: false,
       currentlySelectedForm: null,
       customObjects: [],
-      verboseName: '',
+      createdCustomObjects: [],
       pulseLoading: false,
-      // checker: this.$store.state.customObject.checker,
-      // task: this.$store.state.customObject.task,
       oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...'],
       selectedCustomObject: null,
       selectedCustomObjectName: null,
       currentlySelectedStage: null,
+      currentlySelectedCO: null,
       selectedForm: null,
       selectedStage: null,
-      allForms: null,
+      allForms: [],
       filterText: '',
       COfilterText: '',
-      dropdownLoading: false,
+      reloadCustomObject: false,
       modalLoading: false,
       loaderText: '',
-      currentStageForm: null,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 500 },
@@ -527,47 +673,22 @@ export default {
         },
       }),
       customFields: null,
-      formFieldList: [],
       newFormType: this.formType,
       newResource: this.resource,
-      customResource: this.resource,
+      customResource: null,
       removeCustomObj: false,
       newCustomForm: this.customForm,
-      customSlackFormConfig: [],
-      formHasChanges: false,
       savingForm: false,
       addedFields: [],
-      formChanges: false,
-      typeChanges: false,
-      resourceChanges: false,
       removedFields: [],
       ...FORM_CONSTS,
       Pagination,
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,
-      requiredFields: [],
-      formsByType: [],
-      // requiredProductFields: ['PricebookEntryId', 'Quantity'],
-      requiredOpportunityFields: ['Name', 'StageName', 'CloseDate'],
-      requiredLeadFields: ['LastName', 'Company', 'Status'],
       nameValue: '',
-      amountValue: '',
-      closeValue: '',
-      priceValue: '',
-      quantityValue: '',
-      lineValue: '',
-      lastNameValue: '',
-      leadLastNameValue: '',
-      companyValue: '',
-      accountNameValue: '',
-      statusValue: '',
-      stageValue: '',
-      addingFieldValue: '',
-      addingFields: false,
-      productSelected: false,
-      addingProducts: false,
-      customObjectModal: false,
+      customObjectView: false,
+      customObjectModalView: false,
       confirmDeleteModal: false,
       modalOpen: false,
       formChange: false,
@@ -660,201 +781,12 @@ export default {
         datetimeCreated: '2020-08-03 11:39:23.632256Z',
         lastEdited: '2020-08-03 11:39:23.632256Z',
       },
-      // noteTitle: {
-      //   _fields: {
-      //     length: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     id: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     apiName: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     custom: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     createable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     dataType: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     label: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     reference: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceToInfos: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     updateable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     required: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     unique: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     value: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     displayValue: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceDisplayLabel: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     filterable: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     order: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     includeInRecap: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //   },
-      //   length: 30,
-      //   id: '6407b7a1-a877-44e2-979d-1effafec5035',
-      //   apiName: 'meeting_type',
-      //   custom: true,
-      //   createable: true,
-      //   dataType: 'String',
-      //   label: 'Note Subject',
-      //   reference: 'false',
-      //   referenceToInfos: [],
-      //   updateable: true,
-      //   required: false,
-      //   unique: false,
-      //   value: '',
-      //   displayValue: '',
-      //   referenceDisplayLabel: 'Note Subject',
-      //   filterable: 'false',
-      //   order: null,
-      //   includeInRecap: true,
-      // },
-      // noteSubject: {
-      //   _fields: {
-      //     length: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     id: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     apiName: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     custom: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     createable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     dataType: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     label: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     reference: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceToInfos: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     updateable: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     required: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     unique: {
-      //       defaultVal: false,
-      //       readOnly: false,
-      //     },
-      //     value: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     displayValue: {
-      //       defaultVal: '',
-      //       readOnly: false,
-      //     },
-      //     referenceDisplayLabel: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     filterable: {
-      //       defaultVal: '',
-      //       readOnly: true,
-      //     },
-      //     order: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //     includeInRecap: {
-      //       defaultVal: null,
-      //       readOnly: false,
-      //     },
-      //   },
-      //   length: 255,
-      //   id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
-      //   apiName: 'meeting_comments',
-      //   custom: true,
-      //   createable: true,
-      //   dataType: 'String',
-      //   label: 'Notes',
-      //   reference: 'false',
-      //   referenceToInfos: [],
-      //   updateable: true,
-      //   required: false,
-      //   unique: false,
-      //   value: '',
-      //   displayValue: '',
-      //   referenceDisplayLabel: 'Notes',
-      //   filterable: 'false',
-      //   order: null,
-      //   includeInRecap: true,
-      // },
     }
   },
   watch: {
     selectedStage: 'setNewForm',
     selectedForm: 'setCustomForm',
     task: 'checkAndClearInterval',
-    getTask: 'checkAndClearInterval',
     customResource: 'watcherCustomResource',
     formFields: 'watcherCustomResource',
     customForm: {
@@ -871,7 +803,10 @@ export default {
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
-              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
+              let fieldsToAdd =
+                this.userCRM === 'SALESFORCE'
+                  ? [this.noteTitle, this.noteSubject]
+                  : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -919,7 +854,10 @@ export default {
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
               currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
             ) {
-              let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
+              let fieldsToAdd =
+                this.userCRM === 'SALESFORCE'
+                  ? [this.noteTitle, this.noteSubject]
+                  : [this.noteTitleHubspot, this.noteSubjectHubspot]
               let copyArray = this.addedFields
               fieldsToAdd = fieldsToAdd.concat(copyArray)
               this.addedFields = fieldsToAdd.map((field, i) => {
@@ -1072,14 +1010,20 @@ export default {
     formLength() {
       return this.formStages.length
     },
+    customForms() {
+      return this.allForms.filter(form => form.customObject)
+    },
     filteredFields() {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
+      if (!this.customFields) {
+        return
+      }
       return this.customFields.list
         .filter(
           (field) =>
-            field.referenceDisplayLabel.toLowerCase().includes(this.filterText.toLowerCase()) &&
+            field.referenceDisplayLabel.toLowerCase().includes(this.COfilterText.toLowerCase()) &&
             field.integrationSource === this.userCRM,
         )
         .filter((field) => !this.addedFieldNames.includes(field.apiName))
@@ -1160,7 +1104,7 @@ export default {
       console.log('log', log)
     },
     customLabel(prop) {
-      return `${prop.label}`
+      return prop.customObject ? `${prop.customObject}` : `${prop.label}`
     },
     searchFields() {
       this.formFields = CollectionManager.create({
@@ -1180,21 +1124,6 @@ export default {
         this.$router.go()
       }, 300)
     },
-    removeCustomObject() {
-      this.removeCustomObj = true
-      this.customResource = this.resource
-      this.newResource = this.resource
-      this.selectedCustomObjectName = null
-      this.newCustomForm.customObject = ''
-      this.addedFields = []
-      this.formFields = CollectionManager.create({
-        ModelClass: ObjectField,
-        pagination: { size: 500 },
-        filters: {
-          crmObject: this.resource,
-        },
-      })
-    },
     checkAndClearInterval() {
       if (this.task && this.task.completed) {
         this.stopChecker()
@@ -1202,29 +1131,29 @@ export default {
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
+        if (this.reloadCustomObject) {
+          this.$router.go()
+        }
       } else {
-        // this.timeout = setTimeout(function() {
-        //   this.checkTask()
-        //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        // }.bind(this), 2000)
         return
       }
     },
-    toggleCustomObjectModal() {
-      this.customObjectModal = !this.customObjectModal
+    toggleCustomObjectModalView() {
+      this.customObjectModalView = !this.customObjectModalView
     },
     closeCustomModal() {
-      this.customObjectModal = false
       if (this.selectedCustomObject) {
         this.selectedCustomObject = null
-        this.formFields = CollectionManager.create({
+        this.customFields = CollectionManager.create({
           ModelClass: ObjectField,
           pagination: { size: 500 },
           filters: {
             crmObject: this.customResource,
           },
         })
+        this.customFields.refresh()
       }
+      this.formFields.refresh()
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1234,27 +1163,53 @@ export default {
       try {
         this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
+        const customForm = {
+          config: {},
+          customFields: [],
+          customObject: this.selectedCustomObjectName,
+          fields: [],
+          fieldsRef: [],
+          formType: "CREATE",
+          id: "",
+          organization: this.allForms[0].organization,
+          resource: "CustomObject",
+          stage: "",
+        }
+        this.newCustomForm = customForm
+
+        this.addedFields = []
+        const res = await SlackOAuth.api.postOrgCustomForm({
+          ...this.newCustomForm,
+        })
+        this.reloadCustomObject = true
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+          // setTimeout(() => {
+          //   this.loaderText = 'Reloading page, please be patient...'
+          //   setTimeout(() => {
+          //     this.$router.go()
+          //   }, 1000)
+          // }, 2000)
         }, 400)
-        // const res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name).then(res => {
-        //   this.verboseName = res.verbose_name
-        //   // this.timeout = setTimeout(function() {
-        //   //   this.checkTask()
-        //   //   this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        //   // }.bind(this), 2000)
-        // })
       } catch (e) {
         console.log(e)
       }
     },
-    async checkTask() {
-      try {
-        clearTimeout(this.timeout)
-        this.task = await User.api.checkTasks(this.verboseName)
-      } catch (e) {
-        console.log(e)
+    getCreatedCO() {
+      if (!this.selectedCustomObject) {
+        return
       }
+      this.selectedCustomObjectName = this.selectedCustomObject.name
+
+      this.modalLoading = true
+      this.loaderText = this.loaderTextList[0]
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
+      )
+      this.newFormType = 'CREATE'
+      setTimeout(() => {
+        this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+      }, 400)
     },
     changeLoaderText() {
       let newIndex
@@ -1281,7 +1236,21 @@ export default {
     },
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
-      this.customObjects = res.sobjects
+      const names = []
+      for (let i = 0; i < this.customForms.length; i++) {
+        const form = this.customForms[i]
+        names.push(form.customObject)
+      }
+      const createdCustomObjects = []
+      const filteredCustomObjects = res.sobjects.filter(co => {
+        if (!names.includes(co.name)) {
+          return co
+        } else {
+          createdCustomObjects.push(co)
+        }
+      })
+      this.customObjects = filteredCustomObjects
+      this.createdCustomObjects = createdCustomObjects
     },
     clearStageData() {
       this.selectedForm = null
@@ -1378,27 +1347,10 @@ export default {
         this.selectedStage = n.label
       }
     },
-    updateForm(event) {
-      this.selectedForm = event
-      let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
-
-      if (~index) {
-        this.allForms[index] = this.selectedForm
-        this.allForms = [...this.allForms]
-      }
-    },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
-
-        // this.$toast('This stage has a form', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'default',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
       }
       let newForm = SlackOAuth.customSlackForm.create({
         resource: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL,
@@ -1431,13 +1383,6 @@ export default {
           }
           let dealStage = []
           if (dealStages.optionsRef.length) {
-            // const items = dealStages.options[0]
-            // for (let key in items) {
-            //   // dealStage = [...dealStage, items[key].stages]
-            //   for (let j = 0; j < items[key].stages.length; j++) {
-            //     dealStage.push(items[key].stages[j])
-            //   }
-            // }
             for (let i = 0; i < dealStages.optionsRef.length; i++) {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
@@ -1449,24 +1394,6 @@ export default {
         }
       } catch (e) {
         console.log(e)
-      }
-    },
-    async onAddForm() {
-      this.selectingStage = !this.selectingStage
-      this.loadingStages = true
-      try {
-        await this.listPicklists({ crmObject: this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL, picklistFor: this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage' })
-      } catch (e) {
-        this.$modal.close('add-stage-modal')
-        this.$toast('Failed to retreive stages', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loadingStages = false
       }
     },
     getStageForms() {
@@ -1489,7 +1416,14 @@ export default {
       })
       this.formStages = [...forms]
     },
+    toggleCustomObjectView() {
+      this.customObjectView = true
+      this.newCustomForm = this.allForms.find(
+        (f) => f.resource == 'CustomObject' && f.formType == this.UPDATE,
+      )
+    },
     changeToAccount() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToAccount
@@ -1504,6 +1438,7 @@ export default {
       this.storedField = null
     },
     changeToCompany() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToCompany
@@ -1518,6 +1453,7 @@ export default {
       this.storedField = null
     },
     changeToOpportunity() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToOpportunity
@@ -1532,6 +1468,7 @@ export default {
       this.storedField = null
     },
     changeToDeal() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToDeal
@@ -1545,10 +1482,8 @@ export default {
       )
       this.storedField = null
     },
-    // changeToStage(stage = '') {
-    //   this.newResource = this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'
-    // },
     changeToProducts() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToProducts
@@ -1563,6 +1498,7 @@ export default {
       this.storedField = null
     },
     changeToStage(stage = '') {
+      this.customObjectView = false
       this.clearStageData()
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
@@ -1588,6 +1524,7 @@ export default {
       this.storedField = null
     },
     changeToContact() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToContact
@@ -1601,24 +1538,8 @@ export default {
       )
       this.storedField = null
     },
-    changeToHubspotContact() {
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToHubspotContact
-        return
-      }
-      this.filterText = ''
-      this.newResource = 'Contact'
-      this.newFormType = 'UPDATE'
-      const form = this.allForms.find(
-        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
-      )
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.HUBSPOTCONTACT && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
     changeToLead() {
+      this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
         this.storedModalFunction = this.changeToLead
@@ -1652,19 +1573,6 @@ export default {
         // this.$router.go()
       }, 400)
     },
-    camelize(str) {
-      return str[0] + str.slice(1).toLowerCase()
-    },
-    lowerCase(word1, word2) {
-      return (word1 + ' ' + word2)
-        .toLowerCase()
-        .split(' ')
-        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
-        .join(' ')
-    },
-    productSelect() {
-      this.productSelected = !this.productSelected
-    },
     getActionChoices() {
       this.loadingMeetingTypes = true
       const action = ActionChoice.api
@@ -1673,14 +1581,6 @@ export default {
           this.actionChoices = res.results
         })
         .finally((this.loadingMeetingTypes = false))
-    },
-    async onFieldsNextPage() {
-      this.dropdownLoading = true
-      await this.formFields.addNextPage().then(() => {
-        setTimeout(() => {
-          this.dropdownLoading = false
-        }, 1000)
-      })
     },
     canRemoveField(field) {
       // If form is create required fields cannot be removed
@@ -1702,11 +1602,10 @@ export default {
         return
       }
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
-      // this.formFields.filters = { salesforceObject: this.resource }
-      // this.formFields.refresh()
     },
     changeCustomObjectName() {
       this.newCustomForm.customObject = this.customResource
+      this.newCustomForm.resource = "CustomObject"
     },
     goBack() {
       if (this.fromAdmin) {
@@ -1714,12 +1613,6 @@ export default {
       } else {
         this.$router.push({ name: 'Required' })
       }
-    },
-    goToUpdateOpp() {
-      this.$router.push({ name: 'UpdateOpportunity' })
-    },
-    goToValidations() {
-      this.$emit('cancel-selected')
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -1765,19 +1658,29 @@ export default {
       })
 
       if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
-        if (currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false && currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false) {
-          let fieldsToAdd = this.userCRM === 'SALESFORCE' ? [this.noteTitle, this.noteSubject] : [this.noteTitleHubspot, this.noteSubjectHubspot]
+        if (
+          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
+          currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5034') == false
+        ) {
+          let fieldsToAdd =
+            this.userCRM === 'SALESFORCE'
+              ? [this.noteTitle, this.noteSubject]
+              : [this.noteTitleHubspot, this.noteSubjectHubspot]
           let copyArray = this.addedFields
           this.addedFields = fieldsToAdd.concat(copyArray)
         }
       }
 
-      
       let fields = new Set([...this.addedFields.map((f) => f.id)])
       fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
       let fieldsCheck = []
-      fields.forEach(field => {
-        if (field === '6407b7a1-a877-44e2-979d-1effafec5034' || field === '6407b7a1-a877-44e2-979d-1effafec5035' || field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af2' || field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1') {
+      fields.forEach((field) => {
+        if (
+          field === '6407b7a1-a877-44e2-979d-1effafec5034' ||
+          field === '6407b7a1-a877-44e2-979d-1effafec5035' ||
+          field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af2' ||
+          field === '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+        ) {
           return
         }
         fieldsCheck.push(field)
@@ -1794,6 +1697,7 @@ export default {
       }
       let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
       if (
+        this.customResource &&
         this.customResource !== 'Opportunity' &&
         this.customResource !== 'Deal' &&
         this.customResource !== 'Lead' &&
@@ -1825,76 +1729,16 @@ export default {
             this.removedFields = []
             // this.$router.go()
           }, 300)
+          this.addedFields = fields_ref
         })
         .finally(() => {
           this.savingForm = false
           this.getAllForms()
-          // if (this.formType !== 'STAGE_GATING' && !this.fromAdmin) {
-          //   this.$router.push({ name: 'Required' })
-          // } else {
-          //   this.$router.go()
-          // }
           this.formChange = false
         })
     },
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-    },
-    async goToProducts() {
-      if (
-        (this.resource == 'Opportunity' || this.resource == 'Account') &&
-        this.customForm.formType == FORM_CONSTS.MEETING_REVIEW
-      ) {
-        if (!this.meetingType.length && !this.actionChoices.length) {
-          this.$toast('Please enter a meeting type', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-          return
-        }
-      }
-      this.savingForm = true
-
-      let fields = new Set([...this.addedFields.map((f) => f.id)])
-      fields = Array.from(fields).filter((f) => !this.removedFields.map((f) => f.id).includes(f))
-      let fields_ref = this.addedFields.filter((f) => fields.includes(f.id))
-
-      try {
-        const res = await SlackOAuth.api.postOrgCustomForm({
-          ...this.customForm,
-          fields: fields,
-          removedFields: this.removedFields,
-          fields_ref: fields_ref,
-        })
-        this.$emit('update:selectedForm', res)
-        this.$store.dispatch('refreshCurrentUser')
-        this.$toast('Form added successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.savingForm = false
-        if (this.fromAdmin && this.formType !== 'UPDATE') {
-          this.$router.push({ name: 'Staff' })
-        } else {
-          this.$router.push({ name: 'ProductForm' })
-        }
-      } catch (e) {
-        console.log('error', e)
-        this.$toast('Form submission failed', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.savingForm = false
-      }
     },
   },
 }
@@ -1941,26 +1785,6 @@ export default {
     cursor: pointer;
     color: $light-gray-blue;
   }
-}
-::v-deep .sortable-ghost {
-  border: 1px dashed $very-light-gray;
-  border-radius: 6px;
-  padding-left: 8px;
-}
-.save--button {
-  position: absolute;
-  right: 40vw;
-  z-index: 15;
-  top: 4vh;
-}
-.delete {
-  background-color: $coral;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-  padding: 8px 16px;
-  margin-right: 2.75vw;
 }
 .red-text {
   color: $coral;
@@ -2020,19 +1844,6 @@ input[type='checkbox'] + label::before {
   border: 1px solid rgb(182, 180, 180);
   border-radius: 4px;
   margin-right: 0.5em;
-}
-.form-type {
-  padding: 6px 12px 6px 4px;
-  img {
-    padding-top: 2px;
-  }
-  transition: all 0.2s;
-}
-.form-type:hover {
-  opacity: 0.8;
-  cursor: pointer;
-  border-radius: 6px;
-  transform: translateY(-10%);
 }
 .search-bar {
   background-color: white;
@@ -2195,24 +2006,6 @@ input[type='search']:focus {
     }
   }
 }
-
-// #formSection::-webkit-scrollbar {
-//   width: 4px;
-//   height: 0px;
-// }
-// #formSection::-webkit-scrollbar-thumb {
-//   background-color: $soft-gray;
-//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// #formSection::-webkit-scrollbar-track {
-//   box-shadow: inset 2px 2px 4px 0 $off-white;
-//   border-radius: 0.3rem;
-// }
-// #formSection::-webkit-scrollbar-track-piece {
-//   margin-top: 12px;
-// }
-
 #formField {
   width: 100%;
   display: flex;
@@ -2229,12 +2022,6 @@ input[type='search']:focus {
     cursor: grab;
   }
 }
-
-.tab-text {
-  color: $base-gray !important;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-}
 //////END TAB STYLE//////
 
 .sticky {
@@ -2243,36 +2030,6 @@ input[type='search']:focus {
   background-color: red;
   padding-top: 0px;
   margin-top: 0;
-}
-
-.card {
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    img {
-      margin: 0;
-      padding: 0;
-    }
-  }
-  &__img {
-    background-color: white;
-    border-radius: 100%;
-    padding: 6px 8px 2px 4px;
-    box-shadow: 1px 1px 1px $very-light-gray;
-  }
-}
-.overlap {
-  z-index: 2;
-  margin-left: -12px;
-  box-shadow: 1px 1px 0.5px 0.5px $very-light-gray;
-  // background-color: white;
-}
-.extra-padding {
-  padding: 5px 4px 3px 4px;
-}
-.section-title {
-  letter-spacing: 0.5px;
 }
 .multi-slot {
   display: flex;
@@ -2305,28 +2062,8 @@ input[type='search']:focus {
     }
   }
 }
-.invert {
-  filter: invert(80%);
-  height: 1rem;
-}
-.invert2 {
-  filter: invert(80%);
-}
-// .img-border {
-//   display: flex;
-//   align-items: center;
-//   justify-content: flex-start;
-//   background-color: white;
-//   border: 1px solid $soft-gray;
-//   border-radius: 4px;
-//   cursor: pointer;
-//   padding: 4px;
-// }
 .margin-right {
   margin-right: 2.75vw;
-}
-.label {
-  font-size: 0.85rem;
 }
 .gray {
   color: $light-gray-blue;
@@ -2343,74 +2080,8 @@ input[type='search']:focus {
   border-radius: 4px;
   font-weight: bold;
 }
-.default_button {
-  padding: 0.5rem 1rem;
-  margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: $dark-green;
-  background: white;
-
-  img {
-    height: 0.75rem;
-    filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(75%) contrast(94%);
-  }
-}
-.recommend {
-  position: absolute;
-  bottom: 20vh;
-  left: 34vw;
-  z-index: 5;
-  background-color: white;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  box-shadow: 1px 2px 2px $very-light-gray;
-  height: 40vh;
-  width: 30vw;
-  &__header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 2px solid #e8e8e8;
-    height: 4rem;
-    padding: 1rem;
-
-    letter-spacing: 0.5px;
-    img {
-      height: 1rem;
-      filter: invert(30%);
-    }
-  }
-
-  &__body {
-    height: 5rem;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-evenly;
-    flex-direction: row;
-    margin-top: -0.5rem;
-    font-size: 14px;
-    padding: 0.5rem;
-  }
-}
-.drop {
-  border: 2px solid $soft-gray;
-  border-radius: 0.25rem;
-  color: $very-light-gray;
-  padding: 0.25rem 0.5rem;
-  max-height: 2rem;
-}
 .invisible {
   visibility: hidden;
-}
-.white-background {
-  background-color: white;
-  border-radius: 0.25rem;
-  height: 1.7rem;
-  width: 1.7rem;
-  margin-right: 0.25rem;
 }
 #drag {
   filter: invert(60%);
@@ -2424,30 +2095,7 @@ input[type='search']:focus {
   align-items: center !important;
   border-radius: 0.2rem;
 }
-.center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-.centered {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: row;
-}
 .drag-section {
-}
-.header-img {
-  padding: 5px 8px;
-  border-radius: 4px;
-  margin-left: 4px;
-}
-.active {
-  background-color: $off-white;
-  img {
-    filter: invert(50%);
-  }
 }
 .slack-form-builder {
   display: flex;
@@ -2470,24 +2118,8 @@ input[type='search']:focus {
     filter: invert(70%);
   }
 }
-.primary-button {
-  padding: 0.4rem 1.5rem;
-  box-shadow: none;
-  font-weight: 400;
-}
-.primary-button:disabled {
-  background-color: $soft-gray;
-}
 img:hover {
   cursor: pointer;
-}
-.close {
-  padding: 0.5rem 1.5rem;
-  background: transparent;
-  color: $very-light-gray;
-  border: 2px solid $soft-gray;
-  border-radius: 0.25rem;
-  opacity: 0.8;
 }
 .save {
   padding: 8px 20px;
@@ -2508,34 +2140,6 @@ img:hover {
   margin-right: 8px;
   cursor: pointer;
 }
-.custom-object-button__remove {
-  padding: 8px 20px;
-  font-size: 13px;
-  background-color: white;
-  color: $coral;
-  border: 1px solid $coral;
-  border-radius: 0.25rem;
-  margin-right: 8px;
-  cursor: pointer;
-}
-.mar-left {
-  margin-left: 4vw;
-  margin-top: 6px;
-}
-.right {
-  width: 16vw;
-}
-.white_button {
-  padding: 8px 20px;
-  font-size: 14px;
-  background-color: white;
-  color: $base-gray;
-  border: none;
-  border-radius: 0.25rem;
-  margin-right: 3vw;
-  border: 1px solid $soft-gray;
-  cursor: pointer;
-}
 :disabled {
   padding: 12px 20px;
   background-color: $soft-gray;
@@ -2546,64 +2150,6 @@ img:hover {
   margin-left: 0.5rem;
   opacity: 0.8;
   cursor: text;
-}
-.disabled__ {
-  background-color: transparent;
-  font-size: 14px;
-  color: $dark-green;
-  border: none;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-.example--footer {
-  position: sticky;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: auto;
-  bottom: 0;
-  background-color: white;
-  outline: 1px solid white;
-  z-index: 2;
-}
-.example-text {
-  position: absolute;
-  bottom: 180px;
-  left: 50px;
-  opacity: 0.1;
-  filter: alpha(opacity=50);
-  font-size: 3.5rem;
-  transform: rotate(-45deg);
-}
-.collection_fields {
-  background-color: $white;
-  padding: 4px 16px 0px 16px;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  overflow: auto;
-  height: 260px;
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-.stage_fields {
-  background-color: $white;
-  border-radius: 0.5rem;
-  height: 74vh;
-  width: 36vw;
-  overflow-y: scroll;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  border: 1px solid #e8e8e8;
-}
-.opportunity__row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
 }
 .row__ {
   display: flex;
@@ -2621,13 +2167,6 @@ img:hover {
   justify-content: flex-start;
   align-items: center;
 }
-
-.drop-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
 .opp-modal-container {
   display: flex;
   flex-direction: column;
@@ -2637,7 +2176,6 @@ img:hover {
   height: 70vh;
   border-radius: 0.5rem;
   padding: 1rem;
-  // border: 1px solid #e8e8e8;
 }
 .modal-container {
   background-color: $white;
@@ -2648,7 +2186,6 @@ img:hover {
   max-height: 80vh;
   align-items: center;
   border-radius: 0.5rem;
-  // border: 1px solid #e8e8e8;
   z-index: 20;
 }
 .rel {
@@ -2674,9 +2211,6 @@ img:hover {
   top: 0;
   padding: 0px 6px 8px -2px;
 }
-// .border-bottom {
-//   border-bottom: 1.25px solid $soft-gray;
-// }
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -2695,19 +2229,6 @@ img:hover {
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
       brightness(93%) contrast(89%);
   }
-}
-.modal-label {
-  display: flex;
-  align-items: flex-start;
-  padding: 6px 0px;
-  font-size: 12.5px;
-  min-width: 80px;
-  margin-top: 12px;
-  letter-spacing: 1px;
-  color: $light-gray-blue;
-  border: none;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
 }
 .add-button {
   display: flex;
@@ -2781,5 +2302,14 @@ img:hover {
   padding: 4px 6px 3px 6px;
   border-radius: 6px;
   background-color: white;
+}
+
+.flex-end-opp {
+  width: 100%;
+  padding: 4px 12px 4px 0px;
+  height: 4rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 </style>

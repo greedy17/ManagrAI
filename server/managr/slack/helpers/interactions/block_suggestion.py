@@ -444,6 +444,8 @@ def RESOURCE_OPTIONS(resource, options):
 
 @processor(required_context=["u", "resource_type"])
 def process_get_crm_resource_options(payload, context):
+    add_opts = json.loads(context.get("add_opts", json.dumps([])))
+
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource_type")
@@ -480,6 +482,10 @@ def process_get_crm_resource_options(payload, context):
                 f"Failed to retrieve resource options for user {str(user.id)} after {attempts} tries"
             )
     options = RESOURCE_OPTIONS(resource, res)
+    if len(add_opts):
+        create_option = [block_builders.option(add_opts[0]["label"], add_opts[0]["value"])]
+        create_option.extend(options["options"])
+        options["options"] = create_option
     return options
 
 
