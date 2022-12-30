@@ -360,7 +360,11 @@ def _generate_team_form_templates(user_id):
             stage=form.stage,
         )
         if len(f.config):
-            f.recreate_form()
+            try:
+                f.recreate_form()
+            except Exception as e:
+                logger.exception(f"Couldn't recreate team form due to: {e}")
+                continue
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_RESOURCE_SYNC_QUEUE)
@@ -721,9 +725,9 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
             res = OpportunityLineItemAdapter.create(
                 data,
                 sf.access_token,
-                sf.instance_url,
                 adapter.object_fields.get("OpportunityLineItem", {}),
                 user.id,
+                sf.instance_url,
             )
             attempts = 1
             product_form.is_submitted = True

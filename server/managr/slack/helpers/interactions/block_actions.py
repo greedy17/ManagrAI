@@ -608,14 +608,12 @@ def process_meeting_selected_resource_option(payload, context):
             # did not find the block
             block = None
             pass
+        slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE).first()
         if (
             workflow.user.crm == "HUBSPOT"
             and resource_type == "Deal"
             and context["action"] == "CREATE_NEW"
         ):
-            slack_form = workflow.forms.filter(
-                template__form_type=slack_const.FORM_TYPE_CREATE
-            ).first()
             try:
                 pipeline_index, pipeline_block = block_finder("pipeline", blocks)
             except ValueError:
@@ -1224,8 +1222,31 @@ def process_show_update_resource_form(payload, context):
         trigger_id,
         view_id,
     )
-    resource_id = payload["actions"][0]["selected_option"]["value"]
+    integration_id = payload["actions"][0]["selected_option"]["value"]
     resource_type = context.get("resource_type")
+    try:
+        resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
+            integration_id=integration_id
+        )
+        resource_id = resource.id
+    except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
+        try:
+            resource_res = user.crm_account.adapter_class.list_resource_data(
+                resource_type,
+                filter=[
+                    {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id}
+                ],
+            )
+            serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
+                data=resource_res[0].as_dict
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            resource_id = serializer.instance.id
+        except Exception as e:
+            logger.exception(
+                f"Failed to sync new resource with id {integration_id} for {user.email}"
+            )
     show_submit_button_if_fields_added = False
     stage_form = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
@@ -3589,6 +3610,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_show_meeting_convert_lead_form,
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
+        slack_const.GET_CRM_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM: process_show_alert_update_resource_form,
         slack_const.PROCESS_SHOW_DIGEST_UPDATE_RESOURCE_FORM: process_show_digest_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,

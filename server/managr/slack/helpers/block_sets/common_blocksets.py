@@ -72,16 +72,12 @@ def loading_block_set(context):
 @block_set()
 def direct_to_block_set(context):
     slack_context = context.get("slack")
-    managr_url = context.get("managr")
     blocks = [
         block_builders.simple_section(f"{context.get('title')}", "mrkdwn"),
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Open", "complete_in_slack", action_id=slack_context,
-                ),
-                block_builders.simple_button_block(
-                    "Grid View", "complete_in_managr", url=managr_url,
+                    "Log Meeting", "complete_in_slack", action_id=slack_context, style="primary"
                 ),
             ]
         ),
@@ -581,8 +577,8 @@ def initial_alert_message(context):
     title = context.get("title")
     invocation = context.get("invocation")
     channel = context.get("channel")
-    template = context.get("template")
     config_id = context.get("config_id")
+    user = context.get("user")
     if settings.IN_DEV:
         url = "http://localhost:8080/pipelines"
     elif settings.IN_STAGING:
@@ -594,7 +590,7 @@ def initial_alert_message(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Open",
+                    "View Message",
                     "update_in_slack",
                     action_id=action_with_params(
                         slack_const.PAGINATE_ALERTS,
@@ -607,7 +603,17 @@ def initial_alert_message(context):
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Grid View", "open_in_pipeline", url=f"{url}/{template}",
+                    "In-Line Edit",
+                    "switch_inline",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
+                        params=[
+                            f"invocation={invocation}",
+                            f"config_id={config_id}",
+                            f"u={user}",
+                            f"switch_to={'inline'}",
+                        ],
+                    ),
                 ),
             ]
         ),

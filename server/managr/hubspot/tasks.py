@@ -285,6 +285,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
             return logger.warning(
                 f"Failed to sync some data for resource {resource} for user {user_id} because of {e}"
             )
+    errors = []
     for item in res:
         existing = model_class.objects.filter(integration_id=item.integration_id).first()
         if existing:
@@ -295,12 +296,16 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            logger.exception(
-                f"Failed to save data for {resource} {item.name if hasattr(item, 'name') else 'N/A'} with hubspot id {item.integration_id} due to the following error {e}"
+            errors.append(
+                (
+                    f"Failed to save data for {resource} {item.name if hasattr(item, 'name') else item.email}",
+                    f"{str(e)}",
+                )
             )
-            break
+            continue
         serializer.save()
-
+    if len(errors):
+        logger.exception(f"Errors for syncing {resource} for user {user.email}: {errors}")
     return
 
 
@@ -872,8 +877,8 @@ def _process_slack_inline_update(payload, context):
             saved_data_ref = form.saved_data
         form.save_form({value: state[key]})
         if saved_data_ref:
-            form.saved_data.update(saved_data_ref)
-            form.save()
+            saved_data_ref.update(form.saved_data)
+            form.save_form(saved_data_ref, False)
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     if not user:

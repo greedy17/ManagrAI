@@ -119,7 +119,7 @@
       </transition> -->
 
       <div v-if="editing" class="alert_cards">
-        <div v-if="!zoomChannel" class="added-collection yellow-shadow">
+        <!-- <div v-if="!zoomChannel" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="gray">
               <img src="@/assets/images/logo.png" height="28px" alt="" />
@@ -137,6 +137,19 @@
           </div>
           <div class="added-collection__footer">
             <div class="row__">
+              <button @click="goToLogZoom" class="white_button">Activate</button>
+            </div>
+          </div>
+        </div> -->
+        <div v-if="!zoomChannel" class="card">
+          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
+            <img style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+          <div class="card__body">
+            <h4>Log Meeting</h4>
+            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
+            <div class="card__body__between">
+              <p></p>
               <button @click="goToLogZoom" class="white_button">Activate</button>
             </div>
           </div>
@@ -300,7 +313,6 @@
           <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
-
           <div class="card__body">
             <h4>Log Meeting</h4>
             <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>

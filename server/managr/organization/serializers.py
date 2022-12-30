@@ -3,6 +3,7 @@ from rest_framework import serializers
 from managr.organization.models import ActionChoice
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
+from managr.crm.models import BaseOpportunity
 from managr.opportunity.models import Opportunity
 from .models import (
     OpportunityLineItem,
@@ -299,7 +300,7 @@ class OpportunityLineItemSerializer(serializers.ModelSerializer):
             prod = prod.id if prod else prod
             data.update({"product": prod})
         if opportunity:
-            opp = Opportunity.objects.filter(integration_id=opportunity).first()
+            opp = BaseOpportunity.objects.filter(integration_id=opportunity).first()
             opp = opp.id if opp else opp
             data.update({"opportunity": opp})
 

@@ -1,5 +1,6 @@
 import logging
 import json
+import time
 import re
 import uuid
 import random
@@ -28,6 +29,7 @@ from managr.slack import constants as slack_consts
 from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
 from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
+from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
 
@@ -118,6 +120,51 @@ def _refresh_zoom_token(zoom_account_id):
             f"Did not attempt refresh for user because token was revoked, {zoom_account.user.id}, {zoom_account.user.email}"
         )
     return
+
+
+def sync_contacts(contacts, user_id):
+    from managr.crm.routes import model_routes
+
+    zoom = ZoomAuthAccount.objects.get(user__id=user_id)
+    user = zoom.user
+    model_class = model_routes(user.crm)["Contact"]["model"]
+    serializer_class = model_routes(user.crm)["Contact"]["serializer"]
+    for item in contacts:
+        existing = model_class.objects.filter(integration_id=item.integration_id).first()
+        if existing:
+            serializer = serializer_class(data=item.as_dict, instance=existing)
+        else:
+            serializer = serializer_class(data=item.as_dict)
+        # check if already exists and update
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            logger.exception(f"Error saving contact in zoom flow: {e}")
+            continue
+        serializer.save()
+        # if contact.secondary_data["associatedcompanyid"]
+        if user.crm == "HUBSPOT":
+            if (
+                isinstance(item.secondary_data["num_associated_deals"], str)
+                and len(item.secondary_data["num_associated_deals"]) > 0
+            ):
+                associated_deals = user.crm_account.adapter_class.get_associated_resource(
+                    "Contact", "Deal", item.integration_id
+                )["results"][0]["to"]
+                filtered_ids = [deal["id"] for deal in associated_deals]
+                synced_deals = BaseOpportunity.objects.filter(integration_id__in=filtered_ids)
+                for deal in synced_deals:
+                    deal.contacts.add(serializer.instance)
+                    deal.save()
+    return
+
+
+def CONTACT_FILTERS(crm, emails):
+    if crm == "HUBSPOT":
+        return [{"propertyName": "email", "operator": "IN", "values": emails,}]
+    else:
+        email_string = "','".join(emails)
+        return [f"AND Email IN ('{email_string}')"]
 
 
 @background(schedule=0)
@@ -251,6 +298,22 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
         if len(participants):
             # Reduce to set of unique participant emails
             participant_emails = set([p.get("user_email") for p in participants])
+            attempts = 1
+            while True:
+                try:
+                    crm_contacts = user.crm_account.adapter_class.list_resource_data(
+                        "Contact", filter=CONTACT_FILTERS(user.crm, list(participant_emails)),
+                    )
+                    break
+                except CRMTokenExpired:
+                    if attempts >= 5:
+                        break
+                    else:
+                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        time.sleep(sleep)
+                        user.crm_account.regenerate_token()
+                        attempts += 1
+            sync_contacts(crm_contacts, str(user.id))
             meeting_contacts = []
 
             # find existing contacts
@@ -289,7 +352,6 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                     if lead:
                         meeting_resource_data["resource_id"] = str(lead.id)
                         meeting_resource_data["resource_type"] = "Lead"
-
             # convert all contacts to model representation and remove from array
             for contact in existing_contacts:
                 formatted_contact = contact.adapter_class.as_dict
@@ -444,7 +506,7 @@ def _kick_off_slack_interaction(user_id, managr_meeting_id):
                     block_set=block_set,
                 )
                 return logger.exception(
-                    f"Failed to send to channel in kick off slack interaction for workflow {str(workflow.id)} {e}"
+                    f"Message redirected, failed to send to zoom channel in kick off slack interaction for workflow {str(workflow.id)} {e}"
                 )
             except Exception as e:
                 return logger.exception(
