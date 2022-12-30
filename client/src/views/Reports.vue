@@ -84,7 +84,7 @@
       <div class="container3">
         <div class="top space-between">
           <h2 style="margin-top: 0; font-size: 20px">{{ selectedOpp.name }}</h2>
-          <button @click="reportMode = 'Visualize'" class="pink_button">View Dashboard</button>
+          <!-- <button @click="reportMode = 'Visualize'" class="pink_button">Dashboard</button> -->
         </div>
         <TimeLine />
         <div style="margin-top: 1rem" class="bottom"></div>
@@ -122,7 +122,17 @@
           {{ selectedUser.firstName }} has a <span class="inline-text"> 83%</span> success rate when
           logging 5 or more meetings via Managr
         </p>
-        <div style="margin-top: 1rem" class="bottom"></div>
+        <div style="margin-top: 1rem" class="bottom">
+          <button @click="reportMode = 'Visualize'" class="pink_button">
+            Overview
+            <img
+              style="filter: invert(100%); margin-left: 4px"
+              src="@/assets/images/picture.svg"
+              height="13px"
+              alt=""
+            />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -216,7 +226,15 @@
       </div>
 
       <div style="margin-top: 1rem" class="bottom">
-        <button @click="reportMode = 'Timeline'" class="pink_button">View Timeline</button>
+        <button @click="reportMode = 'Timeline'" class="pink_button">
+          Timeline
+          <img
+            style="filter: invert(100%); margin-left: 4px"
+            src="@/assets/images/route.svg"
+            height="13px"
+            alt=""
+          />
+        </button>
       </div>
     </div>
   </div>
@@ -396,15 +414,18 @@ export default {
 
 .pink_button {
   color: white;
-  background-color: $candy;
+  background-color: $grape;
   max-height: 2rem;
   border-radius: 0.25rem;
-  padding: 0.5rem 1.25rem;
+  padding: 6px 10px;
   font-size: 13px;
   letter-spacing: 0.75px;
   border: none;
   cursor: pointer;
   box-shadow: 1px 3px 3px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .container {
@@ -418,7 +439,7 @@ export default {
 }
 
 .container2 {
-  height: 34vh;
+  height: 32vh;
   overflow-y: scroll;
   padding: 0px 32px 0px 32px;
   width: 54vw;
@@ -429,7 +450,7 @@ export default {
 }
 
 .container3 {
-  height: 58vh;
+  height: 62vh;
   overflow-y: scroll;
   padding: 0px 32px 0px 32px;
   width: 54vw;
