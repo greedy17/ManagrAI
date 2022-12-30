@@ -37,6 +37,7 @@ class HubspotAuthAccountSerializer(serializers.ModelSerializer):
             "refresh_token",
             "hubspot_id",
             "hobjects",
+            "custom_objects",
             "extra_pipeline_fields",
         )
 

@@ -902,6 +902,23 @@ class SalesforceAuthAccount(TimeStampModel):
         return SalesforceAuthAccountAdapter(**data)
 
     @property
+    def custom_objects(self):
+        object_list = set(
+            [
+                "Opportunity",
+                "Account",
+                "Contact",
+                "Lead",
+                "PricebookEntry",
+                "Product2",
+                "Pricebook2",
+                "OpportunityLineItem",
+            ]
+        )
+        custom = set(self.sobjects.keys())
+        return list(custom - object_list)
+
+    @property
     def crm_id(self):
         return self.salesforce_id
 

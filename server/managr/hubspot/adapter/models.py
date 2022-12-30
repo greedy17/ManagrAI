@@ -68,6 +68,7 @@ class HubspotAuthAccountAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
+            print(status_code, error_data)
             if status_code == 400:
                 error_param = error_data.get("error", error_data.get("errorCode", None))
                 error_message = error_data.get("error_description", error_data.get("message", None))
@@ -249,7 +250,6 @@ class HubspotAuthAccountAdapter:
                 has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
                 if has_next_page and page <= 5:
                     data["after"] = has_next_page
-                    time.sleep(5.00)
                     with Client as client:
                         res = client.post(
                             url,
