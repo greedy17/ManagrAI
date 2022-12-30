@@ -251,6 +251,12 @@ class HubspotAuthAccount(TimeStampModel):
         return self.hubspot_id
 
     @property
+    def custom_objects(self):
+        object_list = set(["Deal", "Company", "Contact",])
+        custom = set(self.hobjects.keys())
+        return list(custom - object_list)
+
+    @property
     def instance_url(self):
         return hs_consts.HUBSPOT_INSTANCE_URL
 

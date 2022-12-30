@@ -1170,9 +1170,9 @@ def _process_create_new_contacts(workflow_id, *args):
                 res = ContactAdapter.create(
                     data,
                     sf.access_token,
-                    sf.instance_url,
                     sf_adapter.object_fields.get("Contact", {}),
                     str(user.id),
+                    sf.instance_url,
                 )
                 attempts = 1
                 form.is_submitted = True

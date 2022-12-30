@@ -321,7 +321,6 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     MeetingWorkflowHeader,
     MeetingWorkflow,
     UpdateForm,

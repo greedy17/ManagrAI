@@ -217,7 +217,7 @@ class OrgCustomSlackForm(TimeStampModel):
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "team", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage", "custom_object"]
 
     def generate_form_state(self):
         form_fields = CustomFormField.objects.filter(form=self)
@@ -231,9 +231,16 @@ class OrgCustomSlackForm(TimeStampModel):
         from managr.crm.models import ObjectField
 
         team_lead = self.team.team_lead
-        fields = ObjectField.objects.filter(
-            Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
-            | Q(is_public=True)
+        fields = (
+            ObjectField.objects.filter(
+                Q(api_name__in=self.config.values(), crm_object=self.custom_object, user=team_lead,)
+                | Q(is_public=True)
+            )
+            if self.resource == "CustomObject"
+            else ObjectField.objects.filter(
+                Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
+                | Q(is_public=True)
+            )
         )
         self.custom_fields.clear()
         for i, field in enumerate(self.config.items()):
