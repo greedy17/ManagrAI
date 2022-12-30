@@ -168,10 +168,8 @@
                 <span
                   v-for="(day, i) in weeklyOpts"
                   :key="i"
-                  :class="
-                    config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
-                  "
                 >
+                <!-- config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : '' -->
                   <input
                     type="checkbox"
                     @input="setDay"
@@ -180,7 +178,12 @@
                     v-model="config.newConfigs[0].recurrenceDays"
                     :disabled="!hasSlack"
                   />
-                  <label :for="day.value">{{ day.key.charAt(0) }}</label>
+                  <label 
+                    :for="day.value"
+                    :class="
+                      config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
+                    "
+                    >{{ day.key.charAt(0) }}</label>
                 </span>
               </div>
             </div>
@@ -757,6 +760,7 @@ export default {
         (this.setDaysBool || this.selectFieldBool)
       ) {
         try {
+          console.log('this.config in create', this.config)
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
             user: this.$store.state.user.id,
@@ -873,6 +877,9 @@ export default {
   margin-top: 16px;
 
   span {
+    transition: all 0.2s;
+  }
+  label {
     cursor: pointer;
     color: $light-gray-blue;
     margin-right: 8px;
@@ -884,15 +891,37 @@ export default {
     border-radius: 100%;
     border: 1px solid $soft-gray;
     transition: all 0.2s;
-    input {
-      display: none;
-    }
+  }
+  input {
+    display: none;
   }
 
   span:hover {
     transform: scale(1.15);
     color: $base-gray;
   }
+
+  // span {
+  //   cursor: pointer;
+  //   color: $light-gray-blue;
+  //   margin-right: 8px;
+  //   display: flex;
+  //   align-items: center;
+  //   justify-content: center;
+  //   height: 26px;
+  //   width: 26px;
+  //   border-radius: 100%;
+  //   border: 1px solid $soft-gray;
+  //   transition: all 0.2s;
+  //   input {
+  //     display: none;
+  //   }
+  // }
+
+  // span:hover {
+  //   transform: scale(1.15);
+  //   color: $base-gray;
+  // }
 }
 .centered {
   display: flex;
