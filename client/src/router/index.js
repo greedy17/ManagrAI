@@ -77,6 +77,11 @@ export default new Router({
       name: 'Home',
     },
     {
+      path: '/story-reports',
+      component: () => import('../views/Reports'),
+      name: 'Reports',
+    },
+    {
       path: '/create-leads',
       name: 'CreateLeads',
       beforeEnter: Auth.requireAuth,
