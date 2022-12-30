@@ -81,7 +81,7 @@
           </div>
         </router-link>
 
-        <router-link exact-active-class="active" :to="{ name: 'Reports' }">
+        <router-link v-if="user.isStaff" exact-active-class="active" :to="{ name: 'Reports' }">
           <div class="tooltip">
             <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" />
             <span class="tooltiptext">Reports</span>
