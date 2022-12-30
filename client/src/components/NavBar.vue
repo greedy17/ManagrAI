@@ -21,18 +21,18 @@
           </div>
         </router-link>
 
-        <router-link
-          v-if="userCRM"
-          exact-active-class="active"
-          :to="{ name: 'Pipelines' }"
-        >
+        <router-link v-if="userCRM" exact-active-class="active" :to="{ name: 'Pipelines' }">
           <div class="tooltip">
             <img src="@/assets/images/pipeline.svg" height="16px" alt="" />
             <span class="tooltiptext">Pipeline</span>
           </div>
         </router-link>
 
-        <router-link v-if="userCRM === 'SALESFORCE'" exact-active-class="active" :to="{ name: 'Meetings' }">
+        <router-link
+          v-if="userCRM === 'SALESFORCE'"
+          exact-active-class="active"
+          :to="{ name: 'Meetings' }"
+        >
           <div class="tooltip">
             <img src="@/assets/images/calendar.svg" height="16px" alt="" />
             <span class="tooltiptext">Meetings</span>
@@ -78,6 +78,13 @@
           <div class="tooltip">
             <img src="@/assets/images/profile.svg" height="16px" alt="" />
             <span class="tooltiptext">Profile</span>
+          </div>
+        </router-link>
+
+        <router-link exact-active-class="active" :to="{ name: 'Reports' }">
+          <div class="tooltip">
+            <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" />
+            <span class="tooltiptext">Reports</span>
           </div>
         </router-link>
 

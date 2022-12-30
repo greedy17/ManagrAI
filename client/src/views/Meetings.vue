@@ -321,7 +321,6 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     MeetingWorkflowHeader,
     MeetingWorkflow,
     UpdateForm,
@@ -867,7 +866,9 @@ export default {
         this.loading = true
         this.loaderText = 'Pulling your calendar events...'
         setTimeout(() => {
-          this.loaderText = `Mapping to ${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'}...`
+          this.loaderText = `Mapping to ${
+            this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'
+          }...`
           this.getMeetingList()
           setTimeout(() => {
             this.loading = false
@@ -1414,17 +1415,15 @@ export default {
 
         console.log('check res', res)
 
-        this.updateOppForm = this.userCRM === 'SALESFORCE' ? res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
-        ) : res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal',
-        )
+        this.updateOppForm =
+          this.userCRM === 'SALESFORCE'
+            ? res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity')
+            : res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal')
 
-        let stageGateForms = this.userCRM === 'SALESFORCE' ? res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
-        ) : res.filter(
-          (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
-        )
+        let stageGateForms =
+          this.userCRM === 'SALESFORCE'
+            ? res.filter((obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity')
+            : res.filter((obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal')
         this.createContactForm = res.filter(
           (obj) => obj.formType === 'CREATE' && obj.resource === 'Contact',
         )[0]
@@ -1433,11 +1432,11 @@ export default {
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Contact',
         )[0]
         this.updateContactForm = this.updateContactForm ? this.updateContactForm.fieldsRef : []
-        this.updateAccountForm = this.userCRM === 'SALESFORCE' ? res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Account',
-        )[0].fieldsRef : res.filter(
-          (obj) => obj.formType === 'UPDATE' && obj.resource === 'Company',
-        )[0]
+        this.updateAccountForm =
+          this.userCRM === 'SALESFORCE'
+            ? res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Account')[0]
+                .fieldsRef
+            : res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Company')[0]
         this.updateAccountForm = this.updateAccountForm ? this.updateAccountForm.fieldsRef : []
         this.updateLeadForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Lead',
