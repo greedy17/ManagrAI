@@ -1206,6 +1206,7 @@ export default {
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
       )
+      this.newFormType = 'CREATE'
       setTimeout(() => {
         this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
       }, 400)
