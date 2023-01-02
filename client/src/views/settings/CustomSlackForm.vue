@@ -20,12 +20,12 @@
           </div>
           <div class="opp-modal">
             <section>
-              <div style="display: flex; justify-content: center;">
+              <div style="display: flex; justify-content: center">
                 <Multiselect
                   @input="getCustomObjectFields"
                   :options="customObjects"
                   openDirection="below"
-                  style="width: 94%; margin-left: 1rem;"
+                  style="width: 94%; margin-left: 1rem"
                   :max-height="400"
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
@@ -36,14 +36,14 @@
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
                   </template>
-      
+
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
                       Select Custom Object
                     </p>
                   </template>
-      
+
                   <template slot="option" slot-scope="props">
                     <div>
                       <span class="option__title">{{
@@ -150,10 +150,10 @@
         </p>
         <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
           Custom Object
-          <span 
-            v-if="customForms && customForms.length" 
-            class="option__small" 
-            style="margin-left: 0; font-size: .7rem"
+          <span
+            v-if="customForms && customForms.length"
+            class="option__small"
+            style="margin-left: 0; font-size: 0.7rem"
             >active
           </span>
         </p>
@@ -189,9 +189,7 @@
           Deal - Stage related
         </p>
         <p @click="changeToCompany" :class="newResource == 'Company' ? 'green' : ''">Company</p>
-        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">
-          Contact
-        </p>
+        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
       </section>
       <div class="save-refresh-section">
         <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
@@ -375,7 +373,10 @@
 
         <div v-else>
           <div v-if="!customResource">
-            <div v-if="createdCustomObjects.length" style="width: 100%; display: flex; justify-content: space-between;">
+            <div
+              v-if="createdCustomObjects.length"
+              style="width: 100%; display: flex; justify-content: space-between"
+            >
               <Multiselect
                 @input="getCreatedCO"
                 :options="createdCustomObjects"
@@ -390,25 +391,21 @@
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
-    
+
                 <template slot="placeholder">
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     Select Custom Object
                   </p>
                 </template>
-    
+
                 <template slot="option" slot-scope="props">
                   <div>
-                    <span class="option__title">{{props.option.name}}</span
-                    >
+                    <span class="option__title">{{ props.option.name }}</span>
                   </div>
                 </template>
               </Multiselect>
-              <button
-                @click="toggleCustomObjectModalView"
-                class="custom-object-button"
-              >
+              <button @click="toggleCustomObjectModalView" class="custom-object-button">
                 Add Custom Object
               </button>
             </div>
@@ -427,14 +424,14 @@
               <template slot="noResult">
                 <p class="multi-slot">No results.</p>
               </template>
-  
+
               <template slot="placeholder">
                 <p class="slot-icon">
                   <img src="@/assets/images/search.svg" alt="" />
                   Select Custom Object
                 </p>
               </template>
-  
+
               <template slot="option" slot-scope="props">
                 <div>
                   <span class="option__title">{{
@@ -465,15 +462,12 @@
                 />
                 Back
               </h4>
-  
+
               <div class="row__">
                 <h4 style="margin-right: 16px">
                   {{ selectedCustomObjectName + ' Form' }}
                 </h4>
-                <div
-                  class="margin-right"
-                  @click.prevent="deleteForm(newCustomForm)"
-                >
+                <div class="margin-right" @click.prevent="deleteForm(newCustomForm)">
                   <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
                 </div>
               </div>
@@ -1011,7 +1005,7 @@ export default {
       return this.formStages.length
     },
     customForms() {
-      return this.allForms.filter(form => form.customObject)
+      return this.allForms.filter((form) => form.customObject)
     },
     filteredFields() {
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
@@ -1169,11 +1163,11 @@ export default {
           customObject: this.selectedCustomObjectName,
           fields: [],
           fieldsRef: [],
-          formType: "CREATE",
-          id: "",
+          formType: 'CREATE',
+          id: '',
           organization: this.allForms[0].organization,
-          resource: "CustomObject",
-          stage: "",
+          resource: 'CustomObject',
+          stage: '',
         }
         this.newCustomForm = customForm
 
@@ -1182,15 +1176,16 @@ export default {
           ...this.newCustomForm,
         })
         this.reloadCustomObject = true
-        setTimeout(() => {
-          this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
-          // setTimeout(() => {
-          //   this.loaderText = 'Reloading page, please be patient...'
-          //   setTimeout(() => {
-          //     this.$router.go()
-          //   }, 1000)
-          // }, 2000)
-        }, 400)
+        // let res = await SObjects.api.getCustomObjectFields(this.selectedCustomObject.name)
+        // setTimeout(() => {
+        //   this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+        //   // setTimeout(() => {
+        //   //   this.loaderText = 'Reloading page, please be patient...'
+        //   //   setTimeout(() => {
+        //   //     this.$router.go()
+        //   //   }, 1000)
+        //   // }, 2000)
+        // }, 400)
       } catch (e) {
         console.log(e)
       }
@@ -1204,7 +1199,10 @@ export default {
       this.modalLoading = true
       this.loaderText = this.loaderTextList[0]
       this.newCustomForm = this.allForms.find(
-        (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
+        (f) =>
+          f.resource == 'CustomObject' &&
+          f.formType == 'CREATE' &&
+          f.customObject == this.selectedCustomObjectName,
       )
       this.newFormType = 'CREATE'
       setTimeout(() => {
@@ -1242,7 +1240,7 @@ export default {
         names.push(form.customObject)
       }
       const createdCustomObjects = []
-      const filteredCustomObjects = res.sobjects.filter(co => {
+      const filteredCustomObjects = res.sobjects.filter((co) => {
         if (!names.includes(co.name)) {
           return co
         } else {
@@ -1281,9 +1279,7 @@ export default {
               bodyClassName: ['custom'],
             })
           })
-          .finally(() => {
-            
-          })
+          .finally(() => {})
       } else {
         const forms = this.allForms.filter((f) => {
           if (form) {
@@ -1605,7 +1601,7 @@ export default {
     },
     changeCustomObjectName() {
       this.newCustomForm.customObject = this.customResource
-      this.newCustomForm.resource = "CustomObject"
+      this.newCustomForm.resource = 'CustomObject'
     },
     goBack() {
       if (this.fromAdmin) {
@@ -1725,10 +1721,11 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          setTimeout(() => {
-            this.removedFields = []
-            // this.$router.go()
-          }, 300)
+          this.removedFields = []
+          // setTimeout(() => {
+          //   this.removedFields = []
+          //   // this.$router.go()
+          // }, 300)
           this.addedFields = fields_ref
         })
         .finally(() => {
