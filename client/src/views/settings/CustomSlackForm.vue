@@ -569,7 +569,10 @@
 
           <div class="field-section__fields">
             <div>
-              <p>Nothing here. Try selecting an object</p>
+              <p v-if="createdCustomFields">
+                Fields still syncing...
+              </p>
+              <p v-else>Nothing here. Try selecting an object</p>
             </div>
           </div>
         </div>
@@ -662,7 +665,8 @@ export default {
       allForms: [],
       filterText: '',
       COfilterText: '',
-      reloadCustomObject: false,
+      createdCustomFields: false,
+      newCustomObject: false,
       modalLoading: false,
       loaderText: '',
       formFields: CollectionManager.create({
@@ -1131,9 +1135,7 @@ export default {
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
-        if (this.reloadCustomObject) {
-          this.$router.go()
-        }
+        this.createdCustomFields = false
       } else {
         return
       }
@@ -1154,6 +1156,7 @@ export default {
         this.customFields.refresh()
       }
       this.formFields.refresh()
+      this.customObjectModalView = false
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1161,7 +1164,7 @@ export default {
       }
       this.selectedCustomObjectName = this.selectedCustomObject.name
       try {
-        this.modalLoading = true
+        // this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
         const customForm = {
           config: {},
@@ -1181,9 +1184,12 @@ export default {
         const res = await SlackOAuth.api.postOrgCustomForm({
           ...this.newCustomForm,
         })
-        this.reloadCustomObject = true
+        this.updateCustomFields()
+        this.createdCustomFields = true
+        this.newCustomObject = true
+        this.getAllForms()
         setTimeout(() => {
-          this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+          this.$store.dispatch('setCustomObject', this.selectedCustomObjectName)
           // setTimeout(() => {
           //   this.loaderText = 'Reloading page, please be patient...'
           //   setTimeout(() => {
@@ -1630,6 +1636,12 @@ export default {
       this.formChange = true
     },
     async onSave() {
+      if (this.newCustomObject) {
+        this.newCustomForm = this.allForms.find(
+          (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
+        )
+        this.newCustomObject = false
+      }
       if (!this.newCustomForm) {
         this.newCustomForm = this.customForm
       }
