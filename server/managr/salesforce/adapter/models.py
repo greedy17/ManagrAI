@@ -428,6 +428,25 @@ class SalesforceAuthAccountAdapter:
                 }
             )
 
+    def get_stage_picklist_values_by_record_type(self, record_type_id):
+        url = f"{self.instance_url}{sf_consts.SALEFORCE_STAGE_PICKLIST_URI(record_type_id)}"
+        with Client as client:
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+
+            return SObjectPicklistAdapter.create_from_api(
+                {
+                    "values": res["values"],
+                    "salesforce_account": str(self.id),
+                    "picklist_for": "StageName",
+                    "imported_by": str(self.user),
+                    "salesforce_object": "Opportunity",
+                    "integration_source": "SALESFORCE",
+                }
+            )
+
     def get_individual_picklist_values(self, resource, field_name=None, for_dev=False):
         """Sync method to get picklist values for resources not saved in our db"""
 

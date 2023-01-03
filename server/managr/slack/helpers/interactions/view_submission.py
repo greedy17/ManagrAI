@@ -797,6 +797,14 @@ def process_submit_custom_object(payload, context):
     return
 
 
+def CRM_FILTERS(crm, integration_id):
+    filters = {
+        "HUBSPOT": [{"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id},],
+        "SALESFORCE": [f"AND Id = '{integration_id}'"],
+    }
+    return filters[crm]
+
+
 @log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
@@ -831,10 +839,7 @@ def process_zoom_meeting_attach_resource(payload, context):
         except CRM_SWITCHER[user.crm][meeting_resource]["model"].DoesNotExist:
             try:
                 resource_res = user.crm_account.adapter_class.list_resource_data(
-                    meeting_resource,
-                    filter=[
-                        {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id}
-                    ],
+                    meeting_resource, filter=CRM_FILTERS(user.crm, integration_id),
                 )
                 serializer = CRM_SWITCHER[user.crm][meeting_resource]["serializer"](
                     data=resource_res[0].as_dict

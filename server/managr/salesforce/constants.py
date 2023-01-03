@@ -24,6 +24,9 @@ SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
+SALEFORCE_STAGE_PICKLIST_URI = (
+    lambda record_type_id: f"{CUSTOM_BASE_URI}/ui-api/object-info/Opportunity/picklist-values/{record_type_id}/StageName"
+)
 SALESFORCE_SOAP_URI = f"/services/Soap/u/{SF_API_VERSION}"
 OBJECTS_URI = f"{CUSTOM_BASE_URI}/sobjects"
 
