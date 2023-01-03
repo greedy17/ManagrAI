@@ -5918,22 +5918,22 @@ h3 {
   border-spacing: 3px;
   background-color: white;
 }
-// .table-section::-webkit-scrollbar {
-//   width: 0px;
-//   height: 8px;
-// }
-// .table-section::-webkit-scrollbar-thumb {
-//   background-color: $dark-green;
-//   box-shadow: inset 4px 4px 6px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// .table-section::-webkit-scrollbar-track {
-//   box-shadow: inset 4px 4px 8px 0 $soft-gray;
-//   border-radius: 0.3rem;
-// }
-// .table-section::-webkit-scrollbar-track-piece:end {
-//   margin-right: 50vw;
-// }
+.table-section::-webkit-scrollbar {
+  width: 0px;
+  height: 8px;
+}
+.table-section::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 4px 4px 6px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.table-section::-webkit-scrollbar-track {
+  box-shadow: inset 4px 4px 8px 0 $white;
+  border-radius: 0.3rem;
+}
+.table-section::-webkit-scrollbar-track-piece:end {
+  // margin-right: 50vw;
+}
 .multi-slot {
   display: flex;
   align-items: center;
