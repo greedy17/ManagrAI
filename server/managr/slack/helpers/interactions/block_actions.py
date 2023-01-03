@@ -1281,6 +1281,14 @@ def process_pipeline_selected_command_form(payload, context):
         return logger.exception(f"Failed To Generate Slack Workflow Interaction for user {e}")
 
 
+def CRM_FILTERS(crm, integration_id):
+    filters = {
+        "HUBSPOT": [{"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id},],
+        "SALESFORCE": [f"AND Id = '{integration_id}'"],
+    }
+    return filters[crm]
+
+
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["resource_type", "u"])
 def process_show_update_resource_form(payload, context):
@@ -1311,10 +1319,7 @@ def process_show_update_resource_form(payload, context):
     except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
         try:
             resource_res = user.crm_account.adapter_class.list_resource_data(
-                resource_type,
-                filter=[
-                    {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id}
-                ],
+                resource_type, filter=CRM_FILTERS(user.crm, integration_id),
             )
             serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                 data=resource_res[0].as_dict
