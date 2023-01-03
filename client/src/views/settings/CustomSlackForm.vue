@@ -150,11 +150,11 @@
         </p>
         <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
           Custom Object
-          <span 
+          <!-- <span 
             v-if="customForms && customForms.length" 
             class="option__small" 
             style="margin-left: 0; font-size: .7rem"
-            >active
+            >active -->
           </span>
         </p>
       </section>
@@ -569,7 +569,10 @@
 
           <div class="field-section__fields">
             <div>
-              <p>Nothing here. Try selecting an object</p>
+              <p v-if="createdCustomFields">
+                Fields still syncing...
+              </p>
+              <p v-else>Nothing here. Try selecting an object</p>
             </div>
           </div>
         </div>
@@ -662,7 +665,8 @@ export default {
       allForms: [],
       filterText: '',
       COfilterText: '',
-      reloadCustomObject: false,
+      createdCustomFields: false,
+      newCustomObject: false,
       modalLoading: false,
       loaderText: '',
       formFields: CollectionManager.create({
@@ -875,7 +879,7 @@ export default {
               })
             }
           }
-          if (this.newNormType !== 'UPDATE') {
+          if (this.newFormType !== 'UPDATE') {
             this.addedFields = this.addedFields.filter((field) => {
               return (
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
@@ -1131,9 +1135,7 @@ export default {
         this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
-        if (this.reloadCustomObject) {
-          this.$router.go()
-        }
+        this.createdCustomFields = false
       } else {
         return
       }
@@ -1154,6 +1156,7 @@ export default {
         this.customFields.refresh()
       }
       this.formFields.refresh()
+      this.customObjectModalView = false
     },
     async getCustomObjectFields() {
       if (!this.selectedCustomObject) {
@@ -1161,7 +1164,7 @@ export default {
       }
       this.selectedCustomObjectName = this.selectedCustomObject.name
       try {
-        this.modalLoading = true
+        // this.modalLoading = true
         this.loaderText = this.loaderTextList[0]
         const customForm = {
           config: {},
@@ -1181,9 +1184,12 @@ export default {
         const res = await SlackOAuth.api.postOrgCustomForm({
           ...this.newCustomForm,
         })
-        this.reloadCustomObject = true
+        this.updateCustomFields()
+        this.createdCustomFields = true
+        this.newCustomObject = true
+        this.getAllForms()
         setTimeout(() => {
-          this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
+          this.$store.dispatch('setCustomObject', this.selectedCustomObjectName)
           // setTimeout(() => {
           //   this.loaderText = 'Reloading page, please be patient...'
           //   setTimeout(() => {
@@ -1201,15 +1207,12 @@ export default {
       }
       this.selectedCustomObjectName = this.selectedCustomObject.name
 
-      this.modalLoading = true
       this.loaderText = this.loaderTextList[0]
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
       )
       this.newFormType = 'CREATE'
-      setTimeout(() => {
-        this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
-      }, 400)
+      this.updateCustomFields()
     },
     changeLoaderText() {
       let newIndex
@@ -1429,6 +1432,7 @@ export default {
         this.storedModalFunction = this.changeToAccount
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Account'
       this.newFormType = 'UPDATE'
@@ -1444,6 +1448,7 @@ export default {
         this.storedModalFunction = this.changeToCompany
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
@@ -1459,6 +1464,7 @@ export default {
         this.storedModalFunction = this.changeToOpportunity
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Opportunity'
       this.newFormType = 'UPDATE'
@@ -1474,6 +1480,7 @@ export default {
         this.storedModalFunction = this.changeToDeal
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
@@ -1489,6 +1496,7 @@ export default {
         this.storedModalFunction = this.changeToProducts
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'OpportunityLineItem'
       this.newFormType = 'CREATE'
@@ -1505,6 +1513,7 @@ export default {
         this.storedModalFunction = this.changeToStage
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newFormType = 'STAGE_GATING'
       this.newResource = 'Opportunity'
@@ -1530,6 +1539,7 @@ export default {
         this.storedModalFunction = this.changeToContact
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
@@ -1545,6 +1555,7 @@ export default {
         this.storedModalFunction = this.changeToLead
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
@@ -1633,6 +1644,12 @@ export default {
       this.formChange = true
     },
     async onSave() {
+      if (this.newCustomObject) {
+        this.newCustomForm = this.allForms.find(
+          (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
+        )
+        this.newCustomObject = false
+      }
       if (!this.newCustomForm) {
         this.newCustomForm = this.customForm
       }
