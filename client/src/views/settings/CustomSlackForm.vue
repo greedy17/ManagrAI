@@ -875,7 +875,7 @@ export default {
               })
             }
           }
-          if (this.newNormType !== 'UPDATE') {
+          if (this.newFormType !== 'UPDATE') {
             this.addedFields = this.addedFields.filter((field) => {
               return (
                 field.id !== '6407b7a1-a877-44e2-979d-1effafec5034' &&
@@ -1201,15 +1201,12 @@ export default {
       }
       this.selectedCustomObjectName = this.selectedCustomObject.name
 
-      this.modalLoading = true
       this.loaderText = this.loaderTextList[0]
       this.newCustomForm = this.allForms.find(
         (f) => f.resource == 'CustomObject' && f.formType == 'CREATE' && f.customObject == this.selectedCustomObjectName,
       )
       this.newFormType = 'CREATE'
-      setTimeout(() => {
-        this.$store.dispatch('setCustomObject', this.selectedCustomObject.name)
-      }, 400)
+      this.updateCustomFields()
     },
     changeLoaderText() {
       let newIndex
