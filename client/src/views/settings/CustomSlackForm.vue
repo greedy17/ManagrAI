@@ -150,11 +150,11 @@
         </p>
         <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
           Custom Object
-          <span 
+          <!-- <span 
             v-if="customForms && customForms.length" 
             class="option__small" 
             style="margin-left: 0; font-size: .7rem"
-            >active
+            >active -->
           </span>
         </p>
       </section>
@@ -1432,6 +1432,7 @@ export default {
         this.storedModalFunction = this.changeToAccount
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Account'
       this.newFormType = 'UPDATE'
@@ -1447,6 +1448,7 @@ export default {
         this.storedModalFunction = this.changeToCompany
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Company'
       this.newFormType = 'UPDATE'
@@ -1462,6 +1464,7 @@ export default {
         this.storedModalFunction = this.changeToOpportunity
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Opportunity'
       this.newFormType = 'UPDATE'
@@ -1477,6 +1480,7 @@ export default {
         this.storedModalFunction = this.changeToDeal
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Deal'
       this.newFormType = 'UPDATE'
@@ -1492,6 +1496,7 @@ export default {
         this.storedModalFunction = this.changeToProducts
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'OpportunityLineItem'
       this.newFormType = 'CREATE'
@@ -1508,6 +1513,7 @@ export default {
         this.storedModalFunction = this.changeToStage
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newFormType = 'STAGE_GATING'
       this.newResource = 'Opportunity'
@@ -1533,6 +1539,7 @@ export default {
         this.storedModalFunction = this.changeToContact
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Contact'
       this.newFormType = 'UPDATE'
@@ -1548,6 +1555,7 @@ export default {
         this.storedModalFunction = this.changeToLead
         return
       }
+      this.customResource = null
       this.filterText = ''
       this.newResource = 'Lead'
       this.newFormType = 'UPDATE'
