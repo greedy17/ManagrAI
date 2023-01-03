@@ -551,12 +551,16 @@
 
           <div class="field-section__fields">
             <div>
-              <p v-for="(field, i) in COfilteredFields" :key="field.id">
+              <p v-if="(!COfilteredFields.length && createdCustomFields)">
+                Fields still syncing...
+              </p>
+              <p v-else-if="COfilteredFields.length" v-for="(field, i) in COfilteredFields" :key="field.id">
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
                 {{ field.label }}
                 <span v-if="field.required" class="red-text">required</span>
               </p>
+              <p v-else>Nothing here. Try selecting an object</p>
             </div>
           </div>
         </div>
@@ -1188,6 +1192,9 @@ export default {
         this.createdCustomFields = true
         this.newCustomObject = true
         this.getAllForms()
+        if (this.userCRM == 'SALESFORCE') {
+          this.getCustomObjects()
+        }
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObjectName)
           // setTimeout(() => {
