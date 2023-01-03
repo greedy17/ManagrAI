@@ -173,10 +173,10 @@ const actions = {
     try {
       await SObjects.api.getCustomObjectFields(name).then((res) => {
         const vbName = res.verbose_name
-        state.customObject.checker = setInterval(() => {
-          dispatch('checkTask', vbName)
-          // this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        }, 2000)
+        // state.customObject.checker = setInterval(() => {
+        //   dispatch('checkTask', vbName)
+        //   // this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        // }, 2000)
         commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task: null})
       })
     } catch (e) {
