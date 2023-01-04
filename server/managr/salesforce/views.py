@@ -335,6 +335,35 @@ class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         return Response()
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="stage-by-record-id",
+    )
+    def get_stage_picklist_values_by_record_id(self, request, *args, **kwargs):
+        record_id = self.request.GET.get("record_id")
+        user = self.request.user
+        attempts = 1
+        while True:
+            try:
+                res = user.crm_account.adapter_class.get_stage_picklist_values_by_record_type(
+                    record_id
+                )
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Refresh token on get stage by picklist value endpoint failed due to <{e}>"
+                    )
+                    break
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={})
+        return Response(data=res)
+
 
 class SalesforceSObjectViewSet(
     viewsets.GenericViewSet,
