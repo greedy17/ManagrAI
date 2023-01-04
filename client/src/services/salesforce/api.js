@@ -293,6 +293,16 @@ export class SObjectFormBuilderAPI extends ModelAPI {
     }
   }
 
+  async getStageByRecord(data) {
+    try {
+      let d = objectToSnakeCase(data)
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/stage-by-record-id/', { params: d })
+      return res
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Stage Record Data' })(e)
+    }
+  }
+
   async list({ filters = {}, pagination = {} } = {}) {
     // list method that works with collection manager for pagination
     let filtersMap = {
