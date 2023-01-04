@@ -138,7 +138,7 @@
                     : 'Not Submitted'
                 }}
               </p>
-              <div>
+              <div @click="test(modalInfo)">
                 <div>
                   <span class="">Workflow ID:</span>
                   {{ modalInfo.workflow ? modalInfo.workflow : 'None' }} |
@@ -1242,9 +1242,14 @@ export default {
       this.page = 'MeetingWorkflow'
     },
     openModal(name, data) {
+      console.log('name and data', name, data)
       this.modalName = name
       this.modalInfo = data
-      this.editOpModalOpen = true
+      if (data.previous_data && data.saved_data) {
+        this.setSavedAndPrev()
+      } else {
+        this.editOpModalOpen = true
+      }
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
@@ -1273,6 +1278,12 @@ export default {
         toastClassName: 'custom',
         bodyClassName: ['custom'],
       })
+    },
+    setSavedAndPrev() {
+      console.log('setSavedandPrev')
+      const saved = this.modalInfo.saved_data
+      const prev = this.modalInfo.previous_data
+      this.editOpModalOpen = true
     },
     getObjString(obj, i) {
       const orgs = obj.orgs
