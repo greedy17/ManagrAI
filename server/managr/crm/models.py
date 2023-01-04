@@ -465,7 +465,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
                     else:
                         options = [block_builders.option("None", "None")]
                 else:
-                    if resource_id:
+                    if resource_id and "RecordTypeId" in resource.secondary_data.keys():
                         stages = self.user.crm_account.adapter_class.get_stage_picklist_values_by_record_type(
                             resource.secondary_data["RecordTypeId"]
                         )
@@ -477,7 +477,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
                                 stages.values,
                             )
                         )
-                    options = self.get_slack_options
+                    else:
+                        options = self.get_slack_options
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
