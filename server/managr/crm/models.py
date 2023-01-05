@@ -465,19 +465,23 @@ class ObjectField(TimeStampModel, IntegrationModel):
                     else:
                         options = [block_builders.option("None", "None")]
                 else:
-                    if resource_id:
-                        stages = self.user.crm_account.adapter_class.get_stage_picklist_values_by_record_type(
-                            resource.secondary_data["RecordTypeId"]
-                        )
-                        options = list(
-                            map(
-                                lambda option: block_builders.option(
-                                    option["label"], option["value"]
-                                ),
-                                stages.values,
-                            )
-                        )
                     options = self.get_slack_options
+                    if resource_id:
+                        if (
+                            "RecordTypeId" in resource.secondary_data.keys()
+                            and resource.secondary_data.get("RecordTypeId", None) is not None
+                        ):
+                            stages = self.user.crm_account.adapter_class.get_stage_picklist_values_by_record_type(
+                                resource.secondary_data["RecordTypeId"]
+                            )
+                            options = list(
+                                map(
+                                    lambda option: block_builders.option(
+                                        option["label"], option["value"]
+                                    ),
+                                    stages.values,
+                                )
+                            )
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
@@ -643,7 +647,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
                     optional=not self.required,
                     initial_value=value,
                     block_id=self.api_name,
-                    placeholder="MM-DD-YYYY HH:MM AM/PM",
+                    placeholder="YYYY-MM-DD HH:MM:SS (24 hour format)",
                 )
 
             if self.data_type == "String" and self.length >= 250 or self.data_type == "TextArea":
