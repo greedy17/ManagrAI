@@ -292,6 +292,15 @@ export class SObjectFormBuilderAPI extends ModelAPI {
       apiErrorHandler({ apiName: 'Error Retrieving Picklist Values' })(e)
     }
   }
+  
+  async getRecords() {
+    try {
+      const res = await this.client.get(SObjectFormBuilderAPI.ENDPOINT + 'picklists/record_type_picklist/')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Stage Record Data' })(e)
+    }
+  }
 
   async getStageByRecord(data) {
     try {
