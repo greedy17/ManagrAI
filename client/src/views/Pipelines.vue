@@ -413,7 +413,7 @@
                             :disabled="savingCreateForm"
                             v-model="currentVals[field.apiName]"
                             @input="
-                              ;(value = $event.target.value),
+                              ;(value = $event.target.value + ':00'),
                                 setUpdateValidationValues(field.apiName, value)
                             "
                           />
@@ -724,7 +724,7 @@
                           :disabled="savingCreateForm"
                           v-model="currentVals[field.apiName]"
                           @input="
-                            ;(value = $event.target.value),
+                            ;(value = $event.target.value + ':00'),
                               setUpdateValidationValues(field.apiName, value)
                           "
                         />
@@ -795,7 +795,7 @@
                   type="datetime-local"
                   id="start"
                   :disabled="savingCreateForm"
-                  @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                  @input=";(value = $event.target.value + ':00'), setUpdateValues(field.apiName, value)"
                 />
               </div>
               <div
@@ -990,7 +990,7 @@
                       style="width: 40vw"
                       :disabled="savingCreateForm"
                       v-model="currentVals[field.apiName]"
-                      @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                      @input=";(value = $event.target.value + ':00'), setCreateValues(field.apiName, value)"
                     />
                   </div>
                   <div
@@ -1405,7 +1405,7 @@
                         id="start"
                         v-model="currentVals[field.apiName]"
                         @input="
-                          ;(value = $event.target.value),
+                          ;(value = $event.target.value + ':00'),
                             setUpdateValidationValues(field.apiName, value)
                         "
                       />
@@ -1476,7 +1476,7 @@
                 type="datetime-local"
                 id="start"
                 v-model="currentVals[field.apiName]"
-                @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+                @input=";(value = $event.target.value + ':00'), setUpdateValues(field.apiName, value)"
               />
             </div>
             <div
@@ -1647,7 +1647,7 @@
                     id="start"
                     style="width: 40vw"
                     v-model="currentVals[field.apiName]"
-                    @input=";(value = $event.target.value), setCreateValues(field.apiName, value)"
+                    @input=";(value = $event.target.value + ':00'), setCreateValues(field.apiName, value)"
                   />
                 </div>
                 <div
@@ -1826,7 +1826,7 @@
                     style="width: 38vw"
                     :placeholder="currentSelectedProduct[field.apiName]"
                     v-model="dropdownProductVal[field.apiName]"
-                    @input=";(value = $event.target.value), setProductValues(field.apiName, value)"
+                    @input=";(value = $event.target.value + ':00'), setProductValues(field.apiName, value)"
                   />
                 </div>
                 <div
@@ -2167,7 +2167,7 @@
                   <input
                     type="datetime-local"
                     id="start"
-                    @input="oppNewValue = $event.target.value"
+                    @input="oppNewValue = $event.target.value + ':00'"
                     class="sliding"
                   />
                 </div>
@@ -2455,7 +2455,7 @@
                 id="start"
                 v-model="currentVals[field.apiName]"
                 @input="
-                  ;(value = $event.target.value), setUpdateValidationValues(field.apiName, value)
+                  ;(value = $event.target.value + ':00'), setUpdateValidationValues(field.apiName, value)
                 "
               />
             </div>
@@ -2746,7 +2746,7 @@
                           ? opp['secondary_data'][field.apiName]
                           : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                       "
-                      @input="setUpdateValues(field.apiName, $event.target.value)"
+                      @input="setUpdateValues(field.apiName, $event.target.value + ':00')"
                     />
                   </div>
                   <div
