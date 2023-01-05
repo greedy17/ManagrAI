@@ -35,6 +35,7 @@ const state = {
     verboseName: null,
     checker: null,
   },
+  recordTypes: [],
 }
 
 const mutations = {
@@ -46,6 +47,9 @@ const mutations = {
   },
   UPDATE_USERTOKEN: (state, payload) => {
     state.token = payload
+  },
+  UPDATE_RECORD_TYPES: (state, payload) => {
+    state.recordTypes = payload
   },
   // Log out the user by resetting the state to defaults
   LOGOUT_USER(state) {
@@ -182,6 +186,10 @@ const actions = {
     } catch (e) {
       console.log(e)
     }
+  },
+  async getRecords({ commit }) {
+    const res = await SObjects.api.getRecords()
+    commit('UPDATE_RECORD_TYPES', res)
   },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)

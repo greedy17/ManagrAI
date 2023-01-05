@@ -64,6 +64,9 @@ export default {
     this.$store.dispatch('loadApiPicklists')
     this.$store.dispatch('loadPricebooks')
     this.$store.dispatch('loadTemplates')
+    if (this.$store.state.user.crm === 'SALESFORCE') {
+      this.$store.dispatch('getRecords')
+    }
     // this.$store.dispatch('loadWorkflows')
   },
 

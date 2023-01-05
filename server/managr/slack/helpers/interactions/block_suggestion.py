@@ -399,7 +399,7 @@ def CRM_FILTERS(crm, crm_id):
         crm_id = [crm_id]
     filters = {
         "HUBSPOT": [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": crm_id,},],
-        "SALESFORCE": [],
+        "SALESFORCE": None,
     }
     return filters[crm]
 
