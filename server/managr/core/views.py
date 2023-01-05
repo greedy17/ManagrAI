@@ -33,7 +33,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.core.utils import pull_usage_data
+from managr.core.utils import pull_usage_data, get_user_totals
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
@@ -471,6 +471,17 @@ class UserViewSet(
         users = User.objects.filter(organization=param)
         serialized = self.get_serializer(users, many=True).data
         return Response(serialized)
+
+    @action(
+        methods=["GET"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="usage-report",
+    )
+    def usage_report(self, request, *args, **kwargs):
+        user_id = request.query_params.get("user_id", None)
+        data = get_user_totals(user_id, True)
+        return Response(data=data)
 
 
 class ActivationLinkView(APIView):

@@ -7,6 +7,7 @@ from managr.core.models import User
 from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.organization.models import Organization
+from managr.salesforce.models import MeetingWorkflow
 
 
 def get_month_start_and_end(year, current_month, return_current_month_only=False):
@@ -99,6 +100,33 @@ def get_org_fields(org, first, last):
                         obj[form.user.email] = {}
                         obj[form.user.email][key] = 1
         return obj
+
+
+def get_user_fields(user_id, first, last):
+    user = User.objects.get(id=user_id)
+    forms = OrgCustomSlackFormInstance.objects.filter(
+        user=user, datetime_created__range=(first, last)
+    ).exclude(template__isnull=True)
+    obj = {}
+    if len(forms):
+        list(forms.first().__dict__.get("saved_data").keys())
+        for form in forms:
+            old_data = form.previous_data
+            new_data = form.saved_data
+            for key, new_value in new_data.items():
+                if key in old_data:
+                    if str(old_data.get(key)) != str(new_value):
+                        if key in obj.keys():
+                            obj[key] += 1
+                        else:
+                            obj[key] = 1
+
+                else:
+                    if key in obj.keys():
+                        obj[key] += 1
+                    else:
+                        obj[key] = 1
+    return obj
 
 
 def get_totals_for_year(month_only=False):
@@ -207,6 +235,35 @@ def get_organization_totals(month_only=False):
 
         totals[date[1]] = org_totals
 
+    return totals
+
+
+def get_user_totals(user_id, month_only=False):
+    totals = {}
+    current_date = datetime.now(tz=timezone.utc)
+    date_list = get_month_start_and_end(current_date.year, current_date.month, month_only)
+    user = User.objects.get(id=user_id)
+    for date in date_list:
+        start = timezone.make_aware(datetime.strptime(f"{date[0]} 00:01", "%Y-%m-%d %H:%M"))
+        end = timezone.make_aware(datetime.strptime(f"{date[1]} 23:59", "%Y-%m-%d %H:%M"))
+        slack_form_instances = (
+            OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
+            .filter(is_submitted=True, user=user)
+            .exclude(template__isnull=True)
+        )
+        user_obj = {}
+        user_instances = slack_form_instances.filter(user=user)
+        per_day = get_instance_averages(user_instances, date[1])
+        user_obj = {**per_day}
+        user_obj["updates"] = user_instances.filter(
+            template__form_type__in=["UPDATE", "STAGE_GATING"]
+        ).count()
+        user_obj["meetings"] = user_instances.values_list("workflow").distinct().count()
+        user_obj["contacts"] = user_instances.filter(
+            template__form_type="CREATE", template__resource="Contact"
+        ).count()
+        user_obj["fields"] = get_user_fields(user_id, start, end)
+        totals[date[1]] = user_obj
     return totals
 
 
