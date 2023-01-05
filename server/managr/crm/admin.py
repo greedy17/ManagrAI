@@ -18,18 +18,21 @@ class CustomBaseOpportunity(admin.ModelAdmin):
     model = crm_models.BaseOpportunity
     list_display = ("name", "owner")
     list_filter = ("owner__organization", "owner")
+    readonly_fields = ["contacts", "imported_by", "secondary_data", "account", "owner"]
 
 
 class CustomBaseAccount(admin.ModelAdmin):
     model = crm_models.BaseAccount
     list_display = ("name", "owner")
     list_filter = ("owner__organization", "owner")
+    readonly_fields = ["imported_by", "secondary_data", "owner", "organization"]
 
 
 class CustomBaseContact(admin.ModelAdmin):
     model = crm_models.BaseContact
     list_display = ("email", "owner")
     list_filter = ("owner__organization", "owner")
+    readonly_fields = ["imported_by", "secondary_data", "owner", "account"]
 
 
 # Register your models here.
