@@ -209,7 +209,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: ">=",
                     operandValue: "0",
                     operandType: "FIELD",

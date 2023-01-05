@@ -79,7 +79,7 @@
       </div>
 
       <div class="alert-operand-row__value">
-        <div v-if="selectedFieldTypeRaw == 'Picklist' && selectedFieldType == 'STRING'">
+        <div v-if="(selectedFieldTypeRaw == 'Picklist' || selectedFieldTypeRaw == 'Reference') && selectedFieldType == 'STRING'">
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
               <Multiselect
@@ -234,7 +234,7 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { SObjects, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import {
   ALERT_DATA_TYPE_MAP,
@@ -430,6 +430,8 @@ export default {
         if (this.dealStageCheck) {
           this.form.field.operandValue.value = this.selectedOperand.id
           this.dealStageCheck = false
+        } else if (this.selectedOperand.value === undefined) {
+          this.form.field.operandValue.value = this.selectedOperand.id
         } else {
           this.form.field.operandValue.value = this.selectedOperand.value
         }
@@ -442,7 +444,10 @@ export default {
       immediate: true,
       deep: true,
       async handler(val) {
-        if (val && val.apiName && val.dataType == 'Picklist') {
+        if (val && val.apiName === 'RecordTypeId') {
+          this.getRecords()
+        }
+        else if (val && val.apiName && (val.dataType == 'Picklist' || val.dataType == 'Reference')) {
           await this.listPicklists({
             picklistFor: val.apiName,
             salesforceObject: this.resourceType,
@@ -478,6 +483,10 @@ export default {
         return INPUT_TYPE_MAP[type.dataType]
       }
       return 'text'
+    },
+    async getRecords() {
+      const res = await SObjects.api.getRecords()
+      this.picklistOpts = res
     },
     toggleSelectedCondition() {
       this.selectedCondition == 'AND'
