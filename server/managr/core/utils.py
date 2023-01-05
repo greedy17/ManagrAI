@@ -10,6 +10,16 @@ from managr.organization.models import Organization
 from managr.salesforce.models import MeetingWorkflow
 
 
+def qsort(inlist, obj):
+    if inlist == []:
+        return []
+    else:
+        pivot = inlist[0]
+        lesser = qsort([x for x in inlist[1:] if obj[x] < obj[pivot]], obj)
+        greater = qsort([x for x in inlist[1:] if obj[x] >= obj[pivot]], obj)
+        return lesser + [pivot] + greater
+
+
 def get_month_start_and_end(year, current_month, return_current_month_only=False):
     # create dictionary of normal month lengths
     months = {
@@ -262,7 +272,8 @@ def get_user_totals(user_id, month_only=False):
         user_obj["contacts"] = user_instances.filter(
             template__form_type="CREATE", template__resource="Contact"
         ).count()
-        user_obj["fields"] = get_user_fields(user_id, start, end)
+        field_obj = get_user_fields(user_id, start, end)
+        user_obj["fields"] = qsort(list(field_obj.keys()), field_obj)
         totals[date[1]] = user_obj
     return totals
 
