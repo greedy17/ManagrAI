@@ -4,7 +4,7 @@ import json
 import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException
+from .exceptions import CustomAPIException, ApiRateLimitExceeded
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
@@ -68,7 +68,6 @@ class HubspotAuthAccountAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            print(status_code, error_data)
             if status_code == 400:
                 error_param = error_data.get("error", error_data.get("errorCode", None))
                 error_message = error_data.get("error_description", error_data.get("message", None))
@@ -238,12 +237,18 @@ class HubspotAuthAccountAdapter:
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         # logger.info(f"{url} was sent with data: {data}")
         with Client as client:
-            res = client.post(
-                url,
-                headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
-                data=json.dumps(data),
-            )
-            res = self._handle_response(res)
+            attempts = 1
+            while True:
+                try:
+                    res = client.post(
+                        url,
+                        headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                        data=json.dumps(data),
+                    )
+                    res = self._handle_response(res)
+                    break
+                except ApiRateLimitExceeded:
+                    time.sleep(10)
             saved_response = res
             page = 1
             while True:
