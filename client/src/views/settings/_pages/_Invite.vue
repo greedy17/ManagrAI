@@ -280,8 +280,11 @@
           <span :class="user.slackRef ? '' : 'grayscale'">
             <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
           </span>
-          <span :class="user.hasSalesforceIntegration ? '' : 'grayscale'">
+          <span v-if="userCRM === 'SALESFORCE'" :class="user.hasSalesforceIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/salesforce.png" height="18px" alt="" />
+          </span>
+          <span v-else-if="userCRM === 'HUBSPOT'" :class="user.hasHubspotIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
           </span>
           <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/zoom.png" alt="" height="18px" />
@@ -348,8 +351,11 @@
             <span :class="member.slackRef ? '' : 'grayscale'">
               <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <span :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
+            <span v-if="userCRM === 'SALESFORCE'" :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
               <img src="@/assets/images/salesforce.png" height="18px" alt="" />
+            </span>
+            <span v-else-if="userCRM === 'HUBSPOT'" :class="member.hasHubspotIntegration ? '' : 'grayscale'">
+              <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
             </span>
             <span :class="member.hasZoomIntegration ? '' : 'grayscale'">
               <img src="@/assets/images/zoom.png" alt="" height="18px" />
@@ -623,6 +629,9 @@ export default {
     },
     hasSlack() {
       return !!this.$store.state.user.slackRef
+    },
+    userCRM() {
+      return this.$store.state.user.crm
     },
     usersInTeam() {
       return this.team.list.filter(
