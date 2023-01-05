@@ -892,7 +892,7 @@ form {
     &__container {
       width: 100%;
       display: flex;
-      margin-bottom: 0.5rem;
+      // margin-bottom: 0.5rem;
       z-index: 2;
       margin-left: 16px;
     }
