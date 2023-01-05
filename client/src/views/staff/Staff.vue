@@ -157,7 +157,8 @@
                 </div>
                 <div>
                   <span class="">Previous Data:</span>
-                  {{ modalInfo.previous_data ? modalInfo.previous_data : 'None' }}
+                  <div v-html="prevData"></div>
+                  <!-- {{ modalInfo.previous_data ? showPrevious() : 'None' }} -->
                 </div>
               </div>
             </section>
@@ -918,6 +919,7 @@ export default {
   },
   data() {
     return {
+      prevData: null,
       commandOptions: [
         { label: 'Salesforce Resources', value: 'SALESFORCE_RESOURCES' },
         { label: 'Salesforce Fields', value: 'SALESFORCE_FIELDS' },
@@ -1242,19 +1244,20 @@ export default {
       this.page = 'MeetingWorkflow'
     },
     openModal(name, data) {
-      console.log('name and data', name, data)
       this.modalName = name
       this.modalInfo = data
-      if (data.previous_data && data.saved_data) {
+      if (data.previous_data && data.saved_data && Object.keys(data.previous_data).length) {
         this.setSavedAndPrev()
       } else {
         this.editOpModalOpen = true
       }
+      this.showPrevious()
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
       this.modalName = ''
       this.modalInfo = null
+      this.prevData = null
     },
     resetCommandsEdit() {
       this.displayCommandModal = !this.displayCommandModal
@@ -1280,10 +1283,30 @@ export default {
       })
     },
     setSavedAndPrev() {
-      console.log('setSavedandPrev')
-      const saved = this.modalInfo.saved_data
-      const prev = this.modalInfo.previous_data
+      const saved = {...this.modalInfo.saved_data}
+      const prev = {...this.modalInfo.previous_data}
+      for (let key in saved) {
+        if (prev[key] || prev[key] === null) {
+          prev[key] = `<span style="background-color: yellow;">${prev[key]}</span>`
+        }
+      }
+      this.prevData = prev
       this.editOpModalOpen = true
+    },
+    showPrevious() {
+      if (this.prevData) {
+        let inner = '<div>'
+        let string = '{'
+        for (let key in this.prevData) {
+          string += `${key}: ${this.prevData[key]}, `
+        }
+        string += '}'
+        inner += string
+        inner += '</div>'
+        this.prevData = inner
+      } else {
+        this.prevData = this.modalInfo.previous_data
+      }
     },
     getObjString(obj, i) {
       const orgs = obj.orgs
