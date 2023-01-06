@@ -189,7 +189,7 @@
               </div>
               <div
                 v-else-if="
-                  field.apiName === 'dealstage' || field.apiName === 'Stage Name'
+                  field.apiName === 'dealstage'/* || field.apiName === 'StageName'*/
                 "
               >
                 <div v-if="savedPipeline">
@@ -467,7 +467,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-else>
+                <div v-else-if="userCRM === 'HUBSPOT'">
                   <label class="label">Select Pipeline for Stage</label>
                   <Multiselect
                     v-model="savedPipeline"
@@ -488,6 +488,30 @@
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
                         Select Pipeline
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+                <div v-else>
+                  <label class="label">Select Record for Stage</label>
+                  <Multiselect
+                    v-model="savedPipeline"
+                    :options="recordOptions"
+                    @select="setUpdateValues(field.apiName, $event.id)"
+                    openDirection="below"
+                    style="width: 40.25vw"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="label"
+                  >
+                    <template v-slot:noResult>
+                      <p class="multi-slot">No results.</p>
+                    </template>
+    
+                    <template v-slot:placeholder>
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        Select Record
                       </p>
                     </template>
                   </Multiselect>
@@ -2898,6 +2922,7 @@ export default {
       savedPipeline: null,
       storedStageName: '',
       pipelineOptions: [],
+      recordOptions: [],
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
       dealStages: [],
       stageGateCopy: [],
@@ -3190,6 +3215,9 @@ export default {
     this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
     this.getUsers()
+    if (this.userCRM === 'SALESFORCE') {
+      this.getRecords()
+    }
     this.templates.refresh()
   },
   beforeMount() {
@@ -5117,6 +5145,10 @@ export default {
           bodyClassName: ['custom'],
         })
       }
+    },
+    async getRecords() {
+      const res = await SObjects.api.getRecords()
+      this.recordOptions = res
     },
     async getInitialAccounts() {
       this.loadingAccounts = true
