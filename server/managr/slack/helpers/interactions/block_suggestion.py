@@ -459,7 +459,10 @@ def process_get_crm_resource_options(payload, context):
             )
             filters = CRM_FILTERS(user.crm, crm_id)
             if value:
-                filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
+                if filters is None:
+                    filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)]
+                else:
+                    filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
             res = crm_adapter.list_resource_data(resource, filter=filters, owners=crm_id, limit=20)
             break
         except TokenExpired:
