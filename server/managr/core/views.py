@@ -480,7 +480,7 @@ class UserViewSet(
     )
     def usage_report(self, request, *args, **kwargs):
         user_id = request.query_params.get("user_id", None)
-        data = get_user_totals(user_id, True)
+        data = get_user_totals(user_id)
         return Response(data=data)
 
 

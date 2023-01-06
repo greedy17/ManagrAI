@@ -273,7 +273,11 @@ def get_user_totals(user_id, month_only=False):
             template__form_type="CREATE", template__resource="Contact"
         ).count()
         field_obj = get_user_fields(user_id, start, end)
-        user_obj["fields"] = qsort(list(field_obj.keys()), field_obj)
+        sorted_fields = qsort(list(field_obj.keys()), field_obj)
+        sorted_field_obj = {}
+        for field in sorted_fields:
+            sorted_field_obj[field] = field_obj[field]
+        user_obj["fields"] = sorted_field_obj
         totals[date[1]] = user_obj
     return totals
 
