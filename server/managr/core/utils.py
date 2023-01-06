@@ -275,10 +275,9 @@ def get_user_totals(user_id, month_only=False):
         ).count()
         field_obj = get_user_fields(user_id, start, end)
         sorted_fields = qsort(list(field_obj.keys()), field_obj)
-        sorted_field_obj = OrderedDict()
-        for field in sorted_fields:
-            sorted_field_obj[field] = field_obj[field]
-        user_obj["fields"] = sorted_field_obj
+
+        user_obj["fields"] = field_obj
+        user_obj["field_order"] = sorted_fields
         totals[date[1]] = user_obj
     return totals
 
