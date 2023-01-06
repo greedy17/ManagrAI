@@ -346,20 +346,6 @@
           </div>
         </div>
 
-        <div v-if="!zoomChannel" class="card">
-          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
-          </div>
-          <div class="card__body">
-            <h4>Log Meeting</h4>
-            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
-            <div class="card__body__between">
-              <p></p>
-              <button @click="goToLogZoom" class="white_button">Activate</button>
-            </div>
-          </div>
-        </div>
-
         <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
           <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
             <img style="height: 40px" src="@/assets/images/logo.png" />
