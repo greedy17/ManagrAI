@@ -62,7 +62,7 @@
               src="@/assets/images/close.svg"
               height="24px"
               alt=""
-              style="filter: invert(30%); cursor: pointer;"
+              style="filter: invert(30%); cursor: pointer"
             />
           </div>
         </div>
@@ -122,7 +122,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem;">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
         <div class="modal-header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -134,13 +134,19 @@
               src="@/assets/images/close.svg"
               height="24px"
               alt=""
-              style="filter: invert(30%); cursor: pointer;"
+              style="filter: invert(30%); cursor: pointer"
             />
           </div>
         </div>
 
         <div
-          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem; margin-bottom: 1rem;"
+          style="
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: -3rem;
+            margin-bottom: 1rem;
+          "
         >
           <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
@@ -321,6 +327,16 @@
                 alt=""
               />
             </span>
+
+            <div class="img-border" @click="viewAdminPage" v-if="getUser.isStaff">
+              <img
+                style="filter: invert(40%); margin-left: 8px"
+                src="@/assets/images/adminPanel.svg"
+                class="nav-img"
+                height="18px"
+                alt=""
+              />
+            </div>
           </div>
           <h3 style="color: #41b883; background-color: #dcf8e9; padding: 4px; border-radius: 6px">
             {{ $store.state.user.organizationRef.name }}
@@ -479,6 +495,9 @@ export default {
     }
   },
   methods: {
+    viewAdminPage() {
+      this.$router.push({ name: 'Staff' })
+    },
     test(log) {
       console.log('log', log)
     },

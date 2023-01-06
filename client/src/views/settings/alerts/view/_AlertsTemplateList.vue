@@ -58,21 +58,23 @@
                 <h4>
                   {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
                 </h4>
-                <p>Stage: {{ userCRM === 'SALESFORCE' ? opp.StageName : hsStages[opp.dealstage].label }}</p>
-                <p>Close Date: {{ userCRM === 'SALESFORCE' ? opp.CloseDate : opp.closedate.split('T')[0] }}</p>
+                <p>
+                  Stage:
+                  {{ userCRM === 'SALESFORCE' ? opp.StageName : hsStages[opp.dealstage].label }}
+                </p>
+                <p>
+                  Close Date:
+                  {{ userCRM === 'SALESFORCE' ? opp.CloseDate : opp.closedate.split('T')[0] }}
+                </p>
               </div>
             </div>
           </section>
         </div>
         <div v-else>
-          <section
-            class="workflow__modal__body"
-          >
+          <section class="workflow__modal__body">
             <div class="title">
               <div>
-                <h4>
-                  No Results
-                </h4>
+                <h4>No Results</h4>
               </div>
             </div>
           </section>
@@ -100,7 +102,10 @@
           <div class="title">
             <div>
               <h4>{{ meeting.meeting_ref.topic ? meeting.meeting_ref.topic : 'Meeting' }}</h4>
-              <p>Participants: {{ meeting.meeting_ref.participants && meething.meeting_ref.participants.length }}</p>
+              <p>
+                Participants:
+                {{ meeting.meeting_ref.participants && meething.meeting_ref.participants.length }}
+              </p>
               <p>
                 {{
                   meeting.meeting_ref.start_time
@@ -187,7 +192,9 @@
               </h4>
               <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
             </div>
-            <p class="card-text" @click="test(alert)">Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}</p>
+            <p class="card-text" @click="test(alert)">
+              Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}
+            </p>
 
             <div class="card__body__between">
               <div class="row__">
@@ -205,7 +212,12 @@
                   <span class="tooltiptext">Send to Slack</span>
                 </div>
 
-                <button v-if="(userCRM)" @click="openList(alert)" style="margin-right: 8px" class="img-border">
+                <button
+                  v-if="userCRM"
+                  @click="openList(alert)"
+                  style="margin-right: 8px"
+                  class="img-border"
+                >
                   <img
                     src="@/assets/images/listed.svg"
                     style="filter: invert(40%)"
@@ -256,7 +268,7 @@
                   alt=""
                 />
               </button>
-              <div v-else style="width: 5px; height: 5px;"></div>
+              <div v-else style="width: 5px; height: 5px"></div>
 
               <button @click="goToLogZoom" class="white_button">Change Channel</button>
               <!-- <small>{{ currentZoomChannel }}</small> -->
@@ -281,7 +293,7 @@
                   alt=""
                 />
               </button>
-              <div v-else style="width: 5px; height: 5px;"></div>
+              <div v-else style="width: 5px; height: 5px"></div>
 
               <button @click="goToRecap" class="white_button">Change Channel</button>
               <!-- <small> {{ currentRecapChannel }}</small> -->
@@ -302,9 +314,34 @@
           <div class="card__body">
             <h4>{{ config.title }}</h4>
             <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
-            <div class="card__body__between" style="margin-top: 8px">
+            <div
+              v-if="config.title !== 'Team Pipeline'"
+              class="card__body__between"
+              style="margin-top: 8px"
+            >
               <p></p>
               <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
+            </div>
+
+            <div v-else class="card__body__between" style="margin-top: 8px">
+              <p></p>
+              <button
+                v-if="isPaid && userLevel == 'MANAGER'"
+                @click="goToWorkflow(config.title)"
+                class="white_button"
+              >
+                Activate
+              </button>
+              <div v-else class="tooltip-left">
+                <img
+                  class="shimmer"
+                  style="filter: invert(40%)"
+                  src="@/assets/images/lock.svg"
+                  height="16px"
+                  alt=""
+                />
+                <small class="tooltiptext-left">Upgrade to <strong>Team Plan</strong></small>
+              </div>
             </div>
           </div>
         </div>
@@ -377,6 +414,7 @@ export default {
         'Upcoming Next Step',
         'Requird Field Empty',
         'Large Opportunities',
+        'Team Pipeline',
         'Deal Review',
         'Close Date Approaching',
       ],
@@ -667,7 +705,9 @@ export default {
       const own = []
       if (originalList) {
         for (let i = 0; i < originalList.length; i++) {
-          this.user.id !== originalList[i].user ? leaders.push(originalList[i]) : own.push(originalList[i])
+          this.user.id !== originalList[i].user
+            ? leaders.push(originalList[i])
+            : own.push(originalList[i])
         }
       }
       return [...leaders, ...own]
@@ -686,6 +726,20 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.shimmer {
+  display: inline-block;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  max-width: 200px;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
 
 @keyframes bounce {
   0% {
@@ -742,6 +796,35 @@ export default {
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
 }
+
+.tooltip-left {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip text */
+.tooltip-left .tooltiptext-left {
+  visibility: hidden;
+  width: 160px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  opacity: 0.7;
+
+  /* Position the tooltip text - */
+  position: absolute;
+  z-index: 1;
+  top: 1px;
+  right: 105%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip-left:hover .tooltiptext-left {
+  visibility: visible;
+}
+
 .header {
   outline: 1px solid red;
 }

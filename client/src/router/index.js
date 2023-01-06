@@ -154,10 +154,10 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
     },
     {
-      path: '/empty-field',
-      name: 'RequiredFieldEmpty',
+      path: '/team-pipeline',
+      name: 'TeamPipeline',
       beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/settings/alerts/create/templates/RequiredFieldEmpty')
+      component: () => import('@/views/settings/alerts/create/templates/TeamPipeline')
     },
     {
       path: '/close-date-approaching',

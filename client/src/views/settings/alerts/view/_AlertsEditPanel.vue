@@ -231,8 +231,8 @@ export default {
         'Update Forecast',
         'Deal Rotting',
         'Upcoming Next Step',
-        'Required Field Empty',
         'Large Opportunities',
+        'Team Pipeline',
       ],
       // fields: CollectionManager.create({
       //   ModelClass: ObjectField,
@@ -244,10 +244,10 @@ export default {
       //   },
       //   pagination: { size: 1000 },
       // }),
-      fields: CollectionManager.create({ 
-        ModelClass: ObjectField, 
+      fields: CollectionManager.create({
+        ModelClass: ObjectField,
         filters: {
-          crmObject: this.alert.resourceType
+          crmObject: this.alert.resourceType,
         },
         pagination: { size: 1000 },
       }),
@@ -294,9 +294,6 @@ export default {
     editor() {
       return this.$refs['message-body'].quill
     },
-    stateRecordTypes(){
-      return this.$store.state.recordTypes
-    }
   },
   methods: {
     test(log) {
@@ -414,7 +411,9 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${this.valuePromise ? this.valuePromise : valueLabel} `
+      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+        this.valuePromise ? this.valuePromise : valueLabel
+      } `
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
