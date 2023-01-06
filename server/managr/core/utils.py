@@ -263,7 +263,8 @@ def get_user_totals(user_id, month_only=False):
             template__form_type="CREATE", template__resource="Contact"
         ).count()
         user_obj["fields"] = get_user_fields(user_id, start, end)
-        totals[date[1]] = user_obj
+        totals = user_obj
+        # totals[date[1]] = user_obj
     return totals
 
 
@@ -271,4 +272,3 @@ def pull_usage_data(month_only=True):
     totals = get_totals_for_year(month_only)
     orgs = get_organization_totals(month_only)
     return {"totals": totals, "org": orgs}
-

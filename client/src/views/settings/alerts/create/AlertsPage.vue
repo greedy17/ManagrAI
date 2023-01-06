@@ -464,7 +464,7 @@
           </div>
         </div>
 
-        <div
+        <!-- <div
           :class="
             !user.activatedTemplateRef.includes('Close Date Passed') &&
             isOnboarding &&
@@ -516,7 +516,7 @@
               Active <img src="@/assets/images/configCheck.svg" alt="" />
             </h4>
           </div>
-        </div>
+        </div> -->
 
         <div
           :class="
