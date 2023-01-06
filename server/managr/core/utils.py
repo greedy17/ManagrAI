@@ -8,6 +8,7 @@ from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.organization.models import Organization
 from managr.salesforce.models import MeetingWorkflow
+from collections import OrderedDict
 
 
 def qsort(inlist, obj):
@@ -274,7 +275,7 @@ def get_user_totals(user_id, month_only=False):
         ).count()
         field_obj = get_user_fields(user_id, start, end)
         sorted_fields = qsort(list(field_obj.keys()), field_obj)
-        sorted_field_obj = {}
+        sorted_field_obj = OrderedDict()
         for field in sorted_fields:
             sorted_field_obj[field] = field_obj[field]
         user_obj["fields"] = sorted_field_obj
