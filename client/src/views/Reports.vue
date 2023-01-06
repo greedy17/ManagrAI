@@ -2,8 +2,11 @@
   <div class="reports">
     <div class="alerts-header">
       <div class="results-title">
-        <p @click="selectUsageReport" :class="reportType == 'Usage' ? '' : 'light-gray-text'">
-          Usage Reports
+        <p
+          @click="selectPerformanceReport"
+          :class="reportType == 'Performance' ? '' : 'light-gray-text'"
+        >
+          Performance Reports
         </p>
 
         <p
@@ -446,7 +449,7 @@ export default {
       reps: CollectionManager.create({ ModelClass: User }),
       selectedOpp: null,
       selectedUser: null,
-      reportType: 'Usage',
+      reportType: 'Performance',
       reportMode: 'Visualize',
       generating: false,
       performanceReport: null,
@@ -490,8 +493,8 @@ export default {
       this.sortedUpdates = sortable
     },
 
-    selectUsageReport() {
-      this.reportType = 'Usage'
+    selectPerformanceReport() {
+      this.reportType = 'Performance'
       this.generating = false
       this.selectedUser = null
       this.selectedOpp = null

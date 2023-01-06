@@ -267,7 +267,7 @@
             </div>
 
             <p class="card-text">Activates meeting workflow automations.</p>
-            <div>
+            <div v-if="isPaid">
               <PulseLoadingSpinnerButton
                 v-if="!hasZoomIntegration"
                 :disabled="hasZoomIntegration"
@@ -294,18 +294,18 @@
                     alt=""
                   />
                 </div>
-
-                <!-- <div style="cursor: text" class="right-tooltip">
-                  <img
-                    class="shimmer"
-                    style="filter: invert(40%)"
-                    src="@/assets/images/lock.svg"
-                    height="18"
-                    alt=""
-                  />
-                  <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
-                </div> -->
               </div>
+            </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
             </div>
           </div>
         </div>
@@ -319,7 +319,7 @@
           <div class="card__body">
             <h3>Salesloft</h3>
             <p class="card-text">Add Contacts to Cadences</p>
-            <div>
+            <div v-if="isPaid">
               <PulseLoadingSpinnerButton
                 v-if="!hasSalesloftIntegration"
                 :disabled="hasSalesloftIntegration"
@@ -339,6 +339,17 @@
                 </div>
               </div>
             </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+            </div>
           </div>
         </div>
 
@@ -351,31 +362,45 @@
             <h3>Outreach</h3>
 
             <p class="card-text">Add Contacts to Sequences</p>
-            <PulseLoadingSpinnerButton
-              v-if="!hasOutreachIntegration"
-              :disabled="hasOutreachIntegration"
-              @click="onGetAuthLink('OUTREACH')"
-              class="orange_button"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
-            ></PulseLoadingSpinnerButton>
-            <div class="row" v-else>
-              <div class="img-border">
-                <img
-                  @click="setRemoveApp('OUTREACH')"
-                  src="@/assets/images/revoke.svg"
-                  height="16"
-                  alt=""
-                />
+
+            <div v-if="isPaid">
+              <PulseLoadingSpinnerButton
+                v-if="!hasOutreachIntegration"
+                :disabled="hasOutreachIntegration"
+                @click="onGetAuthLink('OUTREACH')"
+                class="orange_button"
+                text="Connect"
+                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+              ></PulseLoadingSpinnerButton>
+              <div class="row" v-else>
+                <div class="img-border">
+                  <img
+                    @click="setRemoveApp('OUTREACH')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+                <div class="img-border">
+                  <img
+                    @click="onGetAuthLink('OUTREACH')"
+                    src="@/assets/images/refresh.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
               </div>
-              <div class="img-border">
-                <img
-                  @click="onGetAuthLink('OUTREACH')"
-                  src="@/assets/images/refresh.svg"
-                  height="16"
-                  alt=""
-                />
-              </div>
+            </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
             </div>
           </div>
         </div>
@@ -406,7 +431,7 @@
           <div class="card__body">
             <h3>Gong</h3>
             <p class="card-text">Access call recordings & insights</p>
-            <div>
+            <div v-if="isPaid">
               <PulseLoadingSpinnerButton
                 v-if="!hasGongIntegration && user.isAdmin"
                 :disabled="hasGongIntegration"
@@ -426,6 +451,17 @@
                   />
                 </div>
               </div>
+            </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
             </div>
           </div>
         </div>
@@ -680,7 +716,7 @@ export default {
     }
   },
   computed: {
-    paidAccount() {
+    isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     hasSalesforceIntegration() {

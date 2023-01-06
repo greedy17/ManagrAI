@@ -230,8 +230,8 @@ export default {
         'Update Forecast',
         'Deal Rotting',
         'Upcoming Next Step',
-        'Required Field Empty',
         'Large Opportunities',
+        'Team Pipeline',
       ],
       // fields: CollectionManager.create({
       //   ModelClass: ObjectField,
@@ -243,10 +243,10 @@ export default {
       //   },
       //   pagination: { size: 1000 },
       // }),
-      fields: CollectionManager.create({ 
-        ModelClass: ObjectField, 
+      fields: CollectionManager.create({
+        ModelClass: ObjectField,
         filters: {
-          crmObject: this.alert.resourceType
+          crmObject: this.alert.resourceType,
         },
         pagination: { size: 1000 },
       }),
@@ -292,7 +292,7 @@ export default {
   computed: {
     editor() {
       return this.$refs['message-body'].quill
-    }
+    },
   },
   methods: {
     test(log) {
