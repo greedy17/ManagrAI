@@ -1262,6 +1262,7 @@ export default {
     clearStageData() {
       this.selectedForm = null
       this.currentlySelectedStage = null
+      this.selectedStage = null
     },
     async deleteForm(form) {
       if (form && form.id && form.id.length) {
@@ -1739,6 +1740,9 @@ export default {
         })
         .then((res) => {
           // this.$emit('update:selectedForm', res)
+
+          this.newCustomForm = res
+          this.activeForm = res
 
           this.$toast('Form saved', {
             timeout: 2000,
