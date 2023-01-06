@@ -1,7 +1,7 @@
 <template>
   <div class="reports">
     <div class="alerts-header">
-      <div class="results-title">
+      <div v-if="isPaid" class="results-title">
         <p
           @click="selectPerformanceReport"
           :class="reportType == 'Performance' ? '' : 'light-gray-text'"
@@ -15,6 +15,30 @@
           :class="reportType == 'Story' ? '' : 'light-gray-text'"
         >
           Story Reports
+        </p>
+      </div>
+
+      <div class="results-title" v-else>
+        <p class="light-gray-text row">
+          Performance Reports
+          <img
+            class="shimmer"
+            style="filter: invert(40%); margin-left: 4px"
+            src="@/assets/images/lock.svg"
+            height="14px"
+            alt=""
+          />
+        </p>
+
+        <p style="margin-left: 18px" class="light-gray-text row">
+          Story Reports
+          <img
+            class="shimmer"
+            style="filter: invert(40%); margin-left: 4px"
+            src="@/assets/images/lock.svg"
+            height="14px"
+            alt=""
+          />
         </p>
       </div>
 
@@ -258,6 +282,7 @@
             track-by="id"
             v-model="selectedUser"
             :custom-label="fullOrEmailLabel"
+            :disabled="!isPaid"
           >
             <template slot="noResult">
               <p class="multi-slot">No results.</p>
@@ -282,7 +307,7 @@
             <img src="@/assets/images/logo.png" height="24px" alt="" />
             Performance Report
           </div>
-          <sub class="light-green-section">30 Open Opportunities</sub>
+          <sub class="light-green-section">{{ allOpps.length }} Open Opportunities</sub>
         </div>
 
         <div class="space-between">
@@ -299,69 +324,206 @@
             <img src="@/assets/images/session.svg" height="24px" alt="" />
             <h1 class="green-text" style="margin: 12px 0">
               {{ performanceReport['total sessions'] }}
-              <img src="@/assets/images/trendingDown.svg" class="red-filter" height="18" alt="" />
+
+              <img
+                v-if="
+                  performanceReport['total sessions'] >=
+                  performanceReport['total sessions'] / totalMonths
+                "
+                src="@/assets/images/trendingUp.svg"
+                class="green-filter"
+                height="18"
+                alt=""
+              />
+              <img
+                v-else
+                src="@/assets/images/trendingDown.svg"
+                class="red-filter"
+                height="18"
+                alt=""
+              />
             </h1>
             <p>Sessions</p>
-            <meter id="file" value="5" max="10"></meter>
-            <p class="small-text">Avg: 10</p>
+            <meter
+              id="file"
+              :value="performanceReport['total sessions']"
+              :max="performanceReport['total sessions'] / totalMonths"
+            ></meter>
+            <p class="small-text">Avg: {{ performanceReport['total sessions'] / totalMonths }}</p>
           </div>
 
           <div class="card">
             <img src="@/assets/images/check.svg" height="24px" alt="" />
             <h1 class="green-text" style="margin: 12px 0">
               {{ performanceReport['updates'] }}
-              <img src="@/assets/images/trendingUp.svg" class="green-filter" height="18" alt="" />
+              <img
+                v-if="performanceReport['updates'] >= performanceReport['updates'] / totalMonths"
+                src="@/assets/images/trendingUp.svg"
+                class="green-filter"
+                height="18"
+                alt=""
+              />
+              <img
+                v-else
+                src="@/assets/images/trendingDown.svg"
+                class="red-filter"
+                height="18"
+                alt=""
+              />
             </h1>
             <p>Total Updates</p>
-            <meter id="file" value="50" max="30"></meter>
-            <p class="small-text">Avg: 30</p>
+            <meter
+              id="file"
+              :value="performanceReport['updates']"
+              :max="performanceReport['updates'] / totalMonths"
+            ></meter>
+            <p class="small-text">Avg: {{ performanceReport['updates'] / totalMonths }}</p>
           </div>
 
           <div class="card">
             <img src="@/assets/images/doubleCheck.svg" height="24px" alt="" />
             <h1 class="green-text" style="margin: 12px 0">
               {{ Object.keys(performanceReport['fields']).length }}
-              <img src="@/assets/images/trendingUp.svg" class="green-filter" height="18" alt="" />
+              <img
+                v-if="
+                  Object.keys(performanceReport['fields']).length >=
+                  Object.keys(performanceReport['fields']).length / totalMonths
+                "
+                src="@/assets/images/trendingUp.svg"
+                class="green-filter"
+                height="18"
+                alt=""
+              />
+              <img
+                v-else
+                src="@/assets/images/trendingDown.svg"
+                class="red-filter"
+                height="18"
+                alt=""
+              />
             </h1>
             <p>Fields Updated</p>
-            <meter id="file" value="25" max="20"></meter>
-            <p class="small-text">Avg: 20</p>
+            <meter
+              id="file"
+              :value="Object.keys(performanceReport['fields']).length"
+              :max="Object.keys(performanceReport['fields']).length / totalMonths"
+            ></meter>
+            <p class="small-text">
+              Avg: {{ Object.keys(performanceReport['fields']).length / totalMonths }}
+            </p>
           </div>
         </div>
 
         <div class="even-row">
           <div class="card">
             <img src="@/assets/images/calendar.svg" height="22px" alt="" />
-            <h1 class="green-text" style="margin: 12px 0">{{ performanceReport['meetings'] }}</h1>
+            <h1 class="green-text" style="margin: 12px 0">
+              {{ performanceReport['meetings'] }}
+              <img
+                v-if="performanceReport['meetings'] >= performanceReport['meetings'] / totalMonths"
+                src="@/assets/images/trendingUp.svg"
+                class="green-filter"
+                height="18"
+                alt=""
+              />
+              <img
+                v-else
+                src="@/assets/images/trendingDown.svg"
+                class="red-filter"
+                height="18"
+                alt=""
+              />
+            </h1>
             <p>Meetings Logged</p>
-            <meter id="file" value="8" max="8"></meter>
-            <p class="small-text">Avg: 8</p>
+            <meter
+              id="file"
+              :value="performanceReport['meetings']"
+              :max="performanceReport['meetings'] / totalMonths"
+            ></meter>
+            <p class="small-text">Avg: {{ performanceReport['meetings'] / totalMonths }}</p>
           </div>
 
           <div class="card">
-            <img src="@/assets/images/person.svg" height="24px" alt="" />
+            <img src="@/assets/images/group.svg" height="24px" alt="" />
             <h1 class="green-text" style="margin: 12px 0">
               {{ performanceReport['contacts'] }}
-              <img src="@/assets/images/trendingDown.svg" class="red-filter" height="18" alt="" />
+              <img
+                v-if="performanceReport['contacts'] >= performanceReport['contacts'] / totalMonths"
+                src="@/assets/images/trendingUp.svg"
+                class="green-filter"
+                height="18"
+                alt=""
+              />
+              <img
+                v-else
+                src="@/assets/images/trendingDown.svg"
+                class="red-filter"
+                height="18"
+                alt=""
+              />
             </h1>
             <p>Contacts Created</p>
-            <meter id="file" value="5" max="8"></meter>
-            <p class="small-text">Avg: 8</p>
+            <meter
+              id="file"
+              :value="performanceReport['contacts']"
+              :max="performanceReport['contacts'] / totalMonths"
+            ></meter>
+            <p class="small-text">Avg: {{ performanceReport['contacts'] / totalMonths }}</p>
           </div>
 
           <div class="card">
             <img src="@/assets/images/note.svg" height="20px" alt="" />
             <h1 class="green-text" style="margin: 12px 0">
               {{
-                performanceReport['fields']['CloseDate']
-                  ? performanceReport['fields']['CloseDate']
+                performanceReport['fields']['MeetingComments']
+                  ? performanceReport['fields']['MeetingComments']
                   : 0
               }}
-              <img src="@/assets/images/trendingUp.svg" class="green-filter" height="18" alt="" />
+              <img
+                v-if="
+                  (performanceReport['fields']['MeetingComments']
+                    ? performanceReport['fields']['MeetingComments']
+                    : 0) >=
+                  (performanceReport['fields']['MeetingComments']
+                    ? performanceReport['fields']['MeetingComments']
+                    : 0 / totalMonths)
+                "
+                src="@/assets/images/trendingUp.svg"
+                class="green-filter"
+                height="18"
+                alt=""
+              />
+
+              <img
+                v-else
+                src="@/assets/images/trendingDown.svg"
+                class="red-filter"
+                height="18"
+                alt=""
+              />
             </h1>
             <p>Notes Added</p>
-            <meter id="file" value="14" max="12"></meter>
-            <p class="small-text">Avg: 12</p>
+            <meter
+              id="file"
+              :value="
+                performanceReport['fields']['MeetingComments']
+                  ? performanceReport['fields']['MeetingComments']
+                  : 0
+              "
+              :max="
+                performanceReport['fields']['MeetingComments']
+                  ? performanceReport['fields']['MeetingComments']
+                  : 0 / totalMonths
+              "
+            ></meter>
+            <p class="small-text">
+              Avg:
+              {{
+                performanceReport['fields']['MeetingComments']
+                  ? performanceReport['fields']['MeetingComments']
+                  : 0 / totalMonths
+              }}
+            </p>
           </div>
         </div>
 
@@ -454,6 +616,7 @@ export default {
       generating: false,
       performanceReport: null,
       sortedUpdates: [],
+      totalMonths: null,
     }
   },
   watch: {
@@ -463,6 +626,13 @@ export default {
     this.reps.refresh()
   },
   methods: {
+    greaterVal(a, b) {
+      if (a >= b) {
+        return true
+      } else {
+        return false
+      }
+    },
     fullOrEmailLabel(props) {
       if (!props.fullName.trim()) {
         return props.email
@@ -473,10 +643,13 @@ export default {
       this.generating = !this.generating
     },
     async getPerformanceReport(id) {
+      let today = new Date()
+      let month = today.getMonth() + 1
       try {
         const res = await User.api.getPerformanceReport(id)
-        console.log(res)
-        this.performanceReport = res
+        console.log(res[month])
+        this.totalMonths = Object.keys(res).length
+        this.performanceReport = res[month]
       } catch (e) {
         console.log(e)
       }
@@ -519,6 +692,12 @@ export default {
     user() {
       return this.$store.state.user
     },
+    allOpps() {
+      return this.$store.state.allOpps
+    },
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
   },
 }
 </script>
@@ -526,6 +705,20 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.shimmer {
+  display: inline-block;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  max-width: 200px;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
 
 .reports {
   color: $base-gray;

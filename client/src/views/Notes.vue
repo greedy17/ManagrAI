@@ -11,22 +11,18 @@
 
       <!-- <h3>Current Template Name</h3> -->
 
-      <div v-if="!isPaid">
-        <div v-if="noteTemplates.length" class="tooltip">
-          <button disabled class="green_button row">
-            Create Template
-            <img
-              class="shimmer"
-              style="filter: invert(40%); margin-left: 6px"
-              src="@/assets/images/lock.svg"
-              height="18"
-              alt=""
-            />
-          </button>
-          <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
-        </div>
-
-        <button v-else @click="createNote" class="green_button">Create Template</button>
+      <div v-if="!isPaid" class="tooltip">
+        <button disabled class="green_button row">
+          Create Template
+          <img
+            class="shimmer"
+            style="filter: invert(40%); margin-left: 6px"
+            src="@/assets/images/lock.svg"
+            height="18"
+            alt=""
+          />
+        </button>
+        <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
       </div>
 
       <button v-else-if="!creating && !editing && isPaid" @click="createNote" class="green_button">

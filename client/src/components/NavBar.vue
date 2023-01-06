@@ -81,7 +81,13 @@
           </div>
         </router-link>
 
-        <router-link v-if="user.isStaff" exact-active-class="active" :to="{ name: 'Reports' }">
+        <router-link v-if="!isPaid" exact-active-class="active" :to="{ name: 'Reports' }">
+          <div class="tooltip-wide">
+            <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" />
+            <span class="tooltiptext-wide">Reports: Upgrade to Team Plan</span>
+          </div>
+        </router-link>
+        <router-link v-else exact-active-class="active" :to="{ name: 'Reports' }">
           <div class="tooltip">
             <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" />
             <span class="tooltiptext">Reports</span>
@@ -209,7 +215,17 @@ export default {
 .nav-img {
   height: 16px;
 }
-
+.overlay {
+  background-color: white;
+  filter: blur(30%);
+  position: relative;
+  top: 10px;
+  left: -6px;
+  height: fit-content;
+  width: 100%;
+  z-index: 10;
+  outline: 1px solid red;
+}
 span {
   font-size: 11px;
   color: $dark-green;
@@ -335,6 +351,40 @@ a:hover {
 }
 
 .tooltip:hover .tooltiptext {
+  visibility: visible;
+  animation: tooltips-horz 300ms ease-out forwards;
+}
+
+.tooltip-wide {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0px;
+}
+.tooltip-wide .tooltiptext-wide {
+  visibility: hidden;
+  width: 240px;
+  background-color: $base-gray;
+  color: white;
+  text-align: center;
+  border: none !important;
+  letter-spacing: 1px;
+  padding: 8px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold !important;
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  left: 270%;
+  margin-left: -32px;
+  opacity: 70%;
+  transition: opacity 0.3s;
+}
+
+.tooltip-wide:hover .tooltiptext-wide {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
 }
