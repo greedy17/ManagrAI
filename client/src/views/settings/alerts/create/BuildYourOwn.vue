@@ -300,21 +300,15 @@
         </section>
 
         <!-- <label class="label" for="message">Message </label> -->
-        <FormField id="message">
-          <template v-slot:input>
-            <quill-editor
-              @blur="alertTemplateForm.field.alertMessages.groups[0].field.body.validate()"
-              ref="message-body"
-              v-model="alertTemplateForm.field.alertMessages.groups[0].field.body.value"
-              :options="{
-                modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-                placeholder: 'Write your message.',
-                theme: 'snow',
-              }"
-              class="message__box"
-            />
-          </template>
-        </FormField>
+        <div style="margin-bottom: 1rem;">
+          <div v-for="(message, i) in formattedSlackMessage" :key="i" style="margin: 1rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 47.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+            <div style="justify-self: start;">
+              <div style="font-weight: 900; font-size: .85rem; margin-bottom: 0.1rem;">{{message.title}}</div>
+              <div style="font-size: .8rem;">{ {{message.val}} }</div>
+            </div>
+            <div @click="removeMessage(i)" style=""><img src="@/assets/images/remove.svg" /></div>
+          </div>
+        </div>
         <div style="margin-right: 8px" class="start">
           <Multiselect
             placeholder="Select field"
@@ -429,6 +423,8 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
+      slackMessage: [],
+      formattedSlackMessage: [],
       // fields: CollectionManager.create({
       //   ModelClass: ObjectField,
       //   pagination: { size: 1000 },
@@ -482,6 +478,18 @@ export default {
       this.userCRM === 'SALESFORCE'
         ? ['Opportunity', 'Account', 'Contact', 'Lead']
         : ['Deal', 'Contact', 'Company']
+    this.slackMessage = this.alertTemplateForm.field.alertMessages.groups[0].field.body.value.split('<p><br></p>')
+    const tempFormat = []
+    for (let i = 0; i < this.slackMessage.length; i++) {
+      const message = this.slackMessage[i]
+      const titleAndVal = message.split('<br>')
+      const title = titleAndVal[0]
+      const val = titleAndVal[1]
+      let titleFormatted = title.slice(8, title.length-9)
+      let valFormatted = val.slice(2, val.length-2)
+      tempFormat.push({title: titleFormatted, val: valFormatted})
+    }
+    this.formattedSlackMessage = tempFormat
   },
   watch: {
     alertIsValid: 'activateSave',
@@ -505,6 +513,9 @@ export default {
     oldAlert: {},
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     checkForChannel() {
       !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
     },
@@ -778,6 +789,7 @@ export default {
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {
+          this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = '<p>' + this.alertTemplateForm.field.alertMessages.groups[0].field.body.value + '</p>'
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
@@ -799,12 +811,15 @@ export default {
       }
     },
     bindText(val, title) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
+      const addedStr = `<strong>${title}</strong><br>{ ${val} }`
+      this.slackMessage.push(addedStr)
+      this.formattedSlackMessage.push({title, val})
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('<p><br></p>')
+    },
+    removeMessage(i) {
+      this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
+      this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('<p><br></p>')
     },
     onNextPage() {
       this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
@@ -937,7 +952,8 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      'Hey { __Recipient.full_name },'
+      this.userCRM === 'SALESFORCE' ? '<strong>Name</strong><br>{ Opportunity.Name }' :
+      '<strong>Deal Name</strong><br>{ Deal.Name }'
     this.alertTemplateForm.field.resourceType.value =
       this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.repsPipeline()
