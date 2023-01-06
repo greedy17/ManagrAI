@@ -294,12 +294,6 @@ export default {
     editor() {
       return this.$refs['message-body'].quill
     },
-<<<<<<< HEAD
-=======
-    stateRecordTypes(){
-      return this.$store.state.recordTypes
-    }
->>>>>>> ff5dd88e07bfcc5e22d690d10734998df2cd4799
   },
   methods: {
     test(log) {
@@ -417,7 +411,9 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${this.valuePromise ? this.valuePromise : valueLabel} `
+      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+        this.valuePromise ? this.valuePromise : valueLabel
+      } `
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
