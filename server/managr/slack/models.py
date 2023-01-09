@@ -502,7 +502,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         for k, v in values.items():
             if k in fields:
                 if k in datetime_fields:
-                    if "T" not in v:
+                    if v is not None and "T" not in v:
                         s = v.split(" ")
                         v = "T".join(s)
                 new_data[k] = v
