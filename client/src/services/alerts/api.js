@@ -33,7 +33,7 @@ export default class AlertTemplateAPI extends ModelAPI {
     try {
       await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/test/`)
     } catch (e) {
-      apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.testAlertTemplate' })(e)
     }
   }
   async runAlertTemplateNow(id, from_workflow) {
@@ -42,7 +42,7 @@ export default class AlertTemplateAPI extends ModelAPI {
       const res = await this.client.post(`${AlertTemplateAPI.ENDPOINT}${id}/run-now/`, { from_workflow: fw})
       return res
     } catch (e) {
-      apiErrorHandler({ apiName: 'AlertTemplateAPI.deleteAlertTemplate' })(e)
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.runAlertTemplateNow' })(e)
     }
   }
 
