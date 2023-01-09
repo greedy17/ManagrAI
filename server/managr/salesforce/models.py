@@ -902,6 +902,23 @@ class SalesforceAuthAccount(TimeStampModel):
         return SalesforceAuthAccountAdapter(**data)
 
     @property
+    def custom_objects(self):
+        object_list = set(
+            [
+                "Opportunity",
+                "Account",
+                "Contact",
+                "Lead",
+                "PricebookEntry",
+                "Product2",
+                "Pricebook2",
+                "OpportunityLineItem",
+            ]
+        )
+        custom = set(self.sobjects.keys())
+        return list(custom - object_list)
+
+    @property
     def crm_id(self):
         return self.salesforce_id
 
@@ -964,6 +981,12 @@ class SalesforceAuthAccount(TimeStampModel):
             )
         return []
 
+    @property
+    def crm_user_ids(self):
+        return SalesforceAuthAccount.objects.filter(
+            user__organization=self.user.organization
+        ).values_list("salesforce_id", flat=True)
+
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
@@ -990,6 +1013,10 @@ class SalesforceAuthAccount(TimeStampModel):
             self.default_record_ids = current_record_ids
             self.save()
         return fields
+
+    def get_record_type_picklist(self):
+        res = self.adapter_class.get_record_type_picklist()
+        return res
 
     def get_validations(self, resource):
         rules = self.adapter_class.list_validations(resource)

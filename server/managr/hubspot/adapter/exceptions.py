@@ -24,7 +24,7 @@ from managr.crm.exceptions import (
 logger = logging.getLogger("managr")
 
 
-# class TokenExpired(Exception):
+# class CRM(Exception):
 #     def __init(self, message="Token Expired"):
 #         self.message = message
 #         super().__init__(self.message)
@@ -122,6 +122,7 @@ class CustomAPIException:
     def raise_error(self):
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
+        print(self.message)
         if self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured with a hubspot integration, {self.fn_name}")
             raise Api500Error()
@@ -181,6 +182,7 @@ class CustomAPIException:
             raise UnableToUnlockRow(
                 f"Unable to save data because row is locked by hubspot {self.message}"
             )
-
+        elif self.status_code == 429 and self.param == "RATE_LIMITS":
+            raise ApiRateLimitExceeded("Secondly Limit")
         else:
             raise UnhandledCRMError(f"HubSpot error: {self.message}")

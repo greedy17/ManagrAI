@@ -428,6 +428,38 @@ class SalesforceAuthAccountAdapter:
                 }
             )
 
+    def get_record_type_picklist(self):
+        url = f"{self.instance_url}/{sf_consts.RECORD_TYPE_URI}"
+        with Client as client:
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+            res = [
+                dict(label=record_type["Name"], id=record_type["Id"])
+                for record_type in res["records"]
+            ]
+            return res
+
+    def get_stage_picklist_values_by_record_type(self, record_type_id):
+        url = f"{self.instance_url}{sf_consts.SALEFORCE_STAGE_PICKLIST_URI(record_type_id)}"
+        with Client as client:
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+
+            return SObjectPicklistAdapter.create_from_api(
+                {
+                    "values": res["values"],
+                    "salesforce_account": str(self.id),
+                    "picklist_for": "StageName",
+                    "imported_by": str(self.user),
+                    "salesforce_object": "Opportunity",
+                    "integration_source": "SALESFORCE",
+                }
+            )
+
     def get_individual_picklist_values(self, resource, field_name=None, for_dev=False):
         """Sync method to get picklist values for resources not saved in our db"""
 
@@ -541,22 +573,24 @@ class SalesforceAuthAccountAdapter:
     #         res = self._format_resource_response(saved_response, resource)
     #         return res
 
-    def list_resource_data(self, resource, offset, *args, **kwargs):
+    def list_resource_data(self, resource, offset=None, *args, **kwargs):
         # add extra fields to query string
         extra_items = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
         )
         from .routes import routes
 
+        owners = kwargs.get("owners", None)
         add_filters = kwargs.get("filter", None)
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
         additional_filters = (
             resource_class.additional_filters() if add_filters is None else add_filters
         )
+        owner_id = owners if owners else self.salesforce_id
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
         url_list = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(
-            self.salesforce_id,
+            owner_id,
             resource,
             extra_items,
             relationships,

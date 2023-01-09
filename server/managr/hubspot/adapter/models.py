@@ -68,6 +68,7 @@ class HubspotAuthAccountAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
+            print(status_code, error_data)
             if status_code == 400:
                 error_param = error_data.get("error", error_data.get("errorCode", None))
                 error_message = error_data.get("error_description", error_data.get("message", None))
@@ -227,7 +228,7 @@ class HubspotAuthAccountAdapter:
             "api_name", flat=True
         )
         add_filters = kwargs.get(
-            "filters",
+            "filter",
             [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
         )
         resource_class = routes.get(resource)
@@ -249,7 +250,6 @@ class HubspotAuthAccountAdapter:
                 has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
                 if has_next_page and page <= 5:
                     data["after"] = has_next_page
-                    time.sleep(5.00)
                     with Client as client:
                         res = client.post(
                             url,
@@ -573,7 +573,7 @@ class DealAdapter:
     @staticmethod
     def additional_filters():
         """pass custom additional filters to the url"""
-        return [{"propertyName": "is_closed", "value": False, "operator": "EQ",}]
+        return [{"propertyName": "hs_is_closed", "value": False, "operator": "EQ",}]
 
     @staticmethod
     def from_api(data, user_id, *args, **kwargs):

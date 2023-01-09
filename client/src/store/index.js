@@ -35,6 +35,7 @@ const state = {
     verboseName: null,
     checker: null,
   },
+  recordTypes: [],
 }
 
 const mutations = {
@@ -46,6 +47,9 @@ const mutations = {
   },
   UPDATE_USERTOKEN: (state, payload) => {
     state.token = payload
+  },
+  UPDATE_RECORD_TYPES: (state, payload) => {
+    state.recordTypes = payload
   },
   // Log out the user by resetting the state to defaults
   LOGOUT_USER(state) {
@@ -173,15 +177,19 @@ const actions = {
     try {
       await SObjects.api.getCustomObjectFields(name).then((res) => {
         const vbName = res.verbose_name
-        state.customObject.checker = setInterval(() => {
-          dispatch('checkTask', vbName)
-          // this.loaderText = this.loaderTextList[this.changeLoaderText()]
-        }, 2000)
+        // state.customObject.checker = setInterval(() => {
+        //   dispatch('checkTask', vbName)
+        //   // this.loaderText = this.loaderTextList[this.changeLoaderText()]
+        // }, 2000)
         commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task: null})
       })
     } catch (e) {
       console.log(e)
     }
+  },
+  async getRecords({ commit }) {
+    const res = await SObjects.api.getRecords()
+    commit('UPDATE_RECORD_TYPES', res)
   },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)

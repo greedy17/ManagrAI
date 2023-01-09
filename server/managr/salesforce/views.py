@@ -116,6 +116,8 @@ def authenticate(request):
                 if len(form_check) > 0
                 else timezone.now()
             )
+            if settings.IN_DEV:
+                schedule = timezone.now() + timezone.timedelta(minutes=2)
             emit_generate_form_template(data.user, schedule=schedule)
         user = User.objects.get(id=request.user.id)
         sync_operations = [*user.salesforce_account.resource_sync_opts]
@@ -334,6 +336,62 @@ class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         serializer.save()
 
         return Response()
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="stage-by-record-id",
+    )
+    def get_stage_picklist_values_by_record_id(self, request, *args, **kwargs):
+        record_id = self.request.GET.get("record_id")
+        user = self.request.user
+        attempts = 1
+        while True:
+            try:
+                res = user.crm_account.adapter_class.get_stage_picklist_values_by_record_type(
+                    record_id
+                )
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Refresh token on get stage by picklist value endpoint failed due to <{e}>"
+                    )
+                    break
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={})
+        return Response(data=res)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="record_type_picklist",
+    )
+    def get_record_type_picklist(self, request, *args, **kwargs):
+        user = self.request.user
+        picklist = user.crm_account.get_record_type_picklist()
+        attempts = 1
+        while True:
+            try:
+                picklist = user.crm_account.get_record_type_picklist()
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Refresh token on get stage by picklist value endpoint failed due to <{e}>"
+                    )
+                    break
+                else:
+                    user.salesforce_account.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={})
+        return Response(data=picklist)
 
 
 class SalesforceSObjectViewSet(
@@ -924,7 +982,29 @@ class SalesforceSObjectViewSet(
     )
     def get_custom_objects(self, request, *args, **kwargs):
         user = request.user
-        objects = user.salesforce_account.list_objects()
+        attempts = 1
+        while True:
+            try:
+                objects = user.salesforce_account.list_objects()
+                break
+            except TokenExpired:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to retrieve all object from Salesforce for user {str(user.id)} after {attempts} tries"
+                    )
+                else:
+                    try:
+                        user.crm_account.regenerate_token()
+                        attempts += 1
+                    except InvalidRefreshToken:
+                        return Response(
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            data={
+                                "error": "There was a problem with your connection to Salesforce, please reconnect to SFDC"
+                            },
+                        )
+            except Exception as e:
+                logger.exception("Error fetching all Salesforce Objects")
         return Response(data={"sobjects": objects})
 
     @action(

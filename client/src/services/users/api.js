@@ -28,6 +28,7 @@ const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
 const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
 const FORECAST_ENDPOINT = '/users/modify-forecast/'
 const PULL_USAGE_DATA = '/users/pull-usage-data/'
+const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 
 export default class UserAPI {
@@ -412,5 +413,12 @@ export default class UserAPI {
     } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.getStaffSObjects' })
     }
+  }
+
+  getPerformanceReport(user_id) {
+    return this.client
+      .get(PERFORMANCE_REPORT_ENDPOINT, { params: { user_id } })
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 }

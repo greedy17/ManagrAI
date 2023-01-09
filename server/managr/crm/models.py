@@ -445,13 +445,14 @@ class ObjectField(TimeStampModel, IntegrationModel):
             # stage has a special function so we add the action param can only use one action_id so serving this statically for now
             action_id = None
             if self.api_name in ["StageName", "dealstage"]:
+                resource_id = kwargs.get("resource_id", None)
+                if resource_id:
+                    resource = BaseOpportunity.objects.get(id=resource_id)
                 if self.api_name == "dealstage":
-                    resource_id = kwargs.get("resource_id", None)
                     pipeline_id = kwargs.get("pipeline_id", None)
                     if resource_id or pipeline_id:
                         pipeline = pipeline_id
                         if resource_id:
-                            resource = BaseOpportunity.objects.get(id=resource_id)
                             pipeline = resource.secondary_data["pipeline"]
                         stages = self.options[0].get(pipeline)["stages"]
                         stage_options = list(
@@ -465,6 +466,22 @@ class ObjectField(TimeStampModel, IntegrationModel):
                         options = [block_builders.option("None", "None")]
                 else:
                     options = self.get_slack_options
+                    if resource_id:
+                        if (
+                            "RecordTypeId" in resource.secondary_data.keys()
+                            and resource.secondary_data.get("RecordTypeId", None) is not None
+                        ):
+                            stages = self.user.crm_account.adapter_class.get_stage_picklist_values_by_record_type(
+                                resource.secondary_data["RecordTypeId"]
+                            )
+                            options = list(
+                                map(
+                                    lambda option: block_builders.option(
+                                        option["label"], option["value"]
+                                    ),
+                                    stages.values,
+                                )
+                            )
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
@@ -630,7 +647,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
                     optional=not self.required,
                     initial_value=value,
                     block_id=self.api_name,
-                    placeholder="MM-DD-YYYY HH:MM AM/PM",
+                    placeholder="YYYY-MM-DD HH:MM:SS (24 hour format)",
                 )
 
             if self.data_type == "String" and self.length >= 250 or self.data_type == "TextArea":

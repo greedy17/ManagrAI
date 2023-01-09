@@ -6,7 +6,7 @@
           <div id="part1" class="portion-block"><div class="circle"></div></div>
           <div id="part2" class="portion-block"><div class="circle"></div></div>
           <div id="part3" class="portion-block"><div class="circle"></div></div>
-          <p class="center">66</p>
+          <p class="center"></p>
         </div>
       </div>
     </div>
@@ -56,9 +56,9 @@ export default {
 
 .donut-chart {
   position: relative;
-  width: 180px;
-  height: 180px;
-  margin: 0 auto 2rem;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 1rem;
   border-radius: 100%;
 }
 p.center {
@@ -101,7 +101,7 @@ p.center {
 }
 
 #part1 .circle {
-  background-color: $light-yellow;
+  background-color: $dark-green;
   /*transform: rotate(76deg);*/
   animation: first 1s 1 forwards;
 }
@@ -110,7 +110,7 @@ p.center {
   transform: rotate(100deg);
 }
 #part2 .circle {
-  background-color: $yellow;
+  background-color: $dark-green;
   animation: second 1s 1 forwards 1s;
 }
 #part3 {

@@ -77,6 +77,11 @@ export default new Router({
       name: 'Home',
     },
     {
+      path: '/reports',
+      component: () => import('../views/Reports'),
+      name: 'Reports',
+    },
+    {
       path: '/create-leads',
       name: 'CreateLeads',
       beforeEnter: Auth.requireAuth,
@@ -149,10 +154,10 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
     },
     {
-      path: '/empty-field',
-      name: 'RequiredFieldEmpty',
+      path: '/team-pipeline',
+      name: 'TeamPipeline',
       beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/settings/alerts/create/templates/RequiredFieldEmpty')
+      component: () => import('@/views/settings/alerts/create/templates/TeamPipeline')
     },
     {
       path: '/close-date-approaching',

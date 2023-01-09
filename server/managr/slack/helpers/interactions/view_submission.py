@@ -651,14 +651,165 @@ def process_submit_resource_data(payload, context):
 
 
 @log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
+def process_submit_custom_object(payload, context):
+    print(context)
+    user = User.objects.get(id=context.get("u"))
+    form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    state = payload["view"]["state"]["values"]
+    form.save_form(state)
+    data = form.saved_data
+    attempts = 1
+    has_error = False
+    while True:
+        crm = user.crm_account
+        try:
+            res = crm.create_custom_object(
+                data,
+                crm.access_token,
+                crm.instance_url,
+                crm.salesforce_id,
+                form.template.custom_object,
+            )
+            form.is_submitted = True
+            form.update_source = "meeting" if context.get("w", None) else "command"
+            form.submission_date = timezone.now()
+            form.save()
+            break
+        except FieldValidationError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except RequiredFieldError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                },
+            )
+            break
+        except UnhandledCRMError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except SFNotFoundError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except TokenExpired as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
+                    },
+                )
+                break
+            else:
+                crm.regenerate_token()
+                attempts += 1
+
+        except ConnectionResetError:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+        except Exception as e:
+            logger.exception(
+                f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
+            )
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
+            )
+            break
+    if has_error:
+        form_id = str(form.id)
+        blocks = [
+            *blocks,
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "return to form",
+                        form_id,
+                        style="primary",
+                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                    )
+                ]
+            ),
+        ]
+        new_context = {**context, "type": "command"}
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        error_view_data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Error"},
+                "blocks": blocks,
+                "private_metadata": json.dumps(new_context),
+            },
+        }
+        try:
+            return slack_requests.generic_request(
+                url, error_view_data, access_token=user.organization.slack_integration.access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
+            )
+
+    return
+
+
+def CRM_FILTERS(crm, integration_id):
+    filters = {
+        "HUBSPOT": [{"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id},],
+        "SALESFORCE": [f"AND Id = '{integration_id}'"],
+    }
+    return filters[crm]
+
+
+@log_all_exceptions
 @processor(required_context=["w"])
 def process_zoom_meeting_attach_resource(payload, context):
     type = context.get("type", None)
-    workflow = (
-        MeetingPrepInstance.objects.get(id=context.get("w"))
-        if type
-        else MeetingWorkflow.objects.get(id=context.get("w"))
-    )
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -675,13 +826,45 @@ def process_zoom_meeting_attach_resource(payload, context):
     state_values = payload["view"]["state"]["values"]
     meeting_resource = context.get("resource")
     if context.get("action") == "EXISTING":
-
         selected_action = [
             val.get("selected_option", {}).get("value", [])
             for val in state_values["select_existing"].values()
         ]
-        selected_action = selected_action[0] if len(selected_action) else None
-        workflow.resource_id = selected_action
+        integration_id = selected_action[0] if len(selected_action) else None
+        try:
+            resource = CRM_SWITCHER[user.crm][meeting_resource]["model"].objects.get(
+                integration_id=integration_id
+            )
+            resource_id = resource.id
+        except CRM_SWITCHER[user.crm][meeting_resource]["model"].DoesNotExist:
+            try:
+                resource_res = user.crm_account.adapter_class.list_resource_data(
+                    meeting_resource, filter=CRM_FILTERS(user.crm, integration_id),
+                )
+                serializer = CRM_SWITCHER[user.crm][meeting_resource]["serializer"](
+                    data=resource_res[0].as_dict
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                resource_id = serializer.instance.id
+            except Exception as e:
+                logger.exception(
+                    f"Failed to sync new resource with id {integration_id} for {user.email}"
+                )
+                return {
+                    "response_action": "push",
+                    "view": {
+                        "type": "modal",
+                        "title": {"type": "plain_text", "text": "An Error Occured"},
+                        "blocks": get_block_set(
+                            "error_modal",
+                            {
+                                "message": f":no_entry: We could not sync the {meeting_resource} because of :\n *Error* : _{e}_"
+                            },
+                        ),
+                    },
+                }
+        workflow.resource_id = resource_id
         workflow.resource_type = meeting_resource
         workflow.save()
         # update the forms to the correct type
@@ -2689,14 +2872,6 @@ def process_submit_alert_resource_data(payload, context):
         crm = user.crm_account
         try:
             resource = main_form.resource_object.update(all_form_data)
-            if len(custom_object_forms):
-                crm.create_custom_object(
-                    custom_object_data_collector,
-                    crm.access_token,
-                    crm.instance_url,
-                    crm.salesforce_id,
-                    custom_object_forms.first().template.custom_object,
-                )
             data = {
                 "view_id": loading_view_data["view"]["id"],
                 "view": {
@@ -3178,6 +3353,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__CONVERT_LEAD: process_convert_lead,
         slack_const.PROCESS_SUBMIT_BULK_UPDATE: process_submit_bulk_update,
         slack_const.GET_SUMMARY: process_get_summary,
+        slack_const.SUBMIT_CUSTOM_OBJECT_DATA: process_submit_custom_object,
     }
 
     callback_id = payload["view"]["callback_id"]

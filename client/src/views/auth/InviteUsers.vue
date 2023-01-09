@@ -62,7 +62,7 @@
               src="@/assets/images/close.svg"
               height="24px"
               alt=""
-              style="filter: invert(30%); cursor: pointer;"
+              style="filter: invert(30%); cursor: pointer"
             />
           </div>
         </div>
@@ -122,7 +122,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem;">
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
         <div class="modal-header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -134,13 +134,19 @@
               src="@/assets/images/close.svg"
               height="24px"
               alt=""
-              style="filter: invert(30%); cursor: pointer;"
+              style="filter: invert(30%); cursor: pointer"
             />
           </div>
         </div>
 
         <div
-          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem; margin-bottom: 1rem;"
+          style="
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: -3rem;
+            margin-bottom: 1rem;
+          "
         >
           <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
@@ -312,22 +318,75 @@
         <div class="profile-info__body">
           <div class="row__">
             <h2>{{ getUser.firstName }} {{ getUser.lastName }}</h2>
-
-            <span @click="selectingOption = !selectingOption" class="img-border">
+            <!-- <span @click="selectingOption = !selectingOption" class="img-border">
               <img
                 src="@/assets/images/more_horizontal.svg"
                 style="margin-left: 8px"
                 height="18px"
                 alt=""
               />
-            </span>
+            </span> -->
+
+            <div class="img-border" @click="viewAdminPage" v-if="getUser.isStaff">
+              <img
+                style="filter: invert(40%); margin-left: 8px"
+                src="@/assets/images/adminPanel.svg"
+                class="nav-img"
+                height="18px"
+                alt=""
+              />
+            </div>
           </div>
           <h3 style="color: #41b883; background-color: #dcf8e9; padding: 4px; border-radius: 6px">
             {{ $store.state.user.organizationRef.name }}
           </h3>
           <small>{{ getUser.timezone }}</small>
+          <div class="options__section">
+            <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
+              Change Admin
+            </button>
+            <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
+              Create New Team
+            </button>
 
-          <div v-show="selectingOption" class="options">
+            <div class="tooltip">
+              <button
+                :disabled="team.list.length >= numberOfAllowedUsers"
+                class="invite_button"
+                type="submit"
+                @click="handleInvite"
+              >
+                Invite Member
+
+                <div v-if="team.list.length >= numberOfAllowedUsers">
+                  <img
+                    v-if="hasSlack"
+                    style="height: 0.8rem; margin-left: 0.25rem"
+                    src="@/assets/images/lock.svg"
+                    alt=""
+                  />
+                </div>
+
+                <div v-else>
+                  <img
+                    v-if="hasSlack"
+                    style="height: 0.8rem; margin-left: 0.25rem"
+                    src="@/assets/images/slackLogo.png"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    style="height: 0.8rem; margin-left: 0.25rem"
+                    src="@/assets/images/logo.png"
+                    alt=""
+                  />
+                </div>
+              </button>
+              <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
+            </div>
+          </div>
+
+          <!-- <div v-show="selectingOption" class="options">
             <p v-if="!updateInfoSelected" @click="updateInfo">Edit Info</p>
             <p v-if="!manageTeamSelected" @click="manageTeam">Manage Team</p>
             <div class="options__section">
@@ -337,23 +396,44 @@
               <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
                 Create New Team
               </button>
-              <button class="invite_button" type="submit" @click="handleInvite">
-                Invite Member
-                <img
-                  v-if="hasSlack"
-                  style="height: 0.8rem; margin-left: 0.25rem"
-                  src="@/assets/images/slackLogo.png"
-                  alt=""
-                />
-                <img
-                  v-else
-                  style="height: 0.8rem; margin-left: 0.25rem"
-                  src="@/assets/images/logo.png"
-                  alt=""
-                />
-              </button>
+
+              <div class="tooltip">
+                <button
+                  :disabled="team.list.length >= numberOfAllowedUsers"
+                  class="invite_button"
+                  type="submit"
+                  @click="handleInvite"
+                >
+                  Invite Member
+
+                  <div v-if="team.list.length >= numberOfAllowedUsers">
+                    <img
+                      v-if="hasSlack"
+                      style="height: 0.8rem; margin-left: 0.25rem"
+                      src="@/assets/images/lock.svg"
+                      alt=""
+                    />
+                  </div>
+
+                  <div v-else>
+                    <img
+                      v-if="hasSlack"
+                      style="height: 0.8rem; margin-left: 0.25rem"
+                      src="@/assets/images/slackLogo.png"
+                      alt=""
+                    />
+                    <img
+                      v-else
+                      style="height: 0.8rem; margin-left: 0.25rem"
+                      src="@/assets/images/logo.png"
+                      alt=""
+                    />
+                  </div>
+                </button>
+                <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
+              </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </section>
@@ -479,6 +559,9 @@ export default {
     }
   },
   methods: {
+    viewAdminPage() {
+      this.$router.push({ name: 'Staff' })
+    },
     test(log) {
       console.log('log', log)
     },
@@ -881,6 +964,12 @@ export default {
     hasSlack() {
       return !!this.$store.state.user.slackRef
     },
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
+    numberOfAllowedUsers() {
+      return this.$store.state.user.organizationRef.numberOfAllowedUsers
+    },
   },
 }
 </script>
@@ -907,7 +996,7 @@ export default {
   width: 100%;
   // border-bottom: 1px solid $soft-gray;
   position: relative;
-  height: 20vh;
+  height: 13vh;
   border-top-right-radius: 4px;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
@@ -934,7 +1023,6 @@ export default {
 }
 .options {
   // border: 1px solid $soft-gray;
-  position: absolute;
   top: 10vh;
   left: 20vw;
   padding: 16px 8px 8px 8px;
@@ -960,13 +1048,16 @@ export default {
   }
 
   &__section {
-    margin: 0px 8px 8px 0px;
+    margin: 0px 8px 8px -8px;
     padding: 8px 8px 8px 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
 }
 .profile-info {
   position: absolute;
-  top: 15.5vh;
+  top: 6vh;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1131,6 +1222,8 @@ h2 {
   border: 1px solid #e8e8e8;
 }
 .invite_button:disabled {
+  display: flex;
+  flex-direction: row;
   color: $base-gray;
   background-color: $soft-gray;
   border-radius: 0.25rem;
@@ -1139,6 +1232,11 @@ h2 {
   font-weight: 400px;
   font-size: 14px;
   border: 1px solid #e8e8e8;
+}
+
+.invite_button:disabled:hover {
+  color: $base-gray;
+  cursor: text;
 }
 
 .invite_button:hover,
@@ -1223,20 +1321,20 @@ input[type='checkbox'] + label::before {
 .tooltip .tooltiptext {
   visibility: hidden;
   background-color: $base-gray;
-  color: white;
+  color: white !important;
   text-align: center;
   border: 1px solid $soft-gray;
   letter-spacing: 0.5px;
   padding: 4px 0px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
 
   /* Position the tooltip text */
   position: absolute;
   z-index: 1;
-  width: 200px;
-  top: 100%;
-  left: 50%;
+  width: 160px;
+  top: 60%;
+  left: 38%;
   margin-left: -50px;
 
   /* Fade in tooltip */

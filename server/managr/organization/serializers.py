@@ -34,6 +34,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "has_products",
             "number_of_allowed_users",
             "ignore_email_ref",
+            "is_paid",
         )
 
     def get_ignore_emails(self, instance):

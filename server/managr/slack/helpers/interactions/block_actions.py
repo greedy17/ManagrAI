@@ -901,6 +901,85 @@ def process_add_products_form(payload, context):
         )
 
 
+@slack_api_exceptions(rethrow=True)
+def process_add_custom_object_form(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    selected_object = payload["actions"][0]["selected_option"]["value"]
+    template = (
+        OrgCustomSlackForm.objects.for_user(user).filter(custom_object=selected_object).first()
+    )
+    if template:
+        form = OrgCustomSlackFormInstance.objects.create(template=template, user=user,)
+        blocks = form.generate_form()
+        if context.get("w", None):
+            workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+            form.workflow = workflow
+            form.save()
+            print(form.workflow)
+    context = {**context, "f": str(form.id)}
+    data = {
+        "view_id": payload["view"]["id"],
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Create Custom Object"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(context),
+            "callback_id": slack_const.SUBMIT_CUSTOM_OBJECT_DATA,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+def process_pick_custom_object(payload, context):
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    custom_objects = user.crm_account.custom_objects
+    options = [
+        block_builders.option(custom_object, custom_object) for custom_object in custom_objects
+    ]
+    params = [f"u={str(user.id)}"]
+    if context.get("w", None):
+        params.append(f"w={str(context.get('w'))}")
+    action_id = action_with_params(slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM, params=params)
+    blocks = [
+        block_builders.static_select(
+            "Choose a custom object to add", options=options, action_id=action_id
+        )
+    ]
+    data = {
+        "view_id": payload["view"]["id"],
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Add Custom Object"},
+            "blocks": blocks,
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(
+            f"Failed to show product form for user {str(user.id)} email {user.email} {e}"
+        )
+    return
+
+
 #########################################################
 # COMMAND ACTIONS
 #########################################################
@@ -1202,6 +1281,14 @@ def process_pipeline_selected_command_form(payload, context):
         return logger.exception(f"Failed To Generate Slack Workflow Interaction for user {e}")
 
 
+def CRM_FILTERS(crm, integration_id):
+    filters = {
+        "HUBSPOT": [{"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id},],
+        "SALESFORCE": [f"AND Id = '{integration_id}'"],
+    }
+    return filters[crm]
+
+
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["resource_type", "u"])
 def process_show_update_resource_form(payload, context):
@@ -1222,8 +1309,28 @@ def process_show_update_resource_form(payload, context):
         trigger_id,
         view_id,
     )
-    resource_id = payload["actions"][0]["selected_option"]["value"]
+    integration_id = payload["actions"][0]["selected_option"]["value"]
     resource_type = context.get("resource_type")
+    try:
+        resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
+            integration_id=integration_id
+        )
+        resource_id = resource.id
+    except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
+        try:
+            resource_res = user.crm_account.adapter_class.list_resource_data(
+                resource_type, filter=CRM_FILTERS(user.crm, integration_id),
+            )
+            serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
+                data=resource_res[0].as_dict
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            resource_id = serializer.instance.id
+        except Exception as e:
+            logger.exception(
+                f"Failed to sync new resource with id {integration_id} for {user.email}"
+            )
     show_submit_button_if_fields_added = False
     stage_form = None
     # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
@@ -1288,6 +1395,7 @@ def process_show_update_resource_form(payload, context):
         )
         show_submit_button_if_fields_added = False
     if user.organization.has_products and resource_type == "Opportunity":
+        buttons = []
         params = [
             f"f={str(slack_form.id)}",
             f"u={str(user.id)}",
@@ -1295,20 +1403,24 @@ def process_show_update_resource_form(payload, context):
         ]
         if slack_form.resource_object.secondary_data["Pricebook2Id"]:
             params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
-        blocks.append(
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Add Product",
-                        "ADD_PRODUCT",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
-                        ),
-                    )
-                ],
-                block_id="ADD_PRODUCT_BUTTON",
-            ),
+        buttons.append(
+            block_builders.simple_button_block(
+                "Add Product",
+                "ADD_PRODUCT",
+                action_id=action_with_params(slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,),
+            )
         )
+        if len(user.crm_account.custom_objects) > 0:
+            buttons.append(
+                block_builders.simple_button_block(
+                    "Add Custom Object",
+                    "ADD_CUSTOM_OBJECT",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_PICK_CUSTOM_OBJECT, params=params,
+                    ),
+                )
+            )
+        blocks.append(block_builders.actions_block(buttons, block_id="ADD_EXTRA_OBJECTS_BUTTON",),)
         current_products = user.salesforce_account.list_resource_data(
             "OpportunityLineItem",
             0,
@@ -3587,6 +3699,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_show_meeting_convert_lead_form,
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
+        slack_const.GET_CRM_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM: process_show_alert_update_resource_form,
         slack_const.PROCESS_SHOW_DIGEST_UPDATE_RESOURCE_FORM: process_show_digest_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
@@ -3614,6 +3727,8 @@ def handle_block_actions(payload):
         slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
         slack_const.PROCESS_ADD_PRODUCTS_FORM: process_add_products_form,
+        slack_const.PROCESS_ADD_CUSTOM_OBJECT_FORM: process_add_custom_object_form,
+        slack_const.PROCESS_PICK_CUSTOM_OBJECT: process_pick_custom_object,
         slack_const.VIEW_RECAP: process_view_recap,
         slack_const.PROCESS_SELECT_RESOURCE: process_select_resource,
         slack_const.PROCESS_LEAD_INPUT_SWITCH: process_lead_input_switch,

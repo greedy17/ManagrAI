@@ -24,9 +24,12 @@ SALESFORCE_FIELDS_URI = lambda resource: f"{CUSTOM_BASE_URI}/ui-api/object-info/
 SALESFORCE_PICKLIST_URI = (
     lambda resource_uri, record_type_id: f"{resource_uri}/picklist-values/{record_type_id}"
 )
+SALEFORCE_STAGE_PICKLIST_URI = (
+    lambda record_type_id: f"{CUSTOM_BASE_URI}/ui-api/object-info/Opportunity/picklist-values/{record_type_id}/StageName"
+)
 SALESFORCE_SOAP_URI = f"/services/Soap/u/{SF_API_VERSION}"
 OBJECTS_URI = f"{CUSTOM_BASE_URI}/sobjects"
-
+RECORD_TYPE_URI = f"{CUSTOM_BASE_URI}/query/?q=SELECT Id,Name FROM RecordType"
 REMOVE_OWNER_ID = {
     # we automatically add owner id as a filter to be most restrictive and not have cross account issues
     # some fields do not support owner id as a filter therefore we need to remove them
@@ -124,7 +127,11 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     # make a set to remove duplicates
     fields = set(fields)
     if resource not in REMOVE_OWNER_ID:
-        additional_filters.insert(0, f"OwnerId = '{owner_id}'")
+        if isinstance(owner_id, list):
+            owners = "','".join(owner_id)
+            additional_filters.insert(0, f"OwnerId IN ('{owners}')")
+        else:
+            additional_filters.insert(0, f"OwnerId = '{owner_id}'")
     field_list = SEPARATE_FIELDS(fields)
     url_list = []
     for idx, field_string in enumerate(field_list):

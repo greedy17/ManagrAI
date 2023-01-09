@@ -8,8 +8,24 @@
         <img src="@/assets/images/left.svg" height="14px" alt="" />
         Back
       </p>
+
       <!-- <h3>Current Template Name</h3> -->
-      <button v-if="!creating && !editing" @click="createNote" class="green_button">
+
+      <div v-if="!isPaid" class="tooltip">
+        <button disabled class="green_button row">
+          Create Template
+          <img
+            class="shimmer"
+            style="filter: invert(40%); margin-left: 6px"
+            src="@/assets/images/lock.svg"
+            height="18"
+            alt=""
+          />
+        </button>
+        <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+      </div>
+
+      <button v-else-if="!creating && !editing && isPaid" @click="createNote" class="green_button">
         Create Template
       </button>
 
@@ -161,6 +177,9 @@ export default {
   },
 
   computed: {
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     noteTemplates() {
       return this.$store.state.templates
     },
@@ -180,6 +199,34 @@ export default {
     createNote() {
       this.creating = true
     },
+    // async createDefaultTemplate() {
+    //   this.savingTemplate = true
+    //   try {
+    //     const res = await User.api.createTemplate({
+    //       subject: 'Default Template',
+    //       body: this.noteBody,
+    //       is_shared: this.isShared,
+    //       user: this.user.id,
+    //     })
+    //     this.$toast('Note template created successfully', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'success',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //     this.$router.go()
+    //   } catch (e) {
+    //     console.log(e)
+    //     this.$toast('Error creating template', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   }
+    // },
     async createTemplate() {
       this.savingTemplate = true
       try {
@@ -267,6 +314,19 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
+.shimmer {
+  display: inline-block;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  max-width: 200px;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
 
 ::v-deep .ql-toolbar.ql-snow {
   display: flex;
@@ -338,11 +398,17 @@ export default {
   color: $base-gray;
   background-color: $soft-gray;
   max-height: 2rem;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1.25rem;
-  font-size: 13px;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
   border: none;
   cursor: pointer;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 .gray-blue {
   color: $light-gray-blue;
@@ -448,39 +514,32 @@ export default {
 }
 .tooltip {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2px 0px;
+  display: inline-block;
 }
+
+/* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
-  background-color: $base-gray;
-  color: white;
+  width: 160px;
+  background-color: black;
+  color: #fff;
   text-align: center;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.5px;
-  padding: 4px 0px;
+  padding: 5px 0;
   border-radius: 6px;
-  font-size: 12px;
+  opacity: 0.7;
 
+  /* Position the tooltip text - */
   position: absolute;
   z-index: 1;
-  width: 200px;
-  top: 100%;
-  left: 50%;
-  margin-left: -50px;
-
-  opacity: 0;
-  transition: opacity 0.3s;
+  top: 2px;
+  right: 105%;
 }
+
+/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
-  animation: tooltips-horz 300ms ease-out forwards;
 }
-.small {
-  font-size: 12px;
-}
+
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;

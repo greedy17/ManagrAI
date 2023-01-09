@@ -217,7 +217,7 @@ class OrgCustomSlackForm(TimeStampModel):
         ordering = [
             "resource",
         ]
-        unique_together = ["resource", "form_type", "team", "stage"]
+        unique_together = ["resource", "form_type", "team", "stage", "custom_object"]
 
     def generate_form_state(self):
         form_fields = CustomFormField.objects.filter(form=self)
@@ -231,9 +231,16 @@ class OrgCustomSlackForm(TimeStampModel):
         from managr.crm.models import ObjectField
 
         team_lead = self.team.team_lead
-        fields = ObjectField.objects.filter(
-            Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
-            | Q(is_public=True)
+        fields = (
+            ObjectField.objects.filter(
+                Q(api_name__in=self.config.values(), crm_object=self.custom_object, user=team_lead,)
+                | Q(is_public=True)
+            )
+            if self.resource == "CustomObject"
+            else ObjectField.objects.filter(
+                Q(api_name__in=self.config.values(), crm_object=self.resource, user=team_lead,)
+                | Q(is_public=True)
+            )
         )
         self.custom_fields.clear()
         for i, field in enumerate(self.config.items()):
@@ -486,19 +493,25 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     def save_form(self, state, from_slack_object=True):
         """gets all form values but only saves values for fields"""
         values = self.get_values(state) if from_slack_object else state
-        fields = [field.api_name for field in self.get_user_fields()]
+        user_fields = self.get_user_fields()
+        datetime_fields = [field.api_name for field in user_fields if field.data_type == "DateTime"]
+        fields = [field.api_name for field in user_fields]
         old_values = self.generate_form_values()
         new_data = dict()
         old_data = dict()
         for k, v in values.items():
             if k in fields:
+                if k in datetime_fields:
+                    if "T" not in v:
+                        s = v.split(" ")
+                        v = "T".join(s)
                 new_data[k] = v
                 pass
         for o_k, o_v in old_values.items():
             if o_k in fields:
                 old_data[o_k] = o_v
                 pass
-
+        print(new_data)
         self.saved_data = new_data
         self.previous_data = old_data
         self.save()
