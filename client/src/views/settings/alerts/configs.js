@@ -696,7 +696,7 @@ const TEAM_PIPELINE = {
             " __Recipient.full_name ",
 
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, here's your teams' pipeline.",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, here's your team's pipeline.",
     },
     newConfigs: [
         {
@@ -726,9 +726,19 @@ const TEAM_PIPELINE_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "closedate",
+                    operandIdentifier: "CloseDate",
                     operandOperator: "<=",
                     operandValue: 30,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: ">",
+                    operandValue: -1,
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -738,30 +748,13 @@ const TEAM_PIPELINE_HUBSPOT = {
             groupOrder: 0,
             template: "",
         },
-        {
-            groupCondition: "AND",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: ">",
-                    operandValue: -1,
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-            ],
-            groupOrder: 1,
-            template: "",
-        }
     ],
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
 
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, here's your teams' pipeline.",
+        body: "Hey <strong>{ __Recipient.full_name }</strong>, here's your team's pipeline.",
     },
     newConfigs: [
         {

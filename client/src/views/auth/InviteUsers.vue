@@ -318,14 +318,14 @@
         <div class="profile-info__body">
           <div class="row__">
             <h2>{{ getUser.firstName }} {{ getUser.lastName }}</h2>
-            <span @click="selectingOption = !selectingOption" class="img-border">
+            <!-- <span @click="selectingOption = !selectingOption" class="img-border">
               <img
                 src="@/assets/images/more_horizontal.svg"
                 style="margin-left: 8px"
                 height="18px"
                 alt=""
               />
-            </span>
+            </span> -->
 
             <div class="img-border" @click="viewAdminPage" v-if="getUser.isStaff">
               <img
@@ -341,8 +341,52 @@
             {{ $store.state.user.organizationRef.name }}
           </h3>
           <small>{{ getUser.timezone }}</small>
+          <div class="options__section">
+            <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
+              Change Admin
+            </button>
+            <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
+              Create New Team
+            </button>
 
-          <div v-show="selectingOption" class="options">
+            <div class="tooltip">
+              <button
+                :disabled="team.list.length >= numberOfAllowedUsers"
+                class="invite_button"
+                type="submit"
+                @click="handleInvite"
+              >
+                Invite Member
+
+                <div v-if="team.list.length >= numberOfAllowedUsers">
+                  <img
+                    v-if="hasSlack"
+                    style="height: 0.8rem; margin-left: 0.25rem"
+                    src="@/assets/images/lock.svg"
+                    alt=""
+                  />
+                </div>
+
+                <div v-else>
+                  <img
+                    v-if="hasSlack"
+                    style="height: 0.8rem; margin-left: 0.25rem"
+                    src="@/assets/images/slackLogo.png"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    style="height: 0.8rem; margin-left: 0.25rem"
+                    src="@/assets/images/logo.png"
+                    alt=""
+                  />
+                </div>
+              </button>
+              <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
+            </div>
+          </div>
+
+          <!-- <div v-show="selectingOption" class="options">
             <p v-if="!updateInfoSelected" @click="updateInfo">Edit Info</p>
             <p v-if="!manageTeamSelected" @click="manageTeam">Manage Team</p>
             <div class="options__section">
@@ -386,10 +430,10 @@
                     />
                   </div>
                 </button>
-                <small class="tooltiptext">Upgrade to Team Plan</small>
+                <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </section>
@@ -924,7 +968,7 @@ export default {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     numberOfAllowedUsers() {
-      return !!this.$store.state.user.organizationRef.numberOfAllowedUsers
+      return this.$store.state.user.organizationRef.numberOfAllowedUsers
     },
   },
 }
@@ -952,7 +996,7 @@ export default {
   width: 100%;
   // border-bottom: 1px solid $soft-gray;
   position: relative;
-  height: 20vh;
+  height: 13vh;
   border-top-right-radius: 4px;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
@@ -979,7 +1023,6 @@ export default {
 }
 .options {
   // border: 1px solid $soft-gray;
-  position: absolute;
   top: 10vh;
   left: 20vw;
   padding: 16px 8px 8px 8px;
@@ -1005,7 +1048,7 @@ export default {
   }
 
   &__section {
-    margin: 0px 8px 8px 0px;
+    margin: 0px 8px 8px -8px;
     padding: 8px 8px 8px 0px;
     display: flex;
     flex-direction: row;
@@ -1014,7 +1057,7 @@ export default {
 }
 .profile-info {
   position: absolute;
-  top: 15.5vh;
+  top: 6vh;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1291,7 +1334,7 @@ input[type='checkbox'] + label::before {
   z-index: 1;
   width: 160px;
   top: 60%;
-  left: 35%;
+  left: 38%;
   margin-left: -50px;
 
   /* Fade in tooltip */
