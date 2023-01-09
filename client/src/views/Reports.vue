@@ -578,7 +578,7 @@
 
             <div class="column">
               <div v-for="(field, i) in sortedUpdates" :key="i" class="space-between">
-                <small v-if="i < 10">{{ sortedUpdates[i][0] }}</small>
+                <small v-if="i < 10">{{ fieldLabels[sortedUpdates[i][0]] }}</small>
                 <section v-if="i < 10">
                   <meter id="file" :value="sortedUpdates[i][1]" :max="sortedUpdates[0][1]"></meter>
                   <small>{{ sortedUpdates[i][1] }}</small>
@@ -663,6 +663,7 @@ export default {
       performanceReport: null,
       sortedUpdates: [],
       totalMonths: null,
+      fieldLabels: null,
       workflows: CollectionManager.create({
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
@@ -699,6 +700,7 @@ export default {
       try {
         const res = await User.api.getPerformanceReport(id)
         console.log(res[month])
+        this.fieldLabels = res[month].field_labels
         this.totalMonths = Object.keys(res).length
         this.performanceReport = res[month]
       } catch (e) {
@@ -708,7 +710,6 @@ export default {
     getMostUpdated() {
       if (this.performanceReport) {
         let uniqueFields = this.performanceReport['fields']
-
         let asArray = Object.entries(uniqueFields)
         let filterNotes = asArray.filter(
           ([key, value]) => key !== 'meeting_comments' && key !== 'meeting_type',

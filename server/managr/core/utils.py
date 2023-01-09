@@ -278,6 +278,14 @@ def get_user_totals(user_id, month_only=False):
 
         user_obj["fields"] = field_obj
         user_obj["field_order"] = sorted_fields
+        user_fields = user.object_fields.filter(api_name__in=sorted_fields)
+        label_obj = {}
+        for field in sorted_fields:
+
+            field_ref = user_fields.filter(api_name=field).first()
+            if field_ref is not None:
+                label_obj[field_ref.api_name] = field_ref.label
+        user_obj["field_labels"] = label_obj
         totals[date[1][6:7]] = user_obj
     return totals
 
