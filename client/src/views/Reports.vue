@@ -502,7 +502,7 @@
             <div class="relative">
               <meter
                 id="file"
-                :value="performanceReport['contacts'] / 2"
+                :value="performanceReport['contacts']"
                 :max="(performanceReport['contacts'] / totalMonths) * 2"
               ></meter>
               <span class="center-line">|</span>
