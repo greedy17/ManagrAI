@@ -528,7 +528,7 @@ export default {
       if (i === 0) {
         titleFormatted = title.slice(8, title.length-10)
       } else {
-        titleFormatted = title.slice(9, title.length-10)
+        titleFormatted = title.slice(8, title.length-10)
       }
       let valFormatted = val.slice(2, val.length-2)
       tempFormat.push({title: titleFormatted, val: valFormatted})
@@ -612,10 +612,12 @@ export default {
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
       this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
+      this.config.messageTemplate.bindings.push(val)
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
+      this.config.messageTemplate.bindings = this.config.messageTemplate.bindings.filter((mes, j) => j !== i) 
       this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },

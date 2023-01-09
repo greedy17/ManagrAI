@@ -449,14 +449,13 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
-      console.log('this.messageTemplateForm', this.messageTemplateForm)
-      this.messageTemplateForm.field.body.value = this.slackMessage.join('<p><br></p>')
+      this.messageTemplateForm.field.body.value = this.slackMessage.join((' <br>\n<br>'))
       this.executeUpdateMessageTemplate()
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
-      this.messageTemplateForm.field.body.value = this.slackMessage.join('<p><br></p>')
+      this.messageTemplateForm.field.body.value = this.slackMessage.join((' <br>\n<br>'))
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onAddField(field) {
@@ -609,9 +608,7 @@ export default {
       if (this.messageTemplateForm.isValid) {
         try {
           this.savingInTab = true
-          console.log('bindings?', this.messageTemplateForm.field.body.value)
           const bindings = stringRenderer('{', '}', this.messageTemplateForm.field.body.value)
-          console.log('okay. bindings.', bindings)
           await AlertMessageTemplate.api.updateMessageTemplate(this.alert.messageTemplateRef.id, {
             body: this.messageTemplateForm.field.body.value,
             bindings: bindings,
@@ -643,8 +640,7 @@ export default {
       this.templateTitleField.value = this.alert.title
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
-    this.slackMessage = this.messageTemplateForm.field.body.value.split('<p><br></p>')
-    console.log(' value', this.messageTemplateForm.field.body.value)
+    this.slackMessage = this.messageTemplateForm.field.body.value.split((' <br>\n<br>'))
     const tempFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const message = this.slackMessage[i]
@@ -660,7 +656,6 @@ export default {
       let valFormatted = val.slice(2, val.length-2)
       tempFormat.push({title: titleFormatted, val: valFormatted})
     }
-    console.log('tempFormat', tempFormat)
     this.formattedSlackMessage = tempFormat
   },
 }
