@@ -4,17 +4,23 @@
       <div v-if="isPaid" class="results-title">
         <p
           @click="selectPerformanceReport"
-          :class="reportType == 'Performance' ? '' : 'light-gray-text'"
+          :class="reportType == 'Story' ? '' : 'light-green-section'"
         >
           Performance Reports
         </p>
 
-        <p
+        <!-- <p
           style="margin-left: 16px"
           @click="selectStoryReport"
-          :class="reportType == 'Story' ? '' : 'light-gray-text'"
+          :class="reportType == 'Performance' ? '' : 'light-green-section'"
         >
           Story Reports
+        </p> -->
+        <p
+          style="margin-left: 16px; cursor: text"
+          :class="reportType == 'Performance' ? '' : 'light-green-section'"
+        >
+          Story Reports <span class="purple-section">Coming Soon</span>
         </p>
       </div>
 
@@ -42,12 +48,12 @@
         </p>
       </div>
 
-      <div class="flex-row">
-        <span :class="!generating ? 'invert' : ''"
+      <!-- <div style="padding: 4px" class="flex-row">
+        <span
           ><img src="@/assets/images/shared.svg" height="12px" style="margin-right: 8px" alt="" />
           Share Report</span
         >
-      </div>
+      </div> -->
     </div>
 
     <div v-if="reportType == 'Story'">
@@ -307,15 +313,27 @@
             <img src="@/assets/images/logo.png" height="24px" alt="" />
             Performance Report
           </div>
-          <sub class="light-green-section">{{ allOpps.length }} Open Opportunities</sub>
+          <sub class="gray-section">{{ allOpps.length }} Open Opportunities</sub>
         </div>
 
         <div class="space-between">
           <div style="margin-left: 0.5rem">
             <h2 style="margin-bottom: 0; font-size: 26px">January 2023</h2>
             <p style="margin-top: 8px" class="light-gray-text">
-              Account Executive: {{ selectedUser.fullName }}
+              {{ selectedUser.userLevel[0] + selectedUser.userLevel.toLowerCase().slice(1) }}:
+              {{ selectedUser.fullName }}
             </p>
+          </div>
+
+          <div class="column margin-top-small">
+            <small class="row">
+              <img class="green-filter" src="@/assets/images/correct.svg" height="14px" alt="" />
+              {{ workflows.list.length }} Active workflows
+            </small>
+            <small class="row">
+              <img class="green-filter" src="@/assets/images/correct.svg" height="14px" alt="" />
+              {{ notes.length }} Note templates
+            </small>
           </div>
         </div>
 
@@ -344,11 +362,15 @@
               />
             </h1>
             <p>Sessions</p>
-            <meter
-              id="file"
-              :value="performanceReport['total sessions']"
-              :max="performanceReport['total sessions'] / totalMonths"
-            ></meter>
+            <div class="relative">
+              <meter
+                id="file"
+                :value="performanceReport['total sessions']"
+                :max="(performanceReport['total sessions'] / totalMonths) * 2"
+              ></meter>
+              <span class="center-line">|</span>
+            </div>
+
             <p class="small-text">Avg: {{ performanceReport['total sessions'] / totalMonths }}</p>
           </div>
 
@@ -372,11 +394,15 @@
               />
             </h1>
             <p>Total Updates</p>
-            <meter
-              id="file"
-              :value="performanceReport['updates']"
-              :max="performanceReport['updates'] / totalMonths"
-            ></meter>
+            <div class="relative">
+              <meter
+                id="file"
+                :value="performanceReport['updates']"
+                :max="(performanceReport['updates'] / totalMonths) * 2"
+              ></meter>
+              <span class="center-line">|</span>
+            </div>
+
             <p class="small-text">Avg: {{ performanceReport['updates'] / totalMonths }}</p>
           </div>
 
@@ -403,11 +429,15 @@
               />
             </h1>
             <p>Fields Updated</p>
-            <meter
-              id="file"
-              :value="Object.keys(performanceReport['fields']).length"
-              :max="Object.keys(performanceReport['fields']).length / totalMonths"
-            ></meter>
+            <div class="relative">
+              <meter
+                id="file"
+                :value="Object.keys(performanceReport['fields']).length"
+                :max="(Object.keys(performanceReport['fields']).length / totalMonths) * 2"
+              ></meter>
+              <span class="center-line">|</span>
+            </div>
+
             <p class="small-text">
               Avg: {{ Object.keys(performanceReport['fields']).length / totalMonths }}
             </p>
@@ -435,11 +465,16 @@
               />
             </h1>
             <p>Meetings Logged</p>
-            <meter
-              id="file"
-              :value="performanceReport['meetings']"
-              :max="performanceReport['meetings'] / totalMonths"
-            ></meter>
+
+            <div class="relative">
+              <meter
+                id="file"
+                :value="performanceReport['meetings']"
+                :max="(performanceReport['meetings'] / totalMonths) * 2"
+              ></meter>
+              <span class="center-line">|</span>
+            </div>
+
             <p class="small-text">Avg: {{ performanceReport['meetings'] / totalMonths }}</p>
           </div>
 
@@ -463,11 +498,16 @@
               />
             </h1>
             <p>Contacts Created</p>
-            <meter
-              id="file"
-              :value="performanceReport['contacts']"
-              :max="performanceReport['contacts'] / totalMonths"
-            ></meter>
+
+            <div class="relative">
+              <meter
+                id="file"
+                :value="performanceReport['contacts'] / 2"
+                :max="(performanceReport['contacts'] / totalMonths) * 2"
+              ></meter>
+              <span class="center-line">|</span>
+            </div>
+
             <p class="small-text">Avg: {{ performanceReport['contacts'] / totalMonths }}</p>
           </div>
 
@@ -475,17 +515,17 @@
             <img src="@/assets/images/note.svg" height="20px" alt="" />
             <h1 class="green-text" style="margin: 12px 0">
               {{
-                performanceReport['fields']['MeetingComments']
-                  ? performanceReport['fields']['MeetingComments']
+                performanceReport['fields']['meeting_comments']
+                  ? performanceReport['fields']['meeting_comments']
                   : 0
               }}
               <img
                 v-if="
-                  (performanceReport['fields']['MeetingComments']
-                    ? performanceReport['fields']['MeetingComments']
+                  (performanceReport['fields']['meeting_comments']
+                    ? performanceReport['fields']['meeting_comments']
                     : 0) >=
-                  (performanceReport['fields']['MeetingComments']
-                    ? performanceReport['fields']['MeetingComments']
+                  (performanceReport['fields']['meeting_comments']
+                    ? performanceReport['fields']['meeting_comments']
                     : 0 / totalMonths)
                 "
                 src="@/assets/images/trendingUp.svg"
@@ -503,24 +543,29 @@
               />
             </h1>
             <p>Notes Added</p>
-            <meter
-              id="file"
-              :value="
-                performanceReport['fields']['MeetingComments']
-                  ? performanceReport['fields']['MeetingComments']
-                  : 0
-              "
-              :max="
-                performanceReport['fields']['MeetingComments']
-                  ? performanceReport['fields']['MeetingComments']
-                  : 0 / totalMonths
-              "
-            ></meter>
+
+            <div class="relative">
+              <meter
+                id="file"
+                :value="
+                  performanceReport['fields']['meeting_comments']
+                    ? performanceReport['fields']['meeting_comments']
+                    : 0
+                "
+                :max="
+                  performanceReport['fields']['meeting_comments']
+                    ? performanceReport['fields']['meeting_comments'] * 2
+                    : 0 / totalMonths
+                "
+              ></meter>
+              <span class="center-line">|</span>
+            </div>
+
             <p class="small-text">
               Avg:
               {{
-                performanceReport['fields']['MeetingComments']
-                  ? performanceReport['fields']['MeetingComments']
+                performanceReport['fields']['meeting_comments']
+                  ? performanceReport['fields']['meeting_comments']
                   : 0 / totalMonths
               }}
             </p>
@@ -533,8 +578,8 @@
 
             <div class="column">
               <div v-for="(field, i) in sortedUpdates" :key="i" class="space-between">
-                <small v-if="i < 5">{{ sortedUpdates[i][0] }}</small>
-                <section v-if="i < 5">
+                <small v-if="i < 10">{{ sortedUpdates[i][0] }}</small>
+                <section v-if="i < 10">
                   <meter id="file" :value="sortedUpdates[i][1]" :max="sortedUpdates[0][1]"></meter>
                   <small>{{ sortedUpdates[i][1] }}</small>
                 </section>
@@ -584,7 +629,7 @@
         </div>
 
         <div style="margin-top: 1rem" class="bottom">
-          <button @click="reportMode = 'Timeline'" class="pink_button">View Team Report</button>
+          <!-- <button @click="reportMode = 'Timeline'" class="pink_button">View Team Report</button> -->
         </div>
       </div>
     </div>
@@ -594,6 +639,7 @@
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
+import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users'
 import TimeLine from '@/components/Timeline'
 import Chart from '@/components/Chart'
@@ -617,6 +663,10 @@ export default {
       performanceReport: null,
       sortedUpdates: [],
       totalMonths: null,
+      workflows: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
     }
   },
   watch: {
@@ -624,6 +674,7 @@ export default {
   },
   async created() {
     this.reps.refresh()
+    this.workflows.refresh()
   },
   methods: {
     greaterVal(a, b) {
@@ -655,15 +706,24 @@ export default {
       }
     },
     getMostUpdated() {
-      let uniqueFields = this.performanceReport['fields']
-      let sortable = []
-      for (var field in uniqueFields) {
-        sortable.push([field, uniqueFields[field]])
+      if (this.performanceReport) {
+        let uniqueFields = this.performanceReport['fields']
+
+        let asArray = Object.entries(uniqueFields)
+        let filterNotes = asArray.filter(
+          ([key, value]) => key !== 'meeting_comments' && key !== 'meeting_type',
+        )
+        let filtered = Object.fromEntries(filterNotes)
+
+        let sortable = []
+        for (var field in filtered) {
+          sortable.push([field, filtered[field]])
+        }
+        sortable.sort(function (a, b) {
+          return b[1] - a[1]
+        })
+        this.sortedUpdates = sortable
       }
-      sortable.sort(function (a, b) {
-        return b[1] - a[1]
-      })
-      this.sortedUpdates = sortable
     },
 
     selectPerformanceReport() {
@@ -671,12 +731,14 @@ export default {
       this.generating = false
       this.selectedUser = null
       this.selectedOpp = null
+      this.performanceReport = null
     },
     selectStoryReport() {
       this.reportType = 'Story'
       this.generating = false
       this.selectedUser = null
       this.selectedOpp = null
+      this.performanceReport = null
     },
   },
   computed: {
@@ -684,7 +746,10 @@ export default {
       return this.$store.state.user.crm
     },
     allOpps() {
-      return this.$store.state.allOpps
+      return this.selectedUser
+        ? this.$store.state.allOpps.filter((opp) => opp.owner == this.selectedUser.id)
+        : this.$store.state.allOpps
+      // return this.$store.state.allOpps
     },
     isAdmin() {
       return this.userIsLoggedIn && this.$store.state.user.isAdmin
@@ -692,11 +757,11 @@ export default {
     user() {
       return this.$store.state.user
     },
-    allOpps() {
-      return this.$store.state.allOpps
-    },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
+    },
+    notes() {
+      return this.$store.state.templates
     },
   },
 }
@@ -720,6 +785,16 @@ export default {
   }
 }
 
+.center-line {
+  position: absolute;
+  right: 45%;
+  font-weight: 900;
+}
+.relative {
+  position: relative;
+  width: fit-content;
+}
+
 .reports {
   color: $base-gray;
   display: flex;
@@ -727,7 +802,7 @@ export default {
   align-items: center;
   justify-content: center;
   margin-left: 80px;
-  margin-top: 64px;
+  margin-top: 72px;
   letter-spacing: 0.75px;
 }
 
@@ -753,7 +828,7 @@ export default {
   background-color: white;
   width: 96vw;
   border-bottom: 1px solid $soft-gray;
-  padding: 8px 32px 0px 8px;
+  padding: 4px 32px 0px 4px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -778,9 +853,10 @@ export default {
   margin-left: 4px;
 
   p {
-    font-size: 16px;
-    margin-left: 4px;
+    font-size: 15px;
+    margin-left: 2px;
     color: $base-gray;
+    padding: 6px 9px;
     cursor: pointer;
     span {
       // background-color: $white-green;
@@ -822,6 +898,9 @@ export default {
 
 .margin-top {
   margin-top: 3rem;
+}
+.margin-top-small {
+  margin-top: 1.5rem;
 }
 
 .margin-right {
@@ -971,10 +1050,19 @@ export default {
 
 .light-green-section {
   letter-spacing: 0.75px;
-  color: $dark-green;
+  color: $dark-green !important;
   background-color: $white-green;
-  padding: 6px 10px;
+  padding: 6px 9px;
   border-radius: 6px;
+}
+
+.purple-section {
+  letter-spacing: 0.25px;
+  color: white !important;
+  font-size: 10px !important;
+  background-color: $grape;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
 }
 
 .gray-text {

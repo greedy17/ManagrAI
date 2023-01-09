@@ -662,6 +662,9 @@ export default {
     },
   },
   computed: {
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     user() {
       return this.$store.state.user
     },
