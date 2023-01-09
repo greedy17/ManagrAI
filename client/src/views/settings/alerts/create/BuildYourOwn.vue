@@ -440,7 +440,8 @@ export default {
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
         filters: {
-          crmObject: alert.resourceType
+          crmObject: alert.resourceType,
+          forAlerts: true,
         },
         pagination: { size: 1000 },
       }),
@@ -817,7 +818,6 @@ export default {
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {
-          this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = '<p>' + this.alertTemplateForm.field.alertMessages.groups[0].field.body.value + '</p>'
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,

@@ -458,7 +458,8 @@ export default {
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
         filters: {
-          crmObject: alert.resourceType
+          crmObject: alert.resourceType,
+          forAlerts: true,
         },
         pagination: { size: 1000 },
       }),
@@ -516,7 +517,7 @@ export default {
       crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
-    this.slackMessage = this.config.messageTemplate.body.split('<br><br>')
+    this.slackMessage = this.config.messageTemplate.body.split(' <br>\n<br>')
     const tempFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const message = this.slackMessage[i]
@@ -610,12 +611,12 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
-      this.config.messageTemplate.body = this.slackMessage.join('<br><br>')
+      this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
-      this.config.messageTemplate.body = this.slackMessage.join('<br><br>')
+      this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onAddField(field) {

@@ -229,7 +229,8 @@ export default {
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
         filters: {
-          crmObject: this.alert.resourceType
+          crmObject: this.alert.resourceType,
+          forAlerts: true,
         },
         pagination: { size: 1000 },
       }),
@@ -448,7 +449,9 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
+      console.log('this.messageTemplateForm', this.messageTemplateForm)
       this.messageTemplateForm.field.body.value = this.slackMessage.join('<p><br></p>')
+      this.executeUpdateMessageTemplate()
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
@@ -606,7 +609,9 @@ export default {
       if (this.messageTemplateForm.isValid) {
         try {
           this.savingInTab = true
+          console.log('bindings?', this.messageTemplateForm.field.body.value)
           const bindings = stringRenderer('{', '}', this.messageTemplateForm.field.body.value)
+          console.log('okay. bindings.', bindings)
           await AlertMessageTemplate.api.updateMessageTemplate(this.alert.messageTemplateRef.id, {
             body: this.messageTemplateForm.field.body.value,
             bindings: bindings,
@@ -639,6 +644,7 @@ export default {
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
     this.slackMessage = this.messageTemplateForm.field.body.value.split('<p><br></p>')
+    console.log(' value', this.messageTemplateForm.field.body.value)
     const tempFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const message = this.slackMessage[i]
@@ -647,13 +653,14 @@ export default {
       const val = titleAndVal[1]
       let titleFormatted
       if (i === 0) {
-        titleFormatted = title.slice(11, title.length-10)
+        titleFormatted = title.slice(8, title.length-10)
       } else {
         titleFormatted = title.slice(8, title.length-10)
       }
       let valFormatted = val.slice(2, val.length-2)
       tempFormat.push({title: titleFormatted, val: valFormatted})
     }
+    console.log('tempFormat', tempFormat)
     this.formattedSlackMessage = tempFormat
   },
 }
