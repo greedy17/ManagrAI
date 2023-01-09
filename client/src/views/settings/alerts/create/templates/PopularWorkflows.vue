@@ -356,6 +356,55 @@
             </div>
           </div>
         </div>
+        <div style="margin-bottom: 8px; display: flex;" class="section">
+          <div style="">
+            <h4 class="section__head">Slack Message</h4>
+            <section class="section__body">
+              <p style="margin-bottom: 0;">This is the message you'll recieve in slack with your workflow.</p>
+            </section>
+            <div style="display: flex; overflow-y: auto; height: 28.75vh;">
+              <div style="margin-bottom: 1rem;">
+                <div v-if="formattedSlackMessage.length">
+                  <div v-for="(message, i) in formattedSlackMessage" :key="i" style="margin: .5rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+                    <div style="justify-self: start;">
+                      <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">{{message.title}}</div>
+                      <div style="font-size: .6rem;">{ {{message.val}} }</div>
+                    </div>
+                    <div @click="removeMessage(i, message)"><img src="@/assets/images/remove.svg" style="height: 1.2rem;" /></div>
+                  </div>
+                </div>
+                <div v-else style="margin:.5rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+                  <div style="justify-self: start;">
+                    <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">Please Select an Option from the List</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-right: 8px; height: fit-content;" class="start">
+            <section>
+              <div class="search-bar">
+                <img src="@/assets/images/search.svg" style="height: 18px;" alt="" />
+                <input
+                  @input="searchFields"
+                  type="search"
+                  :placeholder="`Search Fields`"
+                  v-model="filterText"
+                />
+              </div>
+
+              <div class="field-section__fields">
+                <div>
+                  <p v-for="(field, i) in filteredFields" :key="field.id" style="margin: 4px 0;">
+                    <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+                    <label :for="i"></label>
+                    {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
       <div v-if="!hasSlack && !selectField" class="overlay">
         <p class="text">
@@ -396,6 +445,17 @@ export default {
         pagination: { size: 200 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
+      slackMessage: [],
+      formattedSlackMessage: [],
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        filters: {
+          crmObject: alert.resourceType
+        },
+        pagination: { size: 1000 },
+      }),
+      filterText: '',
+      addedFields: [],
       dropdownLoading: null,
       selectedUsers: [],
       selectedDays: null,
@@ -414,7 +474,7 @@ export default {
       selectUsersBool: false,
       directToUsers: true,
       alertTemplateForm: new AlertTemplateForm(),
-      fields: CollectionManager.create({ ModelClass: ObjectField }),
+      // fields: CollectionManager.create({ ModelClass: ObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -447,6 +507,23 @@ export default {
       crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
+    this.slackMessage = this.config.messageTemplate.body.split('<br><br>')
+    const tempFormat = []
+    for (let i = 0; i < this.slackMessage.length; i++) {
+      const message = this.slackMessage[i]
+      const titleAndVal = message.split('\n')
+      const title = titleAndVal[0]
+      const val = titleAndVal[1]
+      let titleFormatted
+      if (i === 0) {
+        titleFormatted = title.slice(8, title.length-10)
+      } else {
+        titleFormatted = title.slice(9, title.length-10)
+      }
+      let valFormatted = val.slice(2, val.length-2)
+      tempFormat.push({title: titleFormatted, val: valFormatted})
+    }
+    this.formattedSlackMessage = tempFormat
   },
   watch: {
     selectedResourceType: {
@@ -517,7 +594,36 @@ export default {
     goToConnect() {
       this.$router.push({ name: 'Integrations' })
     },
-    test() {},
+    test(log) {
+      console.log('log', log)
+    },
+    bindText(val, title) {
+      const addedStr = `<strong>${title}</strong> \n { ${val} }`
+      this.slackMessage.push(addedStr)
+      this.formattedSlackMessage.push({title, val})
+      this.config.messageTemplate.body = this.slackMessage.join('<br><br>')
+    },
+    removeMessage(i, removedField) {
+      this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
+      this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
+      this.config.messageTemplate.body = this.slackMessage.join('<br><br>')
+      this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
+    },
+    onAddField(field) {
+      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.bindText(`${this.selectedResourceType}.${field.apiName}`, `${field.label}`)
+    },
+    searchFields() {
+      this.fields = CollectionManager.create({
+        ModelClass: ObjectField,
+        pagination: { size: 1000 },
+        filters: {
+          crmObject: this.selectedResourceType,
+          search: this.filterText,
+        },
+      })
+      this.fields.refresh()
+    },
     setDefaultChannel() {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = ['default'])
@@ -539,7 +645,8 @@ export default {
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
           this.config.newConfigs[0].alertTargets.length &&
           this.selectUsersBool &&
-          (this.setDaysBool || this.selectFieldBool)
+          (this.setDaysBool || this.selectFieldBool) &&
+          this.config.messageTemplate.body.length
         )
       }
     },
@@ -793,6 +900,14 @@ export default {
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.recapChannel
         : null
+    },
+    filteredFields() {
+      return this.fields.list.filter((field) => !this.addedFieldNames.includes(`${this.selectedResourceType}.${field.apiName}`))
+    },
+    addedFieldNames() {
+      return this.formattedSlackMessage.map((field) => {
+        return field.val
+      })
     },
     userLevel() {
       return this.$store.state.user.userLevel
@@ -1219,5 +1334,68 @@ img {
 }
 .margin-top {
   margin-top: 3rem;
+}
+.search-bar {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 15vw;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 4px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
+}
+.field-section {
+  width: 20vw;
+  background-color: white;
+  height: 100%;
+  margin-top: 28px;
+  margin-left: 16px;
+  padding: 0px 32px;
+  border-radius: 6px;
+  letter-spacing: 0.75px;
+
+  &__title {
+    letter-spacing: 0.75px;
+  }
+  &__fields {
+    h4 {
+      font-size: 13px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 12px;
+      letter-spacing: 0.75px;
+    }
+    div {
+      outline: 1px solid $soft-gray;
+      border-radius: 6px;
+      padding: 4px 16px;
+      margin-top: 16px;
+      height: 32vh;
+      overflow: scroll;
+      section {
+        span {
+          color: $coral;
+          margin-left: 4px;
+        }
+      }
+    }
+  }
 }
 </style>

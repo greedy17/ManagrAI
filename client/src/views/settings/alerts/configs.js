@@ -40,7 +40,7 @@ const CLOSE_DATE_PASSED = {
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        body: "<strong>Opportunity Name</strong>: { Opportunity.Name } <br><br> <strong>Close Date</strong>: { Opportunity.CloseDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Close Date</strong> \n { Opportunity.CloseDate }",
     },
     newConfigs: [
         {
@@ -99,7 +99,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname } <br><br> <strong>Close Date</strong>: { Deal.closedate }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Close Date</strong> \n { Deal.closedate }",
     },
     newConfigs: [
         {
@@ -169,7 +169,7 @@ const NINETY_DAY_PIPELINE = {
             " Opportunity.StageName ",
             " Opportunity.LastActivityDate ",
         ],
-        body: "<strong>Opportunity Name</strong>: { Opportunity.Name } <br><br> <strong>Close Date</strong>: { Opportunity.CloseDate } <br><br> <strong>Stage</strong>: { Opportunity.StageName } <br><br> <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Close Date</strong> \n { Opportunity.CloseDate } <br><br> <strong>Stage</strong> \n { Opportunity.StageName } <br><br> <strong>Last Activity</strong> \n { Opportunity.LastActivityDate }",
     },
     newConfigs: [
         {
@@ -228,7 +228,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
             " Deal.closedate ",
             " Deal.dealstage ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname } <br><br> <strong>Close Date</strong>: { Deal.closedate }</strong> <br><br> <strong>Stage</strong>: { Deal.dealstage }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Close Date</strong> \n { Deal.closedate }</strong> <br><br> <strong>Stage</strong> \n { Deal.dealstage }",
     },
     newConfigs: [
         {
@@ -277,7 +277,7 @@ const DEAL_REVIEW = {
             " Opportunity.Name ",
             " Opportunity.LastModifiedDate ",
         ],
-        body: "<strong>Opportunity Name</strong>: { Opportunity.Name } <br><br> <strong>Last Modified Date</strong>: { Opportunity.LastModifiedDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Last Modified Date</strong> \n { Opportunity.LastModifiedDate }",
     },
     newConfigs: [
         {
@@ -326,7 +326,7 @@ const DEAL_REVIEW_HUBSPOT = {
             " Deal.dealname ",
             " Deal.hs_lastmodifieddate ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname } <br><br> <strong>Last Modified Date</strong>: { Deal.hs_lastmodifieddate }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Last Modified Date</strong> \n { Deal.hs_lastmodifieddate }",
     },
     newConfigs: [
         {
@@ -385,7 +385,7 @@ const CLOSE_DATE_APPROACHING = {
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        body: "<strong>Opportunity Name</strong>: { Opportunity.Name } <br><br> <strong>Close Date</strong>: { Opportunity.CloseDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Close Date</strong> \n { Opportunity.CloseDate }",
     },
     newConfigs: [
         {
@@ -444,7 +444,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname } <br><br> <strong>Close Date</strong>: { Deal.closedate }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Close Date</strong> \n { Deal.closedate }",
     },
     newConfigs: [
         {
@@ -492,7 +492,7 @@ const UPCOMING_NEXT_STEP = {
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "<strong>Opporunity Name</strong>: { Opportunity.Name }",
+        body: "<strong>Opporunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
@@ -540,7 +540,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
             " __Recipient.full_name ",
             " Deal.dealname ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },
     newConfigs: [
         {
@@ -588,7 +588,7 @@ const REQUIRED_FIELD_EMPTY = {
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "<strong>Opportunity Name</strong>: { Opportunity.Name }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
@@ -636,7 +636,7 @@ const REQUIRED_FIELD_EMPTY_HUBSPOT = {
             " __Recipient.full_name ",
             " Deal.dealname ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },
     newConfigs: [
         {
@@ -684,7 +684,7 @@ const LARGE_OPPORTUNITIES = {
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "<strong>Opportunity Name</strong>: { Opportunity.Name }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
@@ -732,7 +732,7 @@ const LARGE_DEALS_HUBSPOT = {
             " __Recipient.full_name ",
             " Deal.dealname ",
         ],
-        body: "<strong>Deal Name</strong>: { Deal.dealname }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },
     newConfigs: [
         {

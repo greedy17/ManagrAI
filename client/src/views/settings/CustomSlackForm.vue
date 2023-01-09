@@ -1893,11 +1893,11 @@ input[type='search'] {
   padding: 4px;
   margin: 0;
 }
-::placeholder {
-  color: $very-light-gray;
-}
 input[type='search']:focus {
   outline: none;
+}
+::placeholder {
+  color: $very-light-gray;
 }
 .field-section {
   width: 20vw;
