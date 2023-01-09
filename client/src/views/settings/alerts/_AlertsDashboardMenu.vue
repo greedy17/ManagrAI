@@ -60,18 +60,41 @@
         </div>
       </div>
 
-      <div class="tooltip" v-else>
-        <button disabled class="green_button right-margin center-row">
+      <div v-else>
+        <div class="tooltip" v-if="!buildingCustom && !editingWorkflow">
+          <button disabled class="green_button right-margin center-row">
+            Create Workflow
+            <img
+              class="shimmer"
+              style="filter: invert(40%)"
+              src="@/assets/images/lock.svg"
+              height="16px"
+              alt=""
+            />
+          </button>
+          <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+        </div>
+
+        <button
+          @click="saveWorkflow"
+          :disabled="!canSave"
+          class="green_button right-margin"
+          :class="canSave ? 'pulse' : ''"
+          v-else-if="buildingCustom"
+        >
           Create Workflow
-          <img
-            class="shimmer"
-            style="filter: invert(40%)"
-            src="@/assets/images/lock.svg"
-            height="16px"
-            alt=""
-          />
         </button>
-        <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+
+        <div v-else>
+          <button @click="deleteWorkflow(currentAlert.id)" class="delete">Delete</button>
+          <button
+            @click="updateWorkflow"
+            style="margin-left: 8px"
+            class="green_button right-margin"
+          >
+            Update
+          </button>
+        </div>
       </div>
     </div>
 
