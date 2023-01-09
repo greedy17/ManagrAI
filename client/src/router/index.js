@@ -77,7 +77,7 @@ export default new Router({
       name: 'Home',
     },
     {
-      path: '/story-reports',
+      path: '/reports',
       component: () => import('../views/Reports'),
       name: 'Reports',
     },

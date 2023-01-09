@@ -1250,6 +1250,7 @@ export default {
     clearStageData() {
       this.selectedForm = null
       this.currentlySelectedStage = null
+      this.selectedStage = null
     },
     async deleteForm(form) {
       if (form && form.id && form.id.length) {
@@ -1728,6 +1729,9 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
 
+          this.newCustomForm = res
+          this.activeForm = res
+
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -1877,11 +1881,11 @@ input[type='search'] {
   padding: 4px;
   margin: 0;
 }
-::placeholder {
-  color: $very-light-gray;
-}
 input[type='search']:focus {
   outline: none;
+}
+::placeholder {
+  color: $very-light-gray;
 }
 .field-section {
   width: 20vw;
