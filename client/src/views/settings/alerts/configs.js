@@ -674,8 +674,6 @@ const TEAM_PIPELINE = {
                     dataType: "DATE",
                     group: "",
                 },
-            ],
-            newOperands: [
                 {
                     operandCondition: "AND",
                     operandIdentifier: "CloseDate",
@@ -687,6 +685,7 @@ const TEAM_PIPELINE = {
                     group: "",
                 },
             ],
+
             groupOrder: 0,
             template: "",
         },
