@@ -162,6 +162,9 @@ export default {
     },
   },
   computed: {
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },
