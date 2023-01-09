@@ -1,5 +1,8 @@
 <template>
-  <PopularWorkflows :selectField="true" :config="userCRM === 'HUBSPOT' ? allConfigs.REQUIRED_FIELD_EMPTY_HUBSPOT : allConfigs.REQUIRED_FIELD_EMPTY" />
+  <PopularWorkflows
+    :selectField="true"
+    :config="userCRM === 'HUBSPOT' ? allConfigs.TEAM_PIPELINE_HUBSPOT : allConfigs.TEAM_PIPELINE"
+  />
 </template>
 
 <script>
@@ -11,7 +14,7 @@ import PopularWorkflows from '@/views/settings/alerts/create/templates/PopularWo
 import allConfigs from '../../configs'
 
 export default {
-  name: 'RequiredFieldEmpty',
+  name: 'TeamPipeline',
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

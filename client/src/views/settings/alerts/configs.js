@@ -40,7 +40,7 @@ const CLOSE_DATE_PASSED = {
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a passed close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br>\n<br><strong>Close Date</strong> \n { Opportunity.CloseDate }",
     },
     newConfigs: [
         {
@@ -99,7 +99,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has a passed close date of <strong>{ Deal.closedate }</strong>. Please update it!",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br>\n<br><strong>Close Date</strong> \n { Deal.closedate }",
     },
     newConfigs: [
         {
@@ -169,7 +169,7 @@ const NINETY_DAY_PIPELINE = {
             " Opportunity.StageName ",
             " Opportunity.LastActivityDate ",
         ],
-        body: "<strong>{ Opportunity.Name }</strong> has a Close Date of <strong>{ Opportunity.CloseDate }</strong> \n \n <strong>Stage</strong>: { Opportunity.StageName } \n \n <strong>Last Activity</strong>: { Opportunity.LastActivityDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br>\n<br><strong>Close Date</strong> \n { Opportunity.CloseDate } <br>\n<br><strong>Stage</strong> \n { Opportunity.StageName } <br>\n<br><strong>Last Activity</strong> \n { Opportunity.LastActivityDate }",
     },
     newConfigs: [
         {
@@ -228,7 +228,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
             " Deal.closedate ",
             " Deal.dealstage ",
         ],
-        body: "<strong>{ Deal.dealname }</strong> has a Close Date of <strong>{ Deal.closedate }</strong> \n \n <strong>Stage</strong>: { Deal.dealstage }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br>\n<br><strong>Close Date</strong> \n { Deal.closedate }</strong> <br>\n<br><strong>Stage</strong> \n { Deal.dealstage }",
     },
     newConfigs: [
         {
@@ -277,7 +277,7 @@ const DEAL_REVIEW = {
             " Opportunity.Name ",
             " Opportunity.LastModifiedDate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Opportunity.Name }</strong> hasnt been updated since <strong>{ Opportunity.LastModifiedDate }</strong>",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br>\n<br><strong>Last Modified Date</strong> \n { Opportunity.LastModifiedDate }",
     },
     newConfigs: [
         {
@@ -326,7 +326,7 @@ const DEAL_REVIEW_HUBSPOT = {
             " Deal.dealname ",
             " Deal.hs_lastmodifieddate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your Opp <strong>{ Deal.dealname }</strong> hasnt been updated since <strong>{ Deal.hs_lastmodifieddate }</strong>",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br>\n<br><strong>Last Modified Date</strong> \n { Deal.hs_lastmodifieddate }",
     },
     newConfigs: [
         {
@@ -385,7 +385,7 @@ const CLOSE_DATE_APPROACHING = {
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming close date of <strong>{ Opportunity.CloseDate }</strong>. Please update it!",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br>\n<br><strong>Close Date</strong> \n { Opportunity.CloseDate }",
     },
     newConfigs: [
         {
@@ -444,7 +444,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has an upcoming close date of <strong>{ Deal.closedate }</strong>. Please update it!",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br>\n<br><strong>Close Date</strong> \n { Deal.closedate }",
     },
     newConfigs: [
         {
@@ -492,7 +492,7 @@ const UPCOMING_NEXT_STEP = {
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has an upcoming Next Step Date due this week.",
+        body: "<strong>Opporunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
@@ -540,103 +540,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
             " __Recipient.full_name ",
             " Deal.dealname ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has an upcoming Next Step Date due this week.",
-    },
-    newConfigs: [
-        {
-            recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
-            recurrenceDay: "0",
-            recipients: ["default"],
-            alertTargets: ["SELF"],
-            recipientType: "SLACK_CHANNEL",
-            alertTemplateId: "",
-            template: "",
-        }
-    ],
-    alertLevel: "ORGANIZATION",
-}
-
-const REQUIRED_FIELD_EMPTY = {
-    title: "Required Field Empty",
-    subtitle: "View and update all Opportunities with required fields that have not been filled out",
-    user: null,
-    isActive: true,
-    crm: 'SALESFORCE',
-    resourceType: "Opportunity",
-    newGroups: [
-        {
-            groupCondition: "AND",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "",
-                    operandOperator: "=",
-                    operandValue: 'null',
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "STRING",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
-    ],
-    messageTemplate: {
-        bindings: [
-            " __Recipient.full_name ",
-            " Opportunity.Name ",
-        ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> has a required field that has not been filled out.",
-    },
-    newConfigs: [
-        {
-            recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
-            recurrenceDay: "0",
-            recipients: ["default"],
-            alertTargets: ["SELF"],
-            recipientType: "SLACK_CHANNEL",
-            alertTemplateId: "",
-            template: "",
-        }
-    ],
-    alertLevel: "ORGANIZATION",
-}
-
-const REQUIRED_FIELD_EMPTY_HUBSPOT = {
-    title: "Required Field Empty",
-    subtitle: "View and update all Deals with required fields that have not been filled out",
-    user: null,
-    isActive: true,
-    crm: 'HUBSPOT',
-    resourceType: "Deal",
-    newGroups: [
-        {
-            groupCondition: "AND",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "",
-                    operandOperator: "=",
-                    operandValue: 'null',
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "STRING",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
-    ],
-    messageTemplate: {
-        bindings: [
-            " __Recipient.full_name ",
-            " Deal.dealname ",
-        ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> has a required field that has not been filled out.",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },
     newConfigs: [
         {
@@ -684,7 +588,7 @@ const LARGE_OPPORTUNITIES = {
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Opportunity.Name }</strong> is a large opportunity.",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
@@ -732,7 +636,7 @@ const LARGE_DEALS_HUBSPOT = {
             " __Recipient.full_name ",
             " Deal.dealname ",
         ],
-        body: "Hey <strong>{ __Recipient.full_name }</strong>, your deal <strong>{ Deal.dealname }</strong> is a large deal.",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },
     newConfigs: [
         {
@@ -741,6 +645,124 @@ const LARGE_DEALS_HUBSPOT = {
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const TEAM_PIPELINE = {
+    title: "Team Pipeline",
+    subtitle: "View your entire team’s pipeline of deals closing this month",
+    user: null,
+    isActive: true,
+    crm: 'SALESFORCE',
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "<=",
+                    operandValue: 30,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: ">",
+                    operandValue: -1,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+
+            groupOrder: 0,
+            template: "",
+        },
+
+    ],
+    messageTemplate: {
+        bindings: [
+            " __Recipient.full_name ",
+
+        ],
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "MONTHLY",
+            recurrenceDays: [0],
+            recurrenceDay: "1",
+            recipients: ["default"],
+            alertTargets: ["TEAM"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const TEAM_PIPELINE_HUBSPOT = {
+    title: "Team Pipeline",
+    subtitle: "View your entire team’s pipeline of deals closing this month",
+    user: null,
+    isActive: true,
+    crm: 'HUBSPOT',
+    resourceType: "Deal",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "<=",
+                    operandValue: 30,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: ">",
+                    operandValue: -1,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        },
+    ],
+    messageTemplate: {
+        bindings: [
+            " __Recipient.full_name ",
+
+        ],
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "MONTHLY",
+            recurrenceDays: [0],
+            recurrenceDay: "1",
+            recipients: ["default"],
+            alertTargets: ["TEAM"],
             recipientType: "SLACK_CHANNEL",
             alertTemplateId: "",
             template: "",
@@ -760,10 +782,10 @@ const ALL_CONFIGS = {
     CLOSE_DATE_APPROACHING_HUBSPOT,
     UPCOMING_NEXT_STEP,
     UPCOMING_NEXT_STEP_HUBSPOT,
-    REQUIRED_FIELD_EMPTY,
-    REQUIRED_FIELD_EMPTY_HUBSPOT,
     LARGE_OPPORTUNITIES,
     LARGE_DEALS_HUBSPOT,
+    TEAM_PIPELINE,
+    TEAM_PIPELINE_HUBSPOT,
 }
 
 export default ALL_CONFIGS;
