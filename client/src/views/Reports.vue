@@ -271,7 +271,7 @@
     </div>
 
     <div v-else>
-      <div v-if="!performanceReport" class="container-small">
+      <div v-if="!performanceReport && isPaid" class="container-small">
         <div class="space-between">
           <h2>Generate Performance Report</h2>
         </div>
@@ -307,7 +307,7 @@
         </div>
       </div>
 
-      <div class="container4" v-else>
+      <div class="container4" v-else-if="performanceReport && isPaid">
         <div class="space-between">
           <div class="row medText">
             <img src="@/assets/images/logo.png" height="24px" alt="" />
@@ -632,6 +632,23 @@
           <!-- <button @click="reportMode = 'Timeline'" class="pink_button">View Team Report</button> -->
         </div>
       </div>
+
+      <div class="even-row" v-else>
+        <div style="margin-right: 5vw" class="preview">
+          <img src="@/assets/images/performance-prev.png" height="100%" width="100%" alt="" />
+          <h3 style="margin-left: 8px">Performance Report</h3>
+          <p class="preview-text">An automated report detailing how users work.</p>
+          <p class="preview-text grape">*Requires Team Plan.</p>
+        </div>
+        <div class="preview">
+          <img src="@/assets/images/story-prev.png" height="100%" width="100%" alt="" />
+          <h3 style="margin-left: 8px; margin-top: 36px">Story Report</h3>
+          <p class="preview-text">
+            A contenxtualized "Story" report highlighting the deal journey.
+          </p>
+          <p class="preview-text grape">*Requires Team Plan.</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -936,6 +953,26 @@ export default {
   align-items: center;
 }
 
+.preview {
+  min-height: 80vh;
+  padding: 16px 32px 0 32px;
+  width: 40vw;
+  outline: 1px solid $soft-gray;
+  border-radius: 8px;
+  background-color: white;
+  margin-top: 1rem;
+  img {
+    border: 1px solid transparent;
+    border-radius: 6px;
+  }
+}
+
+.preview-text {
+  font-size: 13px;
+  letter-spacing: 0.75px;
+  margin-left: 8px;
+}
+
 .container {
   min-height: 64vh;
   padding: 16px 32px 0 32px;
@@ -1088,6 +1125,11 @@ export default {
   margin-right: 8px !important;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+
+.grape {
+  color: $grape;
+  font-weight: bold;
 }
 
 .red-filter {

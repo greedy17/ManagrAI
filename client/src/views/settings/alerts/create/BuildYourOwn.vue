@@ -440,7 +440,8 @@ export default {
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
         filters: {
-          crmObject: alert.resourceType
+          crmObject: alert.resourceType,
+          forAlerts: true,
         },
         pagination: { size: 1000 },
       }),
@@ -486,7 +487,7 @@ export default {
       this.userCRM === 'SALESFORCE'
         ? ['Opportunity', 'Account', 'Contact', 'Lead']
         : ['Deal', 'Contact', 'Company']
-    this.slackMessage = this.alertTemplateForm.field.alertMessages.groups[0].field.body.value.split('<p><br></p>')
+    this.slackMessage = this.alertTemplateForm.field.alertMessages.groups[0].field.body.value.split(' <br>\n<br>')
     const tempFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const message = this.slackMessage[i]
@@ -817,7 +818,6 @@ export default {
       this.alertTemplateForm.validate()
       if (this.alertTemplateForm.isValid) {
         try {
-          this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = '<p>' + this.alertTemplateForm.field.alertMessages.groups[0].field.body.value + '</p>'
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
             user: this.$store.state.user.id,
@@ -842,12 +842,12 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
-      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('<p><br></p>')
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join(' <br>\n<br>')
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
-      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('<p><br></p>')
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join(' <br>\n<br>')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onNextPage() {

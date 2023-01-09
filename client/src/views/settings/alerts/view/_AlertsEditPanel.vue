@@ -229,7 +229,8 @@ export default {
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
         filters: {
-          crmObject: this.alert.resourceType
+          crmObject: this.alert.resourceType,
+          forAlerts: true,
         },
         pagination: { size: 1000 },
       }),
@@ -448,12 +449,13 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
-      this.messageTemplateForm.field.body.value = this.slackMessage.join('<p><br></p>')
+      this.messageTemplateForm.field.body.value = this.slackMessage.join((' <br>\n<br>'))
+      this.executeUpdateMessageTemplate()
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
-      this.messageTemplateForm.field.body.value = this.slackMessage.join('<p><br></p>')
+      this.messageTemplateForm.field.body.value = this.slackMessage.join((' <br>\n<br>'))
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onAddField(field) {
@@ -638,7 +640,7 @@ export default {
       this.templateTitleField.value = this.alert.title
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
-    this.slackMessage = this.messageTemplateForm.field.body.value.split('<p><br></p>')
+    this.slackMessage = this.messageTemplateForm.field.body.value.split((' <br>\n<br>'))
     const tempFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const message = this.slackMessage[i]
@@ -647,7 +649,7 @@ export default {
       const val = titleAndVal[1]
       let titleFormatted
       if (i === 0) {
-        titleFormatted = title.slice(11, title.length-10)
+        titleFormatted = title.slice(8, title.length-10)
       } else {
         titleFormatted = title.slice(8, title.length-10)
       }

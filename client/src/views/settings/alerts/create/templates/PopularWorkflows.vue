@@ -458,7 +458,8 @@ export default {
       fields: CollectionManager.create({ 
         ModelClass: ObjectField, 
         filters: {
-          crmObject: alert.resourceType
+          crmObject: alert.resourceType,
+          forAlerts: true,
         },
         pagination: { size: 1000 },
       }),
@@ -516,7 +517,7 @@ export default {
       crmObject: this.resourceType,
     }
     await this.objectFields.refresh()
-    this.slackMessage = this.config.messageTemplate.body.split('<br><br>')
+    this.slackMessage = this.config.messageTemplate.body.split(' <br>\n<br>')
     const tempFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const message = this.slackMessage[i]
@@ -527,7 +528,7 @@ export default {
       if (i === 0) {
         titleFormatted = title.slice(8, title.length-10)
       } else {
-        titleFormatted = title.slice(9, title.length-10)
+        titleFormatted = title.slice(8, title.length-10)
       }
       let valFormatted = val.slice(2, val.length-2)
       tempFormat.push({title: titleFormatted, val: valFormatted})
@@ -610,12 +611,14 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
-      this.config.messageTemplate.body = this.slackMessage.join('<br><br>')
+      this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
+      this.config.messageTemplate.bindings.push(val)
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
-      this.config.messageTemplate.body = this.slackMessage.join('<br><br>')
+      this.config.messageTemplate.bindings = this.config.messageTemplate.bindings.filter((mes, j) => j !== i) 
+      this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onAddField(field) {
