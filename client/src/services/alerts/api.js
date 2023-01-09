@@ -46,6 +46,15 @@ export default class AlertTemplateAPI extends ModelAPI {
     }
   }
 
+  async getAdminAlerts(id) {
+    try {
+      const res = await this.client.get(`${AlertTemplateAPI.ENDPOINT}admin/`, { org_id: id})
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'AlertTemplateAPI.getAdminAlerts' })(e)
+    }
+  }
+
   async updateAlertTemplate(id, data) {
     const d = objectToSnakeCase(data)
     try {

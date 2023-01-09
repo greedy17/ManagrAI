@@ -903,6 +903,7 @@
 
 <script>
 import SlackOAuth from '@/services/slack'
+import AlertTemplate from '@/services/alerts'
 import { MeetingWorkflows } from '@/services/salesforce'
 import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
@@ -963,6 +964,7 @@ export default {
       modalInfo: null,
       displayCommandModal: false,
       contentModalInfo: null,
+      orgAlerts: null,
       contentType: '',
       states: ['ACTIVE', 'INACTIVE'],
       stateActive: null,
@@ -1417,6 +1419,8 @@ export default {
         this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
           this.selected_org.id,
         )
+        this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
+        console.log('orgAlerts', this.orgAlerts)
       }
     },
   },
