@@ -33,7 +33,7 @@ from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
 from managr.utils import sites as site_utils
-from managr.core.utils import pull_usage_data
+from managr.core.utils import pull_usage_data, get_user_totals
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
@@ -456,7 +456,10 @@ class UserViewSet(
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-tasks",
     )
     def admin_tasks(self, request, *args, **kwargs):
         tasks = CompletedTask.objects.all()[:100]
@@ -464,13 +467,27 @@ class UserViewSet(
         return Response(data={"tasks": dict_tasks})
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-users",
     )
     def admin_users(self, request, *args, **kwargs):
         param = request.query_params.get("org_id", None)
         users = User.objects.filter(organization=param)
         serialized = self.get_serializer(users, many=True).data
         return Response(serialized)
+
+    @action(
+        methods=["GET"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="performance-report",
+    )
+    def performance_report(self, request, *args, **kwargs):
+        user_id = request.query_params.get("user_id", None)
+        data = get_user_totals(user_id)
+        return Response(data=data)
 
 
 class ActivationLinkView(APIView):
@@ -487,7 +504,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -495,7 +513,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -610,7 +630,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -844,7 +866,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -878,7 +902,9 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_task_status(request):
     data = {}

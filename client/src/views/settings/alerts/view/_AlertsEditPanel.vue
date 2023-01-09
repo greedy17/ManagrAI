@@ -223,6 +223,7 @@ export default {
       savedChanges: false,
       savingInTab: false,
       crmValue: null,
+      valuePromise: null,
       slackMessage: [],
       formattedSlackMessage: [],
       fields: CollectionManager.create({ 
@@ -240,8 +241,8 @@ export default {
         'Update Forecast',
         'Deal Rotting',
         'Upcoming Next Step',
-        'Required Field Empty',
         'Large Opportunities',
+        'Team Pipeline',
       ],
       // fields: CollectionManager.create({
       //   ModelClass: ObjectField,
@@ -405,9 +406,16 @@ export default {
         return STRING
       }
     },
+    getRecordNames(value) {
+      const option = this.stateRecordTypes.filter((item) => item.id === value)[0]
+      return option ? option.label : value
+    },
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
+      if (rowData && rowData.operandIdentifier === 'RecordTypeId') {
+        this.valuePromise = this.getRecordNames(value)
+      }
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
       let valueLabel = value
       let operandOperatorLabel = operandOpts.find((opt) => opt.value == operandOperator)
@@ -421,7 +429,9 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
+      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+        this.valuePromise ? this.valuePromise : valueLabel
+      } `
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {

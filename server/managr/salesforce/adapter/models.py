@@ -428,6 +428,19 @@ class SalesforceAuthAccountAdapter:
                 }
             )
 
+    def get_record_type_picklist(self):
+        url = f"{self.instance_url}/{sf_consts.RECORD_TYPE_URI}"
+        with Client as client:
+            res = client.get(
+                url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
+            )
+            res = self._handle_response(res)
+            res = [
+                dict(label=record_type["Name"], id=record_type["Id"])
+                for record_type in res["records"]
+            ]
+            return res
+
     def get_stage_picklist_values_by_record_type(self, record_type_id):
         url = f"{self.instance_url}{sf_consts.SALEFORCE_STAGE_PICKLIST_URI(record_type_id)}"
         with Client as client:

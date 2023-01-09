@@ -58,8 +58,8 @@ if settings.USE_HUBSPOT:
         "crm.schemas.deals.read",
         "crm.schemas.deals.write",
         "crm.objects.owners.read",
-        "oauth",
     ]
+
     URL_SCOPES = " ".join(SCOPES)
     AUTHENTICATION_BODY = lambda code: {
         "grant_type": "authorization_code",
@@ -80,7 +80,7 @@ if settings.USE_HUBSPOT:
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
         "redirect_uri": REDIRECT_URI,
-        "scopes": URL_SCOPES,
+        "scope": URL_SCOPES,
         "state": "HUBSPOT",
     }
 

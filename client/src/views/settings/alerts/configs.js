@@ -209,7 +209,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: ">=",
                     operandValue: "0",
                     operandType: "FIELD",
@@ -557,102 +557,6 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
     alertLevel: "ORGANIZATION",
 }
 
-const REQUIRED_FIELD_EMPTY = {
-    title: "Required Field Empty",
-    subtitle: "View and update all Opportunities with required fields that have not been filled out",
-    user: null,
-    isActive: true,
-    crm: 'SALESFORCE',
-    resourceType: "Opportunity",
-    newGroups: [
-        {
-            groupCondition: "AND",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "",
-                    operandOperator: "=",
-                    operandValue: 'null',
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "STRING",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
-    ],
-    messageTemplate: {
-        bindings: [
-            " __Recipient.full_name ",
-            " Opportunity.Name ",
-        ],
-        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
-    },
-    newConfigs: [
-        {
-            recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
-            recurrenceDay: "0",
-            recipients: ["default"],
-            alertTargets: ["SELF"],
-            recipientType: "SLACK_CHANNEL",
-            alertTemplateId: "",
-            template: "",
-        }
-    ],
-    alertLevel: "ORGANIZATION",
-}
-
-const REQUIRED_FIELD_EMPTY_HUBSPOT = {
-    title: "Required Field Empty",
-    subtitle: "View and update all Deals with required fields that have not been filled out",
-    user: null,
-    isActive: true,
-    crm: 'HUBSPOT',
-    resourceType: "Deal",
-    newGroups: [
-        {
-            groupCondition: "AND",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "",
-                    operandOperator: "=",
-                    operandValue: 'null',
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "STRING",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
-    ],
-    messageTemplate: {
-        bindings: [
-            " __Recipient.full_name ",
-            " Deal.dealname ",
-        ],
-        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
-    },
-    newConfigs: [
-        {
-            recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
-            recurrenceDay: "0",
-            recipients: ["default"],
-            alertTargets: ["SELF"],
-            recipientType: "SLACK_CHANNEL",
-            alertTemplateId: "",
-            template: "",
-        }
-    ],
-    alertLevel: "ORGANIZATION",
-}
-
 const LARGE_OPPORTUNITIES = {
     title: "Large Opportunities",
     subtitle: "View and update all your Opportunities that exceed a certain amount",
@@ -749,6 +653,132 @@ const LARGE_DEALS_HUBSPOT = {
     alertLevel: "ORGANIZATION",
 }
 
+const TEAM_PIPELINE = {
+    title: "Team Pipeline",
+    subtitle: "View your entire team’s pipeline of deals closing this month",
+    user: null,
+    isActive: true,
+    crm: 'SALESFORCE',
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "<=",
+                    operandValue: 30,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: ">",
+                    operandValue: -1,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        },
+
+    ],
+    messageTemplate: {
+        bindings: [
+            " __Recipient.full_name ",
+
+        ],
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "MONTHLY",
+            recurrenceDays: [0],
+            recurrenceDay: "1",
+            recipients: ["default"],
+            alertTargets: ["TEAM"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const TEAM_PIPELINE_HUBSPOT = {
+    title: "Team Pipeline",
+    subtitle: "View your entire team’s pipeline of deals closing this month",
+    user: null,
+    isActive: true,
+    crm: 'HUBSPOT',
+    resourceType: "Deal",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "closedate",
+                    operandOperator: "<=",
+                    operandValue: 30,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        },
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "closedate",
+                    operandOperator: ">",
+                    operandValue: -1,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 1,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        bindings: [
+            " __Recipient.full_name ",
+
+        ],
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "MONTHLY",
+            recurrenceDays: [0],
+            recurrenceDay: "1",
+            recipients: ["default"],
+            alertTargets: ["TEAM"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
     CLOSE_DATE_PASSED_HUBSPOT,
@@ -760,10 +790,10 @@ const ALL_CONFIGS = {
     CLOSE_DATE_APPROACHING_HUBSPOT,
     UPCOMING_NEXT_STEP,
     UPCOMING_NEXT_STEP_HUBSPOT,
-    REQUIRED_FIELD_EMPTY,
-    REQUIRED_FIELD_EMPTY_HUBSPOT,
     LARGE_OPPORTUNITIES,
     LARGE_DEALS_HUBSPOT,
+    TEAM_PIPELINE,
+    TEAM_PIPELINE_HUBSPOT,
 }
 
 export default ALL_CONFIGS;
