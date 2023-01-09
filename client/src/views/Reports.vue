@@ -9,19 +9,19 @@
           Performance Reports
         </p>
 
-        <p
+        <!-- <p
           style="margin-left: 16px"
           @click="selectStoryReport"
           :class="reportType == 'Performance' ? '' : 'light-green-section'"
         >
           Story Reports
-        </p>
-        <!-- <p
+        </p> -->
+        <p
           style="margin-left: 16px; cursor: text"
           :class="reportType == 'Performance' ? '' : 'light-green-section'"
         >
           Story Reports <span class="purple-section">Coming Soon</span>
-        </p> -->
+        </p>
       </div>
 
       <div class="results-title" v-else>
