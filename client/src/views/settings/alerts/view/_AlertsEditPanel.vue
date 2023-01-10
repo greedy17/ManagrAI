@@ -313,6 +313,9 @@ export default {
         return field.val
       })
     },
+    stateRecordTypes() {
+      return this.$store.state.recordTypes
+    },
   },
   methods: {
     test(log) {
