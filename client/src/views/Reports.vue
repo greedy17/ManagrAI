@@ -59,7 +59,7 @@
         style="padding: 4px; cursor: pointer"
         class="flex-row light-gray-text"
       >
-        {{ 'Company: ' + selectedUser.organizationRef.name }}
+        {{ selectedUser.organizationRef.name }}
       </div>
     </div>
 
@@ -282,7 +282,6 @@
         <div class="space-between">
           <h2>Generate Performance Report</h2>
         </div>
-
         <div style="margin-top: 32px; margin-bottom: 32px">
           <p>Select a Rep</p>
           <Multiselect
@@ -295,7 +294,6 @@
             track-by="id"
             v-model="selectedUser"
             :custom-label="fullOrEmailLabel"
-            :disabled="!isPaid"
             :loading="dropdownLoading"
           >
             <template slot="noResult">
@@ -322,35 +320,71 @@
       </div>
 
       <div v-else-if="performanceReport && isPaid">
-        <div class="container4">
-          <div class="space-between">
-            <div class="row medText">
-              <img src="@/assets/images/logo.png" height="24px" alt="" />
-              Performance Report
-            </div>
-            <sub class="gray-section">{{ allOpps.length }} Open Opportunities</sub>
-          </div>
+        <div style="margin-bottom: 16px" class="container4">
+          <section style="padding-top: 24px; padding-bottom: 16px" class="locked">
+            <div style="margin-bottom: 16px" class="space-between">
+              <div class="medText">
+                <span class="row">
+                  <img src="@/assets/images/logo.png" height="24px" alt="" />
+                  Performance Report
+                </span>
 
-          <div class="space-between">
-            <div style="margin-left: 0.5rem">
-              <h2 style="margin-bottom: 0; font-size: 26px">January 2023</h2>
-              <p style="margin-top: 8px" class="light-gray-text">
+                <!-- <p style="margin-left: 6px" class="light-gray-text">
                 {{ selectedUser.userLevel[0] + selectedUser.userLevel.toLowerCase().slice(1) }}:
                 {{ selectedUser.fullName }}
-              </p>
+              </p> -->
+              </div>
+
+              <div>
+                <!-- <sub style="font-size: 16px; margin-top: 4px" class="green-text">{{
+                selectedUser.organizationRef.name
+              }}</sub> -->
+                <sub class="gray-section">{{ allOpps.length }} Open Opportunities</sub>
+              </div>
             </div>
 
-            <div class="column margin-top-small">
-              <small class="row">
+            <div class="space-between">
+              <div style="margin-left: 0.5rem">
+                <h2 style="margin-bottom: 16px; font-size: 26px">January 2023</h2>
+                <p style="margin-top: 8px" class="light-gray-text">
+                  {{ selectedUser.userLevel[0] + selectedUser.userLevel.toLowerCase().slice(1) }}:
+                  {{ selectedUser.fullName }}
+                </p>
+              </div>
+
+              <div class="column margin-top-small">
+                <!-- <sub class="gray-section">{{ allOpps.length }} Open Opportunities</sub> -->
+                <!-- <small class="row">
                 <img class="green-filter" src="@/assets/images/correct.svg" height="14px" alt="" />
                 {{ workflows.list.length }} Active workflows
               </small>
               <small class="row">
                 <img class="green-filter" src="@/assets/images/correct.svg" height="14px" alt="" />
                 {{ notes.length }} Note templates
-              </small>
+              </small> -->
+              </div>
             </div>
-          </div>
+
+            <div class="wider-card">
+              <div class="top">
+                <sub class="purple-section-l"> Insight 🧙‍♀</sub>
+              </div>
+
+              <div style="margin-top: 8px" class="row light-gray-text">
+                <p class="row">
+                  <img class="gold-filter" src="@/assets/images/star.svg" height="22px" alt="" />
+                  {{ selectedUser.firstName + ' ' }} saved
+                  <span class="inline-text">{{ ' ' + timeSaved + ' ' }}</span> hours this month by
+                  using Managr.
+                </p>
+
+                <!-- <p style="margin-left: 16px" class="row">
+                <img class="gold-filter" src="@/assets/images/star.svg" height="22px" alt="" />
+                <span class="inline-text">4</span> Smart workflows activated.
+              </p> -->
+              </div>
+            </div>
+          </section>
 
           <div class="even-row">
             <div class="card">
@@ -615,29 +649,6 @@
             <!-- <button @click="reportMode = 'Timeline'" class="pink_button">View Team Report</button> -->
           </div>
         </div>
-
-        <div style="width: 56vw" class="container2">
-          <div class="top">
-            <sub class="gray-section">Insights</sub>
-          </div>
-
-          <p class="row light-gray-text">
-            <img class="gold-filter" src="@/assets/images/star.svg" height="22px" alt="" />
-            {{ selectedUser.fullName + ' ' }} saved
-            <span class="inline-text">{{ ' ' + timeSaved + ' ' }}</span> hours this month by using
-            Managr.
-          </p>
-          <p class="row light-gray-text">
-            <img class="gold-filter" src="@/assets/images/star.svg" height="22px" alt="" />
-            Additonal insights coming soon...
-          </p>
-          <!-- <div class="margin-left">
-            <small class="light-gray-text img-border img-row"
-              >- Here's a hint for what saved the most time
-              <img src="@/assets/images/calendar.svg" height="12" alt=""
-            /></small>
-          </div> -->
-        </div>
       </div>
 
       <div class="even-row" v-else>
@@ -679,7 +690,11 @@ export default {
   data() {
     return {
       timeSaved: null,
-      reps: CollectionManager.create({ ModelClass: User }),
+      reps: CollectionManager.create({
+        ModelClass: User,
+        pagination: { size: 500 },
+      }),
+      searchText: null,
       selectedOpp: null,
       selectedUser: null,
       reportType: 'Performance',
@@ -702,6 +717,7 @@ export default {
   async created() {
     this.reps.refresh()
     this.workflows.refresh()
+    console.log(this.reps)
   },
   methods: {
     async onUsersNextPage() {
@@ -741,7 +757,7 @@ export default {
       }
     },
     setTimeSaved() {
-      console.log(this.performanceReport)
+      // console.log(this.performanceReport)
       let totalTime = 0
       let sessionTime = this.performanceReport['total sessions'] * 5
       let updates = this.performanceReport['updates']
@@ -905,6 +921,14 @@ export default {
     color: $light-gray-blue;
   }
 }
+
+.locked {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: white;
+}
+
 .img-row {
   display: flex;
   flex-direction: row;
@@ -1113,7 +1137,7 @@ export default {
 .container4 {
   height: 98vh;
   overflow-y: scroll;
-  padding: 24px 32px 0px 32px;
+  padding: 0px 32px 0px 32px;
   width: 56vw;
   margin-top: 1rem;
   outline: 1px solid $soft-gray;
@@ -1195,6 +1219,14 @@ export default {
   background-color: $grape;
   padding: 2px 4px !important;
   border-radius: 4px !important;
+}
+.purple-section-l {
+  letter-spacing: 0.75px;
+  color: white;
+  font-size: 13px;
+  background-color: $grape;
+  padding: 4px 6px;
+  border-radius: 6px;
 }
 
 .gray-text {
@@ -1297,6 +1329,17 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 26px 0;
+}
+.wider-card {
+  border-radius: 5px;
+  border: 1px solid $soft-gray;
+  width: 51.5vw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0px 0px 4px 16px;
+  margin-top: 8px;
 }
 
 .section {

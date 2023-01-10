@@ -176,9 +176,6 @@
                 <span
                   v-for="(day, i) in weeklyOpts"
                   :key="i"
-                  :class="
-                    config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
-                  "
                 >
                   <input
                     type="checkbox"
@@ -188,7 +185,12 @@
                     v-model="config.newConfigs[0].recurrenceDays"
                     :disabled="!hasSlack"
                   />
-                  <label :for="day.value">{{ day.key.charAt(0) }}</label>
+                  <label 
+                    :for="day.value"
+                    :class="
+                      config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
+                    "
+                    >{{ day.key.charAt(0) }}</label>
                 </span>
               </div>
             </div>
@@ -376,7 +378,7 @@
                   <div v-for="(message, i) in formattedSlackMessage" :key="i" style="margin: .5rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
                     <div style="justify-self: start;">
                       <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">{{message.title}}</div>
-                      <div style="font-size: .6rem;">{ {{message.val}} }</div>
+                      <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                     </div>
                     <div @click="removeMessage(i, message)"><img src="@/assets/images/remove.svg" style="height: 1.2rem;" /></div>
                   </div>
@@ -518,22 +520,15 @@ export default {
     }
     await this.objectFields.refresh()
     this.slackMessage = this.config.messageTemplate.body.split(' <br>\n<br>')
-    const tempFormat = []
+    const slackFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
-      const message = this.slackMessage[i]
-      const titleAndVal = message.split('\n')
-      const title = titleAndVal[0]
-      const val = titleAndVal[1]
-      let titleFormatted
-      if (i === 0) {
-        titleFormatted = title.slice(8, title.length-10)
-      } else {
-        titleFormatted = title.slice(8, title.length-10)
-      }
-      let valFormatted = val.slice(2, val.length-2)
-      tempFormat.push({title: titleFormatted, val: valFormatted})
+      const titleAndVal = this.slackMessage[i].split('\n')
+      const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length-10)
+      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length-2)
+      // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
+      slackFormat.push({title: titleFormatted, val: valFormatted})
     }
-    this.formattedSlackMessage = tempFormat
+    this.formattedSlackMessage = slackFormat
   },
   watch: {
     selectedResourceType: {
@@ -611,14 +606,14 @@ export default {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
-      this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
+      this.config.messageTemplate.body = this.slackMessage.join('\n\n')
       this.config.messageTemplate.bindings.push(val)
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
       this.config.messageTemplate.bindings = this.config.messageTemplate.bindings.filter((mes, j) => j !== i) 
-      this.config.messageTemplate.body = this.slackMessage.join(' <br>\n<br>')
+      this.config.messageTemplate.body = this.slackMessage.join('\n\n')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onAddField(field) {
@@ -1003,6 +998,9 @@ export default {
   margin-top: 16px;
 
   span {
+    transition: all 0.2s;
+  }
+  label {
     cursor: pointer;
     color: $light-gray-blue;
     margin-right: 8px;
@@ -1014,14 +1012,13 @@ export default {
     border-radius: 100%;
     border: 1px solid $soft-gray;
     transition: all 0.2s;
-    input {
-      display: none;
-    }
   }
-
+  input {
+    display: none;
+  }
   span:hover {
-    transform: scale(1.15);
-    color: $base-gray;
+   transform: scale(1.15);
+   color: $base-gray;
   }
 }
 .centered {
