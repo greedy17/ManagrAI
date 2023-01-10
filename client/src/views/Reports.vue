@@ -720,9 +720,6 @@ export default {
     console.log(this.reps)
   },
   methods: {
-    searchUsers(val) {
-      console.log(val)
-    },
     async onUsersNextPage() {
       this.dropdownLoading = true
       await this.reps.addNextPage()
@@ -730,7 +727,6 @@ export default {
         this.dropdownLoading = false
       }, 1000)
     },
-
     greaterVal(a, b) {
       if (a >= b) {
         return true
