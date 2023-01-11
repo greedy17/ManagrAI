@@ -45,7 +45,7 @@ const CLOSE_DATE_PASSED = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -104,7 +104,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -174,7 +174,7 @@ const NINETY_DAY_PIPELINE = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -233,7 +233,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -282,7 +282,7 @@ const DEAL_REVIEW = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 3],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -331,7 +331,7 @@ const DEAL_REVIEW_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 3],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -390,7 +390,7 @@ const CLOSE_DATE_APPROACHING = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -449,7 +449,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -497,7 +497,7 @@ const UPCOMING_NEXT_STEP = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -545,7 +545,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -593,7 +593,7 @@ const LARGE_OPPORTUNITIES = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -641,7 +641,7 @@ const LARGE_DEALS_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -701,7 +701,7 @@ const TEAM_PIPELINE = {
     newConfigs: [
         {
             recurrenceFrequency: "MONTHLY",
-            recurrenceDays: [0],
+            recurrenceDays: ["0"],
             recurrenceDay: "1",
             recipients: ["default"],
             alertTargets: ["TEAM"],
@@ -759,7 +759,7 @@ const TEAM_PIPELINE_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "MONTHLY",
-            recurrenceDays: [0],
+            recurrenceDays: ["0"],
             recurrenceDay: "1",
             recipients: ["default"],
             alertTargets: ["TEAM"],
