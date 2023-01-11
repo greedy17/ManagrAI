@@ -183,6 +183,7 @@ export default {
         })
     },
     updateWorkflow() {
+      this.$refs.editAlertsPanel.updateWorkflow()
       this.buildingCustom = false
       this.editingWorkflow = false
       this.$toast('Workflow Updated', {
@@ -192,7 +193,6 @@ export default {
         toastClassName: 'custom',
         bodyClassName: ['custom'],
       })
-      this.$refs.editAlertsPanel.updateWorkflow()
     },
     deleteWorkflow(id) {
       this.$emit('delete-workflow')
