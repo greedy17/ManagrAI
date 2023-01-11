@@ -179,7 +179,7 @@
                 >
                   <input
                     type="checkbox"
-                    @input="setDay"
+                    :input="setDay"
                     :id="day.value"
                     :value="day.value"
                     v-model="config.newConfigs[0].recurrenceDays"
