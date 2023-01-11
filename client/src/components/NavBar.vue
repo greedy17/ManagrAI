@@ -84,7 +84,7 @@
         <router-link v-if="!isPaid" exact-active-class="active" :to="{ name: 'Reports' }">
           <div class="tooltip-wide">
             <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" />
-            <span class="tooltiptext-wide">Reports: Upgrade to Team Plan</span>
+            <span class="tooltiptext-wide">Reports: Upgrade to Startup Plan</span>
           </div>
         </router-link>
         <router-link v-else exact-active-class="active" :to="{ name: 'Reports' }">
