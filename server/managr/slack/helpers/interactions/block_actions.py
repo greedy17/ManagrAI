@@ -2088,6 +2088,7 @@ def process_get_call_recording(payload, context):
         view_id,
     )
     resource_id = context.get("resource_id", None)
+    print(resource_id)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     if resource_id is None and type != "recap":
         timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
@@ -2104,7 +2105,7 @@ def process_get_call_recording(payload, context):
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
-    resource = routes[resource_type]["model"].objects.get(id=resource_id)
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
     if resource_type in ["Opportunity", "Contact"]:
         resource_ids = [resource.secondary_data["Id"]]
         if resource.account:

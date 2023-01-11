@@ -1702,7 +1702,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                         text=f"Recap {main_form.template.resource}",
                         block_set=blocks,
                     )
-                    logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
+                    # logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
                 except CannotSendToChannel:
                     try:
                         slack_requests.send_channel_message(
@@ -1924,7 +1924,7 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
                 r = slack_requests.send_channel_message(
                     channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
                 )
-                logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
+                # logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:
                 try:
                     slack_requests.send_channel_message(

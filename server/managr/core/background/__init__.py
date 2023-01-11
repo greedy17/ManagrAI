@@ -39,6 +39,7 @@ from managr.opportunity.models import Lead, Opportunity
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
+from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 
 logger = logging.getLogger("managr")
 
@@ -225,6 +226,50 @@ def _process_calendar_details(user_id):
         return None
 
 
+def sync_contacts(contacts, user_id):
+    from managr.crm.routes import model_routes
+
+    user = User.objects.get(id=user_id)
+    model_class = model_routes(user.crm)["Contact"]["model"]
+    serializer_class = model_routes(user.crm)["Contact"]["serializer"]
+    for item in contacts:
+        existing = model_class.objects.filter(integration_id=item.integration_id).first()
+        if existing:
+            serializer = serializer_class(data=item.as_dict, instance=existing)
+        else:
+            serializer = serializer_class(data=item.as_dict)
+        # check if already exists and update
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            logger.exception(f"Error saving contact in zoom flow: {e}")
+            continue
+        serializer.save()
+        # if contact.secondary_data["associatedcompanyid"]
+        if user.crm == "HUBSPOT":
+            if (
+                isinstance(item.secondary_data["num_associated_deals"], str)
+                and len(item.secondary_data["num_associated_deals"]) > 0
+            ):
+                associated_deals = user.crm_account.adapter_class.get_associated_resource(
+                    "Contact", "Deal", item.integration_id
+                )["results"][0]["to"]
+                filtered_ids = [deal["id"] for deal in associated_deals]
+                synced_deals = BaseOpportunity.objects.filter(integration_id__in=filtered_ids)
+                for deal in synced_deals:
+                    deal.contacts.add(serializer.instance)
+                    deal.save()
+    return
+
+
+def CONTACT_FILTERS(crm, emails):
+    if crm == "HUBSPOT":
+        return [{"propertyName": "email", "operator": "IN", "values": emails,}]
+    else:
+        email_string = "','".join(emails)
+        return [f"AND Email IN ('{email_string}')"]
+
+
 def meeting_prep(processed_data, user_id):
     def get_domain(email):
         """Parse domain out of an email"""
@@ -287,8 +332,24 @@ def meeting_prep(processed_data, user_id):
     contact_forms = []
     if len(participants):
         # Reduce to set of unique participant emails
-        participant_emails = set([p.get("email") for p in participants])
-        meeting_contacts = []
+        participant_emails = set([p.get("user_email") for p in participants])
+        attempts = 1
+        while True:
+            try:
+                crm_contacts = user.crm_account.adapter_class.list_resource_data(
+                    "Contact", filter=CONTACT_FILTERS(user.crm, list(participant_emails)),
+                )
+                break
+            except CRMTokenExpired:
+                if attempts >= 5:
+                    break
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    user.crm_account.regenerate_token()
+                    attempts += 1
+        sync_contacts(crm_contacts, str(user.id))
+    meeting_contacts = []
     # find existing contacts
     existing_contacts = BaseContact.objects.filter(
         email__in=participant_emails, owner__organization__id=user.organization.id

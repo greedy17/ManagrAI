@@ -17,6 +17,9 @@ from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_inline_paginator_block,
 )
+from managr.slack.helpers import exceptions as slack_exceptions
+
+logger = logging.getLogger("managr")
 
 
 def emit_send_paginated_alerts(payload, context):
@@ -122,11 +125,38 @@ def _process_send_paginated_alerts(payload, context):
             *blocks,
             *custom_paginator_block(alert_instances, invocation, channel, config_id),
         ]
-    slack_requests.generic_request(
-        payload["response_url"],
-        {"replace_original": True, "blocks": blocks},
-        access_token=access_token,
-    )
+    try:
+        slack_requests.generic_request(
+            payload["response_url"],
+            {"replace_original": True, "blocks": blocks},
+            access_token=access_token,
+        )
+    except slack_exceptions.UnHandeledBlocksException:
+        logger.exception(f"Send paginated alerts background task has unhandled blocks: {blocks}")
+        blocks = [
+            *get_block_set(
+                "initial_alert_blockset",
+                {
+                    "channel": channel,
+                    "user": str(user.id),
+                    "config_id": config_id,
+                    "invocation": invocation,
+                    "title": f"*New Task:* {len(alert_instances)} {alert_template.title}",
+                },
+            ),
+            block_builders.context_block(f"Owned by {user.full_name}"),
+        ]
+        blocks = [
+            block_builders.simple_section("There was an error building your alerts :warning:"),
+            *blocks,
+        ]
+        slack_requests.generic_request(
+            payload["response_url"],
+            {"replace_original": True, "blocks": blocks},
+            access_token=access_token,
+        )
+    except Exception as e:
+        logger.exception(f"Exeception on process send paginated alerts <{e}>")
     return
 
 
