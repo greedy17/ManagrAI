@@ -100,56 +100,55 @@
       </div>
     </div>
 
-    <div class="title">
-      <h4 class="title__head">Slack Message</h4>
+    <div style="margin-bottom: 8px; display: flex;" class="title">
+        <div style="">
+          <h4 class="title__head">Slack Message</h4>
+          <section class="title__body">
+            <p style="margin-bottom: 0;">This is the message you'll recieve in slack with your workflow.</p>
+          </section>
+          <div style="display: flex; overflow-y: auto; height: 28.75vh;">
+            <div style="margin-bottom: 1rem;">
+              <div v-if="formattedSlackMessage.length">
+                <div v-for="(message, i) in formattedSlackMessage" :key="i" style="margin: .5rem 1rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+                  <div style="justify-self: start;">
+                    <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">{{message.title}}</div>
+                    <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
+                  </div>
+                  <div @click="removeMessage(i, message)"><img src="@/assets/images/remove.svg" style="height: 1.2rem;" /></div>
+                </div>
+              </div>
+              <div v-else style="margin:.5rem 1rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+                <div style="justify-self: start;">
+                  <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">Please Select an Option from the List</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-right: 8px; height: fit-content;" class="start">
+          <section>
+            <div class="search-bar">
+              <img src="@/assets/images/search.svg" style="height: 18px;" alt="" />
+              <input
+                @input="searchFields"
+                type="search"
+                :placeholder="`Search Fields`"
+                v-model="filterText"
+              />
+            </div>
 
-      <section class="title__body">
-        <p>Edit your slack message</p>
-      </section>
-
-      <div class="alerts-template-list__content-message__form-body">
-        <FormField :errors="messageTemplateForm.field.body.errors">
-          <template v-slot:input>
-            <quill-editor
-              @blur="messageTemplateForm.field.body.validate()"
-              @input="executeUpdateMessageTemplate"
-              ref="message-body"
-              v-model="messageTemplateForm.field.body.value"
-              :options="{
-                modules: { toolbar: { container: ['bold', 'italic', 'strike'] } },
-              }"
-              class="message__box"
-            />
-          </template>
-        </FormField>
+            <div class="field-section__fields">
+              <div>
+                <p v-for="(field, i) in filteredFields" :key="field.id" style="margin: 4px 0;">
+                  <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" style="width: 10%;" />
+                  <label :for="i"></label>
+                  {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-      <div style="margin-right: 16px" class="flex-end">
-        <Multiselect
-          placeholder="Select field"
-          v-model="crmValue"
-          @input="bindText(`${alert.resourceType}.${$event.apiName}`, `${$event.label}`)"
-          :options="fields.list"
-          openDirection="above"
-          style="width: 18vw; margin-right: 4px"
-          selectLabel="Enter"
-          track-by="apiName"
-          label="referenceDisplayLabel"
-        >
-          <template slot="noResult">
-            <p class="multi-slot">No results.</p>
-          </template>
-          <template slot="afterList">
-            <p class="multi-slot__more" @click="fieldNextPage">Load More</p>
-          </template>
-          <template slot="placeholder">
-            <p class="slot-icon">
-              <img src="@/assets/images/search.svg" alt="" />
-              Insert Value { }
-            </p>
-          </template>
-        </Multiselect>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -224,14 +223,27 @@ export default {
       savedChanges: false,
       savingInTab: false,
       crmValue: null,
+      valuePromise: null,
+      slackMessage: [],
+      formattedSlackMessage: [],
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        filters: {
+          crmObject: this.alert.resourceType,
+          forAlerts: true,
+        },
+        pagination: { size: 1000 },
+      }),
+      filterText: '',
+      addedFields: [],
       templateNames: [
         'Close Date Passed',
         'Close Date Approaching',
         'Update Forecast',
         'Deal Rotting',
         'Upcoming Next Step',
-        'Required Field Empty',
         'Large Opportunities',
+        'Team Pipeline',
       ],
       // fields: CollectionManager.create({
       //   ModelClass: ObjectField,
@@ -243,13 +255,13 @@ export default {
       //   },
       //   pagination: { size: 1000 },
       // }),
-      fields: CollectionManager.create({ 
-        ModelClass: ObjectField, 
-        filters: {
-          crmObject: this.alert.resourceType
-        },
-        pagination: { size: 1000 },
-      }),
+      // fields: CollectionManager.create({ 
+      //   ModelClass: ObjectField, 
+      //   filters: {
+      //     crmObject: this.alert.resourceType
+      //   },
+      //   pagination: { size: 1000 },
+      // }),
       recipientBindings: [
         { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
         { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
@@ -292,7 +304,18 @@ export default {
   computed: {
     editor() {
       return this.$refs['message-body'].quill
-    }
+    },
+    filteredFields() {
+      return this.fields.list.filter((field) => !this.addedFieldNames.includes(`${this.alert.resourceType}.${field.apiName}`))
+    },
+    addedFieldNames() {
+      return this.formattedSlackMessage.map((field) => {
+        return field.val
+      })
+    },
+    stateRecordTypes() {
+      return this.$store.state.recordTypes
+    },
   },
   methods: {
     test(log) {
@@ -387,9 +410,16 @@ export default {
         return STRING
       }
     },
+    getRecordNames(value) {
+      const option = this.stateRecordTypes.filter((item) => item.id === value)[0]
+      return option ? option.label : value
+    },
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
+      if (rowData && rowData.operandIdentifier === 'RecordTypeId') {
+        this.valuePromise = this.getRecordNames(value)
+      }
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
       let valueLabel = value
       let operandOperatorLabel = operandOpts.find((opt) => opt.value == operandOperator)
@@ -403,7 +433,9 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${valueLabel} `
+      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+        this.valuePromise ? this.valuePromise : valueLabel
+      } `
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
@@ -415,6 +447,37 @@ export default {
       } else if (num == 3 || num == 23) {
         return num + 'rd'
       }
+    },
+    bindText(val, title) {
+      const addedStr = `<strong>${title}</strong> \n { ${val} }`
+      this.slackMessage.push(addedStr)
+      this.formattedSlackMessage.push({title, val})
+      this.messageTemplateForm.field.body.value = this.slackMessage.join(('\n\n'))
+      this.alert.messageTemplateRef.body = this.slackMessage.join(('\n\n'))
+      this.executeUpdateMessageTemplate()
+    },
+    removeMessage(i, removedField) {
+      this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
+      this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
+      this.messageTemplateForm.field.body.value = this.slackMessage.join(('\n\n'))
+      this.alert.messageTemplateRef.body = this.slackMessage.join(('\n\n'))
+      this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
+      this.executeUpdateMessageTemplate()
+    },
+    onAddField(field) {
+      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.bindText(`${this.alert.resourceType}.${field.apiName}`, `${field.label}`)
+    },
+    searchFields() {
+      this.fields = CollectionManager.create({
+        ModelClass: ObjectField,
+        pagination: { size: 1000 },
+        filters: {
+          crmObject: this.alert.resourceType,
+          search: this.filterText,
+        },
+      })
+      this.fields.refresh()
     },
     getReadableConfig(config) {
       let recurrenceDayString = config.recurrenceDay
@@ -512,14 +575,14 @@ export default {
       })
     },
 
-    bindText(val, title) {
-      this.$refs['message-body'].quill.focus()
-      let start = 0
-      if (this.editor.selection.lastRange) {
-        start = this.editor.selection.lastRange.index
-      }
-      this.editor.insertText(start, `\n\n${title}: { ${val} }`)
-    },
+    // bindText(val, title) {
+    //   this.$refs['message-body'].quill.focus()
+    //   let start = 0
+    //   if (this.editor.selection.lastRange) {
+    //     start = this.editor.selection.lastRange.index
+    //   }
+    //   this.editor.insertText(start, `\n\n${title}: { ${val} }`)
+    // },
     async updateTemplate(field) {
       this.templateTitleField.validate()
       if (this.templateTitleField.isValid) {
@@ -581,8 +644,21 @@ export default {
     this.fields.refresh()
     if (this.alert) {
       this.templateTitleField.value = this.alert.title
+      // work here
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
+    if (this.messageTemplateForm.field.body.value) {
+      this.slackMessage = this.messageTemplateForm.field.body.value.split(('\n\n'))
+    }
+    const slackFormat = []
+    for (let i = 0; i < this.slackMessage.length; i++) {
+      const titleAndVal = this.slackMessage[i].split('\n')
+      const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length-10)
+      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length-2)
+      // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
+      slackFormat.push({title: titleFormatted, val: valFormatted})
+    }
+    this.formattedSlackMessage = slackFormat
   },
 }
 </script>
@@ -899,6 +975,69 @@ input:focus {
     flex-direction: row;
     align-items: flex-start;
     height: 100%;
+  }
+}
+.search-bar {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 15vw;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 4px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
+}
+.field-section {
+  width: 20vw;
+  background-color: white;
+  height: 100%;
+  margin-top: 28px;
+  margin-left: 16px;
+  padding: 0px 32px;
+  border-radius: 6px;
+  letter-spacing: 0.75px;
+
+  &__title {
+    letter-spacing: 0.75px;
+  }
+  &__fields {
+    h4 {
+      font-size: 13px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 12px;
+      letter-spacing: 0.75px;
+    }
+    div {
+      outline: 1px solid $soft-gray;
+      border-radius: 6px;
+      padding: 4px 16px;
+      margin-top: 16px;
+      height: 32vh;
+      overflow: scroll;
+      section {
+        span {
+          color: $coral;
+          margin-left: 4px;
+        }
+      }
+    }
   }
 }
 </style>

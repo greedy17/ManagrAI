@@ -1014,6 +1014,10 @@ class SalesforceAuthAccount(TimeStampModel):
             self.save()
         return fields
 
+    def get_record_type_picklist(self):
+        res = self.adapter_class.get_record_type_picklist()
+        return res
+
     def get_validations(self, resource):
         rules = self.adapter_class.list_validations(resource)
         return rules

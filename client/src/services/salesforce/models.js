@@ -95,6 +95,7 @@ const ALERT_DATA_TYPE_MAP = {
   Date: DATE,
   DateTime: DATETIME,
   Picklist: STRING,
+  Reference: STRING,
   TextArea: STRING,
   Boolean: BOOLEAN,
   Email: EMAIL,

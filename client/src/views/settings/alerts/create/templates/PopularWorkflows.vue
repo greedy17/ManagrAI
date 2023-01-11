@@ -48,7 +48,11 @@
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <div style="padding-left: 12px" class="section" v-if="largeOpps">
+            <div
+              style="padding-left: 12px"
+              class="section"
+              v-if="largeOpps && teamPipeline !== 'Team Pipeline'"
+            >
               <h4 class="section__header">Select your "Amount" Field</h4>
 
               <div>
@@ -108,7 +112,11 @@
                 </div>
               </div>
             </div>
-            <div style="padding-left: 12px" class="section" v-else>
+            <div
+              style="padding-left: 12px"
+              class="section"
+              v-else-if="teamPipeline !== 'Team Pipeline'"
+            >
               <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
@@ -168,9 +176,6 @@
                 <span
                   v-for="(day, i) in weeklyOpts"
                   :key="i"
-                  :class="
-                    config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
-                  "
                 >
                   <input
                     type="checkbox"
@@ -180,7 +185,12 @@
                     v-model="config.newConfigs[0].recurrenceDays"
                     :disabled="!hasSlack"
                   />
-                  <label :for="day.value">{{ day.key.charAt(0) }}</label>
+                  <label 
+                    :for="day.value"
+                    :class="
+                      config.newConfigs[0].recurrenceDays.includes(day.value) ? 'active-option' : ''
+                    "
+                    >{{ day.key.charAt(0) }}</label>
                 </span>
               </div>
             </div>
@@ -223,7 +233,7 @@
             />
           </section>
         </div>
-        <div v-if="userLevel == 'MANAGER'" class="section">
+        <div v-if="userLevel == 'MANAGER' && teamPipeline !== 'Team Pipeline'" class="section">
           <h4 class="section__head">Select Pipelines</h4>
 
           <div class="section__body">
@@ -356,6 +366,55 @@
             </div>
           </div>
         </div>
+        <div style="margin-bottom: 8px; display: flex;" class="section">
+          <div style="">
+            <h4 class="section__head">Slack Message</h4>
+            <section class="section__body">
+              <p style="margin-bottom: 0;">This is the message you'll recieve in slack with your workflow.</p>
+            </section>
+            <div style="display: flex; overflow-y: auto; height: 28.75vh;">
+              <div style="margin-bottom: 1rem;">
+                <div v-if="formattedSlackMessage.length">
+                  <div v-for="(message, i) in formattedSlackMessage" :key="i" style="margin: .5rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+                    <div style="justify-self: start;">
+                      <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">{{message.title}}</div>
+                      <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
+                    </div>
+                    <div @click="removeMessage(i, message)"><img src="@/assets/images/remove.svg" style="height: 1.2rem;" /></div>
+                  </div>
+                </div>
+                <div v-else style="margin:.5rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
+                  <div style="justify-self: start;">
+                    <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">Please Select an Option from the List</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-right: 8px; height: fit-content;" class="start">
+            <section>
+              <div class="search-bar">
+                <img src="@/assets/images/search.svg" style="height: 18px;" alt="" />
+                <input
+                  @input="searchFields"
+                  type="search"
+                  :placeholder="`Search Fields`"
+                  v-model="filterText"
+                />
+              </div>
+
+              <div class="field-section__fields">
+                <div>
+                  <p v-for="(field, i) in filteredFields" :key="field.id" style="margin: 4px 0;">
+                    <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
+                    <label :for="i"></label>
+                    {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
       <div v-if="!hasSlack && !selectField" class="overlay">
         <p class="text">
@@ -396,6 +455,18 @@ export default {
         pagination: { size: 200 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
+      slackMessage: [],
+      formattedSlackMessage: [],
+      fields: CollectionManager.create({ 
+        ModelClass: ObjectField, 
+        filters: {
+          crmObject: alert.resourceType,
+          forAlerts: true,
+        },
+        pagination: { size: 1000 },
+      }),
+      filterText: '',
+      addedFields: [],
       dropdownLoading: null,
       selectedUsers: [],
       selectedDays: null,
@@ -410,11 +481,12 @@ export default {
       largeOppValue: '',
       setDaysBool: false,
       largeOppsBool: false,
+      teamPipeline: this.config.title,
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
       alertTemplateForm: new AlertTemplateForm(),
-      fields: CollectionManager.create({ ModelClass: ObjectField }),
+      // fields: CollectionManager.create({ ModelClass: ObjectField }),
       users: CollectionManager.create({ ModelClass: User }),
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
@@ -444,9 +516,19 @@ export default {
     }
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      crmObject: this.resourceType,
+      crmObject: this.selectedResourceType,
     }
     await this.objectFields.refresh()
+    this.slackMessage = this.config.messageTemplate.body.split('\n\n')
+    const slackFormat = []
+    for (let i = 0; i < this.slackMessage.length; i++) {
+      const titleAndVal = this.slackMessage[i].split('\n')
+      const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length-10)
+      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length-2)
+      // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
+      slackFormat.push({title: titleFormatted, val: valFormatted})
+    }
+    this.formattedSlackMessage = slackFormat
   },
   watch: {
     selectedResourceType: {
@@ -517,7 +599,38 @@ export default {
     goToConnect() {
       this.$router.push({ name: 'Integrations' })
     },
-    test() {},
+    test(log) {
+      console.log('log', log)
+    },
+    bindText(val, title) {
+      const addedStr = `<strong>${title}</strong> \n { ${val} }`
+      this.slackMessage.push(addedStr)
+      this.formattedSlackMessage.push({title, val})
+      this.config.messageTemplate.body = this.slackMessage.join('\n\n')
+      this.config.messageTemplate.bindings.push(val)
+    },
+    removeMessage(i, removedField) {
+      this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
+      this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
+      this.config.messageTemplate.bindings = this.config.messageTemplate.bindings.filter((mes, j) => j !== i) 
+      this.config.messageTemplate.body = this.slackMessage.join('\n\n')
+      this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
+    },
+    onAddField(field) {
+      this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
+      this.bindText(`${this.selectedResourceType}.${field.apiName}`, `${field.label}`)
+    },
+    searchFields() {
+      this.fields = CollectionManager.create({
+        ModelClass: ObjectField,
+        pagination: { size: 1000 },
+        filters: {
+          crmObject: this.selectedResourceType,
+          search: this.filterText,
+        },
+      })
+      this.fields.refresh()
+    },
     setDefaultChannel() {
       this.directToUsers
         ? (this.config.newConfigs[0].recipients = ['default'])
@@ -533,13 +646,16 @@ export default {
           this.selectFieldBool &&
           this.largeOppsBool
         )
+      } else if (this.teamPipeline == 'Team Pipeline') {
+        return 'True'
       } else {
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
           this.config.newConfigs[0].alertTargets.length &&
           this.selectUsersBool &&
-          (this.setDaysBool || this.selectFieldBool)
+          (this.setDaysBool || this.selectFieldBool) &&
+          this.config.messageTemplate.body.length
         )
       }
     },
@@ -750,11 +866,12 @@ export default {
         }
       }
       if (
-        (newConfigs.recurrenceDays.length || operandIden) &&
-        newConfigs.alertTargets.length &&
-        this.selectUsersBool &&
-        largeOpsCheck &&
-        (this.setDaysBool || this.selectFieldBool)
+        ((newConfigs.recurrenceDays.length || operandIden) &&
+          newConfigs.alertTargets.length &&
+          this.selectUsersBool &&
+          largeOpsCheck &&
+          (this.setDaysBool || this.selectFieldBool)) ||
+        this.teamPipeline == 'Team Pipeline'
       ) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
@@ -774,7 +891,7 @@ export default {
           })
           this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
-          this.$toast('One or more of these users do not have Slack.', {
+          this.$toast(`${e}`, {
             timeout: 2000,
             position: 'top-left',
             type: 'error',
@@ -793,6 +910,14 @@ export default {
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.recapChannel
         : null
+    },
+    filteredFields() {
+      return this.fields.list.filter((field) => !this.addedFieldNames.includes(`${this.selectedResourceType}.${field.apiName}`))
+    },
+    addedFieldNames() {
+      return this.formattedSlackMessage.map((field) => {
+        return field.val
+      })
     },
     userLevel() {
       return this.$store.state.user.userLevel
@@ -873,6 +998,9 @@ export default {
   margin-top: 16px;
 
   span {
+    transition: all 0.2s;
+  }
+  label {
     cursor: pointer;
     color: $light-gray-blue;
     margin-right: 8px;
@@ -884,14 +1012,13 @@ export default {
     border-radius: 100%;
     border: 1px solid $soft-gray;
     transition: all 0.2s;
-    input {
-      display: none;
-    }
   }
-
+  input {
+    display: none;
+  }
   span:hover {
-    transform: scale(1.15);
-    color: $base-gray;
+   transform: scale(1.15);
+   color: $base-gray;
   }
 }
 .centered {
@@ -1219,5 +1346,68 @@ img {
 }
 .margin-top {
   margin-top: 3rem;
+}
+.search-bar {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 15vw;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 4px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
+}
+.field-section {
+  width: 20vw;
+  background-color: white;
+  height: 100%;
+  margin-top: 28px;
+  margin-left: 16px;
+  padding: 0px 32px;
+  border-radius: 6px;
+  letter-spacing: 0.75px;
+
+  &__title {
+    letter-spacing: 0.75px;
+  }
+  &__fields {
+    h4 {
+      font-size: 13px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 12px;
+      letter-spacing: 0.75px;
+    }
+    div {
+      outline: 1px solid $soft-gray;
+      border-radius: 6px;
+      padding: 4px 16px;
+      margin-top: 16px;
+      height: 32vh;
+      overflow: scroll;
+      section {
+        span {
+          color: $coral;
+          margin-left: 4px;
+        }
+      }
+    }
+  }
 }
 </style>

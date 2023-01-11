@@ -33,6 +33,7 @@ class ObjectFieldFilterSet(FilterSet):
                     "Boolean",
                     "Picklist",
                     "Email",
+                    "Reference",
                 ]
             )
         return qs

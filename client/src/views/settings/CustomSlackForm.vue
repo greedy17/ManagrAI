@@ -46,15 +46,9 @@
 
                   <template slot="option" slot-scope="props">
                     <div>
-                      <span class="option__title">{{
-                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label
-                      }}</span
+                      <span class="option__title">{{removeAmp(props.option.label)}}</span
                       ><span
-                        v-if="
-                          currentStagesWithForms.includes(
-                            userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
-                          )
-                        "
+                        v-if="currentStagesWithForms.includes(props.option.label)"
                         class="option__small"
                       >
                         edit
@@ -315,14 +309,10 @@
               <template slot="option" slot-scope="props">
                 <div>
                   <span class="option__title">{{
-                    userCRM === 'SALESFORCE' ? props.option.value : props.option.label
+                    userCRM === 'SALESFORCE' ? removeAmp(props.option.value) : removeAmp(props.option.label)
                   }}</span
                   ><span
-                    v-if="
-                      currentStagesWithForms.includes(
-                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
-                      )
-                    "
+                    v-if="currentStagesWithForms.includes(props.option.label)"
                     class="option__small"
                   >
                     edit
@@ -434,15 +424,9 @@
 
               <template slot="option" slot-scope="props">
                 <div>
-                  <span class="option__title">{{
-                    userCRM === 'SALESFORCE' ? props.option.label : props.option.label
-                  }}</span
+                  <span class="option__title">{{ removeAmp(props.option.label) }}</span
                   ><span
-                    v-if="
-                      currentStagesWithForms.includes(
-                        userCRM === 'SALESFORCE' ? props.option.label : props.option.label,
-                      )
-                    "
+                    v-if="currentStagesWithForms.includes(props.option.label)"
                     class="option__small"
                   >
                     edit
@@ -525,7 +509,7 @@
             <p v-for="(field, i) in filteredFields" :key="field.id">
               <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
               <label :for="i"></label>
-              {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
+              {{ field.label == 'Price Book Entry ID' ? 'Products' : removeAmp(field.label) }}
               <!-- <span v-if="field.required" class="red-text">required</span> -->
             </p>
           </div>
@@ -551,7 +535,7 @@
               <p v-else-if="COfilteredFields.length" v-for="(field, i) in COfilteredFields" :key="field.id">
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
-                {{ field.label }}
+                {{ removeAmp(field.label) }}
                 <span v-if="field.required" class="red-text">required</span>
               </p>
               <p v-else>Nothing here. Try selecting an object</p>
@@ -1106,7 +1090,11 @@ export default {
       console.log('log', log)
     },
     customLabel(prop) {
-      return prop.customObject ? `${prop.customObject}` : `${prop.label}`
+      const label = prop.customObject ? `${prop.customObject}` : `${prop.label}`
+      return label.replace('&amp;', '&')
+    },
+    removeAmp(label) {
+      return label.replace('&amp;', '&')
     },
     searchFields() {
       this.formFields = CollectionManager.create({
@@ -1262,6 +1250,7 @@ export default {
     clearStageData() {
       this.selectedForm = null
       this.currentlySelectedStage = null
+      this.selectedStage = null
     },
     async deleteForm(form) {
       if (form && form.id && form.id.length) {
@@ -1740,6 +1729,9 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
 
+          this.newCustomForm = res
+          this.activeForm = res
+
           this.$toast('Form saved', {
             timeout: 2000,
             position: 'top-left',
@@ -1889,11 +1881,11 @@ input[type='search'] {
   padding: 4px;
   margin: 0;
 }
-::placeholder {
-  color: $very-light-gray;
-}
 input[type='search']:focus {
   outline: none;
+}
+::placeholder {
+  color: $very-light-gray;
 }
 .field-section {
   width: 20vw;

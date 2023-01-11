@@ -464,7 +464,7 @@
           </div>
         </div>
 
-        <div
+        <!-- <div
           :class="
             !user.activatedTemplateRef.includes('Close Date Passed') &&
             isOnboarding &&
@@ -516,7 +516,7 @@
               Active <img src="@/assets/images/configCheck.svg" alt="" />
             </h4>
           </div>
-        </div>
+        </div> -->
 
         <div
           :class="
@@ -569,6 +569,60 @@
             >
               Active <img src="@/assets/images/configCheck.svg" alt="" />
             </h4>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
+            <h3>Team Pipeline</h3>
+          </div>
+
+          <div class="card__body">
+            <img
+              style="height: 1.5rem; margin-right: 0.5rem"
+              src="@/assets/images/logo.png"
+              alt=""
+            />
+            <img
+              style="height: 1rem; margin-right: 0.5rem"
+              src="@/assets/images/plusOne.svg"
+              class="filter-plus"
+              alt=""
+            />
+            <img
+              style="height: 1.25rem; margin-right: 0.5rem"
+              src="@/assets/images/salesforce.png"
+              alt=""
+            />
+          </div>
+
+          <div v-if="isPaid" class="card__footer">
+            <button
+              v-if="
+                hasSalesforceIntegration && !user.activatedTemplateRef.includes('Team Pipeline')
+              "
+              @click="goToTeamPipeline"
+              class="orange_button"
+            >
+              Activate
+            </button>
+            <h4 v-else-if="!hasSalesforceIntegration">Connect Salesforce to acivate</h4>
+            <h4
+              class="active-workflow"
+              v-else-if="user.activatedTemplateRef.includes('Team Pipeline')"
+            >
+              Active <img src="@/assets/images/configCheck.svg" alt="" />
+            </h4>
+          </div>
+
+          <div v-else class="card__footer">
+            <img
+              class="shimmer"
+              style="filter: invert(40%)"
+              src="@/assets/images/lock.svg"
+              height="16px"
+              alt=""
+            />
           </div>
         </div>
       </div>
@@ -654,14 +708,17 @@ export default {
     goToNextStep() {
       this.$router.push({ name: 'NextStep' })
     },
-    goToEmptyField() {
-      this.$router.push({ name: 'RequiredFieldEmpty' })
+    goToTeamPipeline() {
+      this.$router.push({ name: 'TeamPipeline' })
     },
     goToLargeOpps() {
       this.$router.push({ name: 'LargeOpps' })
     },
   },
   computed: {
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
@@ -712,6 +769,20 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+
+.shimmer {
+  display: inline-block;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  max-width: 200px;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
 
 @keyframes bounce {
   0% {

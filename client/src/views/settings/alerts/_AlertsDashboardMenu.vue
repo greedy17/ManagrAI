@@ -28,7 +28,7 @@
         <span class="gray-text">{{ currentAlert.title }}</span>
       </div>
 
-      <div>
+      <div v-if="isPaid">
         <button
           v-if="!buildingCustom && !editingWorkflow"
           class="green_button right-margin"
@@ -37,6 +37,43 @@
         >
           Create Workflow
         </button>
+
+        <button
+          @click="saveWorkflow"
+          :disabled="!canSave"
+          class="green_button right-margin"
+          :class="canSave ? 'pulse' : ''"
+          v-else-if="buildingCustom"
+        >
+          Create Workflow
+        </button>
+
+        <div v-else>
+          <button @click="deleteWorkflow(currentAlert.id)" class="delete">Delete</button>
+          <button
+            @click="updateWorkflow"
+            style="margin-left: 8px"
+            class="green_button right-margin"
+          >
+            Update
+          </button>
+        </div>
+      </div>
+
+      <div v-else>
+        <div class="tooltip" v-if="!buildingCustom && !editingWorkflow">
+          <button disabled class="green_button right-margin center-row">
+            Create Workflow
+            <img
+              class="shimmer"
+              style="filter: invert(40%)"
+              src="@/assets/images/lock.svg"
+              height="16px"
+              alt=""
+            />
+          </button>
+          <small class="tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+        </div>
 
         <button
           @click="saveWorkflow"
@@ -227,6 +264,9 @@ export default {
     this.templates.refresh()
   },
   computed: {
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     hasZoomChannel() {
       if (this.hasSlack) {
         return this.$store.state.user.slackAccount.zoomChannel
@@ -256,6 +296,20 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.shimmer {
+  display: inline-block;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  max-width: 200px;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
 
 @keyframes bounce {
   0% {
@@ -554,6 +608,11 @@ a:hover span {
 .right-margin {
   margin-right: 40px;
 }
+.center-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 .row {
   display: flex;
   flex-direction: row;
@@ -563,36 +622,40 @@ a:hover span {
   border-right: 2px solid $soft-gray;
 }
 .tooltip {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  padding-right: 12px;
-  border-right: 2px solid $soft-gray;
+  position: relative;
+  display: inline-block;
 }
-// .tooltip .tooltiptext {
-//   visibility: hidden;
-//   width: 160px;
-//   background-color: $base-gray;
-//   color: white;
-//   text-align: center;
-//   border: none !important;
-//   letter-spacing: 1px;
-//   padding: 8px 0;
-//   border-radius: 6px;
-//   font-size: 12px;
-//   font-weight: bold !important;
-//   position: absolute;
-//   z-index: 1;
-//   top: 8px;
-//   left: 215%;
-//   margin-left: -60px;
-//   opacity: 70%;
-//   transition: opacity 0.3s;
-// }
 
-// .tooltip:hover .tooltiptext {
-//   visibility: visible;
-//   animation: bounce 300ms ease-out forwards;
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 140px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  opacity: 0.7;
+
+  /* Position the tooltip text - */
+  position: absolute;
+  z-index: 1;
+  top: 5px;
+  right: 105%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+// .tooltip .tooltiptext::after {
+//   content: ' ';
+//   position: absolute;
+//   bottom: 100%; At the top of the tooltip
+//   left: 50%;
+//   margin-left: -5px;
+//   border-width: 5px;
+//   border-style: solid;
+//   border-color: transparent transparent black transparent;
 // }
 </style>

@@ -38,7 +38,9 @@ class Organization(TimeStampModel):
     name = models.CharField(max_length=255, blank=True)
     photo = models.ImageField(upload_to=datetime_appended_filepath, max_length=255, blank=True)
     state = models.CharField(
-        max_length=255, choices=org_consts.STATE_CHOCIES, default=org_consts.STATE_ACTIVE,
+        max_length=255,
+        choices=org_consts.STATE_CHOCIES,
+        default=org_consts.STATE_ACTIVE,
     )
     is_trial = models.BooleanField(default=False)
     ignore_emails = ArrayField(
@@ -48,7 +50,8 @@ class Organization(TimeStampModel):
         blank=True,
     )
     has_products = models.BooleanField(default=False)
-    number_of_allowed_users = models.IntegerField(default=1)
+    is_paid = models.BooleanField(default=False)
+    number_of_allowed_users = models.IntegerField(default=3)
     objects = OrganizationQuerySet.as_manager()
 
     def __str__(self):
@@ -141,7 +144,9 @@ class Account(TimeStampModel, IntegrationModel):
 
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "Organization", related_name="accounts", on_delete=models.CASCADE,
+        "Organization",
+        related_name="accounts",
+        on_delete=models.CASCADE,
     )
     parent = models.ForeignKey(
         "organization.Account",
@@ -385,7 +390,9 @@ class Stage(TimeStampModel, IntegrationModel):
         max_length=255, blank=True, help_text="This may be use as a unique value, if it exists"
     )
     organization = models.ForeignKey(
-        "Organization", related_name="stages", on_delete=models.CASCADE,
+        "Organization",
+        related_name="stages",
+        on_delete=models.CASCADE,
     )
     order = models.IntegerField(blank=True, null=True)
     is_closed = models.BooleanField(default=False)
@@ -432,7 +439,9 @@ class ActionChoice(TimeStampModel):
     title = models.CharField(max_length=255, blank=True, null=False)
     description = models.CharField(max_length=255, blank=True, null=False)
     organization = models.ForeignKey(
-        "organization.Organization", on_delete=models.CASCADE, related_name="action_choices",
+        "organization.Organization",
+        on_delete=models.CASCADE,
+        related_name="action_choices",
     )
 
     objects = ActionChoiceQuerySet.as_manager()
@@ -602,7 +611,12 @@ class PricebookEntryQuerySet(models.QuerySet):
 
 class PricebookEntry(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=150)
-    unit_price = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    unit_price = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     external_pricebook = models.CharField(
         max_length=255, blank=True, help_text="value from the integration"
     )
@@ -610,10 +624,14 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
         max_length=255, blank=True, help_text="value from the integration"
     )
     pricebook = models.ForeignKey(
-        "organization.Pricebook2", related_name="pricebook_entries", on_delete=models.CASCADE,
+        "organization.Pricebook2",
+        related_name="pricebook_entries",
+        on_delete=models.CASCADE,
     )
     product = models.ForeignKey(
-        "organization.Product2", related_name="pricebook_entry", on_delete=models.CASCADE,
+        "organization.Product2",
+        related_name="pricebook_entry",
+        on_delete=models.CASCADE,
     )
     secondary_data = JSONField(
         default=dict,
@@ -689,9 +707,24 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         null=True,
         blank=True,
     )
-    unit_price = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
-    quantity = models.DecimalField(max_digits=13, decimal_places=2, default=0.00, null=True,)
-    total_price = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    unit_price = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
+    quantity = models.DecimalField(
+        max_digits=13,
+        decimal_places=2,
+        default=0.00,
+        null=True,
+    )
+    total_price = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     secondary_data = JSONField(
         default=dict,
         null=True,
@@ -817,4 +850,3 @@ class Team(TimeStampModel):
 
         self.team_lead = new_team_lead
         self.save()
-

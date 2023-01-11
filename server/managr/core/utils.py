@@ -7,6 +7,18 @@ from managr.core.models import User
 from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.organization.models import Organization
+from managr.salesforce.models import MeetingWorkflow
+from collections import OrderedDict
+
+
+def qsort(inlist, obj):
+    if inlist == []:
+        return []
+    else:
+        pivot = inlist[0]
+        lesser = qsort([x for x in inlist[1:] if obj[x] < obj[pivot]], obj)
+        greater = qsort([x for x in inlist[1:] if obj[x] >= obj[pivot]], obj)
+        return lesser + [pivot] + greater
 
 
 def get_month_start_and_end(year, current_month, return_current_month_only=False):
@@ -99,6 +111,33 @@ def get_org_fields(org, first, last):
                         obj[form.user.email] = {}
                         obj[form.user.email][key] = 1
         return obj
+
+
+def get_user_fields(user_id, first, last):
+    user = User.objects.get(id=user_id)
+    forms = OrgCustomSlackFormInstance.objects.filter(
+        user=user, datetime_created__range=(first, last)
+    ).exclude(template__isnull=True)
+    obj = {}
+    if len(forms):
+        list(forms.first().__dict__.get("saved_data").keys())
+        for form in forms:
+            old_data = form.previous_data
+            new_data = form.saved_data
+            for key, new_value in new_data.items():
+                if key in old_data:
+                    if str(old_data.get(key)) != str(new_value):
+                        if key in obj.keys():
+                            obj[key] += 1
+                        else:
+                            obj[key] = 1
+
+                else:
+                    if key in obj.keys():
+                        obj[key] += 1
+                    else:
+                        obj[key] = 1
+    return obj
 
 
 def get_totals_for_year(month_only=False):
@@ -210,8 +249,48 @@ def get_organization_totals(month_only=False):
     return totals
 
 
+def get_user_totals(user_id, month_only=False):
+    totals = {}
+    current_date = datetime.now(tz=timezone.utc)
+    date_list = get_month_start_and_end(current_date.year, current_date.month, month_only)
+    user = User.objects.get(id=user_id)
+    for date in date_list:
+        start = timezone.make_aware(datetime.strptime(f"{date[0]} 00:01", "%Y-%m-%d %H:%M"))
+        end = timezone.make_aware(datetime.strptime(f"{date[1]} 23:59", "%Y-%m-%d %H:%M"))
+        slack_form_instances = (
+            OrgCustomSlackFormInstance.objects.filter(datetime_created__range=(start, end))
+            .filter(is_submitted=True, user=user)
+            .exclude(template__isnull=True)
+        )
+        user_obj = {}
+        user_instances = slack_form_instances.filter(user=user)
+        per_day = get_instance_averages(user_instances, date[1])
+        user_obj = {**per_day}
+        user_obj["updates"] = user_instances.filter(
+            template__form_type__in=["UPDATE", "STAGE_GATING"]
+        ).count()
+        user_obj["meetings"] = user_instances.values_list("workflow").distinct().count()
+        user_obj["contacts"] = user_instances.filter(
+            template__form_type="CREATE", template__resource="Contact"
+        ).count()
+        field_obj = get_user_fields(user_id, start, end)
+        sorted_fields = qsort(list(field_obj.keys()), field_obj)
+
+        user_obj["fields"] = field_obj
+        user_obj["field_order"] = sorted_fields
+        user_fields = user.object_fields.filter(api_name__in=sorted_fields)
+        label_obj = {}
+        for field in sorted_fields:
+
+            field_ref = user_fields.filter(api_name=field).first()
+            if field_ref is not None:
+                label_obj[field_ref.api_name] = field_ref.label
+        user_obj["field_labels"] = label_obj
+        totals[date[1][6:7]] = user_obj
+    return totals
+
+
 def pull_usage_data(month_only=True):
     totals = get_totals_for_year(month_only)
     orgs = get_organization_totals(month_only)
     return {"totals": totals, "org": orgs}
-

@@ -20,6 +20,7 @@ from rest_framework import (
     views,
     viewsets,
 )
+from managr.core.permissions import IsStaff
 from rest_framework.decorators import action
 from rest_framework.decorators import (
     api_view,
@@ -279,6 +280,16 @@ class AlertTemplateViewSet(
                     run_time.strftime("%Y-%m-%dT%H:%M%z"),
                 )
         return Response()
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+    )
+    def admin_alerts(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        param = request.query_params.get("org_id", None)
+        templates = alert_models.AlertTemplate.objects.filter(user__organization=param)
+        serialized = self.get_serializer(templates, many=True).data
+        return Response(serialized)
 
 
 class AlertMessageTemplateViewSet(

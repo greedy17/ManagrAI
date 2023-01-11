@@ -21,7 +21,13 @@
                 @click="handleConfirmCancel"
                 src="@/assets/images/close.svg"
                 alt=""
-                style="filter: invert(30%); cursor: pointer; width: 20px; height: 20px; margin-right: 5px;"
+                style="
+                  filter: invert(30%);
+                  cursor: pointer;
+                  width: 20px;
+                  height: 20px;
+                  margin-right: 5px;
+                "
               />
             </div>
           </div>
@@ -107,7 +113,7 @@
         </div>
         <div class="card" v-else>
           <div class="card__header og-bg" style="padding-left: 18px; padding-right: 18px">
-            <img style="height: 30px; width: auto;" src="@/assets/images/salesforce.png" />
+            <img style="height: 30px; width: auto" src="@/assets/images/salesforce.png" />
             <img style="height: 30px" src="@/assets/images/hubspot-single-logo.svg" />
             <!-- <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 32px" />
             <img src="@/assets/images/outlookMail.png" style="height: 32px" /> -->
@@ -123,7 +129,7 @@
           </div>
           <div v-else>
             <div class="card__body">
-              <div style="display: flex;">
+              <div style="display: flex">
                 <h3 class="card__title">CRM</h3>
                 <span class="required" v-if="!userCRM">
                   <img src="@/assets/images/required.svg" height="14px" alt=""
@@ -250,9 +256,18 @@
           </div>
 
           <div class="card__body">
-            <h3 class="card__title">Zoom</h3>
+            <div class="space-between">
+              <h3 class="card__title">Zoom</h3>
+              <!-- <img
+                class="gold-filter shimmer"
+                src="@/assets/images/premium.svg"
+                height="24"
+                alt=""
+              /> -->
+            </div>
+
             <p class="card-text">Activates meeting workflow automations.</p>
-            <div>
+            <div v-if="isPaid">
               <PulseLoadingSpinnerButton
                 v-if="!hasZoomIntegration"
                 :disabled="hasZoomIntegration"
@@ -281,6 +296,17 @@
                 </div>
               </div>
             </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+            </div>
           </div>
         </div>
 
@@ -293,7 +319,7 @@
           <div class="card__body">
             <h3>Salesloft</h3>
             <p class="card-text">Add Contacts to Cadences</p>
-            <div>
+            <div v-if="isPaid">
               <PulseLoadingSpinnerButton
                 v-if="!hasSalesloftIntegration"
                 :disabled="hasSalesloftIntegration"
@@ -313,6 +339,17 @@
                 </div>
               </div>
             </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+            </div>
           </div>
         </div>
 
@@ -325,31 +362,45 @@
             <h3>Outreach</h3>
 
             <p class="card-text">Add Contacts to Sequences</p>
-            <PulseLoadingSpinnerButton
-              v-if="!hasOutreachIntegration"
-              :disabled="hasOutreachIntegration"
-              @click="onGetAuthLink('OUTREACH')"
-              class="orange_button"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'OUTREACH'"
-            ></PulseLoadingSpinnerButton>
-            <div class="row" v-else>
-              <div class="img-border">
-                <img
-                  @click="setRemoveApp('OUTREACH')"
-                  src="@/assets/images/revoke.svg"
-                  height="16"
-                  alt=""
-                />
+
+            <div v-if="isPaid">
+              <PulseLoadingSpinnerButton
+                v-if="!hasOutreachIntegration"
+                :disabled="hasOutreachIntegration"
+                @click="onGetAuthLink('OUTREACH')"
+                class="orange_button"
+                text="Connect"
+                :loading="generatingToken && selectedIntegration == 'OUTREACH'"
+              ></PulseLoadingSpinnerButton>
+              <div class="row" v-else>
+                <div class="img-border">
+                  <img
+                    @click="setRemoveApp('OUTREACH')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+                <div class="img-border">
+                  <img
+                    @click="onGetAuthLink('OUTREACH')"
+                    src="@/assets/images/refresh.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
               </div>
-              <div class="img-border">
-                <img
-                  @click="onGetAuthLink('OUTREACH')"
-                  src="@/assets/images/refresh.svg"
-                  height="16"
-                  alt=""
-                />
-              </div>
+            </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
             </div>
           </div>
         </div>
@@ -380,7 +431,7 @@
           <div class="card__body">
             <h3>Gong</h3>
             <p class="card-text">Access call recordings & insights</p>
-            <div>
+            <div v-if="isPaid">
               <PulseLoadingSpinnerButton
                 v-if="!hasGongIntegration && user.isAdmin"
                 :disabled="hasGongIntegration"
@@ -400,6 +451,17 @@
                   />
                 </div>
               </div>
+            </div>
+
+            <div v-else style="cursor: text" class="right-tooltip">
+              <img
+                class="shimmer"
+                style="filter: invert(40%)"
+                src="@/assets/images/lock.svg"
+                height="18"
+                alt=""
+              />
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
             </div>
           </div>
         </div>
@@ -590,16 +652,16 @@ export default {
         }
       } else {
         // if (!this.hasSlackIntegration) {
-          try {
-            let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.USER)
-            if (res.link) {
-              window.location.href = res.link
-            }
-          } catch (e) {
-          } finally {
-            this.generatingToken = false
-            return res
+        try {
+          let res = await SlackOAuth.api.getOAuthLink(SlackOAuth.options.USER)
+          if (res.link) {
+            window.location.href = res.link
           }
+        } catch (e) {
+        } finally {
+          this.generatingToken = false
+          return res
+        }
         // }
       }
     },
@@ -654,6 +716,9 @@ export default {
     }
   },
   computed: {
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
@@ -739,6 +804,78 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.shimmer {
+  display: inline-block;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  max-width: 200px;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 110px;
+  background-color: $base-gray;
+  opacity: 0.9;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  right: 105%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.right-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.right-tooltip .right-tooltiptext {
+  visibility: hidden;
+  width: 150px;
+  background-color: $base-gray;
+  opacity: 0.9;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  top: -2px;
+  left: 115%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.right-tooltip:hover .right-tooltiptext {
+  visibility: visible;
+}
+
+a {
+  text-decoration: none;
+  color: white !important;
+}
+
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -796,6 +933,23 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.gold-filter {
+  filter: invert(81%) sepia(35%) saturate(920%) hue-rotate(343deg) brightness(91%) contrast(90%);
+  margin-left: 4px;
+}
+
+.gold-text {
+  color: #ddad3c;
+}
+
+.space-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 116%;
 }
 
 // .card:hover {
@@ -857,7 +1011,7 @@ export default {
   background: linear-gradient(90deg, rgba(181, 222, 255, 1) 1%, rgba(127, 196, 251, 1) 100%);
   border: 1px solid $very-light-blue;
 }
-.og-bg{
+.og-bg {
   background: rgb(233, 233, 233);
   background: linear-gradient(90deg, rgba(233, 233, 233, 1) 1%, rgb(227, 231, 235) 100%);
   border: 1px solid rgba(233, 233, 233, 1);
