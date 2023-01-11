@@ -606,7 +606,7 @@
               <div>
                 <span class="">Alert Updates:</span>
                 {{
-                  content.total && content.total.updates.alert !== null
+                  content.total && content.total.updates && content.total.updates.alert !== null
                     ? content.total.updates.alert
                     : 'None'
                 }}
@@ -763,7 +763,7 @@
           <!-- <div>{{allForms}}</div> -->
           <div class="form__list">
             <div class="added-collection">
-              <p class="added-collection__header">Users</p>
+              <p class="added-collection__header">Users <span v-if="orgUsers" class="green">{{ orgUsers.length }}</span></p>
               <div class="added-collection__body">
                 <Multiselect
                   placeholder="Select User"
@@ -786,7 +786,7 @@
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Slack Form</p>
+              <p class="added-collection__header">Slack Form <span v-if="orgSlackForms" class="green">{{ orgSlackForms.length }}</span></p>
               <div class="added-collection__body">
                 <Multiselect
                   placeholder="Select Slack Form"
@@ -811,13 +811,13 @@
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Slack Form Instances</p>
+              <p class="added-collection__header">Slack Form Instances <span v-if="orgSlackFormInstances" class="green">{{ orgSlackFormInstances.length }}</span></p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToSlackFormInstace()">Go</button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Meeting Workflows</p>
+              <p class="added-collection__header">Meeting Workflows <span v-if="orgMeetingWorkflows" class="green">{{ orgMeetingWorkflows.length }}</span></p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToMeetingWorkflow()">Go</button>
               </div>
@@ -1747,5 +1747,13 @@ input[type='search']:focus {
 }
 .bottom-margin {
   margin-bottom: 1rem;
+}
+.green {
+  color: $dark-green;
+  background-color: $white-green;
+  font-size: .75rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-left: 8px;
 }
 </style>
