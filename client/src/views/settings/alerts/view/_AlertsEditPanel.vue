@@ -453,13 +453,16 @@ export default {
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({title, val})
       this.messageTemplateForm.field.body.value = this.slackMessage.join(('\n\n'))
+      this.alert.messageTemplateRef.body = this.slackMessage.join(('\n\n'))
       this.executeUpdateMessageTemplate()
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
       this.messageTemplateForm.field.body.value = this.slackMessage.join(('\n\n'))
+      this.alert.messageTemplateRef.body = this.slackMessage.join(('\n\n'))
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
+      this.executeUpdateMessageTemplate()
     },
     onAddField(field) {
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
@@ -641,9 +644,12 @@ export default {
     this.fields.refresh()
     if (this.alert) {
       this.templateTitleField.value = this.alert.title
+      // work here
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
-    this.slackMessage = this.messageTemplateForm.field.body.value.split(('\n\n'))
+    if (this.messageTemplateForm.field.body.value) {
+      this.slackMessage = this.messageTemplateForm.field.body.value.split(('\n\n'))
+    }
     const slackFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const titleAndVal = this.slackMessage[i].split('\n')

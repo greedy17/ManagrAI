@@ -179,7 +179,7 @@
                 >
                   <input
                     type="checkbox"
-                    @input="setDay"
+                    :input="setDay"
                     :id="day.value"
                     :value="day.value"
                     v-model="config.newConfigs[0].recurrenceDays"
@@ -516,10 +516,10 @@ export default {
     }
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      crmObject: this.resourceType,
+      crmObject: this.selectedResourceType,
     }
     await this.objectFields.refresh()
-    this.slackMessage = this.config.messageTemplate.body.split(' <br>\n<br>')
+    this.slackMessage = this.config.messageTemplate.body.split('\n\n')
     const slackFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const titleAndVal = this.slackMessage[i].split('\n')

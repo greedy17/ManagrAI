@@ -31,7 +31,7 @@
       </div>
 
       <div class="results-title" v-else>
-        <p class="light-gray-text row">
+        <p class="light-gray-text row right-tooltip">
           Performance Reports
           <img
             class="shimmer"
@@ -40,9 +40,10 @@
             height="14px"
             alt=""
           />
+          <small class="right-tooltiptext">Upgrade to Startup Plan</small>
         </p>
 
-        <p style="margin-left: 18px" class="light-gray-text row">
+        <p style="margin-left: 18px" class="light-gray-text right-tooltip row">
           Story Reports
           <img
             class="shimmer"
@@ -51,6 +52,7 @@
             height="14px"
             alt=""
           />
+          <small class="right-tooltiptext">Upgrade to Startup Plan</small>
         </p>
       </div>
 
@@ -656,7 +658,6 @@
           <img src="@/assets/images/performance-prev.png" height="100%" width="100%" alt="" />
           <h3 style="margin-left: 8px">Performance Report</h3>
           <p class="preview-text">An automated report detailing how users work.</p>
-          <p class="preview-text grape">*Requires Team Plan.</p>
         </div>
         <div class="preview">
           <img src="@/assets/images/story-prev.png" height="100%" width="100%" alt="" />
@@ -664,7 +665,6 @@
           <p class="preview-text">
             A contenxtualized "Story" report highlighting the deal journey.
           </p>
-          <p class="preview-text grape">*Requires Team Plan.</p>
         </div>
       </div>
     </div>
@@ -998,6 +998,35 @@ export default {
         brightness(93%) contrast(89%);
     }
   }
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.right-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.right-tooltip .right-tooltiptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: $base-gray;
+  opacity: 0.9;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 95%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.right-tooltip:hover .right-tooltiptext {
+  visibility: visible;
 }
 
 .even-row {
