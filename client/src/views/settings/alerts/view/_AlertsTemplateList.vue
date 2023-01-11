@@ -527,6 +527,9 @@ export default {
     },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
+      if (newName === 'LargeDeals') {
+        newName = 'LargeOpportunities'
+      }
       this.$router.push({ name: newName })
     },
     getActiveTemplateTitles() {
