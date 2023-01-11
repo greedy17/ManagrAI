@@ -72,7 +72,7 @@
               alt=""
             />
           </button>
-          <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+          <small class="tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
         </div>
 
         <button

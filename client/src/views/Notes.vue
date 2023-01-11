@@ -22,7 +22,7 @@
             alt=""
           />
         </button>
-        <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+        <small class="tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
       </div>
 
       <button v-else-if="!creating && !editing && isPaid" @click="createNote" class="green_button">
