@@ -915,7 +915,6 @@ def process_add_custom_object_form(payload, context):
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
             form.workflow = workflow
             form.save()
-            print(form.workflow)
     context = {**context, "f": str(form.id)}
     data = {
         "view_id": payload["view"]["id"],
@@ -2104,7 +2103,7 @@ def process_get_call_recording(payload, context):
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
     user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
-    resource = routes[resource_type]["model"].objects.get(id=resource_id)
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
     if resource_type in ["Opportunity", "Contact"]:
         resource_ids = [resource.secondary_data["Id"]]
         if resource.account:

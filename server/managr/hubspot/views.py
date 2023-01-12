@@ -1,11 +1,8 @@
 import logging
-from faker import Faker
-from django.utils import timezone
-
 from urllib.parse import urlencode
-
 from django.shortcuts import redirect
-
+from django.utils import timezone
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework import permissions
@@ -72,6 +69,8 @@ def get_hubspot_authentication(request):
                 if len(form_check) > 0
                 else timezone.now()
             )
+            if settings.IN_DEV:
+                schedule = timezone.now() + timezone.timedelta(minutes=2)
             emit_generate_hs_form_template(str(res.user), schedule=schedule)
         sync_operations = [*user.hubspot_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
