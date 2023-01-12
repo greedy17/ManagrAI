@@ -11,7 +11,7 @@
 
       <!-- <h3>Current Template Name</h3> -->
 
-      <div v-if="!isPaid" class="tooltip">
+      <div v-if="!isPaid && !editing" class="tooltip">
         <button disabled class="green_button row">
           Create Template
           <img
