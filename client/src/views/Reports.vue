@@ -460,11 +460,12 @@
             <div class="card">
               <img src="@/assets/images/doubleCheck.svg" height="24px" alt="" />
               <h1 class="green-text" style="margin: 12px 0">
-                {{ Object.keys(performanceReport['fields']).length }}
+                {{ Object.keys(performanceReport['fields']).length - noteFieldsLength }}
                 <img
                   v-if="
-                    Object.keys(performanceReport['fields']).length >=
-                    Object.keys(performanceReport['fields']).length / totalMonths
+                    Object.keys(performanceReport['fields']).length - noteFieldsLength >=
+                    (Object.keys(performanceReport['fields']).length - noteFieldsLength) /
+                      totalMonths
                   "
                   src="@/assets/images/trendingUp.svg"
                   class="green-filter"
@@ -483,14 +484,21 @@
               <div class="relative">
                 <meter
                   id="file"
-                  :value="Object.keys(performanceReport['fields']).length"
-                  :max="(Object.keys(performanceReport['fields']).length / totalMonths) * 2"
+                  :value="Object.keys(performanceReport['fields']).length - noteFieldsLength"
+                  :max="
+                    ((Object.keys(performanceReport['fields']).length - noteFieldsLength) /
+                      totalMonths) *
+                    2
+                  "
                 ></meter>
                 <span class="center-line">|</span>
               </div>
 
               <p class="small-text">
-                Avg: {{ Object.keys(performanceReport['fields']).length / totalMonths }}
+                Avg:
+                {{
+                  Object.keys(performanceReport['fields']).length - noteFieldsLength / totalMonths
+                }}
               </p>
             </div>
           </div>
@@ -704,6 +712,7 @@ export default {
       sortedUpdates: [],
       totalMonths: null,
       fieldLabels: null,
+      noteFieldsLength: null,
       dropdownLoading: false,
       workflows: CollectionManager.create({
         ModelClass: AlertTemplate,
@@ -744,6 +753,7 @@ export default {
       this.generating = !this.generating
     },
     async getPerformanceReport(id) {
+      let noteLength = 0
       let today = new Date()
       let month = today.getMonth() + 1
       try {
@@ -751,7 +761,10 @@ export default {
         this.fieldLabels = res[month].field_labels
         this.totalMonths = Object.keys(res).length
         this.performanceReport = res[month]
+        res[month]['fields']['meeting_comments'] ? (noteLength += 1) : 0
+        res[month]['fields']['meeting_type'] ? (noteLength += 1) : 0
         this.setTimeSaved()
+        this.noteFieldsLength = noteLength
       } catch (e) {
         console.log(e)
       }
