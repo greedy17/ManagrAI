@@ -917,7 +917,7 @@
         </div>
       </section> -->
 
-      <!-- <section style="position: relative">
+      <section style="position: relative">
         <button
           v-if="activeFilters.length < 4 && selected_org"
           @click.stop="addingFilter"
@@ -932,9 +932,42 @@
           />Filter
         </button>
         <div v-outside-click="closeFilters" v-if="filtering">
-          <Filters @select-filter="selectFilter" :filterFields="filterFields" />
+          <div v-if="filtering">
+            <div class="filter-selection__body">
+              <Multiselect
+                placeholder="Team/User"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
+                v-model="selectedTeamOrUser"
+                :options="teamOrUser"
+                openDirection="below"
+                selectLabel="Enter"
+                track-by="name"
+                label="name"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+              </Multiselect>
+            </div>
+            <div class="filter-selection__body">
+              <Multiselect
+                placeholder="Filter"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
+                v-model="selectedFilter"
+                :options="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? teamList : orgUsers) : []"
+                openDirection="below"
+                selectLabel="Enter"
+                track-by="name"
+                :label="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? '' : 'email') : ''"
+              >
+                <template slot="placeholder">
+                  <p class="multi-slot">{{selectedTeamOrUser ? `Filters` : `Please select User/Team.`}}</p>
+                </template>
+              </Multiselect>
+            </div>
+          </div>
         </div>
-      </section> -->
+      </section>
     </div>
     <div class="staff__main_page">
       <template v-if="selected_org && selected_org.id">
@@ -950,7 +983,7 @@
               <div>
                 <Multiselect
                   placeholder="State"
-                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
                   v-model="stateActive"
                   :options="states"
                   openDirection="below"
@@ -1212,6 +1245,15 @@ export default {
       selectedSlackForms: null,
       showOrgList: false,
       showCommandList: false,
+      filtering: false,
+      filterApiName: '',
+      filterType: null,
+      currentFilter: '',
+      filterSelected: false,
+      teamOrUser: [{name: 'team'}, {name: 'user'}],
+      selectedTeamOrUser: null,
+      selectedFilter: null,
+      teamList: [],
       activeFilters: [],
       orgUsers: [],
       orgSlackForms: [],
@@ -1273,6 +1315,24 @@ export default {
     clearUsersAndSlackForm() {
       this.selectedSlackForms = null
       this.selectedUsers = null
+    },
+    closeFilters() {
+      this.filtering = false
+    },
+    addingFilter() {
+      if (this.filtering === true) {
+        this.filtering = false
+      } else {
+        this.filtering = true
+        this.filterSelected = false
+      }
+    },
+    selectFilter(name, type, label) {
+      this.filtering = !this.filtering
+      this.filterApiName = name
+      this.filterType = type
+      this.currentFilter = label
+      this.filterSelected = true
     },
     async getAllOrgUsers(orgId) {
       const res = await User.api.getAllOrgUsers(orgId)
@@ -1698,6 +1758,12 @@ export default {
           this.selected_org.id,
         )
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
+        const tempTeams = new Set()
+        this.orgUsers.forEach(user => tempTeams.add(user.team))
+        this.teamList = Array.from(tempTeams)
+        console.log('this.teamList', this.teamList)
+        console.log('selected_org', this.selected_org)
+        console.log('orgUsers', this.orgUsers)
       }
     },
   },
@@ -1745,7 +1811,7 @@ h1 {
   flex-wrap: wrap;
   margin-left: 1rem;
   margin-top: 1rem;
-  width: 62vw;
+  width: 82vw;
 }
 ul {
   margin: 0;
@@ -1940,7 +2006,7 @@ input[type='search']:focus {
     background-color: $white;
     border: 1px solid #e8e8e8;
     color: $base-gray;
-    width: 62vw;
+    width: 82vw;
     // height: 60vh;
     overflow: scroll;
     padding: 1.5rem 1.5rem 1.5rem 1rem;
