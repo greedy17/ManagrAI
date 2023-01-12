@@ -117,7 +117,7 @@
     </div>
 
     <div v-if="editingWorkflow && !buildingCustom">
-      <AlertsEditPanel :alert="currentAlert" />
+      <AlertsEditPanel :alert="currentAlert" ref="editAlertsPanel" />
     </div>
 
     <router-view
@@ -183,6 +183,7 @@ export default {
         })
     },
     updateWorkflow() {
+      this.$refs.editAlertsPanel.updateWorkflow()
       this.buildingCustom = false
       this.editingWorkflow = false
       this.$toast('Workflow Updated', {
