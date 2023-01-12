@@ -311,9 +311,9 @@
             @click="test(member)"
           >
             <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
-            {{ !member.firstName ? 'Pending' : member.isActive ? member.firstName : '[REMOVED]' }}
+            {{ !member.firstName ? 'Pending' : member.isActive ? member.firstName : member.firstName }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
-              {{ !member.firstName ? member.email : member.isActive ? member.email : '[REMOVED]' }}
+              {{ !member.firstName ? member.email : member.isActive ? member.email : member.email }}
             </p>
           </div>
           <div
@@ -342,7 +342,7 @@
             class="invite-list__section__item"
           >
             <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
-            {{ !member.firstName ? 'Pending...' : member.isActive ? 'Registered' : '[REMOVED]' }}
+            {{ !member.firstName ? 'Pending...' : member.isActive ? 'Registered' : 'Deactivated' }}
           </div>
           <div
             style="display: flex; align-items: flex-start"

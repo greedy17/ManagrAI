@@ -276,6 +276,63 @@
             </section>
           </div>
         </div>
+        <div v-else-if="modalName === 'alert'">
+          <div class="modal-container__body">
+            <div class="flex-row-spread sticky border-bottom">
+              <div class="flex-row">
+                <img src="@/assets/images/logo.png" class="logo" alt="" />
+                <h4>
+                  {{ modalInfo.title ? modalInfo.title : 'None' }}
+                </h4>
+              </div>
+            </div>
+            <section class="note-section" v-if="modalInfo">
+              <p class="note-section__title">
+                Alert ID:
+                {{ modalInfo.id ? modalInfo.id : 'N/A' }}
+              </p>
+              <!-- <p class="note-section__date">
+                User:
+                {{ modalInfo.user ? getUserName(modalInfo.user) : 'N/A' }}
+              </p> -->
+              <p class="note-section__date" style="margin-top: -10px;">
+                Is Active:
+                {{ modalInfo.is_active ? modalInfo.is_active : 'N/A' }}
+              </p>
+              <div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">User: </span
+                  >{{ modalInfo.user ? getUserName(modalInfo.user) : 'N/A' }} |
+                  <span class="">Alert Level: </span
+                  >{{ modalInfo.alert_level ? modalInfo.alert_level : 'N/A' }} |
+                  <span class="">Resource Type: </span
+                  >{{ modalInfo.resource_type ? modalInfo.resource_type : 'None' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Configs: </span
+                  >{{
+                    modalInfo.configs_ref ? modalInfo.configs_ref : 'N/A'
+                  }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Groups: </span
+                  >{{ modalInfo.groups_ref ? modalInfo.groups_ref : 'N/A' }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="">Instances: </span
+                  >{{ modalInfo.instances_ref ? modalInfo.instances_ref : 'N/A' }}
+                </div>
+                <div>
+                  <span class="">Message Templates: </span
+                  >{{ modalInfo.message_template_ref ? modalInfo.message_template_ref : 'N/A' }}
+                </div>
+              </div>
+            </section>
+            <section v-else>
+              <p>No Info to Display</p>
+            </section>
+          </div>
+        </div>
         <div v-else-if="modalName === 'user'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
@@ -510,6 +567,85 @@
                 </div>
               </div>
             </section>
+          </div>
+        </div>
+        <div v-else-if="modalName === 'usersOverview'">
+          <div class="modal-container__body">
+            <div class="flex-row-spread sticky border-bottom" style="margin-bottom: 1rem; background-color: white; z-index: 3;">
+              <div class="flex-row">
+                <img src="@/assets/images/logo.png" class="logo" alt="" />
+                <h4>{{ this.selected_org.name }}'s Users</h4>
+              </div>
+            </div>
+            <div v-for="member in modalInfo" :key="member.id" class="invite-list-users__section__container">
+              <template
+                v-if="
+                  member
+                "
+              >
+                <div
+                  style="display: flex; align-items: flex-start; font-size: 14px"
+                  class="invite-list-users__section__item col"
+                >
+                  <!-- {{member.is_active ? member.first_name : 'Pending'}} -->
+                  {{ !member.first_name ? 'Pending' : member.is_active ? member.first_name : member.first_name }}
+                  <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
+                    {{ !member.first_name ? member.email : member.is_active ? member.email : member.email }}
+                  </p>
+                </div>
+                <div
+                  v-if="member.user_level == 'MANAGER'"
+                  style="display: flex; align-items: flex-start; font-size: 14px"
+                  class="invite-list-users__section__item"
+                >
+                  Manager
+                </div>
+                <div
+                  v-else-if="member.user_level == 'SDR'"
+                  style="display: flex; align-items: flex-start; font-size: 14px"
+                  class="invite-list-users__section__item"
+                >
+                  SDR
+                </div>
+                <div
+                  v-else-if="member.user_level == 'REP'"
+                  style="display: flex; align-items: flex-start; font-size: 14px"
+                  class="invite-list-users__section__item"
+                >
+                  REP
+                </div>
+                <div
+                  style="display: flex; align-items: flex-start; font-size: 14px"
+                  class="invite-list-users__section__item"
+                >
+                  <!-- {{ member.is_active ? 'Registered' : 'Pending...' }} -->
+                  {{ !member.first_name ? 'Pending...' : member.is_active ? 'Registered' : 'Deactivated' }}
+                </div>
+                <div
+                  style="display: flex; align-items: flex-start"
+                  class="invite-list-users__section__item invite-list-users__status"
+                >
+                  <span :class="member.slack_ref ? '' : 'grayscale'">
+                    <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
+                  </span>
+                  <span v-if="member.crm === 'SALESFORCE'" :class="member.has_salesforce_integration ? '' : 'grayscale'">
+                    <img src="@/assets/images/salesforce.png" height="18px" alt="" />
+                  </span>
+                  <span v-else-if="member.crm === 'HUBSPOT'" :class="member.has_hubspot_integration ? '' : 'grayscale'">
+                    <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
+                  </span>
+                  <span v-else :class="'grayscale'">
+                    <img src="@/assets/images/revoke.svg" height="18px" alt="" />
+                  </span>
+                  <span :class="member.has_zoom_integration ? '' : 'grayscale'">
+                    <img src="@/assets/images/zoom.png" alt="" height="18px" />
+                  </span>
+                  <span :class="member.nylas_ref ? '' : 'grayscale'">
+                    <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
+                  </span>
+                </div>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -783,6 +919,7 @@
               </div>
               <div class="added-collection__body">
                 <button class="green_button" @click="openModal('user', selectedUsers)">Go</button>
+                <button class="green_button" @click="openModal('usersOverview', orgUsers)">Overview</button>
               </div>
             </div>
             <div class="added-collection">
@@ -820,6 +957,12 @@
               <p class="added-collection__header">Meeting Workflows <span v-if="orgMeetingWorkflows" class="green">{{ orgMeetingWorkflows.length }}</span></p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToMeetingWorkflow()">Go</button>
+              </div>
+            </div>
+            <div class="added-collection">
+              <p class="added-collection__header">Alerts <span v-if="orgAlerts" class="green">{{ orgAlerts.length }}</span></p>
+              <div class="added-collection__body">
+                <button class="green_button" @click="goToAlerts()">Go</button>
               </div>
             </div>
           </div>
@@ -878,6 +1021,20 @@
                 : 'No meeting tied to this workflow'
             }}
           </h4>
+        </div>
+      </template>
+      <template v-else-if="page === 'OrgAlerts'">
+        <button class="green_button back" @click="goBack">Back</button>
+        <div
+          :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
+          v-for="(alert, i) in orgAlerts"
+          :key="alert.id"
+        >
+          <h5 class="click click_width" @click="openModal('alert', alert)">
+            {{ alert.title ? alert.title : 'N/A' }}
+            <!-- ({{ alert.alert_level ? alert.alert_level : 'N/A' }}) by
+            {{ getUserName(alert.user) }} -->
+          </h5>
         </div>
       </template>
       <template v-else>
@@ -1245,6 +1402,11 @@ export default {
       this.selected_org = null
       this.page = 'MeetingWorkflow'
     },
+    goToAlerts() {
+      this.old_selected_org = this.selected_org
+      this.selected_org = null
+      this.page = 'OrgAlerts'
+    },
     openModal(name, data) {
       this.modalName = name
       this.modalInfo = data
@@ -1420,7 +1582,6 @@ export default {
           this.selected_org.id,
         )
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
-        console.log('orgAlerts', this.orgAlerts)
       }
     },
   },
@@ -1755,5 +1916,45 @@ input[type='search']:focus {
   padding: 2px 4px;
   border-radius: 4px;
   margin-left: 8px;
+}
+.invite-list-users {
+  &__container {
+    background-color: $white;
+    // border: 1px solid #e8e8e8;
+    color: $base-gray;
+    width: 92vw;
+    height: 60vh;
+    overflow: scroll;
+    padding: 1.5rem 0rem 1.5rem 1rem;
+    border-radius: 5px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  &__section {
+    &__container {
+      width: 100%;
+      display: flex;
+      // margin-bottom: 0.5rem;
+      z-index: 2;
+      margin-left: 16px;
+    }
+    &__item {
+      width: 33%;
+      overflow-wrap: break-word;
+    }
+  }
+  &__status {
+    img {
+      margin-right: 16px;
+    }
+  }
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.grayscale {
+  filter: grayscale(99%);
 }
 </style>
