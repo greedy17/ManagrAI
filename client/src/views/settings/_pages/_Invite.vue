@@ -351,11 +351,14 @@
             <span :class="member.slackRef ? '' : 'grayscale'">
               <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <span v-if="userCRM === 'SALESFORCE'" :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
+            <span v-if="member.crm === 'SALESFORCE'" :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
               <img src="@/assets/images/salesforce.png" height="18px" alt="" />
             </span>
-            <span v-else-if="userCRM === 'HUBSPOT'" :class="member.hasHubspotIntegration ? '' : 'grayscale'">
+            <span v-else-if="member.crm === 'HUBSPOT'" :class="member.hasHubspotIntegration ? '' : 'grayscale'">
               <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
+            </span>
+            <span v-else :class="'grayscale'">
+              <img src="@/assets/images/revoke.svg" height="18px" alt="" />
             </span>
             <span :class="member.hasZoomIntegration ? '' : 'grayscale'">
               <img src="@/assets/images/zoom.png" alt="" height="18px" />
