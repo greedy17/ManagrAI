@@ -801,7 +801,7 @@
       </div>
       <div v-else>No Modal Info</div>
     </Modal>
-    <div class="staff__drawer">
+    <!-- <div class="staff__drawer">
       <h3>Quick Commands</h3>
       <div class="command_dropdown">
         <Multiselect
@@ -836,6 +836,105 @@
           <p class="multi-slot">No results.</p>
         </template>
       </Multiselect>
+    </div> -->
+    <div class="flex-row">
+      <small class="pipeline-header">Quick Commands:</small>
+      <button @click.stop="showCommandList = !showCommandList" class="text-button" style="cursor: pointer">
+        Commands
+        <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
+      </button>
+      <div v-outside-click="closeListSelect" v-show="showCommandList" class="list-section">
+        <div class="list-section__title flex-row-spread">
+          <p>Commands</p>
+        </div>
+        <button
+          @click="selectCommand(command)"
+          :v-model="selectedCommand"
+          class="list-button"
+          v-for="command in commandOptions"
+          :key="command.id"
+        >
+          {{ command.label }}
+        </button>
+      </div>
+      <small class="pipeline-header">Organization:</small>
+      <button @click.stop="showOrgList = !showOrgList" class="text-button" style="cursor: pointer">
+        Organization
+        <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
+      </button>
+      <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section">
+        <div class="list-section__title flex-row-spread">
+          <p>Organizations</p>
+        </div>
+        <button
+          @click="selectOrg(org)"
+          :v-model="selected_org"
+          class="list-button"
+          v-for="org in organizations"
+          :key="org.id"
+        >
+          {{ org.name }}
+        </button>
+      </div>
+      <div
+        v-for="(filter, i) in activeFilters"
+        :key="i"
+        @mouseenter="hoveredIndex = i"
+        @mouseleave="hoveredIndex = null"
+        class="main"
+      >
+        <strong style="font-size: 14px">{{ filter }}</strong>
+        <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
+        <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
+        <span v-if="hoveredIndex === i" class="selected-filters__close"
+          ><img src="@/assets/images/close.svg" @click="removeFilter(filter, userCRM === 'SALESFORCE' ? i + 2 : i + 10)" alt=""
+        /></span>
+      </div>
+
+      <!-- <section v-if="filterSelected" style="position: relative">
+        <main class="main__before">
+          <small
+            ><strong>{{ currentFilter }}</strong></small
+          >
+          <small style="margin-left: 0.2rem">{{
+            currentOperators[currentOperators.length - 1]
+          }}</small>
+        </main>
+        <div>
+          <FilterSelection
+            @filter-added="applyFilter"
+            @operator-selected="addOperator"
+            @value-selected="valueSelected"
+            @close-selection="closeFilterSelection"
+            @filter-accounts="getAccounts"
+            :type="filterType"
+            :filterName="currentFilter"
+            :dropdowns="apiPicklistOptions"
+            :apiName="filterApiName"
+            :accounts="allAccounts"
+            :owners="allUsers"
+          />
+        </div>
+      </section> -->
+
+      <!-- <section style="position: relative">
+        <button
+          v-if="activeFilters.length < 4 && selected_org"
+          @click.stop="addingFilter"
+          class="add-filter-button"
+        >
+          <img
+            src="@/assets/images/filter.svg"
+            class="invert"
+            height="12px"
+            style="margin-right: 0.25rem"
+            alt=""
+          />Filter
+        </button>
+        <div v-outside-click="closeFilters" v-if="filtering">
+          <Filters @select-filter="selectFilter" :filterFields="filterFields" />
+        </div>
+      </section> -->
     </div>
     <div class="staff__main_page">
       <template v-if="selected_org && selected_org.id">
@@ -919,7 +1018,7 @@
               </div>
               <div class="added-collection__body">
                 <button class="green_button" @click="openModal('user', selectedUsers)">Go</button>
-                <button class="green_button" @click="openModal('usersOverview', orgUsers)">Overview</button>
+                <button class="green_button" @click="openModal('usersOverview', orgUsers)" style="margin-left: 1rem;">Overview</button>
               </div>
             </div>
             <div class="added-collection">
@@ -1111,6 +1210,9 @@ export default {
       },
       selectedUsers: null,
       selectedSlackForms: null,
+      showOrgList: false,
+      showCommandList: false,
+      activeFilters: [],
       orgUsers: [],
       orgSlackForms: [],
       orgSlackFormInstances: null,
@@ -1163,6 +1265,11 @@ export default {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
     },
+    selectOrg(org) {
+      this.selected_org = org
+      this.clearUsersAndSlackForm()
+      this.closeListSelect()
+    },
     clearUsersAndSlackForm() {
       this.selectedSlackForms = null
       this.selectedUsers = null
@@ -1203,6 +1310,11 @@ export default {
       } catch (e) {
         console.log(e)
       }
+    },
+    selectCommand(cmd) {
+      this.selectedCommand = cmd
+      this.closeListSelect()
+      this.runCommand()
     },
     async runCommand() {
       if (!this.selectedCommand || !this.selectedCommand.value) {
@@ -1366,6 +1478,10 @@ export default {
       this.selected_org = this.old_selected_org
       this.old_selected_org = null
       this.page = null
+    },
+    closeListSelect() {
+      this.showOrgList = false
+      this.showCommandList = false
     },
     goToUser() {
       if (!this.selectedUsers || !this.selectedUsers.length) {
@@ -1595,13 +1711,15 @@ export default {
 .staff {
   margin-top: 3rem;
   display: flex;
+  flex-direction: column;
   height: 100vh;
   padding-left: 72px;
 }
 
 .staff__drawer {
-  width: 20vw;
-  height: 40%;
+  // width: 20vw;
+  // height: 40%;
+  display: flex;
   background-color: #fafbfc;
   border-right: 2px solid $soft-gray;
   border-bottom: 2px solid $soft-gray;
