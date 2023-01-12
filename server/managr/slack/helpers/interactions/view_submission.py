@@ -654,7 +654,6 @@ def process_submit_resource_data(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_submit_custom_object(payload, context):
-    print(context)
     user = User.objects.get(id=context.get("u"))
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
     state = payload["view"]["state"]["values"]

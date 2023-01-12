@@ -87,7 +87,6 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
-        print("HUBSPOT AUTHENTICATE RES", res)
         if settings.IN_DEV:
             user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
             # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
@@ -197,7 +196,6 @@ class HubspotAuthAccountAdapter:
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
-            print("HUBSPOT GET USER INFO RESPONSE", res.json())
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):

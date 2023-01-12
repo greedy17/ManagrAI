@@ -122,7 +122,6 @@ class CustomAPIException:
     def raise_error(self):
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
-        print(self.message)
         if self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured with a hubspot integration, {self.fn_name}")
             raise Api500Error()

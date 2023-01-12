@@ -915,7 +915,6 @@ def process_add_custom_object_form(payload, context):
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
             form.workflow = workflow
             form.save()
-            print(form.workflow)
     context = {**context, "f": str(form.id)}
     data = {
         "view_id": payload["view"]["id"],
@@ -2088,7 +2087,6 @@ def process_get_call_recording(payload, context):
         view_id,
     )
     resource_id = context.get("resource_id", None)
-    print(resource_id)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     if resource_id is None and type != "recap":
         timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
