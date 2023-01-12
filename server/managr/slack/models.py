@@ -511,7 +511,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if o_k in fields:
                 old_data[o_k] = o_v
                 pass
-        print(new_data)
         self.saved_data = new_data
         self.previous_data = old_data
         self.save()
