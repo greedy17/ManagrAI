@@ -1097,12 +1097,20 @@ export default {
       return label.replace('&amp;', '&')
     },
     searchFields() {
+      let fieldParam = {}
+      if (this.formType == this.CREATE) {
+        fieldParam['createable'] = true
+      } else {
+        fieldParam['updateable'] = true
+      }
+
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 500 },
         filters: {
           crmObject: this.newResource,
           search: this.filterText,
+          ...fieldParam,
         },
       })
     },

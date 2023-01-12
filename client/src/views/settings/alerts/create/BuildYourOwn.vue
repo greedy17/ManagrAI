@@ -293,35 +293,68 @@
         <div ref="bottom"></div>
       </div>
 
-      <div style="margin-bottom: 8px; display: flex;" class="title">
+      <div style="margin-bottom: 8px; display: flex" class="title">
         <div style="">
           <h4 class="title__head">Slack Message</h4>
           <section class="title__body">
-            <p style="margin-bottom: 0;">This is the message you'll recieve in slack with your workflow.</p>
+            <p style="margin-bottom: 0">
+              This is the message you'll recieve in slack with your workflow.
+            </p>
           </section>
-          <div style="display: flex; overflow-y: auto; height: 28.75vh;">
-            <div style="margin-bottom: 1rem;">
+          <div style="display: flex; overflow-y: auto; height: 28.75vh">
+            <div style="margin-bottom: 1rem">
               <div v-if="formattedSlackMessage.length">
-                <div v-for="(message, i) in formattedSlackMessage" :key="i" style="margin: .5rem 1rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
-                  <div style="justify-self: start;">
-                    <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">{{message.title}}</div>
+                <div
+                  v-for="(message, i) in formattedSlackMessage"
+                  :key="i"
+                  style="
+                    margin: 0.5rem 1rem;
+                    padding: 6px 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 27.5vw;
+                    border: 1px solid #eeeeee;
+                    border-radius: 8px;
+                  "
+                >
+                  <div style="justify-self: start">
+                    <div style="font-weight: 900; font-size: 0.75rem; margin-bottom: 0.1rem">
+                      {{ message.title }}
+                    </div>
                     <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                   </div>
-                  <div @click="removeMessage(i, message)"><img src="@/assets/images/remove.svg" style="height: 1.2rem;" /></div>
+                  <div @click="removeMessage(i, message)">
+                    <img src="@/assets/images/remove.svg" style="height: 1.2rem" />
+                  </div>
                 </div>
               </div>
-              <div v-else style="margin:.5rem 1rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 27.5vw; border: 1px solid #eeeeee; border-radius: 8px;">
-                <div style="justify-self: start;">
-                  <div style="font-weight: 900; font-size: .75rem; margin-bottom: 0.1rem;">Please Select an Option from the List</div>
+              <div
+                v-else
+                style="
+                  margin: 0.5rem 1rem;
+                  padding: 6px 12px;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  width: 27.5vw;
+                  border: 1px solid #eeeeee;
+                  border-radius: 8px;
+                "
+              >
+                <div style="justify-self: start">
+                  <div style="font-weight: 900; font-size: 0.75rem; margin-bottom: 0.1rem">
+                    Please Select an Option from the List
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div style="margin-right: 8px; height: fit-content;" class="start">
+        <div style="margin-right: 8px; height: fit-content" class="start">
           <section>
             <div class="search-bar">
-              <img src="@/assets/images/search.svg" style="height: 18px;" alt="" />
+              <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
               <input
                 @input="searchFields"
                 type="search"
@@ -332,7 +365,7 @@
 
             <div class="field-section__fields">
               <div>
-                <p v-for="(field, i) in filteredFields" :key="field.id" style="margin: 4px 0;">
+                <p v-for="(field, i) in filteredFields" :key="field.id" style="margin: 4px 0">
                   <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                   <label :for="i"></label>
                   {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
@@ -437,8 +470,8 @@ export default {
       //   ModelClass: ObjectField,
       //   pagination: { size: 1000 },
       // }),
-      fields: CollectionManager.create({ 
-        ModelClass: ObjectField, 
+      fields: CollectionManager.create({
+        ModelClass: ObjectField,
         filters: {
           crmObject: alert.resourceType,
           forAlerts: true,
@@ -487,14 +520,15 @@ export default {
       this.userCRM === 'SALESFORCE'
         ? ['Opportunity', 'Account', 'Contact', 'Lead']
         : ['Deal', 'Contact', 'Company']
-    this.slackMessage = this.alertTemplateForm.field.alertMessages.groups[0].field.body.value.split('\n\n')
+    this.slackMessage =
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value.split('\n\n')
     const slackFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
       const titleAndVal = this.slackMessage[i].split('\n')
-      const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length-10)
-      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length-2)
+      const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length - 10)
+      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length - 2)
       // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
-      slackFormat.push({title: titleFormatted, val: valFormatted})
+      slackFormat.push({ title: titleFormatted, val: valFormatted })
     }
     this.formattedSlackMessage = slackFormat
   },
@@ -834,13 +868,15 @@ export default {
     bindText(val, title) {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
-      this.formattedSlackMessage.push({title, val})
-      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('\n\n')
+      this.formattedSlackMessage.push({ title, val })
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
+        this.slackMessage.join('\n\n')
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
-      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('\n\n')
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
+        this.slackMessage.join('\n\n')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
     },
     onNextPage() {
@@ -921,7 +957,9 @@ export default {
         : null
     },
     filteredFields() {
-      return this.fields.list.filter((field) => !this.addedFieldNames.includes(`${this.selectedResourceType}.${field.apiName}`))
+      return this.fields.list.filter(
+        (field) => !this.addedFieldNames.includes(`${this.selectedResourceType}.${field.apiName}`),
+      )
     },
     addedFieldNames() {
       return this.formattedSlackMessage.map((field) => {
@@ -982,8 +1020,9 @@ export default {
   beforeMount() {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
-      this.userCRM === 'SALESFORCE' ? '<strong>Name</strong> \n { Opportunity.Name }' :
-      '<strong>Deal Name</strong> \n { Deal.Name }'
+      this.userCRM === 'SALESFORCE'
+        ? '<strong>Name</strong> \n { Opportunity.Name }'
+        : '<strong>Deal Name</strong> \n { Deal.dealname }'
     this.alertTemplateForm.field.resourceType.value =
       this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.repsPipeline()
