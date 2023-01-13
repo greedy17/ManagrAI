@@ -377,7 +377,7 @@ class HObjectFieldAdapter:
     def from_api(data):
         data["integration_source"] = "HUBSPOT"
         type = data["fieldType"]
-        data["fieldType"] = DATA_TYPE_OBJ[type]
+        data["fieldType"] = DATA_TYPE_OBJ[type] if type in DATA_TYPE_OBJ.keys() else "String"
         if "referencedObjectType" in data.keys() and data["referencedObjectType"]:
             data["reference"] = True
             data["fieldType"] = "Reference"
