@@ -534,7 +534,6 @@ class CompanyAdapter:
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(user.crm_account.access_token)},
             )
             r = HubspotAuthAccountAdapter._handle_response(r)
-            print(r)
             r = CompanyAdapter.from_api(r["results"][0]["properties"], self.owner)
             return r
 
