@@ -52,7 +52,7 @@ from managr.core.cron import process_get_task_list
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
-from managr.gong.exceptions import InvalidRequest
+from managr.gong import exceptions as gong_exceptions
 from managr.crm.models import ObjectField
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
@@ -2070,6 +2070,8 @@ def process_get_notes(payload, context):
 @processor(required_context="u")
 def process_get_call_recording(payload, context):
     type = context.get("type", None)
+    resource_id = context.get("resource_id", None)
+    resource_type = context.get("resource_type", None)
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"] if "trigger_id" in payload else None
@@ -2086,76 +2088,62 @@ def process_get_call_recording(payload, context):
         trigger_id,
         view_id,
     )
-    resource_id = context.get("resource_id", None)
+    form_id = context.get("form_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    if resource_id is None and type != "recap":
-        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
-        resource_type = [
-            value.get("selected_option") for value in state.get("selected_object_type", {}).values()
-        ][0].get("value")
+    if form_id is None:
+        if resource_id is None:
+            resource_type = [
+                value.get("selected_option")
+                for value in state.get("selected_object_type", {}).values()
+            ][0].get("value")
 
-        resource_id = [
-            value.get("selected_option") for value in state.get("selected_object", {}).values()
-        ][0].get("value")
+            resource_id = [
+                value.get("selected_option") for value in state.get("selected_object", {}).values()
+            ][0].get("value")
     else:
-        resource_type = context.get("resource_type")
-        timestamp = datetime.fromtimestamp(float(payload["actions"][0]["action_ts"]))
+        form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+        resource_type = form.template.resource
     user_tz = datetime.now(pytz.timezone(user.timezone)).strftime("%z")
-    user_timezone = pytz.timezone(user.timezone)
     gong_auth = GongAuthAccount.objects.get(organization=user.organization)
-    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
-    if resource_type in ["Opportunity", "Contact"]:
-        resource_ids = [resource.secondary_data["Id"]]
-        if resource.account:
-            resource_ids.append(resource.account.secondary_data["Id"])
+    curr_date_str = (
+        str((date.today() - timezone.timedelta(days=90)))
+        + "T01:00:00"
+        + f"{user_tz[:3]}:{user_tz[3:]}"
+    )
+    if type == "recap":
+        resource = form.resource_object
     else:
-        resource_ids = [resource.secondary_data["Id"]]
-    call = GongCall.objects.filter(
-        Q(crm_id__in=resource_ids) | Q(acc_crm_id__in=resource_ids)
-    ).first()
-    current = pytz.utc.localize(timestamp).astimezone(user_timezone).date()
-    blocks = []
-    if type == "recap" and datetime.now().date() == current:
-        curr_date = date.today()
-        curr_date_str = curr_date.isoformat() + "T01:00:00" + f"{user_tz[:3]}:{user_tz[3:]}"
+        resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+        if resource_type in ["Opportunity", "Contact"]:
+            resource_ids = [resource.secondary_data["Id"]]
+            if resource.account:
+                resource_ids.append(resource.account.secondary_data["Id"])
+        else:
+            resource_ids = [resource.secondary_data["Id"]]
+    attempts = 1
+    while True:
         try:
-            call_res = gong_auth.helper_class.check_for_current_call(curr_date_str)
-            call_details = generate_call_block(call_res, resource_ids)
-            if call_details:
-                blocks = [*call_details]
+            call_res = gong_auth.helper_class.check_for_current_call(
+                curr_date_str, resource.owner.gong_account.gong_id
+            )
+            blocks = generate_call_block(call_res, resource.integration_id, resource_type)
+            break
+        except gong_exceptions.TokenExpired:
+            if attempts >= 5:
+                return
             else:
-                if call:
-                    call_details = generate_call_block(call_res)
-                    blocks = [*call_details]
-                    blocks.append(
-                        block_builders.context_block(
-                            "Gong may still be processing this call, check back in a bit"
-                        )
-                    )
-                else:
-                    blocks = [
-                        block_builders.simple_section(
-                            f"No call associated with this {resource_type}"
-                        )
-                    ]
-        except InvalidRequest as e:
-            logger.exception(f"Gong invalid request: {e}")
-            if call:
-                call_res = call.helper_class.get_call_details(call.auth_account.access_token)
-                call_details = generate_call_block(call_res)
-                blocks = [*call_details]
-                blocks.append(
-                    block_builders.context_block(
-                        "Gong may still be processing this call, check back in a bit"
-                    )
-                )
-            else:
-                blocks = [
-                    block_builders.simple_section(f"No call associated with this {resource_type}"),
-                    block_builders.context_block(
-                        "*Gong may still be processing this call, check back in a bit"
-                    ),
-                ]
+                gong_auth.regenerate_token()
+                attempts += 1
+        except gong_exceptions.InvalidRequest:
+            blocks = [
+                block_builders.simple_section(
+                    f"There was no calls associated with this {resource_type}"
+                ),
+                block_builders.context_block(
+                    "*Gong may still be processing this call, check back in a bit"
+                ),
+            ]
+            break
         except Exception as e:
             logger.exception(f"Gong call error: {e}")
             blocks = [
@@ -2164,18 +2152,7 @@ def process_get_call_recording(payload, context):
                     "*Gong may still be processing this call, check back in a bit"
                 ),
             ]
-    else:
-        if call:
-            call_res = call.helper_class.get_call_details(call.auth_account.access_token)
-            call_details = generate_call_block(call_res)
-            blocks = [*call_details]
-        else:
-            blocks = [
-                block_builders.simple_section(f"No call associated with this {resource_type}"),
-                block_builders.context_block(
-                    "*Gong may still be processing this call, check back in a bit"
-                ),
-            ]
+            break
     modal_data = {
         "view_id": loading_view_data["view"]["id"],
         "view": {
@@ -3279,12 +3256,7 @@ def process_view_recap(payload, context):
                 "call_details",
                 action_id=action_with_params(
                     slack_const.GONG_CALL_RECORDING,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={main_form.resource_id}",
-                        f"resource_type={main_form.template.resource}",
-                        "type=recap",
-                    ],
+                    params=[f"u={str(user.id)}", f"form_id={str(main_form.id)}", "type=recap",],
                 ),
                 style="primary",
             ),
