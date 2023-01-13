@@ -407,6 +407,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         form_values = self.generate_form_values(data)
         form_blocks = []
         for field in user_fields:
+
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg

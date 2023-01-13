@@ -720,6 +720,7 @@ class AlertInstance(TimeStampModel):
                                     binding_map[binding] = binding_map[binding][0:10]
                                 if field and field.data_type == "Reference":
                                     relationship = field.reference_to_infos[0]["api_name"]
+                                    print(relationship)
                                     try:
                                         reference_record = (
                                             CRM_SWITCHER[user.crm][relationship]["model"]

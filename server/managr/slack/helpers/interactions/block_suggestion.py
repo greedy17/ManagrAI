@@ -344,11 +344,11 @@ def process_get_people(payload, context):
     resource_id = context.get("resource_id")
     value = payload["value"]
     if type == "Opportunity":
-        opportunity = Opportunity.objects.get(id=resource_id)
-        account = Account.objects.filter(opportunities__in=[resource_id]).first()
+        opportunity = BaseOpportunity.objects.get(id=resource_id)
+        account = BaseAccount.objects.filter(opportunities__in=[resource_id]).first()
         contacts = account.contacts.all() if hasattr(account, "contacts") else opportunity.contacts
     else:
-        account = Account.objects.get(id=resource_id)
+        account = BaseAccount.objects.get(id=resource_id)
         contacts = account.contacts.all()
     return {
         "options": [l.as_slack_option for l in contacts.filter(email__icontains=value)[:50]],
