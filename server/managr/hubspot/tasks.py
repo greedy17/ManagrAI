@@ -150,6 +150,7 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
                 attempts += 1
         except CannotRetreiveObjectType:
             hs.hobjects[resource] = False
+    errors = []
     for field in fields:
         existing = ObjectField.objects.filter(
             api_name=field.api_name, user=user, crm_object=resource,
@@ -168,9 +169,14 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
             serializer = ObjectFieldSerializer(data=field.as_dict, instance=existing)
         else:
             serializer = ObjectFieldSerializer(data=field.as_dict)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            errors.append(f"{field.api_name} - {e}")
+            continue
+    if len(errors):
+        logger.error(f"Error syncing fields for {user.email}: {errors}")
     return
 
 

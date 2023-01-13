@@ -139,7 +139,7 @@ def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):
     }
 
 
-def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
+def HUBSPOT_SEARCH_NAME_BODY(fields, filter_value, limit=25):
     fields = set(fields)
     return {
         "properties": list(fields),
@@ -155,6 +155,14 @@ def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
             }
         ],
         "limit": limit,
+    }
+
+
+def HUBSPOT_SEARCH_BODY(fields, filters):
+    fields = set(fields)
+    return {
+        "properties": list(fields),
+        "filterGroups": [{"filters": filters}],
     }
 
 

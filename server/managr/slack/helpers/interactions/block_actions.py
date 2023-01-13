@@ -1933,7 +1933,7 @@ def process_show_engagement_modal(payload, context):
         else context.get("resource_id")
     )
     resource_type = context.get("resource_type")
-    resource_name = routes[resource_type]["model"].objects.get(id=resource_id).name
+    resource_name = CRM_SWITCHER[u.crm][resource_type]["model"].objects.get(id=resource_id).name
     private_metadata = {
         "resource_name": resource_name,
         "resource_id": resource_id,
