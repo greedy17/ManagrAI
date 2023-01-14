@@ -323,7 +323,13 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
     # collect forms for resource meeting_review and if stages any stages related forms
-    update_forms = workflow.forms.filter(template__form_type__in=[slack_consts.FORM_TYPE_UPDATE,])
+    update_forms = workflow.forms.filter(
+        template__form_type__in=[
+            slack_consts.FORM_TYPE_UPDATE,
+            slack_consts.FORM_TYPE_STAGE_GATING,
+        ],
+        template__custom_object__isnull=True,
+    )
     update_form_ids = []
     # aggregate the data
     data = dict()

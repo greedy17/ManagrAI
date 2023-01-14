@@ -249,26 +249,21 @@ def process_done_alert(block_id, blocks):
     return updated_blocks
 
 
-def generate_call_block(call_res, resource_id=None):
+def generate_call_block(call_res, resource_id, resource_type):
     blocks = []
-    if resource_id:
-        call_data = None
-        for call in call_res["calls"]:
-            context = call["context"]
-            context_objects = [
-                object["objects"] for object in context if object["system"] == "Salesforce"
-            ]
-            object_ids = [
-                object["objectId"]
-                for inner_list in context_objects
-                for object in inner_list
-                if object["objectId"] in resource_id
-            ]
-            if len(object_ids):
+    call_data = None
+    calls = call_res["calls"]
+    calls.reverse()
+    for call in calls:
+        salesforce_objects = []
+        for crm_group in call["context"]:
+            if crm_group["system"] == "Salesforce":
+                salesforce_objects = crm_group["objects"]
+                break
+        for object in salesforce_objects:
+            if object["objectId"] == resource_id:
                 call_data = call
                 break
-    else:
-        call_data = call_res["calls"][0]
     if call_data:
         content_data = call_data.get("content", None)
         meta_data = call_data.get("metaData", None)
@@ -314,8 +309,14 @@ def generate_call_block(call_res, resource_id=None):
                 style="primary",
             )
         )
+
     else:
-        return None
+        blocks = [
+            block_builders.simple_section(f"No call associated with this {resource_type}"),
+            block_builders.context_block(
+                "*Gong may still be processing this call, check back in a bit"
+            ),
+        ]
     return blocks
 
 
