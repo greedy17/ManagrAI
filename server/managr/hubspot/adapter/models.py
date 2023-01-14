@@ -359,7 +359,7 @@ class HObjectFieldAdapter:
         self.user = data.get("user", None)
         self.crm_object = data.get("crm_object", None)
         self.api_name = data.get("name", None)
-        self.label = data.get("label", "")
+        self.label = data.get("label", f"{self.api_name}")
         self.data_type = data.get("field_type", None)
         self.display_value = data.get("label", None)
         self.options = data.get("options", None)
