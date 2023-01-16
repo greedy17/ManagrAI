@@ -801,45 +801,9 @@
       </div>
       <div v-else>No Modal Info</div>
     </Modal>
-    <!-- <div class="staff__drawer">
-      <h3>Quick Commands</h3>
-      <div class="command_dropdown">
-        <Multiselect
-          placeholder="Select Command"
-          style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
-          v-model="selectedCommand"
-          :options="commandOptions"
-          openDirection="below"
-          selectLabel="Enter"
-          track-by="value"
-          label="label"
-        >
-          <template slot="noResult">
-            <p class="multi-slot">No results.</p>
-          </template>
-        </Multiselect>
-        <PipelineLoader v-if="commandButtonLoading" class="sized"/>
-        <button v-else class="green_button sized" @click="runCommand">></button>
-      </div>
-      <h3>Organizations</h3>
-      <Multiselect
-        placeholder="Select Organization"
-        @select="clearUsersAndSlackForm"
-        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
-        v-model="selected_org"
-        :options="organizations /*.list*/"
-        openDirection="below"
-        selectLabel="Enter"
-        label="name"
-      >
-        <template slot="noResult">
-          <p class="multi-slot">No results.</p>
-        </template>
-      </Multiselect>
-    </div> -->
     <div class="flex-row">
       <small class="pipeline-header">Quick Commands:</small>
-      <button @click.stop="showCommandList = !showCommandList" class="text-button" style="cursor: pointer">
+      <button @click.stop="showCommandList = !showCommandList; showOrgList = false" class="text-button" style="cursor: pointer">
         Commands
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
@@ -858,11 +822,11 @@
         </button>
       </div>
       <small class="pipeline-header">Organization:</small>
-      <button @click.stop="showOrgList = !showOrgList" class="text-button" style="cursor: pointer">
+      <button @click.stop="showOrgList = !showOrgList; showCommandList = false" class="text-button" style="cursor: pointer">
         Organization
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
-      <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section">
+      <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section" style="left: 310px;">
         <div class="list-section__title flex-row-spread">
           <p>Organizations</p>
         </div>
@@ -879,64 +843,49 @@
       <div
         v-for="(filter, i) in activeFilters"
         :key="i"
-        @mouseenter="hoveredIndex = i"
-        @mouseleave="hoveredIndex = null"
         class="main"
       >
         <strong style="font-size: 14px">{{ filter }}</strong>
         <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
         <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
-        <span v-if="hoveredIndex === i" class="selected-filters__close"
-          ><img src="@/assets/images/close.svg" @click="removeFilter(filter, userCRM === 'SALESFORCE' ? i + 2 : i + 10)" alt=""
-        /></span>
       </div>
 
-      <!-- <section v-if="filterSelected" style="position: relative">
-        <main class="main__before">
-          <small
-            ><strong>{{ currentFilter }}</strong></small
-          >
-          <small style="margin-left: 0.2rem">{{
-            currentOperators[currentOperators.length - 1]
-          }}</small>
-        </main>
-        <div>
-          <FilterSelection
-            @filter-added="applyFilter"
-            @operator-selected="addOperator"
-            @value-selected="valueSelected"
-            @close-selection="closeFilterSelection"
-            @filter-accounts="getAccounts"
-            :type="filterType"
-            :filterName="currentFilter"
-            :dropdowns="apiPicklistOptions"
-            :apiName="filterApiName"
-            :accounts="allAccounts"
-            :owners="allUsers"
-          />
-        </div>
-      </section> -->
-
       <section style="position: relative">
-        <button
-          v-if="activeFilters.length < 4 && selected_org"
-          @click.stop="addingFilter"
-          class="add-filter-button"
-        >
-          <img
-            src="@/assets/images/filter.svg"
-            class="invert"
-            height="12px"
-            style="margin-right: 0.25rem"
-            alt=""
-          />Filter
-        </button>
+        <div style="display: flex;">
+          <button
+            v-if="activeFilters.length < 4 && selected_org"
+            @click.stop="addingFilter"
+            class="add-filter-button"
+          >
+            <img
+              src="@/assets/images/filter.svg"
+              class="invert"
+              height="12px"
+              style="margin-right: 0.25rem"
+              alt=""
+            />Filter
+          </button>
+          <button
+            v-if="activeFilters.length && selected_org"
+            @click.stop="resetFilters"
+            class="add-filter-button"
+          >
+            <img
+              src="@/assets/images/filter.svg"
+              class="invert"
+              height="12px"
+              style="margin-right: 0.25rem"
+              alt=""
+            />Clear
+          </button>
+        </div>
         <div v-outside-click="closeFilters" v-if="filtering">
-          <div v-if="filtering">
+          <div v-if="filtering" class="filter-selection">
             <div class="filter-selection__body">
               <Multiselect
                 placeholder="Team/User"
-                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
+                @select="resetFilters"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4;"
                 v-model="selectedTeamOrUser"
                 :options="teamOrUser"
                 openDirection="below"
@@ -953,12 +902,14 @@
               <Multiselect
                 placeholder="Filter"
                 style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
+                @select="applyFilter($event)"
                 v-model="selectedFilter"
                 :options="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? teamList : orgUsers) : []"
                 openDirection="below"
                 selectLabel="Enter"
                 track-by="name"
-                :label="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? '' : 'email') : ''"
+                :customLabel="filtersLabel"
+                :label="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? 'name' : 'email') : ''"
               >
                 <template slot="placeholder">
                   <p class="multi-slot">{{selectedTeamOrUser ? `Filters` : `Please select User/Team.`}}</p>
@@ -1031,13 +982,13 @@
           <!-- <div>{{allForms}}</div> -->
           <div class="form__list">
             <div class="added-collection">
-              <p class="added-collection__header">Users <span v-if="orgUsers" class="green">{{ orgUsers.length }}</span></p>
+              <p class="added-collection__header">Users <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span></p>
               <div class="added-collection__body">
                 <Multiselect
                   placeholder="Select User"
                   style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
                   v-model="selectedUsers"
-                  :options="orgUsers"
+                  :options="filteredOrgUsers"
                   openDirection="below"
                   selectLabel="Enter"
                   track-by="id"
@@ -1051,17 +1002,17 @@
               </div>
               <div class="added-collection__body">
                 <button class="green_button" @click="openModal('user', selectedUsers)">Go</button>
-                <button class="green_button" @click="openModal('usersOverview', orgUsers)" style="margin-left: 1rem;">Overview</button>
+                <button class="green_button" @click="openModal('usersOverview', filteredOrgUsers)" style="margin-left: 1rem;">Overview</button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Slack Form <span v-if="orgSlackForms" class="green">{{ orgSlackForms.length }}</span></p>
+              <p class="added-collection__header">Slack Form <span v-if="filteredOrgSlackForms" class="green">{{ filteredOrgSlackForms.length }}</span></p>
               <div class="added-collection__body">
                 <Multiselect
                   placeholder="Select Slack Form"
                   style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
                   v-model="selectedSlackForms"
-                  :options="orgSlackForms"
+                  :options="filteredOrgSlackForms"
                   openDirection="below"
                   selectLabel="Enter"
                   track-by="id"
@@ -1080,19 +1031,19 @@
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Slack Form Instances <span v-if="orgSlackFormInstances" class="green">{{ orgSlackFormInstances.length }}</span></p>
+              <p class="added-collection__header">Slack Form Instances <span v-if="filteredOrgSlackFormInstances" class="green">{{ filteredOrgSlackFormInstances.length }}</span></p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToSlackFormInstace()">Go</button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Meeting Workflows <span v-if="orgMeetingWorkflows" class="green">{{ orgMeetingWorkflows.length }}</span></p>
+              <p class="added-collection__header">Meeting Workflows <span v-if="filteredOrgMeetingWorkflows" class="green">{{ filteredOrgMeetingWorkflows.length }}</span></p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToMeetingWorkflow()">Go</button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Alerts <span v-if="orgAlerts" class="green">{{ orgAlerts.length }}</span></p>
+              <p class="added-collection__header">Alerts <span v-if="filteredOrgAlerts" class="green">{{ filteredOrgAlerts.length }}</span></p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToAlerts()">Go</button>
               </div>
@@ -1122,7 +1073,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(slackFormInstance, i) in orgSlackFormInstances"
+          v-for="(slackFormInstance, i) in filteredOrgSlackFormInstances"
           :key="slackFormInstance.id"
         >
           <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
@@ -1143,7 +1094,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(meetingWorkflow, i) in orgMeetingWorkflows"
+          v-for="(meetingWorkflow, i) in filteredOrgMeetingWorkflows"
           :key="meetingWorkflow.id"
         >
           <h4 class="click click_width" @click="openModal('meetingWorkflow', meetingWorkflow)">
@@ -1159,7 +1110,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-          v-for="(alert, i) in orgAlerts"
+          v-for="(alert, i) in filteredOrgAlerts"
           :key="alert.id"
         >
           <h5 class="click click_width" @click="openModal('alert', alert)">
@@ -1257,6 +1208,12 @@ export default {
       activeFilters: [],
       orgUsers: [],
       orgSlackForms: [],
+      setFilters: {},
+      filteredOrgUsers: [],
+      filteredOrgSlackForms: [],
+      filteredOrgMeetingWorkflows: [],
+      filteredOrgSlackFormInstances: [],
+      filteredOrgAlerts: [],
       orgSlackFormInstances: null,
       selectedCommand: '',
       loading: true,
@@ -1307,6 +1264,20 @@ export default {
       const user = this.orgUsers.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
     },
+    filtersLabel(prop) {
+      if (this.selectedTeamOrUser) {
+        return this.selectedTeamOrUser.name === 'team' ? prop.name : prop.email
+      }
+    },
+    resetFilters() {
+      this.activeFilters = []
+      this.selectedFilter = null
+      this.filteredOrgUsers = this.orgUsers
+      this.filteredOrgSlackForms = this.orgSlackForms
+      this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows
+      this.filteredOrgSlackFormInstances = this.orgSlackFormInstances
+      this.filteredOrgAlerts = this.orgAlerts
+    },
     selectOrg(org) {
       this.selected_org = org
       this.clearUsersAndSlackForm()
@@ -1333,6 +1304,42 @@ export default {
       this.filterType = type
       this.currentFilter = label
       this.filterSelected = true
+    },
+    applyFilter(value) {
+      this.getFilteredObjects(value)
+      this.activeFilters.push(this.selectedFilter)
+      this.selectedFilter = null
+      this.selectedTeamOrUser = null
+      this.filtering = false
+    },
+    async getFilteredObjects(value) {
+      if (value) {
+        const newValue = value.email ? value.email : value.name
+        this.setFilters[this.activeFilters.length] = [this.selectedTeamOrUser.name, newValue]
+      }
+      if (this.selectedTeamOrUser.name === 'team') {
+        const userIdsList = []
+        this.filteredOrgUsers = this.orgUsers.filter(item => {
+          if (item.team === value.id) {
+            userIdsList.push(item.id)
+            return item
+          }
+        })
+        this.filteredOrgSlackForms = this.orgSlackForms.filter(item => item.team === value.id)
+        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows.filter(item => userIdsList.includes(item.user))
+        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances.filter(item => userIdsList.includes(item.user))
+        this.filteredOrgAlerts = this.orgAlerts.filter(item => userIdsList.includes(item.user))
+      } else {
+        this.filteredOrgUsers = this.orgUsers.filter(item => {
+          if (item.id === value.id) {
+            return item
+          }
+        })
+        this.filteredOrgSlackForms = this.orgSlackForms.filter(item => item.team === value.team)
+        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows.filter(item => item.user === value.id)
+        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances.filter(item => item.user === value.id)
+        this.filteredOrgAlerts = this.orgAlerts.filter(item => item.user === value.id)
+      }
     },
     async getAllOrgUsers(orgId) {
       const res = await User.api.getAllOrgUsers(orgId)
@@ -1758,12 +1765,12 @@ export default {
           this.selected_org.id,
         )
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
-        const tempTeams = new Set()
-        this.orgUsers.forEach(user => tempTeams.add(user.team))
-        this.teamList = Array.from(tempTeams)
-        console.log('this.teamList', this.teamList)
-        console.log('selected_org', this.selected_org)
-        console.log('orgUsers', this.orgUsers)
+        this.teamList = this.selected_org.teams_ref
+        this.filteredOrgUsers = this.orgUsers
+        this.filteredOrgSlackForms = this.orgSlackForms
+        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows
+        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances
+        this.filteredOrgAlerts = this.orgAlerts
       }
     },
   },
@@ -2140,5 +2147,160 @@ input[type='search']:focus {
 }
 .grayscale {
   filter: grayscale(99%);
+}
+.pipeline-header {
+  font-size: 11px;
+  color: $light-gray-blue;
+  margin-left: 4px;
+}
+.text-button {
+  border: none;
+  font-size: 13px;
+  background-color: transparent;
+  margin-right: 8px;
+  color: $base-gray;
+  letter-spacing: 0.75px;
+}
+.list-section {
+  z-index: 4;
+  position: absolute;
+  top: 10vh;
+  left: 88px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: $white;
+  min-width: 20vw;
+  max-height: 70vh;
+  overflow: scroll;
+  margin-right: 0.5rem;
+  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  letter-spacing: 0.75px;
+  &__title {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    color: $base-gray;
+    background-color: $off-white;
+    letter-spacing: 0.75px;
+    padding-left: 0.75rem;
+    font-size: 16px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    img {
+      margin-top: 2px;
+    }
+  }
+  &__sub-title {
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    margin-left: 0.75rem;
+    margin-top: 1rem;
+    color: $base-gray;
+    cursor: pointer;
+    width: 100%;
+    img {
+      margin: 2px 0px 0px 3px;
+      height: 0.75rem;
+      filter: invert(70%);
+    }
+  }
+}.list-button {
+  display: flex;
+  align-items: center;
+  height: 4.5vh;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 6px;
+  color: $base-gray;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.75px;
+}
+.list-button:hover {
+  color: $dark-green;
+  background-color: $off-white;
+}
+.main {
+  border: none;
+  height: 5vh;
+  max-width: 10vw;
+  margin: 0 0.5rem 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background-color: $white-green;
+  cursor: pointer;
+  color: $dark-green;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+.main:hover {
+  overflow: visible;
+  white-space: normal;
+  max-width: none;
+}
+
+main > span {
+  display: none;
+}
+main:hover > span {
+  display: block;
+}
+.add-filter-button {
+  display: flex;
+  align-items: center;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background-color: transparent;
+  cursor: pointer;
+  color: $base-gray;
+  letter-spacing: 0.75px !important;
+
+  img {
+    filter: invert(70%);
+  }
+}
+.filter-selection {
+  z-index: 5;
+  position: absolute;
+  top: 6vh;
+  left: 0;
+  border-radius: 0.33rem;
+  background-color: $white;
+  min-width: 24vw;
+  padding: 1rem 1rem 0rem 1rem;
+  overflow: visible;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    margin-top: 1.5rem;
+    height: 3rem;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-size: 13px;
+      padding-top: 0.5rem;
+    }
+  }
 }
 </style>
