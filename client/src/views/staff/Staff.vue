@@ -926,7 +926,8 @@
         <template v-else>
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
           <div class="invite-list__container">
-            <img class="back-logo" style="right: 18%; bottom: 60%" src="@/assets/images/logo.png" />
+            <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" />
+            <h2>{{ selected_org.name }}</h2>
             <div class="invite-list__section__container">
               <div class="line-up">
                 <div class="invite-list__section__item">State</div>
@@ -1282,6 +1283,7 @@ export default {
       this.selected_org = org
       this.clearUsersAndSlackForm()
       this.closeListSelect()
+      this.resetFilters()
     },
     clearUsersAndSlackForm() {
       this.selectedSlackForms = null
