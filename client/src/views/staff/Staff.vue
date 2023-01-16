@@ -138,7 +138,7 @@
                     : 'Not Submitted'
                 }}
               </p>
-              <div @click="test(modalInfo)">
+              <div>
                 <div style="margin-bottom: 0.5rem">
                   <span class="">Workflow ID:</span>
                   {{ modalInfo.workflow ? modalInfo.workflow : 'None' }} |
@@ -260,10 +260,24 @@
                   >{{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
                 </div>
                 <div style="margin-bottom: 0.5rem;">
-                  <span class="">Participants: </span
-                  >{{
+                  <span class="">Participants: </span>
+                  <div v-for="(participant,i) in modalInfo.meeting_ref.participants" :key="i" style="margin-left: 0.5rem;">
+                    {{ i+1 }}: 
+                    <div v-for="(value,propertyName) in participant" :key="propertyName" style="margin-left: 1rem;">
+                      <div v-if="propertyName === 'secondary_data'">
+                        {{ propertyName }}: 
+                        <div v-for="(data, secondaryName) in value" :key="secondaryName" style="margin-left: 1.5rem;">
+                          {{ secondaryName }}: {{ `${data}` }}
+                        </div>
+                      </div>
+                      <div v-else>
+                        {{ propertyName }}: {{ `${value}` }}
+                      </div>
+                    </div>
+                  </div>
+                  <!-- {{
                     modalInfo.meeting_ref.participants ? modalInfo.meeting_ref.participants : 'None'
-                  }}
+                  }} -->
                 </div>
                 <div>
                   <span class="">Type: </span
@@ -313,22 +327,46 @@
                   >{{ modalInfo.resource_type ? modalInfo.resource_type : 'None' }}
                 </div>
                 <div style="margin-bottom: 0.5rem;">
-                  <span class="">Configs: </span
-                  >{{
-                    modalInfo.configs_ref ? modalInfo.configs_ref : 'N/A'
-                  }}
+                  <span class="">Configs: </span>
+                  <div v-for="(config, i) in modalInfo.configs_ref" :key="i" style="margin-left: 0.5rem;">
+                    {{ i+1 }}:
+                    <div style="margin-left: 1rem;">
+                      <div>
+                        ID: {{ config.id }}
+                      </div>
+                      <div>
+                        Recurrence Frequency: {{ config.recurrence_frequency }}
+                      </div>
+                      <div>
+                        Recurrence Day: {{ weekdays[config.recurrence_day] }}
+                      </div>
+                      <div>
+                        Recurrence Days: {{ getWeekdays(config.recurrence_days) }}
+                      </div>
+                      <div>
+                        Recipients: {{ config.recipients }}
+                      </div>
+                      <div>
+                        Recipient Type: {{ config.recipient_type }}
+                      </div>
+                      <div>
+                        Template: {{ config.template }}
+                      </div>
+                      <div>
+                        Alert Targets: {{ config.alert_targets }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div style="margin-bottom: 0.5rem;">
-                  <span class="">Groups: </span
-                  >{{ modalInfo.groups_ref ? modalInfo.groups_ref : 'N/A' }}
-                </div>
-                <div style="margin-bottom: 0.5rem;">
-                  <span class="">Instances: </span
-                  >{{ modalInfo.instances_ref ? modalInfo.instances_ref : 'N/A' }}
-                </div>
-                <div>
-                  <span class="">Message Templates: </span
-                  >{{ modalInfo.message_template_ref ? modalInfo.message_template_ref : 'N/A' }}
+                  <span class="">Groups: </span>
+                  <div v-for="(group, i) in modalInfo.groups_ref" :key="i" style="margin-left: 0.5rem; margin-bottom: 1rem;">
+                    <div>Order: {{ group.group_order }}</div>
+                    <div>Condition: {{ group.group_condition }}</div>
+                    <div v-for="(operand, i) in group.operands_ref" :key="i" style="margin-left: 1rem">
+                      {{ operand.operand_order }} - {{ operand.operand_identifier }} {{ operand.operand_operator }} {{ operand.operand_value }} ({{ operand.data_type }}) {{ operand.operand_condition }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1182,6 +1220,15 @@ export default {
         5: 'Friday',
         6: 'Saturday',
       },
+      weekdays: {
+        0: 'Monday',
+        1: 'Tuesday',
+        2: 'Wednesday',
+        3: 'Thursday',
+        4: 'Friday',
+        5: 'Saturday',
+        6: 'Sunday',
+      },
       months: {
         0: 'January',
         1: 'February',
@@ -1281,6 +1328,13 @@ export default {
       this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows
       this.filteredOrgSlackFormInstances = this.orgSlackFormInstances
       this.filteredOrgAlerts = this.orgAlerts
+    },
+    getWeekdays(daysArr) {
+      const weekDays = []
+      for (let i = 0; i < daysArr.length; i++) {
+        weekDays.push(this.weekdays[daysArr[i]])
+      }
+      return weekDays
     },
     selectOrg(org) {
       this.selected_org = org
