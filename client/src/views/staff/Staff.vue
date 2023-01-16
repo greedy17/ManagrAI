@@ -139,11 +139,11 @@
                 }}
               </p>
               <div @click="test(modalInfo)">
-                <div>
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Workflow ID:</span>
                   {{ modalInfo.workflow ? modalInfo.workflow : 'None' }} |
                   <span class="">Update Source:</span>
-                  {{ modalInfo.update_source ? modalInfo.update_source : 'None' }} |
+                  {{ modalInfo.update_source ? modalInfo.update_source : 'None' }}
                 </div>
                 <div style="margin-bottom: 0.5rem;">
                   <span class="">User ID:</span>
@@ -153,12 +153,16 @@
                 </div>
                 <div style="margin-bottom: 0.5rem;">
                   <span class="">Saved Data:</span>
-                  {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }}
+                  <!-- {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }} -->
+                  <div v-for="(value,propertyName) in modalInfo.saved_data" :key="value" style="margin-left: 1rem;">
+                    {{propertyName}}: <span :class="Object.keys(modalInfo.saved_data).length >= Object.keys(modalInfo.previous_data).length && !Object.keys(modalInfo.previous_data).includes(propertyName) ? 'yellow-background' : ''">{{ `${value}` }}</span>
+                  </div>
                 </div>
                 <div>
                   <span class="">Previous Data:</span>
-                  <div v-html="prevData"></div>
-                  <!-- {{ modalInfo.previous_data ? showPrevious() : 'None' }} -->
+                  <div v-for="(value,propertyName) in modalInfo.previous_data" :key="value" style="margin-left: 1rem;">
+                    {{propertyName}}: <span :class="Object.keys(modalInfo.saved_data).length <= Object.keys(modalInfo.previous_data).length && Object.keys(modalInfo.saved_data).includes(propertyName) ? 'yellow-background' : ''">{{ `${value}` }}</span>
+                  </div>
                 </div>
               </div>
             </section>
@@ -927,7 +931,7 @@
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
           <div class="invite-list__container">
             <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" />
-            <h2>{{ selected_org.name }}</h2>
+            <h2 class="org-title">{{ selected_org.name }}</h2>
             <div class="invite-list__section__container">
               <div class="line-up">
                 <div class="invite-list__section__item">State</div>
@@ -1161,7 +1165,6 @@ export default {
   },
   data() {
     return {
-      prevData: null,
       commandOptions: [
         { label: 'Salesforce Resources', value: 'SALESFORCE_RESOURCES' },
         { label: 'Salesforce Fields', value: 'SALESFORCE_FIELDS' },
@@ -1552,23 +1555,6 @@ export default {
       this.showOrgList = false
       this.showCommandList = false
     },
-    goToUser() {
-      if (!this.selectedUsers || !this.selectedUsers.length) {
-        return
-      }
-      // this.selectedUsers = [this.selectedUsers]
-      this.selectedUsers.forEach((u, i) => {
-        this.eventCalendarIDObj[i] = u.nylasRef.eventCalendarId
-        this.fakeMeetingIDObj[i] = u.zoomRef.fakeMeetingIdRef
-        this.zoomChannelObj[i] = u.slackAccount.zoomChannel
-        this.recapObj[i] = u.slackAccount.recapReceivers
-        // VV this is busted VV
-        this.realTimeAlertConfigObj[i] = u.slackAccount.realtimeAlertConfigs.toString()
-      })
-      this.old_selected_org = this.selected_org
-      this.selected_org = null
-      this.page = 'Users'
-    },
     goToSlackForm() {
       if (!this.selectedSlackForms) {
         return
@@ -1593,20 +1579,24 @@ export default {
       this.page = 'OrgAlerts'
     },
     openModal(name, data) {
+      if ((!data || !Object.keys(data).length) && name !== 'task') {
+        this.$toast('Please select an item', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       this.modalName = name
       this.modalInfo = data
-      if (data.previous_data && data.saved_data && Object.keys(data.previous_data).length) {
-        this.setSavedAndPrev()
-      } else {
-        this.editOpModalOpen = true
-      }
-      this.showPrevious()
+      this.editOpModalOpen = true
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
       this.modalName = ''
       this.modalInfo = null
-      this.prevData = null
     },
     resetCommandsEdit() {
       this.displayCommandModal = !this.displayCommandModal
@@ -1630,32 +1620,6 @@ export default {
         toastClassName: 'custom',
         bodyClassName: ['custom'],
       })
-    },
-    setSavedAndPrev() {
-      const saved = {...this.modalInfo.saved_data}
-      const prev = {...this.modalInfo.previous_data}
-      for (let key in saved) {
-        if (prev[key] || prev[key] === null) {
-          prev[key] = `<span style="background-color: yellow;">${prev[key]}</span>`
-        }
-      }
-      this.prevData = prev
-      this.editOpModalOpen = true
-    },
-    showPrevious() {
-      if (this.prevData) {
-        let inner = '<div>'
-        let string = '{'
-        for (let key in this.prevData) {
-          string += `${key}: ${this.prevData[key]}, `
-        }
-        string += '}'
-        inner += string
-        inner += '</div>'
-        this.prevData = inner
-      } else {
-        this.prevData = this.modalInfo.previous_data
-      }
     },
     getObjString(obj, i) {
       const orgs = obj.orgs
@@ -2304,5 +2268,12 @@ main:hover > span {
       padding-top: 0.5rem;
     }
   }
+}
+.org-title {
+  // color: $dark-green;
+  text-decoration: underline;
+}
+.yellow-background{
+  background-color: yellow;
 }
 </style>
