@@ -1053,9 +1053,9 @@ def process_sync_calendar(payload, context):
         logger.exception(f"Failed to loading calendar sync message for {user.email} due to {e}")
     emit_process_calendar_meetings(
         context.get("u"),
-        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
         slack_interaction=slack_interaction,
         date=date,
+        verbose_name=f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
     )
     return
 

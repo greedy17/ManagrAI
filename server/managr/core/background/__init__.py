@@ -93,9 +93,7 @@ def emit_check_reminders(user_id, verbose_name):
 
 
 def emit_process_calendar_meetings(user_id, verbose_name, slack_interaction=None, date=None):
-    return _process_calendar_meetings(
-        user_id, slack_interaction, verbose_name=verbose_name, date=date
-    )
+    return _process_calendar_meetings(user_id, slack_interaction, date, verbose_name=verbose_name,)
 
 
 # Functions for Scheduling Meeting
