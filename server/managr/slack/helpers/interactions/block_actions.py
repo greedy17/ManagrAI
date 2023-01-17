@@ -352,7 +352,11 @@ def process_stage_selected(payload, context):
     if not stage_form:
         submit_text = "Submit"
         if view_type == "create_modal_block_set":
-            callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+            callback_id = callback_id = (
+                slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+                if workflow
+                else slack_const.COMMAND_FORMS__SUBMIT_FORM
+            )
         elif view_type == "update_alert_modal_block_set":
             callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
         else:
@@ -716,7 +720,7 @@ def process_meeting_selected_resource_option(payload, context):
                     **block,
                     "accessory": {
                         **block["accessory"],
-                        "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(workflow.user.id)}&f={str(slack_form.id)}",
+                        "action_id": f"{slack_const.ZOOM_MEETING__STAGE_SELECTED}?u={str(workflow.user.id)}&w={str(workflow.id)}",
                     },
                 }
                 blocks = [*blocks[:index], block, *blocks[index + 1 :]]

@@ -714,6 +714,7 @@ class MeetingWorkflow(SFSyncOperation):
             emit_create_new_contacts,
             emit_sf_update_resource_from_meeting,
             emit_add_products_to_sf,
+            emit_sf_create_resource_from_meeting,
         )
         from managr.hubspot.tasks import (
             emit_add_call_to_hs,
@@ -731,6 +732,7 @@ class MeetingWorkflow(SFSyncOperation):
                 sf_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_contacts,
                 sf_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_sf,
                 sf_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_sf,
+                sf_consts.MEETING_REVIEW__CREATE_RESOURCE: emit_sf_create_resource_from_meeting,
             }
         else:
             return {

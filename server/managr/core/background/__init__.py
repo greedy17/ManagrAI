@@ -255,7 +255,7 @@ def check_workflows_count(user_id):
     return {"status": False}
 
 
-def _process_calendar_details(user_id, date=None):
+def _process_calendar_details(user_id, date):
     user = User.objects.get(id=user_id)
     events = user.nylas._get_calendar_data(date)
     if events:
