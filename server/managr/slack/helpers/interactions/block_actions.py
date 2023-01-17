@@ -345,7 +345,6 @@ def process_stage_selected(payload, context):
         # gather and attach all forms
 
     external_id = payload.get("view", {}).get("external_id", None)
-    print(workflow)
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:
@@ -369,10 +368,15 @@ def process_stage_selected(payload, context):
                 "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             }
         else:
+            call_id = (
+                slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+                if workflow
+                else slack_const.COMMAND_FORMS__SUBMIT_FORM
+            )
             context = {
                 **context,
                 "form_type": slack_const.FORM_TYPE_CREATE,
-                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "callback_id": call_id,
             }
     private_metadata.update(context)
     data = {
@@ -609,8 +613,6 @@ def process_meeting_selected_resource(payload, context):
 @processor(required_context=[])
 def process_meeting_selected_resource_option(payload, context):
     """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
-    print(payload)
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     private_metadata = json.loads(payload["view"]["private_metadata"])
     private_metadata.update({**context})
@@ -667,7 +669,9 @@ def process_meeting_selected_resource_option(payload, context):
         ).delete()
         workflow.add_form(resource_type, slack_const.FORM_TYPE_UPDATE, resource_id=resource_id)
         blocks = get_block_set("meeting_review_modal", context=private_metadata)
+        view = "meeting_review_modal"
     else:
+        view = "create_modal_block_set"
         private_metadata.update({**context})
         blocks = [
             *get_block_set("create_modal_block_set", {**private_metadata}),
@@ -716,6 +720,8 @@ def process_meeting_selected_resource_option(payload, context):
                     },
                 }
                 blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+        workflow.resource_type = resource_type
+        workflow.save()
     slack_access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     # get state - state contains the values based on the block_id
@@ -733,7 +739,7 @@ def process_meeting_selected_resource_option(payload, context):
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Submit"},
             "private_metadata": json.dumps(context),
-            "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
+            "external_id": f"{view}.{str(uuid.uuid4())}",
         },
     }
     try:
@@ -1028,6 +1034,7 @@ def process_pick_custom_object(payload, context):
 @processor()
 def process_sync_calendar(payload, context):
     user = User.objects.get(id=context.get("u"))
+    date = context.get("date", None)
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
@@ -1044,6 +1051,7 @@ def process_sync_calendar(payload, context):
         context.get("u"),
         f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
         slack_interaction=slack_interaction,
+        date=date,
     )
     return
 
@@ -1285,7 +1293,6 @@ def process_alert_inline_stage_selected(payload, context):
 
 @processor(required_context=["u"])
 def process_pipeline_selected_command_form(payload, context):
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     type = context.get("type", None)
     user = User.objects.get(id=context.get("u"))
@@ -1705,7 +1712,6 @@ def process_check_is_owner(payload, context):
 
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
-    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))

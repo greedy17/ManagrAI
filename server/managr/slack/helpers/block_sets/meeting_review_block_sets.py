@@ -1039,7 +1039,8 @@ def paginated_meeting_blockset(context):
             "sync_calendar",
             date_string,
             action_id=action_with_params(
-                slack_const.MEETING_REVIEW_SYNC_CALENDAR, [f"u={str(u.id)}"]
+                slack_const.MEETING_REVIEW_SYNC_CALENDAR,
+                [f"u={str(u.id)}", f"date={str(todays_date.date())}"],
             ),
         ),
         {"type": "divider"},

@@ -92,8 +92,10 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
-def emit_process_calendar_meetings(user_id, verbose_name, slack_interaction=None):
-    return _process_calendar_meetings(user_id, slack_interaction, verbose_name=verbose_name)
+def emit_process_calendar_meetings(user_id, verbose_name, slack_interaction=None, date=None):
+    return _process_calendar_meetings(
+        user_id, slack_interaction, verbose_name=verbose_name, date=date
+    )
 
 
 # Functions for Scheduling Meeting
@@ -253,9 +255,9 @@ def check_workflows_count(user_id):
     return {"status": False}
 
 
-def _process_calendar_details(user_id):
+def _process_calendar_details(user_id, date=None):
     user = User.objects.get(id=user_id)
-    events = user.nylas._get_calendar_data()
+    events = user.nylas._get_calendar_data(date)
     if events:
         return events
     else:
@@ -711,11 +713,11 @@ def process_current_alert_list(user_id):
 
 
 @background()
-def _process_calendar_meetings(user_id, slack_interaction):
+def _process_calendar_meetings(user_id, slack_interaction, date):
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
         try:
-            processed_data = _process_calendar_details(user_id)
+            processed_data = _process_calendar_details(user_id, date)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None

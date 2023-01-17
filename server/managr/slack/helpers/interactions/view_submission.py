@@ -128,7 +128,11 @@ def process_stage_next_page(payload, context):
             next_blocks.extend(form.generate_form())
         private_metadata.update({**context})
         if context.get("form_type") == "CREATE":
-            callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+            callback_id = (
+                slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+                if workflow
+                else slack_const.COMMAND_FORMS__SUBMIT_FORM
+            )
         elif context.get("type") == "alert":
             callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
         else:
@@ -223,16 +227,7 @@ def process_zoom_meeting_data(payload, context):
         f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
         # save meeting data
     ]
-    # for form in contact_forms:
-    #     if form.template.form_type == slack_const.FORM_TYPE_CREATE:
-    #         ops.append(
-    #             f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-    #         )
-    #     else:
-    #         ops.append(
-    #             f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-    #         )
-    # emit all events
+
     if len(workflow.operations_list):
         workflow.operations_list = [*workflow.operations_list, *ops]
     else:
@@ -243,24 +238,6 @@ def process_zoom_meeting_data(payload, context):
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
-    # update_view = {
-    #     "view_id": loading_res["view"]["id"],
-    #     "view": {
-    #         "type": "modal",
-    #         "title": {"type": "plain_text", "text": "Success"},
-    #         "blocks": [
-    #             block_builders.simple_section(
-    #                 f":white_check_mark: Successfully updated {workflow.resource_type}, you can close this window :clap:",
-    #                 "mrkdwn",
-    #             )
-    #         ],
-    #     },
-    # }
-    # slack_requests.generic_request(
-    #     slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-    #     update_view,
-    #     user.organization.slack_integration.access_token,
-    # )
     return {"response_action": "clear"}
 
 

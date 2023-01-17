@@ -394,16 +394,16 @@ def _process_create_resource_from_meeting(workflow_id, *args):
         data = {**data, **form.saved_data}
 
     attempts = 1
-    resource = workflow.resource_type
+    resource_type = workflow.resource_type
     while True:
         hs = user.hubspot_account
         try:
-            object_fields = user.object_fields.filter(crm_object=resource).values_list(
+            object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
                 "api_name", flat=True
             )
-            adpater_class = adapter_routes[user.crm][resource]
+            adpater_class = adapter_routes[user.crm][resource_type]
             res = adpater_class.create(data, hs.access_token, object_fields, str(user.id))
-            serializer = routes.get(resource)["serializer"](data=res.as_dict)
+            serializer = routes.get(resource_type)["serializer"](data=res.as_dict)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             create_forms.update(
@@ -412,6 +412,8 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 update_source="meeting",
                 resource_id=serializer.instance.id,
             )
+            workflow.resource_id = serializer.instance.id
+            workflow.save()
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -424,8 +426,6 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 hs.regenerate_token()
                 attempts += 1
         except Exception as e:
-            if len(user.slack_integration.recap_receivers):
-                _send_recap(create_form_ids, None, True)
             raise e
     # value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
@@ -520,7 +520,9 @@ def _process_add_call_to_hs(workflow_id, *args):
     if not hasattr(user, "hubspot_account"):
         return logger.exception("User does not have a hubspot account cannot push to hs")
     meeting_outcome = args[0][0] if len(args[0]) else "None"
-    review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
+    review_form = workflow.forms.filter(
+        template__form_type__in=[slack_consts.FORM_TYPE_UPDATE, slack_consts.FORM_TYPE_CREATE]
+    ).first()
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
     if description is not None:
