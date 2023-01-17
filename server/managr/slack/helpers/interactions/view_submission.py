@@ -19,7 +19,7 @@ from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry, Account
 from managr.crm.routes import adapter_routes as crm_routes
 from managr.core.models import User, MeetingPrepInstance
-from managr.core.background import emit_create_calendar_event
+from managr.core.background import emit_create_calendar_event, emit_process_calendar_meetings
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.core.cron import generate_morning_digest
 from managr.opportunity.models import Opportunity, Lead
@@ -235,9 +235,15 @@ def process_zoom_meeting_data(payload, context):
     workflow.operations_list = ops
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
+    emit_process_calendar_meetings(
+        str(user.id),
+        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+        workflow.slack_interaction,
+    )
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
+
     return {"response_action": "clear"}
 
 

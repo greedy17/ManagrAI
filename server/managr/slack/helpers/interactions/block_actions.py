@@ -1042,7 +1042,21 @@ def process_sync_calendar(payload, context):
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
+    todays_date = datetime.today()
+    date_string = (
+        f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
+    )
     blocks = [
+        block_builders.section_with_button_block(
+            "Sync Calendar",
+            "sync_calendar",
+            date_string,
+            action_id=action_with_params(
+                slack_const.MEETING_REVIEW_SYNC_CALENDAR,
+                [f"u={str(user.id)}", f"date={str(todays_date.date())}"],
+            ),
+        ),
+        {"type": "divider"},
         *get_block_set("loading", {"message": "Checking for new calendar events..."}),
     ]
     try:
@@ -3531,11 +3545,12 @@ def process_log_activity(payload, context):
 
 def process_insert_note_templates_dropdown(payload, context):
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+
     user = slack_account.user
     view_id = payload["view"]["id"]
     blocks = payload["view"]["blocks"]
     pm = json.loads(payload["view"]["private_metadata"])
-    current_form_ids = pm.get("f").split(",")
+    workflow_id = pm.get("w", None)
     pm.update({"u": str(user.id)})
     try:
         index, block = block_finder("note_templates", blocks)
@@ -3552,7 +3567,12 @@ def process_insert_note_templates_dropdown(payload, context):
             block_id="note_templates",
         )
         blocks = [*blocks[:index], template_dropdown, *blocks[index + 1 :]]
-    current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
+    if workflow_id:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        current_forms = workflow.forms.all()
+    else:
+        current_form_ids = pm.get("f").split(",")
+        current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     current_stage = current_forms.first().resource_object.secondary_data.get("StageName")
     stage_template = (
         OrgCustomSlackForm.objects.for_user(user).filter(stage=current_stage).first()
@@ -3616,7 +3636,7 @@ def process_insert_note_template(payload, context):
     pm = json.loads(payload["view"]["private_metadata"])
     type = pm.get("type", None)
     pm.update({"u": str(user.id)})
-    current_form_ids = pm.get("f").split(",")
+    workflow_id = pm.get("w", None)
     state = payload["view"]["state"]["values"]
     selected_template = state["note_templates"]["INSERT_NOTE_TEMPLATE"]["selected_option"]["text"][
         "text"
@@ -3652,7 +3672,12 @@ def process_insert_note_template(payload, context):
         s_block["block_id"] = "meeting_title"
         blocks = [*blocks[:s_index], s_block, *blocks[s_index + 1 :]]
         blocks = [*blocks[:m_index], m_block, *blocks[m_index + 1 :]]
-    current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
+    if workflow_id:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        current_forms = workflow.forms.all()
+    else:
+        current_form_ids = pm.get("f").split(",")
+        current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.first()
     current_stage = main_form.resource_object.secondary_data.get("StageName")
     stage_template = (
@@ -3674,7 +3699,7 @@ def process_insert_note_template(payload, context):
                     template=stage_template, resource_id=main_form.resource_id, user=user,
                 )
                 current_form_ids.append(str(stage_form.id))
-    pm.update({"f": ",".join(current_form_ids)})
+                pm.update({"f": ",".join(current_form_ids)})
     if stage_template:
         submit_button_text = "Next"
         callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE

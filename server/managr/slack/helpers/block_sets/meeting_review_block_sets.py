@@ -1061,7 +1061,12 @@ def paginated_meeting_blockset(context):
             else end_time
         )
         section_text = f"*{title}*\n{formatted_start} - {formatted_end}"
-        if workflow.progress == 100:
+        if workflow.progress > 0 and workflow.progress < 100:
+            crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
+            block = block_builders.simple_section(
+                f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
+            )
+        elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             block = block_builders.section_with_button_block(
                 "Send Recap",
