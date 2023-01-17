@@ -101,7 +101,7 @@ def _process_send_paginated_alerts(payload, context):
     )
     blocks = [
         block_builders.header_block(
-            f"{len(alert_instances)} results for workflow {alert_template.title}"
+            f":bell: {len(alert_instances)} results for workflow {alert_template.title}"
         ),
         block_builders.actions_block(action_blocks),
         {"type": "divider"},

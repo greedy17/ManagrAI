@@ -654,7 +654,6 @@ class AlertInstance(TimeStampModel):
         """takes the message template body and renders"""
 
         body = self.template.message_template.body
-
         body = convertToSlackFormat(body)
         for k, v in self.var_binding_map.items():
             str_rep = "{ " + k + " }"
@@ -668,6 +667,7 @@ class AlertInstance(TimeStampModel):
         """takes set of variable bindings and replaces them with the value"""
         binding_map = dict()
         attempts = 1
+        current_values = self.resource.secondary_data
         while True:
             try:
                 current_values = self.resource.get_current_values()

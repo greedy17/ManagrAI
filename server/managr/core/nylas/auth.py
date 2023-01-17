@@ -1,7 +1,5 @@
 import base64
 import datetime
-import time
-import unittest
 import pytz
 import requests
 from requests.exceptions import HTTPError
@@ -70,11 +68,15 @@ def get_account_details(token):
     return collected_data
 
 
-def convert_local_time_to_unix(timezone, hr, minute):
-    current_time = datetime.datetime.today()
+def convert_local_time_to_unix(timezone, hr, minute, date=None):
+    current_time = (
+        datetime.datetime.strptime(date, "%Y-%m-%d") if date else datetime.datetime.today()
+    )
+    if date:
+        current_time = current_time.replace(hour=12)
     user_timezone = pytz.timezone(timezone)
-
     current = pytz.utc.localize(current_time).astimezone(user_timezone)
+
     unixtime = current.replace(hour=hr, minute=minute).timestamp()
     return unixtime
 
