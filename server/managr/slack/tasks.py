@@ -22,6 +22,7 @@ def emit_update_slack_message(context, main_form_id):
 
 @background()
 def _update_slack_message(context, main_form_id):
+    print(context)
     user = User.objects.get(id=context.get("u"))
     slack_access_token = user.organization.slack_integration.access_token
     instance = AlertInstance.objects.get(id=context.get("alert_id"))

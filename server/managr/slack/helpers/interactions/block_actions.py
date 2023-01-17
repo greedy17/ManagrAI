@@ -34,6 +34,7 @@ from managr.slack.background import (
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User, MeetingPrepInstance
+from managr.core.background import emit_process_calendar_meetings
 from managr.salesforce.background import (
     emit_meeting_workflow_tracker,
     check_for_display_value,
@@ -71,8 +72,6 @@ def INLINE_UPDATE_FUNCTION(crm):
 #########################################################
 # MEETING REVIEW ACTIONS
 #########################################################
-
-
 @processor()
 def show_initial_meeting_interaction(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
@@ -346,6 +345,7 @@ def process_stage_selected(payload, context):
         # gather and attach all forms
 
     external_id = payload.get("view", {}).get("external_id", None)
+    print(workflow)
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:
@@ -508,6 +508,45 @@ def process_remove_contact_from_meeting(payload, context):
 
 
 @processor(required_context=["w"])
+def process_show_meeting_resource(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    blocks = get_block_set("update_meeting_block_set", context,)
+    access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+            "title": {"type": "plain_text", "text": f"Choose CRM Record"},
+            "blocks": blocks,
+            "external_id": f"update_meeting_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    return
+
+
+@processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
     """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -570,36 +609,68 @@ def process_meeting_selected_resource(payload, context):
 @processor(required_context=[])
 def process_meeting_selected_resource_option(payload, context):
     """depending on the selection on the meeting review form (create new) this will open a create form or an empty block set"""
+    print(payload)
+    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    workflow_id = json.loads(payload["view"]["private_metadata"])["w"]
-    type = context.get("type", None)
-    if type:
-        workflow = MeetingPrepInstance.objects.get(id=workflow_id)
-    else:
-        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    private_metadata = json.loads(payload["view"]["private_metadata"])
+    private_metadata.update({**context})
+    workflow = MeetingWorkflow.objects.get(id=private_metadata.get("w"))
+    user = workflow.user
     select = payload["actions"][0]["selected_option"]["value"]
     resource_type = context.get("resource_type")
     action = None
-    external_id = ""
     try:
-        action, resource_type = select.split(".")
+        action, r = select.split(".")
     except ValueError:
-
         pass
-    context = {
-        "w": workflow_id,
-        "resource": resource_type,
-    }
-    if type:
-        context.update({"type": type})
     if not action:
-        blocks = [block_finder("select_existing", payload["view"]["blocks"])[1]]
-        context["action"] = "EXISTING"
+        blocks = []
+        try:
+            resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
+                integration_id=select
+            )
+            resource_id = resource.id
+        except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
+            try:
+                resource_res = user.crm_account.adapter_class.list_resource_data(
+                    resource_type, filter=CRM_FILTERS(user.crm, select),
+                )
+                serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
+                    data=resource_res[0].as_dict
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                resource_id = serializer.instance.id
+            except Exception as e:
+                logger.exception(f"Failed to sync new resource with id {select} for {user.email}")
+                return {
+                    "response_action": "push",
+                    "view": {
+                        "type": "modal",
+                        "title": {"type": "plain_text", "text": "An Error Occured"},
+                        "blocks": get_block_set(
+                            "error_modal",
+                            {
+                                "message": f":no_entry: We could not sync the {resource_type} because of :\n *Error* : _{e}_"
+                            },
+                        ),
+                    },
+                }
+        workflow.resource_id = resource_id
+        workflow.resource_type = resource_type
+        workflow.save()
+        workflow.forms.exclude(
+            template__resource__in=[
+                slack_const.FORM_RESOURCE_CONTACT,
+                slack_const.FORM_RESOURCE_OPPORTUNITYLINEITEM,
+            ]
+        ).delete()
+        workflow.add_form(resource_type, slack_const.FORM_TYPE_UPDATE, resource_id=resource_id)
+        blocks = get_block_set("meeting_review_modal", context=private_metadata)
     else:
-        context["action"] = "CREATE_NEW"
+        private_metadata.update({**context})
         blocks = [
-            block_finder("select_existing", payload["view"]["blocks"])[1],
-            *get_block_set("create_modal_block_set", context,),
+            *get_block_set("create_modal_block_set", {**private_metadata}),
         ]
         try:
             stage_name = "StageName" if workflow.user.crm == "SALESFORCE" else "dealstage"
@@ -609,11 +680,7 @@ def process_meeting_selected_resource_option(payload, context):
             block = None
             pass
         slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE).first()
-        if (
-            workflow.user.crm == "HUBSPOT"
-            and resource_type == "Deal"
-            and context["action"] == "CREATE_NEW"
-        ):
+        if workflow.user.crm == "HUBSPOT" and resource_type == "Deal" and action == "CREATE_NEW":
             try:
                 pipeline_index, pipeline_block = block_finder("pipeline", blocks)
             except ValueError:
@@ -631,7 +698,7 @@ def process_meeting_selected_resource_option(payload, context):
                 **pipeline_block,
                 "accessory": {
                     **pipeline_block["accessory"],
-                    "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(workflow.user.id)}&f={str(slack_form.id)}&field={str(pipeline_field.id)}",
+                    "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(workflow.user.id)}&w={str(workflow.id)}&field={str(pipeline_field.id)}&type=meeting",
                 },
             }
             if block:
@@ -649,69 +716,48 @@ def process_meeting_selected_resource_option(payload, context):
                     },
                 }
                 blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+    slack_access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    # get state - state contains the values based on the block_id
 
-        external_id = f"create_modal_block_set.{str(uuid.uuid4())}"
-
-    organization = workflow.user.organization
-    access_token = organization.slack_integration.access_token
-    # change variables based on selection
-    private_metadata = json.loads(payload["view"]["private_metadata"])
-    private_metadata.update({**context})
-    if action == "CREATE_NEW":
-        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
-        private_metadata = json.loads(payload["view"]["private_metadata"])
-        private_metadata = {
-            **private_metadata,
-            "u": str(workflow.user.id),
-            "f": str(
-                workflow.forms.filter(
-                    template__form_type="CREATE", template__resource=resource_type
-                )
-                .first()
-                .id
-            ),
-        }
-
-    else:
-        callback_id = (
-            slack_const.PROCESS_DIGEST_ATTACH_RESOURCE
-            if type
-            else slack_const.ZOOM_MEETING__SELECTED_RESOURCE
-        )
-
+    context = {
+        "w": str(workflow.id),
+        "type": "meeting",
+    }
     data = {
         "view_id": payload["view"]["id"],
         "view": {
             "type": "modal",
-            "callback_id": callback_id,
-            "title": {"type": "plain_text", "text": f"{resource_type}"},
+            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
-            "submit": {"type": "plain_text", "text": "Submit",},
-            "external_id": external_id,
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "private_metadata": json.dumps(context),
+            "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
     }
     try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
+        # update initial interaction workflow with new resource
+        res = slack_requests.generic_request(url, data, slack_access_token)
+
+    # add a message for user's if this failed
     except InvalidBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except InvalidBlocksFormatException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except UnHandeledBlocksException as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
     except InvalidAccessToken as e:
         return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+            f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    if type is None:
-        workflow.slack_view = res.get("view").get("id")
-        workflow.save()
+    return
 
 
 @processor()
@@ -979,6 +1025,29 @@ def process_pick_custom_object(payload, context):
     return
 
 
+@processor()
+def process_sync_calendar(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    ts = payload["container"]["message_ts"]
+    channel = payload["container"]["channel_id"]
+    slack_interaction = f"{ts}|{channel}"
+    blocks = [
+        *get_block_set("loading", {"message": "Checking for new calendar events..."}),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            channel, ts, user.organization.slack_integration.access_token, block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(f"Failed to loading calendar sync message for {user.email} due to {e}")
+    emit_process_calendar_meetings(
+        context.get("u"),
+        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+        slack_interaction=slack_interaction,
+    )
+    return
+
+
 #########################################################
 # COMMAND ACTIONS
 #########################################################
@@ -1214,8 +1283,9 @@ def process_alert_inline_stage_selected(payload, context):
     return
 
 
-@processor(required_context=["u", "f"])
+@processor(required_context=["u"])
 def process_pipeline_selected_command_form(payload, context):
+    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     type = context.get("type", None)
     user = User.objects.get(id=context.get("u"))
@@ -1224,7 +1294,6 @@ def process_pipeline_selected_command_form(payload, context):
     trigger_id = payload["trigger_id"]
     view = payload["view"]
     view_id = payload["view"]["id"]
-    private_metadata = json.loads(payload["view"]["private_metadata"])
     blocks = view["blocks"]
     # get the forms associated with this slack
     stage_field = user.object_fields.filter(api_name="dealstage", crm_object="Deal").first()
@@ -1234,7 +1303,11 @@ def process_pipeline_selected_command_form(payload, context):
     except ValueError:
         view_type = external_id
         pass
-
+    action_id = (
+        f"{slack_const.ZOOM_MEETING__STAGE_SELECTED}?w={context.get('w')}"
+        if type == "meeting"
+        else f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={context.get('f')}"
+    )
     if len(payload["actions"]):
         action = payload["actions"][0]
         blocks = payload["view"]["blocks"]
@@ -1246,10 +1319,7 @@ def process_pipeline_selected_command_form(payload, context):
         stage_block = stage_field.to_slack_field(pipeline_id=selected_value)
         stage_block = {
             **stage_block,
-            "accessory": {
-                **stage_block["accessory"],
-                "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={context.get('f')}",
-            },
+            "accessory": {**stage_block["accessory"], "action_id": action_id,},
         }
     blocks[pipeline_index] = stage_block
     updated_view_title = view["title"]
@@ -1635,6 +1705,7 @@ def process_check_is_owner(payload, context):
 
 @processor(required_context="u")
 def process_resource_selected_for_task(payload, context):
+    print(context)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
     u = User.objects.get(id=context.get("u"))
@@ -2381,7 +2452,7 @@ def process_show_alert_update_resource_form(payload, context):
         str(user.id),
         trigger_id,
     )
-    resource_id = payload["actions"][0]["value"]
+    resource_id = context.get("resource_id")
     alert_instance = AlertInstance.objects.get(id=context.get("alert_id"))
     resource_type = context.get("resource_type")
     show_submit_button_if_fields_added = False
@@ -2566,13 +2637,16 @@ def process_mark_complete(payload, context):
     blocks = [
         block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
     ]
-    alert_instances = custom_paginator(alert_instances, page=int(context.get("page")))
+    alert_instances = custom_paginator(alert_instances, page=int(context.get("current_page")))
     for alert_instance in alert_instances.get("results", []):
         blocks = [
             *blocks,
             *get_block_set(
                 "alert_instance",
-                {"instance_id": str(alert_instance.id), "current_page": int(context.get("page")),},
+                {
+                    "instance_id": str(alert_instance.id),
+                    "current_page": int(context.get("current_page")),
+                },
             ),
         ]
         alert_instance.rendered_text = alert_instance.render_text()
@@ -2597,15 +2671,9 @@ def process_mark_complete(payload, context):
 @processor(required_context=["u"])
 def process_alert_actions(payload, context):
     state = payload["state"]["values"]
-    selected = (
-        state[context.get("alert_id")][
-            f"PROCESS_ALERT_ACTIONS?u={context.get('u')}&alert_id={context.get('alert_id')}&page={context.get('page')}&resource_id={context.get('resource_id')}&resource_type={context.get('resource_type')}"
-        ]
-        .get("selected_option")
-        .get("value")
-    )
-    alert_id = context.pop("alert_id")
+    selected = list(list(state.values())[0].values())[0].get("selected_option").get("value")
     alert_action_switcher = {
+        "update_crm": process_show_alert_update_resource_form,
         "call_details": process_get_call_recording,
         "get_notes": process_get_notes,
         "add_to_sequence": process_show_engagement_modal,
@@ -2615,7 +2683,7 @@ def process_alert_actions(payload, context):
     if selected in ["add_to_sequence", "add_to_cadence"]:
         context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
     elif selected == "mark_as_complete":
-        context.update({"instance_id": alert_id})
+        context.update({"instance_id": context.get("alert_id")})
     else:
         context["type"] = "alert"
     return alert_action_switcher[selected](payload, context)
@@ -3712,6 +3780,8 @@ def handle_block_actions(payload):
         slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
         slack_const.GET_SUMMARY: process_get_summary_fields,
+        slack_const.MEETING_REVIEW_SYNC_CALENDAR: process_sync_calendar,
+        slack_const.MEETING_ATTACH_RESOURCE_MODAL: process_show_meeting_resource,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

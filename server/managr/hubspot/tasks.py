@@ -82,6 +82,10 @@ def emit_hs_update_resource_from_meeting(workflow_id, *args):
     return _process_update_resource_from_meeting(workflow_id, *args)
 
 
+def emit_hs_create_resource_from_meeting(workflow_id, *args):
+    return _process_create_resource_from_meeting(workflow_id, *args)
+
+
 def emit_process_slack_hs_bulk_update(
     user, resource_ids, data, message_ts, channel_id, resource_type
 ):
@@ -364,6 +368,68 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
+    return res
+
+
+@background(
+    schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
+def _process_create_resource_from_meeting(workflow_id, *args):
+    # get workflow
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # collect forms for resource meeting_review and if stages any stages related forms
+    create_forms = workflow.forms.filter(
+        template__form_type__in=[
+            slack_consts.FORM_TYPE_CREATE,
+            slack_consts.FORM_TYPE_STAGE_GATING,
+        ],
+        template__custom_object__isnull=True,
+    )
+    create_form_ids = []
+    # aggregate the data
+    data = dict()
+    for form in create_forms:
+        create_form_ids.append(str(form.id))
+        data = {**data, **form.saved_data}
+
+    attempts = 1
+    resource = workflow.resource_type
+    while True:
+        hs = user.hubspot_account
+        try:
+            object_fields = user.object_fields.filter(crm_object=resource).values_list(
+                "api_name", flat=True
+            )
+            adpater_class = adapter_routes[user.crm][resource]
+            res = adpater_class.create(data, hs.access_token, object_fields, str(user.id))
+            serializer = routes.get(resource)["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            create_forms.update(
+                is_submitted=True,
+                submission_date=timezone.now(),
+                update_source="meeting",
+                resource_id=serializer.instance.id,
+            )
+            break
+        except TokenExpired as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                hs.regenerate_token()
+                attempts += 1
+        except Exception as e:
+            if len(user.slack_integration.recap_receivers):
+                _send_recap(create_form_ids, None, True)
+            raise e
+    # value_update = workflow.resource.update_database_values(data)
+    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
+        _send_recap(create_form_ids, None, True)
     return res
 
 
@@ -762,7 +828,7 @@ def _process_create_new_hs_resource(form_ids, *args):
             raise UnhandledCRMError(str(e))
         except Exception as e:
             logger.exception(f"Create failed for {e}")
-            raise Exception(str(e))
+            raise Exception(e)
 
     return
 

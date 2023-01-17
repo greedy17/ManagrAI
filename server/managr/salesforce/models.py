@@ -721,6 +721,7 @@ class MeetingWorkflow(SFSyncOperation):
             emit_create_new_hs_contacts,
             emit_hs_update_resource_from_meeting,
             emit_add_products_to_hs,
+            emit_hs_create_resource_from_meeting,
         )
 
         if self.user.crm == "SALESFORCE":
@@ -738,6 +739,7 @@ class MeetingWorkflow(SFSyncOperation):
                 hs_consts.MEETING_REVIEW__CREATE_CONTACTS: emit_create_new_hs_contacts,
                 hs_consts.MEETING_REVIEW__SAVE_CALL_LOG: emit_add_call_to_hs,
                 hs_consts.MEETING_REVIEW__ADD_PRODUCTS: emit_add_products_to_hs,
+                hs_consts.MEETING_REVIEW__CREATE_RESOURCE: emit_hs_create_resource_from_meeting,
             }
 
     def begin_tasks(self, attempts=1):
@@ -802,40 +804,48 @@ class MeetingWorkflow(SFSyncOperation):
     def save(self, *args, **kwargs):
         """sets the loading to done"""
         if self.progress == 100 and self.slack_interaction:
-            from managr.slack.helpers import requests as slack_requests
-            from managr.slack.helpers.block_sets import get_block_set
+            from managr.core.background import emit_process_calendar_meetings
+            import uuid
 
-            block_set = [*get_block_set("final_meeting_interaction", {"w": str(self.id)})]
-            if len(self.failed_task_description):
-                for i, m in enumerate(self.failed_task_description):
-                    block_set.insert(
-                        i + 1,
-                        *get_block_set("error_message", {"message": f":no_entry_sign: _{m}_"}),
-                    )
-            slack_access_token = self.user.organization.slack_integration.access_token
-            ts, channel = self.slack_interaction.split("|")
-            try:
-                res = slack_requests.update_channel_message(
-                    channel, ts, slack_access_token, block_set=block_set
-                )
-            except InvalidBlocksException as e:
-                return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-                )
-            except InvalidBlocksFormatException as e:
-                return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-                )
-            except UnHandeledBlocksException as e:
-                return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-                )
-            except InvalidAccessToken as e:
-                return logger.exception(
-                    f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-                )
-            # self.user.activity.add_meeting_activity(self.id)
-            self.slack_interaction = f"{res['ts']}|{res['channel']}"
+            emit_process_calendar_meetings(
+                str(self.user.id),
+                f"calendar-meetings-{self.user.email}-{str(uuid.uuid4())}",
+                self.slack_interaction,
+            )
+            # from managr.slack.helpers import requests as slack_requests
+            # from managr.slack.helpers.block_sets import get_block_set
+
+            # block_set = [*get_block_set("final_meeting_interaction", {"w": str(self.id)})]
+            # if len(self.failed_task_description):
+            #     for i, m in enumerate(self.failed_task_description):
+            #         block_set.insert(
+            #             i + 1,
+            #             *get_block_set("error_message", {"message": f":no_entry_sign: _{m}_"}),
+            #         )
+            # slack_access_token = self.user.organization.slack_integration.access_token
+            # ts, channel = self.slack_interaction.split("|")
+            # try:
+            #     res = slack_requests.update_channel_message(
+            #         channel, ts, slack_access_token, block_set=block_set
+            #     )
+            # except InvalidBlocksException as e:
+            #     return logger.exception(
+            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+            #     )
+            # except InvalidBlocksFormatException as e:
+            #     return logger.exception(
+            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+            #     )
+            # except UnHandeledBlocksException as e:
+            #     return logger.exception(
+            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+            #     )
+            # except InvalidAccessToken as e:
+            #     return logger.exception(
+            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
+            #     )
+            # # self.user.activity.add_meeting_activity(self.id)
+            # self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
 
