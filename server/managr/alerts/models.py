@@ -17,7 +17,7 @@ from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.adapter.routes import routes as adapter_routes
 from managr.salesforce import constants as sf_consts
-from managr.crm.exceptions import TokenExpired
+from managr.crm.exceptions import TokenExpired, ApiRateLimitExceeded
 from managr.hubspot import constants as hs_consts
 
 # Create your models here.
@@ -753,6 +753,14 @@ class AlertInstance(TimeStampModel):
                 else:
                     self.resource.owner.crm_account.regenerate_token()
                     attempts += 1
+            except ApiRateLimitExceeded:
+                if attempts >= 5:
+                    logger.exception(
+                        f"Failed to retrieve alerts current data for user {str(self.user.id)} after {attempts} tries"
+                    )
+                    current_values = self.resource.secondary_data
+                else:
+                    time.sleep(10.00)
             except Exception as e:
                 return logger.warning(
                     f"Exception occured when pulling current data for render text in alert {self.id} because of {e}"
