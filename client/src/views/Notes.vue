@@ -11,7 +11,7 @@
 
       <!-- <h3>Current Template Name</h3> -->
 
-      <div v-if="!isPaid" class="tooltip">
+      <div v-if="!isPaid && !editing" class="tooltip">
         <button disabled class="green_button row">
           Create Template
           <img
@@ -22,7 +22,7 @@
             alt=""
           />
         </button>
-        <small class="tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+        <small class="tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
       </div>
 
       <button v-else-if="!creating && !editing && isPaid" @click="createNote" class="green_button">

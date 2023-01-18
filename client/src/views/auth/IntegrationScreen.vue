@@ -305,7 +305,7 @@
                 height="18"
                 alt=""
               />
-              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
             </div>
           </div>
         </div>
@@ -348,7 +348,7 @@
                 height="18"
                 alt=""
               />
-              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@
                 height="18"
                 alt=""
               />
-              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
             </div>
           </div>
         </div>
@@ -461,7 +461,7 @@
                 height="18"
                 alt=""
               />
-              <small class="right-tooltiptext">Upgrade to <strong>Team Plan</strong></small>
+              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
             </div>
           </div>
         </div>

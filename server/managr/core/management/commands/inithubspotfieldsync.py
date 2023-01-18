@@ -27,7 +27,7 @@ class Command(BaseCommand):
                     )
 
                 operations = [
-                    *user.huspot_account.field_sync_opts,
+                    *user.hubspot_account.field_sync_opts,
                 ]
                 scheduled_time = timezone.now()
                 formatted_time = scheduled_time.strftime("%Y-%m-%dT%H:%M%Z")

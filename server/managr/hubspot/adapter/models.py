@@ -4,7 +4,7 @@ import json
 import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException
+from .exceptions import CustomAPIException, ApiRateLimitExceeded
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
@@ -68,7 +68,6 @@ class HubspotAuthAccountAdapter:
         else:
             status_code = response.status_code
             error_data = response.json()
-            print(status_code, error_data)
             if status_code == 400:
                 error_param = error_data.get("error", error_data.get("errorCode", None))
                 error_message = error_data.get("error_description", error_data.get("message", None))
@@ -88,7 +87,6 @@ class HubspotAuthAccountAdapter:
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
-        print("HUBSPOT AUTHENTICATE RES", res)
         if settings.IN_DEV:
             user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
             # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
@@ -198,7 +196,6 @@ class HubspotAuthAccountAdapter:
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
             )
-            print("HUBSPOT GET USER INFO RESPONSE", res.json())
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
@@ -238,12 +235,18 @@ class HubspotAuthAccountAdapter:
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         # logger.info(f"{url} was sent with data: {data}")
         with Client as client:
-            res = client.post(
-                url,
-                headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
-                data=json.dumps(data),
-            )
-            res = self._handle_response(res)
+            attempts = 1
+            while True:
+                try:
+                    res = client.post(
+                        url,
+                        headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                        data=json.dumps(data),
+                    )
+                    res = self._handle_response(res)
+                    break
+                except ApiRateLimitExceeded:
+                    time.sleep(10)
             saved_response = res
             page = 1
             while True:
@@ -281,7 +284,7 @@ class HubspotAuthAccountAdapter:
             )
         with Client as client:
             if len(value) > 0 and relationship != "OWNER":
-                data = hubspot_consts.HUBSPOT_SEARCH_BODY(fields, value)
+                data = hubspot_consts.HUBSPOT_SEARCH_NAME_BODY(fields, value)
                 res = client.post(
                     url,
                     data=json.dumps(data),
@@ -356,7 +359,7 @@ class HObjectFieldAdapter:
         self.user = data.get("user", None)
         self.crm_object = data.get("crm_object", None)
         self.api_name = data.get("name", None)
-        self.label = data.get("label", None)
+        self.label = data.get("label", f"{self.api_name}")
         self.data_type = data.get("field_type", None)
         self.display_value = data.get("label", None)
         self.options = data.get("options", None)
@@ -374,7 +377,7 @@ class HObjectFieldAdapter:
     def from_api(data):
         data["integration_source"] = "HUBSPOT"
         type = data["fieldType"]
-        data["fieldType"] = DATA_TYPE_OBJ[type]
+        data["fieldType"] = DATA_TYPE_OBJ[type] if type in DATA_TYPE_OBJ.keys() else "String"
         if "referencedObjectType" in data.keys() and data["referencedObjectType"]:
             data["reference"] = True
             data["fieldType"] = "Reference"
@@ -519,15 +522,19 @@ class CompanyAdapter:
         resource_fields = user.object_fields.filter(crm_object="Company").values_list(
             "api_name", flat=True
         )
-
-        url = hubspot_consts.HUBSPOT_OBJECTS_URI("companies", resource_fields, self.integration_id)
+        url = hubspot_consts.HUBSPOT_SEARCH_URI("Company")
+        body = hubspot_consts.HUBSPOT_SEARCH_BODY(
+            resource_fields,
+            [{"propertyName": "hs_object_id", "operator": "EQ", "value": self.integration_id}],
+        )
         with Client as client:
-            r = client.get(
+            r = client.post(
                 url,
+                data=json.dumps(body),
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(user.crm_account.access_token)},
             )
             r = HubspotAuthAccountAdapter._handle_response(r)
-            r = DealAdapter.from_api(r["properties"], self.owner)
+            r = CompanyAdapter.from_api(r["results"][0]["properties"], self.owner)
             return r
 
 
@@ -661,14 +668,19 @@ class DealAdapter:
     def get_current_values(self):
         user = self.internal_user
         resource_fields = user.crm_account.adapter_class.object_fields.get("Deal")
-        url = hubspot_consts.HUBSPOT_OBJECTS_URI("deals", resource_fields, self.integration_id)
+        url = hubspot_consts.HUBSPOT_SEARCH_URI("Deal")
+        body = hubspot_consts.HUBSPOT_SEARCH_BODY(
+            resource_fields,
+            [{"propertyName": "hs_object_id", "operator": "EQ", "value": self.integration_id}],
+        )
         with Client as client:
-            r = client.get(
+            r = client.post(
                 url,
+                data=json.dumps(body),
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(user.crm_account.access_token)},
             )
             r = HubspotAuthAccountAdapter._handle_response(r)
-            r = DealAdapter.from_api(r["properties"], self.owner)
+            r = DealAdapter.from_api(r["results"][0]["properties"], self.owner)
             return r
 
 
@@ -795,12 +807,17 @@ class HubspotContactAdapter:
         resource_fields = user.object_fields.filter(crm_object="Contact").values_list(
             "api_name", flat=True
         )
-        url = hubspot_consts.HUBSPOT_OBJECTS_URI("contacts", resource_fields, self.integration_id)
+        url = hubspot_consts.HUBSPOT_SEARCH_URI("Contact")
+        body = hubspot_consts.HUBSPOT_SEARCH_BODY(
+            resource_fields,
+            [{"propertyName": "hs_object_id", "operator": "EQ", "value": self.integration_id}],
+        )
         with Client as client:
-            r = client.get(
+            r = client.post(
                 url,
+                data=json.dumps(body),
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(user.crm_account.access_token)},
             )
             r = HubspotAuthAccountAdapter._handle_response(r)
-            r = DealAdapter.from_api(r["properties"], self.owner)
+            r = HubspotContactAdapter.from_api(r["results"][0]["properties"], self.owner)
             return r

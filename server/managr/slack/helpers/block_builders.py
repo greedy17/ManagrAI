@@ -446,10 +446,24 @@ def checkbox_input(options, action_id):
     return block
 
 
-def static_select_input(options, action_id, placeholder=None):
-    block = {"type": "static_select", "options": options, "action_id": action_id}
+def static_select_input(options, action_id, block_id, label=None, placeholder=None):
+    block = {
+        "type": "input",
+        "block_id": block_id,
+    }
+    select_obj = {
+        "type": "static_select",
+        "options": options,
+        "action_id": action_id,
+    }
+    if label:
+        block["label"] = {
+            "type": "plain_text",
+            "text": label,
+        }
     if placeholder:
-        block["placeholder"] = {"type": "plain_text", "text": placeholder}
+        select_obj["placeholder"] = {"type": "plain_text", "text": placeholder}
+    block["element"] = select_obj
     return block
 
 

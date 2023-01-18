@@ -198,7 +198,7 @@
                   <Multiselect
                     v-model="currentVals[field.apiName]"
                     :options="
-                      field.apiName === 'dealstage' ? field.options[0][savedPipeline.id].stages :
+                      field.apiName === 'dealstage' ? (field.options[0][savedPipeline.id] ? field.options[0][savedPipeline.id].stages : []) :
                       userCRM === 'HUBSPOT' && field.dataType !== 'Reference' ? field.options : 
                       (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
@@ -530,7 +530,7 @@
                 <Multiselect
                   v-model="currentVals[field.apiName]"
                   :options="
-                    field.apiName === 'dealstage' ? field.options[0][savedOpp.secondary_data.pipeline].stages :
+                    field.apiName === 'dealstage' ? (field.options[0][savedOpp.secondary_data.pipeline] ? field.options[0][savedOpp.secondary_data.pipeline].stages : []) :
                     userCRM === 'HUBSPOT' && field.dataType !== 'Reference' ? field.options : 
                     (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                       ? allPicklistOptions[field.id]
@@ -1199,7 +1199,7 @@
               <Multiselect
                 v-model="dropdownVal[field.apiName]"
                 :options="
-                  field.apiName === 'dealstage' ? field.options[0][savedOpp.secondary_data.pipeline].stages :
+                  field.apiName === 'dealstage' ? (field.options[0][savedOpp.secondary_data.pipeline] ? field.options[0][savedOpp.secondary_data.pipeline].stages : []) :
                   userCRM === 'HUBSPOT' && field.dataType !== 'Reference' ? field.options : 
                   (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') && allPicklistOptions[field.id]
                     ? allPicklistOptions[field.id]
@@ -1249,7 +1249,7 @@
                   <p class="slot-icon">
                     <img src="@/assets/images/search.svg" alt="" />
                     {{
-                      field.apiName === 'dealstage' ? field.options[0][savedOpp['secondary_data'].pipeline].stages.filter(stage => stage.id === savedOpp['secondary_data'][field.apiName])[0].label :
+                      field.apiName === 'dealstage' && field.options[0][savedOpp['secondary_data'].pipeline] ? field.options[0][savedOpp['secondary_data'].pipeline].stages.filter(stage => stage.id === savedOpp['secondary_data'][field.apiName])[0].label :
                         field.apiName === 'AccountId'
                           ? currentAccount
                           : field.apiName === 'OwnerId'
@@ -2657,7 +2657,7 @@
 
                   <Multiselect
                     v-else-if="(field.apiName === 'StageName' || field.apiName === 'dealstage')"
-                    :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : field.options[0][opp.secondary_data.pipeline].stages"
+                    :options="userCRM === 'SALESFORCE' ? allPicklistOptions[field.id] : (field.options[0][opp.secondary_data.pipeline] ? field.options[0][opp.secondary_data.pipeline].stages : [])"
                     openDirection="below"
                     selectLabel="Enter"
                     style="width: 23vw; font-size: 13px"
@@ -2681,7 +2681,7 @@
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ field.apiName === 'StageName' ?
                           opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] :
-                          field.apiName === 'dealstage' ? field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label :
+                          field.apiName === 'dealstage' && field.options[0][opp['secondary_data'].pipeline] ? field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label :
                           ((
                               field.apiName.includes('__c')
                                 ? opp['secondary_data'][field.apiName]

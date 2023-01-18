@@ -40,12 +40,12 @@ const CLOSE_DATE_PASSED = {
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Close Date</strong> \n { Opportunity.CloseDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -99,12 +99,12 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
         ],
-        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Close Date</strong> \n { Deal.closedate }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -169,12 +169,12 @@ const NINETY_DAY_PIPELINE = {
             " Opportunity.StageName ",
             " Opportunity.LastActivityDate ",
         ],
-        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Close Date</strong> \n { Opportunity.CloseDate } <br><br> <strong>Stage</strong> \n { Opportunity.StageName } <br><br> <strong>Last Activity</strong> \n { Opportunity.LastActivityDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }\n\n<strong>Stage</strong> \n { Opportunity.StageName }\n\n<strong>Last Activity</strong> \n { Opportunity.LastActivityDate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -228,12 +228,12 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
             " Deal.closedate ",
             " Deal.dealstage ",
         ],
-        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Close Date</strong> \n { Deal.closedate }</strong> <br><br> <strong>Stage</strong> \n { Deal.dealstage }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }</strong>\n\n<strong>Stage</strong> \n { Deal.dealstage }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -277,12 +277,12 @@ const DEAL_REVIEW = {
             " Opportunity.Name ",
             " Opportunity.LastModifiedDate ",
         ],
-        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Last Modified Date</strong> \n { Opportunity.LastModifiedDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Last Modified Date</strong> \n { Opportunity.LastModifiedDate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 3],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -326,12 +326,12 @@ const DEAL_REVIEW_HUBSPOT = {
             " Deal.dealname ",
             " Deal.hs_lastmodifieddate ",
         ],
-        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Last Modified Date</strong> \n { Deal.hs_lastmodifieddate }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Last Modified Date</strong> \n { Deal.hs_lastmodifieddate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 3],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -385,12 +385,12 @@ const CLOSE_DATE_APPROACHING = {
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
-        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name } <br><br> <strong>Close Date</strong> \n { Opportunity.CloseDate }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -444,12 +444,12 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
             " Deal.dealname ",
             " Deal.closedate ",
         ],
-        body: "<strong>Deal Name</strong> \n { Deal.dealname } <br><br> <strong>Close Date</strong> \n { Deal.closedate }",
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0],
+            recurrenceDays: [],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -497,7 +497,7 @@ const UPCOMING_NEXT_STEP = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -545,7 +545,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -593,7 +593,7 @@ const LARGE_OPPORTUNITIES = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -641,7 +641,7 @@ const LARGE_DEALS_HUBSPOT = {
     newConfigs: [
         {
             recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [0, 1, 2, 3, 4, 5],
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
             recurrenceDay: "0",
             recipients: ["default"],
             alertTargets: ["SELF"],
@@ -694,14 +694,14 @@ const TEAM_PIPELINE = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-
+            " Opportunity.Name ",
         ],
         body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "MONTHLY",
-            recurrenceDays: [0],
+            recurrenceDays: ["0"],
             recurrenceDay: "1",
             recipients: ["default"],
             alertTargets: ["TEAM"],
@@ -752,14 +752,14 @@ const TEAM_PIPELINE_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-
+            " Deal.dealname ",
         ],
         body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },
     newConfigs: [
         {
             recurrenceFrequency: "MONTHLY",
-            recurrenceDays: [0],
+            recurrenceDays: ["0"],
             recurrenceDay: "1",
             recipients: ["default"],
             alertTargets: ["TEAM"],

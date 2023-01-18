@@ -386,6 +386,8 @@ class HubspotAuthAccount(TimeStampModel):
                 else:
                     self.regenerate_token()
                     attempts += 1
+            except Exception as e:
+                logger.exception(f"Error syncing {resource} for {self.user.email} <{e}>")
         return
 
     def get_stage_picklist_values(self, resource):

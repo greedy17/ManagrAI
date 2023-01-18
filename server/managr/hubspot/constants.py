@@ -26,7 +26,7 @@ MEETING_REVIEW__CREATE_CONTACTS = "MEETING_REVIEW_CREATE_CONTACTS"
 MEETING_REVIEW__UPDATE_CONTACTS = "MEETING_REVIEW_UPDATE_CONTACTS"
 MEETING_REVIEW__SAVE_CALL_LOG = "MEETING_REVIEW_SAVE_CALL_LOG"
 MEETING_REVIEW__ADD_PRODUCTS = "MEETING_REVIEW__ADD_PRODUCTS"
-
+MEETING_REVIEW__CREATE_RESOURCE = "MEETING_REVIEW__CREATE_RESOURCE"
 HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE = "HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE"
 
 HUBSPOT_QUERY_LIMIT = 100
@@ -139,7 +139,7 @@ def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):
     }
 
 
-def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
+def HUBSPOT_SEARCH_NAME_BODY(fields, filter_value, limit=25):
     fields = set(fields)
     return {
         "properties": list(fields),
@@ -155,6 +155,14 @@ def HUBSPOT_SEARCH_BODY(fields, filter_value, limit=25):
             }
         ],
         "limit": limit,
+    }
+
+
+def HUBSPOT_SEARCH_BODY(fields, filters):
+    fields = set(fields)
+    return {
+        "properties": list(fields),
+        "filterGroups": [{"filters": filters}],
     }
 
 

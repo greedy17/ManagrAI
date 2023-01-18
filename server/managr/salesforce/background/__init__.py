@@ -169,6 +169,10 @@ def emit_sf_update_resource_from_meeting(workflow_id, *args):
     return _process_update_resource_from_meeting(workflow_id, *args)
 
 
+def emit_sf_create_resource_from_meeting(workflow_id, *args):
+    return _process_create_resource_from_meeting(workflow_id, *args)
+
+
 def emit_add_products_to_sf(workflow_id, *args):
     return _process_add_products_to_sf(workflow_id, *args)
 
@@ -684,6 +688,101 @@ def _process_update_resource_from_meeting(workflow_id, *args):
     value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(update_form_ids, None, True)
+    # push to sf
+    return res
+
+
+@background(
+    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+)
+@sf_api_exceptions_wf("update_object_from_review")
+def _process_create_resource_from_meeting(workflow_id, *args):
+    # get workflow
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    # collect forms for resource meeting_review and if stages any stages related forms
+    create_forms = workflow.forms.filter(
+        template__form_type__in=[
+            slack_consts.FORM_TYPE_CREATE,
+            slack_consts.FORM_TYPE_STAGE_GATING,
+        ],
+        template__custom_object__isnull=True,
+    )
+    custom_object_forms = workflow.forms.filter(template__custom_object__isnull=False)
+    create_form_ids = []
+    # aggregate the data
+    data = dict()
+    for form in create_forms:
+        create_form_ids.append(str(form.id))
+        data = {**data, **form.saved_data}
+    custom_object_data_collector = {}
+    if len(custom_object_forms):
+        for custom_form in custom_object_forms:
+            custom_object_data_collector = {
+                **custom_object_data_collector,
+                **custom_form.saved_data,
+            }
+    resource_type = workflow.resource_type
+    attempts = 1
+    while True:
+        sf = user.salesforce_account
+        try:
+            from managr.salesforce.adapter.routes import routes as adapter_routes
+            from managr.salesforce.routes import routes as model_routes
+
+            adapter = adapter_routes.get(resource_type)
+            object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
+                "api_name", flat=True
+            )
+            res = adapter.create(
+                data, sf.access_token, object_fields, str(user.id), sf.instance_url
+            )
+            serializer = model_routes.get(resource_type)["serializer"](data=res.as_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            create_forms.update(
+                is_submitted=True,
+                submission_date=timezone.now(),
+                update_source="meeting",
+                resource_id=serializer.instance.id,
+            )
+            if len(custom_object_forms):
+                sf.create_custom_object(
+                    custom_object_data_collector,
+                    sf.access_token,
+                    sf.instance_url,
+                    sf.salesforce_id,
+                    custom_object_forms.first().template.custom_object,
+                )
+            workflow.resouce_id = serializer.instance.id
+            workflow.save()
+            break
+        except TokenExpired as e:
+            if attempts >= 5:
+                return logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                sf.regenerate_token()
+                attempts += 1
+        except UnableToUnlockRow as e:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
+                )
+                raise e
+            else:
+                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                time.sleep(sleep)
+                attempts += 1
+        except Exception as e:
+            if len(user.slack_integration.recap_receivers):
+                _send_recap(create_form_ids, None, True)
+            raise e
+    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
+        _send_recap(create_form_ids, None, True)
     # push to sf
     return res
 
@@ -1702,7 +1801,7 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                         text=f"Recap {main_form.template.resource}",
                         block_set=blocks,
                     )
-                    logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
+                    # logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
                 except CannotSendToChannel:
                     try:
                         slack_requests.send_channel_message(
@@ -1924,7 +2023,7 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
                 r = slack_requests.send_channel_message(
                     channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
                 )
-                logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
+                # logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:
                 try:
                     slack_requests.send_channel_message(

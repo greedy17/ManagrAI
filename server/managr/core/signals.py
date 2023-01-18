@@ -36,6 +36,7 @@ def update_succesful_task_operations(sender, instance=None, created=False, **kwa
         elif queue in [
             hs_consts.HUBSPOT_RESOURCE_SYNC_QUEUE,
             hs_consts.HUBSPOT_FIELD_SYNC_QUEUE,
+            hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
         ]:
             update_succesful_hubspot_operations(sender, instance, created, **kwargs)
         else:

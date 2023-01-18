@@ -407,6 +407,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         form_values = self.generate_form_values(data)
         form_blocks = []
         for field in user_fields:
+
             val = form_values.get(field.api_name, None)
             if field.is_public:
                 # pass in user as a kwarg
@@ -502,7 +503,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         for k, v in values.items():
             if k in fields:
                 if k in datetime_fields:
-                    if "T" not in v:
+                    if v is not None and "T" not in v:
                         s = v.split(" ")
                         v = "T".join(s)
                 new_data[k] = v
@@ -511,7 +512,6 @@ class OrgCustomSlackFormInstance(TimeStampModel):
             if o_k in fields:
                 old_data[o_k] = o_v
                 pass
-        print(new_data)
         self.saved_data = new_data
         self.previous_data = old_data
         self.save()

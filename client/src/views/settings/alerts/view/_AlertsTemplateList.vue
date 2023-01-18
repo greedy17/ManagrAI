@@ -340,7 +340,7 @@
                   height="16px"
                   alt=""
                 />
-                <small class="tooltiptext-left">Upgrade to <strong>Team Plan</strong></small>
+                <small class="tooltiptext-left">Upgrade to <strong>Startup Plan</strong></small>
               </div>
             </div>
           </div>
@@ -527,6 +527,9 @@ export default {
     },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
+      if (newName === 'LargeDeals') {
+        newName = 'LargeOpportunities'
+      }
       this.$router.push({ name: newName })
     },
     getActiveTemplateTitles() {
