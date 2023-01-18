@@ -86,8 +86,3 @@ class CustomHObjectField(admin.ModelAdmin):
 admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
 admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
 admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
-admin.site.register(HObjectField, CustomHObjectField)
-admin.site.register(Company, CustomCompanyAdmin)
-admin.site.register(Deal, CustomDealAdmin)
-admin.site.register(HubspotContact, CustomHubspotContactAdmin)
-

@@ -176,33 +176,33 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
-    print(f"DATA FROM ZOOM WEBHOOK: obj {obj} / event {event}")
-    if event == zoom_consts.MEETING_EVENT_ENDED:
-        extra_obj = obj.pop("object", {})
-        obj = {**obj, **extra_obj}
-        host_id = obj.get("host_id", None)
-        meeting_uuid = obj.get("uuid", None)
-        original_duration = obj.get("duration", None)
-        if not original_duration or original_duration < 0:
-            original_duration = 0
-        zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
-        if zoom_account and not zoom_account.is_revoked:
-            # emit the process
-            topic = obj["topic"]
-            workflows = MeetingWorkflow.objects.for_user(zoom_account.user)
-            workflow_check = workflows.filter(meeting__topic__icontains=topic).first()
-            if settings.IN_STAGING:
-                logger.info(
-                    f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
-                )
-            if workflow_check is not None:
-                workflow_check.meeting.meeting_id = meeting_uuid
-                workflow_check.meeting.save()
-                workflow_check.begin_communication()
-            else:
-                _get_past_zoom_meeting_details(
-                    str(zoom_account.user.id), meeting_uuid, original_duration
-                )
+    # print(f"DATA FROM ZOOM WEBHOOK: obj {obj} / event {event}")
+    # if event == zoom_consts.MEETING_EVENT_ENDED:
+    #     extra_obj = obj.pop("object", {})
+    #     obj = {**obj, **extra_obj}
+    #     host_id = obj.get("host_id", None)
+    #     meeting_uuid = obj.get("uuid", None)
+    #     original_duration = obj.get("duration", None)
+    #     if not original_duration or original_duration < 0:
+    #         original_duration = 0
+    #     zoom_account = ZoomAuthAccount.objects.filter(zoom_id=host_id).first()
+    #     if zoom_account and not zoom_account.is_revoked:
+    #         # emit the process
+    #         topic = obj["topic"]
+    #         workflows = MeetingWorkflow.objects.for_user(zoom_account.user)
+    #         workflow_check = workflows.filter(meeting__topic__icontains=topic).first()
+    #         if settings.IN_STAGING:
+    #             logger.info(
+    #                 f"WORKFLOW CHECK FOR {zoom_account.user}, topic: {topic} --- {workflow_check} for {workflows}"
+    #             )
+    #         if workflow_check is not None:
+    #             workflow_check.meeting.meeting_id = meeting_uuid
+    #             workflow_check.meeting.save()
+    #             workflow_check.begin_communication()
+    #         else:
+    #             _get_past_zoom_meeting_details(
+    #                 str(zoom_account.user.id), meeting_uuid, original_duration
+    #             )
 
     return Response()
 
