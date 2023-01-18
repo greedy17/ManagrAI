@@ -92,7 +92,6 @@ class CustomPicklistValue(admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(models.SalesforceAuthAccount)
-admin.site.register(models.SObjectField, CustomSObjectField)
 admin.site.register(models.SObjectValidation)
 admin.site.register(models.SObjectPicklist, CustomPicklistValue)
 admin.site.register(models.SFObjectFieldsOperation, CustomSyncFieldOperationAdmin)
