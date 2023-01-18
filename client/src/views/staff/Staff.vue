@@ -619,6 +619,20 @@
                 <h4>{{ this.selected_org.name }}'s Users</h4>
               </div>
             </div>
+            <div class="invite-list-users__section__container" style="margin-bottom: 1rem;">
+              <div class="invite-list-users__section__item underline">
+                Total: {{ modalInfo.length }}
+              </div>
+              <div class="invite-list-users__section__item underline">
+                Invited: {{ invitedUsers ? invitedUsers.length : 0 }}
+              </div>
+              <div class="invite-list-users__section__item underline">
+                Active: {{ activeUsers ? activeUsers.length : 0 }}
+              </div>
+              <div class="invite-list-users__section__item">
+
+              </div>
+            </div>
             <div v-for="member in modalInfo" :key="member.id" class="invite-list-users__section__container">
               <template
                 v-if="
@@ -1295,6 +1309,8 @@ export default {
       page: null,
       orgForms: null,
       organizations: [],
+      invitedUsers: null,
+      activeUsers: null,
     }
   },
   computed: {
@@ -1645,12 +1661,18 @@ export default {
       }
       this.modalName = name
       this.modalInfo = data
+      if (this.modalName === 'usersOverview') {
+        this.invitedUsers = this.modalInfo.filter(user => !user.first_name)
+        this.activeUsers = this.modalInfo.filter(user => user.is_active)
+      }
       this.editOpModalOpen = true
     },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
       this.modalName = ''
       this.modalInfo = null
+      this.invitedUsers = null
+      this.activeUsers = null
     },
     resetCommandsEdit() {
       this.displayCommandModal = !this.displayCommandModal
