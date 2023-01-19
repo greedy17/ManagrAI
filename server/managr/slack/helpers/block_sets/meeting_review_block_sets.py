@@ -512,8 +512,10 @@ def meeting_review_modal_block_set(context):
         block_builders.external_select(type_text, action_query, block_id="managr_task_type")
     )
     # additional validations
-
-    blocks.extend(slack_form.generate_form())
+    if len(slack_form.saved_data):
+        blocks.extend(slack_form.generate_form(slack_form.saved_data))
+    else:
+        blocks.extend(slack_form.generate_form())
     # static blocks
     if slack_form:
         stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
@@ -644,44 +646,56 @@ def create_or_search_modal_block_set(context):
     ]
 
 
-@block_set(required_context=["w", "resource"])
+@block_set(required_context=["w", "resource_type"])
 def create_modal_block_set(context, *args, **kwargs):
     """Shows a modal to create a resource"""
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    existing_form_id = context.get("f", None)
-    if existing_form_id:
-        existing_form = workflow.forms.filter(id=existing_form_id).first()
-        if not existing_form:
-            existing_form.add(existing_form)
-        form_blocks = existing_form.generate_form(existing_form.saved_data)
-    else:
-
-        template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(
-                Q(resource=context.get("resource"), form_type=slack_const.FORM_TYPE_CREATE,)
-                & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
-            )
-            .first()
+    template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(
+            Q(resource=context.get("resource_type"), form_type=slack_const.FORM_TYPE_CREATE,)
+            & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
         )
-        if template:
-            workflow.forms.filter(
-                template__form_type__in=[
-                    slack_const.FORM_TYPE_CREATE,
-                    slack_const.FORM_TYPE_STAGE_GATING,
-                ]
-            ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
-            # remove old instance (in case there was an error that required the form to add fields)
+        .first()
+    )
+    if template:
+        blocks = []
+        action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
+        type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+        blocks.append(
+            block_builders.external_select(type_text, action_query, block_id="managr_task_type")
+        )
+        workflow.forms.filter(
+            template__form_type__in=[
+                slack_const.FORM_TYPE_CREATE,
+                slack_const.FORM_TYPE_STAGE_GATING,
+            ]
+        ).exclude(template__resource=slack_const.FORM_RESOURCE_CONTACT).delete()
+        # remove old instance (in case there was an error that required the form to add fields)
 
-            slack_form = OrgCustomSlackFormInstance.objects.create(
-                user=user, template=template, workflow=workflow
-            )
-            form_blocks = slack_form.generate_form()
+        slack_form = OrgCustomSlackFormInstance.objects.create(
+            user=user, template=template, workflow=workflow
+        )
+        form_blocks = slack_form.generate_form()
     if len(form_blocks):
-        blocks = [*form_blocks]
-    else:
+        blocks.extend(form_blocks)
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        try:
+            index, block = block_finder(stage_name, blocks)
+        except ValueError:
+            # did not find the block
+            block = None
+            pass
 
+        if block:
+            action_id = slack_const.ZOOM_MEETING__STAGE_SELECTED + f"?w={context.get('w')}"
+            block = {
+                **block,
+                "accessory": {**block["accessory"], "action_id": f"{action_id}",},
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+    else:
         blocks = [
             block_builders.section_with_button_block(
                 "Forms",
@@ -1009,4 +1023,97 @@ def convert_lead_block_set(context):
             initial_option=user_option,
         ),
     ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def paginated_meeting_blockset(context):
+    u = User.objects.get(id=context.get("u"))
+    user_timezone = u.timezone
+    workflows = MeetingWorkflow.objects.for_user(u)
+    todays_date = datetime.today()
+    date_string = (
+        f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
+    )
+    blocks = [
+        block_builders.section_with_button_block(
+            "Sync Calendar",
+            "sync_calendar",
+            date_string,
+            action_id=action_with_params(
+                slack_const.MEETING_REVIEW_SYNC_CALENDAR,
+                [f"u={str(u.id)}", f"date={str(todays_date.date())}"],
+            ),
+        ),
+        {"type": "divider"},
+    ]
+    for workflow in workflows:
+        meeting = workflow.meeting
+        title = meeting.topic
+        start_time = meeting.start_time
+        end_time = meeting.end_time
+        formatted_start = (
+            datetime.strftime(start_time.astimezone(pytz.timezone(user_timezone)), "%I:%M %p")
+            if start_time
+            else start_time
+        )
+        formatted_end = (
+            datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%I:%M %p")
+            if end_time
+            else end_time
+        )
+        section_text = f"*{title}*\n{formatted_start} - {formatted_end}"
+        if len(workflow.failed_task_description):
+            message = ""
+            for i, m in enumerate(workflow.failed_task_description):
+                m_split = m.split(".")
+                if i == len(workflow.failed_task_description) - 1:
+                    message += f"{m_split[0]}"
+                else:
+                    message += f"{m_split[0]},"
+            block = block_builders.section_with_button_block(
+                "Return to Form",
+                "RETURN_TO_FORM",
+                section_text=f":no_entry_sign: Uh-oh we hit a validation:\n{message}\n{title}",
+                block_id=str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__INIT_REVIEW,
+                    params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
+                ),
+            )
+        elif workflow.progress > 0 and workflow.progress < 100:
+            crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
+            block = block_builders.simple_section(
+                f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
+            )
+
+        elif workflow.progress == 100:
+            section_text = f":white_check_mark: *Meeting Logged*\n{title}"
+            block = block_builders.section_with_button_block(
+                "Send Recap",
+                "SEND_RECAP",
+                section_text=section_text,
+                block_id=str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.PROCESS_SEND_RECAP_MODAL,
+                    params=[
+                        f"u={str(workflow.user.id)}",
+                        f"workflow_id={str(workflow.id)}",
+                        "type=meeting",
+                    ],
+                ),
+            )
+        else:
+            action_id = (
+                f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={str(workflow.id)}&u={str(u.id)}"
+            )
+            block = block_builders.section_with_button_block(
+                "Log Meeting",
+                "log_meeting",
+                section_text=section_text,
+                block_id=str(workflow.id),
+                style="primary",
+                action_id=action_id,
+            )
+        blocks.append(block)
     return blocks

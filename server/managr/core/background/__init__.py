@@ -1,7 +1,6 @@
 import logging
 import time
 import random
-import textwrap
 import jwt
 import pytz
 import uuid
@@ -17,7 +16,6 @@ from django.utils import timezone
 from managr.crm.exceptions import TokenExpired
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core.models import User, MeetingPrepInstance
-from managr.core.serializers import MeetingPrepInstanceSerializer
 from managr.core import constants as core_consts
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
@@ -33,13 +31,12 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.slack.helpers import block_builders
-from managr.organization.models import Contact
-from managr.organization.models import Account
-from managr.opportunity.models import Lead, Opportunity
+from managr.opportunity.models import Lead
 from managr.zoom.background import _split_first_name, _split_last_name
 from managr.utils.misc import custom_paginator
 from managr.zoom.background import emit_kick_off_slack_interaction
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
+from managr.slack.helpers.block_sets import get_block_set
 
 logger = logging.getLogger("managr")
 
@@ -49,6 +46,11 @@ elif settings.IN_STAGING:
     MANAGR_URL = "https://staging.managr.ai"
 else:
     MANAGR_URL = "https://app.managr.ai"
+
+
+def get_domain(email):
+    """Parse domain out of an email"""
+    return email[email.index("@") + 1 :]
 
 
 #########################################################
@@ -90,8 +92,8 @@ def emit_check_reminders(user_id, verbose_name):
     return check_reminders(user_id, verbose_name=verbose_name)
 
 
-def emit_process_calendar_meetings(user_id, verbose_name):
-    return _process_calendar_meetings(user_id, verbose_name=verbose_name)
+def emit_process_calendar_meetings(user_id, verbose_name, slack_interaction=None, date=None):
+    return _process_calendar_meetings(user_id, slack_interaction, date, verbose_name=verbose_name,)
 
 
 # Functions for Scheduling Meeting
@@ -114,6 +116,40 @@ def emit_morning_refresh_message(user_id, verbose_name):
 #########################################################
 # Helper functions
 #########################################################
+
+
+def should_register_this_meetings(user_id, processed_data):
+    user = User.objects.get(id=user_id)
+    ignore_emails = user.organization.ignore_emails
+    # Getting all participants from meetings and all their emails
+    all_participants = processed_data.get("participants")
+    all_emails = []
+    for participant in all_participants:
+        participants_email = participant.get("email")
+        all_emails.append(participants_email)
+
+    # all emails are now in participant_emails
+    # Gather Meeting Participants from Zoom and Calendar
+    # Gather unique emails from the Zoom Meeting participants
+    user = User.objects.get(id=user_id)
+    org_email_domain = get_domain(user.email)
+    remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
+        org_email_domain
+    )
+    for email in ignore_emails:
+        remove_users_with_these_domains_regex = (
+            remove_users_with_these_domains_regex + r"|({})".format(email)
+        )
+    # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
+    # first check if we care about this meeting before going forward
+    should_register_this_meeting = [
+        p
+        for p in all_participants
+        if not re.search(remove_users_with_these_domains_regex, p.get("email", ""))
+    ]
+    if not len(should_register_this_meeting):
+        return False
+    return True
 
 
 def _process_create_calendar_event(
@@ -217,9 +253,9 @@ def check_workflows_count(user_id):
     return {"status": False}
 
 
-def _process_calendar_details(user_id):
+def _process_calendar_details(user_id, date):
     user = User.objects.get(id=user_id)
-    events = user.nylas._get_calendar_data()
+    events = user.nylas._get_calendar_data(date)
     if events:
         return events
     else:
@@ -271,10 +307,6 @@ def CONTACT_FILTERS(crm, emails):
 
 
 def meeting_prep(processed_data, user_id):
-    def get_domain(email):
-        """Parse domain out of an email"""
-        return email[email.index("@") + 1 :]
-
     user = User.objects.get(id=user_id)
     ignore_emails = user.organization.ignore_emails
     # Getting all participants from meetings and all their emails
@@ -538,7 +570,7 @@ def _send_calendar_details(
                         block_builders.simple_section(
                             f":calendar: *Meetings Today*: {len(meetings)}", "mrkdwn"
                         ),
-                        *block_sets.get_block_set(
+                        *get_block_set(
                             "calendar_reminders_blockset",
                             {"prep_id": str(current_instance.id), "u": str(user.id)},
                         ),
@@ -679,11 +711,11 @@ def process_current_alert_list(user_id):
 
 
 @background()
-def _process_calendar_meetings(user_id):
+def _process_calendar_meetings(user_id, slack_interaction, date):
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
         try:
-            processed_data = _process_calendar_details(user_id)
+            processed_data = _process_calendar_details(user_id, date)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
@@ -692,8 +724,58 @@ def _process_calendar_meetings(user_id):
             for event in processed_data:
                 title = event.get("title", None)
                 workflow_check = workflows.filter(meeting__topic=title).first()
-                if workflow_check is None:
-                    meeting_prep(event, user_id)
+                register_check = should_register_this_meetings(user_id, event)
+                if workflow_check is None and register_check:
+                    meeting_data = {
+                        **event,
+                        "user": user,
+                    }
+                    meeting_serializer = MeetingSerializer(data=meeting_data)
+                    meeting_serializer.is_valid(raise_exception=True)
+                    meeting_serializer.save()
+                    meeting = Meeting.objects.filter(user=user).first()
+                    meeting.save()
+                    # Conditional Check for Zoom meeting or Non-Zoom Meeting
+                    meeting_workflow = MeetingWorkflow.objects.create(
+                        operation_type="MEETING_REVIEW", meeting=meeting, user=user,
+                    )
+            blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id)})
+        else:
+            todays_date = datetime.today()
+            date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Sync Calendar",
+                    "sync_calendar",
+                    date_string,
+                    action_id=f"{slack_consts.MEETING_REVIEW_SYNC_CALENDAR}?u={str(user.id)}&date={str(todays_date.date())}",
+                ),
+                {"type": "divider"},
+                block_builders.simple_section(
+                    "You don't have any meeting for today... If that changes, click 'Sync Calendar'"
+                ),
+            ]
+        try:
+            if slack_interaction:
+                timestamp, channel = slack_interaction.split("|")
+                slack_res = slack_requests.update_channel_message(
+                    channel,
+                    timestamp,
+                    user.organization.slack_integration.access_token,
+                    block_set=blocks,
+                )
+                slack_int = slack_interaction
+            else:
+                slack_res = slack_requests.send_channel_message(
+                    user.slack_integration.zoom_channel,
+                    user.organization.slack_integration.access_token,
+                    block_set=blocks,
+                )
+                slack_int = f"{slack_res['ts']}|{slack_res['channel']}"
+            workflows = MeetingWorkflow.objects.for_user(user)
+            workflows.update(slack_interaction=slack_int)
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     return
 
 

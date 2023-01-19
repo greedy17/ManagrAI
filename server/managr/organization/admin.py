@@ -107,12 +107,8 @@ class CustomTeam(admin.ModelAdmin):
 
 
 admin.site.register(Organization, CustomOrganization)
-admin.site.register(Account, CustomAccount)
 admin.site.register(Product2, CustomProduct2)
 admin.site.register(Pricebook2, CustomPricebook2)
 admin.site.register(PricebookEntry, CustomPricebookEntry)
 admin.site.register(OpportunityLineItem, CustomOpportunityLineItem)
-admin.site.register(Contact, CustomContact)
-admin.site.register(ActionChoice)
-admin.site.register(Stage)
 admin.site.register(Team, CustomTeam)

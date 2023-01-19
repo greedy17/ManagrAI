@@ -53,6 +53,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "workflow_reminder": common_blocksets.workflow_reminder_block_set,
         "command_update_resource": command_views_blocksets.command_update_resource_interaction,
         "update_modal_block_set": command_views_blocksets.update_modal_block_set,
+        "update_meeting_block_set": command_views_blocksets.update_meeting_block_set,
         "command_meeting_summary": command_views_blocksets.command_meeting_summary,
         "command_create_task": command_views_blocksets.command_create_task_interaction,
         "tasks_list": common_blocksets.tasks_list_block_set,
@@ -73,5 +74,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "initial_alert_blockset": common_blocksets.initial_alert_message,
         "bulk_recap_block_set": common_blocksets.bulk_recap_block_set,
         "direct_to_block_set": common_blocksets.direct_to_block_set,
+        "paginated_meeting_blockset": meeting_review_block_sets.paginated_meeting_blockset,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

@@ -269,16 +269,8 @@ def alert_instance_block_set(context):
             ),
         ]
         options = [
+            block_builders.option(f"Update {instance.template.resource_type}", "update_crm"),
             block_builders.option("Get Notes", "get_notes"),
-        ]
-
-        action_blocks = [
-            block_builders.simple_button_block(
-                f"Update {instance.template.resource_type} + Notes",
-                instance.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(resource_owner.id)}&resource_type={instance.template.resource_type}&alert_id={instance.id}&current_page={context.get('current_page',1)}&type=alert",
-                style="primary",
-            )
         ]
         if user.crm == "SALESFORCE":
             if hasattr(user, "gong_account"):
@@ -290,24 +282,24 @@ def alert_instance_block_set(context):
                     options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
                 if hasattr(user, "salesloft_account"):
                     options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
-
-        action_blocks.append(
+        blocks.append(
             block_builders.static_select_input(
-                options,
+                label=":star: Actions:",
+                options=options,
+                block_id=str(instance.id),
                 action_id=action_with_params(
                     slack_const.PROCESS_ALERT_ACTIONS,
                     params=[
                         f"u={str(user.id)}",
                         f"alert_id={str(instance.id)}",
-                        f"page={context.get('current_page',1)}",
+                        f"current_page={context.get('current_page',1)}",
                         f"resource_id={str(instance.resource_id)}",
                         f"resource_type={instance.template.resource_type}",
                     ],
                 ),
-                placeholder="Managr Action",
+                placeholder="Select an Action",
             )
         )
-        blocks.append(block_builders.actions_block(action_blocks, block_id=str(instance.id)))
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
@@ -376,6 +368,48 @@ def update_modal_block_set(context, *args, **kwargs):
                     block_id=slack_const.NO_FORM_FIELDS,
                 )
             ]
+    return blocks
+
+
+@block_set(required_context=["u", "w"])
+def update_meeting_block_set(context, *args, **kwargs):
+    """Shows a modal to update a resource"""
+    resource_type = context.get("resource_type", None)
+    resource_id = context.get("resource_id", None)
+    user_id = context.get("u")
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    type = context.get("type")
+    user = User.objects.get(id=user_id)
+    blocks = []
+    blocks.append(
+        block_builders.static_select(
+            "Related to type",
+            resource_options(user.crm),
+            action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}&w={context.get('w')}",
+            block_id="managr_task_related_to_resource",
+            initial_option=block_builders.option(resource_type, resource_type)
+            if resource_type
+            else None,
+        )
+    )
+    if (not resource_id and resource_type) or (resource_id and resource_type):
+        additional_opts = [
+            {
+                "label": f"NEW {resource_type} (create)",
+                "value": f'CREATE_NEW.{context.get("resource")}',
+            }
+        ]
+        blocks.append(
+            block_builders.external_select(
+                f"*Search for an {context.get('resource_type')}*",
+                f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}?u={user_id}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}",
+                block_id="select_existing",
+                placeholder="Type to search",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
+            ),
+        )
     return blocks
 
 

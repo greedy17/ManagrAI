@@ -463,14 +463,14 @@ class NylasAuthAccount(TimeStampModel):
             return NylasAPIError(error_message)
         return data
 
-    def _get_calendar_data(self):
+    def _get_calendar_data(self, date=None):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
         user_timezone = f"{self.user.timezone}"
-        starts_after = convert_local_time_to_unix(user_timezone, 7, 00)
-        ends_before = convert_local_time_to_unix(user_timezone, 20, 00)
+        starts_after = convert_local_time_to_unix(user_timezone, 7, 00, date)
+        ends_before = convert_local_time_to_unix(user_timezone, 20, 00, date)
 
         query = dict({"starts_after": starts_after, "ends_before": ends_before,})
         if self.event_calendar_id:

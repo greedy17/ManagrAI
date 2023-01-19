@@ -694,7 +694,7 @@ const TEAM_PIPELINE = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-
+            " Opportunity.Name ",
         ],
         body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
@@ -752,7 +752,7 @@ const TEAM_PIPELINE_HUBSPOT = {
     messageTemplate: {
         bindings: [
             " __Recipient.full_name ",
-
+            " Deal.dealname ",
         ],
         body: "<strong>Deal Name</strong> \n { Deal.dealname }",
     },

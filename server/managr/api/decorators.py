@@ -24,6 +24,7 @@ from managr.slack.helpers.exceptions import (
     CannotSendToChannel,
 )
 from managr.utils.misc import snake_to_space
+from managr.salesforce import constants as sf_consts
 
 LOGGER = logging.getLogger("managr")
 
@@ -41,6 +42,12 @@ def log_all_exceptions(func):
     return wrapper_log_all_exceptions
 
 
+WORKFLOW_KEY_MAP = {
+    "update_object_from_review": sf_consts.MEETING_REVIEW__UPDATE_RESOURCE,
+    "add_call_log": sf_consts.MEETING_REVIEW__SAVE_CALL_LOG,
+}
+
+
 def sf_api_exceptions_wf(error_key):
     """Decorator for sf async (for workflows only) functions will error_key: kebab case key"""
 
@@ -56,12 +63,13 @@ def sf_api_exceptions_wf(error_key):
                 operation_key = f"Failed to {snake_to_space(error_key)}"
 
                 workflow_id = args[0]
+                failed_task_string = f"{operation_key} {str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
                 w = MeetingWorkflow.objects.filter(id=workflow_id).first()
                 if not w:
                     return LOGGER.exception(
                         f"Function wrapped in sfw logger but cannot find workflow {e}"
                     )
-                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                w.failed_task_description.append(failed_task_string)
                 w.save()
             except FieldValidationError as e:
                 from managr.salesforce.models import MeetingWorkflow
@@ -74,7 +82,8 @@ def sf_api_exceptions_wf(error_key):
                     return LOGGER.exception(
                         f"Function wrapped in sfw logger but cannot find workflow {e}"
                     )
-                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                failed_task_string = f"{operation_key} {str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
+                w.failed_task_description.append(failed_task_string)
                 w.save()
             except InvalidFieldError as e:
                 from managr.salesforce.models import MeetingWorkflow
