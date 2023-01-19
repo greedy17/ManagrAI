@@ -544,29 +544,39 @@ def _process_add_call_to_hs(workflow_id, *args):
     attempts = 1
     while True:
         hs = user.hubspot_account
-        try:
-            create_res = hs.adapter_class.create_meeting_in_hubspot(data)
-            meeting_id = create_res["id"]
-            associate_res = hs.adapter_class.associate_objects(
-                "meetings",
-                meeting_id,
-                workflow.resource_type,
-                workflow.resource.integration_id,
-                CALL_ASSOCIATIONS[workflow.resource_type.lower()],
-            )
-            break
-        except TokenExpired as e:
-            if attempts >= 5:
-                return logger.exception(
-                    f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+        if workflow.resource:
+            try:
+                create_res = hs.adapter_class.create_meeting_in_hubspot(data)
+                meeting_id = create_res["id"]
+                associate_res = hs.adapter_class.associate_objects(
+                    "meetings",
+                    meeting_id,
+                    workflow.resource_type,
+                    workflow.resource.integration_id,
+                    CALL_ASSOCIATIONS[workflow.resource_type.lower()],
                 )
+                break
+            except TokenExpired as e:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+                    )
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    hs.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.exception(f"Creating meeting error: <{e}>")
+        else:
+            if attempts >= 5:
+                logger.info(
+                    f"Failed to add call log because resource id was not found on workflow {workflow_id}"
+                )
+                break
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                time.sleep(sleep)
-                hs.regenerate_token()
                 attempts += 1
-        except Exception as e:
-            logger.exception(f"Creating meeting error: <{e}>")
+                time.sleep(2.00)
     return
 
 

@@ -71,6 +71,7 @@ class OrgCustomSlackFormSerializer(serializers.ModelSerializer):
             "custom_object",
             "fields",
             "fields_ref",
+            "team",
         )
 
         read_only_fields = (

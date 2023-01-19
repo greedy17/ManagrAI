@@ -159,7 +159,7 @@
             </div>
           </div>
         </div>
-        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
+        <!-- <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="gray">
               <img src="@/assets/images/logo.png" height="28px" alt="" />
@@ -178,7 +178,7 @@
           <div class="added-collection__footer">
             <button @click="goToRecap" class="white_button">Activate</button>
           </div>
-        </div>
+        </div> -->
 
         <div :key="alert.id" v-for="alert in leaderTemplatesFirst" class="card">
           <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
