@@ -1,17 +1,11 @@
 import logging
-from re import template
-from django.conf import settings
-from datetime import datetime
+import time
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
-from django.forms import UUIDField
-
 from managr.slack.helpers import block_builders
-
-from managr.crm.exceptions import TokenExpired, InvalidRefreshToken
-from managr.core import constants as core_consts
+from managr.crm.exceptions import TokenExpired, InvalidRefreshToken, ApiRateLimitExceeded
 from . import constants as slack_consts
 
 from managr.core.models import TimeStampModel
@@ -384,6 +378,14 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                                     )
                                     form_values = self.resource_object.secondary_data
                                     break
+                        except ApiRateLimitExceeded:
+                            if attempts >= 5:
+                                logger.exception(
+                                    f"Failed to retrieve alerts current data for user {str(self.user.id)} after {attempts} tries"
+                                )
+                                form_values = self.resource_object.secondary_data
+                            else:
+                                time.sleep(2.00)
                         except Exception as e:
                             logger.exception(f"Failed pull current data from {e}")
                             form_values = self.resource_object.secondary_data
