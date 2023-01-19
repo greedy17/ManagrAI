@@ -445,7 +445,6 @@ def RESOURCE_OPTIONS(resource, options):
 @processor(required_context=["u", "resource_type"])
 def process_get_crm_resource_options(payload, context):
     add_opts = json.loads(context.get("add_opts", json.dumps([])))
-
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource_type")
@@ -463,7 +462,7 @@ def process_get_crm_resource_options(payload, context):
                     filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)]
                 else:
                     filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
-            res = crm_adapter.list_resource_data(resource, filter=filters, owners=crm_id, limit=20)
+            res = crm_adapter.list_resource_data(resource, filter=filters, owners=crm_id, limit=50)
             break
         except TokenExpired:
             if attempts >= 5:
