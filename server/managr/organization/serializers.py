@@ -18,9 +18,16 @@ from .models import (
     Team,
 )
 
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+
+        fields = ("id", "name", "organization", "team_lead")
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     ignore_email_ref = serializers.SerializerMethodField("get_ignore_emails")
+    teams_ref = TeamSerializer(source="teams",many=True)
 
     class Meta:
         model = Organization
@@ -35,10 +42,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "number_of_allowed_users",
             "ignore_email_ref",
             "is_paid",
+            "teams_ref"
         )
-
-    def get_ignore_emails(self, instance):
-        return instance.ignore_emails
 
     def get_ignore_emails(self, instance):
         return instance.ignore_emails
@@ -308,10 +313,3 @@ class OpportunityLineItemSerializer(serializers.ModelSerializer):
         # remove contacts from validation
         internal_data = super().to_internal_value(data)
         return internal_data
-
-
-class TeamSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Team
-
-        fields = ("id", "name", "organization", "team_lead")

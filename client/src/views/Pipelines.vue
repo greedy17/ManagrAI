@@ -2871,7 +2871,7 @@
       </section>
     </div>
     <div v-if="loading">
-      <Loader loaderText="Pulling in your latest Salesforce data" />
+      <Loader :loaderText="`Pulling in your latest ${userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} data`" />
     </div>
   </div>
 </template>

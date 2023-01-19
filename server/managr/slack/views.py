@@ -556,7 +556,7 @@ class SlackFormsViewSet(
         if not len(data.get("custom_object")):
             data["custom_object"] = None
         data.update(
-            {"organization": self.request.user.organization_id, "team": self.request.user.team}
+            {"organization": self.request.user.organization_id, "team": self.request.user.team.id}
         )
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -565,7 +565,7 @@ class SlackFormsViewSet(
         instance.custom_fields.clear()
         for i, field in enumerate(fields):
             instance.custom_fields.add(field, through_defaults={"order": i})
-        instance.team = self.request.user.team
+        instance.team = self.request.user.team.id
         instance.save()
         return Response(serializer.data)
 
@@ -576,7 +576,7 @@ class SlackFormsViewSet(
         if not len(data.get("custom_object")):
             data["custom_object"] = None
         data.update(
-            {"organization": self.request.user.organization_id, "team": self.request.user.team}
+            {"organization": self.request.user.organization_id, "team": self.request.user.team.id}
         )
         serializer = self.get_serializer(data=data, instance=self.get_object())
         try:
@@ -600,7 +600,7 @@ class SlackFormsViewSet(
             org = Organization.objects.get(id=request.data["organization"])
             org.update_has_settings("products")
             form = OrgCustomSlackForm.objects.filter(
-                team=self.request.user.team, resource="OpportunityLineItem", form_type="UPDATE",
+                team=self.request.user.team.id, resource="OpportunityLineItem", form_type="UPDATE",
             ).first()
             update_data = data
             update_data["form_type"] = "UPDATE"

@@ -907,6 +907,7 @@ export default {
         this.teamPipeline == 'Team Pipeline'
       ) {
         try {
+          console.log('this.config in create', this.config)
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
             user: this.$store.state.user.id,
@@ -1055,6 +1056,28 @@ export default {
     transform: scale(1.15);
     color: $base-gray;
   }
+
+  // span {
+  //   cursor: pointer;
+  //   color: $light-gray-blue;
+  //   margin-right: 8px;
+  //   display: flex;
+  //   align-items: center;
+  //   justify-content: center;
+  //   height: 26px;
+  //   width: 26px;
+  //   border-radius: 100%;
+  //   border: 1px solid $soft-gray;
+  //   transition: all 0.2s;
+  //   input {
+  //     display: none;
+  //   }
+  // }
+
+  // span:hover {
+  //   transform: scale(1.15);
+  //   color: $base-gray;
+  // }
 }
 .centered {
   display: flex;

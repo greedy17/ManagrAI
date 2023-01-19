@@ -127,7 +127,6 @@ def should_register_this_meetings(user_id, processed_data):
     for participant in all_participants:
         participants_email = participant.get("email")
         all_emails.append(participants_email)
-
     # all emails are now in participant_emails
     # Gather Meeting Participants from Zoom and Calendar
     # Gather unique emails from the Zoom Meeting participants
@@ -137,9 +136,10 @@ def should_register_this_meetings(user_id, processed_data):
         org_email_domain
     )
     for email in ignore_emails:
-        remove_users_with_these_domains_regex = (
-            remove_users_with_these_domains_regex + r"|({})".format(email)
-        )
+        if len(email):
+            remove_users_with_these_domains_regex = (
+                remove_users_with_these_domains_regex + r"|({})".format(email)
+            )
     # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
     # first check if we care about this meeting before going forward
     should_register_this_meeting = [

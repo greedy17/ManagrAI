@@ -47,7 +47,7 @@
         :class="!fieldData ? 'gray' : ''"
         v-else-if="apiName === 'dealstage'"
       >
-        {{field && opp ? 
+        {{field && opp && field.options[0][opp['secondary_data'].pipeline] ? 
           field.options[0][opp['secondary_data'].pipeline].stages.filter(stage => stage.id === opp['secondary_data'][field.apiName])[0].label
           :
           fieldData ? fieldData : 'Empty'

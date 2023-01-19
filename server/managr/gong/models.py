@@ -172,9 +172,10 @@ class GongAuthAdapter:
         return GongAuthAdapter._handle_response(res)
 
     def refresh(self):
+        headers = {"Authorization": f"Basic {gong_consts.GONG_BASIC_TOKEN}"}
         query = gong_consts.REFRESH_QUERY_PARAMS(self.refresh_token)
         query = urlencode(query)
-        res = client.post(f"{gong_consts.AUTHENTICATION_URI}?{query}")
+        res = client.post(f"{gong_consts.AUTHENTICATION_URI}?{query}", headers=headers)
         return GongAuthAdapter._handle_response(res)
 
     def revoke(self):
