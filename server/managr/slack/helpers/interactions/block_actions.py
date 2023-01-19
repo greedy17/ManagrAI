@@ -2697,23 +2697,26 @@ def process_mark_complete(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_alert_actions(payload, context):
-    state = payload["state"]["values"]
-    selected = list(list(state.values())[0].values())[0].get("selected_option").get("value")
-    alert_action_switcher = {
-        "update_crm": process_show_alert_update_resource_form,
-        "call_details": process_get_call_recording,
-        "get_notes": process_get_notes,
-        "add_to_sequence": process_show_engagement_modal,
-        "add_to_cadence": process_show_engagement_modal,
-        "mark_as_complete": process_mark_complete,
-    }
-    if selected in ["add_to_sequence", "add_to_cadence"]:
-        context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
-    elif selected == "mark_as_complete":
-        context.update({"instance_id": context.get("alert_id")})
-    else:
-        context["type"] = "alert"
-    return alert_action_switcher[selected](payload, context)
+    state = payload["actions"]
+    select_check = state[0].get("selected_option", None)
+    if select_check:
+        selected = select_check.get("value")
+        alert_action_switcher = {
+            "update_crm": process_show_alert_update_resource_form,
+            "call_details": process_get_call_recording,
+            "get_notes": process_get_notes,
+            "add_to_sequence": process_show_engagement_modal,
+            "add_to_cadence": process_show_engagement_modal,
+            "mark_as_complete": process_mark_complete,
+        }
+        if selected in ["add_to_sequence", "add_to_cadence"]:
+            context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
+        elif selected == "mark_as_complete":
+            context.update({"instance_id": context.get("alert_id")})
+        else:
+            context["type"] = "alert"
+        return alert_action_switcher[selected](payload, context)
+    return
 
 
 @slack_api_exceptions(rethrow=True)
