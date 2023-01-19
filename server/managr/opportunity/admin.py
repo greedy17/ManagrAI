@@ -51,5 +51,4 @@ class CustomLeadAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Opportunity, CustomOpportunityAdmin)
 admin.site.register(Lead, CustomLeadAdmin)

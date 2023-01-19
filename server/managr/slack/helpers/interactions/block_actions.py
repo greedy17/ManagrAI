@@ -109,8 +109,9 @@ def show_initial_meeting_interaction(payload, context):
 @processor()
 def process_meeting_review(payload, context):
     trigger_id = payload["trigger_id"]
-    workflow_id = payload["actions"][0]["value"]
+    workflow_id = context.get("w")
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    main_form = workflow.forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     crm = "Salesforce" if workflow.user.crm == "SALESFORCE" else "HubSpot"
@@ -121,25 +122,27 @@ def process_meeting_review(payload, context):
         str(workflow.user.id),
         trigger_id,
     )
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
     context = {
         "w": workflow_id,
-        "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
         "type": "meeting",
     }
-    private_metadata.update(context)
+    stage_form_check = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+    if len(stage_form_check):
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
+        submit_text = "Next"
+        context["form_type"] = main_form.template.form_type
+    else:
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        submit_text = "Submit"
     data = {
         "view_id": loading_view_data["view"]["id"],
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "private_metadata": json.dumps(private_metadata),
+            "submit": {"type": "plain_text", "text": submit_text},
+            "private_metadata": json.dumps(context),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
     }
@@ -2694,23 +2697,26 @@ def process_mark_complete(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_alert_actions(payload, context):
-    state = payload["state"]["values"]
-    selected = list(list(state.values())[0].values())[0].get("selected_option").get("value")
-    alert_action_switcher = {
-        "update_crm": process_show_alert_update_resource_form,
-        "call_details": process_get_call_recording,
-        "get_notes": process_get_notes,
-        "add_to_sequence": process_show_engagement_modal,
-        "add_to_cadence": process_show_engagement_modal,
-        "mark_as_complete": process_mark_complete,
-    }
-    if selected in ["add_to_sequence", "add_to_cadence"]:
-        context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
-    elif selected == "mark_as_complete":
-        context.update({"instance_id": context.get("alert_id")})
-    else:
-        context["type"] = "alert"
-    return alert_action_switcher[selected](payload, context)
+    state = payload["actions"]
+    select_check = state[0].get("selected_option", None)
+    if select_check:
+        selected = select_check.get("value")
+        alert_action_switcher = {
+            "update_crm": process_show_alert_update_resource_form,
+            "call_details": process_get_call_recording,
+            "get_notes": process_get_notes,
+            "add_to_sequence": process_show_engagement_modal,
+            "add_to_cadence": process_show_engagement_modal,
+            "mark_as_complete": process_mark_complete,
+        }
+        if selected in ["add_to_sequence", "add_to_cadence"]:
+            context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
+        elif selected == "mark_as_complete":
+            context.update({"instance_id": context.get("alert_id")})
+        else:
+            context["type"] = "alert"
+        return alert_action_switcher[selected](payload, context)
+    return
 
 
 @slack_api_exceptions(rethrow=True)

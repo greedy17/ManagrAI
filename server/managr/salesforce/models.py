@@ -747,7 +747,7 @@ class MeetingWorkflow(SFSyncOperation):
             }
 
     def begin_tasks(self, attempts=1):
-
+        new_operations_list = []
         for op in self.operations_list:
             # split the operation to get opp and params
             operation_name, param = op.split(".")
@@ -759,7 +759,26 @@ class MeetingWorkflow(SFSyncOperation):
                 self.operations.append(str(t.task_hash))
             else:
                 self.operations = [str(t.task_hash)]
+            new_operations_list.append(f"{operation_name}.{param}.{str(t.task_hash)}")
             self.save()
+        self.operations_list = new_operations_list
+        self.save()
+
+    def build_retry_list(self):
+        retry_operations = []
+        for op in self.operations_list:
+            operation, param, task_hash = op.split(".")
+            for failed_task in self.failed_task_description:
+                failed_list = failed_task.split(".")
+                if operation in failed_list:
+                    retry_operations.append(f"{operation}.{param}")
+                    self.completed_operations.remove(task_hash)
+                    self.operations.remove(task_hash)
+                    self.failed_task_description.remove(failed_task)
+        if len(retry_operations):
+            self.operations_list = retry_operations
+            self.save()
+        return self.operations_list
 
     def begin_communication(self, now=False):
         from managr.zoom.background import (
