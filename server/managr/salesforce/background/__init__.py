@@ -611,8 +611,6 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
 
 
 ## Meeting Review Workflow tasks
-
-
 @background(
     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
@@ -652,6 +650,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
             update_forms.update(
                 is_submitted=True, submission_date=timezone.now(), update_source="meeting"
             )
+            if len(workflow.failed_task_description):
+                workflow.failed_task_description = []
+                workflow.save()
             if len(custom_object_forms):
                 sf.create_custom_object(
                     custom_object_data_collector,
@@ -660,6 +661,9 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                     sf.salesforce_id,
                     custom_object_forms.first().template.custom_object,
                 )
+            value_update = workflow.resource.update_database_values(data)
+            if user.has_slack_integration and len(user.slack_integration.recap_receivers):
+                _send_recap(update_form_ids, None, True)
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -681,21 +685,17 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 sleep = 1 * 2 ** attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
-        except Exception as e:
-            if len(user.slack_integration.recap_receivers):
-                _send_recap(update_form_ids, None, True)
+        except FieldValidationError as e:
             raise e
-    value_update = workflow.resource.update_database_values(data)
-    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
-        _send_recap(update_form_ids, None, True)
-    # push to sf
+        except Exception as e:
+            raise e
     return res
 
 
 @background(
     schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
-@sf_api_exceptions_wf("update_object_from_review")
+@sf_api_exceptions_wf("create_object_from_review")
 def _process_create_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -929,7 +929,7 @@ def _process_add_call_to_sf(workflow_id, *args):
 
 
 @background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
-@sf_api_exceptions_wf("add_call_log")
+@sf_api_exceptions_wf("add_task_log")
 def _process_add_update_to_sf(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
     resource = model_routes[form.resource_type]["model"].objects.get(id=form.resource_id)

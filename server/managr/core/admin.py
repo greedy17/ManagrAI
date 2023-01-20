@@ -227,9 +227,6 @@ class CustomNoteTemplate(admin.ModelAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
-admin.site.register(MeetingPrepInstance, CustomMeetingPrepInstance)
-admin.site.register(UserActivity, CustomUserActivity)
-admin.site.register(UserForecast, CustomUserActivity)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
 
 

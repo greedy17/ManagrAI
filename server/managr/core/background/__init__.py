@@ -127,7 +127,6 @@ def should_register_this_meetings(user_id, processed_data):
     for participant in all_participants:
         participants_email = participant.get("email")
         all_emails.append(participants_email)
-
     # all emails are now in participant_emails
     # Gather Meeting Participants from Zoom and Calendar
     # Gather unique emails from the Zoom Meeting participants
@@ -137,9 +136,10 @@ def should_register_this_meetings(user_id, processed_data):
         org_email_domain
     )
     for email in ignore_emails:
-        remove_users_with_these_domains_regex = (
-            remove_users_with_these_domains_regex + r"|({})".format(email)
-        )
+        if len(email):
+            remove_users_with_these_domains_regex = (
+                remove_users_with_these_domains_regex + r"|({})".format(email)
+            )
     # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
     # first check if we care about this meeting before going forward
     should_register_this_meeting = [
@@ -740,27 +740,42 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id)})
-            try:
-                if slack_interaction:
-                    timestamp, channel = slack_interaction.split("|")
-                    slack_res = slack_requests.update_channel_message(
-                        channel,
-                        timestamp,
-                        user.organization.slack_integration.access_token,
-                        block_set=blocks,
-                    )
-                    slack_int = slack_interaction
-                else:
-                    slack_res = slack_requests.send_channel_message(
-                        user.slack_integration.zoom_channel,
-                        user.organization.slack_integration.access_token,
-                        block_set=blocks,
-                    )
-                    slack_int = f"{slack_res['ts']}|{slack_res['channel']}"
-                workflows = MeetingWorkflow.objects.for_user(user)
-                workflows.update(slack_interaction=slack_int)
-            except Exception as e:
-                logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+        else:
+            todays_date = datetime.today()
+            date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Sync Calendar",
+                    "sync_calendar",
+                    date_string,
+                    action_id=f"{slack_consts.MEETING_REVIEW_SYNC_CALENDAR}?u={str(user.id)}&date={str(todays_date.date())}",
+                ),
+                {"type": "divider"},
+                block_builders.simple_section(
+                    "You don't have any meeting for today... If that changes, click 'Sync Calendar'"
+                ),
+            ]
+        try:
+            if slack_interaction:
+                timestamp, channel = slack_interaction.split("|")
+                slack_res = slack_requests.update_channel_message(
+                    channel,
+                    timestamp,
+                    user.organization.slack_integration.access_token,
+                    block_set=blocks,
+                )
+                slack_int = slack_interaction
+            else:
+                slack_res = slack_requests.send_channel_message(
+                    user.slack_integration.zoom_channel,
+                    user.organization.slack_integration.access_token,
+                    block_set=blocks,
+                )
+                slack_int = f"{slack_res['ts']}|{slack_res['channel']}"
+            workflows = MeetingWorkflow.objects.for_user(user)
+            workflows.update(slack_interaction=slack_int)
+        except Exception as e:
+            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     return
 
 

@@ -512,8 +512,10 @@ def meeting_review_modal_block_set(context):
         block_builders.external_select(type_text, action_query, block_id="managr_task_type")
     )
     # additional validations
-
-    blocks.extend(slack_form.generate_form())
+    if len(slack_form.saved_data):
+        blocks.extend(slack_form.generate_form(slack_form.saved_data))
+    else:
+        blocks.extend(slack_form.generate_form())
     # static blocks
     if slack_form:
         stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
@@ -1061,11 +1063,30 @@ def paginated_meeting_blockset(context):
             else end_time
         )
         section_text = f"*{title}*\n{formatted_start} - {formatted_end}"
-        if workflow.progress > 0 and workflow.progress < 100:
+        if len(workflow.failed_task_description):
+            message = ""
+            for i, m in enumerate(workflow.failed_task_description):
+                m_split = m.split(".")
+                if i == len(workflow.failed_task_description) - 1:
+                    message += f"{m_split[0]}"
+                else:
+                    message += f"{m_split[0]},"
+            block = block_builders.section_with_button_block(
+                "Return to Form",
+                "RETURN_TO_FORM",
+                section_text=f":no_entry_sign: Uh-oh we hit a validation:\n{message}\n{title}",
+                block_id=str(workflow.id),
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__INIT_REVIEW,
+                    params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
+                ),
+            )
+        elif workflow.progress > 0 and workflow.progress < 100:
             crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
             block = block_builders.simple_section(
                 f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
             )
+
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             block = block_builders.section_with_button_block(

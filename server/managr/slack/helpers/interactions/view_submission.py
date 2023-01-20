@@ -215,24 +215,27 @@ def process_zoom_meeting_data(payload, context):
     create_form_check = workflow.forms.filter(
         template__form_type=slack_const.FORM_TYPE_CREATE
     ).first()
-    main_operation = (
-        f"{sf_consts.MEETING_REVIEW__CREATE_RESOURCE}.{str(workflow.id)}"
-        if create_form_check
-        else f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}"
-    )
-    ops = [
-        # update/create
-        main_operation,
-        # create call log
-        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
-        # save meeting data
-    ]
-
-    if len(workflow.operations_list):
-        workflow.operations_list = [*workflow.operations_list, *ops]
+    if len(workflow.failed_task_description):
+        workflow.build_retry_list()
     else:
+        main_operation = (
+            f"{sf_consts.MEETING_REVIEW__CREATE_RESOURCE}.{str(workflow.id)}"
+            if create_form_check
+            else f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}"
+        )
+        ops = [
+            # update/create
+            main_operation,
+            # create call log
+            f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
+            # save meeting data
+        ]
+
+        if len(workflow.operations_list):
+            workflow.operations_list = [*workflow.operations_list, *ops]
+        else:
+            workflow.operations_list = ops
         workflow.operations_list = ops
-    workflow.operations_list = ops
     if len(user.slack_integration.realtime_alert_configs):
         _send_instant_alert(current_form_ids)
     emit_process_calendar_meetings(
