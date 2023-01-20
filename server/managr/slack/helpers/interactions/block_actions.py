@@ -1570,35 +1570,6 @@ def process_show_update_resource_form(payload, context):
     )
 
 
-@processor(requried_context="u")
-def process_coming_soon(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    u = User.objects.get(id=context.get("u"))
-    org = u.organization
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": "NEXT",
-            "title": {"type": "plain_text", "text": f"Coming Soon"},
-            "blocks": get_block_set("coming_soon_modal", {}),
-        },
-    }
-    try:
-        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
-
-    except InvalidBlocksException as e:
-        return logger.exception(f"Failed To Generate Blocks {e}")
-    except InvalidBlocksFormatException as e:
-        return logger.exception(f"Failed To Generate Blocks {e}")
-    except UnHandeledBlocksException as e:
-        return logger.exception(f"Failed To Generate Blocks {e}")
-    except InvalidAccessToken as e:
-        return logger.exception(f"Failed To send slack {e}")
-
-
 @processor(required_context="u")
 def process_create_task(payload, context):
     type = context.get("type", None)
@@ -1650,44 +1621,6 @@ def process_create_task(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
-
-
-@processor()
-def process_request_invite_from_home_tab(payload, context):
-    """
-    According to slack anyone can see the home tab if a user triggers the home event
-    And is not a user we show a button to request access, this will ask the is_admin user to invite them
-    """
-    # get the org team
-    team_id = payload["user"]["team_id"]
-    new_user_slack_id = payload["actions"][0]["value"]
-    # get the is_admin user
-    o = Organization.objects.filter(slack_integration__team_id=team_id).first()
-    u = o.users.filter(is_admin=True).first()
-    # send a message to invite the user
-    slack_requests.send_ephemeral_message(
-        u.slack_integration.channel,
-        o.slack_integration.access_token,
-        u.slack_integration.slack_id,
-        text="User requested an invite",
-        block_set=[
-            block_builders.simple_section(
-                f"<@{new_user_slack_id}> has requested an invite to Managr", "mrkdwn"
-            )
-        ],
-    )
-    old_view = payload["view"]
-    blocks = old_view["blocks"]
-    # remove the request button
-    index, block = block_finder("INVITE_BUTTON", blocks)
-    new_blocks = [
-        *blocks[0:index],
-        block_builders.simple_section("Invite Sent"),
-        *blocks[index + 1 :],
-    ]
-    view = {"type": "home", "blocks": new_blocks}
-    slack_requests.publish_view(new_user_slack_id, o.slack_integration.access_token, view)
-    # update the home tab of the user with message that it was sent
 
 
 @slack_api_exceptions(rethrow=True)
@@ -3787,7 +3720,6 @@ def handle_block_actions(payload):
         slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM: process_add_create_form,
         slack_const.COMMAND_FORMS__CONVERT_LEAD: process_show_convert_lead_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
-        slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,
