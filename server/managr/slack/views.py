@@ -565,7 +565,6 @@ class SlackFormsViewSet(
         instance.custom_fields.clear()
         for i, field in enumerate(fields):
             instance.custom_fields.add(field, through_defaults={"order": i})
-        instance.team = self.request.user.team.id
         instance.save()
         return Response(serializer.data)
 
