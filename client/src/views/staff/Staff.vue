@@ -155,13 +155,30 @@
                   <span class="">Saved Data:</span>
                   <!-- {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }} -->
                   <div v-for="(value,propertyName) in modalInfo.saved_data" :key="value" style="margin-left: 1rem;">
-                    {{propertyName}}: <span :class="Object.keys(modalInfo.saved_data).length >= Object.keys(modalInfo.previous_data).length && !Object.keys(modalInfo.previous_data).includes(propertyName) ? 'yellow-background' : ''">{{ `${value}` }}</span>
+                    {{propertyName}}: <span 
+                    @click="test(modalInfo.previous_data[propertyName] !== value)" 
+                    :class="
+                    !modalInfo.previous_data[propertyName] 
+                    ||
+                    (
+                      modalInfo.previous_data[propertyName] && 
+                      modalInfo.previous_data[propertyName] !== value
+                    ) 
+                    ? 'yellow-background' : ''"
+                    >{{ `${value}` }}</span>
                   </div>
                 </div>
                 <div>
                   <span class="">Previous Data:</span>
                   <div v-for="(value,propertyName) in modalInfo.previous_data" :key="value" style="margin-left: 1rem;">
-                    {{propertyName}}: <span :class="Object.keys(modalInfo.saved_data).length <= Object.keys(modalInfo.previous_data).length && Object.keys(modalInfo.saved_data).includes(propertyName) ? 'yellow-background' : ''">{{ `${value}` }}</span>
+                    {{propertyName}}: <span 
+                    @click="test(modalInfo.saved_data[propertyName] !== value)" 
+                    :class="
+                      (
+                        modalInfo.saved_data[propertyName] && 
+                        modalInfo.saved_data[propertyName] !== value
+                      ) ? 'yellow-background' : ''"
+                    >{{ `${value}` }}</span>
                   </div>
                 </div>
               </div>
