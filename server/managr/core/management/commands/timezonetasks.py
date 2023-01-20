@@ -15,15 +15,23 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("-u", "--users", nargs="+", type=str)
         parser.add_argument("-m", "--meetings", action="store_true")
+        parser.add_argument("date", default=None, nargs="?")
 
     def handle(self, *args, **options):
         if options["users"]:
             for t in options["users"]:
                 user = User.objects.filter(email=t).first()
                 if options["meetings"]:
-                    emit_process_calendar_meetings(
-                        str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
-                    )
+                    if options["date"]:
+                        emit_process_calendar_meetings(
+                            str(user.id),
+                            f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+                            date=options["date"],
+                        )
+                    else:
+                        emit_process_calendar_meetings(
+                            str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
+                        )
                 else:
                     # emit_check_reminders(
                     #     str(user.id), f"reminders-{user.email}-{str(uuid.uuid4())}"

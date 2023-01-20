@@ -741,7 +741,7 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
                     )
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id)})
         else:
-            todays_date = datetime.today()
+            todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")
             date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
             blocks = [
                 block_builders.section_with_button_block(
