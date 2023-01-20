@@ -242,6 +242,7 @@ def process_zoom_meeting_data(payload, context):
         str(user.id),
         f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
         workflow.slack_interaction,
+        date=str(workflow.datetime_created.date),
     )
     workflow.save()
     workflow.begin_tasks()

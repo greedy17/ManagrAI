@@ -584,9 +584,11 @@ class SalesforceAuthAccountAdapter:
         add_filters = kwargs.get("filter", None)
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
-        additional_filters = (
-            resource_class.additional_filters() if add_filters is None else add_filters
-        )
+        if add_filters is not None:
+            add_filters.extend(resource_class.additional_filters())
+            additional_filters = add_filters
+        else:
+            additional_filters = resource_class.additional_filters()
         owner_id = owners if owners else self.salesforce_id
         limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
         url_list = sf_consts.SALESFORCE_RESOURCE_QUERY_URI(

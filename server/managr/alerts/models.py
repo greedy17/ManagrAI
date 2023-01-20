@@ -657,11 +657,12 @@ class AlertInstance(TimeStampModel):
         body = convertToSlackFormat(body)
         for k, v in self.var_binding_map.items():
             str_rep = "{ " + k + " }"
-            if len(str_rep) > 255:
-                str_rep = str_rep[:255] + "..."
             str_rep = r"{}".format(str_rep)
-
-            body = body.replace(str_rep, str(v))
+            if len(str(v)) > 255:
+                value = str(v)[:256] + "..."
+            else:
+                value = str(v)
+            body = body.replace(str_rep, value)
         return body
 
     @property
@@ -683,11 +684,6 @@ class AlertInstance(TimeStampModel):
                             # if field does not exist set to strike through field with N/A
                             # binding_map[binding] = self.resource.secondary_data.get(v, "~None~")
                             binding_map[binding] = current_values.secondary_data.get(v, "~None~")
-                            if (
-                                isinstance(binding_map[binding], str)
-                                and len(binding_map[binding]) >= 2
-                            ):
-                                print(binding_map[binding])
                             # if field value is None or blank set to empty or no value
                             if binding_map[binding] in ["", None]:
                                 binding_map[binding] = "~None~"
