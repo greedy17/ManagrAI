@@ -528,6 +528,7 @@ export default {
           bodyClassName: ['custom'],
         })
         await this.refresh()
+        this.$emit('handleRefresh')
         this.resetData()
       } catch (e) {
         let err = e.response.data
