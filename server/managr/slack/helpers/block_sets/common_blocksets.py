@@ -480,10 +480,11 @@ def meeting_reminder_block_set(context):
         user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
     )
     name = channel_info.get("channel").get("name")
-    text = "meeting" if not_completed < 2 else "meetings"
+    text = "meeting" if not_completed == 1 else "meetings"
     blocks = [
         block_builders.simple_section(
-            f"{not_completed} {text} left to complete: #{name}", "mrkdwn",
+            f":wave: You have {not_completed} un-logged {text}. Please log them here #{name}",
+            "mrkdwn",
         )
     ]
     return blocks

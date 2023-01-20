@@ -1081,7 +1081,7 @@ def paginated_meeting_blockset(context):
                     params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
                 ),
             )
-        elif workflow.progress > 0 and workflow.progress < 100:
+        elif len(workflow.operations) and workflow.progress < 100:
             crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
             block = block_builders.simple_section(
                 f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"

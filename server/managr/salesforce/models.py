@@ -826,7 +826,7 @@ class MeetingWorkflow(SFSyncOperation):
 
     def save(self, *args, **kwargs):
         """sets the loading to done"""
-        date = self.datetime_created.date
+        date = str(self.datetime_created.date())
         if self.progress == 100 and self.slack_interaction:
             from managr.core.background import emit_process_calendar_meetings
             import uuid
@@ -835,7 +835,7 @@ class MeetingWorkflow(SFSyncOperation):
                 str(self.user.id),
                 f"calendar-meetings-{self.user.email}-{str(uuid.uuid4())}",
                 self.slack_interaction,
-                date=str(date),
+                date=date,
             )
             # from managr.slack.helpers import requests as slack_requests
             # from managr.slack.helpers.block_sets import get_block_set
