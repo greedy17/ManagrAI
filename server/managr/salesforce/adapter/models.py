@@ -615,9 +615,10 @@ class SalesforceAuthAccountAdapter:
                     f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
                 )
                 # regardless of the offset if the data is too large Salesforce will paginate
+                page = 1
                 while True:
                     has_next_page = res.get("nextRecordsUrl", None)
-                    if has_next_page:
+                    if has_next_page and page <= 3:
                         logger.info(f"Request returned a next page {has_next_page}")
                         next_page_url = self.instance_url + has_next_page
                         with Client as client:
@@ -632,6 +633,7 @@ class SalesforceAuthAccountAdapter:
                                 *saved_response["records"],
                                 *res["records"],
                             ]
+                            page += 1
                     else:
                         break
                 if merged_res:

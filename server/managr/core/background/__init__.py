@@ -72,8 +72,8 @@ def emit_create_calendar_event(user, title, start_time, participants, meeting_li
     )
 
 
-def emit_process_send_meeting_reminder(user_id, not_completed):
-    return _process_send_meeting_reminder(user_id, not_completed)
+def emit_process_send_meeting_reminder(user_id, verbose_name):
+    return _process_send_meeting_reminder(user_id, verbose_name=verbose_name)
 
 
 def emit_process_send_manager_reminder(user_id, not_completed):
@@ -204,7 +204,7 @@ def check_for_time(tz, hour, minute):
     )
     min = 00 if minute >= 30 else 30
     hr = hour - 1 if minute < 30 else hour
-    return current <= current.replace(hour=hour, minute=minute) and current >= current.replace(
+    return current < current.replace(hour=hour, minute=minute) and current >= current.replace(
         hour=hr, minute=min
     )
 
@@ -817,22 +817,28 @@ def _process_send_workflow_reminder(user_id, workflow_count):
 
 
 @background()
-def _process_send_meeting_reminder(user_id, not_completed):
+def _process_send_meeting_reminder(user_id):
     user = User.objects.get(id=user_id)
     if hasattr(user, "slack_integration"):
         access_token = user.organization.slack_integration.access_token
-        blocks = block_sets.get_block_set("meeting_reminder", {"not_completed": not_completed})
-        try:
-            slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                access_token,
-                text="Meeting Reminder",
-                block_set=blocks,
+        workflows = MeetingWorkflow.objects.for_user(user)
+        uncompleted = [workflow for workflow in workflows if workflow.progress < 100]
+        if len(uncompleted):
+            blocks = get_block_set(
+                "meeting_reminder", {"not_completed": len(uncompleted), "u": str(user.id)}
             )
-        except Exception as e:
-            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+            try:
+                slack_requests.send_channel_message(
+                    user.slack_integration.channel,
+                    access_token,
+                    text="Meeting Reminder",
+                    block_set=blocks,
+                )
+            except Exception as e:
+                logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     else:
         logger.exception(f"{user.email} does not have a slack account")
+    return
 
 
 @background()
@@ -1018,6 +1024,7 @@ TIMEZONE_TASK_FUNCTION = {
     core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
     core_consts.MORNING_REFRESH: emit_morning_refresh_message,
+    core_consts.MEETING_REMINDER: emit_process_send_meeting_reminder,
 }
 
 
