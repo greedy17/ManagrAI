@@ -15,7 +15,7 @@ from managr.salesforce.adapter.models import OpportunityAdapter
 class BaseAccountQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
+            if user.user_level in ["SDR", "MANAGER"] and user.organization.is_paid:
                 return self.filter(organization=user.organization, integration_source=user.crm)
             else:
                 return self.filter(
@@ -115,7 +115,7 @@ class BaseAccount(TimeStampModel, IntegrationModel):
 class BaseOpportunityQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
+            if user.user_level in ["SDR", "MANAGER"] and user.organization.is_paid:
                 return self.filter(
                     owner__organization=user.organization, integration_source=user.crm
                 )
@@ -255,7 +255,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
 
 class BaseContactQuerySet(models.QuerySet):
     def for_user(self, user):
-        if user.organization and user.is_active:
+        if user.organization and user.is_active and user.organization.is_paid:
             if user.user_level in ["SDR", "MANAGER"]:
                 return self.filter(owner__organization=user.organization)
             else:
@@ -354,10 +354,7 @@ class BaseContact(TimeStampModel, IntegrationModel):
 class ObjectFieldQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.organization and user.is_active:
-            if user.user_level in ["SDR", "MANAGER"]:
-                return self.filter(user=user)
-            else:
-                return self.filter(user=user)
+            return self.filter(user=user)
         else:
             return None
 

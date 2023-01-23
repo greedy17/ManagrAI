@@ -45,6 +45,7 @@ from .serializers import (
     NoteTemplateSerializer,
 )
 from managr.organization.models import Team
+from managr.organization.serializers import TeamSerializer
 from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
 from managr.core.background import emit_process_calendar_meetings
 from .nylas.emails import (
@@ -286,6 +287,11 @@ class UserViewSet(
                 user.timezone = timezone
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
+                if user.organization.is_paid == False:
+                    user_team = Team.objects.create(
+                        name=user.first_name, organization=user.organization, team_lead=user
+                    )
+                    user.team = user_team
                 user.save()
                 login(request, user)
                 # create token if one does not exist
@@ -293,6 +299,7 @@ class UserViewSet(
 
                 # Build and send the response
                 serializer = UserSerializer(user, context={"request": request})
+
                 response_data = serializer.data
                 response_data["token"] = user.auth_token.key
                 return Response(response_data)

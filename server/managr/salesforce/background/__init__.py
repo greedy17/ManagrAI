@@ -181,8 +181,8 @@ def emit_generate_form_template(user_id, delete_forms=False, schedule=timezone.n
     return _generate_form_template(user_id, delete_forms, schedule=schedule)
 
 
-def emit_generate_team_form_templates(user_id):
-    return _generate_team_form_templates(user_id)
+def emit_generate_team_form_templates(user_id, schedule):
+    return _generate_team_form_templates(user_id, schedule=schedule)
 
 
 def emit_update_current_db_values(user_id, resource_type, integration_id, verbose_name):

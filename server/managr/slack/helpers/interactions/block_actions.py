@@ -3243,8 +3243,9 @@ def process_view_recap(payload, context):
                         new_value = str(new_value)[:256] + "..."
                     if len(str(old_value)) > 255:
                         old_value = str(old_value)[:256] + "..."
+
                     message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
+                        f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
                     )
         elif main_form.template.form_type == "MEETING_REVIEW":
             old_value = old_data.get(key)

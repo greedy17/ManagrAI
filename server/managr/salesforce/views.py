@@ -61,13 +61,11 @@ from .background import (
     emit_gen_next_sync,
     emit_gen_next_object_field_sync,
     emit_generate_form_template,
-    emit_add_update_to_sf,
     _send_instant_alert,
-    emit_process_update_resources_in_salesforce,
-    _process_pipeline_sf_sync,
     emit_meeting_workflow_tracker,
     create_form_instance,
     emit_process_bulk_update,
+    emit_generate_team_form_templates,
 )
 from managr.salesforce import constants as sf_consts
 from managr.crm.exceptions import (
@@ -119,6 +117,14 @@ def authenticate(request):
             if settings.IN_DEV:
                 schedule = timezone.now() + timezone.timedelta(minutes=2)
             emit_generate_form_template(data.user, schedule=schedule)
+        if (
+            not serializer.instance.user.organization.is_paid
+            and not serializer.instance.user.is_admin
+        ):
+            emit_generate_team_form_templates(
+                str(serializer.instance.user.id),
+                schedule=(timezone.now() + timezone.timedelta(minutes=2)),
+            )
         user = User.objects.get(id=request.user.id)
         sync_operations = [*user.salesforce_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")

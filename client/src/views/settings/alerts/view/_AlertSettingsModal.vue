@@ -50,6 +50,7 @@
         </div>
         <div v-else-if="weeklyOrMonthly == 'MONTHLY'">
           <FormField
+            style="margin-top: -0.75rem"
             placeholder="Day of month"
             @blur="form.field.recurrenceDay.validate()"
             v-model="form.field.recurrenceDay.value"
@@ -86,7 +87,7 @@
           </template>
         </FormField>
       </div>
-      <div style="margin-top: 2rem" class="alerts-page__settings__recipients">
+      <div class="alerts-page__settings__recipients">
         <div class="alerts-page__settings__recipient-type">
           <div v-if="!channelName" class="row__">
             <label>Select channel</label>
@@ -126,10 +127,10 @@
           />
 
           <div v-if="!channelCreated">
-            <button v-if="channelName" @click="createChannel(channelName)" class="purple__button">
+            <button v-if="channelName" @click="createChannel(channelName)" class="green_button">
               Create Channel
             </button>
-            <button v-else class="disabled__button">Create Channel</button>
+            <button v-else :disabled="true" class="green_button">Create Channel</button>
           </div>
         </div>
 
@@ -173,15 +174,15 @@
           >
         </div>
       </div>
-      <div style="margin-top: -24px" class="save-button">
-        <PulseLoadingSpinnerButton
-          text="save"
-          @click="onSave"
-          class="primary-button"
-          :loading="isSaving"
-          :disabled="!form.isValid"
-        />
-      </div>
+    </div>
+    <div class="save-button">
+      <PulseLoadingSpinnerButton
+        text="save"
+        @click="onSave"
+        class="green_button"
+        :loading="isSaving"
+        :disabled="!form.isValid"
+      />
     </div>
   </div>
 </template>
@@ -283,15 +284,15 @@ export default {
       if (this.form.isValid) {
         try {
           const res = await AlertConfig.api.createConfig(this.form.toAPI)
-          this.$toast('Successfully added new delivery settings', {
+          this.$toast('Successfully added new delivery', {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          this.createdObj = res
-          this.$modal.hide('alert-settings-modal', { createdObj: this.createdObj })
+          // this.$modal.hide('alert-settings-modal', { createdObj: this.createdObj })
+          this.$emit('close-settings-modal', res)
           this.isSaving = false
         } finally {
           this.isSaving = false
@@ -486,6 +487,7 @@ export default {
   align-items: center;
   justify-content: center;
   height: 4rem;
+  margin-top: -1.5rem;
 }
 .slot-icon {
   display: flex;
@@ -498,6 +500,26 @@ export default {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+.green_button {
+  color: white;
+  background-color: $dark-green;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 13px;
+  letter-spacing: 0.75px;
+  border: none;
+  cursor: pointer;
+}
+.green_button:disabled {
+  color: $base-gray;
+  background-color: $soft-gray;
+  max-height: 2rem;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
 }
 .multi-slot {
   display: flex;
@@ -564,17 +586,14 @@ h2 {
   font-weight: 400;
 }
 .primary-button:disabled {
-  background-color: $soft-gray;
+  background-color: $soft-gray !important;
   color: $gray;
 }
 .alert-settings-modal {
   overflow-y: scroll;
-  height: 100%;
-  max-height: 100%;
-  background-color: $white;
   color: $base-gray;
   font-size: 14px;
-  padding: 16px 0px 0px 16px;
+  padding: 2px 0px 0px 0px;
   font-family: Lato-Regular, sans-serif;
   &__header {
     outline: 1px solid #e8e8e8;
@@ -584,10 +603,15 @@ h2 {
   }
 }
 .alerts-page__settings {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-evenly;
   color: $base-gray;
   margin: 0.5rem 1rem;
   &__frequency {
     display: flex;
+    flex-direction: row;
     align-items: center;
     &-label {
       margin: 0 0.5rem;
@@ -596,11 +620,12 @@ h2 {
 }
 .save-button {
   display: flex;
-  align-items: flex-end;
   justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  margin-top: 15vh;
   width: 100%;
   padding: 0rem 1rem 0rem 0rem;
-  height: 170px;
 }
 .row__ {
   display: flex;
