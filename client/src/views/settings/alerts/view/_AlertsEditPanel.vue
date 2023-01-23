@@ -216,7 +216,7 @@
                 v-model="formattedSlackMessage"
                 group="fields"
                 @start="drag = true"
-                @end="drag = false"
+                @end="dragEnd"
                 class="drag-section"
               >
                 <div
@@ -616,9 +616,11 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+      const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
         this.valuePromise ? this.valuePromise : valueLabel
       } `
+      this.valuePromise = null;
+      return operandString
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
@@ -728,6 +730,17 @@ export default {
           console.log(e)
         }
       }
+    },
+    dragEnd() {
+      const slackMesArr = []
+      for (let i = 0; i < this.formattedSlackMessage.length; i++) {
+        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+      }
+      this.slackMessage = slackMesArr
+      this.messageTemplateForm.field.body.value = this.slackMessage.join('\n\n')
+      this.alert.messageTemplateRef.body = this.slackMessage.join('\n\n')
+      this.updateMessageTemplate()
+      this.drag = false
     },
     async onRemoveAlertGroup(id, index) {
       console.log(id, index)
