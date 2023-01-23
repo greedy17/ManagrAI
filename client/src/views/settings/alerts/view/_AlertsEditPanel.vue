@@ -114,7 +114,7 @@
                 v-model="formattedSlackMessage"
                 group="fields"
                 @start="drag = true"
-                @end="drag = false"
+                @end="dragEnd"
                 class="drag-section"
               >
                 <div
@@ -597,6 +597,17 @@ export default {
           console.log(e)
         }
       }
+    },
+    dragEnd() {
+      const slackMesArr = []
+      for (let i = 0; i < this.formattedSlackMessage.length; i++) {
+        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+      }
+      this.slackMessage = slackMesArr
+      this.messageTemplateForm.field.body.value = this.slackMessage.join('\n\n')
+      this.alert.messageTemplateRef.body = this.slackMessage.join('\n\n')
+      this.updateMessageTemplate()
+      this.drag = false
     },
     async onRemoveAlertGroup(id, index) {
       let confirmation = confirm('Delete this Group and all its rows ?')

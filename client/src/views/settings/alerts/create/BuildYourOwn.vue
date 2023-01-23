@@ -308,7 +308,7 @@
                   v-model="formattedSlackMessage"
                   group="fields"
                   @start="drag = true"
-                  @end="drag = false"
+                  @end="dragEnd"
                   class="drag-section"
                 >
                   <div
@@ -876,6 +876,15 @@ export default {
           this.savingTemplate = false
         }
       }
+    },
+    dragEnd() {
+      const slackMesArr = []
+      for (let i = 0; i < this.formattedSlackMessage.length; i++) {
+        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+      }
+      this.slackMessage = slackMesArr
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('\n\n')
+      this.drag = false
     },
     bindText(val, title) {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
