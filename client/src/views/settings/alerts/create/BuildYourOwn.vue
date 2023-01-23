@@ -323,6 +323,7 @@
                       width: 27.5vw;
                       border: 1px solid #eeeeee;
                       border-radius: 8px;
+                      cursor: pointer;
                     "
                   >
                     <div style="justify-self: start">
