@@ -1,3 +1,5 @@
+from datetime import datetime
+import pytz
 from django.db import models
 from django.db.models import Q
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -68,6 +70,11 @@ class Organization(TimeStampModel):
         for u in users:
             u.state = org_consts.STATE_INACTIVE
             u.save()
+
+    @property
+    def days_since_created(self):
+        datetime_obj = datetime.replace(datetime.now(),tzinfo=pytz.utc) - datetime.replace(self.datetime_created,tzinfo=pytz.utc)
+        return datetime_obj.days
 
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
