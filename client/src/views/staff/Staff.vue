@@ -896,6 +896,16 @@
         Organization
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
+      <small v-if="!selected_org" class="pipeline-header">Search Orgs: </small>
+      <div v-if="!selected_org" class="search-bar">
+        <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
+        <input
+          type="search"
+          placeholder="search"
+          v-model="filterText"
+          @input="showOrgList = true"
+        />
+      </div>
       <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section" style="left: 310px;">
         <div class="list-section__title flex-row-spread">
           <p>Organizations</p>
@@ -904,7 +914,7 @@
           @click="selectOrg(org)"
           :v-model="selected_org"
           class="list-button"
-          v-for="org in organizations"
+          v-for="org in filteredOrganizations"
           :key="org.id"
         >
           {{ org.name }}
@@ -1328,11 +1338,19 @@ export default {
       organizations: [],
       invitedUsers: null,
       activeUsers: null,
+      filterText: ''
     }
   },
   computed: {
     user() {
       return this.$store.state.user
+    },
+    filteredOrganizations() {
+      if (!this.filterText) {
+        return this.organizations
+      } else {
+        return this.organizations.filter(org => org.name.toLowerCase().includes(this.filterText.toLowerCase()))
+      }
     },
   },
   mounted() {
@@ -1814,6 +1832,7 @@ export default {
     async selected_org() {
       if (this.selected_org) {
         this.loading = false
+        this.filterText = ''
         this.ignoreEmails = this.selected_org.ignore_email_ref
         this.hasProducts = this.selected_org.has_products
         this.stateActive = this.selected_org.state
@@ -2368,5 +2387,30 @@ main:hover > span {
 }
 .yellow-background{
   background-color: yellow;
+}
+.search-bar {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 8px;
+  // margin-top: 16px;
+  margin-left: 4px;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 15vw;
+  // letter-spacing: 0.75px;
+  border: none;
+  padding: 2px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
 }
 </style>
