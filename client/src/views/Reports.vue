@@ -540,42 +540,7 @@
             </div>
 
             <div class="card">
-              <img src="@/assets/images/group.svg" height="24px" alt="" />
-              <h1 class="green-text" style="margin: 12px 0">
-                {{ performanceReport['contacts'] }}
-                <img
-                  v-if="
-                    performanceReport['contacts'] >= performanceReport['contacts'] / totalMonths
-                  "
-                  src="@/assets/images/trendingUp.svg"
-                  class="green-filter"
-                  height="18"
-                  alt=""
-                />
-                <img
-                  v-else
-                  src="@/assets/images/trendingDown.svg"
-                  class="red-filter"
-                  height="18"
-                  alt=""
-                />
-              </h1>
-              <p>Contacts Created</p>
-
-              <div class="relative">
-                <meter
-                  id="file"
-                  :value="performanceReport['contacts']"
-                  :max="(performanceReport['contacts'] / totalMonths) * 2"
-                ></meter>
-                <span class="center-line">|</span>
-              </div>
-
-              <p class="small-text">Avg: {{ performanceReport['contacts'] / totalMonths }}</p>
-            </div>
-
-            <div class="card">
-              <img src="@/assets/images/note.svg" height="20px" alt="" />
+              <img src="@/assets/images/note.svg" height="22px" alt="" />
               <h1 class="green-text" style="margin: 12px 0">
                 {{
                   performanceReport['fields']['meeting_comments']
@@ -632,6 +597,20 @@
                     : 0 / totalMonths
                 }}
               </p>
+            </div>
+
+            <div style="height: 30vh" class="card">
+              <img src="@/assets/images/workflows.svg" height="20px" alt="" />
+              <h1 class="green-text" style="margin: 12px 0">
+                {{ workflows.list.length }}
+              </h1>
+              <p>Active workflows</p>
+              <p class="small-text">Avg: {{ workflows.list.length }}</p>
+
+              <div class="relative">
+                <meter id="file" :value="1" :max="2"></meter>
+                <span class="center-line">|</span>
+              </div>
             </div>
           </div>
 
@@ -1350,11 +1329,18 @@ export default {
 .blue-text {
   color: $panther-blue;
 }
+.col-even {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-evenly;
+}
 
 .card {
   border-radius: 5px;
   border: 1px solid $soft-gray;
   width: 16vw;
+  height: 30vh;
 }
 .big-card {
   border-radius: 5px;

@@ -1,5 +1,107 @@
 <template>
   <div class="edit-panel">
+    <Modal v-if="modalOpen" dimmed>
+      <div class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="margin-right: 8px; margin-left: 4px"
+              class="logo"
+              height="26px"
+              alt=""
+            />
+            <h4>Add condition</h4>
+          </div>
+          <div class="flex-row">
+            <img
+              @click="resetModal"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
+            />
+          </div>
+        </div>
+
+        <div class="margin-top">
+          <AlertOperandRow :resourceType="alert.resourceType" :form.sync="currentForm" />
+          <div class="bottom">
+            <button @click="onSaveOperand()" class="green_button" :disabled="!currentForm.isValid">
+              Add Condition
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <Modal v-if="groupModalOpen" dimmed>
+      <div class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="margin-right: 8px; margin-left: 4px"
+              class="logo"
+              height="26px"
+              alt=""
+            />
+            <h4>Add Group</h4>
+          </div>
+          <div class="flex-row">
+            <img
+              @click="resetGroupModal"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
+            />
+          </div>
+        </div>
+
+        <div class="margin-top">
+          <AlertGroup :resourceType="alert.resourceType" :form.sync="groupForm" />
+
+          <div class="bottom">
+            <button @click="onSaveGroup()" class="green_button" :disabled="!groupForm.isValid">
+              Add Group
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <Modal v-if="deliveryModalOpen" dimmed>
+      <div class="modal-container-large rel">
+        <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="margin-right: 8px; margin-left: 4px"
+              class="logo"
+              height="26px"
+              alt=""
+            />
+            <h4>Delivery Method</h4>
+          </div>
+          <div class="flex-row">
+            <img
+              @click="resetDeliveryModal"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
+            />
+          </div>
+        </div>
+
+        <div class="margin-top">
+          <AlertSettingsModal
+            @close-settings-modal="closeSettingsModal"
+            :resourceType="alert.resourceType"
+            :form.sync="deliveryForm"
+          />
+        </div>
+      </div>
+    </Modal>
     <div class="title">
       <h4 class="title__head">General</h4>
 
@@ -114,7 +216,7 @@
                 v-model="formattedSlackMessage"
                 group="fields"
                 @start="drag = true"
-                @end="drag = false"
+                @end="dragEnd"
                 class="drag-section"
               >
                 <div
@@ -133,9 +235,11 @@
                   "
                 >
                   <div style="justify-self: start">
-                    <div style="font-weight: 900; font-size: 0.75rem; display: flex;">
+                    <div style="font-weight: 900; font-size: 0.75rem; display: flex">
                       <img src="@/assets/images/drag.svg" alt="" />
-                      <div style="margin-top: 0.25rem; margin-left: 0.5rem;">{{ message.title }}</div>
+                      <div style="margin-top: 0.25rem; margin-left: 0.5rem">
+                        {{ message.title }}
+                      </div>
                     </div>
                     <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                   </div>
@@ -187,7 +291,7 @@
                   type="checkbox"
                   :id="i"
                   :value="field"
-                  style="width: 10%"
+                  style="width: 10%; cursor: pointer"
                 />
                 <label :for="i"></label>
                 {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
@@ -209,6 +313,7 @@ import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 import { quillEditor } from 'vue-quill-editor'
+import Modal from '@/components/InviteModal'
 import debounce from 'lodash.debounce'
 import draggable from 'vuedraggable'
 
@@ -221,19 +326,20 @@ import FormField from '@/components/forms/FormField'
  * Services
  *
  */
+import AlertOperandRow from '../create/_AlertOperandRow.vue'
+import AlertGroup from '../create/_AlertGroup'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { FormField as FormFieldService } from '@thinknimble/tn-forms'
 import { RequiredValidator } from '@thinknimble/tn-validators'
-
 import AlertTemplate, {
   AlertMessageTemplate,
   AlertConfig,
-  AlertGroup,
-  AlertGroupForm,
   AlertConfigForm,
   AlertMessageTemplateForm,
   AlertGroupOperand,
   AlertOperandForm,
+  AlertGroupForm,
+  AlertGroup as AlertGroupModel,
 } from '@/services/alerts/'
 import { stringRenderer } from '@/services/utils'
 import { ObjectField } from '@/services/crm'
@@ -252,6 +358,9 @@ export default {
     AlertGroupModal,
     AlertSettingsModal,
     quillEditor,
+    Modal,
+    AlertGroup,
+    AlertOperandRow,
     draggable,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -263,7 +372,14 @@ export default {
   },
   data() {
     return {
+      modalOpen: false,
+      deliveryModalOpen: false,
+      groupModalOpen: false,
       dropdownLoading: false,
+      currentForm: null,
+      groupForm: null,
+      groupIndex: null,
+      deliveryForm: null,
       templateTitleField: new FormFieldService({ validators: [new RequiredValidator()] }),
       // executeUpdateTemplate: debounce(this.updateTemplate, 900),
       // executeUpdateMessageTemplate: debounce(this.updateMessageTemplate, 900),
@@ -373,87 +489,102 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    resetDeliveryModal() {
+      this.deliveryModalOpen = !this.deliveryModalOpen
+      this.deliveryForm = null
+      this.groupIndex = null
+    },
+    resetGroupModal() {
+      this.groupModalOpen = !this.groupModalOpen
+      this.groupForm = null
+      this.groupIndex = null
+    },
+    resetModal() {
+      this.modalOpen = !this.modalOpen
+      this.currentForm = null
+      this.groupIndex = null
+    },
+    async onSaveOperand() {
+      this.currentForm.validate()
+      if (this.currentForm.isValid) {
+        try {
+          const res = await AlertGroupOperand.api.createOperand(this.currentForm.toAPI)
+          this.$toast('Successfully added operand', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+
+          this.alert.groupsRef[this.groupIndex].operandsRef = [
+            ...this.alert.groupsRef[this.groupIndex].operandsRef,
+            res,
+          ]
+          this.alert.groupsRef[this.groupIndex].operands = [
+            ...this.alert.groupsRef[this.groupIndex].operandsRef.map((op) => op.id),
+          ]
+        } finally {
+          this.modalOpen = false
+          this.groupIndex = null
+          this.currentForm = null
+        }
+      }
+    },
     onShowOperandModal(groupIndex) {
+      this.groupIndex = groupIndex
       let newForm = new AlertOperandForm({
         operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
         groupId: this.alert.groupsRef[groupIndex].id,
       })
+      this.currentForm = newForm
+      this.modalOpen = true
+    },
 
-      this.$modal.show(
-        AlertOperandModal,
-        { form: newForm, resourceType: this.alert.resourceType },
-
-        {
-          name: 'alert-operands-modal',
-          height: 400,
-          width: 800,
-        },
-        {
-          'before-close': (e) => {
-            if (e.params && e.params.createdObj) {
-              this.alert.groupsRef[groupIndex].operandsRef = [
-                ...this.alert.groupsRef[groupIndex].operandsRef,
-                e.params.createdObj,
-              ]
-              this.alert.groupsRef[groupIndex].operands = [
-                ...this.alert.groupsRef[groupIndex].operandsRef.map((op) => op.id),
-              ]
-            }
-          },
-        },
-      )
+    async onSaveGroup() {
+      this.groupForm.validate()
+      if (this.groupForm.isValid) {
+        try {
+          const res = await AlertGroupModel.api.createGroup(this.groupForm.toAPI)
+          this.$toast('Successfully added group', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.alert.groupsRef = [...this.alert.groupsRef, res]
+          this.alert.groups = [...this.alert.groupsRef.map((op) => op.id)]
+        } finally {
+          this.groupModalOpen = false
+          this.groupForm = null
+          this.groupIndex = null
+        }
+      }
     },
     onShowGroupModal() {
       let newForm = new AlertGroupForm({
         groupOrder: this.alert.groupsRef.length,
         alertTemplateId: this.alert.id,
       })
-
-      this.$modal.show(
-        AlertGroupModal,
-        { form: newForm, resourceType: this.alert.resourceType },
-
-        {
-          name: 'alert-groups-modal',
-
-          height: 400,
-          width: 800,
-
-          adaptive: true,
-        },
-        {
-          'before-close': (e) => {
-            if (e.params && e.params.createdObj) {
-              this.alert.groupsRef = [...this.alert.groupsRef, e.params.createdObj]
-              this.alert.groups = [...this.alert.groupsRef.map((op) => op.id)]
-            }
-          },
-        },
-      )
+      this.groupForm = newForm
+      this.groupModalOpen = true
     },
     onShowSettingsModal() {
       let newForm = new AlertConfigForm({
         alertTemplateId: this.alert.id,
       })
+      this.deliveryForm = newForm
+      this.deliveryModalOpen = true
+    },
+    closeSettingsModal(obj) {
+      this.alert.configsRef = [...this.alert.configsRef, obj]
+      this.alert.configs = [...this.alert.configsRef.map((op) => op.id)]
 
-      this.$modal.show(
-        AlertSettingsModal,
-        { form: newForm },
-
-        {
-          name: 'alert-settings-modal',
-          height: 550,
-          width: 580,
-        },
-        {
-          'before-close': (e) => {
-            if (e.params && e.params.createdObj) {
-              this.alert.configsRef = [...this.alert.configsRef, e.params.createdObj]
-              this.alert.configs = [...this.alert.configsRef.map((op) => op.id)]
-            }
-          },
-        },
-      )
+      setTimeout(() => {
+        this.deliveryModalOpen = false
+        this.deliveryForm = null
+      }, 300)
     },
     selectedFieldType(operatorField) {
       if (operatorField) {
@@ -485,9 +616,11 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+      const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
         this.valuePromise ? this.valuePromise : valueLabel
       } `
+      this.valuePromise = null;
+      return operandString
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
@@ -598,7 +731,19 @@ export default {
         }
       }
     },
+    dragEnd() {
+      const slackMesArr = []
+      for (let i = 0; i < this.formattedSlackMessage.length; i++) {
+        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+      }
+      this.slackMessage = slackMesArr
+      this.messageTemplateForm.field.body.value = this.slackMessage.join('\n\n')
+      this.alert.messageTemplateRef.body = this.slackMessage.join('\n\n')
+      this.updateMessageTemplate()
+      this.drag = false
+    },
     async onRemoveAlertGroup(id, index) {
+      console.log(id, index)
       let confirmation = confirm('Delete this Group and all its rows ?')
 
       if (confirmation) {
@@ -612,7 +757,7 @@ export default {
           })
         }
         try {
-          await AlertGroup.api.delete(id)
+          await AlertGroupModel.api.delete(id)
           this.alert.groupsRef = [
             ...this.alert.groupsRef.slice(0, index),
             ...this.alert.groupsRef.slice(index + 1, this.alert.groupsRef.length),
@@ -760,6 +905,12 @@ export default {
 }
 ::v-deep .ql-editor.ql-blank::before {
   color: $very-light-gray;
+}
+
+.bottom {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
 }
 @keyframes bounce {
   0% {
@@ -947,6 +1098,27 @@ input:focus {
   }
 }
 
+.green_button {
+  color: white;
+  background-color: $dark-green;
+  max-height: 2rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+}
+.green_button:disabled {
+  color: $base-gray;
+  background-color: $soft-gray;
+  max-height: 2rem;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
+  border: none;
+  cursor: text;
+}
+
 .condition-button {
   background-color: white;
   color: $dark-green;
@@ -1097,5 +1269,111 @@ input[type='search']:focus {
       }
     }
   }
+}
+
+.modal-container {
+  background-color: $white;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 58vw;
+  // min-height: 50vh;
+  height: 54vh;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0px 4px;
+
+  &__footer {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    bottom: 0;
+    right: 16px;
+    padding: 0px 8px;
+    background-color: white;
+
+    p {
+      font-size: 12px;
+      color: $light-gray-blue;
+    }
+
+    button {
+      margin-right: 0px;
+      margin-left: 60vw;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+.modal-container-large {
+  background-color: $white;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 58vw;
+  // min-height: 50vh;
+  height: 62vh;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0px 4px;
+
+  &__footer {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    bottom: 0;
+    right: 16px;
+    padding: 0px 8px;
+    background-color: white;
+
+    p {
+      font-size: 12px;
+      color: $light-gray-blue;
+    }
+
+    button {
+      margin-right: 0px;
+      margin-left: 60vw;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+.rel {
+  position: relative;
+}
+
+.flex-row-spread {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sticky {
+  position: sticky;
+  background-color: white;
+  width: 100%;
+  left: 0;
+  top: 0;
+  padding: 0px 6px 8px -2px;
+  z-index: 2;
+}
+
+.border-bottom {
+  border-bottom: 1.25px solid $soft-gray;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  letter-spacing: 1px;
+  h4 {
+    font-size: 20px;
+  }
+}
+.margin-top {
+  margin-top: 2rem;
 }
 </style>
