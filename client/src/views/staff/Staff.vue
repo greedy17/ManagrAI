@@ -158,12 +158,9 @@
                     {{propertyName}}: <span 
                     @click="test(modalInfo.previous_data[propertyName] !== value)" 
                     :class="
-                    !modalInfo.previous_data[propertyName] 
+                    modalInfo.previous_data[propertyName] === undefined
                     ||
-                    (
-                      modalInfo.previous_data[propertyName] && 
-                      modalInfo.previous_data[propertyName] !== value
-                    ) 
+                    modalInfo.previous_data[propertyName] !== value
                     ? 'yellow-background' : ''"
                     >{{ `${value}` }}</span>
                   </div>
@@ -173,12 +170,12 @@
                   <div v-for="(value,propertyName) in modalInfo.previous_data" :key="value" style="margin-left: 1rem;">
                     {{propertyName}}: <span 
                     @click="test(modalInfo.saved_data[propertyName] !== value)" 
-                    :class="
-                      (
-                        modalInfo.saved_data[propertyName] && 
-                        modalInfo.saved_data[propertyName] !== value
-                      ) ? 'yellow-background' : ''"
+                    :class="''"
                     >{{ `${value}` }}</span>
+                    <!-- (
+                      modalInfo.saved_data[propertyName] && 
+                      modalInfo.saved_data[propertyName] !== value
+                    ) ? 'yellow-background' : '' -->
                   </div>
                 </div>
               </div>
