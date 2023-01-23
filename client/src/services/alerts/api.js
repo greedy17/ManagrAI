@@ -19,7 +19,11 @@ export default class AlertTemplateAPI extends ModelAPI {
       const res = await this.client.post(AlertTemplateAPI.ENDPOINT, d)
       return this.cls.fromAPI(res.data)
     } catch (e) {
-      apiErrorHandler({ apiName: 'AlertTemplateAPI.createAlertTemplate' })(e)
+      if (e.response.status === 400 && e.response.data && e.response.data.message) {
+        return e.response
+      } else {
+        apiErrorHandler({ apiName: 'AlertTemplateAPI.createAlertTemplate' })(e)
+      }
     }
   }
   async deleteAlertTemplate(id) {

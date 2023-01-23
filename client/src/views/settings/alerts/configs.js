@@ -1,6 +1,6 @@
 const CLOSE_DATE_PASSED = {
     title: "Close Date Passed",
-    subtitle: "View and update all Opportunities with a passed close date",
+    subtitle: "Close date is in the past",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -59,7 +59,7 @@ const CLOSE_DATE_PASSED = {
 
 const CLOSE_DATE_PASSED_HUBSPOT = {
     title: "Close Date Passed",
-    subtitle: "View and update all Deals with a passed close date",
+    subtitle: "Close date is in the past",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -116,9 +116,9 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
     alertLevel: "ORGANIZATION",
 }
 
-const NINETY_DAY_PIPELINE = {
-    title: "90 Day Pipeline",
-    subtitle: 'Update your Pipeline',
+const THIRTY_DAY_PIPELINE = {
+    title: "30 Day Pipeline",
+    subtitle: 'Rolling 30 day pipeline based on closed date',
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -141,7 +141,7 @@ const NINETY_DAY_PIPELINE = {
                     operandCondition: "AND",
                     operandIdentifier: "CloseDate",
                     operandOperator: "<=",
-                    operandValue: "90",
+                    operandValue: "30",
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -186,9 +186,9 @@ const NINETY_DAY_PIPELINE = {
     alertLevel: "ORGANIZATION",
 }
 
-const NINETY_DAY_PIPELINE_HUBSPOT = {
-    title: "90 Day Pipeline",
-    subtitle: 'Update your Pipeline',
+const THIRTY_DAY_PIPELINE_HUBSPOT = {
+    title: "30 Day Pipeline",
+    subtitle: 'Rolling 30 day pipeline based on closed date',
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -201,7 +201,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
                     operandOperator: "<=",
-                    operandValue: "90",
+                    operandValue: "30",
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -247,7 +247,7 @@ const NINETY_DAY_PIPELINE_HUBSPOT = {
 
 const DEAL_REVIEW = {
     title: "Deal Review",
-    subtitle: 'View and update all Opportunities that havent been worked in the last week',
+    subtitle: 'Closing within 14 days & no recent updates',
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -264,6 +264,16 @@ const DEAL_REVIEW = {
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATETIME",
+                    group: "",
+                },
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "<=",
+                    operandValue: "14",
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
                     group: "",
                 },
             ],
@@ -296,7 +306,7 @@ const DEAL_REVIEW = {
 
 const DEAL_REVIEW_HUBSPOT = {
     title: "Deal Review",
-    subtitle: 'View and update all Deals that havent been worked in the last week',
+    subtitle: 'Closing within 14 days & no recent updates',
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -310,6 +320,16 @@ const DEAL_REVIEW_HUBSPOT = {
                     operandIdentifier: "hs_lastmodifieddate", // Select your Amount
                     operandOperator: "<=",
                     operandValue: "-6", // Amount is greater than
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "closedate",
+                    operandOperator: "<=",
+                    operandValue: "14",
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -345,7 +365,7 @@ const DEAL_REVIEW_HUBSPOT = {
 
 const CLOSE_DATE_APPROACHING = {
     title: "Close Date Approaching",
-    subtitle: 'View and update all Opportunities with an upcoming close date',
+    subtitle: 'Close date within 14 days',
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -404,7 +424,7 @@ const CLOSE_DATE_APPROACHING = {
 
 const CLOSE_DATE_APPROACHING_HUBSPOT = {
     title: "Close Date Approaching",
-    subtitle: 'View and update all Deals with an upcoming close date',
+    subtitle: 'Close date within 14 days',
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -463,7 +483,7 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
 
 const UPCOMING_NEXT_STEP = {
     title: "Upcoming Next Step",
-    subtitle: "View and update all Opportunities with Next Steps due this Week",
+    subtitle: "Next Step is due today",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -511,7 +531,7 @@ const UPCOMING_NEXT_STEP = {
 
 const UPCOMING_NEXT_STEP_HUBSPOT = {
     title: "Upcoming Next Step",
-    subtitle: "View and update all Deals with Next Steps due this Week",
+    subtitle: "Next Step is due today",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -559,7 +579,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
 
 const LARGE_OPPORTUNITIES = {
     title: "Large Opportunities",
-    subtitle: "View and update all your Opportunities that exceed a certain amount",
+    subtitle: "Opportunities that exceed a certain amount",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -607,7 +627,7 @@ const LARGE_OPPORTUNITIES = {
 
 const LARGE_DEALS_HUBSPOT = {
     title: "Large Deals",
-    subtitle: "View and update all your Deals that exceed a certain amount",
+    subtitle: "Deals that exceed a certain amount",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -655,7 +675,7 @@ const LARGE_DEALS_HUBSPOT = {
 
 const TEAM_PIPELINE = {
     title: "Team Pipeline",
-    subtitle: "View your entire team’s pipeline of deals closing this month",
+    subtitle: "Rolling 30 day team pipeline",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -715,7 +735,7 @@ const TEAM_PIPELINE = {
 
 const TEAM_PIPELINE_HUBSPOT = {
     title: "Team Pipeline",
-    subtitle: "View your entire team’s pipeline of deals closing this month",
+    subtitle: "Rolling 30 day team pipeline",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -774,8 +794,8 @@ const TEAM_PIPELINE_HUBSPOT = {
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
     CLOSE_DATE_PASSED_HUBSPOT,
-    NINETY_DAY_PIPELINE,
-    NINETY_DAY_PIPELINE_HUBSPOT,
+    THIRTY_DAY_PIPELINE,
+    THIRTY_DAY_PIPELINE_HUBSPOT,
     DEAL_REVIEW,
     DEAL_REVIEW_HUBSPOT,
     CLOSE_DATE_APPROACHING,
