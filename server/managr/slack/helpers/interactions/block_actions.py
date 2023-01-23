@@ -1045,10 +1045,11 @@ def process_sync_calendar(payload, context):
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
-    todays_date = datetime.today()
-    date_string = (
-        f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
-    )
+    if date:
+        message_date = datetime.strptime(date, "%Y-%m-%d")
+    else:
+        message_date = datetime.today()
+    date_string = f":calendar: Today's Meetings: *{message_date.month}/{message_date.day}/{message_date.year}*"
     blocks = [
         block_builders.section_with_button_block(
             "Sync Calendar",
@@ -1056,7 +1057,7 @@ def process_sync_calendar(payload, context):
             date_string,
             action_id=action_with_params(
                 slack_const.MEETING_REVIEW_SYNC_CALENDAR,
-                [f"u={str(user.id)}", f"date={str(todays_date.date())}"],
+                [f"u={str(user.id)}", f"date={str(message_date.date())}"],
             ),
         ),
         {"type": "divider"},

@@ -720,7 +720,7 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
-            workflows = MeetingWorkflow.objects.for_user(user)
+            workflows = MeetingWorkflow.objects.for_user(user, date)
             for event in processed_data:
                 title = event.get("title", None)
                 workflow_check = workflows.filter(meeting__topic=title).first()
@@ -739,7 +739,7 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
                     meeting_workflow = MeetingWorkflow.objects.create(
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
-            blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id)})
+            blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id), "date": date})
         else:
             todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")
             date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
