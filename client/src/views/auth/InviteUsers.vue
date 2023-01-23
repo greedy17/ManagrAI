@@ -317,7 +317,7 @@
         </div>
         <div class="profile-info__body">
           <div class="row__">
-            <h2>{{ getUser.firstName }} {{ getUser.lastName }}</h2>
+            <h2 @click="test">{{ getUser.fullName }}</h2>
             <!-- <span @click="selectingOption = !selectingOption" class="img-border">
               <img
                 src="@/assets/images/more_horizontal.svg"
@@ -562,8 +562,8 @@ export default {
     viewAdminPage() {
       this.$router.push({ name: 'Staff' })
     },
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.getUser)
     },
     manageTeam() {
       this.manageTeamSelected = true
