@@ -162,8 +162,7 @@ class AlertTemplateViewSet(
         alert_target_ref = data["new_configs"][0]["alert_targets"]
         configs = alert_config_creator(data, request.user)
         if configs is None:
-            serializer = alert_serializers.AlertTemplateWriteSerializer(data=None, context=request)
-            serializer.is_valid(raise_exception=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"message": "Selected users do not have a CRM and Slack connected"})
         else:
             data["new_configs"] = configs
             data["target_reference"] = alert_target_ref

@@ -173,7 +173,7 @@ export default new Router({
     },
     {
       path: '/update-forecast',
-      name: '90DayPipeline',
+      name: '30DayPipeline',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/settings/alerts/create/templates/UpdateForecast')
     },

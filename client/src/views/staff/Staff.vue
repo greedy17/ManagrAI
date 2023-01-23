@@ -1000,7 +1000,10 @@
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
           <div class="invite-list__container">
             <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" />
-            <h2 class="org-title">{{ selected_org.name }}</h2>
+            <div style="display: flex;">
+              <h2 class="org-title">{{ selected_org.name }}</h2>
+              <h4 style="padding-top: 0.25rem; margin-left: 0.5rem;">({{selected_org.days_since_created_ref}} days in Managr)</h4>
+            </div>
             <div class="invite-list__section__container">
               <div class="line-up">
                 <div class="invite-list__section__item">State</div>
