@@ -907,12 +907,22 @@ export default {
         this.teamPipeline == 'Team Pipeline'
       ) {
         try {
-          console.log('this.config in create', this.config)
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
+
+          if (res.status === 400 && res.data.message) {
+            this.$toast(res.data.message, {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            return
+          }
 
           this.handleUpdate()
 
@@ -925,6 +935,7 @@ export default {
           })
           this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
+          console.log('e', e)
           this.$toast(`${e}`, {
             timeout: 2000,
             position: 'top-left',

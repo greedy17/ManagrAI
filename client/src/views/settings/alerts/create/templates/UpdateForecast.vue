@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.NINETY_DAY_PIPELINE_HUBSPOT : allConfigs.NINETY_DAY_PIPELINE" />
+  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.THIRTY_DAY_PIPELINE_HUBSPOT : allConfigs.THIRTY_DAY_PIPELINE" />
 </template>
 
 <script>
