@@ -485,9 +485,11 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      return `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
+      const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
         this.valuePromise ? this.valuePromise : valueLabel
       } `
+      this.valuePromise = null;
+      return operandString
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
