@@ -450,7 +450,6 @@ class SalesforceSObjectViewSet(
             )
         )
         if note_data:
-            print("NOTE DATA", note_data)
             return Response(data=note_data)
         return Response(data=[])
 
