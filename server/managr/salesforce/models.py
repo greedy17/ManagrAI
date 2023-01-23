@@ -645,8 +645,10 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 
 class MeetingWorkflowQuerySet(models.QuerySet):
-    def for_user(self, user):
+    def for_user(self, user, date=None):
         if user.organization and user.is_active:
+            if date:
+                return self.filter(datetime_created__date=date)
             user_timezone = pytz.timezone(user.timezone)
             currenttime = datetime.now()
             user_tz_time = currenttime.astimezone(user_timezone)
@@ -747,7 +749,7 @@ class MeetingWorkflow(SFSyncOperation):
             }
 
     def begin_tasks(self, attempts=1):
-
+        new_operations_list = []
         for op in self.operations_list:
             # split the operation to get opp and params
             operation_name, param = op.split(".")
@@ -759,7 +761,26 @@ class MeetingWorkflow(SFSyncOperation):
                 self.operations.append(str(t.task_hash))
             else:
                 self.operations = [str(t.task_hash)]
+            new_operations_list.append(f"{operation_name}.{param}.{str(t.task_hash)}")
             self.save()
+        self.operations_list = new_operations_list
+        self.save()
+
+    def build_retry_list(self):
+        retry_operations = []
+        for op in self.operations_list:
+            operation, param, task_hash = op.split(".")
+            for failed_task in self.failed_task_description:
+                failed_list = failed_task.split(".")
+                if operation in failed_list:
+                    retry_operations.append(f"{operation}.{param}")
+                    self.completed_operations.remove(task_hash)
+                    self.operations.remove(task_hash)
+                    self.failed_task_description.remove(failed_task)
+        if len(retry_operations):
+            self.operations_list = retry_operations
+            self.save()
+        return self.operations_list
 
     def begin_communication(self, now=False):
         from managr.zoom.background import (
@@ -807,6 +828,7 @@ class MeetingWorkflow(SFSyncOperation):
 
     def save(self, *args, **kwargs):
         """sets the loading to done"""
+        date = str(self.datetime_created.date()) if self.datetime_created else str(datetime.today())
         if self.progress == 100 and self.slack_interaction:
             from managr.core.background import emit_process_calendar_meetings
             import uuid
@@ -815,6 +837,7 @@ class MeetingWorkflow(SFSyncOperation):
                 str(self.user.id),
                 f"calendar-meetings-{self.user.email}-{str(uuid.uuid4())}",
                 self.slack_interaction,
+                date=date,
             )
             # from managr.slack.helpers import requests as slack_requests
             # from managr.slack.helpers.block_sets import get_block_set

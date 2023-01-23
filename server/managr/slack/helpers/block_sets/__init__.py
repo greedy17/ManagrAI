@@ -43,7 +43,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "success_modal": common_blocksets.success_modal_block_set,
         "success_text_modal": common_blocksets.success_text_block_set,
         "home_modal": common_blocksets.home_modal_block_set,
-        "home_modal_generic": common_blocksets.home_modal_generic_block_set,
         "hour_options": common_blocksets.hour_options,
         "minute_options": common_blocksets.minute_options,
         "time_options": common_blocksets.time_options,

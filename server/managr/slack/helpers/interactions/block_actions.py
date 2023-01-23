@@ -109,8 +109,9 @@ def show_initial_meeting_interaction(payload, context):
 @processor()
 def process_meeting_review(payload, context):
     trigger_id = payload["trigger_id"]
-    workflow_id = payload["actions"][0]["value"]
+    workflow_id = context.get("w")
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    main_form = workflow.forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     crm = "Salesforce" if workflow.user.crm == "SALESFORCE" else "HubSpot"
@@ -121,25 +122,27 @@ def process_meeting_review(payload, context):
         str(workflow.user.id),
         trigger_id,
     )
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"],
-        "original_message_timestamp": payload["message"]["ts"],
-    }
     context = {
         "w": workflow_id,
-        "f": str(workflow.forms.filter(template__form_type="UPDATE").first().id),
         "type": "meeting",
     }
-    private_metadata.update(context)
+    stage_form_check = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
+    if len(stage_form_check):
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE
+        submit_text = "Next"
+        context["form_type"] = main_form.template.form_type
+    else:
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        submit_text = "Submit"
     data = {
         "view_id": loading_view_data["view"]["id"],
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "callback_id": callback_id,
             "title": {"type": "plain_text", "text": "Log Meeting"},
             "blocks": get_block_set("meeting_review_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "private_metadata": json.dumps(private_metadata),
+            "submit": {"type": "plain_text", "text": submit_text},
+            "private_metadata": json.dumps(context),
             "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
     }
@@ -1042,10 +1045,11 @@ def process_sync_calendar(payload, context):
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
-    todays_date = datetime.today()
-    date_string = (
-        f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
-    )
+    if date:
+        message_date = datetime.strptime(date, "%Y-%m-%d")
+    else:
+        message_date = datetime.today()
+    date_string = f":calendar: Today's Meetings: *{message_date.month}/{message_date.day}/{message_date.year}*"
     blocks = [
         block_builders.section_with_button_block(
             "Sync Calendar",
@@ -1053,7 +1057,7 @@ def process_sync_calendar(payload, context):
             date_string,
             action_id=action_with_params(
                 slack_const.MEETING_REVIEW_SYNC_CALENDAR,
-                [f"u={str(user.id)}", f"date={str(todays_date.date())}"],
+                [f"u={str(user.id)}", f"date={str(message_date.date())}"],
             ),
         ),
         {"type": "divider"},
@@ -1567,35 +1571,6 @@ def process_show_update_resource_form(payload, context):
     )
 
 
-@processor(requried_context="u")
-def process_coming_soon(payload, context):
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    u = User.objects.get(id=context.get("u"))
-    org = u.organization
-
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": "NEXT",
-            "title": {"type": "plain_text", "text": f"Coming Soon"},
-            "blocks": get_block_set("coming_soon_modal", {}),
-        },
-    }
-    try:
-        slack_requests.generic_request(url, data, access_token=org.slack_integration.access_token)
-
-    except InvalidBlocksException as e:
-        return logger.exception(f"Failed To Generate Blocks {e}")
-    except InvalidBlocksFormatException as e:
-        return logger.exception(f"Failed To Generate Blocks {e}")
-    except UnHandeledBlocksException as e:
-        return logger.exception(f"Failed To Generate Blocks {e}")
-    except InvalidAccessToken as e:
-        return logger.exception(f"Failed To send slack {e}")
-
-
 @processor(required_context="u")
 def process_create_task(payload, context):
     type = context.get("type", None)
@@ -1647,44 +1622,6 @@ def process_create_task(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
-
-
-@processor()
-def process_request_invite_from_home_tab(payload, context):
-    """
-    According to slack anyone can see the home tab if a user triggers the home event
-    And is not a user we show a button to request access, this will ask the is_admin user to invite them
-    """
-    # get the org team
-    team_id = payload["user"]["team_id"]
-    new_user_slack_id = payload["actions"][0]["value"]
-    # get the is_admin user
-    o = Organization.objects.filter(slack_integration__team_id=team_id).first()
-    u = o.users.filter(is_admin=True).first()
-    # send a message to invite the user
-    slack_requests.send_ephemeral_message(
-        u.slack_integration.channel,
-        o.slack_integration.access_token,
-        u.slack_integration.slack_id,
-        text="User requested an invite",
-        block_set=[
-            block_builders.simple_section(
-                f"<@{new_user_slack_id}> has requested an invite to Managr", "mrkdwn"
-            )
-        ],
-    )
-    old_view = payload["view"]
-    blocks = old_view["blocks"]
-    # remove the request button
-    index, block = block_finder("INVITE_BUTTON", blocks)
-    new_blocks = [
-        *blocks[0:index],
-        block_builders.simple_section("Invite Sent"),
-        *blocks[index + 1 :],
-    ]
-    view = {"type": "home", "blocks": new_blocks}
-    slack_requests.publish_view(new_user_slack_id, o.slack_integration.access_token, view)
-    # update the home tab of the user with message that it was sent
 
 
 @slack_api_exceptions(rethrow=True)
@@ -2139,6 +2076,8 @@ def process_get_notes(payload, context):
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
             note_message = replace_tags(note[2])
+            if len(note_message) > 255:
+                note_message = str(note_message)[:255] + "..."
             block_message += f"\nNotes:\n {note_message}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
@@ -2694,23 +2633,26 @@ def process_mark_complete(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_alert_actions(payload, context):
-    state = payload["state"]["values"]
-    selected = list(list(state.values())[0].values())[0].get("selected_option").get("value")
-    alert_action_switcher = {
-        "update_crm": process_show_alert_update_resource_form,
-        "call_details": process_get_call_recording,
-        "get_notes": process_get_notes,
-        "add_to_sequence": process_show_engagement_modal,
-        "add_to_cadence": process_show_engagement_modal,
-        "mark_as_complete": process_mark_complete,
-    }
-    if selected in ["add_to_sequence", "add_to_cadence"]:
-        context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
-    elif selected == "mark_as_complete":
-        context.update({"instance_id": context.get("alert_id")})
-    else:
-        context["type"] = "alert"
-    return alert_action_switcher[selected](payload, context)
+    state = payload["actions"]
+    select_check = state[0].get("selected_option", None)
+    if select_check:
+        selected = select_check.get("value")
+        alert_action_switcher = {
+            "update_crm": process_show_alert_update_resource_form,
+            "call_details": process_get_call_recording,
+            "get_notes": process_get_notes,
+            "add_to_sequence": process_show_engagement_modal,
+            "add_to_cadence": process_show_engagement_modal,
+            "mark_as_complete": process_mark_complete,
+        }
+        if selected in ["add_to_sequence", "add_to_cadence"]:
+            context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
+        elif selected == "mark_as_complete":
+            context.update({"instance_id": context.get("alert_id")})
+        else:
+            context["type"] = "alert"
+        return alert_action_switcher[selected](payload, context)
+    return
 
 
 @slack_api_exceptions(rethrow=True)
@@ -3297,7 +3239,10 @@ def process_view_recap(payload, context):
                     if field.field.is_public and field.field.data_type == "Reference":
                         old_value = check_for_display_value(field.field, old_value)
                         new_value = check_for_display_value(field.field, new_value)
-
+                    if len(str(new_value)) > 255:
+                        new_value = str(new_value)[:256] + "..."
+                    if len(str(old_value)) > 255:
+                        old_value = str(old_value)[:256] + "..."
                     message_string_for_recap += (
                         f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
                     )
@@ -3308,12 +3253,18 @@ def process_view_recap(payload, context):
                 if field.field.is_public and field.field.data_type == "Reference":
                     old_value = check_for_display_value(field.field, old_value)
                     new_value = check_for_display_value(field.field, new_value)
+                if len(str(new_value)) > 255:
+                    new_value = str(new_value)[:256] + "..."
+                if len(str(old_value)) > 255:
+                    old_value = str(old_value)[:256] + "..."
                 message_string_for_recap += (
                     f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
                 )
             else:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
+                if len(str(new_value)) > 255:
+                    new_value = str(new_value)[:256] + "..."
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
 
         elif main_form.template.form_type == "CREATE":
@@ -3321,6 +3272,8 @@ def process_view_recap(payload, context):
             if new_value:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
+                if len(str(new_value)) > 255:
+                    new_value = str(new_value)[:256]
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"
@@ -3781,7 +3734,6 @@ def handle_block_actions(payload):
         slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM: process_add_create_form,
         slack_const.COMMAND_FORMS__CONVERT_LEAD: process_show_convert_lead_form,
         slack_const.UPDATE_TASK_SELECTED_RESOURCE: process_resource_selected_for_task,
-        slack_const.HOME_REQUEST_SLACK_INVITE: process_request_invite_from_home_tab,
         slack_const.RETURN_TO_FORM_MODAL: process_return_to_form_modal,
         slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL: process_check_is_owner,
         slack_const.PAGINATE_ALERTS: process_paginate_alerts,

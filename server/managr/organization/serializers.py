@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from managr.organization.models import ActionChoice
 from managr.opportunity import constants as opp_consts
 from managr.salesforce.models import SalesforceAuthAccount
@@ -28,6 +27,7 @@ class TeamSerializer(serializers.ModelSerializer):
 class OrganizationSerializer(serializers.ModelSerializer):
     ignore_email_ref = serializers.SerializerMethodField("get_ignore_emails")
     teams_ref = TeamSerializer(source="teams",many=True)
+    days_since_created_ref = serializers.SerializerMethodField("get_days_since_created")
 
     class Meta:
         model = Organization
@@ -42,12 +42,15 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "number_of_allowed_users",
             "ignore_email_ref",
             "is_paid",
-            "teams_ref"
+            "teams_ref",
+            "days_since_created_ref",
         )
 
     def get_ignore_emails(self, instance):
         return instance.ignore_emails
 
+    def get_days_since_created(self,instance):
+        return instance.days_since_created
 
 class ActionChoiceSerializer(serializers.ModelSerializer):
     """

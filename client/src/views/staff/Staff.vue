@@ -155,13 +155,30 @@
                   <span class="">Saved Data:</span>
                   <!-- {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }} -->
                   <div v-for="(value,propertyName) in modalInfo.saved_data" :key="value" style="margin-left: 1rem;">
-                    {{propertyName}}: <span :class="Object.keys(modalInfo.saved_data).length >= Object.keys(modalInfo.previous_data).length && !Object.keys(modalInfo.previous_data).includes(propertyName) ? 'yellow-background' : ''">{{ `${value}` }}</span>
+                    {{propertyName}}: <span 
+                    @click="test(modalInfo.previous_data[propertyName] !== value)" 
+                    :class="
+                    !modalInfo.previous_data[propertyName] 
+                    ||
+                    (
+                      modalInfo.previous_data[propertyName] && 
+                      modalInfo.previous_data[propertyName] !== value
+                    ) 
+                    ? 'yellow-background' : ''"
+                    >{{ `${value}` }}</span>
                   </div>
                 </div>
                 <div>
                   <span class="">Previous Data:</span>
                   <div v-for="(value,propertyName) in modalInfo.previous_data" :key="value" style="margin-left: 1rem;">
-                    {{propertyName}}: <span :class="Object.keys(modalInfo.saved_data).length <= Object.keys(modalInfo.previous_data).length && Object.keys(modalInfo.saved_data).includes(propertyName) ? 'yellow-background' : ''">{{ `${value}` }}</span>
+                    {{propertyName}}: <span 
+                    @click="test(modalInfo.saved_data[propertyName] !== value)" 
+                    :class="
+                      (
+                        modalInfo.saved_data[propertyName] && 
+                        modalInfo.saved_data[propertyName] !== value
+                      ) ? 'yellow-background' : ''"
+                    >{{ `${value}` }}</span>
                   </div>
                 </div>
               </div>
@@ -983,7 +1000,10 @@
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
           <div class="invite-list__container">
             <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" />
-            <h2 class="org-title">{{ selected_org.name }}</h2>
+            <div style="display: flex;">
+              <h2 class="org-title">{{ selected_org.name }}</h2>
+              <h4 style="padding-top: 0.25rem; margin-left: 0.5rem;">({{selected_org.days_since_created_ref}} days in Managr)</h4>
+            </div>
             <div class="invite-list__section__container">
               <div class="line-up">
                 <div class="invite-list__section__item">State</div>

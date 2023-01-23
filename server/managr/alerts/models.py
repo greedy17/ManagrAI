@@ -658,8 +658,11 @@ class AlertInstance(TimeStampModel):
         for k, v in self.var_binding_map.items():
             str_rep = "{ " + k + " }"
             str_rep = r"{}".format(str_rep)
-
-            body = body.replace(str_rep, str(v))
+            if len(str(v)) > 255:
+                value = str(v)[:256] + "..."
+            else:
+                value = str(v)
+            body = body.replace(str_rep, value)
         return body
 
     @property
@@ -685,6 +688,7 @@ class AlertInstance(TimeStampModel):
                             if binding_map[binding] in ["", None]:
                                 binding_map[binding] = "~None~"
                             # HACK pb for datetime fields Mike wants just the date
+
                             user = self.user
                             if self.resource.secondary_data.get(v):
                                 field = user.object_fields.filter(

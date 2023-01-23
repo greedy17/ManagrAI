@@ -382,7 +382,7 @@
                   />
                 </div>
               </button>
-              <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
+              <small v-if="team.list.length >= numberOfAllowedUsers" class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
             </div>
           </div>
 
@@ -489,6 +489,7 @@
           :handleEdit="handleEdit"
           :inviteOpen="inviteOpen"
           @cancel="handleCancel"
+          @handleRefresh="refresh"
         />
       </section>
     </div>
@@ -860,6 +861,7 @@ export default {
     },
     async refresh() {
       this.team.refresh()
+      this.inviteOpen = false
     },
     async getTeams() {
       const res = await Organization.api.listTeams(this.getUser.id)

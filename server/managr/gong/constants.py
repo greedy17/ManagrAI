@@ -1,13 +1,5 @@
 import base64
-import json
-import requests
-
-from urllib.parse import urlencode
 from django.conf import settings
-
-from requests.exceptions import HTTPError
-
-from managr.utils.misc import get_site_url
 
 USERS = "users"
 CALLS_EXTENSIVE = "calls/extensive"

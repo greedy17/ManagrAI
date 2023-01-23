@@ -403,17 +403,6 @@ def _process_create_resource_from_meeting(workflow_id, *args):
             )
             adpater_class = adapter_routes[user.crm][resource_type]
             res = adpater_class.create(data, hs.access_token, object_fields, str(user.id))
-            serializer = routes.get(resource_type)["serializer"](data=res.as_dict)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            create_forms.update(
-                is_submitted=True,
-                submission_date=timezone.now(),
-                update_source="meeting",
-                resource_id=serializer.instance.id,
-            )
-            workflow.resource_id = serializer.instance.id
-            workflow.save()
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -427,6 +416,22 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 attempts += 1
         except Exception as e:
             raise e
+    try:
+        serializer = routes.get(resource_type)["serializer"](data=res.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        create_forms.update(
+            is_submitted=True,
+            submission_date=timezone.now(),
+            update_source="meeting",
+            resource_id=serializer.instance.id,
+        )
+        workflow.resource_id = serializer.instance.id
+        workflow.save()
+    except Exception as e:
+        logger.exception(
+            f"Failed to create new resource from hubspot for user {user.email} due to <{e}>"
+        )
     # value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(create_form_ids, None, True)
@@ -544,29 +549,39 @@ def _process_add_call_to_hs(workflow_id, *args):
     attempts = 1
     while True:
         hs = user.hubspot_account
-        try:
-            create_res = hs.adapter_class.create_meeting_in_hubspot(data)
-            meeting_id = create_res["id"]
-            associate_res = hs.adapter_class.associate_objects(
-                "meetings",
-                meeting_id,
-                workflow.resource_type,
-                workflow.resource.integration_id,
-                CALL_ASSOCIATIONS[workflow.resource_type.lower()],
-            )
-            break
-        except TokenExpired as e:
-            if attempts >= 5:
-                return logger.exception(
-                    f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+        if workflow.resource:
+            try:
+                create_res = hs.adapter_class.create_meeting_in_hubspot(data)
+                meeting_id = create_res["id"]
+                associate_res = hs.adapter_class.associate_objects(
+                    "meetings",
+                    meeting_id,
+                    workflow.resource_type,
+                    workflow.resource.integration_id,
+                    CALL_ASSOCIATIONS[workflow.resource_type.lower()],
                 )
+                break
+            except TokenExpired as e:
+                if attempts >= 5:
+                    return logger.exception(
+                        f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
+                    )
+                else:
+                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    time.sleep(sleep)
+                    hs.regenerate_token()
+                    attempts += 1
+            except Exception as e:
+                logger.exception(f"Creating meeting error: <{e}>")
+        else:
+            if attempts >= 5:
+                logger.info(
+                    f"Failed to add call log because resource id was not found on workflow {workflow_id}"
+                )
+                break
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                time.sleep(sleep)
-                hs.regenerate_token()
                 attempts += 1
-        except Exception as e:
-            logger.exception(f"Creating meeting error: <{e}>")
+                time.sleep(2.00)
     return
 
 
