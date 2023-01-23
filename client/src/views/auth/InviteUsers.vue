@@ -354,6 +354,7 @@
                 :disabled="team.list.length >= numberOfAllowedUsers"
                 class="invite_button"
                 type="submit"
+                style="width: 150px"
                 @click="handleInvite"
               >
                 Invite Member
@@ -382,7 +383,9 @@
                   />
                 </div>
               </button>
-              <small v-if="team.list.length >= numberOfAllowedUsers" class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
+              <small v-if="team.list.length >= numberOfAllowedUsers" class="tooltiptext"
+                >User limit exceeded: {{ numberOfAllowedUsers }}</small
+              >
             </div>
           </div>
 
