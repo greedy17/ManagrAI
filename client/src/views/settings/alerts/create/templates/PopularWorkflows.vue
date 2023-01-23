@@ -397,8 +397,9 @@
                       "
                     >
                       <div style="justify-self: start">
-                        <div style="font-weight: 900; font-size: 0.75rem; margin-bottom: 0.1rem">
-                          {{ message.title }}
+                        <div style="font-weight: 900; font-size: 0.75rem; display: flex;">
+                          <img src="@/assets/images/drag.svg" alt="" />
+                          <div style="margin-top: 0.25rem; margin-left: 0.5rem;">{{ message.title }}</div>
                         </div>
                         <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                       </div>
