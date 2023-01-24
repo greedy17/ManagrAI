@@ -354,7 +354,6 @@
                 :disabled="team.list.length >= numberOfAllowedUsers"
                 class="invite_button"
                 type="submit"
-                style="width: 150px"
                 @click="handleInvite"
               >
                 Invite Member
@@ -1209,6 +1208,8 @@ h2 {
 }
 
 .invite_button {
+  display: flex;
+  flex-direction: row;
   color: $base-gray;
   background-color: white;
   border-radius: 6px;
