@@ -645,8 +645,10 @@ class SFObjectFieldsOperation(SFSyncOperation):
 
 
 class MeetingWorkflowQuerySet(models.QuerySet):
-    def for_user(self, user):
+    def for_user(self, user, date=None):
         if user.organization and user.is_active:
+            if date:
+                return self.filter(user=user, datetime_created__date=date)
             user_timezone = pytz.timezone(user.timezone)
             currenttime = datetime.now()
             user_tz_time = currenttime.astimezone(user_timezone)

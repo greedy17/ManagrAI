@@ -403,17 +403,6 @@ def _process_create_resource_from_meeting(workflow_id, *args):
             )
             adpater_class = adapter_routes[user.crm][resource_type]
             res = adpater_class.create(data, hs.access_token, object_fields, str(user.id))
-            serializer = routes.get(resource_type)["serializer"](data=res.as_dict)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            create_forms.update(
-                is_submitted=True,
-                submission_date=timezone.now(),
-                update_source="meeting",
-                resource_id=serializer.instance.id,
-            )
-            workflow.resource_id = serializer.instance.id
-            workflow.save()
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -427,6 +416,22 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 attempts += 1
         except Exception as e:
             raise e
+    try:
+        serializer = routes.get(resource_type)["serializer"](data=res.as_dict)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        create_forms.update(
+            is_submitted=True,
+            submission_date=timezone.now(),
+            update_source="meeting",
+            resource_id=serializer.instance.id,
+        )
+        workflow.resource_id = serializer.instance.id
+        workflow.save()
+    except Exception as e:
+        logger.exception(
+            f"Failed to create new resource from hubspot for user {user.email} due to <{e}>"
+        )
     # value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(create_form_ids, None, True)

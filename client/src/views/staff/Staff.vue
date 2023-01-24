@@ -158,12 +158,9 @@
                     {{propertyName}}: <span 
                     @click="test(modalInfo.previous_data[propertyName] !== value)" 
                     :class="
-                    !modalInfo.previous_data[propertyName] 
+                    modalInfo.previous_data[propertyName] === undefined
                     ||
-                    (
-                      modalInfo.previous_data[propertyName] && 
-                      modalInfo.previous_data[propertyName] !== value
-                    ) 
+                    modalInfo.previous_data[propertyName] !== value
                     ? 'yellow-background' : ''"
                     >{{ `${value}` }}</span>
                   </div>
@@ -173,12 +170,12 @@
                   <div v-for="(value,propertyName) in modalInfo.previous_data" :key="value" style="margin-left: 1rem;">
                     {{propertyName}}: <span 
                     @click="test(modalInfo.saved_data[propertyName] !== value)" 
-                    :class="
-                      (
-                        modalInfo.saved_data[propertyName] && 
-                        modalInfo.saved_data[propertyName] !== value
-                      ) ? 'yellow-background' : ''"
+                    :class="''"
                     >{{ `${value}` }}</span>
+                    <!-- (
+                      modalInfo.saved_data[propertyName] && 
+                      modalInfo.saved_data[propertyName] !== value
+                    ) ? 'yellow-background' : '' -->
                   </div>
                 </div>
               </div>
@@ -899,6 +896,16 @@
         Organization
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
+      <small v-if="!selected_org" class="pipeline-header">Search Orgs: </small>
+      <div v-if="!selected_org" class="search-bar">
+        <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
+        <input
+          type="search"
+          placeholder="search"
+          v-model="filterText"
+          @input="showOrgList = true"
+        />
+      </div>
       <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section" style="left: 310px;">
         <div class="list-section__title flex-row-spread">
           <p>Organizations</p>
@@ -907,7 +914,7 @@
           @click="selectOrg(org)"
           :v-model="selected_org"
           class="list-button"
-          v-for="org in organizations"
+          v-for="org in filteredOrganizations"
           :key="org.id"
         >
           {{ org.name }}
@@ -1000,7 +1007,10 @@
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
           <div class="invite-list__container">
             <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" />
-            <h2 class="org-title">{{ selected_org.name }}</h2>
+            <div style="display: flex;">
+              <h2 class="org-title">{{ selected_org.name }}</h2>
+              <h4 style="padding-top: 0.25rem; margin-left: 0.5rem;">({{selected_org.days_since_created_ref}} days in Managr)</h4>
+            </div>
             <div class="invite-list__section__container">
               <div class="line-up">
                 <div class="invite-list__section__item">State</div>
@@ -1328,11 +1338,19 @@ export default {
       organizations: [],
       invitedUsers: null,
       activeUsers: null,
+      filterText: ''
     }
   },
   computed: {
     user() {
       return this.$store.state.user
+    },
+    filteredOrganizations() {
+      if (!this.filterText) {
+        return this.organizations
+      } else {
+        return this.organizations.filter(org => org.name.toLowerCase().includes(this.filterText.toLowerCase()))
+      }
     },
   },
   mounted() {
@@ -1814,6 +1832,7 @@ export default {
     async selected_org() {
       if (this.selected_org) {
         this.loading = false
+        this.filterText = ''
         this.ignoreEmails = this.selected_org.ignore_email_ref
         this.hasProducts = this.selected_org.has_products
         this.stateActive = this.selected_org.state
@@ -2368,5 +2387,30 @@ main:hover > span {
 }
 .yellow-background{
   background-color: yellow;
+}
+.search-bar {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 8px;
+  // margin-top: 16px;
+  margin-left: 4px;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 15vw;
+  // letter-spacing: 0.75px;
+  border: none;
+  padding: 2px;
+  margin: 0;
+}
+input[type='search']:focus {
+  outline: none;
 }
 </style>

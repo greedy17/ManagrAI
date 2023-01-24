@@ -317,7 +317,7 @@
         </div>
         <div class="profile-info__body">
           <div class="row__">
-            <h2>{{ getUser.firstName }} {{ getUser.lastName }}</h2>
+            <h2 @click="test">{{ getUser.fullName }}</h2>
             <!-- <span @click="selectingOption = !selectingOption" class="img-border">
               <img
                 src="@/assets/images/more_horizontal.svg"
@@ -354,6 +354,7 @@
                 :disabled="team.list.length >= numberOfAllowedUsers"
                 class="invite_button"
                 type="submit"
+                style="width: 150px"
                 @click="handleInvite"
               >
                 Invite Member
@@ -382,7 +383,9 @@
                   />
                 </div>
               </button>
-              <small v-if="team.list.length >= numberOfAllowedUsers" class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
+              <small v-if="team.list.length >= numberOfAllowedUsers" class="tooltiptext"
+                >User limit exceeded: {{ numberOfAllowedUsers }}</small
+              >
             </div>
           </div>
 
@@ -563,8 +566,8 @@ export default {
     viewAdminPage() {
       this.$router.push({ name: 'Staff' })
     },
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.getUser)
     },
     manageTeam() {
       this.manageTeamSelected = true

@@ -1029,9 +1029,13 @@ def convert_lead_block_set(context):
 @block_set(required_context=["u"])
 def paginated_meeting_blockset(context):
     u = User.objects.get(id=context.get("u"))
+    date = context.get("date", None)
     user_timezone = u.timezone
-    workflows = MeetingWorkflow.objects.for_user(u)
-    todays_date = datetime.today()
+    if date:
+        todays_date = datetime.strptime(date, "%Y-%m-%d")
+    else:
+        todays_date = datetime.today()
+    workflows = MeetingWorkflow.objects.for_user(u, str(todays_date.date()))
     date_string = (
         f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
     )

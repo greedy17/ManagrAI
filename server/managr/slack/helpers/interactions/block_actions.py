@@ -1045,10 +1045,11 @@ def process_sync_calendar(payload, context):
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
-    todays_date = datetime.today()
-    date_string = (
-        f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
-    )
+    if date:
+        message_date = datetime.strptime(date, "%Y-%m-%d")
+    else:
+        message_date = datetime.today()
+    date_string = f":calendar: Today's Meetings: *{message_date.month}/{message_date.day}/{message_date.year}*"
     blocks = [
         block_builders.section_with_button_block(
             "Sync Calendar",
@@ -1056,7 +1057,7 @@ def process_sync_calendar(payload, context):
             date_string,
             action_id=action_with_params(
                 slack_const.MEETING_REVIEW_SYNC_CALENDAR,
-                [f"u={str(user.id)}", f"date={str(todays_date.date())}"],
+                [f"u={str(user.id)}", f"date={str(message_date.date())}"],
             ),
         ),
         {"type": "divider"},
@@ -2075,6 +2076,8 @@ def process_get_notes(payload, context):
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
             note_message = replace_tags(note[2])
+            if len(note_message) > 255:
+                note_message = str(note_message)[:255] + "..."
             block_message += f"\nNotes:\n {note_message}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
             note_blocks.append({"type": "divider"})
@@ -3236,9 +3239,13 @@ def process_view_recap(payload, context):
                     if field.field.is_public and field.field.data_type == "Reference":
                         old_value = check_for_display_value(field.field, old_value)
                         new_value = check_for_display_value(field.field, new_value)
+                    if len(str(new_value)) > 255:
+                        new_value = str(new_value)[:256] + "..."
+                    if len(str(old_value)) > 255:
+                        old_value = str(old_value)[:256] + "..."
 
                     message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_data.get(key)}~ :arrow_right: {new_value}"
+                        f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
                     )
         elif main_form.template.form_type == "MEETING_REVIEW":
             old_value = old_data.get(key)
@@ -3247,12 +3254,18 @@ def process_view_recap(payload, context):
                 if field.field.is_public and field.field.data_type == "Reference":
                     old_value = check_for_display_value(field.field, old_value)
                     new_value = check_for_display_value(field.field, new_value)
+                if len(str(new_value)) > 255:
+                    new_value = str(new_value)[:256] + "..."
+                if len(str(old_value)) > 255:
+                    old_value = str(old_value)[:256] + "..."
                 message_string_for_recap += (
                     f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
                 )
             else:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
+                if len(str(new_value)) > 255:
+                    new_value = str(new_value)[:256] + "..."
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
 
         elif main_form.template.form_type == "CREATE":
@@ -3260,6 +3273,8 @@ def process_view_recap(payload, context):
             if new_value:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
+                if len(str(new_value)) > 255:
+                    new_value = str(new_value)[:256]
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"

@@ -375,30 +375,40 @@
             <div style="display: flex; overflow-y: auto; height: 28.75vh">
               <div style="margin-bottom: 1rem">
                 <div v-if="formattedSlackMessage.length">
-                  <div
-                    v-for="(message, i) in formattedSlackMessage"
-                    :key="i"
-                    style="
-                      margin: 0.5rem;
-                      padding: 6px 12px;
-                      display: flex;
-                      justify-content: space-between;
-                      align-items: center;
-                      width: 27.5vw;
-                      border: 1px solid #eeeeee;
-                      border-radius: 8px;
-                    "
+                  <draggable
+                    v-model="formattedSlackMessage"
+                    group="fields"
+                    @start="drag = true"
+                    @end="dragEnd"
+                    class="drag-section"
                   >
-                    <div style="justify-self: start">
-                      <div style="font-weight: 900; font-size: 0.75rem; margin-bottom: 0.1rem">
-                        {{ message.title }}
+                    <div
+                      v-for="(message, i) in formattedSlackMessage"
+                      :key="i"
+                      style="
+                        margin: 0.5rem;
+                        padding: 6px 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 27.5vw;
+                        border: 1px solid #eeeeee;
+                        border-radius: 8px;
+                        cursor: pointer;
+                      "
+                    >
+                      <div style="justify-self: start">
+                        <div style="font-weight: 900; font-size: 0.75rem; display: flex;">
+                          <img src="@/assets/images/drag.svg" alt="" />
+                          <div style="margin-top: 0.25rem; margin-left: 0.5rem;">{{ message.title }}</div>
+                        </div>
+                        <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                       </div>
-                      <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
+                      <div @click="removeMessage(i, message)">
+                        <img src="@/assets/images/remove.svg" style="height: 1.2rem" />
+                      </div>
                     </div>
-                    <div @click="removeMessage(i, message)">
-                      <img src="@/assets/images/remove.svg" style="height: 1.2rem" />
-                    </div>
-                  </div>
+                  </draggable>
                 </div>
                 <div
                   v-else
@@ -462,6 +472,7 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
+import draggable from 'vuedraggable'
 
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
@@ -477,6 +488,7 @@ export default {
     ToggleCheckBox,
     FormField,
     PulseLoadingSpinnerButton,
+    draggable,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -632,6 +644,15 @@ export default {
     },
     test(log) {
       console.log('log', log)
+    },
+    dragEnd() {
+      const slackMesArr = []
+      for (let i = 0; i < this.formattedSlackMessage.length; i++) {
+        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+      }
+      this.slackMessage = slackMesArr
+      this.config.messageTemplate.body = this.slackMessage.join('\n\n')
+      this.drag = false
     },
     bindText(val, title) {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
@@ -907,12 +928,22 @@ export default {
         this.teamPipeline == 'Team Pipeline'
       ) {
         try {
-          console.log('this.config in create', this.config)
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
             user: this.$store.state.user.id,
             directToUsers: this.directToUsers,
           })
+
+          if (res.status === 400 && res.data.message) {
+            this.$toast(res.data.message, {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            return
+          }
 
           this.handleUpdate()
 
@@ -925,6 +956,7 @@ export default {
           })
           this.$router.push({ name: 'ListTemplates' })
         } catch (e) {
+          console.log('e', e)
           this.$toast(`${e}`, {
             timeout: 2000,
             position: 'top-left',
