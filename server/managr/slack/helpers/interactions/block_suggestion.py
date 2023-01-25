@@ -448,6 +448,10 @@ def process_get_crm_resource_options(payload, context):
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
     resource = context.get("resource_type")
+    if resource in user.crm_account.custom_objects:
+        create_option = [block_builders.option(add_opts[0]["label"], add_opts[0]["value"])]
+        return {"options": create_option}
+
     attempts = 1
     while True:
         crm_account = user.crm_account

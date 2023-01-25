@@ -651,14 +651,19 @@ def create_modal_block_set(context, *args, **kwargs):
     """Shows a modal to create a resource"""
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = workflow.user
-    template = (
-        OrgCustomSlackForm.objects.for_user(user)
-        .filter(
-            Q(resource=context.get("resource_type"), form_type=slack_const.FORM_TYPE_CREATE,)
-            & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
+    resource_type = context.get("resource_type")
+    if resource_type in user.crm_account.custom_objects:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user).filter(custom_object=resource_type).first()
         )
-        .first()
-    )
+    else:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(
+                Q(resource=context.get("resource_type"), form_type=slack_const.FORM_TYPE_CREATE,)
+            )
+            .first()
+        )
     if template:
         blocks = []
         action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
@@ -833,9 +838,11 @@ def send_recap_block_set(context):
         SObjectField.objects.get(pk="e286d1d5-5447-47e6-ad55-5f54fdd2b00d").to_slack_field(
             user=user
         ),
+        block_builders.context_block("Only Managr users will show up here*"),
         SObjectField.objects.get(pk="fae88a10-53cc-470e-86ec-32376c041893").to_slack_field(
             user=user
         ),
+        block_builders.context_block("Only Managr users will show up here*"),
     ]
     return blocks
 

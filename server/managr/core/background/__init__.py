@@ -204,10 +204,6 @@ def check_for_time(tz, hour, minute):
     )
     min = 00 if minute >= 30 else 30
     hr = hour - 1 if minute < 30 else hour
-    if settings.IN_STAGING and hour == 7 and minute == 30:
-        logger.info(
-            f"Check for time info:\nCurrent: {current}\nLess Than: {current.replace(hour=hour, minute=minute)}\nGreater: {current.replace(hour=hour, minute=minute)}"
-        )
     return current < current.replace(hour=hour, minute=minute) and current > current.replace(
         hour=hr, minute=min
     )
