@@ -2697,6 +2697,12 @@
           <div
             v-show="currentCell == i && currentInlineRow == j && editingInline"
             class="inline-edit"
+            :style="
+              field.dataType === 'TextArea' ||
+              (field.length > 250 && field.dataType === 'String') ? 
+              'width: 32vw;' :
+              ''
+              "
           >
             <div class="inline-edit__header">
               <h4>
@@ -5572,6 +5578,7 @@ export default {
   border-radius: 8px;
   margin-left: 2px;
   width: 25vw;
+  // width: 32vw;
 
   &__header {
     display: flex;
@@ -6136,7 +6143,7 @@ h3 {
   border-radius: 12px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
-  border-spacing: 3px;
+  // border-spacing: 3px;
   background-color: white;
 }
 .table-section::-webkit-scrollbar {
@@ -6573,11 +6580,13 @@ section {
 }
 #user-input-wide-inline {
   border: 1px solid #e8e8e8;
-  height: 140px;
+  // height: 140px;
+  height: 180px;
   border-radius: 8px;
   background-color: white;
   min-height: 2.5rem;
-  width: 23vw;
+  // width: 23vw;
+  width: 30vw;
   font-family: $base-font-family;
   letter-spacing: 0.75px;
   padding: 8px 12px;

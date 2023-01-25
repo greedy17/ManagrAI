@@ -35,12 +35,12 @@
         v-else-if="apiName === 'StageName'"
       >
         {{ fieldData ? fieldData : 'Empty' }}
-        <span class="daysinstage">{{
+        <!-- <span class="daysinstage">{{
           fieldData
             ? 'Days in Stage: ' +
               (getDaysInStage(lastStageUpdate) > 19000 ? 0 : getDaysInStage(lastStageUpdate))
             : ''
-        }}</span>
+        }}</span> -->
       </p>
       <p
         class="flex-columned blank"
@@ -152,7 +152,7 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 .red {
-  width: fit-content;
+  // width: fit-content;
 }
 .flex-columned {
   display: flex;
@@ -162,7 +162,7 @@ export default {
 .daysinstage {
   font-size: 11px;
   font-weight: bold;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   color: $gray;
 }
 .cash {
@@ -197,5 +197,8 @@ export default {
   background-color: #fdf7e6;
   border-radius: 6px;
   padding: 5px 1px;
+}
+.blank {
+  // margin: 3px 0;
 }
 </style>

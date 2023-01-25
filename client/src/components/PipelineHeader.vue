@@ -1,11 +1,11 @@
 <template>
   <div class="table-row">
-    <div style="padding: 2vh" class="table-cell-checkbox-header">
+    <!-- <div style="padding: 2vh" class="table-cell-checkbox-header">
       <div>
         <input @click="emitCheckAll" type="checkbox" id="checkAllprimary" v-model="allSelected" />
         <label for="checkAllprimary"></label>
       </div>
-    </div>
+    </div> -->
 
     <div
       @click="
@@ -522,18 +522,20 @@ export default {
 }
 .cell-name-header {
   display: table-cell;
-  padding-left: 4px;
+  // padding-left: 4px;
+  padding-left: 4.25rem;
   border: none;
   border-bottom: 1px solid $soft-gray;
   z-index: 3;
-  left: 3.5vw;
+  left: 0vw;
   top: 0;
   position: sticky;
-  background-color: white;
+  // background-color: white;
+  background-color: $off-white;
   font-weight: bolder;
   font-size: 12px;
   letter-spacing: 0.75px;
-  color: $light-gray-blue;
+  color: $base-gray;
 }
 .table-cell-header {
   display: table-cell;
@@ -543,11 +545,13 @@ export default {
   z-index: 2;
   top: 0;
   position: sticky;
-  background-color: white;
+  // background-color: white;
+  background-color: $off-white;
   font-weight: bolder;
   font-size: 12px;
   letter-spacing: 0.75px;
-  color: $light-gray-blue;
+  // color: $light-gray-blue;
+  color: $base-gray;
 }
 .invert {
   filter: invert(80%);

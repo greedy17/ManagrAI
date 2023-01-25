@@ -5,7 +5,7 @@
     class="table-row"
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
-    <div v-if="opp" :class="showIcons ? 'hovered' : ''" class="table-cell-checkbox">
+    <!-- <div v-if="opp" :class="showIcons ? 'hovered' : ''" class="table-cell-checkbox">
       <div
         v-if="
           updateList.includes(opp.id) ||
@@ -25,10 +25,26 @@
         />
         <label :for="index"></label>
       </div>
-    </div>
+    </div> -->
 
     <div :class="showIcons ? 'hovered' : ''" class="cell-name">
+      <!-- flex-row-spread -->
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
+        <div v-if="showIcons" class="flex-row">
+          <div>
+            <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
+              <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
+            </button>
+          </div>
+
+          <div>
+            <button @click="emitGetNotes" class="name-cell-note-button-1">
+              <img class="gray" height="12px" src="@/assets/images/note.svg" />
+            </button>
+          </div>
+        </div>
+        <div v-else class="flex-row-spread" style="width: 4rem; height: .75rem;"></div>
+
         <div>
           <div
             class="flex-column"
@@ -47,22 +63,6 @@
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
-        </div>
-
-        <div v-show="showIcons" class="flex-row">
-          <div>
-            <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
-              <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
-            </button>
-            <!-- <span class="tooltiptext">Expand</span> -->
-          </div>
-
-          <div>
-            <button @click="emitGetNotes" class="name-cell-note-button-1">
-              <img class="gray" height="12px" src="@/assets/images/note.svg" />
-            </button>
-            <!-- <span class="tooltiptext">Notes</span> -->
-          </div>
         </div>
       </div>
     </div>
@@ -887,12 +887,14 @@ input {
 
 .table-row {
   display: table-row;
-  height: 7vh;
+  height: 4vh;
 }
 .empty {
   display: table-cell;
   position: sticky;
   min-width: 12vw;
+  border-bottom: 1px solid $soft-gray;
+  padding: 0px 4px;
 }
 .selected {
   color: $dark-green !important;
@@ -900,24 +902,26 @@ input {
 .table-cell {
   display: table-cell;
   position: sticky;
-  min-width: 16vw;
-  border: none;
+  min-width: 8vw;
+  // width: 10vw;
+  width: fit-content;
+  border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding-left: 4px;
 }
 .cell-name {
-  min-width: 18vw;
+  min-width: 12vw;
   display: table-cell;
   background-color: white;
   color: $base-gray;
   letter-spacing: 0.25px;
   position: sticky;
-  left: 3.5vw;
+  left: 0vw;
   z-index: 2;
   padding: 0px 4px;
   line-height: 1.1;
   font-size: 13px;
-  border: none;
+  border-bottom: 1px solid $soft-gray;
 }
 .cell-end {
   display: table-cell;
@@ -935,8 +939,8 @@ input {
 .table-cell-wide {
   display: table-cell;
   position: sticky;
-  min-width: 26vw;
-  border: none;
+  min-width: 22vw;
+  border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding-left: 4px;
 }
@@ -954,7 +958,7 @@ input {
 }
 .table-cell-checkbox {
   display: table-cell;
-  padding: 2vh;
+  padding: 0 2vh;
   width: 3.75vw;
   border: none;
   left: 0;
@@ -968,7 +972,7 @@ input {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  // justify-content: space-between;
 }
 .flex-column {
   display: flex;
@@ -979,8 +983,8 @@ input {
 .flex-row {
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
-  align-items: flex-end;
+  // justify-content: flex-end;
+  // align-items: flex-end;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -1065,4 +1069,7 @@ input[type='checkbox'] + label::before {
 // .mar-left {
 //   margin-left: 8px;
 // }
+.blank {
+  // margin: 0;
+}
 </style>
