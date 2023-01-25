@@ -722,14 +722,14 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
             for event in processed_data:
-                title = event.get("title", None)
-                workflow_check = workflows.filter(meeting__topic=title).first()
+                id = event.get("id", None)
+                workflow_check = workflows.filter(meeting__meeting_id=id).first()
                 register_check = should_register_this_meetings(user_id, event)
+                meeting_data = {
+                    **event,
+                    "user": user,
+                }
                 if workflow_check is None and register_check:
-                    meeting_data = {
-                        **event,
-                        "user": user,
-                    }
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -739,6 +739,12 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
                     meeting_workflow = MeetingWorkflow.objects.create(
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
+                else:
+                    meeting_serializer = MeetingSerializer(
+                        instance=workflow_check.meeting, data=meeting_data
+                    )
+                    meeting_serializer.is_valid(raise_exception=True)
+                    meeting_serializer.save()
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id), "date": date})
         else:
             todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")

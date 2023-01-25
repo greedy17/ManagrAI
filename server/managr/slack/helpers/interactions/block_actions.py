@@ -3228,7 +3228,7 @@ def process_view_recap(payload, context):
         field = form_fields.filter(field__api_name=key).first()
         if not field:
             continue
-        field_label = field.field.reference_display_label
+        field_label = field.field.reference_display_label.capitalize()
         if main_form.template.form_type == "UPDATE":
             # Only sends values for fields that have been updated
             # all fields on update form are included by default users cannot edit
@@ -3266,8 +3266,15 @@ def process_view_recap(payload, context):
                 if len(str(new_value)) > 255:
                     new_value = str(new_value)[:256]
                 if user.crm == "HUBSPOT":
-                    if field.data_type == "DateTime":
+                    if field.field.data_type in ["DateTime", "Date"]:
                         new_value = str(new_value)[:10]
+                    if field.field.api_name == "dealstage":
+                        deal_stages = field.field.options[0][
+                            main_form.resource_object.secondary_data.get("pipeline")
+                        ]["stages"]
+                        new_value = [
+                            stage["label"] for stage in deal_stages if stage["id"] == new_value
+                        ][0]
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"
