@@ -998,6 +998,7 @@ input {
 .flex-row {
   display: flex;
   flex-direction: row;
+  padding-left: 4px;
   // justify-content: flex-end;
   // align-items: flex-end;
 }
