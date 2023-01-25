@@ -204,13 +204,10 @@ def check_for_time(tz, hour, minute):
     )
     min = 00 if minute >= 30 else 30
     hr = hour - 1 if minute < 30 else hour
-    if settings.IN_STAGING and hour == 7 and minute == 30:
-        logger.info(
-            f"Check for time info:\nCurrent: {current}\nLess Than: {current.replace(hour=hour, minute=minute)}\nGreater: {current.replace(hour=hour, minute=minute)}"
-        )
-    return current < current.replace(hour=hour, minute=minute) and current > current.replace(
-        hour=hr, minute=min
-    )
+    current = current.replace(hour=hour)
+    return current < current.replace(
+        hour=hour, minute=minute, second=0, microsecond=0
+    ) and current > current.replace(hour=hr, minute=min, second=0, microsecond=0)
 
 
 def check_for_uncompleted_meetings(user_id, org_level=False):
@@ -715,7 +712,7 @@ def process_current_alert_list(user_id):
 
 
 @background()
-def _process_calendar_meetings(user_id, slack_interaction, date):
+def _process_calendar_meetings(user_id, slack_int, date):
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
         try:
@@ -725,15 +722,18 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
             processed_data = None
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
+            slack_interaction_check = set([workflow.slack_interaction for workflow in workflows])
+            if len(list(slack_interaction_check)):
+                slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
-                title = event.get("title", None)
-                workflow_check = workflows.filter(meeting__topic=title).first()
+                id = event.get("id", None)
+                workflow_check = workflows.filter(meeting__meeting_id=id).first()
                 register_check = should_register_this_meetings(user_id, event)
+                meeting_data = {
+                    **event,
+                    "user": user,
+                }
                 if workflow_check is None and register_check:
-                    meeting_data = {
-                        **event,
-                        "user": user,
-                    }
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -743,6 +743,12 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
                     meeting_workflow = MeetingWorkflow.objects.create(
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
+                else:
+                    meeting_serializer = MeetingSerializer(
+                        instance=workflow_check.meeting, data=meeting_data
+                    )
+                    meeting_serializer.is_valid(raise_exception=True)
+                    meeting_serializer.save()
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id), "date": date})
         else:
             todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")
@@ -760,24 +766,24 @@ def _process_calendar_meetings(user_id, slack_interaction, date):
                 ),
             ]
         try:
-            if slack_interaction:
-                timestamp, channel = slack_interaction.split("|")
+            if slack_int:
+                timestamp, channel = slack_int.split("|")
                 slack_res = slack_requests.update_channel_message(
                     channel,
                     timestamp,
                     user.organization.slack_integration.access_token,
                     block_set=blocks,
                 )
-                slack_int = slack_interaction
+                slack_interaction = slack_int
             else:
                 slack_res = slack_requests.send_channel_message(
                     user.slack_integration.zoom_channel,
                     user.organization.slack_integration.access_token,
                     block_set=blocks,
                 )
-                slack_int = f"{slack_res['ts']}|{slack_res['channel']}"
+                slack_interaction = f"{slack_res['ts']}|{slack_res['channel']}"
             workflows = MeetingWorkflow.objects.for_user(user)
-            workflows.update(slack_interaction=slack_int)
+            workflows.update(slack_interaction=slack_interaction)
         except Exception as e:
             logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     return
@@ -1056,11 +1062,16 @@ def timezone_tasks(user_id):
     else:
         tasks = core_consts.TIMEZONE_TASK_TIMES
     user = User.objects.get(id=user_id)
+    logger_str = f"{user.email} - {datetime.now()} - "
     for key in tasks.keys():
+        key_str = f"{key}: False, "
         check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
         if check:
+            key_str = f"{key}: True, "
             verbose_name = f"{key}-{user.email}-{str(uuid.uuid4())}"
             TIMEZONE_TASK_FUNCTION[key](user_id, verbose_name)
+        logger_str += key_str
+    logger.info(logger_str)
     return
 
 

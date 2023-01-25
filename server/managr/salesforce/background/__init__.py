@@ -730,32 +730,34 @@ def _process_create_resource_from_meeting(workflow_id, *args):
             from managr.salesforce.adapter.routes import routes as adapter_routes
             from managr.salesforce.routes import routes as model_routes
 
-            adapter = adapter_routes.get(resource_type)
-            object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
-                "api_name", flat=True
-            )
-            res = adapter.create(
-                data, sf.access_token, object_fields, str(user.id), sf.instance_url
-            )
-            serializer = model_routes.get(resource_type)["serializer"](data=res.as_dict)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            create_forms.update(
-                is_submitted=True,
-                submission_date=timezone.now(),
-                update_source="meeting",
-                resource_id=serializer.instance.id,
-            )
+            if len(create_forms):
+                adapter = adapter_routes.get(resource_type)
+                object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
+                    "api_name", flat=True
+                )
+                res = adapter.create(
+                    data, sf.access_token, object_fields, str(user.id), sf.instance_url
+                )
+                serializer = model_routes.get(resource_type)["serializer"](data=res.as_dict)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                create_forms.update(
+                    is_submitted=True,
+                    submission_date=timezone.now(),
+                    update_source="meeting",
+                    resource_id=serializer.instance.id,
+                )
+                workflow.resource_id = serializer.instance.id
+                workflow.save()
             if len(custom_object_forms):
-                sf.create_custom_object(
+                res = sf.create_custom_object(
                     custom_object_data_collector,
                     sf.access_token,
                     sf.instance_url,
                     sf.salesforce_id,
                     custom_object_forms.first().template.custom_object,
                 )
-            workflow.resouce_id = serializer.instance.id
-            workflow.save()
+
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -871,7 +873,9 @@ def _process_add_call_to_sf(workflow_id, *args):
         return logger.exception(f"User not found unable to log call {str(user.id)}")
     if not hasattr(user, "salesforce_account"):
         return logger.exception("User does not have a salesforce account cannot push to sf")
-    review_form = workflow.forms.filter(template__form_type=slack_consts.FORM_TYPE_UPDATE).first()
+    review_form = workflow.forms.filter(
+        template__form_type__in=[slack_consts.FORM_TYPE_UPDATE, slack_consts.FORM_TYPE_CREATE]
+    ).first()
     subject = review_form.saved_data.get("meeting_type")
     description = review_form.saved_data.get("meeting_comments")
     user_timezone = user.timezone

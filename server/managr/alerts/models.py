@@ -720,7 +720,7 @@ class AlertInstance(TimeStampModel):
                                     binding_map[binding] = (
                                         value_option[0]["label"] if len(value_option) else "~None~"
                                     )
-                                if field and field.data_type == "DateTime":
+                                if field and field.data_type in ["DateTime", "Date"]:
                                     binding_map[binding] = binding_map[binding][0:10]
                                 if field and field.data_type == "Reference":
                                     relationship = field.reference_to_infos[0]["api_name"]
