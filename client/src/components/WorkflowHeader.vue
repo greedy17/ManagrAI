@@ -1,6 +1,6 @@
 <template>
   <div class="table-row">
-    <div style="padding: 2vh" class="table-cell-checkbox-header">
+    <!-- <div style="padding: 2vh" class="table-cell-checkbox-header">
       <div>
         <input
           @click="emitCheckAll"
@@ -10,7 +10,7 @@
         />
         <label for="checkAllWorkflows"></label>
       </div>
-    </div>
+    </div> -->
 
     <div
       @click="
@@ -394,7 +394,7 @@ export default {
   border-bottom: 1px solid $light-orange-gray;
   border-radius: 2px;
   z-index: 3;
-  left: 3.5vw;
+  // left: 1vw;
   top: 0;
   position: sticky;
   background-color: white;

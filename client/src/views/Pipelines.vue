@@ -2369,7 +2369,7 @@
             <SkeletonBox width="400px" height="22px" />
           </div>
         </div>
-        <div class="flex-row">
+        <div style="margin-right: -12px" class="flex-row">
           <div class="tooltip">
             <button @click="manualSync" class="select-btn">
               <img src="@/assets/images/cloud.svg" style="height: 26px" alt="" />
@@ -2697,6 +2697,11 @@
           <div
             v-show="currentCell == i && currentInlineRow == j && editingInline"
             class="inline-edit"
+            :style="
+              field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
+                ? 'width: 32vw;'
+                : ''
+            "
           >
             <div class="inline-edit__header">
               <h4>
@@ -5572,6 +5577,7 @@ export default {
   border-radius: 8px;
   margin-left: 2px;
   width: 25vw;
+  // width: 32vw;
 
   &__header {
     display: flex;
@@ -6131,12 +6137,13 @@ h3 {
   margin: 0;
   padding: 0;
   min-height: 50vh;
-  max-height: 88vh;
+  max-height: 91vh;
+  width: 93vw;
   overflow: scroll;
   border-radius: 12px;
   border: 1px solid #e8e8e8;
   border-collapse: separate;
-  border-spacing: 3px;
+  // border-spacing: 3px;
   background-color: white;
 }
 .table-section::-webkit-scrollbar {
@@ -6468,7 +6475,7 @@ section {
   justify-content: flex-start;
 }
 .pipelines {
-  padding: 28px 0px 0px 72px;
+  padding: 20px 0px 0px 56px;
   color: $base-gray;
   margin: 0 1rem 0 0.5rem;
   letter-spacing: 0.75px !important;
@@ -6573,11 +6580,13 @@ section {
 }
 #user-input-wide-inline {
   border: 1px solid #e8e8e8;
-  height: 140px;
+  // height: 140px;
+  height: 180px;
   border-radius: 8px;
   background-color: white;
   min-height: 2.5rem;
-  width: 23vw;
+  // width: 23vw;
+  width: 30vw;
   font-family: $base-font-family;
   letter-spacing: 0.75px;
   padding: 8px 12px;
@@ -6700,7 +6709,7 @@ main:hover > span {
 .list-section {
   z-index: 4;
   position: absolute;
-  top: 10vh;
+  top: 8vh;
   left: 88px;
   border-radius: 6px;
   display: flex;
