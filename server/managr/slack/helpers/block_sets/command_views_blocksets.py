@@ -327,11 +327,12 @@ def update_modal_block_set(context, *args, **kwargs):
             id__in=form_ids, template__form_type__in=["UPDATE", "CREATE"]
         ).first()
     user = User.objects.get(id=user_id)
+    resource_opts = resource_options(user.crm)
     blocks = []
     blocks.append(
         block_builders.static_select(
             "Related to type",
-            resource_options(user.crm),
+            resource_opts,
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
@@ -381,10 +382,17 @@ def update_meeting_block_set(context, *args, **kwargs):
     type = context.get("type")
     user = User.objects.get(id=user_id)
     blocks = []
+    resource_opts = resource_options(user.crm)
+    if len(user.crm_account.custom_objects):
+        custom_options = [
+            block_builders.option(custom_obj, custom_obj)
+            for custom_obj in user.crm_account.custom_objects
+        ]
+        resource_opts.extend(custom_options)
     blocks.append(
         block_builders.static_select(
             "Related to type",
-            resource_options(user.crm),
+            resource_opts,
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}&w={context.get('w')}",
             block_id="managr_task_related_to_resource",
             initial_option=block_builders.option(resource_type, resource_type)
@@ -399,6 +407,7 @@ def update_meeting_block_set(context, *args, **kwargs):
                 "value": f'CREATE_NEW.{context.get("resource")}',
             }
         ]
+
         blocks.append(
             block_builders.external_select(
                 f"*Search for an {context.get('resource_type')}*",
@@ -420,16 +429,27 @@ def create_modal_block_set(context, *args, **kwargs):
 
     user_id = context.get("u")
     form_id = context.get("f")
-
+    user = User.objects.get(id=user_id)
     blocks = []
-
     if form_id:
         slack_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-        form_blocks = slack_form.generate_form(
-            slack_form.saved_data
-        )  # optionally pass any saved data from this form
+        form_blocks = slack_form.generate_form()
         if len(form_blocks):
             blocks = [*form_blocks]
+            if len(user.crm_account.custom_objects) > 0:
+                params = [
+                    f"f={str(slack_form.id)}",
+                    f"u={user_id}",
+                    "type=command",
+                ]
+                custom_object_button = block_builders.simple_button_block(
+                    "Add Custom Object",
+                    "ADD_CUSTOM_OBJECT",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_PICK_CUSTOM_OBJECT, params=params,
+                    ),
+                )
+                blocks.append(block_builders.actions_block([custom_object_button]))
         else:
 
             blocks = [
