@@ -556,6 +556,7 @@ a:hover span {
 .header {
   position: fixed;
   z-index: 100;
+  margin-left: -12px;
   top: 0;
   background-color: $white;
   width: 96vw;

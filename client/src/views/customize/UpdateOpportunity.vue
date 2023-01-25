@@ -3,7 +3,9 @@
     <CustomSlackForm
       :formType="UPDATE"
       :customForm="
-        (this.selectedForm = this.allForms.find((f) => f.resource == currentResource && f.formType == UPDATE))
+        (this.selectedForm = this.allForms.find(
+          (f) => f.resource == currentResource && f.formType == UPDATE,
+        ))
       "
       :resource="currentResource"
       v-on:update:selectedForm="updateForm($event)"
@@ -133,8 +135,12 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          const form = this.allForms.find((f) => f.resource == this.currentResource && f.formType == this.UPDATE)
-          const hsPicklist = form.fieldsRef.filter(item => query_params.picklistFor === item.apiName)
+          const form = this.allForms.find(
+            (f) => f.resource == this.currentResource && f.formType == this.UPDATE,
+          )
+          const hsPicklist = form.fieldsRef.filter(
+            (item) => query_params.picklistFor === item.apiName,
+          )
           this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
@@ -154,7 +160,7 @@ export default {
 .update_opportunity {
   color: $base-gray;
   // overflow: auto;
-  padding-left: 72px;
+  padding-left: 60px;
 }
 
 .opportunity_title {

@@ -9,7 +9,12 @@
 
     <div
       @click="
-        $emit('sort-opps', 'String', userCRM === 'SALESFORCE' ? 'Name' : 'dealname', userCRM === 'SALESFORCE' ? 'name' : 'dealname'),
+        $emit(
+          'sort-opps',
+          'String',
+          userCRM === 'SALESFORCE' ? 'Name' : 'dealname',
+          userCRM === 'SALESFORCE' ? 'name' : 'dealname',
+        ),
           (sortingForward = false),
           (nameSort = 1),
           (sortingIndex = null),
@@ -29,7 +34,12 @@
 
     <div
       @click="
-        $emit('sort-opps-reverse', 'String', userCRM === 'SALESFORCE' ? 'Name' : 'dealname', userCRM === 'SALESFORCE' ? 'name' : 'dealname'),
+        $emit(
+          'sort-opps-reverse',
+          'String',
+          userCRM === 'SALESFORCE' ? 'Name' : 'dealname',
+          userCRM === 'SALESFORCE' ? 'name' : 'dealname',
+        ),
           (sortingForward = true),
           (nameSort = 2),
           (sortingIndex = null),
@@ -193,7 +203,13 @@
 
     <div class="table-cell-header-end">
       <div class="direction-row" @click="addField">
-        <img src="@/assets/images/plusOne.svg" height="20px" style="filter: invert(30%)" alt="" />
+        <img
+          src="@/assets/images/plusOne.svg"
+          height="22px"
+          width="auto"
+          style="filter: invert(30%)"
+          alt=""
+        />
       </div>
 
       <div v-if="addingField" class="add-field-section">
@@ -357,7 +373,7 @@ export default {
   z-index: 5;
   position: absolute;
   right: 0.5rem;
-  top: 9vh;
+  top: 7vh;
   border-radius: 0.33rem;
   display: flex;
   flex-direction: column;
@@ -513,18 +529,21 @@ export default {
   color: $base-gray;
 }
 .direction-row {
-  width: 40px;
+  width: 36px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   cursor: pointer;
+  img {
+    padding-top: 4px;
+  }
 }
 .cell-name-header {
   display: table-cell;
   // padding-left: 4px;
   padding-left: 4.25rem;
-  border: none;
+  border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
   z-index: 3;
   left: 0vw;
@@ -539,8 +558,8 @@ export default {
 }
 .table-cell-header {
   display: table-cell;
-  padding-left: 4px;
-  border: none;
+  padding-left: 12px;
+  border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
   z-index: 2;
   top: 0;

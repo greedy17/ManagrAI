@@ -398,9 +398,11 @@
                       "
                     >
                       <div style="justify-self: start">
-                        <div style="font-weight: 900; font-size: 0.75rem; display: flex;">
+                        <div style="font-weight: 900; font-size: 0.75rem; display: flex">
                           <img src="@/assets/images/drag.svg" alt="" />
-                          <div style="margin-top: 0.25rem; margin-left: 0.5rem;">{{ message.title }}</div>
+                          <div style="margin-top: 0.25rem; margin-left: 0.5rem">
+                            {{ message.title }}
+                          </div>
                         </div>
                         <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                       </div>
@@ -648,7 +650,13 @@ export default {
     dragEnd() {
       const slackMesArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
-        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+        slackMesArr.push(
+          '<strong>' +
+            this.formattedSlackMessage[i].title +
+            '</strong> \n { ' +
+            this.formattedSlackMessage[i].val +
+            ' }',
+        )
       }
       this.slackMessage = slackMesArr
       this.config.messageTemplate.body = this.slackMessage.join('\n\n')
@@ -1206,7 +1214,7 @@ export default {
   position: fixed;
   z-index: 10;
   top: 0;
-  left: 72px;
+  left: 60px;
   background-color: $white;
   width: 96vw;
   border-bottom: 1px solid $soft-gray;
