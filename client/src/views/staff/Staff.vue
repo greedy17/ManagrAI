@@ -15,52 +15,54 @@
           <div class="modal-container__body">
             <div class="" style="margin-bottom: 1rem">
               <div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Task Params:</span>
                   {{ modalInfo.fields.task_params ? modalInfo.fields.task_params : 'Null' }}
                 </div>
                 <div>
                   <span class="">Task Hash:</span>
-                    {{ modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null' }} |
+                  {{ modalInfo.fields.task_hash ? modalInfo.fields.task_hash : 'Null' }} |
                 </div>
                 <div>
                   <span class="">Verbose Name:</span>
-                    {{ modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null' }} |
+                  {{ modalInfo.fields.verbose_name ? modalInfo.fields.verbose_name : 'Null' }} |
                 </div>
                 <div>
                   <span class="">Priority:</span>
-                    {{
-                      modalInfo.fields.priority || modalInfo.fields.priority === 0
-                        ? modalInfo.fields.priority
-                        : 'Null'
-                    }} |
+                  {{
+                    modalInfo.fields.priority || modalInfo.fields.priority === 0
+                      ? modalInfo.fields.priority
+                      : 'Null'
+                  }}
+                  |
                   <span class="">Run At:</span>
-                    {{ modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null' }} |
+                  {{ modalInfo.fields.run_at ? modalInfo.fields.run_at : 'Null' }} |
                   <span class="">Repeat:</span>
-                    {{
-                      modalInfo.fields.repeat || modalInfo.fields.repeat === 0
-                        ? modalInfo.fields.repeat
-                        : 'Null'
-                    }} |
+                  {{
+                    modalInfo.fields.repeat || modalInfo.fields.repeat === 0
+                      ? modalInfo.fields.repeat
+                      : 'Null'
+                  }}
+                  |
                   <span class="">Repeat Until:</span>
-                    {{ modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null' }} |
+                  {{ modalInfo.fields.repeat_until ? modalInfo.fields.repeat_until : 'Null' }} |
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Queue:</span>
-                    {{ modalInfo.fields.queue ? modalInfo.fields.queue : 'Null' }} |
+                  {{ modalInfo.fields.queue ? modalInfo.fields.queue : 'Null' }} |
                   <span class="">Attempts:</span>
                   {{ modalInfo.fields.attempts }}
                 </div>
               </div>
               <div v-if="modalInfo.fields.failed_at">
                 <div class="separator"></div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Failed At:</span>
-                    {{ modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null' }}
+                  {{ modalInfo.fields.failed_at ? modalInfo.fields.failed_at : 'Null' }}
                 </div>
-                <div style="margin-bottom: 0.5rem; color: #fa646a;">
+                <div style="margin-bottom: 0.5rem; color: #fa646a">
                   <span class="" style="color: black">Last Error:</span>
-                  <div style="margin-left: 0.5rem;">
+                  <div style="margin-left: 0.5rem">
                     {{ modalInfo.fields.last_error ? modalInfo.fields.last_error : 'Null' }}
                   </div>
                 </div>
@@ -68,21 +70,22 @@
               <div class="separator"></div>
               <div>
                 <span class="">Locked By:</span>
-                  {{ modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null' }} |
+                {{ modalInfo.fields.locked_by ? modalInfo.fields.locked_by : 'Null' }} |
                 <span class="">Locked At:</span>
-                  {{ modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null' }} |
+                {{ modalInfo.fields.locked_at ? modalInfo.fields.locked_at : 'Null' }} |
               </div>
               <div>
                 <span class="">Creator Content Type:</span>
-                  {{
-                    modalInfo.fields.creator_content_type
-                      ? modalInfo.fields.creator_content_type
-                      : 'Null'
-                  }} |
+                {{
+                  modalInfo.fields.creator_content_type
+                    ? modalInfo.fields.creator_content_type
+                    : 'Null'
+                }}
+                |
                 <span class="">Creator Object ID:</span>
-                  {{
-                    modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'
-                  }}
+                {{
+                  modalInfo.fields.creator_object_id ? modalInfo.fields.creator_object_id : 'Null'
+                }}
               </div>
             </div>
           </div>
@@ -120,7 +123,8 @@
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
                 <h4>
-                  {{ modalInfo.template_ref ? modalInfo.template_ref.resource : '--' }} {{ modalInfo.template_ref ? modalInfo.template_ref.form_type : '' }} by
+                  {{ modalInfo.template_ref ? modalInfo.template_ref.resource : '--' }}
+                  {{ modalInfo.template_ref ? modalInfo.template_ref.form_type : '' }} by
                   {{ getUserName(modalInfo.user) }}
                 </h4>
               </div>
@@ -145,13 +149,13 @@
                   <span class="">Update Source:</span>
                   {{ modalInfo.update_source ? modalInfo.update_source : 'None' }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">User ID:</span>
                   {{ modalInfo.user ? modalInfo.user : 'None' }} |
                   <span class="">Template ID:</span>
                   {{ modalInfo.template ? modalInfo.template : 'None' }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Saved Data:</span>
                   <!-- {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }} -->
                   <div v-for="(value,propertyName) in modalInfo.saved_data" :key="value" style="margin-left: 1rem;">
@@ -167,11 +171,15 @@
                 </div>
                 <div>
                   <span class="">Previous Data:</span>
-                  <div v-for="(value,propertyName) in modalInfo.previous_data" :key="value" style="margin-left: 1rem;">
-                    {{propertyName}}: <span 
-                    @click="test(modalInfo.saved_data[propertyName] !== value)" 
-                    :class="''"
-                    >{{ `${value}` }}</span>
+                  <div
+                    v-for="(value, propertyName) in modalInfo.previous_data"
+                    :key="value"
+                    style="margin-left: 1rem"
+                  >
+                    {{ propertyName }}:
+                    <span @click="test(modalInfo.saved_data[propertyName] !== value)" :class="''">{{
+                      `${value}`
+                    }}</span>
                     <!-- (
                       modalInfo.saved_data[propertyName] && 
                       modalInfo.saved_data[propertyName] !== value
@@ -208,8 +216,8 @@
                 }}
               </p>
               <!-- <br /> -->
-              <p class="note-section__date" style="margin-top: -10px;">
-                End Time: <span style="color: white;">{{' . '}}</span>
+              <p class="note-section__date" style="margin-top: -10px">
+                End Time: <span style="color: white">{{ ' . ' }}</span>
                 {{
                   modalInfo.meeting_ref.end_time
                     ? `${weekDay(modalInfo.meeting_ref.end_time)} ${formatDateTime(
@@ -223,9 +231,12 @@
                   <span class="">Meeting UUID: </span
                   >{{
                     modalInfo.meeting_ref.meeting_uuid ? modalInfo.meeting_ref.meeting_uuid : 'None'
-                  }} |
-                  <span class="">Account ID: </span
-                  >{{ modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None' }} |
+                  }}
+                  | <span class="">Account ID: </span
+                  >{{
+                    modalInfo.meeting_ref.account_id ? modalInfo.meeting_ref.account_id : 'None'
+                  }}
+                  |
                 </div>
                 <div>
                   <span class="">Host ID: </span
@@ -233,15 +244,16 @@
                   <span class="">Operator ID: </span
                   >{{
                     modalInfo.meeting_ref.operator_id ? modalInfo.meeting_ref.operator_id : 'None'
-                  }} |
+                  }}
+                  |
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Status: </span
                   >{{ modalInfo.meeting_ref.status ? modalInfo.meeting_ref.status : 'None' }} |
                   <span class="">Timezone: </span
                   >{{ modalInfo.meeting_ref.timezone ? modalInfo.meeting_ref.timezone : 'None' }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Start URL: </span
                   >{{ modalInfo.meeting_ref.start_url ? modalInfo.meeting_ref.start_url : 'None' }}
                 </div>
@@ -253,40 +265,55 @@
                     modalInfo.meeting_ref.original_duration
                       ? modalInfo.meeting_ref.original_duration
                       : 'None'
-                  }} |
+                  }}
+                  |
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Total Minutes: </span
                   >{{
-                    modalInfo.meeting_ref.total_minutes ? modalInfo.meeting_ref.total_minutes : 'None'
-                  }} |
-                  <span class="">Recurrence: </span
-                  >{{ modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None' }}
+                    modalInfo.meeting_ref.total_minutes
+                      ? modalInfo.meeting_ref.total_minutes
+                      : 'None'
+                  }}
+                  | <span class="">Recurrence: </span
+                  >{{
+                    modalInfo.meeting_ref.recurrence ? modalInfo.meeting_ref.recurrence : 'None'
+                  }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Join URL: </span
                   >{{ modalInfo.meeting_ref.join_url ? modalInfo.meeting_ref.join_url : 'None' }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Operator: </span
                   >{{ modalInfo.meeting_ref.operator ? modalInfo.meeting_ref.operator : 'None' }} |
                   <span class="">Operation: </span
                   >{{ modalInfo.meeting_ref.operation ? modalInfo.meeting_ref.operation : 'None' }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Participants: </span>
-                  <div v-for="(participant,i) in modalInfo.meeting_ref.participants" :key="i" style="margin-left: 0.5rem;">
-                    {{ i+1 }}: 
-                    <div v-for="(value,propertyName) in participant" :key="propertyName" style="margin-left: 1rem;">
+                  <div
+                    v-for="(participant, i) in modalInfo.meeting_ref.participants"
+                    :key="i"
+                    style="margin-left: 0.5rem"
+                  >
+                    {{ i + 1 }}:
+                    <div
+                      v-for="(value, propertyName) in participant"
+                      :key="propertyName"
+                      style="margin-left: 1rem"
+                    >
                       <div v-if="propertyName === 'secondary_data'">
-                        {{ propertyName }}: 
-                        <div v-for="(data, secondaryName) in value" :key="secondaryName" style="margin-left: 1.5rem;">
+                        {{ propertyName }}:
+                        <div
+                          v-for="(data, secondaryName) in value"
+                          :key="secondaryName"
+                          style="margin-left: 1.5rem"
+                        >
                           {{ secondaryName }}: {{ `${data}` }}
                         </div>
                       </div>
-                      <div v-else>
-                        {{ propertyName }}: {{ `${value}` }}
-                      </div>
+                      <div v-else>{{ propertyName }}: {{ `${value}` }}</div>
                     </div>
                   </div>
                   <!-- {{
@@ -327,12 +354,12 @@
                 User:
                 {{ modalInfo.user ? getUserName(modalInfo.user) : 'N/A' }}
               </p> -->
-              <p class="note-section__date" style="margin-top: -10px;">
+              <p class="note-section__date" style="margin-top: -10px">
                 Is Active:
                 {{ modalInfo.is_active ? modalInfo.is_active : 'N/A' }}
               </p>
               <div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">User: </span
                   >{{ modalInfo.user ? getUserName(modalInfo.user) : 'N/A' }} |
                   <span class="">Alert Level: </span
@@ -340,45 +367,44 @@
                   <span class="">Resource Type: </span
                   >{{ modalInfo.resource_type ? modalInfo.resource_type : 'None' }}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Configs: </span>
-                  <div v-for="(config, i) in modalInfo.configs_ref" :key="i" style="margin-left: 0.5rem;">
-                    {{ i+1 }}:
-                    <div style="margin-left: 1rem;">
-                      <div>
-                        ID: {{ config.id }}
-                      </div>
-                      <div>
-                        Recurrence Frequency: {{ config.recurrence_frequency }}
-                      </div>
-                      <div>
-                        Recurrence Day: {{ weekdays[config.recurrence_day] }}
-                      </div>
-                      <div>
-                        Recurrence Days: {{ getWeekdays(config.recurrence_days) }}
-                      </div>
-                      <div>
-                        Recipients: {{ config.recipients }}
-                      </div>
-                      <div>
-                        Recipient Type: {{ config.recipient_type }}
-                      </div>
-                      <div>
-                        Template: {{ config.template }}
-                      </div>
-                      <div>
-                        Alert Targets: {{ config.alert_targets }}
-                      </div>
+                  <div
+                    v-for="(config, i) in modalInfo.configs_ref"
+                    :key="i"
+                    style="margin-left: 0.5rem"
+                  >
+                    {{ i + 1 }}:
+                    <div style="margin-left: 1rem">
+                      <div>ID: {{ config.id }}</div>
+                      <div>Recurrence Frequency: {{ config.recurrence_frequency }}</div>
+                      <div>Recurrence Day: {{ weekdays[config.recurrence_day] }}</div>
+                      <div>Recurrence Days: {{ getWeekdays(config.recurrence_days) }}</div>
+                      <div>Recipients: {{ config.recipients }}</div>
+                      <div>Recipient Type: {{ config.recipient_type }}</div>
+                      <div>Template: {{ config.template }}</div>
+                      <div>Alert Targets: {{ config.alert_targets }}</div>
                     </div>
                   </div>
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem">
                   <span class="">Groups: </span>
-                  <div v-for="(group, i) in modalInfo.groups_ref" :key="i" style="margin-left: 0.5rem; margin-bottom: 1rem;">
+                  <div
+                    v-for="(group, i) in modalInfo.groups_ref"
+                    :key="i"
+                    style="margin-left: 0.5rem; margin-bottom: 1rem"
+                  >
                     <div>Order: {{ group.group_order }}</div>
                     <div>Condition: {{ group.group_condition }}</div>
-                    <div v-for="(operand, i) in group.operands_ref" :key="i" style="margin-left: 1rem">
-                      {{ operand.operand_order }} - {{ operand.operand_identifier }} {{ operand.operand_operator }} {{ operand.operand_value }} ({{ operand.data_type }}) {{ operand.operand_condition }}
+                    <div
+                      v-for="(operand, i) in group.operands_ref"
+                      :key="i"
+                      style="margin-left: 1rem"
+                    >
+                      {{ operand.operand_order }} - {{ operand.operand_identifier }}
+                      {{ operand.operand_operator }} {{ operand.operand_value }} ({{
+                        operand.data_type
+                      }}) {{ operand.operand_condition }}
                     </div>
                   </div>
                 </div>
@@ -434,7 +460,8 @@
                     modalInfo.slack_account && modalInfo.slack_account.channel
                       ? modalInfo.slack_account.channel
                       : 'None'
-                  }} |
+                  }}
+                  |
                 </div>
                 <div>
                   <span class="">Organization Slack:</span>
@@ -447,7 +474,8 @@
                     modalInfo.slack_account && modalInfo.slack_account.recap_channel
                       ? modalInfo.slack_account.recap_channel
                       : 'None'
-                  }} |
+                  }}
+                  |
                   <span class="">Recap Recievers:</span>
                   {{
                     modalInfo.slack_account && modalInfo.slack_account.recap_receivers
@@ -467,7 +495,8 @@
                 <div style="margin-bottom: 0.5rem">
                   <span class="">SFDC ID:</span>
                   {{
-                    modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.salesforce_id
+                    modalInfo.salesforce_account_ref &&
+                    modalInfo.salesforce_account_ref.salesforce_id
                       ? modalInfo.salesforce_account_ref.salesforce_id
                       : 'None'
                   }}
@@ -483,7 +512,8 @@
                 <div style="margin-bottom: 0.5rem">
                   <span class="">Instance URL:</span>
                   {{
-                    modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.instance_url
+                    modalInfo.salesforce_account_ref &&
+                    modalInfo.salesforce_account_ref.instance_url
                       ? modalInfo.salesforce_account_ref.instance_url
                       : 'None'
                   }}
@@ -491,7 +521,8 @@
                 <div>
                   <span class="">Access Token:</span>
                   {{
-                    modalInfo.salesforce_account_ref && modalInfo.salesforce_account_ref.access_token
+                    modalInfo.salesforce_account_ref &&
+                    modalInfo.salesforce_account_ref.access_token
                       ? modalInfo.salesforce_account_ref.access_token
                       : 'None'
                   }}
@@ -509,13 +540,15 @@
                     modalInfo.nylas_ref && modalInfo.nylas_ref.access_token
                       ? modalInfo.nylas_ref.access_token
                       : 'None'
-                  }} |
+                  }}
+                  |
                   <span class="">Email:</span>
                   {{
                     modalInfo.nylas_ref && modalInfo.nylas_ref.email_address
                       ? modalInfo.nylas_ref.email_address
                       : 'None'
-                  }} |
+                  }}
+                  |
                 </div>
                 <div>
                   <span class="">Event Calendar ID:</span>
@@ -523,7 +556,8 @@
                     modalInfo.nylas_ref && modalInfo.nylas_ref.event_calendar_id
                       ? modalInfo.nylas_ref.event_calendar_id
                       : 'None'
-                  }} |
+                  }}
+                  |
                   <span class="">Provider:</span>
                   {{
                     modalInfo.nylas_ref && modalInfo.nylas_ref.provider
@@ -544,7 +578,8 @@
                     modalInfo.zoom_ref && modalInfo.zoom_ref.zoom_id
                       ? modalInfo.zoom_ref.zoom_id
                       : 'None'
-                  }} |
+                  }}
+                  |
                   <span class="">Timezone:</span>
                   {{
                     modalInfo.zoom_ref && modalInfo.zoom_ref.timezone
@@ -591,13 +626,15 @@
                     modalInfo.slack_account && modalInfo.slack_account.slack_id
                       ? modalInfo.slack_account.slack_id
                       : 'None'
-                  }} |
+                  }}
+                  |
                   <span class="">Channel:</span>
                   {{
                     modalInfo.slack_account && modalInfo.slack_account.channel
                       ? modalInfo.slack_account.channel
                       : 'None'
-                  }} |
+                  }}
+                  |
                 </div>
                 <div style="margin-bottom: 0.5rem">
                   <span class="">Zoom Channel:</span>
@@ -605,7 +642,8 @@
                     modalInfo.slack_account && modalInfo.slack_account.zoom_channel
                       ? modalInfo.slack_account.zoom_channel
                       : 'None'
-                  }} |
+                  }}
+                  |
                   <span class="">Recap Receivers:</span>
                   {{
                     modalInfo.slack_account && modalInfo.slack_account.recap_receivers
@@ -627,13 +665,16 @@
         </div>
         <div v-else-if="modalName === 'usersOverview'">
           <div class="modal-container__body">
-            <div class="flex-row-spread sticky border-bottom" style="margin-bottom: 1rem; background-color: white; z-index: 3;">
+            <div
+              class="flex-row-spread sticky border-bottom"
+              style="margin-bottom: 1rem; background-color: white; z-index: 3"
+            >
               <div class="flex-row">
                 <img src="@/assets/images/logo.png" class="logo" alt="" />
                 <h4>{{ this.selected_org.name }}'s Users</h4>
               </div>
             </div>
-            <div class="invite-list-users__section__container" style="margin-bottom: 1rem;">
+            <div class="invite-list-users__section__container" style="margin-bottom: 1rem">
               <div class="invite-list-users__section__item underline">
                 Total: {{ modalInfo.length }}
               </div>
@@ -643,24 +684,34 @@
               <div class="invite-list-users__section__item underline">
                 Active: {{ activeUsers ? activeUsers.length : 0 }}
               </div>
-              <div class="invite-list-users__section__item">
-
-              </div>
+              <div class="invite-list-users__section__item"></div>
             </div>
-            <div v-for="member in modalInfo" :key="member.id" class="invite-list-users__section__container">
-              <template
-                v-if="
-                  member
-                "
-              >
+            <div
+              v-for="member in modalInfo"
+              :key="member.id"
+              class="invite-list-users__section__container"
+            >
+              <template v-if="member">
                 <div
                   style="display: flex; align-items: flex-start; font-size: 14px"
                   class="invite-list-users__section__item col"
                 >
                   <!-- {{member.is_active ? member.first_name : 'Pending'}} -->
-                  {{ !member.first_name ? 'Pending' : member.is_active ? member.first_name : member.first_name }}
+                  {{
+                    !member.first_name
+                      ? 'Pending'
+                      : member.is_active
+                      ? member.first_name
+                      : member.first_name
+                  }}
                   <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
-                    {{ !member.first_name ? member.email : member.is_active ? member.email : member.email }}
+                    {{
+                      !member.first_name
+                        ? member.email
+                        : member.is_active
+                        ? member.email
+                        : member.email
+                    }}
                   </p>
                 </div>
                 <div
@@ -689,7 +740,13 @@
                   class="invite-list-users__section__item"
                 >
                   <!-- {{ member.is_active ? 'Registered' : 'Pending...' }} -->
-                  {{ !member.first_name ? 'Pending...' : member.is_active ? 'Registered' : 'Deactivated' }}
+                  {{
+                    !member.first_name
+                      ? 'Pending...'
+                      : member.is_active
+                      ? 'Registered'
+                      : 'Deactivated'
+                  }}
                 </div>
                 <div
                   style="display: flex; align-items: flex-start"
@@ -698,10 +755,16 @@
                   <span :class="member.slack_ref ? '' : 'grayscale'">
                     <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
                   </span>
-                  <span v-if="member.crm === 'SALESFORCE'" :class="member.has_salesforce_integration ? '' : 'grayscale'">
+                  <span
+                    v-if="member.crm === 'SALESFORCE'"
+                    :class="member.has_salesforce_integration ? '' : 'grayscale'"
+                  >
                     <img src="@/assets/images/salesforce.png" height="18px" alt="" />
                   </span>
-                  <span v-else-if="member.crm === 'HUBSPOT'" :class="member.has_hubspot_integration ? '' : 'grayscale'">
+                  <span
+                    v-else-if="member.crm === 'HUBSPOT'"
+                    :class="member.has_hubspot_integration ? '' : 'grayscale'"
+                  >
                     <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
                   </span>
                   <span v-else :class="'grayscale'">
@@ -873,7 +936,14 @@
     </Modal>
     <div class="flex-row">
       <small class="pipeline-header">Quick Commands:</small>
-      <button @click.stop="showCommandList = !showCommandList; showOrgList = false" class="text-button" style="cursor: pointer">
+      <button
+        @click.stop="
+          showCommandList = !showCommandList
+          showOrgList = false
+        "
+        class="text-button"
+        style="cursor: pointer"
+      >
         Commands
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
@@ -892,7 +962,14 @@
         </button>
       </div>
       <small class="pipeline-header">Organization:</small>
-      <button @click.stop="showOrgList = !showOrgList; showCommandList = false" class="text-button" style="cursor: pointer">
+      <button
+        @click.stop="
+          showOrgList = !showOrgList
+          showCommandList = false
+        "
+        class="text-button"
+        style="cursor: pointer"
+      >
         Organization
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
@@ -906,7 +983,12 @@
           @input="showOrgList = true"
         />
       </div>
-      <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section" style="left: 310px;">
+      <div
+        v-outside-click="closeListSelect"
+        v-show="showOrgList"
+        class="list-section"
+        style="left: 310px"
+      >
         <div class="list-section__title flex-row-spread">
           <p>Organizations</p>
         </div>
@@ -920,18 +1002,14 @@
           {{ org.name }}
         </button>
       </div>
-      <div
-        v-for="(filter, i) in activeFilters"
-        :key="i"
-        class="main"
-      >
+      <div v-for="(filter, i) in activeFilters" :key="i" class="main">
         <strong style="font-size: 14px">{{ filter }}</strong>
         <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
         <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
       </div>
 
       <section style="position: relative">
-        <div style="display: flex;">
+        <div style="display: flex">
           <button
             v-if="activeFilters.length < 4 && selected_org"
             @click.stop="addingFilter"
@@ -965,7 +1043,7 @@
               <Multiselect
                 placeholder="Team/User"
                 @select="resetFilters"
-                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4;"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4"
                 v-model="selectedTeamOrUser"
                 :options="teamOrUser"
                 openDirection="below"
@@ -981,18 +1059,28 @@
             <div class="filter-selection__body">
               <Multiselect
                 placeholder="Filter"
-                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
+                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
                 @select="applyFilter($event)"
                 v-model="selectedFilter"
-                :options="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? teamList : orgUsers) : []"
+                :options="
+                  selectedTeamOrUser
+                    ? selectedTeamOrUser.name === 'team'
+                      ? teamList
+                      : orgUsers
+                    : []
+                "
                 openDirection="below"
                 selectLabel="Enter"
                 track-by="name"
                 :customLabel="filtersLabel"
-                :label="selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? 'name' : 'email') : ''"
+                :label="
+                  selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? 'name' : 'email') : ''
+                "
               >
                 <template slot="placeholder">
-                  <p class="multi-slot">{{selectedTeamOrUser ? `Filters` : `Please select User/Team.`}}</p>
+                  <p class="multi-slot">
+                    {{ selectedTeamOrUser ? `Filters` : `Please select User/Team.` }}
+                  </p>
                 </template>
               </Multiselect>
             </div>
@@ -1007,9 +1095,11 @@
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
           <div class="invite-list__container">
             <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" />
-            <div style="display: flex;">
+            <div style="display: flex">
               <h2 class="org-title">{{ selected_org.name }}</h2>
-              <h4 style="padding-top: 0.25rem; margin-left: 0.5rem;">({{selected_org.days_since_created_ref}} days in Managr)</h4>
+              <h4 style="padding-top: 0.25rem; margin-left: 0.5rem">
+                ({{ selected_org.days_since_created_ref }} days in Managr)
+              </h4>
             </div>
             <div class="invite-list__section__container">
               <div class="line-up">
@@ -1018,7 +1108,7 @@
               <div>
                 <Multiselect
                   placeholder="State"
-                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3;"
+                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
                   v-model="stateActive"
                   :options="states"
                   openDirection="below"
@@ -1066,7 +1156,10 @@
           <!-- <div>{{allForms}}</div> -->
           <div class="form__list">
             <div class="added-collection">
-              <p class="added-collection__header">Users <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span></p>
+              <p class="added-collection__header">
+                Users
+                <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span>
+              </p>
               <div class="added-collection__body">
                 <Multiselect
                   placeholder="Select User"
@@ -1086,11 +1179,22 @@
               </div>
               <div class="added-collection__body">
                 <button class="green_button" @click="openModal('user', selectedUsers)">Go</button>
-                <button class="green_button" @click="openModal('usersOverview', filteredOrgUsers)" style="margin-left: 1rem;">Overview</button>
+                <button
+                  class="green_button"
+                  @click="openModal('usersOverview', filteredOrgUsers)"
+                  style="margin-left: 1rem"
+                >
+                  Overview
+                </button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Slack Form <span v-if="filteredOrgSlackForms" class="green">{{ filteredOrgSlackForms.length }}</span></p>
+              <p class="added-collection__header">
+                Slack Form
+                <span v-if="filteredOrgSlackForms" class="green">{{
+                  filteredOrgSlackForms.length
+                }}</span>
+              </p>
               <div class="added-collection__body">
                 <Multiselect
                   placeholder="Select Slack Form"
@@ -1115,19 +1219,32 @@
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Slack Form Instances <span v-if="filteredOrgSlackFormInstances" class="green">{{ filteredOrgSlackFormInstances.length }}</span></p>
+              <p class="added-collection__header">
+                Slack Form Instances
+                <span v-if="filteredOrgSlackFormInstances" class="green">{{
+                  filteredOrgSlackFormInstances.length
+                }}</span>
+              </p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToSlackFormInstace()">Go</button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Meeting Workflows <span v-if="filteredOrgMeetingWorkflows" class="green">{{ filteredOrgMeetingWorkflows.length }}</span></p>
+              <p class="added-collection__header">
+                Meeting Workflows
+                <span v-if="filteredOrgMeetingWorkflows" class="green">{{
+                  filteredOrgMeetingWorkflows.length
+                }}</span>
+              </p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToMeetingWorkflow()">Go</button>
               </div>
             </div>
             <div class="added-collection">
-              <p class="added-collection__header">Alerts <span v-if="filteredOrgAlerts" class="green">{{ filteredOrgAlerts.length }}</span></p>
+              <p class="added-collection__header">
+                Alerts
+                <span v-if="filteredOrgAlerts" class="green">{{ filteredOrgAlerts.length }}</span>
+              </p>
               <div class="added-collection__body">
                 <button class="green_button" @click="goToAlerts()">Go</button>
               </div>
@@ -1293,7 +1410,7 @@ export default {
       filterType: null,
       currentFilter: '',
       filterSelected: false,
-      teamOrUser: [{name: 'team'}, {name: 'user'}],
+      teamOrUser: [{ name: 'team' }, { name: 'user' }],
       selectedTeamOrUser: null,
       selectedFilter: null,
       teamList: [],
@@ -1338,7 +1455,7 @@ export default {
       organizations: [],
       invitedUsers: null,
       activeUsers: null,
-      filterText: ''
+      filterText: '',
     }
   },
   computed: {
@@ -1349,7 +1466,9 @@ export default {
       if (!this.filterText) {
         return this.organizations
       } else {
-        return this.organizations.filter(org => org.name.toLowerCase().includes(this.filterText.toLowerCase()))
+        return this.organizations.filter((org) =>
+          org.name.toLowerCase().includes(this.filterText.toLowerCase()),
+        )
       }
     },
   },
@@ -1429,26 +1548,34 @@ export default {
       }
       if (this.selectedTeamOrUser.name === 'team') {
         const userIdsList = []
-        this.filteredOrgUsers = this.orgUsers.filter(item => {
+        this.filteredOrgUsers = this.orgUsers.filter((item) => {
           if (item.team === value.id) {
             userIdsList.push(item.id)
             return item
           }
         })
-        this.filteredOrgSlackForms = this.orgSlackForms.filter(item => item.team === value.id)
-        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows.filter(item => userIdsList.includes(item.user))
-        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances.filter(item => userIdsList.includes(item.user))
-        this.filteredOrgAlerts = this.orgAlerts.filter(item => userIdsList.includes(item.user))
+        this.filteredOrgSlackForms = this.orgSlackForms.filter((item) => item.team === value.id)
+        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows.filter((item) =>
+          userIdsList.includes(item.user),
+        )
+        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances.filter((item) =>
+          userIdsList.includes(item.user),
+        )
+        this.filteredOrgAlerts = this.orgAlerts.filter((item) => userIdsList.includes(item.user))
       } else {
-        this.filteredOrgUsers = this.orgUsers.filter(item => {
+        this.filteredOrgUsers = this.orgUsers.filter((item) => {
           if (item.id === value.id) {
             return item
           }
         })
-        this.filteredOrgSlackForms = this.orgSlackForms.filter(item => item.team === value.team)
-        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows.filter(item => item.user === value.id)
-        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances.filter(item => item.user === value.id)
-        this.filteredOrgAlerts = this.orgAlerts.filter(item => item.user === value.id)
+        this.filteredOrgSlackForms = this.orgSlackForms.filter((item) => item.team === value.team)
+        this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows.filter(
+          (item) => item.user === value.id,
+        )
+        this.filteredOrgSlackFormInstances = this.orgSlackFormInstances.filter(
+          (item) => item.user === value.id,
+        )
+        this.filteredOrgAlerts = this.orgAlerts.filter((item) => item.user === value.id)
       }
     },
     async getAllOrgUsers(orgId) {
@@ -1714,8 +1841,8 @@ export default {
       this.modalName = name
       this.modalInfo = data
       if (this.modalName === 'usersOverview') {
-        this.invitedUsers = this.modalInfo.filter(user => !user.first_name)
-        this.activeUsers = this.modalInfo.filter(user => user.is_active)
+        this.invitedUsers = this.modalInfo.filter((user) => !user.first_name)
+        this.activeUsers = this.modalInfo.filter((user) => user.is_active)
       }
       this.editOpModalOpen = true
     },
@@ -1881,7 +2008,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding-left: 72px;
+  padding-left: 60px;
 }
 
 .staff__drawer {
@@ -2198,7 +2325,7 @@ input[type='search']:focus {
 .green {
   color: $dark-green;
   background-color: $white-green;
-  font-size: .75rem;
+  font-size: 0.75rem;
   padding: 2px 4px;
   border-radius: 4px;
   margin-left: 8px;
@@ -2306,7 +2433,8 @@ input[type='search']:focus {
       filter: invert(70%);
     }
   }
-}.list-button {
+}
+.list-button {
   display: flex;
   align-items: center;
   height: 4.5vh;
@@ -2402,7 +2530,7 @@ main:hover > span {
   // color: $dark-green;
   text-decoration: underline;
 }
-.yellow-background{
+.yellow-background {
   background-color: yellow;
 }
 .search-bar {

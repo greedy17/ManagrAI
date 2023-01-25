@@ -260,7 +260,7 @@ nav {
   top: 0;
   left: 0;
   z-index: 20;
-  width: 72px;
+  width: 60px;
   background-color: white;
   padding: 0px 4px;
   border-right: 1px solid $soft-gray;

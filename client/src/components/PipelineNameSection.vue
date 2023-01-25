@@ -3,7 +3,7 @@
     <div>
       <div>
         <!-- margin-bottom: 3px; if including account and owner -->
-        <p style="letter-spacing: 0.25px; font-size: 14px;">{{ name }}</p>
+        <p style="letter-spacing: 0.25px; font-size: 13px">{{ name }}</p>
         <!-- <span v-if="userCRM === 'SALESFORCE'" style="color: #199e54; font-size: 12px" :class="!accountName ? 'gray' : ''">
           {{ accountName ? accountName + ' ' : 'No Account ' }}
         </span> -->
@@ -31,7 +31,7 @@ export default {
     },
   },
   computed: {
-    userCRM(){
+    userCRM() {
       return this.$store.state.user.crm
     },
   },

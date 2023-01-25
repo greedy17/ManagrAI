@@ -27,23 +27,35 @@
       </div>
     </div> -->
 
-    <div :class="showIcons ? 'hovered' : ''" class="cell-name">
+    <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
       <!-- flex-row-spread -->
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
-        <div v-if="showIcons" class="flex-row">
+        <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
           <div>
             <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
-              <img style="filter: invert(10%)" height="12px" src="@/assets/images/expand.svg" />
+              <img style="filter: invert(40%)" height="13px" src="@/assets/images/expand.svg" />
             </button>
           </div>
 
           <div>
             <button @click="emitGetNotes" class="name-cell-note-button-1">
-              <img class="gray" height="12px" src="@/assets/images/note.svg" />
+              <img style="filter: invert(40%)" height="13px" src="@/assets/images/note.svg" />
             </button>
           </div>
         </div>
-        <div v-else class="flex-row" style="width: 4.25rem; height: .75rem;"></div>
+        <div
+          v-else
+          class="flex-row-spread"
+          style="
+            width: 4rem;
+            height: 0.75rem;
+            margin-left: 16px;
+            margin-right: -12px;
+            color: #9596b4;
+          "
+        >
+          {{ index + 1 }}
+        </div>
 
         <div>
           <div
@@ -59,7 +71,11 @@
 
           <PipelineNameSection
             v-else
-            :name="userCRM === 'SALESFORCE' ? opp['secondary_data']['Name'] : opp['secondary_data']['dealname']"
+            :name="
+              userCRM === 'SALESFORCE'
+                ? opp['secondary_data']['Name']
+                : opp['secondary_data']['dealname']
+            "
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
             :owner="opp.owner_ref.first_name"
           />
@@ -310,10 +326,10 @@
             :apiName="field.apiName"
             :dataType="field.dataType"
             :fieldData="
-              userCRM === 'SALESFORCE' ?
-              (field.apiName.includes('__c') || field.apiName.includes('__r')
-                ? opp['secondary_data'][field.apiName]
-                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])
+              userCRM === 'SALESFORCE'
+                ? field.apiName.includes('__c') || field.apiName.includes('__r')
+                  ? opp['secondary_data'][field.apiName]
+                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
                 : opp['secondary_data'][field.apiName]
             "
             :referenceOpts="referenceOpts"
@@ -352,12 +368,12 @@
           :apiName="field.apiName"
           :dataType="field.dataType"
           :fieldData="
-              userCRM === 'SALESFORCE' ?
-              (field.apiName.includes('__c')
+            userCRM === 'SALESFORCE'
+              ? field.apiName.includes('__c')
                 ? opp['secondary_data'][field.apiName]
-                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])
-                : opp['secondary_data'][field.apiName]
-            "
+                : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
+              : opp['secondary_data'][field.apiName]
+          "
           :lastStageUpdate="opp['last_stage_update']"
           :referenceOpts="referenceOpts"
         />
@@ -661,7 +677,7 @@ export default {
     userCRM() {
       return this.$store.state.user.crm
     },
-  }
+  },
 }
 </script>
 
@@ -838,7 +854,7 @@ input {
   justify-content: center;
 }
 .active-edit {
-  border: 1.5px solid $dark-green !important;
+  // border: 1.5px solid $dark-green !important;
   border-radius: 3px;
 }
 .multi-slot {
@@ -892,9 +908,9 @@ input {
 .empty {
   display: table-cell;
   position: sticky;
-  min-width: 12vw;
+  width: fit-content;
   border-bottom: 1px solid $soft-gray;
-  padding: 0px 4px;
+  padding: 0px 24px 0px 12px;
 }
 .selected {
   color: $dark-green !important;
@@ -902,15 +918,13 @@ input {
 .table-cell {
   display: table-cell;
   position: sticky;
-  min-width: 8vw;
-  // width: 10vw;
   width: fit-content;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
-  padding-left: 4px;
+  padding: 0px 32px 0px 12px;
 }
 .cell-name {
-  min-width: 12vw;
+  min-width: 20vw;
   display: table-cell;
   background-color: white;
   color: $base-gray;
@@ -922,6 +936,7 @@ input {
   line-height: 1.1;
   font-size: 13px;
   border-bottom: 1px solid $soft-gray;
+  cursor: text !important;
 }
 .cell-end {
   display: table-cell;
@@ -1032,13 +1047,13 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 10vh;
+  max-height: 7vh;
   padding: 0;
   overflow: auto;
   cursor: pointer;
 }
 .name-cell-note-button-1 {
-  margin-right: 16px;
+  margin-right: 12px;
   padding: 0.25rem;
   border-radius: 4px;
   background-color: transparent;
@@ -1050,7 +1065,7 @@ input[type='checkbox'] + label::before {
 }
 
 .name-cell-edit-note-button-1 {
-  margin-right: 8px;
+  margin-right: 6px;
   padding: 0.25rem;
   border-radius: 4px;
   background-color: transparent;

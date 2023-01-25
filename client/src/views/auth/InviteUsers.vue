@@ -1181,7 +1181,7 @@ export default {
   align-items: flex-start;
   text-align: center;
   margin-top: 8px;
-  margin-left: 72px;
+  margin-left: 60px;
   padding-bottom: 1rem;
   border-top-left-radius: 4px;
 
