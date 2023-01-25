@@ -43,7 +43,7 @@
             </button>
           </div>
         </div>
-        <div v-else class="flex-row-spread" style="width: 4rem; height: .75rem;"></div>
+        <div v-else class="flex-row" style="width: 4.25rem; height: .75rem;"></div>
 
         <div>
           <div
@@ -983,6 +983,7 @@ input {
 .flex-row {
   display: flex;
   flex-direction: row;
+  padding-left: 4px;
   // justify-content: flex-end;
   // align-items: flex-end;
 }
