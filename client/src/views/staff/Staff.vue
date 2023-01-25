@@ -160,7 +160,7 @@
                     :class="
                     modalInfo.previous_data[propertyName] === undefined
                     ||
-                    modalInfo.previous_data[propertyName] !== value
+                    (modalInfo.previous_data[propertyName] !== value && (Number(modalInfo.previous_data[propertyName]) && (modalInfo.previous_data[propertyName].toString().split('.')[1] === undefined || !checkDecimals(modalInfo.previous_data[propertyName])) ? checkDecimals(value): true))
                     ? 'yellow-background' : ''"
                     >{{ `${value}` }}</span>
                   </div>
@@ -1487,6 +1487,23 @@ export default {
       } catch (e) {
         console.log(e)
       }
+    },
+    checkDecimals(value) {
+      if (Number(value) === NaN) {
+        return true
+      }
+      const checkArr = value.toString().split('.')
+      if (checkArr[1] === undefined) {
+        return true
+      }
+      const afterDec = checkArr[1].toString()
+      for (let i = 0; i < afterDec.length; i++) {
+        const digit = afterDec[i]
+        if (digit !== '0') {
+          return true
+        }
+      }
+      return false
     },
     selectCommand(cmd) {
       this.selectedCommand = cmd
