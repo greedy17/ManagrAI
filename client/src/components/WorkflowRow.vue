@@ -1,6 +1,6 @@
 <template>
   <div class="table-row">
-    <div
+    <!-- <div
       style="padding: 2vh"
       class="table-cell-checkbox"
       :class="{ selected: workflowCheckList.includes(workflow.id) }"
@@ -24,7 +24,7 @@
         />
         <label :for="index"></label>
       </div>
-    </div>
+    </div> -->
 
     <div
       style="min-width: 26vw"
@@ -713,7 +713,7 @@ input {
   color: $base-gray;
   letter-spacing: 0.25px;
   position: sticky;
-  left: 3.5vw;
+  left: 0vw;
   z-index: 2;
 }
 .table-cell:hover,
@@ -750,7 +750,7 @@ input {
 }
 .table-cell-checkbox {
   display: table-cell;
-  padding: 2vh;
+  padding: 0 2vh;
   width: 3.75vw;
   border: none;
   left: 0;

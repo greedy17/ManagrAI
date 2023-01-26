@@ -476,17 +476,18 @@ def calendar_reminders_blockset(context):
 def meeting_reminder_block_set(context):
     user = User.objects.get(id=context.get("u"))
     not_completed = context.get("not_completed")
-    channel_info = slack_requests.get_channel_info(
-        user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
-    )
-    name = channel_info.get("channel").get("name")
     text = "meeting" if not_completed == 1 else "meetings"
-    blocks = [
-        block_builders.simple_section(
-            f":wave: You have {not_completed} un-logged {text}. Please log them here #{name}",
-            "mrkdwn",
+    if user.slack_integration.zoom_channel:
+        channel_info = slack_requests.get_channel_info(
+            user.organization.slack_integration.access_token, user.slack_integration.zoom_channel
         )
-    ]
+        name = channel_info.get("channel").get("name")
+        message_text = (
+            f":wave: You have {not_completed} un-logged {text}. Please log them here #{name}"
+        )
+    else:
+        message_text = f":wave: You have {not_completed} un-logged {text}. Please log them."
+    blocks = [block_builders.simple_section(message_text, "mrkdwn",)]
     return blocks
 
 

@@ -502,7 +502,7 @@ input[type='text']:focus {
   position: fixed;
   z-index: 10;
   top: 0;
-  left: 72px;
+  left: 60px;
   background-color: $white;
   width: 96vw;
   border-bottom: 1px solid $soft-gray;
