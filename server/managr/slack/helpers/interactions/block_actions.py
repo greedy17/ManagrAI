@@ -5,11 +5,6 @@ import pytz
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
-from managr.utils.misc import custom_paginator
-from managr.slack.helpers.block_sets.command_views_blocksets import (
-    custom_paginator_block,
-    custom_meeting_paginator_block,
-)
 from managr.organization.models import Organization, Pricebook2, PricebookEntry
 from managr.slack import constants as slack_const
 from managr.slack.helpers import requests as slack_requests
@@ -33,23 +28,20 @@ from managr.slack.background import (
     emit_send_next_page_paginated_inline_alerts,
 )
 from managr.salesforce.models import MeetingWorkflow
-from managr.core.models import User, MeetingPrepInstance
+from managr.core.models import User
 from managr.core.background import emit_process_calendar_meetings
 from managr.salesforce.background import (
-    emit_meeting_workflow_tracker,
     check_for_display_value,
     replace_tags,
     emit_process_slack_inline_sf_update,
 )
 from managr.hubspot.tasks import emit_process_slack_inline_hs_update
-from managr.salesforce import constants as sf_consts
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
     InvalidBlocksFormatException,
     InvalidBlocksException,
     InvalidAccessToken,
 )
-from managr.core.cron import process_get_task_list
 from managr.api.decorators import slack_api_exceptions
 from managr.alerts.models import AlertTemplate, AlertInstance, AlertConfig
 from managr.gong.models import GongCall, GongAuthAccount
@@ -175,13 +167,9 @@ def process_meeting_review(payload, context):
 def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
     view_id = payload["view"]["id"] if action == slack_const.VIEWS_UPDATE else None
     view_type = "open" if action == slack_const.VIEWS_OPEN else "push"
-    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     type = context.get("type", None)
     trigger_id = payload["trigger_id"]
-    if type:
-        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
-    else:
-        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     org = workflow.user.organization
     access_token = org.slack_integration.access_token
     refresh = context.get("tracking_id", None)
@@ -247,12 +235,8 @@ def process_edit_meeting_contact(payload, context):
     view = payload["view"]
     view_id = view["id"]
     type = context.get("type", None)
-    if type:
-        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
-        org = workflow.user.organization
-    else:
-        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        org = workflow.user.organization
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    org = workflow.user.organization
     access_token = org.slack_integration.access_token
     loading_view_data = send_loading_screen(
         access_token,
@@ -421,78 +405,6 @@ def process_stage_selected(payload, context):
     workflow.save()
 
 
-@processor()
-def process_disregard_meeting_review(payload, context):
-    workflow_id = payload["actions"][0]["value"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    organization = workflow.user.organization
-    access_token = organization.slack_integration.access_token
-    try:
-        res = slack_requests.update_channel_message(
-            payload["channel"]["id"],
-            payload["message"]["ts"],
-            access_token,
-            block_set=get_block_set("disregard_meeting_review", context={"w": workflow_id}),
-        )
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    workflow.slack_interaction = f"{res['ts']}|{res['channel']}"
-    workflow.save()
-
-
-@processor()
-def process_no_changes_made(payload, context):
-    workflow_id = payload["actions"][0]["value"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    organization = workflow.user.organization
-    access_token = organization.slack_integration.access_token
-    blocks = [*get_block_set("loading", {"message": ":+1: Got it! Logging your activity"})]
-    try:
-        slack_requests.update_channel_message(
-            payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
-        )
-    except Exception as e:
-        return logger.exception(f"Bad request {e}")
-    state = {"meeting_type": "No Update", "meeting_comments": "No Update"}
-    form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
-    form.is_submitted = True
-    form.submission_date = timezone.now()
-    form.update_source = "meeting"
-    form.save_form(state, False)
-    ops = [
-        f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}",
-    ]
-    contact_forms = workflow.forms.filter(template__resource=slack_const.FORM_RESOURCE_CONTACT)
-    for form in contact_forms:
-        if form.template.form_type == slack_const.FORM_TYPE_CREATE:
-            ops.append(
-                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-            )
-        else:
-            ops.append(
-                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{str(form.id)}"
-            )
-    workflow.operations_list = ops
-    workflow.save()
-    workflow.begin_tasks()
-    emit_meeting_workflow_tracker(str(workflow.id))
-    return {"response_action": "clear"}
-
-
 @processor(required_context=["w", "tracking_id"])
 def process_remove_contact_from_meeting(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
@@ -563,10 +475,7 @@ def process_meeting_selected_resource(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
     type = context.get("type", None)
-    if type:
-        workflow = MeetingPrepInstance.objects.get(id=context.get("w"))
-    else:
-        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     select = payload["actions"][0]["selected_option"]
     selected_option = select["value"]
     organization = workflow.user.organization
@@ -690,7 +599,6 @@ def process_meeting_selected_resource_option(payload, context):
             # did not find the block
             block = None
             pass
-        slack_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE).first()
         if workflow.user.crm == "HUBSPOT" and resource_type == "Deal" and action == "CREATE_NEW":
             try:
                 pipeline_index, pipeline_block = block_finder("pipeline", blocks)
@@ -778,12 +686,7 @@ def process_create_or_search_selected(payload, context):
     """attaches a drop down to the message block for selecting a resource type"""
     workflow_id = payload["actions"][0]["value"]
     type = False
-    if "type" in workflow_id:
-        type = True
-        prep_id = workflow_id.split("%")[1]
-        workflow = MeetingPrepInstance.objects.get(id=prep_id)
-    else:
-        workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
     organization = workflow.user.organization
     access_token = organization.slack_integration.access_token
     # get current blocks
@@ -1184,7 +1087,6 @@ def process_add_create_form(payload, context):
 @processor(required_context=["u", "f"])
 def process_stage_selected_command_form(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    type = context.get("type", None)
     current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
     org = user.organization
@@ -1193,7 +1095,6 @@ def process_stage_selected_command_form(payload, context):
     view = payload["view"]
     view_id = payload["view"]["id"]
     private_metadata = json.loads(payload["view"]["private_metadata"])
-    # get the forms associated with this slack
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
@@ -1201,7 +1102,6 @@ def process_stage_selected_command_form(payload, context):
         view_type = external_id
         pass
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
-    # delete any existing stage forms
     current_forms.exclude(template__form_type__in=["UPDATE", "CREATE"]).delete()
     main_form = current_forms.first()
     added_form_ids = []
@@ -1213,9 +1113,6 @@ def process_stage_selected_command_form(payload, context):
             if user.crm == "SALESFORCE"
             else action["selected_option"]["text"]["text"]
         )
-        # blockfinder returns a tuple of its index in the block and the object
-        index, action_block = block_finder(action["block_id"], blocks)
-        # find all stages previous to it
         stage_form = (
             org.custom_slack_forms.for_user(user)
             .filter(form_type=slack_const.FORM_TYPE_STAGE_GATING, stage=selected_value)
@@ -1228,28 +1125,24 @@ def process_stage_selected_command_form(payload, context):
             added_form_ids.append(str(new_form.id))
 
         # gather and attach all forms
-    context = {**context, "f": ",".join([str(main_form.id), *added_form_ids])}
-    private_metadata.update(context)
-    updated_view_title = view["title"]
+    private_metadata.update({**context, "f": ",".join([str(main_form.id), *added_form_ids])})
     if len(added_form_ids):
         submit_button_message = "Next"
         callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-    elif not len(added_form_ids) and main_form.template.form_type == "UPDATE":
-        submit_button_message = "Update"
-        if type == "alert":
-            callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
-        else:
-            callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
-    elif not len(added_form_ids) and main_form.template.form_type == "CREATE":
-        submit_button_message = "Create"
-        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    else:
+        callback_id = (
+            slack_const.COMMAND_FORMS__SUBMIT_FORM
+            if context.get("type", None) == "alert"
+            else slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
+        )
+        submit_button_message = "Update" if main_form.template.form_type == "UPDATE" else "Create"
     data = {
         "trigger_id": trigger_id,
         "view_id": view_id,
         "view": {
             "type": "modal",
             "callback_id": callback_id,
-            "title": updated_view_title,
+            "title": view["title"],
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": submit_button_message},
             "private_metadata": json.dumps(private_metadata),
@@ -1636,8 +1529,6 @@ def process_check_is_owner(payload, context):
     if user.user_level in ["MANAGER", "SDR"] or user_slack and str(user_slack.user.id) == user_id:
         if type == "alert":
             return process_show_alert_update_resource_form(payload, context)
-        elif type == "prep":
-            return process_show_digest_update_resource_form(payload, context)
         else:
             return process_show_update_resource_form(payload, context)
     else:
@@ -2202,28 +2093,6 @@ def process_get_call_recording(payload, context):
 
 
 @processor(required_context="u")
-def process_call_error(payload, context):
-    u = User.objects.get(id=context.get("u"))
-
-    org = u.organization
-    access_token = org.slack_integration.access_token
-    blocks = [block_builders.header_block(f"Call analysis still in progress ")]
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": "NONE",
-            "title": {"type": "plain_text", "text": "Call Details"},
-            "blocks": blocks,
-        },
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
-    return
-
-
-@processor(required_context="u")
 def process_meeting_details(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -2568,67 +2437,6 @@ def process_show_alert_update_resource_form(payload, context):
     )
 
 
-@processor(required_context="u")
-def process_mark_complete(payload, context):
-    user = User.objects.get(id=context.get("u"))
-    access_token = user.organization.slack_integration.access_token
-    instance = AlertInstance.objects.get(id=context.get("instance_id"))
-    instance.completed = True
-    instance.save()
-    alert_instances = AlertInstance.objects.filter(
-        invocation=instance.invocation,
-        channel=payload["channel"]["id"],
-        config_id=instance.config_id,
-    ).filter(completed=False)
-    alert_instance = alert_instances.first()
-    alert_template = alert_instance.template
-    text = alert_template.title
-    if not alert_instance:
-        blocks = [
-            block_builders.simple_section("You're all caught up with this workflows! Great job!"),
-        ]
-        slack_requests.update_channel_message(
-            payload["channel"]["id"],
-            payload["message"]["ts"],
-            access_token,
-            text="Error",
-            block_set=blocks,
-        )
-        return
-
-    blocks = [
-        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
-    ]
-    alert_instances = custom_paginator(alert_instances, page=int(context.get("current_page")))
-    for alert_instance in alert_instances.get("results", []):
-        blocks = [
-            *blocks,
-            *get_block_set(
-                "alert_instance",
-                {
-                    "instance_id": str(alert_instance.id),
-                    "current_page": int(context.get("current_page")),
-                },
-            ),
-        ]
-        alert_instance.rendered_text = alert_instance.render_text()
-        alert_instance.save()
-    if len(blocks):
-        blocks = [
-            *blocks,
-            *custom_paginator_block(
-                alert_instances, instance.invocation, payload["channel"]["id"], instance.config_id
-            ),
-        ]
-    try:
-        res = slack_requests.update_channel_message(
-            payload["channel"]["id"], payload["message"]["ts"], access_token, block_set=blocks,
-        )
-    except Exception as e:
-        logger.exception(f"Alert mark as complete exception: {e}")
-    return
-
-
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_alert_actions(payload, context):
@@ -2642,12 +2450,9 @@ def process_alert_actions(payload, context):
             "get_notes": process_get_notes,
             "add_to_sequence": process_show_engagement_modal,
             "add_to_cadence": process_show_engagement_modal,
-            "mark_as_complete": process_mark_complete,
         }
         if selected in ["add_to_sequence", "add_to_cadence"]:
             context["system"] = "salesloft" if selected == "add_to_cadence" else "outreach"
-        elif selected == "mark_as_complete":
-            context.update({"instance_id": context.get("alert_id")})
         else:
             context["type"] = "alert"
         return alert_action_switcher[selected](payload, context)
@@ -2820,243 +2625,6 @@ def process_get_summary_fields(payload, context):
 
 
 #########################################################
-# MORNING/AFTERNOON DIGEST ACTIONS
-#########################################################
-
-
-@slack_api_exceptions(rethrow=True)
-@processor()
-def process_paginate_meetings(payload, context):
-    channel_id = payload.get("channel", {}).get("id", None)
-    ts = payload.get("message", {}).get("ts", None)
-    user_slack_id = payload.get("user", {}).get("id", None)
-    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
-    if not user:
-        return
-    access_token = user.organization.slack_integration.access_token
-    invocation = context.get("invocation")
-    channel = context.get("channel")
-    meeting_instances = MeetingPrepInstance.objects.filter(user=user.id).filter(
-        invocation=invocation
-    )
-    meeting_instance = meeting_instances.first()
-    if not meeting_instance:
-        return
-    # NOTE replace [3:8]
-    blocks = payload["message"]["blocks"]
-    meeting_instances = custom_paginator(
-        meeting_instances, count=1, page=int(context.get("new_page", 0))
-    )
-    paginate_results = meeting_instances.get("results", [])
-    if len(paginate_results):
-        current_instance = paginate_results[0]
-        replace_blocks = [
-            *get_block_set(
-                "calendar_reminders_blockset",
-                {
-                    "prep_id": str(current_instance.id),
-                    "u": str(user.id),
-                    "current_page": context.get("new_page", 1),
-                },
-            ),
-            *custom_meeting_paginator_block(meeting_instances, invocation, channel),
-        ]
-        blocks[3:7] = replace_blocks
-        slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
-    return
-
-
-@slack_api_exceptions(rethrow=True)
-@processor()
-def process_paginate_tasks(payload, context):
-    channel_id = payload.get("channel", {}).get("id", None)
-    ts = payload.get("message", {}).get("ts", None)
-    user_slack_id = payload.get("user", {}).get("id", None)
-    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
-    if not user:
-        return
-    access_token = user.organization.slack_integration.access_token
-    channel = context.get("channel")
-    # NOTE replace [3:8]
-    blocks = payload["message"]["blocks"]
-    header_index, header_block = block_finder("task_header", blocks)
-    divider_index, divider_block = block_finder("task_divider", blocks)
-    replace_blocks = process_get_task_list(user.id, page=int(context.get("new_page", 0)))
-    blocks[header_index:divider_index] = replace_blocks
-    slack_requests.update_channel_message(channel_id, ts, access_token, block_set=blocks)
-    return
-
-
-@slack_api_exceptions(rethrow=True)
-@processor(required_context=["resource_type", "u"])
-def process_show_digest_update_resource_form(payload, context):
-    from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
-
-    user = User.objects.get(id=context.get("u"))
-    access_token = user.organization.slack_integration.access_token
-    trigger_id = payload["trigger_id"]
-    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
-    loading_view_data = send_loading_screen(
-        access_token,
-        f"{crm} is being a bit slow :sleeping:… please give it a few seconds",
-        "open",
-        str(user.id),
-        trigger_id,
-    )
-    resource_id = payload["actions"][0]["value"]
-    resource_type = context.get("resource_type")
-    show_submit_button_if_fields_added = False
-    stage_form = None
-    prep_instance = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
-    # HACK forms are generated with a helper fn currently stagename takes a special action id to update forms
-    # we need to manually change this action_id
-    if prep_instance.form:
-        slack_form = prep_instance.form
-    else:
-        template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(Q(resource=resource_type, form_type="UPDATE"))
-            .first()
-        )
-        slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user,
-        )
-        prep_instance.form = slack_form
-        prep_instance.save()
-    if slack_form:
-        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
-        current_stage = slack_form.resource_object.secondary_data.get(stage_name)
-        stage_template = (
-            OrgCustomSlackForm.objects.filter(stage=current_stage).first()
-            if current_stage
-            else None
-        )
-        form_ids = [str(slack_form.id)]
-        if stage_template:
-            stage_form = OrgCustomSlackFormInstance.objects.create(
-                template=stage_template, resource_id=resource_id, user=user,
-            )
-            form_ids.append(str(stage_form.id))
-        context.update({"f": ",".join(form_ids)})
-
-    blocks = get_block_set(
-        "update_modal_block_set",
-        context={**context, "resource_type": resource_type, "resource_id": resource_id},
-    )
-    if slack_form:
-        try:
-            index, block = block_finder(stage_name, blocks)
-        except ValueError:
-            # did not find the block
-            block = None
-            pass
-
-        if block:
-            block = {
-                **block,
-                "accessory": {
-                    **block["accessory"],
-                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(slack_form.id)}",
-                },
-            }
-            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
-
-        try:
-            index, block = block_finder(slack_const.NO_FORM_FIELDS, blocks)
-        except ValueError:
-            # did not find the block
-            show_submit_button_if_fields_added = True
-            pass
-
-    else:
-        blocks.append(
-            block_builders.simple_section("Please re-select your salesforce resource to update")
-        )
-        show_submit_button_if_fields_added = False
-    private_metadata = {
-        "channel_id": payload.get("container").get("channel_id"),
-        "message_ts": payload.get("container").get("message_ts"),
-    }
-    private_metadata.update(context)
-    if user.organization.has_products and resource_type == "Opportunity":
-        params = [
-            f"f={str(slack_form.id)}",
-            f"u={str(user.id)}",
-            "type=command",
-        ]
-        if slack_form.resource_object.secondary_data["Pricebook2Id"]:
-            params.append(f"pricebook={slack_form.resource_object.secondary_data['Pricebook2Id']}")
-        blocks.append(
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Add Product",
-                        "ADD_PRODUCT",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
-                            params=[
-                                f"f={str(slack_form.id)}",
-                                f"u={str(user.id)}",
-                                "type=command",
-                            ],
-                        ),
-                    )
-                ],
-                block_id="ADD_PRODUCT_BUTTON",
-            ),
-        )
-        current_products = user.salesforce_account.list_resource_data(
-            "OpportunityLineItem",
-            0,
-            filter=[
-                "AND IsDeleted = false",
-                f"AND OpportunityId = '{slack_form.resource_object.integration_id}'",
-            ],
-        )
-        if current_products:
-            for product in current_products:
-                product_block = get_block_set(
-                    "current_product_blockset",
-                    {
-                        "opp_item_id": product.integration_id,
-                        "product_data": {
-                            "name": product.name,
-                            "quantity": product.quantity,
-                            "total": product.total_price,
-                        },
-                        "u": str(user.id),
-                        "main_form": str(slack_form.id),
-                    },
-                )
-                blocks.append(product_block)
-
-    data = {
-        "view_id": loading_view_data["view"]["id"],
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": f"Update {resource_type}"},
-            "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
-            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
-        },
-    }
-    if show_submit_button_if_fields_added:
-        if stage_form:
-            submit_button_text = "Next"
-            callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
-        else:
-            submit_button_text = "Update"
-            callback_id = slack_const.PROCESS_SUBMIT_DIGEST_RESOURCE_DATA
-
-        data["view"]["submit"] = {"type": "plain_text", "text": submit_button_text, "emoji": True}
-        data["view"]["callback_id"] = callback_id
-
-    slack_requests.generic_request(
-        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
-    )
-
-
-#########################################################
 # RECAP ACTIONS
 #########################################################
 
@@ -3154,9 +2722,7 @@ def process_show_convert_lead_form(payload, context):
     blocks = get_block_set(
         "convert_lead_block_set", {"u": str(user.id), "resource_id": selected_lead}
     )
-    private_metadata = {
-        **context,
-    }
+    private_metadata = {**context, "resource_id": selected_lead}
     data = {
         "view_id": payload["view"]["id"],
         "view": {
@@ -3719,17 +3285,16 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_meeting_selected_resource_option,
-        slack_const.ZOOM_MEETING__PROCESS_NO_CHANGES: process_no_changes_made,
-        slack_const.ZOOM_MEETING__DISREGARD_REVIEW: process_disregard_meeting_review,
         slack_const.ZOOM_MEETING__INIT_REVIEW: process_meeting_review,
         slack_const.ZOOM_MEETING__STAGE_SELECTED: process_stage_selected,
         slack_const.ZOOM_MEETING__CREATE_TASK: process_create_task,
         slack_const.ZOOM_MEETING__CONVERT_LEAD: process_show_meeting_convert_lead_form,
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
+        slack_const.MEETING_REVIEW_SYNC_CALENDAR: process_sync_calendar,
+        slack_const.MEETING_ATTACH_RESOURCE_MODAL: process_show_meeting_resource,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.GET_CRM_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM: process_show_alert_update_resource_form,
-        slack_const.PROCESS_SHOW_DIGEST_UPDATE_RESOURCE_FORM: process_show_digest_update_resource_form,
         slack_const.COMMAND_FORMS__STAGE_SELECTED: process_stage_selected_command_form,
         slack_const.COMMAND_FORMS__PIPELINE_SELECTED: process_pipeline_selected_command_form,
         slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM: process_add_create_form,
@@ -3743,13 +3308,9 @@ def handle_block_actions(payload):
         slack_const.PROCESS_INLINE_FIELD_SELECTED: process_inline_field_selected,
         slack_const.ALERT_INLINE_STAGE_SELECTED: process_alert_inline_stage_selected,
         slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA: process_submit_inline_alert_data,
-        slack_const.PAGINATE_MEETINGS: process_paginate_meetings,
-        slack_const.PAGINATE_TASKS: process_paginate_tasks,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,
-        slack_const.CALL_ERROR: process_call_error,
         slack_const.GONG_CALL_RECORDING: process_get_call_recording,
-        slack_const.MARK_COMPLETE: process_mark_complete,
         slack_const.PROCESS_SEND_RECAP_MODAL: process_send_recap_modal,
         slack_const.COMMAND_MANAGR_ACTION: process_managr_action,
         slack_const.PROCESS_SHOW_EDIT_PRODUCT_FORM: process_show_edit_product_form,
@@ -3768,8 +3329,6 @@ def handle_block_actions(payload):
         slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
         slack_const.GET_SUMMARY: process_get_summary_fields,
-        slack_const.MEETING_REVIEW_SYNC_CALENDAR: process_sync_calendar,
-        slack_const.MEETING_ATTACH_RESOURCE_MODAL: process_show_meeting_resource,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

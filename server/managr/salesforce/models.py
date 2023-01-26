@@ -841,40 +841,6 @@ class MeetingWorkflow(SFSyncOperation):
                 self.slack_interaction,
                 date=date,
             )
-            # from managr.slack.helpers import requests as slack_requests
-            # from managr.slack.helpers.block_sets import get_block_set
-
-            # block_set = [*get_block_set("final_meeting_interaction", {"w": str(self.id)})]
-            # if len(self.failed_task_description):
-            #     for i, m in enumerate(self.failed_task_description):
-            #         block_set.insert(
-            #             i + 1,
-            #             *get_block_set("error_message", {"message": f":no_entry_sign: _{m}_"}),
-            #         )
-            # slack_access_token = self.user.organization.slack_integration.access_token
-            # ts, channel = self.slack_interaction.split("|")
-            # try:
-            #     res = slack_requests.update_channel_message(
-            #         channel, ts, slack_access_token, block_set=block_set
-            #     )
-            # except InvalidBlocksException as e:
-            #     return logger.exception(
-            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-            #     )
-            # except InvalidBlocksFormatException as e:
-            #     return logger.exception(
-            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-            #     )
-            # except UnHandeledBlocksException as e:
-            #     return logger.exception(
-            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-            #     )
-            # except InvalidAccessToken as e:
-            #     return logger.exception(
-            #         f"Failed To Generate Slack Workflow Interaction for user {str(self.id)} email {self.user.email} {e}"
-            #     )
-            # # self.user.activity.add_meeting_activity(self.id)
-            # self.slack_interaction = f"{res['ts']}|{res['channel']}"
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
 
