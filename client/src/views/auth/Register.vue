@@ -196,16 +196,16 @@ export default {
       this.registrationForm.validate()
 
       // Do not continue if the form has errors
-      // if (!this.registrationForm.isValid) {
-      //   this.$toast('Please complete all fields', {
-      //     timeout: 2000,
-      //     position: 'top-left',
-      //     type: 'error',
-      //     toastClassName: 'custom',
-      //     bodyClassName: ['custom'],
-      //   })
-      //   return
-      // }
+      if (!this.registrationForm.isValid) {
+        this.$toast('Please complete all fields', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
 
       // Continue with user registration...
       this.submitting = true
