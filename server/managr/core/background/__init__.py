@@ -204,7 +204,6 @@ def check_for_time(tz, hour, minute):
     )
     min = 00 if minute >= 30 else 30
     hr = hour - 1 if minute < 30 else hour
-    current = current.replace(hour=hour)
     return current < current.replace(
         hour=hour, minute=minute, second=0, microsecond=0
     ) and current > current.replace(hour=hr, minute=min, second=0, microsecond=0)
