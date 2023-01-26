@@ -1678,7 +1678,6 @@ def process_resource_selected_for_task(payload, context):
         OrgCustomSlackFormInstance.objects.get(id=form_id).delete()
     if len(payload["actions"]):
         action = payload["actions"][0]
-        blocks = payload["view"]["blocks"]
         selected_value = action["selected_option"]["value"]
     external_id = payload.get("view", {}).get("external_id", None)
     try:
@@ -3210,7 +3209,7 @@ def process_view_recap(payload, context):
         access_token, "Processing your recap", "open", str(user.id), payload["trigger_id"]
     )
     old_data = dict()
-    if main_form.template.form_type == "UPDATE" or main_form.template.form_type == "MEETING_REVIEW":
+    if main_form.template.form_type == "UPDATE":
         for additional_stage_form in submitted_forms:
             old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
@@ -3229,7 +3228,7 @@ def process_view_recap(payload, context):
         field = form_fields.filter(field__api_name=key).first()
         if not field:
             continue
-        field_label = field.field.reference_display_label
+        field_label = field.field.reference_display_label.capitalize()
         if main_form.template.form_type == "UPDATE":
             # Only sends values for fields that have been updated
             # all fields on update form are included by default users cannot edit
@@ -3243,38 +3242,39 @@ def process_view_recap(payload, context):
                         new_value = str(new_value)[:256] + "..."
                     if len(str(old_value)) > 255:
                         old_value = str(old_value)[:256] + "..."
-
+                    if user.crm == "HUBSPOT":
+                        if field.field.data_type in ["DateTime", "Date"]:
+                            new_value = str(new_value)[:10]
+                            old_value = str(old_value)[:10]
+                        if field.field.api_name == "dealstage":
+                            deal_stages = field.field.options[0][
+                                main_form.resource_object.secondary_data.get("pipeline")
+                            ]["stages"]
+                            new_value = [
+                                stage["label"] for stage in deal_stages if stage["id"] == new_value
+                            ][0]
+                            old_value = [
+                                stage["label"] for stage in deal_stages if stage["id"] == old_value
+                            ][0]
                     message_string_for_recap += (
                         f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
                     )
-        elif main_form.template.form_type == "MEETING_REVIEW":
-            old_value = old_data.get(key)
-            if key in old_data and str(old_value) != str(new_value):
-
-                if field.field.is_public and field.field.data_type == "Reference":
-                    old_value = check_for_display_value(field.field, old_value)
-                    new_value = check_for_display_value(field.field, new_value)
-                if len(str(new_value)) > 255:
-                    new_value = str(new_value)[:256] + "..."
-                if len(str(old_value)) > 255:
-                    old_value = str(old_value)[:256] + "..."
-                message_string_for_recap += (
-                    f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
-                )
-            else:
-                if field.field.is_public and field.field.data_type == "Reference":
-                    new_value = check_for_display_value(field.field, new_value)
-                if len(str(new_value)) > 255:
-                    new_value = str(new_value)[:256] + "..."
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-
         elif main_form.template.form_type == "CREATE":
-
             if new_value:
                 if field.field.is_public and field.field.data_type == "Reference":
                     new_value = check_for_display_value(field.field, new_value)
                 if len(str(new_value)) > 255:
                     new_value = str(new_value)[:256]
+                if user.crm == "HUBSPOT":
+                    if field.field.data_type in ["DateTime", "Date"]:
+                        new_value = str(new_value)[:10]
+                    if field.field.api_name == "dealstage":
+                        deal_stages = field.field.options[0][
+                            main_form.resource_object.secondary_data.get("pipeline")
+                        ]["stages"]
+                        new_value = [
+                            stage["label"] for stage in deal_stages if stage["id"] == new_value
+                        ][0]
                 message_string_for_recap += f"\n*{field_label}:* {new_value}"
     if not len(message_string_for_recap):
         message_string_for_recap = "No Data to show from form"

@@ -224,13 +224,10 @@ def process_zoom_meeting_data(payload, context):
             else f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}"
         )
         ops = [
-            # update/create
             main_operation,
-            # create call log
-            f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}",
-            # save meeting data
         ]
-
+        if workflow.resource_type not in user.crm_account.custom_objects:
+            ops.append(f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}")
         if len(workflow.operations_list):
             workflow.operations_list = [*workflow.operations_list, *ops]
         else:
@@ -1826,13 +1823,14 @@ def process_send_recaps(payload, context):
     if type == "meeting":
         workflow = MeetingWorkflow.objects.get(id=context.get("workflow_id"))
         # collect forms for resource meeting_review and if stages any stages related forms
-        update_forms = workflow.forms.filter(
+        meeting_forms = workflow.forms.filter(
             template__form_type__in=[
                 slack_const.FORM_TYPE_UPDATE,
+                slack_const.FORM_TYPE_CREATE,
                 slack_const.FORM_TYPE_STAGE_GATING,
             ]
         )
-        form_ids = [str(form.id) for form in update_forms]
+        form_ids = [str(form.id) for form in meeting_forms]
     elif type is None and pm.get("account", None) is not None:
         workflow = MeetingWorkflow.objects.get(id=pm.get("workflow_id"))
         update_form = workflow.forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()

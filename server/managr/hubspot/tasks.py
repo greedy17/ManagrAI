@@ -432,7 +432,6 @@ def _process_create_resource_from_meeting(workflow_id, *args):
         logger.exception(
             f"Failed to create new resource from hubspot for user {user.email} due to <{e}>"
         )
-    # value_update = workflow.resource.update_database_values(data)
     if user.has_slack_integration and len(user.slack_integration.recap_receivers):
         _send_recap(create_form_ids, None, True)
     return res
