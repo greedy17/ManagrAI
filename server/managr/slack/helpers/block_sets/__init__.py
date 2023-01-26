@@ -25,8 +25,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "attach_resource_interaction": meeting_review_block_sets.attach_resource_interaction_block_set,
         "create_or_search_modal": meeting_review_block_sets.create_or_search_modal_block_set,
         "create_modal_block_set": meeting_review_block_sets.create_modal_block_set,
-        "final_meeting_interaction": meeting_review_block_sets.final_meeting_interaction_block_set,
-        "no_change_interaction": meeting_review_block_sets.no_changes_interaction_block_set,
         "show_meeting_contacts": meeting_review_block_sets.meeting_contacts_block_set,
         "edit_meeting_contacts": meeting_review_block_sets.edit_meeting_contacts_block_set,
         "schedule_meeting_modal": meeting_review_block_sets.schedule_zoom_meeting_modal,

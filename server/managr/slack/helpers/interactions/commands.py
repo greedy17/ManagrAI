@@ -3,16 +3,13 @@ import datetime
 import logging
 import uuid
 
-from six import text_type
 from managr.core.models import User
-from managr.core.background import emit_generate_morning_digest
 from managr.slack.models import UserSlackIntegration
 from managr.slack import constants as slack_const
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
-from managr.slack.helpers.utils import action_with_params, send_loading_screen
-from rest_framework.response import Response
+from managr.slack.helpers.utils import action_with_params
 
 logger = logging.getLogger("managr")
 
@@ -485,33 +482,6 @@ def call_recording(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def launch_digest(context):
-    user = User.objects.get(id=context.get("u"))
-    if user.slack_integration:
-        slack = UserSlackIntegration.objects.filter(
-            slack_id=user.slack_integration.slack_id
-        ).first()
-        if not slack:
-            return
-    access_token = user.organization.slack_integration.access_token
-    view_id = context.get("view_id")
-    loading_view_data = send_loading_screen(
-        access_token, "Grabbing your morning digest...", "update", str(user.id), None, view_id,
-    )
-    verbose_name = f"MORNING_DIGEST_COMMAND_{str(uuid.uuid4())}"
-    task = emit_generate_morning_digest(context.get("u"), verbose_name)
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    data = {
-        "view_id": context.get("view_id"),
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Morning Digest"},
-            "blocks": [block_builders.simple_section("Success! You can close this window.")],
-        },
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
-
-
 def get_action(action_name, context={}, *args, **kwargs):
 
     switcher = {
@@ -525,6 +495,5 @@ def get_action(action_name, context={}, *args, **kwargs):
         "ADD_SEQUENCE": add_to_sequence,
         "ADD_CADENCE": add_to_cadence,
         "CALL_RECORDING": call_recording,
-        "LAUNCH_DIGEST": launch_digest,
     }
     return switcher.get(action_name)(context, *args, **kwargs)

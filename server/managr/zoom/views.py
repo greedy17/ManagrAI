@@ -430,7 +430,6 @@ def schedule_zoom_meeting(request):
         "meeting_time": data["meeting_time"],
         "meeting_duration": data["meeting_duration"],
     }
-    # print("\n\nMeeting Duration\n\n", zoom_data["meeting_duration"], "\n\n")
     participant_data = []
     contacts = Contact.objects.filter(id__in=data.get("contacts"))
     internal = User.objects.filter(id__in=data.get("internal"))

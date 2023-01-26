@@ -542,14 +542,12 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         hour = hour + 12
     formatted_time = f"{str(hour)}:{zoom_data['meeting_minute']}"
     try:
-        # print("\n\nmeeting_duration normal + int\n\n", zoom_data["meeting_duration"], "\n\n", int(zoom_data["meeting_duration"]), "\n\n")
         res = user.zoom_account.helper_class.schedule_meeting(
             zoom_data["meeting_topic"],
             zoom_data["meeting_date"],
             formatted_time,
             int(zoom_data["meeting_duration"]),
         )
-        # print(res.json())
         return res
     except Exception as e:
         logger.warning(f"Zoom schedule error: {e}")

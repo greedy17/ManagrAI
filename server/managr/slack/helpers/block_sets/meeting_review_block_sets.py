@@ -6,14 +6,13 @@ from django.db.models import Q
 from managr.utils.sites import get_site_url
 from managr.core.models import User, MeetingPrepInstance
 from managr.salesforce.models import MeetingWorkflow, SObjectField
+from managr.crm.models import ObjectField
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import (
     action_with_params,
     block_set,
     block_finder,
-    get_random_no_update_message,
-    get_random_update_message,
 )
 from managr.slack.helpers import block_builders, block_sets
 from managr.crm.utils import CRM_SWITCHER
@@ -712,51 +711,6 @@ def create_modal_block_set(context, *args, **kwargs):
     return blocks
 
 
-@block_set(required_context=["w"])
-def final_meeting_interaction_block_set(context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    topic = meeting.topic
-    meeting_form = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_UPDATE).first()
-    meet_type = meeting_form.saved_data.get("meeting_type", None)
-    text = (
-        get_random_no_update_message(topic)
-        if meet_type == "No Update"
-        else get_random_update_message(topic)
-    )
-    blocks = [
-        block_builders.section_with_button_block(
-            "Send Recap",
-            "SEND_RECAP",
-            text,
-            action_id=action_with_params(
-                slack_const.PROCESS_SEND_RECAP_MODAL,
-                params=[
-                    f"u={str(workflow.user.id)}",
-                    f"workflow_id={str(workflow.id)}",
-                    "type=meeting",
-                ],
-            ),
-        )
-    ]
-    return blocks
-
-
-@block_set(required_context=["w"])
-def no_changes_interaction_block_set(context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-
-    meeting = workflow.meeting
-    topic = meeting.topic
-    blocks = [
-        block_builders.simple_section(
-            f":+1: Got it! No updated needed for meeting *{topic}* ", "mrkdwn",
-        ),
-    ]
-
-    return blocks
-
-
 @block_set(required_context=[])
 def schedule_zoom_meeting_modal(context):
     user = User.objects.get(id=context.get("u"))
@@ -940,9 +894,25 @@ def convert_meeting_lead_block_set(context):
 def convert_lead_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_option = user.as_slack_option
-    status = SObjectField.objects.filter(Q(salesforce_object="Lead") & Q(api_name="Status")).first()
+    status = ObjectField.objects.filter(Q(crm_object="Lead") & Q(api_name="Status")).first()
     if status:
-        status_options = status.to_slack_field()
+        converted_options = [
+            option
+            for option in status.crm_picklist_options.values
+            if option["attributes"]["converted"]
+        ]
+        status_options = list(
+            map(
+                lambda option: block_builders.option(option["label"], option["value"]),
+                converted_options,
+            )
+        )
+        status_block = block_builders.static_select(
+            f"*{status.reference_display_label}*",
+            status_options,
+            action_id=None,
+            block_id=status.api_name,
+        )
     blocks = [
         block_builders.input_block(
             "Create New", block_id="Opportunity_NAME_INPUT", placeholder="New Opportunity Name"
@@ -1016,7 +986,7 @@ def convert_lead_block_set(context):
             "LEAD_CHECKBOX_CONTACT",
         ),
         block_builders.divider_block(),
-        status_options,
+        status_block,
         block_builders.external_select(
             "Record Owner",
             action_with_params(

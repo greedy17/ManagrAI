@@ -86,7 +86,7 @@ class CustomPicklistValue(admin.ModelAdmin):
     list_display = (
         "salesforce_account",
         "salesforce_object",
-        "field",
+        "object_field",
     )
 
 
