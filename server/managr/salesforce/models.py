@@ -240,7 +240,7 @@ class SObjectField(TimeStampModel, IntegrationModel):
                 resource = self.relationship_name
                 action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
-                    f"_{self.reference_display_label}_",
+                    f"*{self.reference_display_label}*",
                     action_query,
                     block_id=self.api_name,
                     initial_options=None,
@@ -309,14 +309,14 @@ class SObjectField(TimeStampModel, IntegrationModel):
         elif self.data_type == "MultiChannelsSelect":
             return [
                 block_builders.multi_channels_select_block(
-                    section_text=f"_{self.label}_", initial_channels=value, block_id=self.api_name
+                    section_text=f"*{self.label}*", initial_channels=value, block_id=self.api_name
                 ),
                 block_builders.context_block("Please add @managr to channel for access"),
             ]
         elif self.data_type == "MultiConversationsSelect":
             return [
                 block_builders.multi_conversations_select_block(
-                    section_text=f"_{self.label}_",
+                    section_text=f"*{self.label}*",
                     initial_conversations=value,
                     filter_opts={"include": ["private", "public"]},
                     block_id=self.api_name,
@@ -648,7 +648,9 @@ class MeetingWorkflowQuerySet(models.QuerySet):
     def for_user(self, user, date=None):
         if user.organization and user.is_active:
             if date:
-                return self.filter(user=user, datetime_created__date=date)
+                return self.filter(user=user, datetime_created__date=date).order_by(
+                    "datetime_created"
+                )
             user_timezone = pytz.timezone(user.timezone)
             currenttime = datetime.now()
             user_tz_time = currenttime.astimezone(user_timezone)

@@ -784,7 +784,9 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 block_builders.multi_channels_select_block(
                     section_text=f"_{self.label}_", initial_channels=value, block_id=self.name
                 ),
-                block_builders.context_block("Please add @managr to channel for access"),
+                block_builders.context_block(
+                    "Make sure @managr is invited to the selected channel"
+                ),
             ]
         elif self.field_type == "MultiConversationsSelect":
             return [

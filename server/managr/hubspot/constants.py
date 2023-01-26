@@ -135,7 +135,7 @@ def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):
         "properties": list(fields),
         "filters": filters,
         "limit": limit,
-        "sorts": [{"propertyName": "lastmodifieddate", "direction": "DESCENDING"}],
+        "sorts": [{"propertyName": "hs_lastmodifieddate", "direction": "DESCENDING"}],
     }
 
 
