@@ -145,28 +145,6 @@ a:hover {
   height: 70%;
   width: 3px;
 }
-
-.title {
-  color: $base-gray;
-  font-weight: bold;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-top: 0.1rem;
-  margin-bottom: 0.25rem;
-  padding-left: 0.5rem;
-  height: 2.5rem;
-}
-.row:hover {
-  img {
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
-  }
-  color: $dark-green;
-}
-
 .invert {
   filter: invert(40%);
   height: 20px !important;

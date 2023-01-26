@@ -421,9 +421,6 @@ export default {
   background: #fff;
   font-size: 14px;
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 ::placeholder {
   color: $very-light-gray;
   font-size: 0.75rem;
@@ -435,17 +432,6 @@ input[type='text']:focus {
   height: 100vh;
   color: $base-gray;
   margin-top: 5rem;
-}
-.card {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: flex-start;
-  width: 60vw;
-  padding: 3rem;
-  background-color: $white;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-  color: $base-gray;
 }
 .section {
   background-color: white;

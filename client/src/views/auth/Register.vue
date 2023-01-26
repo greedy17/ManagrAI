@@ -277,50 +277,29 @@ a {
     box-shadow: none;
   }
 }
-.logo {
-  height: 2rem;
-  // margin-left: 37%;
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
-}
 input:focus {
   outline: none;
 }
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    height: 1.5rem;
-    margin-right: 0.25rem;
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
-  }
-}
-.time {
-  color: $base-gray;
-  cursor: pointer;
-  font-size: 14px;
-}
-.time:hover {
-  color: $gray;
-}
-
+// .time {
+//   color: $base-gray;
+//   cursor: pointer;
+//   font-size: 14px;
+// }
+// .time:hover {
+//   color: $gray;
+// }
 h1 {
   font-weight: bold;
   color: $main-font-gray;
   text-align: center;
   font-size: 1.6rem;
 }
-
 .registration__form {
   background-color: transparent !important;
   display: flex;
   flex-flow: column;
   align-items: center;
 }
-
 input {
   width: 45vw;
   border-radius: 4px;
@@ -330,12 +309,10 @@ input {
 input:focus {
   outline: none;
 }
-
 label {
   font-size: 13px;
   color: $light-gray-blue;
 }
-
 .form-card {
   display: flex;
   align-items: flex-start;
@@ -355,7 +332,6 @@ label {
     font-size: 12px;
   }
 }
-
 a {
   color: $dark-green;
   font-weight: bold;

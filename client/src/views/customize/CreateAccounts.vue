@@ -149,7 +149,6 @@ export default {
   color: $base-gray;
   overflow: auto;
 }
-
 .opportunity_title {
   display: flex;
   flex-direction: column;

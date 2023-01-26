@@ -130,18 +130,8 @@ input {
   padding: 2px 16px;
 }
 
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
-}
-
 ::-webkit-scrollbar {
   width: 0px;
-}
-
-.muted {
-  color: rgba(47, 48, 53, 0.4);
-  font-family: inherit;
-  font-weight: 300;
 }
 
 .background-logo {

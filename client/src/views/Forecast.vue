@@ -856,34 +856,15 @@ export default {
 .margin-left {
   margin-left: 1.25rem;
 }
-.margin-left-s {
-  margin-left: 0.25rem;
-}
 .margin-top {
   margin-top: 1rem;
-}
-.margin-top-2 {
-  margin-top: 2rem;
 }
 .small-font {
   font-size: 12px;
   font-weight: 300 !important;
 }
-.smaller-font {
-  font-size: 11px;
-  font-weight: 300 !important;
-}
 .gray-text {
   color: $gray;
-}
-.green-text {
-  color: $dark-green;
-}
-.green-text-amount {
-  color: $dark-green;
-  background-color: $white-green;
-  padding: 4px;
-  border-radius: 6px;
 }
 .align-center {
   display: flex;
@@ -895,9 +876,6 @@ export default {
 }
 .letter-spacing {
   letter-spacing: 1px;
-}
-.relative {
-  position: relative;
 }
 .filter-green {
   display: flex;
@@ -953,9 +931,9 @@ export default {
 .invert {
   filter: invert(70%);
 }
-.invertTrash {
-  filter: invert(30%);
-}
+// .invertTrash {
+//   filter: invert(30%);
+// }
 .invert-less {
   filter: invert(40%);
 }
@@ -983,15 +961,6 @@ export default {
   display: table-row;
   left: 0;
 }
-.table-row-sticky {
-  display: table-row;
-  position: sticky;
-  z-index: 2;
-  bottom: 0;
-  outline: none;
-  border-top: 1px solid #e8e8e8;
-  padding: 0.5rem;
-}
 .table-cell {
   display: table-cell;
   position: sticky;
@@ -1001,20 +970,6 @@ export default {
   border: none;
   border-bottom: 1px solid $soft-gray;
   font-size: 12px;
-}
-.table-cell-s {
-  display: table-cell;
-  position: sticky;
-  left: 0;
-  min-width: 12vw;
-  padding: 0 3vh;
-  border: none;
-  font-size: 12px;
-  background-color: white;
-
-  p {
-    height: 0.4rem !important;
-  }
 }
 .table-cell-header {
   display: table-cell;
@@ -1094,12 +1049,6 @@ export default {
   button > img {
     height: 1rem;
   }
-}
-.forecast-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0.25rem 1rem;
 }
 .no-display {
   display: none;
@@ -1206,21 +1155,6 @@ export default {
   cursor: pointer;
   color: white;
 }
-.add-filter-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  height: 4.5vh;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: transparent;
-  cursor: pointer;
-  color: $dark-green;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
-}
 .settings {
   display: flex;
   align-items: center;
@@ -1234,172 +1168,19 @@ export default {
     margin-left: 0.25rem;
   }
 }
-.select-btn1 {
-  width: 9rem !important;
-  border: 0.25px solid $very-light-gray;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between !important;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $base-gray;
-  letter-spacing: 0.2px;
-
-  img {
-    filter: invert(40%);
-  }
-}
-.list-section {
-  z-index: 4;
-  position: absolute;
-  top: 3rem;
-  left: 0.5rem;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  background-color: $white;
-  min-width: 20vw;
-  max-height: 70vh;
-  overflow: scroll;
-  margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 1px $very-light-gray;
-  &__title {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    color: $base-gray;
-    background-color: $off-white;
-    letter-spacing: 0.25px;
-    padding-left: 0.75rem;
-    font-weight: bold;
-    font-size: 16px;
-    width: 100%;
-  }
-  &__sub-title {
-    font-size: 12px;
-    letter-spacing: 0.3px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    margin-left: 0.75rem;
-    margin-top: 1rem;
-    color: $base-gray;
-    cursor: pointer;
-    width: 100%;
-    img {
-      margin: 2px 0px 0px 3px;
-      height: 0.75rem;
-      filter: invert(70%);
-    }
-  }
-}
-.list-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between !important;
-  height: 3rem !important;
-  width: 100% !important;
-  background-color: transparent;
-  border: none;
-  padding: 0.75rem;
-  margin-top: 0.2rem;
-  border-radius: 0.2rem;
-  color: $mid-gray;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: bolder;
-}
-.list-button-2 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 2rem;
-  width: 100%;
-  background-color: transparent;
-  border: none;
-  padding: 0.75rem;
-  margin-top: 0.2rem;
-  border-radius: 0.2rem;
-  color: $mid-gray;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: bolder;
-}
-.list-button:hover,
-.list-button-2:hover {
-  color: $dark-green;
-  background-color: $off-white;
-}
-.selected-filters {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  max-width: 50vw;
-  margin-top: 1rem;
-  overflow: scroll;
-  padding: 0;
-
-  &__close {
-    background-color: $white-green;
-    backdrop-filter: blur(0.5px);
-    opacity: 4;
-    border: none;
-    margin-left: -1rem;
-    padding: 0rem 0.1rem 0rem 0.1rem;
-    min-height: 3vh;
-
-    img {
-      height: 0.9rem;
-      filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    }
-  }
-}
-.main {
-  border: none;
-  height: 5vh;
-  max-width: 12vw;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $white-green;
-  cursor: pointer;
-  color: $dark-green;
-  white-space: nowrap;
-  overflow: hidden;
-  //   text-overflow: ellipsis;
-}
-.main__before {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  border: none;
-  min-height: 5vh;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  font-weight: bold;
-}
-
-.name-cell-edit-note-button {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: 0.2rem;
-  padding: 0.25rem;
-  border-radius: 5px;
-  background-color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0.8px solid $gray;
-  cursor: pointer;
-}
+// .name-cell-edit-note-button {
+//   height: 1.5rem;
+//   width: 1.5rem;
+//   margin-right: 0.2rem;
+//   padding: 0.25rem;
+//   border-radius: 5px;
+//   background-color: white;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   border: 0.8px solid $gray;
+//   cursor: pointer;
+// }
 .no__button {
   background-color: $soft-gray;
   outline: 1px solid $soft-gray;

@@ -669,17 +669,6 @@ input {
 .red {
   filter: invert(42%) sepia(36%) saturate(937%) hue-rotate(308deg) brightness(114%) contrast(96%);
 }
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid $soft-gray;
-  border-radius: 6px;
-  cursor: pointer;
-
-  margin-left: 8px;
-  background-color: white;
-}
 input:focus {
   outline: none;
 }
@@ -743,27 +732,21 @@ input:focus {
   letter-spacing: 0.75px;
   color: $light-gray-blue;
 }
-.key {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  font-size: 0.75rem;
-  margin-bottom: 1.5rem;
-  margin-left: 16px;
-}
-.right-key {
-  display: flex;
-  flex-direction: row;
-  width: 35%;
-  justify-content: flex-start;
-}
-.left-key {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-  justify-self: flex-start;
-  align-items: center;
-}
+// .key {
+//   display: flex;
+//   align-items: center;
+//   width: 100%;
+//   font-size: 0.75rem;
+//   margin-bottom: 1.5rem;
+//   margin-left: 16px;
+// }
+// .left-key {
+//   display: flex;
+//   width: 100%;
+//   flex-direction: row;
+//   justify-self: flex-start;
+//   align-items: center;
+// }
 .header {
   margin-top: -1.5rem;
   width: 100%;
@@ -776,38 +759,15 @@ input:focus {
   // display: flex;
   // justify-content: space-around;
 }
-.complete {
-  border-bottom: 2.9px solid $dark-green;
-
-  margin-right: 0.5rem;
-  color: $base-gray;
-}
-.incomplete {
-  border-bottom: 2px solid $coral;
-  color: $base-gray;
-}
-.back-logo {
-  position: absolute;
-  z-index: -1;
-  opacity: 0.06;
-  filter: alpha(opacity=50);
-  height: 28%;
-  margin-top: -7rem;
-  margin-left: -2rem;
-}
-
-.active {
-  border-bottom: 2px solid $dark-green;
-  padding: 0.2rem;
-
-  margin-right: 0.25rem;
-}
-.inactive {
-  border-bottom: 2px solid $coral;
-  padding: 0.2rem;
-
-  margin-right: 0.25rem;
-}
+// .back-logo {
+//   position: absolute;
+//   z-index: -1;
+//   opacity: 0.06;
+//   filter: alpha(opacity=50);
+//   height: 28%;
+//   margin-top: -7rem;
+//   margin-left: -2rem;
+// }
 .invite-container {
   display: flex;
   flex-flow: row;
@@ -919,37 +879,6 @@ form {
   &:hover {
     cursor: pointer;
   }
-}
-.invite_button {
-  color: $dark-green;
-  background-color: white;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-  width: 6rem;
-  margin-top: 0.75rem;
-  margin-left: 0.5rem;
-  box-shadow: none;
-  height: 2rem;
-  z-index: 3;
-}
-.invite_button:disabled {
-  color: $base-gray;
-  background-color: $soft-gray;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-weight: 400px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-}
-.invite_button:hover {
-  cursor: pointer;
-  transform: scale(1.025);
-  box-shadow: 1px 2px 3px $mid-gray;
-  background-color: white;
 }
 .flex-row {
   display: flex;

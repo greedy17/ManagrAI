@@ -265,10 +265,6 @@ button:disabled {
 .no-cursor {
   cursor: text !important;
 }
-.col {
-  display: flex;
-  flex-direction: column;
-}
 .grey {
   color: $gray !important;
 }
@@ -286,17 +282,6 @@ button:disabled {
   padding: 2px 6px;
   margin-left: 5px;
 }
-.yellow-button {
-  border: 1px solid $yellow;
-  border-radius: 4px;
-  background-color: white;
-  color: $yellow;
-  margin-left: 65px;
-  cursor: pointer;
-}
-.yellow {
-  color: $yellow !important;
-}
 .yellow-text {
   color: $yellow !important;
 }
@@ -312,14 +297,6 @@ button:disabled {
   padding: 2px 6px;
   margin-left: 5px;
 }
-.green-button {
-  border: 1px solid $dark-green;
-  border-radius: 4px;
-  background-color: white;
-  color: $dark-green;
-  margin-left: 55px;
-  cursor: pointer;
-}
 .green {
   font-size: 11px !important;
   font-weight: bold !important;
@@ -333,13 +310,6 @@ button:disabled {
 }
 .red {
   color: $coral !important;
-}
-.red-bg {
-  border-radius: 50%;
-  background-color: $coral;
-  color: white;
-  padding: 2px 6px;
-  margin-left: 5px;
 }
 .sticky {
   position: sticky;
@@ -365,10 +335,6 @@ button:disabled {
   border-bottom: 1px solid $soft-gray;
   margin: 0px 0px 5px 0px;
   width: 100%;
-}
-.soft-gray-bg {
-  background-color: $off-white;
-  height: 26px;
 }
 .yellow-border {
   border-left: 1px solid $yellow;
@@ -403,14 +369,6 @@ button:disabled {
   display: flex;
   flex-direction: row;
 }
-.green-drawer {
-  border: 1px solid $dark-green !important;
-  background-color: $dark-green !important;
-  img {
-    // filter: invert(62%) sepia(73%) saturate(347%) hue-rotate(101deg) brightness(87%) contrast(86%);
-    filter: invert(99%);
-  }
-}
 .notis {
   display: flex;
   flex-direction: row;
@@ -433,7 +391,6 @@ button:disabled {
 .rotate {
   transform: rotate(270deg) !important;
 }
-
 .sidenav {
   height: 100%;
   width: 0;
@@ -449,14 +406,12 @@ button:disabled {
   padding-right: 6px;
   transition: 0.5s;
 }
-
 h3 {
   font-size: 12px;
   padding: 4px 8px 2px 20px;
   color: $base-gray;
   letter-spacing: 0.75px;
 }
-
 .sidenav p {
   padding: 8px 8px 8px 4px;
   letter-spacing: 0.75px;
@@ -466,7 +421,6 @@ h3 {
   display: block;
   transition: 0.3s;
 }
-
 .sidenav a {
   padding: 8px 8px 8px 20px;
   letter-spacing: 0.5px;
@@ -477,12 +431,10 @@ h3 {
   transition: 0.3s;
   cursor: pointer;
 }
-
 .sidenav a:hover {
   color: #c0bcbc;
 }
-
-.sidenav .closebtn {
+.sidenav {
   position: absolute;
   top: 0;
   right: 25px;
@@ -502,21 +454,4 @@ h3 {
     font-size: 18px;
   }
 }
-
-//  ::-webkit-scrollbar {
-//     width: 2px; /* Mostly for vertical scrollbars */
-//     height: 0px; /* Mostly for horizontal scrollbars */
-//   }
-//   ::-webkit-scrollbar-thumb {
-//     background-image: linear-gradient(100deg, $darker-green 0%, $lighter-green 99%);
-//     box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-//     border-radius: 0.3rem;
-//   }
-//   ::-webkit-scrollbar-track {
-//     box-shadow: inset 2px 2px 4px 0 $soft-gray;
-//     border-radius: 0.3rem;
-//   }
-//   ::-webkit-scrollbar-track-piece {
-//     margin-top: 1rem;
-//   }
 </style>

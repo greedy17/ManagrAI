@@ -1815,15 +1815,6 @@ export default {
 .red-filter {
   filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%) contrast(121%);
 }
-.option {
-  &__small {
-    background-color: $white-green;
-    border-radius: 4px;
-    margin-left: 16px;
-    padding: 2px 6px;
-    color: $dark-green;
-  }
-}
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -1841,22 +1832,18 @@ input[type='checkbox']:checked + label::after {
   -ms-transform: rotate(-45deg);
   transform: rotate(-45deg);
 }
-
 input[type='checkbox'] {
   line-height: 2.1ex;
 }
-
 input[type='checkbox'] {
   position: absolute;
   left: -999em;
 }
-
 input[type='checkbox'] + label {
   position: relative;
   overflow: hidden;
   cursor: pointer;
 }
-
 input[type='checkbox'] + label::before {
   content: '';
   display: inline-block;
@@ -1934,14 +1921,12 @@ input[type='search']:focus {
     }
   }
 }
-
 .wrapper {
   width: 100%;
   margin: 0 auto;
   font-size: 14px;
   letter-spacing: 0.75px;
 }
-
 .tab-content {
   width: 100%;
   height: 86vh;
@@ -1961,7 +1946,6 @@ input[type='search']:focus {
     justify-content: space-between;
   }
 }
-
 .space-between {
   display: flex;
   flex-direction: row;
@@ -2118,8 +2102,6 @@ input[type='search']:focus {
   align-items: center !important;
   border-radius: 0.2rem;
 }
-.drag-section {
-}
 .slack-form-builder {
   display: flex;
   flex-direction: row;
@@ -2253,23 +2235,6 @@ img:hover {
       brightness(93%) contrast(89%);
   }
 }
-.add-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  margin: 0 0.5rem 0 0;
-  padding: 9px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  letter-spacing: 0.75px;
-}
-.add-button:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-}
 .cancel {
   color: $dark-green;
   font-weight: bold;
@@ -2284,7 +2249,6 @@ img:hover {
     font-weight: 400;
   }
 }
-
 .logo2 {
   height: 1.75rem;
   margin-left: 0.5rem;
@@ -2325,14 +2289,5 @@ img:hover {
   padding: 4px 6px 3px 6px;
   border-radius: 6px;
   background-color: white;
-}
-
-.flex-end-opp {
-  width: 100%;
-  padding: 4px 12px 4px 0px;
-  height: 4rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
 }
 </style>

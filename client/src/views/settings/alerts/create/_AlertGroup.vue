@@ -188,21 +188,21 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
 
-.andOr {
-  border: 1px solid $soft-gray;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: $base-gray;
-}
+// .andOr {
+//   border: 1px solid $soft-gray;
+//   padding: 6px 8px;
+//   border-radius: 6px;
+//   cursor: pointer;
+//   color: $base-gray;
+// }
 .inactive {
   color: $very-light-gray;
   font-size: 9px;
   border-radius: 4px;
 }
-.space-s {
-  margin: 0 4px;
-}
+// .space-s {
+//   margin: 0 4px;
+// }
 .plus_button {
   border: none;
   background-color: transparent;
@@ -222,10 +222,6 @@ export default {
     font-size: 18px;
     cursor: pointer;
   }
-}
-.filtered {
-  filter: invert(20%);
-  height: 1rem;
 }
 .centered {
   display: flex;

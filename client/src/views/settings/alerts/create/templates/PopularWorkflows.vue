@@ -1166,7 +1166,6 @@ export default {
   border-radius: 4px;
   margin-right: 0.5em;
 }
-
 .sendAll {
   display: flex;
   align-items: center;
@@ -1363,25 +1362,6 @@ input {
 .visible {
   visibility: hidden;
 }
-.alert__column {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.bottom_locked {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: auto;
-  margin-bottom: 0.5rem;
-}
-.delivery__row {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-}
 .forecast__collection {
   display: flex;
   flex-direction: column;
@@ -1391,7 +1371,6 @@ input {
 img {
   filter: invert(40%);
 }
-
 .alerts-page {
   height: 100vh;
   color: $base-gray;
@@ -1399,9 +1378,6 @@ img {
 }
 .base {
   color: $base-gray;
-}
-.spacer {
-  height: 20vh;
 }
 .overlay {
   position: absolute;
@@ -1418,9 +1394,6 @@ img {
   background-color: $dark-green;
   border-radius: 5px;
 }
-.container {
-  position: relative;
-}
 .container:hover .overlay {
   opacity: 0.85;
 }
@@ -1435,15 +1408,12 @@ img {
   transform: translate(-50%, -50%);
   text-align: center;
 }
-.margin-right-s {
-  margin-right: 0.5rem;
-}
+// .margin-right-s {
+//   margin-right: 0.5rem;
+// }
 .link {
   border-bottom: 1px solid white;
   cursor: pointer;
-}
-.margin-top {
-  margin-top: 3rem;
 }
 .search-bar {
   background-color: white;

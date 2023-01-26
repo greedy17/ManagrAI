@@ -552,9 +552,6 @@ export default {
     }
   }
 }
-.invert {
-  filter: invert(80%);
-}
 ::placeholder {
   color: $very-light-gray;
   font-size: 0.75rem;
@@ -579,15 +576,6 @@ h2 {
   width: 16vw;
   margin: 0.5rem 0rem;
   box-shadow: 1px 1px 3px 0px $very-light-gray;
-}
-.primary-button {
-  padding: 0.4rem 1.5rem;
-  box-shadow: none;
-  font-weight: 400;
-}
-.primary-button:disabled {
-  background-color: $soft-gray !important;
-  color: $gray;
 }
 .alert-settings-modal {
   overflow-y: scroll;
@@ -635,37 +623,5 @@ h2 {
   label {
     font-weight: 400;
   }
-}
-.purple__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem 1rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $dark-green;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-size: 1.02rem;
-}
-.disabled__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  background-color: $soft-gray;
-  color: $gray;
-  cursor: not-allowed;
-  font-size: 14px;
 }
 </style>

@@ -359,9 +359,6 @@ export default {
   background-color: $soft-gray !important;
   cursor: text;
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 .flex-start {
   display: flex;
   align-items: flex-start;
@@ -375,23 +372,6 @@ export default {
   flex-direction: row;
   width: 700px;
 }
-.back-button {
-  font-size: 14px;
-  color: $dark-green;
-  background-color: transparent;
-  display: flex;
-  align-items: center;
-  border: none;
-  cursor: pointer;
-  margin: 1rem 0rem 0rem 0rem;
-
-  img {
-    height: 1rem;
-    margin-right: 0.5rem;
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
-  }
-}
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -404,7 +384,6 @@ export default {
     filter: invert(70%);
   }
 }
-
 .multi-slot {
   display: flex;
   align-items: center;
@@ -450,13 +429,6 @@ export default {
 img {
   filter: invert(70%);
 }
-.invert {
-  filter: invert(80%);
-}
-.green {
-  color: #41b883;
-  font-weight: 400;
-}
 .gray {
   color: $light-gray-blue;
 }
@@ -493,40 +465,6 @@ input[type='text']:focus {
   flex-direction: row;
   align-items: center;
   font-weight: bold;
-}
-.green__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0.5rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: $white;
-  background-color: $dark-green;
-  cursor: pointer;
-  height: 2rem;
-  font-weight: bold;
-  font-size: 1.02rem;
-}
-.disabled__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  background-color: $soft-gray;
-  color: $gray;
-  cursor: not-allowed;
-  font-size: 16px;
 }
 input {
   box-shadow: 3px 4px 7px $very-light-gray;

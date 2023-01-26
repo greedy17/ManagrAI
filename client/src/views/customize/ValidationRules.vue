@@ -666,11 +666,9 @@ button:disabled {
     opacity: 0;
   }
 }
-
 .popup-paginator {
   @include paginator();
 }
-
 .centered__stage {
   display: flex;
   justify-content: center;
@@ -678,58 +676,10 @@ button:disabled {
   flex-direction: row;
   height: 100%;
 }
-
-.stage {
-  &__dropdown {
-    min-height: 40vh;
-    width: 48vw;
-    border-radius: 0.3rem;
-    border: 1px solid #e8e8e8;
-    background-color: $white;
-    overflow-y: scroll;
-
-    &__header {
-      font-size: 16px;
-      padding: 1rem;
-      border-bottom: 1px solid #e8e8e8;
-    }
-    &__stages {
-      &__container {
-        display: flex;
-        border: 1px solid #e8e8e8;
-        width: 99%;
-        padding: 0rem 0.4rem 0.2rem 0.3rem;
-        font-weight: 400;
-        margin: 0.25rem;
-        border-radius: 0.3rem;
-        font-size: 14px;
-        cursor: pointer;
-        align-items: center;
-        justify-content: flex-start;
-
-        &--selected {
-          color: $dark-green;
-        }
-      }
-      &__title {
-        cursor: pointer;
-        padding: 0.2rem;
-        margin-bottom: 0.2rem;
-        margin-top: 0.5rem;
-        width: 100%;
-      }
-      &__title:hover {
-        color: $dark-green;
-      }
-    }
-  }
-}
-
 .tooltip {
   height: 1rem;
   margin: 1rem;
 }
-
 .required {
   &__container {
     display: flex;

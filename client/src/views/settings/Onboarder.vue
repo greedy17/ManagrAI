@@ -468,32 +468,6 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
-// .secondary-button {
-//   box-shadow: none;
-//   font-size: 12px;
-// }
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 $dark-green;
-  }
-
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-  }
-
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-.pulse {
-  box-shadow: 0 0 0 0 $dark-green;
-  transform: scale(1);
-  animation: pulse 1.25s infinite;
-}
 .secondary-button {
   box-shadow: none;
   font-size: 13px;
@@ -510,9 +484,9 @@ article {
   color: $base-gray;
   opacity: 0.9;
 }
-.gray-blue {
-  color: $light-gray-blue;
-}
+// .gray-blue {
+//   color: $light-gray-blue;
+// }
 .header {
   letter-spacing: 0.75px;
   color: $base-gray;
@@ -552,12 +526,6 @@ small {
     // color: $light-gray-blue;
   }
 }
-.filtered-green {
-  filter: invert(55%) sepia(75%) saturate(324%) hue-rotate(101deg) brightness(97%) contrast(91%);
-}
-.hide {
-  display: none;
-}
 .step1 {
   background-color: $coral;
   border-radius: 100%;
@@ -571,7 +539,6 @@ small {
   align-items: center;
   justify-content: center;
 }
-
 .card {
   background-color: $white;
   padding: 16px 24px;
@@ -615,10 +582,6 @@ small {
     }
   }
 }
-.primary-button {
-  box-shadow: none;
-  font-size: 13px;
-}
 .form-modal {
   border-radius: 8px;
   padding: 4px 16px;
@@ -655,9 +618,6 @@ small {
 }
 .green {
   color: $dark-green !important;
-}
-.red {
-  color: $coral !important;
 }
 .green-border {
   border-left: 1px solid $dark-green;

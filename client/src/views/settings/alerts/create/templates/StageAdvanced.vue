@@ -589,10 +589,6 @@ export default {
 img {
   filter: invert(60%);
 }
-.title {
-  font-weight: bold;
-  font-size: 14px;
-}
 .slot-icon {
   display: flex;
   flex-direction: row;

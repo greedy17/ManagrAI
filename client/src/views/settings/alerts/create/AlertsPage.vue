@@ -798,10 +798,6 @@ export default {
 .filter-loft {
   filter: invert(40%) sepia(96%) brightness(101%) contrast(82%);
 }
-.onboarding {
-  filter: blur(10px);
-}
-
 .alerts-page {
   color: $base-gray;
 }
@@ -853,7 +849,6 @@ export default {
     justify-content: space-evenly;
   }
 }
-
 .filter-plus {
   filter: invert(10%);
 }

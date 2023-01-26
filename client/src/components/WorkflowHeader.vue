@@ -311,18 +311,18 @@ export default {
 .table-row {
   display: table-row;
 }
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 2vh 1vh;
-  border: none;
-  border-bottom: 1px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $white;
-}
+// .table-cell-checkbox-header {
+//   display: table-cell;
+//   padding: 2vh 1vh;
+//   border: none;
+//   border-bottom: 1px solid $light-orange-gray;
+//   z-index: 3;
+//   width: 4vw;
+//   top: 0;
+//   left: 0;
+//   position: sticky;
+//   background-color: $white;
+// }
 .remove-field-section {
   z-index: 5;
   position: absolute;

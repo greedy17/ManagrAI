@@ -990,39 +990,9 @@ export default {
     cursor: pointer;
   }
 }
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 14px;
-  margin-top: -22px;
-  color: $very-light-gray;
-}
 h3 {
   font-weight: 400;
   letter-spacing: 0.25px;
-}
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.2rem;
-  cursor: pointer;
-  padding: 0.15rem 0.3rem;
-  margin-right: 0.5rem;
-}
-.slot-icon {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 0;
-  margin: 0;
-  img {
-    height: 1rem;
-    margin-right: 0.25rem;
-    filter: invert(70%);
-  }
 }
 input {
   border: none;
@@ -1037,63 +1007,6 @@ input {
 input:focus {
   outline: none;
 }
-.multi-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $gray;
-  font-size: 12px;
-  width: 100%;
-  padding: 0.5rem 0rem;
-  margin: 0;
-  cursor: text;
-  &__more {
-    background-color: white;
-    color: $dark-green;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
-    width: 100%;
-    padding: 0.75rem 0rem;
-    margin: 0;
-    cursor: pointer;
-
-    img {
-      height: 0.8rem;
-      margin-left: 0.25rem;
-      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-        brightness(93%) contrast(89%);
-    }
-  }
-}
-.card-rows {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
-}
-.group-card {
-  border-radius: 0.3rem;
-  background-color: $white;
-  padding: 1.2rem;
-  width: 58%;
-  margin-bottom: 2rem;
-  color: $base-gray;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-
-  &__title {
-    width: 100%;
-    height: 2rem;
-    text-align: center;
-    font-size: 1.05rem;
-  }
-}
-
 .green_button {
   color: white;
   background-color: $dark-green;
@@ -1114,7 +1027,6 @@ input:focus {
   border: none;
   cursor: text;
 }
-
 .condition-button {
   background-color: white;
   color: $dark-green;
@@ -1133,75 +1045,9 @@ input:focus {
   letter-spacing: 0.75px;
   cursor: pointer;
 }
-.even {
-  color: $gray;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  cursor: text;
-  font-size: 14px;
-  img {
-    height: 1rem;
-    filter: invert(70%);
-  }
-}
 .remove-color {
   filter: invert(30%);
   cursor: pointer;
-}
-.invert {
-  filter: invert(80%);
-}
-.message__box {
-  height: 30vh;
-  width: 26vw;
-  background-color: transparent;
-}
-.tab__header-items {
-  display: flex;
-  overflow: scroll;
-  &__item {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    padding: 0.5rem;
-    border-bottom: none;
-    color: $base-gray;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    width: 17vw;
-    &--active {
-      background-color: $dark-green;
-      border-radius: 0.2rem;
-      color: white;
-      position: relative;
-    }
-    &--active:hover {
-      color: white !important;
-    }
-  }
-  &__item:hover {
-    color: $dark-green;
-  }
-  &__group {
-    display: flex;
-    padding: 0.75rem;
-  }
-}
-
-.alerts-template-list__content-message {
-  font-size: 14px;
-  letter-spacing: 0.2px;
-  display: flex;
-  justify-content: flex-start;
-  padding: 0.5rem 2rem;
-  height: 100%;
-  &__form {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    height: 100%;
-  }
 }
 .search-bar {
   background-color: white;
@@ -1227,46 +1073,6 @@ input[type='search'] {
 input[type='search']:focus {
   outline: none;
 }
-.field-section {
-  width: 20vw;
-  background-color: white;
-  height: 100%;
-  margin-top: 28px;
-  margin-left: 16px;
-  padding: 0px 32px;
-  border-radius: 6px;
-  letter-spacing: 0.75px;
-
-  &__title {
-    letter-spacing: 0.75px;
-  }
-  &__fields {
-    h4 {
-      font-size: 13px;
-      font-weight: 400;
-      margin-bottom: 8px;
-    }
-    p {
-      font-size: 12px;
-      letter-spacing: 0.75px;
-    }
-    div {
-      outline: 1px solid $soft-gray;
-      border-radius: 6px;
-      padding: 4px 16px;
-      margin-top: 16px;
-      height: 32vh;
-      overflow: scroll;
-      section {
-        span {
-          color: $coral;
-          margin-left: 4px;
-        }
-      }
-    }
-  }
-}
-
 .modal-container {
   background-color: $white;
   overflow-y: scroll;
@@ -1334,18 +1140,15 @@ input[type='search']:focus {
     }
   }
 }
-
 .rel {
   position: relative;
 }
-
 .flex-row-spread {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
-
 .sticky {
   position: sticky;
   background-color: white;
@@ -1355,11 +1158,9 @@ input[type='search']:focus {
   padding: 0px 6px 8px -2px;
   z-index: 2;
 }
-
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
 }
-
 .flex-row {
   display: flex;
   flex-direction: row;

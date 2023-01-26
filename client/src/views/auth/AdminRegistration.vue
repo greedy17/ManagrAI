@@ -269,21 +269,6 @@ export default {
     box-shadow: none;
   }
 }
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-left: 44vw;
-
-  img {
-    height: 1.5rem;
-    margin-right: 0.25rem;
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
-  }
-}
-
 .time {
   color: $base-gray;
   cursor: pointer;
@@ -334,17 +319,6 @@ a {
   align-items: flex-start;
   justify-content: flex-start;
 }
-// input {
-//   height: 2.5rem;
-//   width: 100%;
-//   display: block;
-//   margin: 1rem;
-
-//   &:disabled {
-//     border: 2px solid $dark-green;
-//   }
-// }
-
 input {
   width: 45vw;
   border-radius: 4px;
@@ -354,18 +328,10 @@ input {
 input:focus {
   outline: none;
 }
-
 label {
   font-size: 13px;
   color: $light-gray-blue;
 }
-
-// button {
-//   @include primary-button();
-//   margin-top: 1.25rem;
-//   height: 1.875rem;
-//   width: 9.375rem;
-// }
 a {
   color: $dark-green;
   font-weight: bold;

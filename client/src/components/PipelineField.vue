@@ -151,54 +151,14 @@ export default {
 <style lang="scss" >
 @import '@/styles/variables';
 @import '@/styles/buttons';
-.red {
-  // width: fit-content;
-}
 .flex-columned {
   display: flex;
   flex-direction: column;
-}
-
-.daysinstage {
-  font-size: 11px;
-  font-weight: bold;
-  margin-top: 0.25rem;
-  color: $gray;
-}
-.cash {
-  color: $dark-green;
-  background-color: $white-green;
-  border-radius: 6px;
-  padding: 8px 14px;
-  letter-spacing: 0.75px;
-}
-.bg {
-  color: $base-gray;
-  background-color: $off-white;
-  border-radius: 6px;
-  padding: 8px 14px;
-  letter-spacing: 0.75px;
-  border: 1px solid $soft-gray;
-}
-.yellow {
-  color: $yellow !important;
-  background-color: #fdf7e6;
-  border-radius: 6px;
-  padding: 5px 1px;
 }
 .gray {
   color: $very-light-gray;
   font-style: italic;
   font-weight: 400;
   font-size: 12px;
-}
-.yellow {
-  color: $yellow !important;
-  background-color: #fdf7e6;
-  border-radius: 6px;
-  padding: 5px 1px;
-}
-.blank {
-  // margin: 3px 0;
 }
 </style>

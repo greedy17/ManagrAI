@@ -499,18 +499,18 @@ export default {
 .table-row {
   display: table-row;
 }
-.table-cell-checkbox-header {
-  display: table-cell;
+// .table-cell-checkbox-header {
+//   display: table-cell;
 
-  border: none;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: white;
-  border-bottom: 1px solid $soft-gray;
-}
+//   border: none;
+//   z-index: 3;
+//   width: 4vw;
+//   top: 0;
+//   left: 0;
+//   position: sticky;
+//   background-color: white;
+//   border-bottom: 1px solid $soft-gray;
+// }
 .table-cell-header-end {
   display: table-cell;
   z-index: 3;
@@ -524,9 +524,6 @@ export default {
   background-color: white;
   padding-left: 4px;
   // box-shadow: 1px 1px 2px 1px $very-light-gray;
-}
-.black {
-  color: $base-gray;
 }
 .direction-row {
   width: 36px;

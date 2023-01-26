@@ -646,17 +646,6 @@ export default {
 .space-s {
   margin: 0 4px;
 }
-.l-gray {
-  color: $soft-gray;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 8px;
-  // margin-top: -16px;
-  color: $very-light-gray;
-}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -688,7 +677,6 @@ export default {
     }
   }
 }
-
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -701,17 +689,11 @@ export default {
     filter: invert(70%);
   }
 }
-
 img {
   filter: invert(90%);
 }
 .uninvert {
   filter: invert(10%);
-}
-.centered {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 .toggle__switch {
   display: flex;

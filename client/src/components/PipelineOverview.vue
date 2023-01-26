@@ -220,23 +220,6 @@ export default {
   transition: all 0.3s;
   font-size: 12px;
 }
-.white-button {
-  border: 1px solid $dark-green;
-  padding: 6px 4px 6px 12px;
-  margin-right: 1rem;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  transition: all 0.3s;
-  font-size: 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  img {
-    margin-left: 6px;
-  }
-}
 .button-section {
   display: flex;
   flex-direction: row;
@@ -277,12 +260,5 @@ export default {
       padding: 2px 4px;
     }
   }
-}
-.light-blue {
-  color: $light-gray-blue;
-}
-.filtered {
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
 }
 </style>

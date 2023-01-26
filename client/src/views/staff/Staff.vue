@@ -2010,22 +2010,10 @@ export default {
   height: 100vh;
   padding-left: 60px;
 }
-
-.staff__drawer {
-  // width: 20vw;
-  // height: 40%;
-  display: flex;
-  background-color: #fafbfc;
-  border-right: 2px solid $soft-gray;
-  border-bottom: 2px solid $soft-gray;
-  padding-right: 1rem;
-}
-
 .staff__main_page {
   width: 70vw;
   margin-left: 1rem;
 }
-
 p {
   font-size: 14px;
 }
@@ -2046,11 +2034,6 @@ ul {
   margin: 0;
   padding: 0;
 }
-
-.command_dropdown {
-  display: flex;
-}
-
 .green_button {
   color: white;
   background-color: $dark-green;
@@ -2061,12 +2044,10 @@ ul {
   border: none;
   cursor: pointer;
 }
-
 .sized {
   height: 3em;
   align-self: center;
 }
-
 input[type='search'] {
   margin: 0 1rem 0 0;
   background-color: white;
@@ -2158,9 +2139,9 @@ input[type='search']:focus {
   align-items: center;
   justify-content: space-between;
 }
-.copy-margin {
-  margin-right: 1rem;
-}
+// .copy-margin {
+//   margin-right: 1rem;
+// }
 .sticky {
   position: sticky;
   background-color: white;
@@ -2318,9 +2299,6 @@ input[type='search']:focus {
   margin-top: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid black;
-}
-.bottom-margin {
-  margin-bottom: 1rem;
 }
 .green {
   color: $dark-green;

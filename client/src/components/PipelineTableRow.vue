@@ -684,13 +684,6 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
-@keyframes tooltips-horz {
-  to {
-    opacity: 0.95;
-    transform: translate(0%, 50%);
-  }
-}
 .row {
   display: flex;
   flex-direction: row;
@@ -698,71 +691,11 @@ export default {
 }
 // .light-gray {
 //   background-color: $off-white !important;
-
 // }
-
-.img-border {
-  border: none;
-  box-shadow: 1px 1px 2px 1px $very-light-gray !important;
-  padding: 4px 6px 3px 6px;
-  border-radius: 6px;
-  box-shadow: 1px 1px 6px 1px $off-white;
-  background-color: white;
-}
-
-.action-buttons {
-  background-color: white;
-  padding: 8px 8px 8px 24px;
-  border-radius: 6px;
-  box-shadow: 1px 1px 2px 1px $off-white;
-  display: flex;
-  flex-direction: row;
-  align-items: space-evenly;
-  // box-shadow: 1px 1px 1px $very-light-gray;
-}
 
 // .left-border {
 //   border-left: 2px solid $off-white !important;
 // }
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-/* Tooltip text */
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  padding: 5px 0;
-  border-radius: 6px;
-  opacity: 0.7;
-
-  /* Position the tooltip text - see examples below! */
-  position: absolute;
-  z-index: 1;
-  top: 100%;
-  left: 40%;
-  margin-left: -60px; /* half of width */
-}
-
-/* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-.tooltip .tooltiptext::after {
-  content: ' ';
-  position: absolute;
-  bottom: 100%; /* At the top of the tooltip */
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent black transparent;
-}
 .save {
   background-color: transparent;
   color: $base-gray;
@@ -959,18 +892,6 @@ input {
   font-size: 13px;
   padding-left: 4px;
 }
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 2vh 1vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $white;
-}
 .table-cell-checkbox {
   display: table-cell;
   padding: 0 2vh;
@@ -1085,7 +1006,4 @@ input[type='checkbox'] + label::before {
 // .mar-left {
 //   margin-left: 8px;
 // }
-.blank {
-  // margin: 0;
-}
 </style>

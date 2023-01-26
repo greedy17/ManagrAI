@@ -6060,25 +6060,25 @@ select {
   color: $light-gray-blue;
   margin-left: 4px;
 }
-.select-btn2 {
-  border: 0.5px solid $very-light-gray;
-  padding: 0.375rem 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
+// .select-btn2 {
+//   border: 0.5px solid $very-light-gray;
+//   padding: 0.375rem 0.75rem;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   border-radius: 6px;
+//   background-color: white;
+//   cursor: pointer;
+//   color: $dark-green;
+//   letter-spacing: 0.2px;
+//   margin-right: 0.5rem;
+//   transition: all 0.25s;
 
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1.05rem !important;
-  }
-}
+//   img {
+//     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+//     height: 1.05rem !important;
+//   }
+// }
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -6228,23 +6228,6 @@ h3 {
 //   display: table-row;
 //   height: 100%;
 // }
-.table-cell {
-  display: table-cell;
-  min-width: 16vw;
-  border: none;
-  font-size: 13px;
-}
-.table-cell-wide {
-  display: table-cell;
-  min-width: 26vw;
-  border: none;
-  font-size: 13px;
-}
-.cell-name {
-  min-width: 21.5vw;
-  display: table-cell;
-  padding-left: 4px;
-}
 .modal-container {
   background-color: $white;
   overflow-y: scroll;
@@ -6415,14 +6398,14 @@ section {
   font-size: 13px;
   padding: 12px;
 }
-.div-placeholder {
-  position: absolute;
-  top: -12px;
-  left: 10px;
-  z-index: -1;
-  color: $very-light-gray;
-  opacity: 0.8;
-}
+// .div-placeholder {
+//   position: absolute;
+//   top: -12px;
+//   left: 10px;
+//   z-index: -1;
+//   color: $very-light-gray;
+//   opacity: 0.8;
+// }
 // .divArea:hover {
 //   border: 1px solid #e8e8e8;
 //   border-radius: 4px;
@@ -6467,7 +6450,6 @@ section {
   align-items: center;
   justify-content: space-between;
 }
-
 .flex-row-spread-start {
   display: flex;
   flex-direction: row;
@@ -6486,9 +6468,9 @@ section {
 .invert {
   filter: invert(80%);
 }
-.fullInvert {
-  filter: invert(99%);
-}
+// .fullInvert {
+//   filter: invert(99%);
+// }
 .add-button:disabled {
   display: flex;
   align-items: center;
@@ -6775,10 +6757,10 @@ main:hover > span {
   color: $dark-green;
   background-color: $off-white;
 }
-.filter {
-  color: #41b883;
-  margin-left: 0.2rem;
-}
+// .filter {
+//   color: #41b883;
+//   margin-left: 0.2rem;
+// }
 .cancel {
   color: $dark-green;
   font-weight: bold;

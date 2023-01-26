@@ -386,7 +386,6 @@ export default {
   margin: 0 4em;
   padding-top: 2rem;
 }
-
 @keyframes expandmenu {
   0% {
     height: 0rem;
@@ -397,7 +396,6 @@ export default {
     opacity: 1;
   }
 }
-
 @keyframes closemenu {
   0% {
     display: block;
@@ -420,34 +418,9 @@ export default {
   flex-direction: column;
   height: 100%;
 }
-
 .tooltip {
   height: 1rem;
   margin: 1rem;
-}
-
-.required {
-  &__container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  &__title {
-    border-bottom: 2px solid #cc3873;
-  }
-  &__instructions {
-    padding: 1.5rem 4.5rem;
-    margin-bottom: 2rem;
-  }
-
-  &__content {
-    margin: 1rem 0 2rem 0;
-    &__container {
-      width: 100%;
-      padding: 1rem 3rem;
-    }
-  }
 }
 a {
   text-decoration: none;

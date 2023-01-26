@@ -870,25 +870,18 @@ export default {
   margin-top: 72px;
   letter-spacing: 0.75px;
 }
-
 .space-between {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
 }
-
 .space-between {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
 }
-
-.header-padding {
-  padding: 4px 32px 32px 4px;
-}
-
 .alerts-header {
   position: fixed;
   z-index: 10;
@@ -913,28 +906,11 @@ export default {
     color: $light-gray-blue;
   }
 }
-
 .locked {
   position: sticky;
   top: 0;
   z-index: 2;
   background-color: white;
-}
-
-.img-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-.img-border {
-  img {
-    border: 1px solid $soft-gray;
-    padding: 2px;
-    border-radius: 100%;
-    height: 20px;
-    margin-left: 4px;
-    filter: invert(40%);
-  }
 }
 .results-title {
   display: flex;
@@ -959,7 +935,6 @@ export default {
     }
   }
 }
-
 .multi-slot {
   display: flex;
   align-items: center;
@@ -991,16 +966,10 @@ export default {
     }
   }
 }
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-
 .right-tooltip {
   position: relative;
   display: inline-block;
 }
-
 .right-tooltip .right-tooltiptext {
   visibility: hidden;
   width: 160px;
@@ -1020,7 +989,6 @@ export default {
 .right-tooltip:hover .right-tooltiptext {
   visibility: visible;
 }
-
 .even-row {
   display: flex;
   flex-direction: row;
@@ -1028,7 +996,6 @@ export default {
   margin-top: 16px;
   justify-content: space-between;
 }
-
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -1036,33 +1003,18 @@ export default {
   padding-top: 8px;
   padding-bottom: 0;
 }
-
 .small-text {
   font-size: 10px;
 }
-
-.flex-end {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-}
-
 .margin-top {
   margin-top: 3rem;
 }
 .margin-top-small {
   margin-top: 1.5rem;
 }
-
 .margin-right {
   margin-right: 6%;
 }
-
-.margin-left {
-  margin-left: 30px;
-}
-
 .green_button {
   color: white;
   background-color: $dark-green;
@@ -1074,7 +1026,6 @@ export default {
   border: none;
   cursor: pointer;
 }
-
 .pink_button {
   color: white;
   background-color: $grape;
@@ -1090,7 +1041,6 @@ export default {
   flex-direction: row;
   align-items: center;
 }
-
 .preview {
   min-height: 80vh;
   padding: 16px 32px 0 32px;
@@ -1104,13 +1054,11 @@ export default {
     border-radius: 6px;
   }
 }
-
 .preview-text {
   font-size: 13px;
   letter-spacing: 0.75px;
   margin-left: 8px;
 }
-
 .container {
   min-height: 64vh;
   padding: 16px 32px 0 32px;
@@ -1120,7 +1068,6 @@ export default {
   background-color: white;
   margin-top: 1rem;
 }
-
 .container-small {
   min-height: 48vh;
   padding: 16px 32px 0 32px;
@@ -1130,7 +1077,6 @@ export default {
   background-color: white;
   margin-top: 1rem;
 }
-
 .container2 {
   height: 32vh;
   overflow-y: scroll;
@@ -1142,7 +1088,6 @@ export default {
   margin-top: 0.5rem;
   margin-bottom: 1rem;
 }
-
 .container3 {
   height: 62vh;
   overflow-y: scroll;
@@ -1154,7 +1099,6 @@ export default {
   margin-top: 0.5rem;
   //   border-top: 2px solid $dark-green;
 }
-
 .container4 {
   height: 98vh;
   overflow-y: scroll;
@@ -1166,7 +1110,6 @@ export default {
   background-color: white;
   //   border-top: 3px solid $dark-green;
 }
-
 .invert {
   color: $light-gray-blue;
 
@@ -1174,11 +1117,9 @@ export default {
     filter: invert(50%);
   }
 }
-
 .medText {
   font-size: 18px;
 }
-
 .row {
   display: flex;
   flex-direction: row;
@@ -1188,27 +1129,17 @@ export default {
     margin-right: 4px;
   }
 }
-
-.row_ {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-}
-
 .light-gray-text {
   color: $light-gray-blue !important;
   letter-spacing: 0.75px;
 }
-
 :disabled {
   background-color: $soft-gray;
   color: $light-gray-blue;
 }
-
 #canClick {
   cursor: pointer;
 }
-
 .gray-section {
   letter-spacing: 0.75px;
   color: $light-gray-blue;
@@ -1216,15 +1147,6 @@ export default {
   padding: 6px 8px;
   border-radius: 4px;
 }
-
-.green-section {
-  letter-spacing: 0.75px;
-  color: white;
-  background-color: $dark-green;
-  padding: 6px 10px;
-  border-radius: 6px;
-}
-
 .light-green-section {
   letter-spacing: 0.75px;
   color: $dark-green !important;
@@ -1232,7 +1154,6 @@ export default {
   padding: 6px 9px;
   border-radius: 6px;
 }
-
 .purple-section {
   letter-spacing: 0.25px;
   color: white !important;
@@ -1249,11 +1170,6 @@ export default {
   padding: 4px 6px;
   border-radius: 6px;
 }
-
-.gray-text {
-  color: $gray;
-}
-
 .shimmer {
   display: inline-block;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
@@ -1261,81 +1177,23 @@ export default {
   animation: shimmer 2.5s infinite;
   max-width: 200px;
 }
-
 @keyframes shimmer {
   100% {
     -webkit-mask-position: left;
   }
 }
-
 .green-filter {
   margin-right: 8px !important;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
-
-.grape {
-  color: $grape;
-  font-weight: bold;
-}
-
 .red-filter {
   margin-right: 8px !important;
   filter: invert(48%) sepia(76%) saturate(3436%) hue-rotate(326deg) brightness(113%) contrast(96%);
 }
-
-.filter-green {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: $white-green;
-  padding: 2px 3px;
-  font-weight: bold;
-  margin-left: 8px;
-  small {
-    color: $dark-green;
-    margin-right: 4px;
-  }
-  img {
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
-    padding: 0px;
-  }
-}
-
-.filter-red {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: $light-red;
-  margin-right: 8px;
-  padding: 2px;
-  img {
-    filter: invert(48%) sepia(76%) saturate(3436%) hue-rotate(326deg) brightness(113%) contrast(96%);
-    padding: 0px;
-  }
-}
-
 .green-text {
   color: $dark-green;
 }
-
-.yellow-text {
-  color: $yellow;
-}
-
-.blue-text {
-  color: $panther-blue;
-}
-.col-even {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-evenly;
-}
-
 .card {
   border-radius: 5px;
   border: 1px solid $soft-gray;
@@ -1369,11 +1227,6 @@ export default {
   padding: 0px 0px 4px 16px;
   margin-top: 8px;
 }
-
-.section {
-  border-bottom: 1px solid $soft-gray;
-}
-
 .bottom {
   display: flex;
   flex-direction: row;
@@ -1384,7 +1237,6 @@ export default {
   padding: 6px 2px;
   letter-spacing: 0.75px;
 }
-
 .top {
   position: sticky;
   top: 0;
@@ -1392,7 +1244,6 @@ export default {
   z-index: 3;
   padding: 12px 0;
 }
-
 .bottom-right {
   display: flex;
   flex-direction: row;
@@ -1404,7 +1255,6 @@ export default {
   padding: 6px 2px;
   letter-spacing: 0.75px;
 }
-
 .column {
   display: flex;
   flex-direction: column;
@@ -1436,7 +1286,6 @@ export default {
     }
   }
 }
-
 .inline-text {
   font-weight: 900;
   font-size: 15px;

@@ -507,32 +507,11 @@ ul {
   flex-direction: column;
   justify-content: center;
 }
-.margin-top {
-  margin-top: 0.5rem;
-}
 .margin-top-large {
   margin-top: 2rem;
 }
-.margin-top-negative {
-  margin-top: -0.75rem;
-}
-.margin-bottom {
-  margin-bottom: 1rem;
-}
-.invert {
-  filter: invert(60%);
-}
-.margin-left {
-  margin-left: 1rem;
-}
-.margin-left-negative {
-  margin-left: -2rem;
-}
 .margin-right-large {
   margin-right: 3.25rem;
-}
-.margin-right-larger {
-  margin-right: 3.75rem;
 }
 .row-spread {
   display: flex;
@@ -540,9 +519,6 @@ ul {
   align-items: flex-start;
   justify-content: space-between;
   margin-top: -24px;
-}
-.width-100 {
-  width: 100%;
 }
 .continue-button {
   padding: 0.5rem 1rem;

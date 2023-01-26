@@ -88,7 +88,6 @@ export default {
     color: $light-gray-blue;
   }
 }
-
 .command-center {
   display: flex;
   flex-direction: row;
@@ -157,16 +156,16 @@ export default {
     height: 80vh;
   }
 }
-.column-section-small {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 12px;
+// .column-section-small {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   margin-bottom: 12px;
 
-  section {
-    border: 1px solid $soft-gray;
-    width: 22vw;
-    height: 24vh;
-  }
-}
+//   section {
+//     border: 1px solid $soft-gray;
+//     width: 22vw;
+//     height: 24vh;
+//   }
+// }
 </style>

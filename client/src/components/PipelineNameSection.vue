@@ -40,8 +40,4 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
-.gray {
-  color: $very-light-gray !important;
-}
 </style>

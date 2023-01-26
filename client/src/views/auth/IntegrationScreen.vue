@@ -817,35 +817,6 @@ export default {
     -webkit-mask-position: left;
   }
 }
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-/* Tooltip text */
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 110px;
-  background-color: $base-gray;
-  opacity: 0.9;
-  color: #fff;
-  text-align: center;
-  padding: 5px 0;
-  border-radius: 6px;
-
-  /* Position the tooltip text - see examples below! */
-  position: absolute;
-  z-index: 1;
-  top: -5px;
-  right: 105%;
-}
-
-/* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-
 .right-tooltip {
   position: relative;
   display: inline-block;
@@ -899,20 +870,16 @@ a {
   padding: 4px 6px;
   margin-right: 8px;
 }
-.filter-dot {
-  height: 0.4rem;
-  filter: invert(80%);
-  margin-left: 0.5rem;
-  filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
-}
-.invert {
-  filter: invert(80%);
-}
+// .filter-dot {
+//   height: 0.4rem;
+//   filter: invert(80%);
+//   margin-left: 0.5rem;
+//   filter: invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg) brightness(93%) contrast(89%);
+// }
 .filter-loft {
   filter: brightness(0%) invert(7%) sepia(31%) saturate(2639%) hue-rotate(115deg) brightness(92%)
     contrast(91%);
 }
-
 .integrations {
   color: $base-gray;
   display: flex;
@@ -929,21 +896,10 @@ a {
     margin-top: 4px;
   }
 }
-.centered {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.gold-filter {
-  filter: invert(81%) sepia(35%) saturate(920%) hue-rotate(343deg) brightness(91%) contrast(90%);
-  margin-left: 4px;
-}
-
-.gold-text {
-  color: #ddad3c;
-}
-
+// .gold-filter {
+//   filter: invert(81%) sepia(35%) saturate(920%) hue-rotate(343deg) brightness(91%) contrast(90%);
+//   margin-left: 4px;
+// }
 .space-between {
   display: flex;
   flex-direction: row;
@@ -951,7 +907,6 @@ a {
   justify-content: space-between;
   width: 116%;
 }
-
 // .card:hover {
 //   transform: scale(1.015);
 //   box-shadow: 1px 2px 2px $very-light-gray;
@@ -997,14 +952,9 @@ a {
     }
   }
 }
-
 .lb-bg {
   background-color: $very-light-blue;
   border: 1px solid $very-light-blue;
-}
-.rb-bg {
-  background: rgb(238, 174, 202);
-  background: radial-gradient(circle, rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
 }
 .vlb-bg {
   background: rgb(181, 222, 255);
@@ -1020,16 +970,6 @@ a {
   background: rgb(140, 255, 191);
   background: linear-gradient(90deg, rgba(140, 255, 191, 1) 1%, rgba(106, 198, 146, 1) 90%);
   border: 1px solid $white-green;
-}
-.ly-bg {
-  background: rgb(252, 235, 196);
-  background: linear-gradient(90deg, rgba(252, 235, 196, 1) 1%, rgba(247, 207, 118, 1) 99%);
-  border: 1px solid $light-yellow;
-}
-.wt-bg {
-  background: rgb(242, 242, 242);
-  background: linear-gradient(90deg, rgba(242, 242, 242, 1) 18%, rgba(226, 226, 226, 1) 100%);
-  border: 1px solid $off-white;
 }
 .lr-bg {
   background: rgb(251, 165, 192);
@@ -1059,43 +999,26 @@ a {
   background: linear-gradient(90deg, rgba(255, 197, 158, 1) 1%, rgba(255, 156, 89, 1) 78%);
   border: 1px solid $light-orange;
 }
-
-.required__header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .required {
   filter: invert(50%) sepia(100%) saturate(901%) hue-rotate(323deg) brightness(110%) contrast(96%);
   margin-left: 4px;
 }
-
 .card-text {
   font-size: 14px;
   color: $light-gray-blue;
   text-align: center;
 }
-
-.privacy {
-  color: $base-gray;
-  font-size: 12px;
-}
-
-.lock {
-  height: 1rem;
-}
+// .privacy {
+//   color: $base-gray;
+//   font-size: 12px;
+// }
+// .lock {
+//   height: 1rem;
+// }
 a {
   text-decoration: none;
   color: $grape;
   font-weight: bold;
-}
-.active {
-  background-color: $white-green;
-  color: $dark-green;
-  padding: 4px 8px;
-  border-radius: 4px;
 }
 .inactive {
   color: $light-gray-blue;
@@ -1142,20 +1065,6 @@ a {
   font-size: 11px;
   border: 1px solid $soft-gray;
   cursor: pointer;
-}
-
-.grey-text {
-  color: $light-gray-blue;
-}
-.margin-left {
-  margin-left: 1.75rem;
-  margin-bottom: -4px;
-}
-.green-outline {
-  outline: 1px solid $dark-green;
-}
-.font-12 {
-  font-size: 12px;
 }
 .slot-icon {
   display: flex;

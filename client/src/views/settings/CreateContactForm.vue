@@ -142,14 +142,6 @@ export default {
   color: $base-gray;
   overflow: auto;
 }
-
-.opportunity_title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 4.2rem;
-  margin-top: 3rem;
-}
 h3 {
   font-size: 1.35rem;
 }

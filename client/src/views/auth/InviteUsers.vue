@@ -1123,14 +1123,6 @@ export default {
   cursor: pointer;
   background-color: white;
 }
-.message__box {
-  margin-top: -16px;
-  margin-bottom: 8px;
-  height: 30vh;
-  width: 40vw;
-  border-radius: 0.25rem;
-  background-color: transparent;
-}
 .template-input {
   border: 1px solid #ccc;
   border-bottom: none;
@@ -1220,13 +1212,6 @@ h2 {
   letter-spacing: 0.75px;
   border: 1px solid #e8e8e8;
 }
-.invite_button2 {
-  background-color: white;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 6px 12px;
-  border: 1px solid #e8e8e8;
-}
 .invite_button:disabled {
   display: flex;
   flex-direction: row;
@@ -1245,8 +1230,7 @@ h2 {
   cursor: text;
 }
 
-.invite_button:hover,
-.invite_button2:hover {
+.invite_button:hover {
   cursor: pointer;
   color: $dark-green;
 }
@@ -1289,9 +1273,6 @@ input[type='checkbox'] + label::before {
   border: 1px solid rgb(182, 180, 180);
   border-radius: 4px;
   margin-right: 0.5em;
-}
-.small {
-  font-size: 12px;
 }
 @mixin epic-sides() {
   position: relative;
@@ -1351,175 +1332,11 @@ input[type='checkbox'] + label::before {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
 }
-.centered {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  height: 40vh;
-}
-.small-container {
-  box-shadow: 1px 1px 2px 1px #ccc;
-  border: 1px solid white;
-  border-radius: 6px;
-  width: 250px;
-  height: 110px;
-  overflow: hidden;
-  cursor: pointer;
-  &__head {
-    border-bottom: 1px solid #ccc;
-    padding: 1px 8px;
-    font-weight: bold;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    height: 40px;
-    display: flex;
-    justify-content: flex-start;
-    background-color: $dark-green;
-    color: white;
-  }
-  &__body {
-    display: flex;
-    justify-content: flex-start;
-    padding: 4px;
-    opacity: 0.8;
-    font-size: 12px;
-  }
-}
-.small-container:hover {
-  opacity: 0.7;
-}
-.row {
-  padding-left: 1.5rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
-}
-.hover-img {
-  background-color: white;
-  border: 1px solid white;
-  box-shadow: 1px 1px 2px 1px #ccc;
-  color: #fff;
-  display: inline-block;
-  margin: 8px;
-  max-width: 320px;
-  min-width: 240px;
-  height: 275px;
-  overflow: hidden;
-  position: relative;
-  text-align: center;
-  width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.hover-img * {
-  box-sizing: border-box;
-  transition: all 0.45s ease;
-}
-
-.hover-img:before,
-.hover-img:after {
-  background-color: rgba(0, 0, 0, 0.5);
-  border-top: 2px solid rgba(0, 0, 0, 0.5);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  content: '';
-  transition: all 0.3s ease;
-  z-index: 1;
-  opacity: 0;
-  transform: scaleY(2);
-}
-
-.hover-img img {
-  vertical-align: top;
-  max-width: 100%;
-  backface-visibility: hidden;
-}
-
-.hover-img figcaption {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  align-items: center;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  line-height: 1.1em;
-  opacity: 0;
-  z-index: 2;
-  transition-delay: 0.1s;
-  font-size: 24px;
-  font-family: sans-serif;
-  font-weight: 400;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.hover-img:hover:before,
-.hover-img:hover:after {
-  transform: scale(1);
-  opacity: 1;
-}
-
-.hover-img:hover > img {
-  opacity: 0.7;
-}
-
-.hover-img:hover figcaption {
-  opacity: 1;
-}
-.wide {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
-.figure-title {
-  img {
-    margin-left: 6px;
-    filter: invert(20%);
-    visibility: hidden;
-  }
-  p {
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-  }
-  background-color: $dark-green;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 8px;
-  font-weight: bold;
-  border-radius: 2px;
-
-  small {
-    color: $base-gray;
-    margin-top: -8px;
-    letter-spacing: 0.5px;
-  }
-}
-.align-start {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
 }
 .multi-slot {
   display: flex;
@@ -1630,16 +1447,6 @@ input[type='checkbox'] + label::before {
     margin-top: 1rem;
   }
 }
-.cancel-button {
-  margin-top: 1rem;
-  position: relative;
-  right: 1px;
-  color: $gray;
-  &:hover {
-    cursor: pointer;
-  }
-}
-
 .modal-input {
   width: 15vw;
   height: 2.5rem;
