@@ -569,7 +569,7 @@ export default {
     for (let i = 0; i < this.slackMessage.length; i++) {
       const titleAndVal = this.slackMessage[i].split('\n')
       const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length - 10)
-      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length - 2)
+      const valFormatted = titleAndVal[1].slice(3, titleAndVal[1].length - 2)
       // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
       slackFormat.push({ title: titleFormatted, val: valFormatted })
     }

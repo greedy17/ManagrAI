@@ -512,7 +512,7 @@ const UPCOMING_NEXT_STEP = {
             " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "<strong>Opporunity Name</strong> \n { Opportunity.Name }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
