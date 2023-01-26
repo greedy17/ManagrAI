@@ -90,8 +90,7 @@
         'active-edit': editing && editIndex === i && currentInlineRow === index,
         'table-cell-wide':
           field.dataType === 'TextArea' ||
-          (field.length > 250 &&
-            field.dataType === 'String' &&
+          (field.dataType === 'String' &&
             (opp['secondary_data'][field.apiName] ||
               opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))])),
         'table-cell':
