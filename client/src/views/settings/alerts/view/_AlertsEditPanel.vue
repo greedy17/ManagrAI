@@ -318,8 +318,6 @@ import debounce from 'lodash.debounce'
 import draggable from 'vuedraggable'
 
 //Internal
-import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
-import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
 import FormField from '@/components/forms/FormField'
 /**
@@ -354,8 +352,6 @@ export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    AlertOperandModal,
-    AlertGroupModal,
     AlertSettingsModal,
     quillEditor,
     Modal,
