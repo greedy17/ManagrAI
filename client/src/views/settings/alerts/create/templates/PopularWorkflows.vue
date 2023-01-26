@@ -667,7 +667,7 @@ export default {
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({ title, val })
       this.config.messageTemplate.body = this.slackMessage.join('\n\n')
-      this.config.messageTemplate.bindings.push(val)
+      this.config.messageTemplate.bindings.push(` ${val} `)
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
