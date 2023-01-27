@@ -2772,13 +2772,18 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
+                    val:
+                      field.apiName === 'StageName'
+                        ? $event.value
+                        : field.apiName === 'dealstage'
+                        ? [$event.label, $event.id]
+                        : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
                 "
                 v-model="dropdownVal[field.apiName]"
-                >
+              >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
@@ -6200,7 +6205,7 @@ h3 {
 }
 .table {
   display: table;
-  overflow: scroll;
+  // overflow: scroll;
   width: 100vw;
 }
 .empty-table {
