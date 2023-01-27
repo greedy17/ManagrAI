@@ -1050,7 +1050,7 @@ export default {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       this.userCRM === 'SALESFORCE'
-        ? '<strong>Name</strong> \n { Opportunity.Name }'
+        ? '<strong>Opportunity Name</strong> \n { Opportunity.Name }'
         : '<strong>Deal Name</strong> \n { Deal.dealname }'
     this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value =
       this.userCRM === 'SALESFORCE'
