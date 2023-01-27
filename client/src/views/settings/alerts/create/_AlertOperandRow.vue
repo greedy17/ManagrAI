@@ -234,7 +234,7 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjects, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import {
   ALERT_DATA_TYPE_MAP,
@@ -280,7 +280,6 @@ export default {
       selectedOperandValueRef: null,
       picklistOpts: [],
       operandDate: '',
-      NON_FIELD_ALERT_OPTS,
       negativeOperand: false,
       positiveOperand: false,
       dealStageCheck: false,

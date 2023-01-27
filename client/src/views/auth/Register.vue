@@ -124,14 +124,12 @@
 <script>
 import User, { RepRegistrationForm } from '@/services/users'
 import Button from '@thinknimble/button'
-import FormField from '@/components/forms/FormField'
 import moment from 'moment-timezone'
 
 export default {
   name: 'Register',
   components: {
     Button,
-    FormField,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {

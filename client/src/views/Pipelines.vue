@@ -2980,15 +2980,13 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
 import PipelineTableRow from '@/components/PipelineTableRow'
 import PipelineHeader from '@/components/PipelineHeader'
-import WorkflowHeader from '@/components/WorkflowHeader'
-import WorkflowRow from '@/components/WorkflowRow'
 import Modal from '@/components/InviteModal'
 import Loader from '@/components/Loader'
 import PipelineLoader from '@/components/PipelineLoader'
@@ -3004,8 +3002,6 @@ export default {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineTableRow,
     PipelineHeader,
-    WorkflowHeader,
-    WorkflowRow,
     PipelineLoader,
     Loader,
     Filters,

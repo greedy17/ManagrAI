@@ -304,14 +304,13 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
+import { SObjects, MeetingWorkflows } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
 import Zoom from '@/services/zoom/account'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
-import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import UpdateForm from '@/components/updateForm/'
 import User from '@/services/users'
 
@@ -321,7 +320,6 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    MeetingWorkflowHeader,
     MeetingWorkflow,
     UpdateForm,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),

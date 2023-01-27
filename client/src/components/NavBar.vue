@@ -49,7 +49,7 @@
         <router-link
           v-if="(isTeamLead || isAdmin) && userCRM"
           exact-active-class="active"
-          :to="{ name: 'UpdateOpportunity' }"
+          :to="{ name: 'Forms' }"
         >
           <div class="tooltip">
             <img src="@/assets/images/upload.svg" height="16px" alt="" />
@@ -140,7 +140,6 @@ export default {
     if (this.isTeamLead || this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },
-        { key: 'Slack Forms', value: 'SlackFormSettings' },
         { key: 'Invite Users', value: 'InviteUsers' },
         { key: 'Log Out', value: 'logout' },
       ]

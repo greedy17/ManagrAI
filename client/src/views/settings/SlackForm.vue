@@ -232,11 +232,10 @@
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 import SlackOAuth from '@/services/slack'
 import { SObjectField } from '@/services/salesforce'
@@ -248,7 +247,6 @@ export default {
   components: {
     PulseLoadingSpinnerButton,
     draggable,
-    ToggleCheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
@@ -303,7 +301,6 @@ export default {
       addedFields: [],
       removedFields: [],
       ...FORM_CONSTS,
-      Pagination,
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,
@@ -708,7 +705,7 @@ export default {
       }
     },
     goToUpdateOpp() {
-      this.$router.push({ name: 'UpdateOpportunity' })
+      this.$router.push({ name: 'Forms' })
     },
     goToValidations() {
       this.$emit('cancel-selected')

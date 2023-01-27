@@ -38,7 +38,7 @@
 <script>
 import Meetings from '@/views/Meetings'
 import PipelineOverview from '@/components/PipelineOverview'
-import ForecastOverview from '@/components/ForecastOverview'
+// import ForecastOverview from '@/components/ForecastOverview'
 import RecentActivity from '@/components/RecentActivity'
 import { CollectionManager } from '@thinknimble/tn-models'
 import AlertTemplate from '@/services/alerts/'
@@ -48,7 +48,7 @@ export default {
   components: {
     Meetings,
     PipelineOverview,
-    ForecastOverview,
+    // ForecastOverview,
     RecentActivity,
   },
   data() {

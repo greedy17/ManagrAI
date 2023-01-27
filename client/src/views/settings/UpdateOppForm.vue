@@ -22,16 +22,12 @@ import SlackForm from '@/views/settings/SlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
 import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import { SOBJECTS_LIST } from '@/services/salesforce'
-import * as FORM_CONSTS from '@/services/slack'
 
 export default {
   name: 'UpdateOppForm',
   components: { SlackForm },
   data() {
     return {
-      ...FORM_CONSTS,
-      SOBJECTS_LIST,
       allForms: [],
       allFields: [],
       formsByType: [],

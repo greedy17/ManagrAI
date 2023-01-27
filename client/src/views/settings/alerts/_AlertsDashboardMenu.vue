@@ -254,9 +254,6 @@ export default {
     goToActive() {
       this.$router.push({ name: 'ListTemplates' })
     },
-    goToInstant() {
-      this.$router.push({ name: 'RealTime' })
-    },
     goToCustom() {
       this.$router.push({ name: 'BuildYourOwn' })
     },

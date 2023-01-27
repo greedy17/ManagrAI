@@ -566,7 +566,7 @@
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
 
@@ -576,7 +576,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
-import User from '@/services/users'
 import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
@@ -668,7 +667,6 @@ export default {
       addedFields: [],
       removedFields: [],
       ...FORM_CONSTS,
-      Pagination,
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,

@@ -17,7 +17,7 @@ import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
-import SideDrawer from '@/components/SideDrawer'
+// import SideDrawer from '@/components/SideDrawer'
 
 const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
 
@@ -25,7 +25,7 @@ export default {
   name: 'app',
   components: {
     NavBar,
-    SideDrawer,
+    // SideDrawer,
   },
   data() {
     return {

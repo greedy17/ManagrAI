@@ -660,7 +660,6 @@
 
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
-import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users'
 import TimeLine from '@/components/Timeline'
@@ -670,7 +669,6 @@ export default {
   name: 'Reports',
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    ToggleCheckBox,
     TimeLine,
     Chart,
   },

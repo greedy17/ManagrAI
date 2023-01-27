@@ -1349,12 +1349,12 @@ import { MeetingWorkflows } from '@/services/salesforce'
 import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
 import User from '@/services/users'
-import CustomSlackForm from '@/views/settings/CustomSlackForm'
+// import CustomSlackForm from '@/views/settings/CustomSlackForm'
 
 export default {
   name: 'Staff',
   components: {
-    CustomSlackForm,
+    // CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),

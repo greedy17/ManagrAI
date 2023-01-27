@@ -646,9 +646,8 @@ import { UserOnboardingForm } from '@/services/users/forms'
  */
 
 import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
-import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { SObjectField } from '@/services/salesforce'
 import User from '@/services/users'
 import { SlackListResponse } from '@/services/slack'
 
@@ -660,9 +659,6 @@ export default {
       savingTemplate: false,
       listVisible: true,
       dropdownVisible: true,
-      NON_FIELD_ALERT_OPTS,
-      stringRenderer,
-      SOBJECTS_LIST,
       alertTemplateForm: new AlertTemplateForm(),
       selectedBindings: [],
       userOnboardingForm: new UserOnboardingForm({}),

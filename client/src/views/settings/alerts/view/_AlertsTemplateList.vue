@@ -389,20 +389,20 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
  *
  */
 import { CollectionManager } from '@thinknimble/tn-models'
-import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import Onboarder from '@/views/settings/Onboarder'
+import SlackOAuth from '@/services/slack'
+// import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
 
-import AlertTemplate, { AlertGroup } from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 import allConfigs from '../configs'
 
 export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    Onboarder,
+    // Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },

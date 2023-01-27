@@ -312,14 +312,12 @@
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-import { quillEditor } from 'vue-quill-editor'
 import Modal from '@/components/InviteModal'
-import debounce from 'lodash.debounce'
+// import debounce from 'lodash.debounce'
 import draggable from 'vuedraggable'
 
 //Internal
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
-import FormField from '@/components/forms/FormField'
 /**
  * Services
  *
@@ -351,9 +349,7 @@ const TABS = [
 export default {
   name: 'AlertsEditPanel',
   components: {
-    FormField,
     AlertSettingsModal,
-    quillEditor,
     Modal,
     AlertGroup,
     AlertOperandRow,

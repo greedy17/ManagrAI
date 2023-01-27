@@ -114,11 +114,3 @@ export class Config extends Model {
   static isActive = new fields.BooleanField({ default: true })
   static recipients = new fields.ArrayField({ type: new fields.CharField() })
 }
-
-export class RealTime extends Model {
-  static api = RealTimeAPI.create(RealTime)
-  static apiName = new fields.CharField()
-  static resourceType = new fields.CharField({})
-  static pipelines = new fields.ArrayField({ type: new fields.CharField() })
-  static recipients = new fields.ArrayField({ type: new fields.CharField() })
-}
