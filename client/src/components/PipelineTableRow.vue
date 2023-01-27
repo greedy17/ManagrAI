@@ -28,33 +28,28 @@
     </div> -->
 
     <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
-      <!-- flex-row-spread -->
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
           <div>
             <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
-              <img style="filter: invert(40%)" height="13px" src="@/assets/images/expand.svg" />
+              <img style="filter: invert(40%)" height="12px" src="@/assets/images/expand.svg" />
             </button>
           </div>
 
           <div>
             <button @click="emitGetNotes" class="name-cell-note-button-1">
-              <img style="filter: invert(40%)" height="13px" src="@/assets/images/note.svg" />
+              <img style="filter: invert(40%)" height="12px" src="@/assets/images/note.svg" />
             </button>
           </div>
         </div>
         <div
           v-else
           class="flex-row-spread"
-          style="
-            width: 4rem;
-            height: 0.75rem;
-            margin-left: 16px;
-            margin-right: -12px;
-            color: #9596b4;
-          "
+          style="min-width: 4rem; margin-left: 16px; margin-right: -12px; color: #9596b4"
         >
-          {{ index + 1 }}
+          <div style="padding: 0; margin: 0">
+            {{ index + 1 }}
+          </div>
         </div>
 
         <div>
@@ -714,7 +709,6 @@ input {
   display: table-cell;
   width: fit-content;
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
@@ -722,14 +716,17 @@ input {
 }
 .cell-name {
   display: table-cell;
+  white-space: nowrap;
+  width: fit-content;
+  text-overflow: ellipsis;
   background-color: white;
   color: $base-gray;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.75px;
   position: sticky;
   left: 0vw;
   z-index: 2;
   padding: 0px 4px;
-  line-height: 1.2;
+  line-height: 1;
   font-size: 13px;
   border-bottom: 1px solid $soft-gray;
   cursor: text !important;
@@ -749,14 +746,13 @@ input {
 
 .table-cell-wide {
   display: table-cell;
-  max-width: 19vw;
+  width: fit-content;
+  text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding-left: 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0px 32px 0px 12px;
+  padding: 0px 28px 0px 12px;
 }
 .table-cell-checkbox-header {
   display: table-cell;
@@ -847,13 +843,14 @@ input[type='checkbox'] + label::before {
 }
 .limit-cell-height {
   padding: 0;
+  max-width: 18vw;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .name-cell-note-button-1 {
-  margin-right: 12px;
+  margin-right: 10px;
   padding: 0.25rem;
   border-radius: 4px;
   background-color: transparent;
