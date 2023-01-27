@@ -953,7 +953,7 @@ input {
 .table-cell-wide {
   display: table-cell;
   position: sticky;
-  min-width: 22vw;
+  min-width: 18vw;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding-left: 4px;
