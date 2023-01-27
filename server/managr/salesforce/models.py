@@ -649,7 +649,7 @@ class MeetingWorkflowQuerySet(models.QuerySet):
         if user.organization and user.is_active:
             if date:
                 return self.filter(user=user, datetime_created__date=date).order_by(
-                    "datetime_created"
+                    "-meeting__start_time"
                 )
             user_timezone = pytz.timezone(user.timezone)
             currenttime = datetime.now()
