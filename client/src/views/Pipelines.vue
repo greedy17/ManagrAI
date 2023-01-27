@@ -2772,18 +2772,13 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val:
-                      field.apiName === 'StageName'
-                        ? $event.value
-                        : field.apiName === 'dealstage'
-                        ? [$event.label, $event.id]
-                        : $event.id,
+                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
                 "
                 v-model="dropdownVal[field.apiName]"
-              >
+                >
                 <template slot="noResult">
                   <p class="multi-slot">No results.</p>
                 </template>
@@ -3319,6 +3314,7 @@ export default {
         ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
+    this.objectFields.filters = { crmObject: this.crmObject }
     this.objectFields.refresh()
     this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
