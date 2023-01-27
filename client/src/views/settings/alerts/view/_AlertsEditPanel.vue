@@ -478,7 +478,7 @@ export default {
     },
     addedFieldNames() {
       return this.formattedSlackMessage.map((field) => {
-        return field.val
+        return field.val.trim()
       })
     },
     stateRecordTypes() {
