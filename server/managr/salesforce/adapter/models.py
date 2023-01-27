@@ -203,6 +203,8 @@ class SalesforceAuthAccountAdapter:
                         "error_description", error_data.get("message", None)
                     )
             else:
+                if isinstance(error_data, list):
+                    error_data = error_data[0]
                 error_param = error_data.get("errorCode", None)
                 error_message = error_data.get("message", None)
             kwargs = {
