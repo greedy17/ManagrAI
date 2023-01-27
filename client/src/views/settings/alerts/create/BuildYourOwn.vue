@@ -538,7 +538,7 @@ export default {
     for (let i = 0; i < this.slackMessage.length; i++) {
       const titleAndVal = this.slackMessage[i].split('\n')
       const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length - 10)
-      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length - 2)
+      const valFormatted = titleAndVal[1].slice(3, titleAndVal[1].length - 2)
       // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
       slackFormat.push({ title: titleFormatted, val: valFormatted })
     }
@@ -892,10 +892,18 @@ export default {
       this.formattedSlackMessage.push({ title, val })
       this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
         this.slackMessage.join('\n\n')
+      if (!this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value) {
+        this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value = [` ${val} `]
+      } else {
+        this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value.push(` ${val} `)
+      }
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
       this.formattedSlackMessage = this.formattedSlackMessage.filter((mes, j) => j !== i)
+      this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value = this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value.filter(
+        (mes, j) => j !== i,
+      )
       this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
         this.slackMessage.join('\n\n')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
@@ -979,7 +987,7 @@ export default {
     },
     filteredFields() {
       return this.fields.list.filter(
-        (field) => !this.addedFieldNames.includes(`${this.selectedResourceType}.${field.apiName}`),
+        (field) => !this.addedFieldNames.includes(`${this.selectedResourceType}.${field.apiName}`)
       )
     },
     addedFieldNames() {
@@ -1044,6 +1052,10 @@ export default {
       this.userCRM === 'SALESFORCE'
         ? '<strong>Name</strong> \n { Opportunity.Name }'
         : '<strong>Deal Name</strong> \n { Deal.dealname }'
+    this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value =
+      this.userCRM === 'SALESFORCE'
+        ? [' Opportunity.Name ']
+        : [' Deal.dealname ']
     this.alertTemplateForm.field.resourceType.value =
       this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.repsPipeline()
