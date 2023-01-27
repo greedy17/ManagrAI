@@ -733,12 +733,16 @@ export default {
     },
     dragEnd() {
       const slackMesArr = []
+      const slackBindingsArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
         slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+        slackBindingsArr.push(` ${this.formattedSlackMessage[i].val} `)
       }
       this.slackMessage = slackMesArr
       this.messageTemplateForm.field.body.value = this.slackMessage.join('\n\n')
       this.alert.messageTemplateRef.body = this.slackMessage.join('\n\n')
+      this.messageTemplateForm.field.bindings.value = slackBindingsArr
+      this.alert.messageTemplateRef.bindings = slackBindingsArr
       this.updateMessageTemplate()
       this.drag = false
     },
