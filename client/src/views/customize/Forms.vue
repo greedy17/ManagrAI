@@ -16,11 +16,11 @@
 </template>
 
 <script>
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
-import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
+import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
@@ -34,30 +34,11 @@ export default {
       SOBJECTS_LIST,
       allForms: [],
       allFields: [],
-      formsByType: [],
-      isLoading: false,
-      selectedTab: null,
-      resource: null,
       selectedForm: null,
-      newForms: [],
-      selectedStage: null,
-      selectedFormFields: [],
       stages: [],
-      loadingStages: false,
-      formType: null,
-      search: '',
-      fieldParam: null,
-      loading: false,
       formFields: CollectionManager.create({ ModelClass: ObjectField }),
-      stageDropDownOpen: false,
-      isVisible: false,
       currentResource: '',
-      validations: CollectionManager.create({
-        ModelClass: SObjectValidation,
-        pagination: Pagination.create({ size: 2 }),
-      }),
       formStages: [],
-      started: false,
     }
   },
   watch: {},
@@ -161,12 +142,6 @@ export default {
   color: $base-gray;
   // overflow: auto;
   padding-left: 60px;
-}
-
-.opportunity_title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
 }
 h3 {
   font-size: 1.35rem;

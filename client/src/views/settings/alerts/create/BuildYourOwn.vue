@@ -396,10 +396,6 @@
  * Components
  * */
 // Pacakges
-import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
-import { quillEditor } from 'vue-quill-editor'
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 //Internal
@@ -414,9 +410,8 @@ import Modal from '@/components/Modal'
  */
 
 import AlertTemplate, { AlertGroupForm, AlertTemplateForm } from '@/services/alerts/'
-import { stringRenderer } from '@/services/utils'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { SOBJECTS_LIST } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import draggable from 'vuedraggable'
 import User from '@/services/users'
@@ -430,58 +425,28 @@ export default {
     PulseLoadingSpinnerButton,
     SlackNotificationTemplate,
     Modal,
-    quillEditor,
     AlertsEditPanel,
     draggable,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
-      updatedAlert: this.oldAlert,
-      addingFields: false,
-      frequencies: ['WEEKLY', 'MONTHLY'],
       resources: [],
       dropdownLoading: false,
-      selectedDay: null,
       selectedChannel: null,
-      crmValue: null,
-      viewingTemplate: false,
-      channelOpts: new SlackListResponse(),
       userChannelOpts: new SlackListResponse(),
       channelName: '',
-      message:
-        this.userCRM === 'SALESFORCE'
-          ? 'Hey { __Recipient.full_name }, your deal { Opportunity.Name }'
-          : 'Hey { __Recipient.full_name }, your deal { Deal.Name }',
-      templateBounce: true,
       selectedUsers: null,
-      fieldBounce: true,
-      clickCount: 0,
-      newChannel: {},
-      showMenu: true,
-      savingTemplate: false,
-      listVisible: true,
-      dropdownVisible: true,
-      NON_FIELD_ALERT_OPTS,
-      stringRenderer,
       SOBJECTS_LIST,
       alertTemplateForm: new AlertTemplateForm(),
-      selectedBindings: [],
-      pageNumber: 0,
-      searchQuery: '',
-      searchText: '',
-      searchChannels: '',
       filterText: '',
+      savingTemplate: false,
       addedFields: [],
       create: false,
       directToUsers: true,
       channelCreated: false,
       slackMessage: [],
       formattedSlackMessage: [],
-      // fields: CollectionManager.create({
-      //   ModelClass: ObjectField,
-      //   pagination: { size: 1000 },
-      // }),
       fields: CollectionManager.create({
         ModelClass: ObjectField,
         filters: {
@@ -491,20 +456,6 @@ export default {
         pagination: { size: 1000 },
       }),
       users: CollectionManager.create({ ModelClass: User }),
-      recipientBindings: [
-        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
-        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
-        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
-        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
-      ],
-      alertRecipientOpts: [
-        { key: 'Myself', value: 'SELF' },
-        { key: 'Owner', value: 'OWNER' },
-        { key: 'All Managers', value: 'MANAGERS' },
-        { key: 'All Reps', value: 'REPS' },
-        { key: 'Everyone', value: 'ALL' },
-        { key: 'SDR', value: 'SDR' },
-      ],
       alertTargetOpts: [
         { key: 'Myself', value: 'SELF' },
         { key: 'All Managers', value: 'MANAGERS' },
@@ -600,6 +551,31 @@ export default {
       }
       return true
     },
+    async onSave() {
+      this.savingTemplate = true
+      this.alertTemplateForm.validate()
+      if (this.alertTemplateForm.isValid) {
+        try {
+          const res = await AlertTemplate.api.createAlertTemplate({
+            ...this.alertTemplateForm.toAPI,
+            user: this.$store.state.user.id,
+            directToUsers: this.directToUsers,
+          })
+          this.$emit('close-builder')
+          this.$router.go()
+        } catch (e) {
+          this.$toast('An error occured while trying to save your workflow', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } finally {
+          this.savingTemplate = false
+        }
+      }
+    },
     onAddField(field) {
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
       this.bindText(`${this.selectedResourceType}.${field.apiName}`, `${field.label}`)
@@ -619,34 +595,15 @@ export default {
       }
       return props.fullName
     },
-    changeFrequency() {
-      this.alertFrequency == 'WEEKLY'
-        ? (this.alertFrequency = 'MONTHLY')
-        : (this.alertFrequency = 'WEEKLY')
+    // changeFrequency() {
+    //   this.alertFrequency == 'WEEKLY'
+    //     ? (this.alertFrequency = 'MONTHLY')
+    //     : (this.alertFrequency = 'WEEKLY')
 
-      this.alertFrequency == 'MONTHLY'
-        ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0])
-        : (this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [])
-    },
-    getFrequency(val) {
-      let newVal = ''
-      val === 'WEEKLY'
-        ? (newVal = 'every week on')
-        : val === 'Monthly'
-        ? (newVal = 'every month on')
-        : (newVal = '')
-      return newVal
-    },
-    getDays(arr) {
-      let days = []
-      for (let i = 0; i < arr.length; i++) {
-        days.push(Object.values(arr[i]))
-      }
-      return days.map((day) => day[0]).toString()
-    },
-    getUsers(arr) {
-      return arr.map((user) => user.fullName).toString()
-    },
+    //   this.alertFrequency == 'MONTHLY'
+    //     ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [0])
+    //     : (this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = [])
+    // },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
       this.alertTemplateForm.field.alertConfig.groups[0].field.alertTargets.value = mappedIds
@@ -655,15 +612,6 @@ export default {
       this.directToUsers
         ? (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = ['default'])
         : (this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = null)
-    },
-    positiveDay(num) {
-      if (num < 0) {
-        return (num *= -1) + ' days in the past.'
-      } else if (num == 0) {
-        return ' the day of your selected delivery day.'
-      } else {
-        return num + ' days in the future.'
-      }
     },
     repsPipeline() {
       if (
@@ -677,27 +625,6 @@ export default {
         })
       }
     },
-    addCount() {
-      this.clickCount += 1
-    },
-    onCopy: function () {
-      this.$toast('Copied', {
-        timeout: 2000,
-        position: 'top-left',
-        type: 'success',
-        toastClassName: 'custom',
-        bodyClassName: ['custom'],
-      })
-    },
-    onError: function () {
-      this.$toast('Error copying template', {
-        timeout: 2000,
-        position: 'top-left',
-        type: 'error',
-        toastClassName: 'custom',
-        bodyClassName: ['custom'],
-      })
-    },
     changeCreate() {
       this.create = !this.create
       if (
@@ -708,14 +635,6 @@ export default {
           'SLACK_CHANNEL'
       }
     },
-    // async listChannels(cursor = null) {
-    //   const res = await SlackOAuth.api.listChannels(cursor)
-    //   const results = new SlackListResponse({
-    //     channels: [...this.channelOpts.channels, ...res.channels],
-    //     responseMetadata: { nextCursor: res.nextCursor },
-    //   })
-    //   this.channelOpts = results
-    // },
     async listUserChannels(cursor) {
       this.dropdownLoading = true
       const res = await SlackOAuth.api.listUserChannels(cursor)
@@ -728,7 +647,6 @@ export default {
         this.dropdownLoading = false
       }, 500)
     },
-
     async createChannel(name) {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
       const res = await SlackOAuth.api.createChannel(name)
@@ -839,44 +757,6 @@ export default {
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
     },
-    accountResource() {
-      this.alertTemplateForm.field.resourceType.value = 'Account'
-    },
-    leadResource() {
-      this.alertTemplateForm.field.resourceType.value = 'Lead'
-    },
-    opportunityResource() {
-      this.alertTemplateForm.field.resourceType.value = 'Opportunity'
-    },
-    contactResource() {
-      this.alertTemplateForm.field.resourceType.value = 'Contact'
-    },
-
-    async onSave() {
-      this.savingTemplate = true
-      this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
-        try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.alertTemplateForm.toAPI,
-            user: this.$store.state.user.id,
-            directToUsers: this.directToUsers,
-          })
-          this.$emit('close-builder')
-          this.$router.go()
-        } catch (e) {
-          this.$toast('An error occured while trying to save your workflow', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } finally {
-          this.savingTemplate = false
-        }
-      }
-    },
     dragEnd() {
       const slackMesArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
@@ -907,19 +787,6 @@ export default {
       this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
         this.slackMessage.join('\n\n')
       this.addedFields = [...this.addedFields.filter((f) => f.id != removedField.id)]
-    },
-    onNextPage() {
-      this.pageNumber <= 2 ? (this.pageNumber += 1) : (this.pageNumber = this.pageNumber)
-    },
-    onPreviousPage() {
-      this.pageNumber >= 1 ? (this.pageNumber -= 1) : (this.pageNumber = this.pageNumber)
-    },
-    setDay(n) {
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDay.value = 0
-      let days = []
-      n.forEach((day) => days.push(day.value))
-      let newDays = [...new Set(days)]
-      this.alertTemplateForm.field.alertConfig.groups[0].field.recurrenceDays.value = newDays
     },
     setPipelines(obj) {
       if (this.alertTemplateForm.field.alertConfig.groups[0].field._alertTargets.value.length < 1) {
@@ -968,9 +835,6 @@ export default {
         el.field.groupOrder.value = order + index
       })
     },
-    async fieldNextPage() {
-      await this.fields.addNextPage()
-    },
     async onUsersNextPage() {
       this.dropdownLoading = true
       await this.users.addNextPage()
@@ -1012,12 +876,6 @@ export default {
     },
     alertIsValid() {
       return this.alertTemplateForm.isValid
-    },
-    editor() {
-      return this.$refs['message-body'].quill
-    },
-    selection() {
-      return this.editor.selection.lastRange
     },
     user() {
       return this.$store.state.user
@@ -1110,132 +968,26 @@ export default {
   color: $base-gray;
   font-size: 12px;
 }
-.gray-bottom {
-  border-bottom: 1px solid $soft-gray;
-  padding-bottom: 8px;
-}
-.red {
-  color: $coral;
-}
-.selector-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center !important;
-  width: 25vw;
-  overflow-x: scroll;
-  outline: 1px solid $soft-gray;
-  padding: 20px 4px 0px 4px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  background-color: $off-white;
-
-  span {
-    background-color: $white;
-    cursor: pointer;
-    color: $base-gray;
-    margin-right: 8px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-    transition: all 0.2s;
-    input {
-      display: none;
-    }
-  }
-
-  p {
-    background-color: $white;
-    color: $base-gray;
-    margin-right: 8px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-    transition: all 0.2s;
-  }
-  span:hover,
-  p:hover {
-    transform: scale(1.15);
-    opacity: 0.5;
-  }
-}
 .active-option {
   color: $base-gray !important;
   border: 1px solid $base-gray !important;
 }
-.negative-left {
-  margin-left: -68px !important;
-}
-.andOr {
-  border: 1px solid $soft-gray;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  width: fit-content;
-  color: $base-gray;
-}
-.inactive {
-  color: $very-light-gray;
-  font-size: 9px;
-  border-radius: 4px;
-}
-.space-s {
-  margin: 0 4px;
-}
-.arrow-div {
-  border-radius: 100%;
-  border: 1px solid $soft-gray;
-  box-shadow: 0 1px 6px rgba($soft-gray, 50%);
-  padding: 11px;
-  margin-top: 20vh;
-  // margin-bottom: auto;
-  margin-right: 24px;
-  img {
-    filter: invert(50%);
-  }
-}
-.auto-left {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  margin-right: 16px;
-}
-.margin-left {
-  margin-left: 16px;
-}
-.margin-left-large {
-  margin-left: 32px;
-}
-.light-gray {
-  color: $very-light-gray;
-  opacity: 0.5;
-}
-.container {
-  background-color: white;
-  outline: 1px solid $soft-gray;
-  padding: 8px 12px;
-  color: $base-gray;
-  border-radius: 6px;
-  margin-top: 0;
-  width: 28vw;
-  height: 34vh;
-  overflow: scroll;
-  letter-spacing: 0.75px;
-}
-.container-large {
-  background-color: white;
-  outline: 1px solid $soft-gray;
-  padding: 8px 12px;
-  color: $base-gray;
-  border-radius: 6px;
-  margin-top: 0;
-  width: 28vw;
-  min-height: 44vh;
-  overflow: scroll;
-  letter-spacing: 0.75px;
-}
-.increase-height {
-  min-height: 84vh;
-}
+// .andOr {
+//   border: 1px solid $soft-gray;
+//   padding: 6px 8px;
+//   border-radius: 6px;
+//   cursor: pointer;
+//   width: fit-content;
+//   color: $base-gray;
+// }
+// .inactive {
+//   color: $very-light-gray;
+//   font-size: 9px;
+//   border-radius: 4px;
+// }
+// .space-s {
+//   margin: 0 4px;
+// }
 .title {
   background-color: white;
   box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
@@ -1263,30 +1015,6 @@ export default {
     }
   }
 }
-.title-small {
-  background-color: white;
-  // box-shadow: 0 6px 20px rgba($soft-gray, 50%);
-  outline: 1px solid $soft-gray;
-  color: $base-gray;
-  border-radius: 6px;
-  width: 22vw;
-  letter-spacing: 0.75px;
-
-  &__head {
-    padding: 8px 12px;
-    background-color: white;
-    margin-bottom: 0;
-    color: $very-light-gray;
-  }
-  &__body {
-    padding: 6px 12px;
-    background-color: white;
-    font-size: 11px;
-    p {
-      margin-top: 0;
-    }
-  }
-}
 .label {
   color: $base-gray;
   font-size: 12px;
@@ -1307,19 +1035,6 @@ input,
 input::placeholder {
   font: 14px $base-font-family;
 }
-.workflow-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  margin: 0px 16px 16px 0px;
-  padding: 8px 12px;
-  width: 32%;
-  overflow: scroll;
-  min-height: 80vh;
-  // border-right: 1px solid $soft-gray;
-}
-
 ::v-deep .ql-toolbar.ql-snow {
   display: none;
 }
@@ -1367,17 +1082,9 @@ input::placeholder {
   opacity: 0.5;
   border-radius: 4px;
 }
-.neg-mar {
-  margin-top: -6px;
-}
-.neg-mar-large {
-  margin-top: -20px;
-}
-
 .border-top {
   border-top: 1px solid $soft-gray;
 }
-
 .custom-checkbox > input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -1418,15 +1125,6 @@ input::placeholder {
   border-radius: 4px;
   margin-right: 0.5em;
 }
-.sendAll {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: $base-gray;
-  margin-top: 1rem;
-}
-
 @keyframes bounce {
   0% {
     transform: translateY(0);
@@ -1438,32 +1136,6 @@ input::placeholder {
 input:focus {
   outline: none !important;
 }
-.template-card {
-  position: absolute;
-  height: 20vh;
-  top: 40vh;
-  width: 100%;
-  background: white;
-  border-radius: 0.25rem;
-  box-shadow: 2px 2px 3px 2px $very-light-gray;
-  &__header {
-    padding-left: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    img {
-      padding-right: 0.5rem;
-      padding-top: -0.2rem;
-    }
-  }
-  &__body {
-    height: 3rem;
-    padding: 1.25rem;
-    display: flex;
-    align-items: center;
-  }
-}
-
 .multi-slot {
   display: flex;
   align-items: center;
@@ -1495,36 +1167,8 @@ input:focus {
     }
   }
 }
-.workflow-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 20px 16px 24px;
-  width: 100%;
-}
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
 ::placeholder {
   color: $very-light-gray;
-}
-.prev-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 1rem;
-  border-radius: 0.3rem;
-  font-weight: bold;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $base-gray;
-  cursor: pointer;
-  height: 2rem;
-  width: 10rem;
-  font-size: 12px;
 }
 .search__input {
   font-family: Lato-Regular, sans-serif;
@@ -1541,35 +1185,6 @@ input:focus {
   border: none;
   width: 14vw;
   border: 1px solid #e8e8e8;
-}
-.bottom_locked {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  width: 100%;
-  height: 100px;
-  position: sticky;
-  border-top: 2px solid $soft-gray;
-  bottom: 0;
-  background-color: white;
-}
-.summary-pill {
-  position: absolute;
-  left: 0;
-  right: 0;
-  margin-left: auto;
-  margin-right: auto;
-  bottom: 84px;
-  background-color: white;
-  outline: 1px solid $soft-gray;
-  color: $base-gray;
-  padding: 8px;
-  border-radius: 16px;
-  width: 200px;
-  z-index: 1;
-  text-align: center;
-  letter-spacing: 0.75px;
 }
 .margin-top {
   margin-top: 16px;
@@ -1591,21 +1206,6 @@ input:focus {
 button img {
   filter: invert(90%);
 }
-.fixed__right {
-  align-self: flex-end;
-  margin-top: -2rem;
-}
-.fixed__center {
-  align-self: center;
-  color: $very-light-gray;
-}
-.message_titles {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  flex-direction: column;
-  position: relative;
-}
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -1618,89 +1218,8 @@ button img {
     filter: invert(70%);
   }
 }
-.crm {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-}
-.filtered {
-  filter: invert(99%);
-  height: 1rem;
-}
-.center {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
 .invert {
   filter: invert(99%);
-}
-.alert__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  border-radius: 0.5rem;
-}
-.alert__row {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  width: 100vw;
-}
-
-.delivery__row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: flex-start;
-}
-.sf__collection {
-  display: flex;
-  align-items: space-evenly;
-  justify-content: center;
-  flex-direction: column;
-  background-color: $white;
-  border-radius: 0.2rem;
-  border: 1px solid #e8e8e8;
-  width: 75vw;
-  padding: 2rem;
-  margin-bottom: 1rem;
-}
-.collection__fields {
-  background-color: $white;
-  display: flex;
-  justify-content: space-evenly;
-  flex-direction: row;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  height: 46vh;
-  width: 70vw;
-  border: 1px solid #e8e8e8;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: -2px;
-  color: $very-light-gray;
-}
-.rotated {
-  transform: rotate(-90deg);
-  color: $very-light-gray;
-  margin-right: 8px;
-}
-
-.button-space {
-  padding: 2.5rem 1rem 0rem 0rem;
-}
-.plus_button {
-  background-color: white;
-  border: 1px solid $dark-green;
-  border-radius: 100%;
-  color: $dark-green;
-  font-size: 18px;
 }
 .white_button {
   font-size: 13px;
@@ -1716,25 +1235,6 @@ button img {
   background-color: $soft-gray;
   color: $gray;
   border: none;
-}
-.group_button {
-  font-size: 13px;
-  margin-right: 12px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: none;
-  background-color: $dark-green;
-  color: white;
-  margin-top: 24px;
-}
-.group_button2 {
-  font-size: 13px;
-  margin-right: 12px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: none;
-  background-color: $dark-green;
-  color: white;
 }
 textarea {
   @extend .textarea;
@@ -1766,33 +1266,11 @@ textarea {
 // ::-webkit-scrollbar-track-piece {
 //   margin-top: 24px;
 // }
-.green {
-  color: $dark-green;
-  font-weight: bold;
-}
-.green-bg {
-  color: $dark-green;
-  background-color: $white-green;
-  padding: 6px 8px;
-  font-weight: bold;
-  border-radius: 4px;
-}
-.large-font {
-  font-size: 18px;
-  font-weight: 400;
-  letter-spacing: 0.75px !important;
-}
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
   font-size: 13px;
-}
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-start;
 }
 .week-row {
   display: flex;
@@ -1827,20 +1305,6 @@ textarea {
     color: $base-gray;
   }
 }
-.dash-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin: 16px -8px 0px -16px;
-  padding: 20px 0px;
-}
-.message__box {
-  height: 30vh;
-  width: 26vw;
-  background-color: transparent;
-}
-
 .gold__button {
   display: flex;
   align-items: center;
@@ -1855,42 +1319,6 @@ textarea {
   font-size: 14px;
   margin-top: 8px;
   // margin-bottom: -8px;
-}
-.disabled__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid $soft-gray;
-  letter-spacing: 0.75px;
-  background-color: white;
-  color: $very-light-gray;
-  cursor: text;
-  font-size: 14px;
-}
-.tooltip {
-  position: relative;
-  &__icon {
-    height: 2rem;
-  }
-
-  &__popup {
-    width: 18rem;
-    visibility: hidden;
-    padding: 10px 18px;
-    border-radius: 6px;
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
-    // border: solid 2px $very-light-gray;
-    background-color: $base-gray;
-    color: white;
-    position: absolute;
-    bottom: -5px;
-    left: 105%;
-  }
-}
-.tooltip:hover .tooltip__popup {
-  visibility: visible;
 }
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;

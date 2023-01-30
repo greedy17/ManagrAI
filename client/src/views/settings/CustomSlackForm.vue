@@ -566,7 +566,7 @@
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
 
@@ -576,7 +576,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import { mapState } from 'vuex'
 
 import SlackOAuth from '@/services/slack'
-import User from '@/services/users'
 import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
@@ -631,12 +630,10 @@ export default {
   data() {
     return {
       activeForm: null,
-      addingForm: false,
       currentlySelectedForm: null,
       customObjects: [],
       createdCustomObjects: [],
       pulseLoading: false,
-      oldIndex: 0,
       loaderTextList: ['Gathering your Fields...', 'Syncing with Object...', 'Syncing fields...'],
       selectedCustomObject: null,
       selectedCustomObjectName: null,
@@ -668,11 +665,9 @@ export default {
       addedFields: [],
       removedFields: [],
       ...FORM_CONSTS,
-      Pagination,
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,
-      nameValue: '',
       customObjectView: false,
       customObjectModalView: false,
       confirmDeleteModal: false,
@@ -993,9 +988,6 @@ export default {
     currentStagesWithForms() {
       return this.formStages.map((sf) => sf.stage)
     },
-    formLength() {
-      return this.formStages.length
-    },
     customForms() {
       return this.allForms.filter((form) => form.customObject)
     },
@@ -1027,11 +1019,6 @@ export default {
         return field.apiName
       })
     },
-    addedFieldLabels() {
-      return this.addedFields.map((field) => {
-        return field.referenceDisplayLabel
-      })
-    },
     unshownIds() {
       return [
         '6407b7a1-a877-44e2-979d-1effafec5035',
@@ -1045,12 +1032,6 @@ export default {
     user() {
       return this.$store.state.user
     },
-    userHasProducts() {
-      return this.$store.state.user.organizationRef.hasProducts
-    },
-    // userHasHubspot() {
-    //   return this.$store.state.user.hasHubspotIntegration
-    // },
     userCRM() {
       return this.$store.state.user.crm
     },
@@ -1066,11 +1047,6 @@ export default {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
-      // if (this.userCRM === 'HUBSPOT') {
-      //   object = this.DEAL
-      // } else if (this.userCRM === 'SALESFORCE') {
-      //   object = this.OPPORTUNITY
-      // }
       this.newCustomForm = this.customForm
       await this.listPicklists({
         crmObject: object,
@@ -1126,7 +1102,6 @@ export default {
       if (this.task && this.task.completed) {
         this.stopChecker()
         this.updateCustomFields()
-        this.oldIndex = 0
         this.loaderText = ''
         this.modalLoading = false
         this.createdCustomFields = false
@@ -1214,16 +1189,6 @@ export default {
       this.newFormType = 'CREATE'
       this.updateCustomFields()
     },
-    changeLoaderText() {
-      let newIndex
-      if (this.oldIndex === 2) {
-        newIndex = 2
-      } else {
-        newIndex = this.oldIndex + 1
-        this.oldIndex = newIndex
-      }
-      return newIndex
-    },
     stopChecker() {
       clearInterval(this.$store.state.customObject.checker)
     },
@@ -1310,7 +1275,6 @@ export default {
     },
     setNewForm() {
       this.addForm(this.selectedStage)
-      this.addingForm = false
     },
     async selectForm(resource, formType, stage = '') {
       this.selectedForm = this.allForms.find(
@@ -1616,13 +1580,6 @@ export default {
     changeCustomObjectName() {
       this.newCustomForm.customObject = this.customResource
       this.newCustomForm.resource = 'CustomObject'
-    },
-    goBack() {
-      if (this.fromAdmin) {
-        this.goBackAdmin()
-      } else {
-        this.$router.push({ name: 'Required' })
-      }
     },
     onRemoveField(field) {
       // remove from the array if  it exists
@@ -1933,14 +1890,12 @@ input[type='search']:focus {
     }
   }
 }
-
 .wrapper {
   width: 100%;
   margin: 0 auto;
   font-size: 14px;
   letter-spacing: 0.75px;
 }
-
 .tab-content {
   width: 100%;
   height: 86vh;
@@ -1951,8 +1906,6 @@ input[type='search']:focus {
   border-radius: 6px;
   margin-top: 28px;
 
-  section {
-  }
   &__div {
     display: flex;
     flex-direction: row;
@@ -1960,7 +1913,6 @@ input[type='search']:focus {
     justify-content: space-between;
   }
 }
-
 .space-between {
   display: flex;
   flex-direction: row;
@@ -2117,8 +2069,6 @@ input[type='search']:focus {
   align-items: center !important;
   border-radius: 0.2rem;
 }
-.drag-section {
-}
 .slack-form-builder {
   display: flex;
   flex-direction: row;
@@ -2252,23 +2202,6 @@ img:hover {
       brightness(93%) contrast(89%);
   }
 }
-.add-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  margin: 0 0.5rem 0 0;
-  padding: 9px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  letter-spacing: 0.75px;
-}
-.add-button:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-}
 .cancel {
   color: $dark-green;
   font-weight: bold;
@@ -2283,7 +2216,6 @@ img:hover {
     font-weight: 400;
   }
 }
-
 .logo2 {
   height: 1.75rem;
   margin-left: 0.5rem;
@@ -2324,14 +2256,5 @@ img:hover {
   padding: 4px 6px 3px 6px;
   border-radius: 6px;
   background-color: white;
-}
-
-.flex-end-opp {
-  width: 100%;
-  padding: 4px 12px 4px 0px;
-  height: 4rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
 }
 </style>
