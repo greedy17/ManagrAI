@@ -51,7 +51,7 @@ ALLOWED_HOSTS = []
 # ALLOWED_HOSTS.append(container_metadata["Networks"][0]["IPv4Addresses"][0])
 ALLOWED_HOSTS += _env_get_required("ALLOWED_HOSTS").split(",")
 
-print(ALLOWED_HOSTS)
+# print(ALLOWED_HOSTS)
 ### Get allowed hosts from ecs
 
 EC2_PRIVATE_IP = None

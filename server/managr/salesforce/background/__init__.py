@@ -2240,7 +2240,6 @@ def _processs_bulk_update(data, user):
                 break
             except FieldValidationError as e:
                 logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
-                print(e)
                 return_data = {"success": False, "error": str(e)}
                 break
 

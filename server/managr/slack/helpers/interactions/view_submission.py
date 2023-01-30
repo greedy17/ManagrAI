@@ -397,7 +397,6 @@ def process_submit_resource_data(payload, context):
             current_forms.update(
                 is_submitted=True, update_source="command", submission_date=timezone.now()
             )
-            print(all_form_data)
             break
         except FieldValidationError as e:
             has_error = True
@@ -519,7 +518,6 @@ def process_submit_resource_data(payload, context):
         message = f"Successfully created *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
     else:
         message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
-    print(all_form_data)
     if (
         all_form_data.get("meeting_comments") is not None
         and all_form_data.get("meeting_type") is not None

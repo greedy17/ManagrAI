@@ -223,7 +223,7 @@ def create_channel(access_token, name, team_id, user, is_private=True):
         else:
             return channel_res
     except Exception as e:
-        print(e)
+        logger.exception(f"Failed to create channel for {user} due to <{e}>")
 
 
 def list_user_channels(access_token, user, limit=100, cursor=None, types=[]):

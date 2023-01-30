@@ -226,7 +226,6 @@ class CRMObjectViewSet(
                     break
                 except FieldValidationError as e:
                     logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
-                    print(e)
                     data = {"success": False, "error": str(e)}
                     break
 

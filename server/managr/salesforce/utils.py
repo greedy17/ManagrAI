@@ -132,7 +132,6 @@ def process_text_field_format(user_id, resource, saved_data):
                     salesforce_formatted = "\r\n".join(split_field)
                     saved_data[field] = salesforce_formatted
         return saved_data
-    print(saved_data)
     return False
 
 
