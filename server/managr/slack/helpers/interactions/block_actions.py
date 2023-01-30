@@ -1840,6 +1840,8 @@ def process_return_to_form_button(payload, context):
     else:
         submit_button_text = "Submit"
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    message_ref = f"{payload['channel']['id']}|{payload['message']['ts']}"
+    context.update({"message_ref": message_ref})
     data = {
         "trigger_id": trigger_id,
         "view": {

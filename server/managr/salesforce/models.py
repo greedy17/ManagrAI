@@ -657,7 +657,7 @@ class MeetingWorkflowQuerySet(models.QuerySet):
             start = user_tz_time.replace(hour=0, minute=0)
             meetings = self.filter(
                 user=user, datetime_created__gte=start.astimezone(pytz.utc)
-            ).order_by("datetime_created")
+            ).order_by("-meeting__start_time")
             return meetings
         else:
             return self.none()

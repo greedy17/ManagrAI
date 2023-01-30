@@ -108,7 +108,7 @@ class ZoomAcct:
             serializer.save()
             meeting = Meeting.objects.get(id=serializer.data["id"])
         except Exception as e:
-            print(f"MEETING SERIALIZER ERROR {e}")
+            logger.exception(f"MEETING SERIALIZER ERROR {e}")
         return meeting
 
     def schedule_meeting(self, topic, date, time, duration):
