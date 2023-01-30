@@ -1992,7 +1992,9 @@ def _send_convert_recap(
     contact = user.crm_account.adapter_class.get_resource_in_list("Contact", [contact_id])[0]
     text = f":zap: *Lead Convert Recap*:\n *Lead*: {lead.email}\n\n:arrows_counterclockwise: _Converted to:_\n\n*Account*: {account.name}\n*Contact*: {contact.secondary_data['Name']}"
     if opportunity_id:
-        opportunity = Opportunity.objects.get(integration_id=opportunity_id)
+        opportunity = user.crm_account.adapter_class.get_resource_in_list(
+            "Opportunity", [opportunity_id]
+        )[0]
         text += f"\n*Opportunity*: {opportunity.name}"
     blocks = [
         block_builders.simple_section(text, "mrkdwn"),
