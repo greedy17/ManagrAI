@@ -3319,6 +3319,7 @@ export default {
         ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
+    this.objectFields.filters = { crmObject: this.crmObject }
     this.objectFields.refresh()
     this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
@@ -6204,7 +6205,7 @@ h3 {
 }
 .table {
   display: table;
-  overflow: scroll;
+  // overflow: scroll;
   width: 100vw;
 }
 .empty-table {

@@ -119,11 +119,10 @@ def process_stage_next_page(payload, context):
     review_form = workflow.forms.filter(template__form_type=context.get("form_type")).first()
     review_form.save_form(state)
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING).all()
-
     if len(forms):
         next_blocks = []
         for form in forms:
-            next_blocks.extend(form.generate_form())
+            next_blocks.extend(form.generate_form(form.saved_data))
         private_metadata.update({**context})
         if context.get("form_type") == "CREATE":
             callback_id = (
@@ -352,27 +351,23 @@ def process_add_products_form(payload, context):
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
     has_error = False
-    state = swap_public_fields(payload["view"]["state"]["values"])
-    current_form_ids = context.get("f").split(",")
     user = User.objects.get(id=context.get("u"))
-    trigger_id = payload["trigger_id"]
-    view_id = payload["view"]["id"]
     slack_access_token = user.organization.slack_integration.access_token
-    loading_view_data = send_loading_screen(
-        slack_access_token,
-        ":exclamation: Please wait a few seconds :zany_face:, then click *'try again'*",
-        "update",
-        str(user.id),
-        trigger_id,
-        view_id,
-    )
+    sending_blocks = get_block_set("loading", {"message": ":rocket: Sending your data to the CRM"})
+    try:
+        sending_res = slack_requests.send_channel_message(
+            user.slack_integration.channel, slack_access_token, block_set=sending_blocks,
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send updating message to {user.email} due to {e}")
     external_id = payload.get("view", {}).get("external_id", None)
     try:
         view_type, __unique_id = external_id.split(".")
     except ValueError:
         view_type = external_id
         pass
-
+    state = swap_public_fields(payload["view"]["state"]["values"])
+    current_form_ids = context.get("f").split(",")
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
     main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
     stage_forms = current_forms.filter(template__form_type="STAGE_GATING")
@@ -492,9 +487,6 @@ def process_submit_resource_data(payload, context):
             break
     if has_error:
         form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
-        # if not len(stage_forms):
-        # add a special button to return the user back to edit their form
-        # this is only required for single page forms
         blocks = [
             *blocks,
             block_builders.actions_block(
@@ -503,30 +495,31 @@ def process_submit_resource_data(payload, context):
                         "return to form",
                         form_id,
                         style="primary",
-                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                        action_id=action_with_params(
+                            slack_const.RETURN_TO_FORM_BUTTON,
+                            [
+                                f"f={context.get('f')}",
+                                f"u={str(user.id)}",
+                                f"resource_type={main_form.template.resource}",
+                            ],
+                        ),
                     )
                 ]
             ),
         ]
-        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-        error_view_data = {
-            "view_id": loading_view_data["view"]["id"],
-            "view": {
-                "type": "modal",
-                "title": {"type": "plain_text", "text": "Error"},
-                "blocks": blocks,
-                "private_metadata": json.dumps(context),
-                "external_id": f"{view_type}.{str(uuid.uuid4())}",
-            },
-        }
         try:
-            return slack_requests.generic_request(
-                url, error_view_data, access_token=slack_access_token
+            slack_requests.update_channel_message(
+                sending_res["channel"],
+                sending_res["ts"],
+                block_set=blocks,
+                access_token=slack_access_token,
             )
         except Exception as e:
             return logger.exception(
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
+        return {"response_action": "clear"}
+
     form_id = current_form_ids[0]
     # update the channel message to clear it
     if main_form.template.form_type == "CREATE":
@@ -541,39 +534,18 @@ def process_submit_resource_data(payload, context):
     ):
         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
     try:
-        slack_requests.send_ephemeral_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            user.slack_integration.slack_id,
-            text=text,
+        slack_requests.update_channel_message(
+            sending_res["channel"],
+            sending_res["ts"],
             block_set=get_block_set(
                 "success_modal", {"message": message, "u": user.id, "form_ids": context.get("f")},
             ),
+            access_token=slack_access_token,
         )
-
     except Exception as e:
         logger.exception(
             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
         )
-        return {"response_action": "clear"}
-    update_view = {
-        "view_id": loading_view_data["view"]["id"],
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Success"},
-            "blocks": [
-                block_builders.simple_section(
-                    f":white_check_mark: Successfully updated {main_form.template.resource}, you can close this window :clap:",
-                    "mrkdwn",
-                )
-            ],
-        },
-    }
-    slack_requests.generic_request(
-        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-        update_view,
-        user.organization.slack_integration.access_token,
-    )
     return {"response_action": "clear"}
 
 
@@ -695,7 +667,9 @@ def process_submit_custom_object(payload, context):
                         "return to form",
                         form_id,
                         style="primary",
-                        action_id=slack_const.RETURN_TO_FORM_MODAL,
+                        action_id=action_with_params(
+                            slack_const.RETURN_TO_FORM_MODAL, [f"f={form_id}", f"u={str(user.id)}"]
+                        ),
                     )
                 ]
             ),
