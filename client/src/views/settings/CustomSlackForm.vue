@@ -1738,7 +1738,6 @@ export default {
           // this.$emit('update:selectedForm', res)
 
           this.newCustomForm = res
-          this.activeForm = res
 
           this.$toast('Form saved', {
             timeout: 2000,

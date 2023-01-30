@@ -649,6 +649,7 @@ export default {
     },
     dragEnd() {
       const slackMesArr = []
+      const slackBindingsArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
         slackMesArr.push(
           '<strong>' +
@@ -657,9 +658,11 @@ export default {
             this.formattedSlackMessage[i].val +
             ' }',
         )
+        slackBindingsArr.push(` ${this.formattedSlackMessage[i].val} `)
       }
       this.slackMessage = slackMesArr
       this.config.messageTemplate.body = this.slackMessage.join('\n\n')
+      this.config.messageTemplate.bindings = slackBindingsArr
       this.drag = false
     },
     bindText(val, title) {
@@ -992,7 +995,7 @@ export default {
     },
     addedFieldNames() {
       return this.formattedSlackMessage.map((field) => {
-        return field.val
+        return field.val.trim()
       })
     },
     userLevel() {

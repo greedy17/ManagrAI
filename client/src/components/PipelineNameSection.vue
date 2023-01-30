@@ -3,7 +3,7 @@
     <div>
       <div>
         <!-- margin-bottom: 3px; if including account and owner -->
-        <p style="letter-spacing: 0.25px; font-size: 13px">{{ name }}</p>
+        <p>{{ truncate(name, 20) }}</p>
         <!-- <span v-if="userCRM === 'SALESFORCE'" style="color: #199e54; font-size: 12px" :class="!accountName ? 'gray' : ''">
           {{ accountName ? accountName + ' ' : 'No Account ' }}
         </span> -->
@@ -28,6 +28,11 @@ export default {
     },
     owner: {
       type: String,
+    },
+  },
+  methods: {
+    truncate(text, max) {
+      return `${text.slice(0, max)} ${text.length > max ? '...' : ''}`
     },
   },
   computed: {

@@ -1067,7 +1067,6 @@ def paginated_meeting_blockset(context):
             block = block_builders.simple_section(
                 f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
             )
-
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             block = block_builders.section_with_button_block(
