@@ -208,7 +208,7 @@ def alert_instance_block_set(context):
                     options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
         blocks.append(
             block_builders.static_select_input(
-                label=":star: Actions:",
+                label=" ",
                 options=options,
                 block_id=str(instance.id),
                 action_id=action_with_params(
@@ -302,8 +302,6 @@ def update_meeting_block_set(context, *args, **kwargs):
     resource_type = context.get("resource_type", None)
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    type = context.get("type")
     user = User.objects.get(id=user_id)
     blocks = []
     resource_opts = resource_options(user.crm)
