@@ -232,10 +232,11 @@
 
 <script>
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
-import { CollectionManager } from '@thinknimble/tn-models'
+import { CollectionManager, Pagination } from '@thinknimble/tn-models'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
+import ToggleCheckBox from '@thinknimble/togglecheckbox'
 
 import SlackOAuth from '@/services/slack'
 import { SObjectField } from '@/services/salesforce'
@@ -247,6 +248,7 @@ export default {
   components: {
     PulseLoadingSpinnerButton,
     draggable,
+    ToggleCheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
@@ -301,6 +303,7 @@ export default {
       addedFields: [],
       removedFields: [],
       ...FORM_CONSTS,
+      Pagination,
       meetingType: '',
       actionChoices: [],
       loadingMeetingTypes: false,
@@ -705,7 +708,7 @@ export default {
       }
     },
     goToUpdateOpp() {
-      this.$router.push({ name: 'Forms' })
+      this.$router.push({ name: 'UpdateOpportunity' })
     },
     goToValidations() {
       this.$emit('cancel-selected')
@@ -890,6 +893,22 @@ export default {
 .invert2 {
   filter: invert(80%);
 }
+.img-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+}
+.label {
+  font-size: 0.85rem;
+}
+.green {
+  color: $dark-green;
+  font-size: 0.85rem;
+}
 .default_button {
   padding: 0.5rem 1rem;
   margin-top: 0.5rem;
@@ -904,8 +923,60 @@ export default {
     filter: invert(39%) sepia(96%) saturate(373%) hue-rotate(94deg) brightness(75%) contrast(94%);
   }
 }
+.recommend {
+  position: absolute;
+  bottom: 20vh;
+  left: 34vw;
+  z-index: 5;
+  background-color: white;
+  border-radius: 0.3rem;
+  border: 1px solid #e8e8e8;
+  box-shadow: 1px 2px 2px $very-light-gray;
+  height: 40vh;
+  width: 30vw;
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #e8e8e8;
+    height: 4rem;
+    padding: 1rem;
+
+    letter-spacing: 0.5px;
+    img {
+      height: 1rem;
+      filter: invert(30%);
+    }
+  }
+
+  &__body {
+    height: 5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    flex-direction: row;
+    margin-top: -0.5rem;
+    font-size: 14px;
+    padding: 0.5rem;
+  }
+}
+.drop {
+  border: 2px solid $soft-gray;
+  border-radius: 0.25rem;
+  color: $very-light-gray;
+  padding: 0.25rem 0.5rem;
+  max-height: 2rem;
+}
 .invisible {
   display: none;
+}
+.white-background {
+  background-color: white;
+  border-radius: 0.25rem;
+  height: 1.7rem;
+  width: 1.7rem;
+  margin-right: 0.25rem;
 }
 #drag {
   filter: invert(60%);
@@ -962,6 +1033,42 @@ export default {
 img:hover {
   cursor: pointer;
 }
+.close {
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  color: $very-light-gray;
+  border: 2px solid $soft-gray;
+  border-radius: 0.25rem;
+  opacity: 0.8;
+}
+.save {
+  padding: 0.6rem 1.5rem;
+  background-color: $dark-green;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+.disabled {
+  padding: 0.5rem 1rem;
+  min-width: 6rem;
+  background-color: $soft-gray;
+  color: $base-gray;
+  border: none;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  opacity: 0.8;
+  cursor: text;
+}
+.disabled__ {
+  background-color: transparent;
+  font-size: 14px;
+  color: $dark-green;
+  border: none;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
 .example--footer {
   position: sticky;
   display: flex;
@@ -976,6 +1083,15 @@ img:hover {
 
   z-index: 2;
 }
+.example-text {
+  position: absolute;
+  bottom: 180px;
+  left: 50px;
+  opacity: 0.1;
+  filter: alpha(opacity=50);
+  font-size: 3.5rem;
+  transform: rotate(-45deg);
+}
 .collection_fields {
   background-color: $white;
   padding: 0rem 2rem;
@@ -989,11 +1105,36 @@ img:hover {
   flex-direction: column;
   position: relative;
 }
+.stage_fields {
+  background-color: $white;
+  padding: 3rem 1rem;
+  margin: -1.5rem 1rem 0rem 0rem;
+  border-radius: 0.5rem;
+  height: 74vh;
+  width: 36vw;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid #e8e8e8;
+}
 .opportunity__row {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   padding: 0;
+}
+.row__ {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.drop-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

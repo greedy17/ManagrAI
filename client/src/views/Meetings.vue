@@ -264,7 +264,7 @@
           :key="i"
           @map-opp="mapOpp"
           @update-Opportunity="updateMeeting"
-          @no-update="NoMeetingUpdate"
+          @no-update="noMeetingUpdate"
           @remove-participant="removeParticipant"
           @add-participant="addParticipant"
           @get-notes="getNotes"
@@ -306,8 +306,6 @@
 <script>
 import { SObjects, MeetingWorkflows } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
-import AlertTemplate from '@/services/alerts/'
-import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
 import Zoom from '@/services/zoom/account'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
@@ -327,7 +325,6 @@ export default {
   },
   data() {
     return {
-      selectedDate: null,
       contactCreateReferenceOpts: {},
       currentSelectedProduct: null,
       savingProduct: null,
@@ -339,19 +336,16 @@ export default {
       updateProductData: {},
       resourceType: 'Opportunity',
       resourceFields: null,
-      selectedPricebook: null,
       pricebookId: null,
       createData: {},
       productRefCopy: {},
       productReferenceOpts: {},
-      createReferenceOpts: {},
       page: 1,
       savingCreateForm: false,
       hasNext: false,
       noteTitle: null,
       noteTemplates: null,
       noteValue: null,
-      addingTemplate: false,
       submitting: false,
       meetingOpen: false,
       integrationId: null,
@@ -362,72 +356,38 @@ export default {
       countSets: 0,
       dropdownLoading: false,
       loadingProducts: false,
-      selectedPriceBook: null,
       pricebookPage: 1,
       savedPricebookEntryId: '',
       showLoadMore: false,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
-      updatingOpps: false,
-      oppInstanceId: null,
       oppId: null,
-      primaryCheckList: [],
-      workflowCheckList: [],
-      allSelected: false,
-      allWorkflowsSelected: false,
-      createQueryOpts: {},
       updateList: [],
-      recapList: [],
       currentVals: [],
-      closeDateSelected: false,
-      advanceStageSelected: false,
-      forecastSelected: false,
-      selection: false,
-      allStages: [],
-      allForecasts: [],
       originalList: null,
-      daysForward: null,
       allOpps: null,
       loading: false,
-      loadingWorkflows: false,
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      users: CollectionManager.create({ ModelClass: User }),
       stagePicklistQueryOpts: {},
       currentWorkflow: null,
       selectedWorkflow: false,
       modalOpen: false,
       editOpModalOpen: false,
-      addOppModalOpen: false,
-      refreshId: null,
-      currentList: "Today's Meetings",
-      alertInstanceId: null,
-      showList: false,
-      showWorkflowList: true,
       loadingAccounts: false,
       accountSobjectId: null,
-      currentOwner: null,
       currentAccount: null,
       selectedAccount: null,
-      selectedOwner: null,
-      showPopularList: true,
       updateOppForm: null,
       oppFormCopy: null,
       createContactForm: null,
       updateContactForm: null,
       updateAccountForm: null,
       updateLeadForm: null,
-      instanceId: null,
-      contactInstanceId: null,
       formData: {},
-      picklistQueryOpts: {},
       picklistQueryOptsContacts: {},
       allAccounts: null,
       allUsers: null,
-      showMeetingList: true,
-      selectedMeeting: false,
       createProductForm: null,
-      // meetings: null,
       referenceOpts: {},
       accountReferenceOpts: {},
       contactReferenceOpts: {},
@@ -463,10 +423,6 @@ export default {
     }
   },
   computed: {
-    allMeetingsUpdated() {
-      return this.$store.state.meetings.every((meeting) => meeting.is_completed)
-      // console.log(this.$store.state.meetings.every((meeting) => meeting.is_completed))
-    },
     user() {
       return this.$store.state.user
     },
@@ -486,9 +442,7 @@ export default {
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
-      console.log('state', this.$store.state)
       if (this.userCRM === 'HUBSPOT') {
-        console.log('hi')
         return this.getHubspotOptions()
       } else {
         return this.$store.state.apiPicklistOptions
@@ -501,7 +455,6 @@ export default {
   created() {
     // this.resourceType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.getAllForms()
-    this.templates.refresh()
   },
   beforeMount() {
     this.getUsers()
@@ -523,26 +476,9 @@ export default {
     //   return i
     // },
     async getHubspotOptions() {
-      console.log('sanity')
       let stages = []
       if (this.userCRM === 'HUBSPOT') {
         try {
-          // let res = await ObjectField.api.listFields({
-          //   crmObject: this.DEAL,
-          //   search: 'Deal Stage',
-          // })
-          // console.log('res please', res)
-          // let dealStage
-          // for (let i = 0; i < res.length; i++) {
-          //   if (res[i].apiName === 'dealstage') {
-          //     dealStage = res[i]
-          //     break
-          //   }
-          // }
-          // if (dealStage) {
-          //   // stages = dealStage
-          //   return dealStage.options
-          // }
           let res = await ObjectField.api.listFields({
             crmObject: this.DEAL,
             search: 'Deal Stage',
@@ -556,13 +492,6 @@ export default {
           }
           let dealStage = []
           if (dealStages.optionsRef.length) {
-            // const items = dealStages.options[0]
-            // for (let key in items) {
-            //   // dealStage = [...dealStage, items[key].stages]
-            //   for (let j = 0; j < items[key].stages.length; j++) {
-            //     dealStage.push(items[key].stages[j])
-            //   }
-            // }
             for (let i = 0; i < dealStages.optionsRef.length; i++) {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
@@ -572,7 +501,6 @@ export default {
           console.log(e)
         }
       }
-      console.log('stages', stages)
       return stages
     },
     cancelEditProduct() {
@@ -621,7 +549,6 @@ export default {
     },
     setTemplate(val, field, title) {
       this.noteTitle = title
-      this.addingTemplate = false
       this.noteValue = val
       this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
@@ -804,7 +731,6 @@ export default {
       this.externalParticipantsSelected = []
       this.extraParticipantsSelected = ''
     },
-
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
@@ -967,13 +893,6 @@ export default {
           })
       } catch (e) {
         console.log(e)
-        // this.$toast('Error adding contact', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -990,33 +909,10 @@ export default {
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
     },
-    selectMeeting(name) {
-      this.currentList = name
-      this.showList = false
-      this.selectedMeeting = true
-      this.selectedWorkflow = false
-    },
-    closeListSelect() {
-      this.showList = false
-    },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
     },
-    resetAddOpp() {
-      this.addOppModalOpen = !this.addOppModalOpen
-    },
-    async updateContactInstance() {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Contact',
-          formType: 'UPDATE',
-        })
-        this.contactInstanceId = res.form_id
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async NoMeetingUpdate(meetingWorkflow) {
+    async noMeetingUpdate(meetingWorkflow) {
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
@@ -1056,7 +952,7 @@ export default {
         const res = await SObjects.api
           .updateResource({
             form_data: this.updateProductData,
-            from_workflow: this.selectedWorkflow ? true : false,
+            from_workflow: this.selectedWorkflow,
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
             form_type: 'UPDATE',
             integration_ids: [this.productIntegrationId],
@@ -1119,10 +1015,6 @@ export default {
         })
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
-        this.currentOwner = this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
-
         this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
@@ -1202,9 +1094,6 @@ export default {
         }, 1000)
       }
     },
-    async getPricebooks() {
-      this.$store.dispatch('loadPricebooks')
-    },
     async getPricebookEntries(id) {
       try {
         this.loadingProducts = true
@@ -1229,7 +1118,6 @@ export default {
         }, 1000)
       }
     },
-
     setUpdateValues(key, val, multi = null) {
       if (multi) {
         this.formData[key] = this.formData[key]
@@ -1483,7 +1371,6 @@ export default {
         console.log(error)
       }
     },
-
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
@@ -1570,14 +1457,6 @@ export default {
       } finally {
         this.loading = false
       }
-    },
-
-    allOpportunities() {
-      this.$router.replace({ path: '/Pipelines' })
-    },
-    weekDay(input) {
-      let newer = new Date(input)
-      return this.days[newer.getDay()]
     },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/

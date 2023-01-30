@@ -2772,12 +2772,7 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val:
-                      field.apiName === 'StageName'
-                        ? $event.value
-                        : field.apiName === 'dealstage'
-                        ? [$event.label, $event.id]
-                        : $event.id,
+                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
@@ -2980,7 +2975,7 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectPicklist } from '@/services/salesforce'
+import { SObjects } from '@/services/salesforce'
 import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
@@ -3009,13 +3004,11 @@ export default {
   },
   data() {
     return {
-      screenHeight: window.innerHeight,
       task: false,
       checker: null,
       verboseName: null,
       editingInline: false,
       currentCell: null,
-      loadingNext: false,
       viewingProducts: false,
       referenceLoading: false,
       savedOpp: null,
@@ -3023,8 +3016,6 @@ export default {
       storedStageName: '',
       pipelineOptions: [],
       recordOptions: [],
-      listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
-      dealStages: [],
       stageGateCopy: [],
       stageReferenceOpts: {},
       currentSelectedProduct: null,
@@ -3040,11 +3031,8 @@ export default {
       noteTitle: null,
       noteValue: null,
       addingTemplate: false,
-      countSets: 0,
-      updateAccountForm: {},
       createData: {},
       savingCreateForm: false,
-      productQueryOpts: {},
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 300 },
@@ -3058,7 +3046,6 @@ export default {
       hasNextOriginal: false,
       integrationId: null,
       hasNext: false,
-      hasPrev: false,
       currentPage: 1,
       notesLength: 0,
       days: {
@@ -3076,14 +3063,12 @@ export default {
       inlineLoader: false,
       currentWorkflowName: this.$route.params.title,
       id: this.$route.params.id,
-      tableKey: 1200,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
       dropdownProductVal: {},
       selectedAccount: null,
-      selectedOwner: null,
       currentOwner: null,
       currentAccount: null,
       updatingOpps: false,
@@ -3093,15 +3078,11 @@ export default {
       allSelected: false,
       allWorkflowsSelected: false,
       updateList: [],
-      recapList: [],
       currentVals: [],
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
       changeFieldsSelected: false,
-      selection: false,
-      allStages: [],
-      allForecasts: [],
       selectedOpp: null,
       selectedresourceName: null,
       oppNewValue: null,
@@ -3120,7 +3101,6 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
-      users: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: [],
       selectedWorkflow: false,
       modalOpen: false,
@@ -3131,31 +3111,20 @@ export default {
       workflowFilterText: '',
       storedFilters: [],
       currentList: 'All Opportunities',
-      alertInstanceId: null,
       showList: false,
-      workList: false,
-      showWorkflowList: true,
-      showPopularList: true,
+      // showPopularList: true,
       notes: [],
       updateOppForm: [],
       oppFormCopy: [],
       createOppForm: [],
       oppFields: [],
-      instanceId: null,
       dropdownValue: {},
       formData: {},
       updateProductData: {},
-      noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
       productReferenceOpts: {},
-      picklistQueryOpts: {},
-      createQueryOpts: {},
-      createProductOpts: {},
-      picklistQueryOptsContacts: {},
-      stagePicklistQueryOpts: {},
       setFilters: {},
-      instanceIds: [],
       allAccounts: [],
       allUsers: [],
       filtering: false,
@@ -3173,9 +3142,8 @@ export default {
         ['NOT_EQUALS', 'StageName', 'Closed Won'],
         ['NOT_EQUALS', 'StageName', 'Closed Lost'],
       ],
-      operatorsLength: 0,
       stageGateId: null,
-      forecastList: [],
+      // forecastList: [],
       stageIntegrationId: null,
       stageId: null,
       selectedPriceBook: null,
@@ -3315,6 +3283,10 @@ export default {
         ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
+    this.objectFields.filters = {
+      ...this.objectFields.filters,
+      crmObject: this.crmObject,
+    }
     this.objectFields.refresh()
     this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
@@ -3376,19 +3348,6 @@ export default {
       setTimeout(() => {
         this.$refs.allProducts ? this.$refs.allProducts.scrollIntoView({ behavior: 'smooth' }) : ''
       }, 100)
-    },
-    setUpdateValuesHandler(key, val, oppId, oppIntId, multi) {
-      let formData = {}
-      if (multi) {
-        formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
-      }
-
-      if (val && !multi) {
-        formData[key] = val
-      }
-      setTimeout(() => {
-        this.inlineUpdate(formData, oppId, oppIntId)
-      }, 500)
     },
     async getAllHSPicklists() {
       this.objectFields.refresh()
@@ -3490,28 +3449,12 @@ export default {
         }, 1000)
       }
     },
-    // async getAllPicklist() {
-    //   try {
-    //     const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
-    //     for (let i = 0; i < res.length; i++) {
-    //       this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
-    //       this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
-    //     }
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
     addProduct() {
       this.addingProduct = !this.addingProduct
       setTimeout(() => {
         this.$refs.product ? this.$refs.product.scrollIntoView({ behavior: 'smooth' }) : null
       }, 100)
     },
-    // scrollToFields() {
-    //   setTimeout(() => {
-    //     this.$refs.product ? this.$refs.product.scrollIntoView() : null
-    //   }, 100)
-    // },
     getFilteredOpps() {
       if (this.userCRM === 'SALESFORCE') {
         this.$store.dispatch('loadAllOpps', [
@@ -3531,63 +3474,36 @@ export default {
         this.stillNextMonth()
       }
     },
-    pricebookLabel({ name }) {
-      return name
-    },
-
-    replaceURLs(message, field) {
-      if (!message) return
-
-      var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
-      message.replace(urlRegex, function (url) {
-        var hyperlink = url
-        if (!hyperlink.match('^https?://')) {
-          hyperlink = 'http://' + hyperlink
-        }
-        return (
-          '<a href="' + hyperlink + '" target="_blank" rel="noopener noreferrer">' + url + '</a>'
-        )
-      })
-
-      this.setUpdateValues(field, message)
-    },
     changeCurrentRow(i, cell) {
       this.currentInlineRow = i
       this.currentCell = cell
       this.dropdownVal = {}
       this.editingInline = true
     },
-    addToForecastList() {
-      let list = []
-      for (let i = 0; i < this.currentCheckList.length; i++) {
-        list.push(this.allOpps.filter((opp) => opp.id === this.currentCheckList[i])[0])
-      }
-      this.forecastList = list.map((opp) => opp.integration_id)
-    },
-    async modifyForecast(action) {
-      const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
-      try {
-        await User.api.modifyForecast(action, this.forecastList)
-        this.$toast(oppOrDeal + ' added to Tracker.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        this.$toast('Error adding ' + oppOrDeal, {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.$store.dispatch('refreshCurrentUser')
-        this.primaryCheckList = []
-      }
-    },
+    // async modifyForecast(action) {
+    //   const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
+    //   try {
+    //     await User.api.modifyForecast(action, this.forecastList)
+    //     this.$toast(oppOrDeal + ' added to Tracker.', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'success',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } catch (e) {
+    //     this.$toast('Error adding ' + oppOrDeal, {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'success',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.$store.dispatch('refreshCurrentUser')
+    //     this.primaryCheckList = []
+    //   }
+    // },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
       if (Array.isArray(field)) {
@@ -3790,9 +3706,6 @@ export default {
     closeListSelect() {
       this.showList = false
     },
-    closeWorkSelect() {
-      this.workList = false
-    },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
       if (value) {
@@ -3897,7 +3810,6 @@ export default {
     },
     applyFilter(value) {
       this.updateFilterValue = value
-      this.operatorsLength += 1
       this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
@@ -4305,7 +4217,7 @@ export default {
         console.log(e)
       }
     },
-    async createFormInstance(opp, id, integrationId, pricebookId, alertInstanceId = null) {
+    async createFormInstance(opp, id, integrationId, pricebookId) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.viewingProducts = false
       this.addingProduct = false
@@ -4320,10 +4232,8 @@ export default {
       this.currentOwner = null
       this.currentAccount = null
       this.selectedAccount = null
-      this.selectedOwner = null
       this.noteValue = null
       this.noteTitle = null
-      this.alertInstanceId = alertInstanceId
       this.oppId = id
       this.currentProducts = []
       this.updateProductData = {}
@@ -4373,7 +4283,6 @@ export default {
       this.createData = {}
       this.currentVals = []
       this.selectedAccount = null
-      this.selectedOwner = null
       this.addOppModalOpen = true
       this.addingProduct = false
       this.stageGateField = null
@@ -4500,7 +4409,6 @@ export default {
         console.log(e)
       }
     },
-
     async onBulkUpdateWorkflow() {
       for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
         if (this.$refs.workflowTableChild[i].isSelected) {
@@ -4527,7 +4435,6 @@ export default {
         console.log(e)
       }
     },
-
     async checkTask() {
       try {
         this.task = await User.api.checkTasks(this.verboseName)
@@ -4535,11 +4442,9 @@ export default {
         console.log(e)
       }
     },
-
     stopChecker() {
       clearInterval(this.checker)
     },
-
     checkAndClearInterval() {
       if (this.task.completed == true) {
         this.stopChecker()
@@ -4658,38 +4563,38 @@ export default {
         })
       }
     },
-    async resourceSync() {
-      if (
-        this.currentDay !== this.syncDay + '/' &&
-        this.currentDay !== this.syncDay &&
-        this.currentDay !== '0' + this.syncDay
-      ) {
-        setTimeout(() => {
-          this.loading = true
-        }, 300)
-        try {
-          await CRMObjects.api.resourceSync()
-          this.$toast('Daily sync complete', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } catch (e) {
-          this.$toast('Error syncing your resources, refresh page', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } finally {
-          this.$store.dispatch('refreshCurrentUser')
-          this.loading = false
-        }
-      }
-    },
+    // async resourceSync() {
+    //   if (
+    //     this.currentDay !== this.syncDay + '/' &&
+    //     this.currentDay !== this.syncDay &&
+    //     this.currentDay !== '0' + this.syncDay
+    //   ) {
+    //     setTimeout(() => {
+    //       this.loading = true
+    //     }, 300)
+    //     try {
+    //       await CRMObjects.api.resourceSync()
+    //       this.$toast('Daily sync complete', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'success',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } catch (e) {
+    //       this.$toast('Error syncing your resources, refresh page', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } finally {
+    //       this.$store.dispatch('refreshCurrentUser')
+    //       this.loading = false
+    //     }
+    //   }
+    // },
     async manualSync() {
       try {
         await CRMObjects.api.resourceSync()
@@ -4850,7 +4755,6 @@ export default {
         return
       }
     },
-
     async updateProduct() {
       this.savingProduct = true
       try {
@@ -4911,7 +4815,6 @@ export default {
           newFormData = this.formData
         }
         const res = await CRMObjects.api.updateResource({
-          // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
@@ -5139,7 +5042,6 @@ export default {
       } finally {
         this.selectedWorkflow = true
         this.showList = false
-        this.workList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
             ? this.sortOppsReverse(
@@ -5200,7 +5102,6 @@ export default {
       this.dropdownLoading = true
       this.productReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'createProduct')
     },
-
     setDropdownValue(val) {
       this.dropdownValue = val
     },
@@ -5359,28 +5260,6 @@ export default {
         this.loadingAccounts = false
       }
     },
-
-    // async getObjects() {
-    //   this.loading = true
-    //   try {
-    //     const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, this.filters)
-    //     this.allOpps = res.results
-    //     this.originalList = res.results
-    //     this.oppTotal = res.count
-    //     this.originalOppTotal = res.count
-    //   } catch (e) {
-    //     this.$toast('Error gathering Opportunities!', {
-    //       timeout: 2000,
-    //       position: 'top-left',
-    //       type: 'error',
-    //       toastClassName: 'custom',
-    //       bodyClassName: ['custom'],
-    //     })
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
-
     async getNotes(id) {
       try {
         const res = await CRMObjects.api.getNotes({
@@ -5405,40 +5284,39 @@ export default {
         })
       }
     },
-    closeDatesThisMonth() {
-      this.currentPage = 1
-      this.selectedWorkflow = false
-      const today = new Date(Date.now())
-      const todaySplit = today.toLocaleDateString().split('/')
-      const todayYear = Number(todaySplit[2])
-      const todayMonth = Number(todaySplit[0])
-      let nextMonth
-      let nextYear
-      if (todayMonth === 12) {
-        nextMonth = 1
-        nextYear = todayYear + 1
-      } else {
-        nextMonth = todayMonth + 1
-      }
-      const beginningOfMonth = `${todayYear}-${todayMonth}-01`
-      let endOfMonth
-      if (nextYear) {
-        endOfMonth = `${nextYear}-${nextMonth}-01`
-      } else {
-        endOfMonth = `${todayYear}-${nextMonth}-01`
-      }
-      this.$store.dispatch('loadAllOpps', [
-        ...this.filters,
-        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
-        ['LESS_THAN', 'CloseDate', endOfMonth],
-      ])
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+    // closeDatesThisMonth() {
+    //   this.currentPage = 1
+    //   this.selectedWorkflow = false
+    //   const today = new Date(Date.now())
+    //   const todaySplit = today.toLocaleDateString().split('/')
+    //   const todayYear = Number(todaySplit[2])
+    //   const todayMonth = Number(todaySplit[0])
+    //   let nextMonth
+    //   let nextYear
+    //   if (todayMonth === 12) {
+    //     nextMonth = 1
+    //     nextYear = todayYear + 1
+    //   } else {
+    //     nextMonth = todayMonth + 1
+    //   }
+    //   const beginningOfMonth = `${todayYear}-${todayMonth}-01`
+    //   let endOfMonth
+    //   if (nextYear) {
+    //     endOfMonth = `${nextYear}-${nextMonth}-01`
+    //   } else {
+    //     endOfMonth = `${todayYear}-${nextMonth}-01`
+    //   }
+    //   this.$store.dispatch('loadAllOpps', [
+    //     ...this.filters,
+    //     ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+    //     ['LESS_THAN', 'CloseDate', endOfMonth],
+    //   ])
+    //   this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
-      this.currentList = 'Closing this month'
-      this.showList = false
-      this.workList = false
-      this.closeFilterSelection()
-    },
+    //   this.currentList = 'Closing this month'
+    //   this.showList = false
+    //   this.closeFilterSelection()
+    // },
     stillThisMonth() {
       this.currentPage = 1
       this.allOpps = this.originalList
@@ -5449,39 +5327,39 @@ export default {
 
       this.currentList = 'Closing this month'
     },
-    closeDatesNextMonth() {
-      this.currentPage = 1
-      this.selectedWorkflow = false
-      const today = new Date(Date.now())
-      const todaySplit = today.toLocaleDateString().split('/')
-      const nextMonthYear = Number(todaySplit[2])
-      const nextMonthMonth = Number(todaySplit[0]) + 1
-      let nextNextMonth
-      let nextYear
-      if (nextMonthMonth >= 12) {
-        nextNextMonth = nextMonthMonth - 11
-        nextYear = nextMonthYear + 1
-      } else {
-        nextNextMonth = nextMonthMonth + 1
-      }
-      const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
-      let endOfMonth
-      if (nextYear) {
-        endOfMonth = `${nextYear}-${nextNextMonth}-01`
-      } else {
-        endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
-      }
-      this.$store.dispatch('loadAllOpps', [
-        ...this.filters,
-        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
-        ['LESS_THAN', 'CloseDate', endOfMonth],
-      ])
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+    // closeDatesNextMonth() {
+    //   this.currentPage = 1
+    //   this.selectedWorkflow = false
+    //   const today = new Date(Date.now())
+    //   const todaySplit = today.toLocaleDateString().split('/')
+    //   const nextMonthYear = Number(todaySplit[2])
+    //   const nextMonthMonth = Number(todaySplit[0]) + 1
+    //   let nextNextMonth
+    //   let nextYear
+    //   if (nextMonthMonth >= 12) {
+    //     nextNextMonth = nextMonthMonth - 11
+    //     nextYear = nextMonthYear + 1
+    //   } else {
+    //     nextNextMonth = nextMonthMonth + 1
+    //   }
+    //   const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
+    //   let endOfMonth
+    //   if (nextYear) {
+    //     endOfMonth = `${nextYear}-${nextNextMonth}-01`
+    //   } else {
+    //     endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
+    //   }
+    //   this.$store.dispatch('loadAllOpps', [
+    //     ...this.filters,
+    //     ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+    //     ['LESS_THAN', 'CloseDate', endOfMonth],
+    //   ])
+    //   this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
-      this.currentList = 'Closing next month'
-      this.showList = false
-      this.closeFilterSelection()
-    },
+    //   this.currentList = 'Closing next month'
+    //   this.showList = false
+    //   this.closeFilterSelection()
+    // },
     stillNextMonth() {
       this.currentPage = 1
       this.allOpps = this.originalList
@@ -5510,13 +5388,6 @@ export default {
       }
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
-    },
-    formatMostRecent(date2) {
-      let today = new Date()
-      let d = new Date(date2)
-      let diff = today.getTime() - d.getTime()
-      let days = diff / (1000 * 3600 * 24)
-      return Math.floor(days)
     },
   },
   beforeUpdate() {

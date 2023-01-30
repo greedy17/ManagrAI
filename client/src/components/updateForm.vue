@@ -882,14 +882,11 @@ export default {
   data() {
     return {
       addingTemplate: false,
-      accountSelected: this.selectedAccount,
-      selectedPricebookCopy: this.selectedPricebook,
       booleans: ['true', 'false'],
       selectedPriceBook: null,
     }
   },
   methods: {
-    test(log) {},
     goToProfile() {
       this.$emit('go-to-profile')
     },
@@ -931,9 +928,6 @@ export default {
     },
     setTemplate(arg1, arg2, arg3) {
       this.$emit('set-template', arg1, arg2, arg3)
-    },
-    updateResource() {
-      this.$emit('update-resource')
     },
     onMakeMeetingUpdate() {
       this.$emit('update-meeting')

@@ -94,13 +94,6 @@
           </div>
         </router-link>
 
-        <!-- <router-link v-if="user.isStaff" exact-active-class="active" :to="{ name: 'Staff' }">
-          <div class="tooltip">
-            <img src="@/assets/images/adminPanel.svg" class="nav-img" height="16px" alt="" />
-            <span class="tooltiptext">Admin</span>
-          </div>
-        </router-link> -->
-
         <router-link style="margin-top: auto" :to="{ name: 'Login' }">
           <div>
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
@@ -123,20 +116,11 @@ export default {
   },
   data() {
     return {
-      showMenus: {
-        user: false,
-      },
       items: [],
-      tooltipOpen: false,
-      dropdownOpen: false,
-      userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
-      userLevel: this.$store.state.user.userLevel,
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
 
   async created() {
-    this.templates.refresh()
     if (this.isTeamLead || this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },
@@ -155,9 +139,6 @@ export default {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
       localStorage.isLoggedOut = true
-    },
-    goToProfile(id) {
-      this.$router.push({ path: `/invite-users/${id}` })
     },
   },
   computed: {
@@ -178,12 +159,6 @@ export default {
     },
     isTeamLead() {
       return this.userIsLoggedIn && this.$store.state.user.isTeamLead
-    },
-    user() {
-      return this.$store.state.user
-    },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
     },
   },
 }

@@ -383,7 +383,6 @@
 <script>
 import User from '@/services/users'
 import { UserInviteForm } from '@/services/users/forms'
-import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/InviteModal'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
@@ -411,15 +410,10 @@ export default {
       activationLink: null,
       selectedMember: null,
       selectedLevel: null,
-      sendSlackInvite: false,
       organization: null,
-      organizations: CollectionManager.create({ ModelClass: Organization }),
-      organizationRef: null,
       slackMembers: new SlackUserList(),
-      inviteRecipient: '',
       uninviteId: '',
       uninviteModal: false,
-      selectedUserType: User.types.REP,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
         { key: 'Representative', value: User.types.REP },
@@ -429,10 +423,8 @@ export default {
         { key: 'Representative', value: User.types.REP },
         { key: 'SDR', value: User.types.SDR },
       ],
-      showInvited: true,
       team: CollectionManager.create({ ModelClass: User }),
       user: null,
-      userRoles: User.roleChoices,
       loading: false,
       userInviteForm: new UserInviteForm({
         role: User.roleChoices[0].key,
@@ -486,9 +478,6 @@ export default {
       this.user = this.$store.state.user
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
         this.$router.push({ name: 'ListTemplates' })
-      }
-      if (this.user.isStaff) {
-        await this.organizations.refresh()
       }
       this.organization = this.$store.state.user.organization
       this.team.refresh()
@@ -628,9 +617,6 @@ export default {
     },
   },
   computed: {
-    isStaff() {
-      return this.$store.state.user.isStaff
-    },
     hasSlack() {
       return !!this.$store.state.user.slackRef
     },

@@ -113,16 +113,16 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
-    getDaysInStage(date) {
-      let newDate = new Date(date)
-      return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
-    },
+    // getDaysInStage(date) {
+    //   let newDate = new Date(date)
+    //   return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
+    // },
   },
   computed: {
-    currentDay() {
-      let date = new Date()
-      return date
-    },
+    // currentDay() {
+    //   let date = new Date()
+    //   return date
+    // },
     userCRM() {
       return this.$store.state.user.crm
     }

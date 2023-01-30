@@ -65,12 +65,6 @@ export default new Router({
       component: () => import('@/views/user/ProfilePage'),
     },
     {
-      path: '/home',
-      component: () => import('../views/Home'),
-      beforeEnter: Auth.requireAuth,
-      name: 'Home',
-    },
-    {
       path: '/reports',
       component: () => import('../views/Reports'),
       name: 'Reports',
@@ -141,12 +135,6 @@ export default new Router({
       name: 'Pipelines',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/Pipelines')
-    },
-    {
-      path: '/forecast',
-      name: 'Forecast',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/Forecast')
     },
     {
       path: '/meetings',

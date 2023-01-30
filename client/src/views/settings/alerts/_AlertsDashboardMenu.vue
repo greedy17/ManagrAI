@@ -131,7 +131,7 @@
 
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
-import { UserOnboardingForm } from '@/services/users/forms'
+// import { UserOnboardingForm } from '@/services/users/forms'
 import AlertTemplate from '@/services/alerts/'
 import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
@@ -147,14 +147,11 @@ export default {
   data() {
     return {
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      userOnboardingForm: new UserOnboardingForm({}),
-      test: true,
-      popular: true,
+      // userOnboardingForm: new UserOnboardingForm({}),
       buildingCustom: false,
       canSave: false,
       editingWorkflow: false,
       currentAlert: null,
-      loading: false,
     }
   },
 
@@ -163,25 +160,25 @@ export default {
       this.buildingCustom = false
       this.editingWorkflow = false
     },
-    onboardComplete() {
-      this.userOnboardingForm.field.onboarding.value = false
-      User.api
-        .update(this.user.id, this.userOnboardingForm.value)
-        .then((response) => {
-          this.$store.dispatch('updateUser', User.fromAPI(response.data))
-          this.$router.push({ name: 'ListTemplates' })
-          this.$toast('Onboarding Complete!', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        })
-        .catch((e) => {
-          console.log(e)
-        })
-    },
+    // onboardComplete() {
+    //   this.userOnboardingForm.field.onboarding.value = false
+    //   User.api
+    //     .update(this.user.id, this.userOnboardingForm.value)
+    //     .then((response) => {
+    //       this.$store.dispatch('updateUser', User.fromAPI(response.data))
+    //       this.$router.push({ name: 'ListTemplates' })
+    //       this.$toast('Onboarding Complete!', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'success',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     })
+    //     .catch((e) => {
+    //       console.log(e)
+    //     })
+    // },
     updateWorkflow() {
       this.$refs.editAlertsPanel.updateWorkflow()
       this.buildingCustom = false
@@ -194,8 +191,24 @@ export default {
         bodyClassName: ['custom'],
       })
     },
-    deleteWorkflow(id) {
-      this.$emit('delete-workflow')
+    async deleteWorkflow(id) {
+      this.deletedTitle(id)
+
+      try {
+        await AlertTemplate.api.deleteAlertTemplate(id)
+        this.handleUpdate()
+        this.$router.go()
+      } catch (e) {
+        this.$toast('Error removing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.editingWorkflow = false
+      }
     },
     deletedTitle(id) {
       let newList = []
@@ -212,32 +225,6 @@ export default {
           console.log(e)
         })
     },
-    async deleteWorkflow(id) {
-      this.deletedTitle(id)
-
-      try {
-        await AlertTemplate.api.deleteAlertTemplate(id)
-        this.handleUpdate()
-        this.$router.go()
-        // this.$toast('Workflow removed', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'success',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
-      } catch (e) {
-        this.$toast('Error removing workflow', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.editingWorkflow = false
-      }
-    },
     openEditWorkflow(alert) {
       this.editingWorkflow = true
       this.currentAlert = alert
@@ -248,15 +235,6 @@ export default {
     setCanSave(val) {
       this.canSave = val
     },
-    goToPopular() {
-      this.$router.push({ name: 'CreateNew' })
-    },
-    goToActive() {
-      this.$router.push({ name: 'ListTemplates' })
-    },
-    goToCustom() {
-      this.$router.push({ name: 'BuildYourOwn' })
-    },
   },
   created() {
     this.templates.refresh()
@@ -265,27 +243,16 @@ export default {
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
-    hasZoomChannel() {
-      if (this.hasSlack) {
-        return this.$store.state.user.slackAccount.zoomChannel
-      }
-    },
-    hasRecapChannel() {
-      if (this.hasSlack) {
-        return this.$store.state.user.slackAccount.recapChannel
-      }
-    },
-    hasSlack() {
-      return this.$store.state.user.slackAccount
-    },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
-    },
+    // hasZoomChannel() {
+    //   if (this.hasSlack) {
+    //     return this.$store.state.user.slackAccount.zoomChannel
+    //   }
+    // },
+    // hasSlack() {
+    //   return this.$store.state.user.slackAccount
+    // },
     user() {
       return this.$store.state.user
-    },
-    userLevel() {
-      return this.$store.state.user.userLevel
     },
   },
 }

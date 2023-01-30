@@ -363,8 +363,6 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import { SObjects } from '@/services/salesforce'
-import debounce from 'lodash.debounce'
 
 export default {
   name: 'WorkflowRow',
@@ -380,12 +378,9 @@ export default {
       isSelected: false,
       currentRow: null,
       formData: {},
-      referenceOptions: [],
       dropdownVal: {},
-      executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
       editIndex: null,
-      currentOpp: null,
       updatedWorkflowList: [],
       newCloseDate: null,
       booleans: ['true', 'false'],
@@ -453,9 +448,9 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox() {
-      this.$emit('checked-box')
-    },
+    // emitCheckedBox() {
+    //   this.$emit('checked-box')
+    // },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
     },
@@ -473,113 +468,6 @@ export default {
       let currentYear = currentDate.getFullYear()
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
-    },
-    async onAdvanceStage() {
-      this.updatedWorkflowList.push(this.workflow.id)
-      try {
-        const res = await SObjects.api
-        SObjects.api
-          .updateResource({
-            form_data: { StageName: this.stageData },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.workflow.id,
-            integration_ids: [this.workflow.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.updatedWorkflowList = []
-      }
-    },
-    async onPushCloseDate() {
-      this.updatedWorkflowList.push(this.workflow.id)
-      try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: { CloseDate: this.newCloseDate },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.workflow.id,
-            integration_ids: [this.workflow.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.updatedWorkflowList = []
-      }
-    },
-    async onChangeForecast() {
-      this.updatedWorkflowList.push(this.workflow.id)
-      try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.workflow.id,
-            integration_ids: [this.workflow.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.updatedWorkflowList = []
-      }
-    },
-    async onBulkUpdate() {
-      this.updatedWorkflowList.push(this.workflow.id)
-      try {
-        const formData = {}
-        formData[this.BulkUpdateName] = this.BulkUpdateValue
-        const res = await SObjects.api
-          .updateResource({
-            form_data: formData,
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.workflow.id,
-            integration_ids: [this.workflow.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.updatedWorkflowList = []
-      }
     },
   },
 }

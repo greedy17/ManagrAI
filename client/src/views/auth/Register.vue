@@ -137,7 +137,6 @@ export default {
       User,
       submitting: false,
       registrationForm: new RepRegistrationForm(),
-      reenterPassword: '',
       userId: null,
       token: null,
       email: null,
@@ -147,7 +146,6 @@ export default {
       timezones: moment.tz.names(),
       userTime: moment.tz.guess(),
       changeZone: false,
-      userRole: null,
       selectedZone: null,
     }
   },
@@ -165,9 +163,9 @@ export default {
       let messages = validations.map((val) => val.message)
       this.errorMessages = messages
     },
-    selectZone() {
-      this.changeZone = !this.changeZone
-    },
+    // selectZone() {
+    //   this.changeZone = !this.changeZone
+    // },
     test(n) {
       this.registrationForm.field.timezone.value = n.value
     },

@@ -253,8 +253,6 @@
 
 <script>
 import { SObjects } from '@/services/salesforce'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'PipelineHeader',
@@ -269,13 +267,6 @@ export default {
       addingField: false,
       removingField: false,
       removingIndex: null,
-      objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
-        filters: {
-          salesforceObject: 'Opportunity',
-        },
-      }),
     }
   },
   components: {

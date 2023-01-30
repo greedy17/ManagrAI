@@ -317,7 +317,7 @@
         </div>
         <div class="profile-info__body">
           <div class="row__">
-            <h2 @click="test">{{ getUser.fullName }}</h2>
+            <h2>{{ getUser.fullName }}</h2>
             <!-- <span @click="selectingOption = !selectingOption" class="img-border">
               <img
                 src="@/assets/images/more_horizontal.svg"
@@ -528,17 +528,12 @@ export default {
   data() {
     return {
       selectingOption: false,
-      noSelection: true,
       manageTeamSelected: true,
       updateInfoSelected: false,
-      createNoteSelected: false,
-      editNoteSelected: false,
-      selectedTemplate: null,
-      noteTemplates: null,
-      isShared: false,
-      savingTemplate: false,
-      noteSubject: null,
-      noteBody: null,
+      // createNoteSelected: false,
+      // editNoteSelected: false,
+      // selectedTemplate: null,
+      // savingTemplate: false,
       inviteOpen: false,
       editTeam: false,
       newTeam: false,
@@ -550,7 +545,7 @@ export default {
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
       teamsList: [],
-      originalTeam: null,
+      originalTeam: {},
       selectedTeam: null,
       selectedUsers: [],
       usersList: [],
@@ -565,67 +560,22 @@ export default {
     viewAdminPage() {
       this.$router.push({ name: 'Staff' })
     },
-    test() {
-      console.log(this.getUser)
-    },
-    manageTeam() {
-      this.manageTeamSelected = true
-      this.updateInfoSelected = false
-      this.createNoteSelected = false
-      this.editNoteSelected = false
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    updateInfo() {
-      this.manageTeamSelected = false
-      this.updateInfoSelected = true
-      this.createNoteSelected = false
-      this.editNoteSelected = false
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    createNote() {
-      this.manageTeamSelected = false
-      this.updateInfoSelected = false
-      this.createNoteSelected = true
-      this.editNoteSelected = false
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    editNote() {
-      this.getTemplates()
-      this.manageTeamSelected = false
-      this.updateInfoSelected = false
-      this.createNoteSelected = false
-      this.editNoteSelected = true
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    selectTemplate(template) {
-      this.selectedTemplate = template
-    },
-    async updateTemplate() {
-      try {
-        const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
-        this.$toast('Note template update successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        this.$toast('Error updating template', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.homeView()
-      }
-    },
+    // manageTeam() {
+    //   this.manageTeamSelected = true
+    //   this.updateInfoSelected = false
+    //   this.createNoteSelected = false
+    //   this.editNoteSelected = false
+    //   this.selectedTemplate = false
+    //   this.selectingOption = false
+    // },
+    // updateInfo() {
+    //   this.manageTeamSelected = false
+    //   this.updateInfoSelected = true
+    //   this.createNoteSelected = false
+    //   this.editNoteSelected = false
+    //   this.selectedTemplate = false
+    //   this.selectingOption = false
+    // },
     updateAvailableUsers(team, users) {
       let filterUsers
       if (this.team.list.length) {
@@ -650,69 +600,6 @@ export default {
               filteredUser.team === this.originalTeam.id && !filteredUser.isTeamLead,
           )
         }
-      }
-    },
-    async removeTemplate() {
-      try {
-        const res = await User.api.removeTemplate(this.selectedTemplate.id)
-        this.$toast('Template removal successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        this.$toast('Error removing template', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.homeView()
-      }
-    },
-    async getTemplates() {
-      try {
-        const res = await User.api.getTemplates()
-        this.noteTemplates = res.results
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async createTemplate() {
-      this.savingTemplate = true
-      try {
-        const res = await User.api.createTemplate({
-          subject: this.noteSubject,
-          body: this.noteBody,
-          is_shared: this.isShared,
-          user: this.getUser.id,
-        })
-        this.$toast('Note template created successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        console.log(e)
-        this.$toast('Error creating template', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.savingTemplate = false
-        this.noteSubject = null
-        this.noteBody = null
-        this.isShared = null
-        this.homeView()
       }
     },
     async changeAdminSubmit() {
@@ -865,22 +752,6 @@ export default {
       this.team.refresh()
       this.inviteOpen = false
     },
-    async getTeams() {
-      const res = await Organization.api.listTeams(this.getUser.id)
-      const teamList = [res.results[0]]
-      for (let i = 1; i < res.results.length; i++) {
-        if (res.results[i].team_lead === this.getUser.id) {
-          teamList.push(res.results[i])
-        }
-      }
-      this.teamsList = teamList
-      this.originalTeam = res.results[0]
-      const currentTeam = res.results.length
-        ? res.results.filter((team) => team.id === this.getUser.team)[0]
-        : null
-      this.selectedTeam = currentTeam
-      this.updateAvailableUsers(currentTeam)
-    },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
     },
@@ -942,7 +813,6 @@ export default {
     },
   },
   async created() {
-    this.getTemplates()
     this.profileForm = new UserProfileForm({
       firstName: this.getUser.firstName,
       lastName: this.getUser.lastName,
@@ -967,9 +837,6 @@ export default {
     },
     hasSlack() {
       return !!this.$store.state.user.slackRef
-    },
-    isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
     },
     numberOfAllowedUsers() {
       return this.$store.state.user.organizationRef.numberOfAllowedUsers

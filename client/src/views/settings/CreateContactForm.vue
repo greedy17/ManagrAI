@@ -17,11 +17,11 @@
 </template>
 
 <script>
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import SlackForm from '@/views/settings/SlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
-import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
+import { SObjectField, SObjectPicklist } from '@/services/salesforce'
 
 export default {
   name: 'CreateContactForm',
@@ -30,29 +30,10 @@ export default {
     return {
       allForms: [],
       allFields: [],
-      formsByType: [],
-      isLoading: false,
-      selectedTab: null,
-      resource: null,
       selectedForm: null,
-      newForms: [],
-      selectedStage: null,
-      selectedFormFields: [],
       stages: [],
-      loadingStages: false,
-      formType: null,
-      search: '',
-      fieldParam: null,
-      loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
-      stageDropDownOpen: false,
-      isVisible: false,
-      validations: CollectionManager.create({
-        ModelClass: SObjectValidation,
-        pagination: Pagination.create({ size: 2 }),
-      }),
       formStages: [],
-      started: false,
     }
   },
   async created() {

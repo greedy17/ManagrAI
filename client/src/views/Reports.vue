@@ -679,7 +679,6 @@ export default {
         ModelClass: User,
         pagination: { size: 500 },
       }),
-      searchText: null,
       selectedOpp: null,
       selectedUser: null,
       reportType: 'Performance',
@@ -713,13 +712,6 @@ export default {
         this.dropdownLoading = false
       }, 1000)
     },
-    greaterVal(a, b) {
-      if (a >= b) {
-        return true
-      } else {
-        return false
-      }
-    },
     fullOrEmailLabel(props) {
       if (!props.fullName.trim()) {
         return props.email
@@ -747,7 +739,6 @@ export default {
       }
     },
     setTimeSaved() {
-      // console.log(this.performanceReport)
       let totalTime = 0
       let sessionTime = this.performanceReport['total sessions'] * 5
       let updates = this.performanceReport['updates']
@@ -782,7 +773,6 @@ export default {
         this.sortedUpdates = sortable
       }
     },
-
     selectPerformanceReport() {
       this.reportType = 'Performance'
       this.generating = false
@@ -790,13 +780,13 @@ export default {
       this.selectedOpp = null
       this.performanceReport = null
     },
-    selectStoryReport() {
-      this.reportType = 'Story'
-      this.generating = false
-      this.selectedUser = null
-      this.selectedOpp = null
-      this.performanceReport = null
-    },
+    // selectStoryReport() {
+    //   this.reportType = 'Story'
+    //   this.generating = false
+    //   this.selectedUser = null
+    //   this.selectedOpp = null
+    //   this.performanceReport = null
+    // },
     home() {
       this.generating = false
       this.selectedUser = null
@@ -805,17 +795,11 @@ export default {
     },
   },
   computed: {
-    userCRM() {
-      return this.$store.state.user.crm
-    },
     allOpps() {
       return this.selectedUser
         ? this.$store.state.allOpps.filter((opp) => opp.owner == this.selectedUser.id)
         : this.$store.state.allOpps
       // return this.$store.state.allOpps
-    },
-    isAdmin() {
-      return this.userIsLoggedIn && this.$store.state.user.isAdmin
     },
     user() {
       return this.$store.state.user

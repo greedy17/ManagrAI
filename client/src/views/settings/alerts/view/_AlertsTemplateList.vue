@@ -408,16 +408,16 @@ export default {
   },
   data() {
     return {
-      templatedAlerts: [
-        'Close Date Passed',
-        '90 Day Pipeline',
-        'Upcoming Next Step',
-        'Requird Field Empty',
-        'Large Opportunities',
-        'Team Pipeline',
-        'Deal Review',
-        'Close Date Approaching',
-      ],
+      // templatedAlerts: [
+      //   'Close Date Passed',
+      //   '90 Day Pipeline',
+      //   'Upcoming Next Step',
+      //   'Requird Field Empty',
+      //   'Large Opportunities',
+      //   'Team Pipeline',
+      //   'Deal Review',
+      //   'Close Date Approaching',
+      // ],
       meetingListOpen: false,
       activeWorkflow: null,
       allConfigs,
@@ -425,23 +425,17 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
-      users: CollectionManager.create({ ModelClass: User }),
       templateTitles: [],
       deleteOpen: false,
       workflowListOpen: false,
       deleteId: '',
       deleteTitle: '',
-      currentAlert: {},
       editing: true,
-      isHiding: false,
       // userConfigForm: new UserConfigForm({}),
-      configName: '',
-      configArray: [],
       currentZoomChannel: '',
       currentRecapChannel: '',
       clicked: [],
       hsStages: {},
-      pageLoaded: false,
     }
   },
   async created() {
@@ -559,41 +553,15 @@ export default {
           console.log(e)
         })
     },
-    alertsCount(num) {
-      if (this.zoomChannel && !this.hasRecapChannel) {
-        return num + 1
-      } else if (this.hasRecapChannel && !this.zoomChannel) {
-        return num + 1
-      } else if (this.hasRecapChannel && this.zoomChannel) {
-        return num + 2
-      } else {
-        return num
-      }
-    },
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
     },
-    goToConnect() {
-      this.$router.push({ name: 'Integrations' })
-    },
-    makeAlertCurrent(val) {
-      this.currentAlert = val
-      this.editing = !this.editing
-    },
-    deleteClosed(val) {
-      this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
-      this.deleteId = val
-    },
     deleteClose() {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
-    closeEdit() {
-      this.editing = !this.editing
-    },
-
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
       this.deleteOpen = !this.deleteOpen
@@ -702,9 +670,9 @@ export default {
     meetings() {
       return this.$store.state.meetings
     },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
-    },
+    // isOnboarding() {
+    //   return this.$store.state.user.onboarding
+    // },
     leaderTemplatesFirst() {
       const originalList = this.templates.list
       const leaders = []

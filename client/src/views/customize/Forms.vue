@@ -162,6 +162,12 @@ export default {
   // overflow: auto;
   padding-left: 60px;
 }
+
+.opportunity_title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
 h3 {
   font-size: 1.35rem;
 }

@@ -554,7 +554,6 @@ export default {
   name: 'MeetingWorkflow',
   data() {
     return {
-      fields: ['topic', 'participants_count', 'participants.email'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
       showingAttendees: false,
       dropdownVal: {},
@@ -573,7 +572,6 @@ export default {
       selectedAccount: null,
       selectedOwner: null,
       formData: {},
-      currentVals: [],
       allOpps: null,
     }
   },
@@ -587,11 +585,9 @@ export default {
     resourceRef: {},
     resourceId: {},
     resourceType: {},
-    index: {},
     workflowId: {},
     meetingUpdated: {},
     meetingLoading: {},
-    dropdowns: {},
     contactFields: {},
     accounts: {},
     owners: {},
@@ -610,17 +606,6 @@ export default {
       return lastName
     },
   },
-  // watch: {
-  //   resourceType: 'getObjects',
-  // },
-  // mounted() {
-  //   if (this.resourceId) {
-  //     this.getCurrentVals()
-  //   }
-  // },
-  created() {
-    this.getObjects()
-  },
   created() {
     this.getObjects()
   },
@@ -628,32 +613,29 @@ export default {
     showAttendees() {
       this.showingAttendees = !this.showingAttendees
     },
-    async getAccounts(val) {
-      this.loadingAccounts = true
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: this.accountSobjectId,
-          value: val,
-          for_meetings: true,
-        })
-        this.allOpps = res
-      } catch (e) {
-        this.$toast('Error gathering Accounts!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loadingAccounts = false
-      }
-    },
+    // async getAccounts(val) {
+    //   this.loadingAccounts = true
+    //   try {
+    //     const res = await SObjects.api.getSobjectPicklistValues({
+    //       sobject_id: this.accountSobjectId,
+    //       value: val,
+    //       for_meetings: true,
+    //     })
+    //     this.allOpps = res
+    //   } catch (e) {
+    //     this.$toast('Error gathering Accounts!', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.loadingAccounts = false
+    //   }
+    // },
     changeMapType(i) {
       this.mapType = i
-    },
-    selectResource() {
-      this.selectingResource = true
     },
     switchResource() {
       this.getObjects()
@@ -692,20 +674,9 @@ export default {
       this.selectingResource = false
       this.getObjects()
     },
-    emitGetNotes(id) {
-      this.$emit('get-notes', id)
-    },
-    async getCurrentVals() {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Contact',
-          formType: 'CREATE',
-          resourceId: this.resourceId,
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    },
+    // emitGetNotes(id) {
+    //   this.$emit('get-notes', id)
+    // },
     setUpdateValues(key, val) {
       if (val) {
         this.formData[key] = val
@@ -733,13 +704,6 @@ export default {
     mapOpp() {
       this.$emit('map-opp', this.workflowId, this.resource, this.mapType)
       this.addingOpp = !this.addingOpp
-    },
-    formatUnix(unix) {
-      let date = new Date(unix * 1000)
-      let hours = date.getHours()
-      let minutes = '0' + date.getMinutes()
-      let formattedTime = hours + ':' + minutes.substr(-2)
-      return formattedTime
     },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)

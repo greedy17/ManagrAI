@@ -171,9 +171,9 @@ export default {
       let messages = validations.map((val) => val.message)
       this.errorMessages = messages
     },
-    selectZone() {
-      this.changeZone = !this.changeZone
-    },
+    // selectZone() {
+    //   this.changeZone = !this.changeZone
+    // },
     test(n) {
       this.registrationForm.field.timezone.value = n.value
     },

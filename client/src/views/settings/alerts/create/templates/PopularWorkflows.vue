@@ -514,7 +514,7 @@ export default {
       addedFields: [],
       dropdownLoading: null,
       selectedUsers: [],
-      selectedDays: null,
+      // selectedDays: null,
       selectedChannel: null,
       userChannelOpts: new SlackListResponse(),
       create: false,

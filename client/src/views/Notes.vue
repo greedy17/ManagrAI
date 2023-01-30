@@ -152,6 +152,7 @@
 import User from '@/services/users'
 import PipelineLoader from '@/components/PipelineLoader'
 import { SObjects } from '@/services/salesforce'
+import { quillEditor } from 'vue-quill-editor'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
@@ -159,6 +160,7 @@ import 'quill/dist/quill.bubble.css'
 export default {
   name: 'Notes',
   components: {
+    quillEditor,
     PipelineLoader,
   },
   data() {

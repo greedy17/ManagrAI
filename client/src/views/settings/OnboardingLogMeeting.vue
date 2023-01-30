@@ -138,7 +138,6 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
 
 export default {
@@ -154,20 +153,14 @@ export default {
       create: true,
       userChannelOpts: new SlackListResponse(),
       channelName: '',
-      newChannel: {},
       channelCreated: false,
-      slackAccount: {},
       zoomChannel: '',
       createdZoomChannel: '',
-      users: CollectionManager.create({ ModelClass: User }),
     }
   },
   async created() {
     if (this.user.slackRef) {
       await this.listUserChannels()
-    }
-    if (this.user.userLevel == 'MANAGER') {
-      await this.users.refresh()
     }
   },
   methods: {

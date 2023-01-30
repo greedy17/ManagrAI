@@ -645,30 +645,19 @@ import { UserOnboardingForm } from '@/services/users/forms'
  * Services
  */
 
-import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField } from '@/services/salesforce'
+import { AlertTemplateForm } from '@/services/alerts/'
 import User from '@/services/users'
-import { SlackListResponse } from '@/services/slack'
 
 export default {
   name: 'AlertsPage',
   data() {
     return {
-      channelOpts: new SlackListResponse(),
-      savingTemplate: false,
-      listVisible: true,
-      dropdownVisible: true,
       alertTemplateForm: new AlertTemplateForm(),
-      selectedBindings: [],
       userOnboardingForm: new UserOnboardingForm({}),
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
-      users: CollectionManager.create({ ModelClass: User }),
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
   async created() {
-    this.templates.refresh()
+    
   },
   methods: {
     handleUpdate() {

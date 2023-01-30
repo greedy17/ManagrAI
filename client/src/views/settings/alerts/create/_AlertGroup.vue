@@ -109,11 +109,11 @@ export default {
     test(log) {
       console.log('log', log)
     },
-    toggleSelectedCondition() {
-      this.selectedCondition == 'AND'
-        ? (this.selectedCondition = 'OR')
-        : (this.selectedCondition = 'AND')
-    },
+    // toggleSelectedCondition() {
+    //   this.selectedCondition == 'AND'
+    //     ? (this.selectedCondition = 'OR')
+    //     : (this.selectedCondition = 'AND')
+    // },
     emitAddOperandForm() {
       const order = this.form.field.alertOperands.groups.length
       if (order >= 3) {

@@ -397,9 +397,7 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import { SObjects } from '@/services/salesforce'
 import User from '@/services/users'
-import debounce from 'lodash.debounce'
 
 export default {
   name: 'PipelineTableRow',
@@ -413,19 +411,16 @@ export default {
   data() {
     return {
       showIcons: false,
-      booleans: ['true', 'false'],
+      // booleans: ['true', 'false'],
       isSelected: false,
       task: false,
       checker: null,
       verboseName: null,
       currentRow: null,
       formData: {},
-      referenceOptions: [],
       dropdownVal: {},
-      executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
       editIndex: null,
-      currentOpp: null,
       // objectFields: CollectionManager.create({
       //   ModelClass: SObjectField,
       //   pagination: { size: 300 },
@@ -533,9 +528,9 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox(i) {
-      this.$emit('checked-box', this.opp.id, i)
-    },
+    // emitCheckedBox(i) {
+    //   this.$emit('checked-box', this.opp.id, i)
+    // },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
     },
@@ -554,91 +549,6 @@ export default {
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
     },
-    async onAdvanceStage() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const res = await SObjects.api
-        SObjects.api
-          .updateResource({
-            form_data: { StageName: this.stageData },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.updatedList = []
-        }, 1000)
-      }
-    },
-    async onPushCloseDate() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: { CloseDate: this.newCloseDate },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.updatedList = []
-        }, 1000)
-      }
-    },
-    async onChangeForecast() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.updatedList = []
-        }, 2000)
-      }
-    },
     async checkTask() {
       try {
         this.task = await User.api.checkTasks(this.verboseName)
@@ -649,29 +559,29 @@ export default {
     stopChecker() {
       clearInterval(this.checker)
     },
-    async onBulkUpdate() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const formData = {}
-        formData[this.BulkUpdateName] = this.BulkUpdateValue
-        const res = await SObjects.api
-          .bulkUpdate({
-            form_data: formData,
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then((res) => {
-            this.verboseName = res.verbose_name
-            this.checker = setInterval(() => {
-              this.checkTask()
-            }, 1000)
-          })
-      } catch (e) {
-        console.log(e)
-      }
-    },
+    // async onBulkUpdate() {
+    //   this.updatedList.push(this.opp.id)
+    //   try {
+    //     const formData = {}
+    //     formData[this.BulkUpdateName] = this.BulkUpdateValue
+    //     const res = await SObjects.api
+    //       .bulkUpdate({
+    //         form_data: formData,
+    //         resource_type: 'Opportunity',
+    //         form_type: 'UPDATE',
+    //         resource_id: this.opp.id,
+    //         integration_ids: [this.opp.integration_id],
+    //       })
+    //       .then((res) => {
+    //         this.verboseName = res.verbose_name
+    //         this.checker = setInterval(() => {
+    //           this.checkTask()
+    //         }, 1000)
+    //       })
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
   },
   computed: {
     userCRM() {

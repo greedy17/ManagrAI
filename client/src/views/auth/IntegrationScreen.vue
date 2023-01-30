@@ -95,7 +95,12 @@
           </div>
 
           <div class="card__body">
-            <h3 class="card__title">Hubspot</h3>
+            <h3 class="card__title">
+              Hubspot
+              <span class="required" v-if="!hasHubspotIntegration">
+                <img src="@/assets/images/required.svg" height="14px" alt=""
+              /></span>
+            </h3>
             <p class="card-text">Sync Companies, Deals, and Contacts</p>
             <div>
               <div>
@@ -536,8 +541,6 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 import Modal from '@/components/InviteModal'
 
-import AlertTemplate from '@/services/alerts/'
-
 export default {
   name: 'Integrations',
   components: {
@@ -550,34 +553,26 @@ export default {
   data() {
     return {
       generatingToken: false,
-      authLink: null,
       crmList: [
         { label: 'Salesforce', value: 'SALESFORCE' },
         { label: 'Hubspot', value: 'HUBSPOT' },
       ],
-      messengerList: [
-        { label: 'Slack', value: 'SLACK' },
-        { label: 'Teams', value: 'TEAMS' },
-      ],
+      // messengerList: [
+      //   { label: 'Slack', value: 'SLACK' },
+      //   { label: 'Teams', value: 'TEAMS' },
+      // ],
       removeApp: '',
       removeAppFormatted: '',
       confirmModal: false,
       pulseLoading: false,
       selectedCRM: null,
-      selectedMessenger: null,
+      // selectedMessenger: null,
       selectedIntegration: null,
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
   methods: {
     test(log) {
       console.log('log', log)
-    },
-    goToTemplates() {
-      this.$router.push({ name: 'CreateNew' })
-    },
-    goToForms() {
-      this.$router.push({ name: 'Required' })
     },
     async onGetAuthLink(integration) {
       integration === 'NYLAS'
@@ -667,7 +662,6 @@ export default {
     },
   },
   async created() {
-    this.templates.refresh()
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
       this.generatingToken = true
@@ -783,9 +777,6 @@ export default {
     },
     user() {
       return this.$store.state.user
-    },
-    userLevel() {
-      return this.$store.state.user.userLevel
     },
     slackButtonMessage() {
       if (!this.orgHasSlackIntegration && this.userCanIntegrateSlack) {
