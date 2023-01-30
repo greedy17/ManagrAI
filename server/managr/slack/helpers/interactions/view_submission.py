@@ -262,7 +262,7 @@ def process_next_page_slack_commands_form(payload, context):
     # currently only for update
     blocks = []
     for form in stage_forms:
-        blocks.extend(form.generate_form())
+        blocks.extend(form.generate_form(form.saved_data))
     if alert_check is not None:
         callback_id = slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
     else:
@@ -354,10 +354,18 @@ def process_submit_resource_data(payload, context):
     user = User.objects.get(id=context.get("u"))
     slack_access_token = user.organization.slack_integration.access_token
     sending_blocks = get_block_set("loading", {"message": ":rocket: Sending your data to the CRM"})
+    message_ref = context.get("message_ref", None)
+    if message_ref:
+        channel, ts = message_ref.split("|")
     try:
-        sending_res = slack_requests.send_channel_message(
-            user.slack_integration.channel, slack_access_token, block_set=sending_blocks,
-        )
+        if message_ref:
+            sending_res = slack_requests.update_channel_message(
+                channel, ts, slack_access_token, block_set=sending_blocks,
+            )
+        else:
+            sending_res = slack_requests.send_channel_message(
+                user.slack_integration.channel, slack_access_token, block_set=sending_blocks,
+            )
     except Exception as e:
         logger.exception(f"Failed to send updating message to {user.email} due to {e}")
     state = swap_public_fields(payload["view"]["state"]["values"])

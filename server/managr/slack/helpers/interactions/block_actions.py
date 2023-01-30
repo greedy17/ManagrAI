@@ -1820,6 +1820,7 @@ def process_return_to_form_modal(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_return_to_form_button(payload, context):
+    print(payload)
     """if an error occurs on create/update commands when the return button is clicked regen form"""
     form_ids = context.get("f").split(",")
     trigger_id = payload["trigger_id"]
@@ -1840,6 +1841,8 @@ def process_return_to_form_button(payload, context):
     else:
         submit_button_text = "Submit"
         callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    message_ref = f"{payload['channel']['id']}|{payload['message']['ts']}"
+    context.update({"message_ref": message_ref})
     data = {
         "trigger_id": trigger_id,
         "view": {
