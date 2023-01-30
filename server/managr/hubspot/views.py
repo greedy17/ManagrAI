@@ -39,7 +39,6 @@ def get_hubspot_authentication(request):
     if not code:
         raise ValidationError()
     res = HubspotAuthAccountAdapter.create_account(code, request.user.id)
-    print("HUBSPOT VIEW CREATE ACCOUNT RES", res)
     existing = HubspotAuthAccount.objects.filter(user=request.user).first()
     if existing:
         serializer = HubspotAuthAccountSerializer(data=res.as_dict, instance=existing)

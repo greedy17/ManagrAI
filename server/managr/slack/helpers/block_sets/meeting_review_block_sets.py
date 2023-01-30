@@ -503,7 +503,7 @@ def meeting_review_modal_block_set(context):
                 ],
             )
         except Exception as e:
-            print(e)
+            logger.exception(f"Failed to retrieve current products due to <{e}>")
     blocks = []
     action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
     type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"

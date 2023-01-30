@@ -93,7 +93,7 @@ def authenticate(request):
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except IntegrityError as e:
-            print(e)
+            logger.exception(f"Failed to validate Salesforce account due to <{e}>")
             raise ValidationError(detail="An integration with this salesforce id already exists")
         # create sf sync object
 
@@ -699,7 +699,6 @@ class SalesforceSObjectViewSet(
                     break
                 except FieldValidationError as e:
                     logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
-                    print(e)
                     data = {"success": False, "error": str(e)}
                     break
 

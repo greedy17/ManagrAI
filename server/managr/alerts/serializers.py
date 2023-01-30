@@ -477,7 +477,7 @@ class AlertTemplateWriteSerializer(serializers.ModelSerializer):
                 _new_configs.is_valid(raise_exception=True)
                 _new_configs.save()
             except Exception as e:
-                print(f"ERROR {e}")
+                logger.exception(f"Error validating alert template {e}")
         return data
 
 
