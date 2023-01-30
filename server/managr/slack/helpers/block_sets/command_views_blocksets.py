@@ -1,33 +1,19 @@
-import pdb
-import resource
-import pytz
-import uuid
 import json
-
-from urllib.parse import urlencode, quote_plus, urlparse
-from datetime import datetime
-from django.db.models import Q
-
+from urllib.parse import urlencode
 from managr.utils.sites import get_site_url
-from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity
-
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import (
     action_with_params,
     block_set,
-    map_fields_to_type,
-    block_finder,
 )
 from managr.slack.helpers import block_builders, block_sets
-from managr.utils.misc import snake_to_space
-
-from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.slack.models import OrgCustomSlackFormInstance
 from managr.alerts.models import AlertInstance
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
+from managr.core.models import User
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
@@ -173,68 +159,6 @@ def custom_inline_paginator_block(pagination_object, invocation, config_id, api_
     return blocks
 
 
-def custom_meeting_paginator_block(pagination_object, invocation, channel):
-    next_page = pagination_object.get("next_page", None)
-    prev_page = pagination_object.get("previous_page", None)
-    blocks = []
-    button_blocks = []
-    page_context = {"invocation": invocation, "channel": channel}
-
-    if prev_page:
-        prev_page_button = block_builders.simple_button_block(
-            "Previous",
-            str(prev_page),
-            style="danger",
-            action_id=f"{slack_const.PAGINATE_MEETINGS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
-        )
-        button_blocks.append(prev_page_button)
-    if next_page:
-        next_page_button = block_builders.simple_button_block(
-            "Next",
-            str(next_page),
-            action_id=f"{slack_const.PAGINATE_MEETINGS}?{urlencode({**page_context,'new_page':int(next_page)})}",
-        )
-        button_blocks.append(next_page_button)
-    if len(button_blocks):
-        blocks.append(block_builders.actions_block(button_blocks))
-
-    blocks.append(
-        block_builders.context_block(f"Showing {pagination_object.get('page')}", "mrkdwn")
-    )
-    return blocks
-
-
-def custom_task_paginator_block(pagination_object, channel):
-    next_page = pagination_object.get("next_page", None)
-    prev_page = pagination_object.get("previous_page", None)
-    blocks = []
-    button_blocks = []
-    page_context = {"channel": channel}
-
-    if prev_page:
-        prev_page_button = block_builders.simple_button_block(
-            "Previous",
-            str(prev_page),
-            style="danger",
-            action_id=f"{slack_const.PAGINATE_TASKS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
-        )
-        button_blocks.append(prev_page_button)
-    if next_page:
-        next_page_button = block_builders.simple_button_block(
-            "Next",
-            str(next_page),
-            action_id=f"{slack_const.PAGINATE_TASKS}?{urlencode({**page_context,'new_page':int(next_page)})}",
-        )
-        button_blocks.append(next_page_button)
-    if len(button_blocks):
-        blocks.append(block_builders.actions_block(button_blocks))
-
-    blocks.append(
-        block_builders.context_block(f"Showing {pagination_object.get('page')}", "mrkdwn")
-    )
-    return blocks
-
-
 @block_set(required_context=["instance_id"])
 def alert_instance_block_set(context):
     """
@@ -284,7 +208,7 @@ def alert_instance_block_set(context):
                     options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
         blocks.append(
             block_builders.static_select_input(
-                label=":star: Actions:",
+                label=" ",
                 options=options,
                 block_id=str(instance.id),
                 action_id=action_with_params(
@@ -378,8 +302,6 @@ def update_meeting_block_set(context, *args, **kwargs):
     resource_type = context.get("resource_type", None)
     resource_id = context.get("resource_id", None)
     user_id = context.get("u")
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    type = context.get("type")
     user = User.objects.get(id=user_id)
     blocks = []
     resource_opts = resource_options(user.crm)

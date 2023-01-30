@@ -5,7 +5,7 @@ import time
 import random
 from datetime import datetime
 from background_task import background
-from background_task.models import CompletedTask, Task
+from background_task.models import CompletedTask
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q
@@ -65,6 +65,7 @@ from ..adapter.exceptions import (
 from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
 from ..routes import routes as model_routes
+from managr.slack.helpers.block_sets import get_block_set
 
 logger = logging.getLogger("managr")
 
@@ -217,6 +218,10 @@ def emit_process_bulk_update(data, user, verbose_name):
 
 def emit_process_slack_inline_sf_update(payload, context):
     _process_slack_inline_sf_update(payload, context)
+
+
+def emit_process_convert_lead(payload, context):
+    _process_convert_lead(payload, context)
 
 
 # SF Resource Sync Tasks
@@ -1974,17 +1979,21 @@ def remove_field(org_id, form_field):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
-def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, send_to_data=None):
-    lead_form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-    user = lead_form.user
+def _send_convert_recap(
+    user_id, lead_id, account_id, contact_id, opportunity_id=None, send_to_data=None
+):
+    lead = Lead.objects.get(integration_id=lead_id)
+    user = User.objects.get(id=user_id)
     send_summ_to_leadership = send_to_data.get("leadership", None) if send_to_data else None
     send_summ_to_reps = send_to_data.get("reps", None) if send_to_data else None
     send_summ_to_channels = send_to_data.get("channels", None) if send_to_data else None
     slack_access_token = user.organization.slack_integration.access_token
-    account = Account.objects.get(integration_id=account_id)
-    contact = Contact.objects.get(integration_id=contact_id)
-    opportunity = Opportunity.objects.get(integration_id=opportunity_id)
-    text = f":zap: *Lead Convert Recap: {lead_form.resource_object.name}*\n*Account*: {account.name}\n*Opportunity*: {opportunity.name}\n*Contact*: {contact.secondary_data['Name']}"
+    account = user.crm_account.adapter_class.get_resource_in_list("Account", [account_id])[0]
+    contact = user.crm_account.adapter_class.get_resource_in_list("Contact", [contact_id])[0]
+    text = f":zap: *Lead Convert Recap*:\n *Lead*: {lead.email}\n\n:arrows_counterclockwise: _Converted to:_\n\n*Account*: {account.name}\n*Contact*: {contact.secondary_data['Name']}"
+    if opportunity_id:
+        opportunity = Opportunity.objects.get(integration_id=opportunity_id)
+        text += f"\n*Opportunity*: {opportunity.name}"
     blocks = [
         block_builders.simple_section(text, "mrkdwn"),
         block_builders.context_block(f"Lead owned by {user.full_name}"),
@@ -2014,7 +2023,7 @@ def _send_convert_recap(form_id, account_id, contact_id, opportunity_id=None, se
                 r = slack_requests.send_channel_message(
                     u.slack_integration.channel,
                     slack_access_token,
-                    text=f"Recap Lead",
+                    text="Recap Lead",
                     block_set=blocks,
                 )
                 logger.info(f"SEND RECAP RESPONSE: {r}")
@@ -2240,7 +2249,6 @@ def _processs_bulk_update(data, user):
                 break
             except FieldValidationError as e:
                 logger.info(f"UPDATE FIELD VALIDATION ERROR {e}")
-                print(e)
                 return_data = {"success": False, "error": str(e)}
                 break
 
@@ -2417,4 +2425,184 @@ def _process_slack_inline_sf_update(payload, context):
         )
     except Exception as e:
         logger.exception(f"Failed to update inline alert message {e}")
+    return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_convert_lead(payload, context):
+    pm = payload["view"]["private_metadata"]
+    user = User.objects.get(id=context.get("u"))
+    state = payload["view"]["state"]["values"]
+    sending_blocks = get_block_set("loading", {"message": ":rocket: Converting your Lead"})
+    try:
+        sending_res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=sending_blocks,
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send updating message to {user.email} due to {e}")
+    convert_data = {}
+    sobjects = ["Opportunity", "Account", "Contact"]
+    for object in sobjects:
+        if f"{object}_NAME_INPUT" in state:
+            if "plain_input" in state[f"{object}_NAME_INPUT"]:
+                value = state[f"{object}_NAME_INPUT"]["plain_input"]["value"]
+            elif (
+                state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]
+                is None
+            ):
+                value = None
+            else:
+                value = state[f"{object}_NAME_INPUT"][
+                    f"GET_SOBJECT_LIST?u={context.get('u')}&resource_type={object}"
+                ]["selected_option"]["value"]
+            if value is not None:
+                datakey = (
+                    f"{object.lower()}Name"
+                    if "plain_input" in state[f"{object}_NAME_INPUT"]
+                    else f"{object.lower()}Id"
+                )
+                convert_data[datakey] = value
+
+    convert_data["convertedStatus"] = list(state["Status"].values())[0]["selected_option"]["value"]
+    owner_id = list(state["RECORD_OWNER"].values())[0]["selected_option"]["value"]
+    assigned_owner = User.objects.get(id=owner_id)
+    convert_data["ownerId"] = assigned_owner.salesforce_account.salesforce_id
+    lead = Lead.objects.get(integration_id=context.get("resource_id"))
+    convert_data["leadId"] = lead.integration_id
+    attempts = 1
+    blocks = None
+    has_error = False
+    while True:
+        try:
+            res = lead.convert_in_salesforce(convert_data)
+            break
+        except FieldValidationError as e:
+            has_error = True
+            blocks = (
+                get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
+                    },
+                ),
+            )
+            break
+
+        except RequiredFieldError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
+                },
+            )
+            break
+        except UnhandledCRMError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except SFNotFoundError as e:
+            has_error = True
+            blocks = get_block_set(
+                "error_modal",
+                {
+                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
+                },
+            )
+            break
+
+        except TokenExpired:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
+                    },
+                )
+                break
+            else:
+                user.salesforce_account.regenerate_token()
+                attempts += 1
+
+        except ConnectionResetError:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
+                )
+                has_error = True
+                blocks = get_block_set(
+                    "error_modal",
+                    {
+                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
+                    },
+                )
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+        except Exception as e:
+            if attempts >= 5:
+                has_error = True
+                logger.exception(f"CONVERT LEAD EXCEPTION: {e}")
+                blocks = [
+                    block_builders.simple_section(
+                        f":exclamation: There was an error converting your lead", "mrkdwn",
+                    )
+                ]
+                break
+            else:
+                time.sleep(2)
+                attempts += 1
+
+    if has_error:
+        update_blocks = blocks
+    if res["success"]:
+        params = [
+            f"u={str(user.id)}",
+            f"lead={lead.integration_id}",
+            f"account={res['Account']}",
+            f"contact={res['Contact']}",
+        ]
+        if "Opportunity" in res.keys():
+            params.append(f"opportunity={res['Opportunity']}")
+        update_blocks = [
+            block_builders.section_with_button_block(
+                "Send Recap",
+                "SEND_RECAP",
+                f":white_check_mark: Successfully converted your Lead {lead.name}",
+                action_id=action_with_params(slack_consts.PROCESS_SEND_RECAP_MODAL, params=params,),
+            )
+        ]
+
+    else:
+        error = res["error"]
+        update_blocks = (
+            [
+                block_builders.simple_section(
+                    f":exclamation: There was an error converting your lead:\n{error}", "mrkdwn",
+                )
+            ],
+        )
+    slack_requests.update_channel_message(
+        sending_res["channel"],
+        sending_res["ts"],
+        block_set=update_blocks,
+        access_token=user.organization.slack_integration.access_token,
+    )
+
     return

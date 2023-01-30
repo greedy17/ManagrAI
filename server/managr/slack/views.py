@@ -47,7 +47,7 @@ from managr.core.serializers import UserSerializer
 from managr.core.models import User
 from managr.api.decorators import slack_api_exceptions
 from managr.organization.models import Organization
-from managr.core.background import generate_reminder_message, generate_morning_digest
+from managr.core.background import generate_reminder_message
 from .models import (
     OrganizationSlackIntegration,
     UserSlackIntegration,
@@ -581,7 +581,7 @@ class SlackFormsViewSet(
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            print(e)
+            logger.exception(f"Failed to validate form info for and update due to <{e}>")
         serializer.save()
         instance = serializer.instance
         instance.custom_fields.clear()

@@ -176,7 +176,6 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
-    # print(f"DATA FROM ZOOM WEBHOOK: obj {obj} / event {event}")
     # if event == zoom_consts.MEETING_EVENT_ENDED:
     #     extra_obj = obj.pop("object", {})
     #     obj = {**obj, **extra_obj}
@@ -430,7 +429,6 @@ def schedule_zoom_meeting(request):
         "meeting_time": data["meeting_time"],
         "meeting_duration": data["meeting_duration"],
     }
-    # print("\n\nMeeting Duration\n\n", zoom_data["meeting_duration"], "\n\n")
     participant_data = []
     contacts = Contact.objects.filter(id__in=data.get("contacts"))
     internal = User.objects.filter(id__in=data.get("internal"))

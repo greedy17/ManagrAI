@@ -36,7 +36,6 @@ const CLOSE_DATE_PASSED = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
@@ -95,7 +94,6 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Deal.dealname ",
             " Deal.closedate ",
         ],
@@ -283,7 +281,6 @@ const DEAL_REVIEW = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Opportunity.Name ",
             " Opportunity.LastModifiedDate ",
         ],
@@ -342,7 +339,6 @@ const DEAL_REVIEW_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Deal.dealname ",
             " Deal.hs_lastmodifieddate ",
         ],
@@ -401,7 +397,6 @@ const CLOSE_DATE_APPROACHING = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Opportunity.Name ",
             " Opportunity.CloseDate ",
         ],
@@ -460,7 +455,6 @@ const CLOSE_DATE_APPROACHING_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Deal.dealname ",
             " Deal.closedate ",
         ],
@@ -509,10 +503,9 @@ const UPCOMING_NEXT_STEP = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
-        body: "<strong>Opporunity Name</strong> \n { Opportunity.Name }",
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
     },
     newConfigs: [
         {
@@ -557,7 +550,6 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Deal.dealname ",
         ],
         body: "<strong>Deal Name</strong> \n { Deal.dealname }",
@@ -605,7 +597,6 @@ const LARGE_OPPORTUNITIES = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
         body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
@@ -653,7 +644,6 @@ const LARGE_DEALS_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Deal.dealname ",
         ],
         body: "<strong>Deal Name</strong> \n { Deal.dealname }",
@@ -713,7 +703,6 @@ const TEAM_PIPELINE = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Opportunity.Name ",
         ],
         body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }",
@@ -771,7 +760,6 @@ const TEAM_PIPELINE_HUBSPOT = {
     ],
     messageTemplate: {
         bindings: [
-            " __Recipient.full_name ",
             " Deal.dealname ",
         ],
         body: "<strong>Deal Name</strong> \n { Deal.dealname }",

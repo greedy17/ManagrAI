@@ -1,4 +1,4 @@
-import pytz
+from copy import copy
 from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel, IntegrationModel
@@ -106,9 +106,10 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         return serializer.instance
 
     def update_database_values(self, data):
-        data.pop("meeting_comments", None)
-        data.pop("meeting_type", None)
-        self.secondary_data.update(data)
+        copied_data = copy(data)
+        copied_data.pop("meeting_comments", None)
+        copied_data.pop("meeting_type", None)
+        self.secondary_data.update(copied_data)
         return self.save()
 
 
@@ -241,9 +242,10 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
         return serializer.instance
 
     def update_database_values(self, data):
-        data.pop("meeting_comments", None)
-        data.pop("meeting_type", None)
-        self.secondary_data.update(data)
+        copied_data = copy(data)
+        copied_data.pop("meeting_comments", None)
+        copied_data.pop("meeting_type", None)
+        self.secondary_data.update(copied_data)
         return self.save()
 
     def add_contact_role(self, access_token, base_url, contact_integration_id):
@@ -345,9 +347,10 @@ class BaseContact(TimeStampModel, IntegrationModel):
         return serializer.instance
 
     def update_database_values(self, data):
-        data.pop("meeting_comments", None)
-        data.pop("meeting_type", None)
-        self.secondary_data.update(data)
+        copied_data = copy(data)
+        copied_data.pop("meeting_comments", None)
+        copied_data.pop("meeting_type", None)
+        self.secondary_data.update(copied_data)
         return self.save()
 
 

@@ -6071,7 +6071,7 @@ h3 {
 }
 .table {
   display: table;
-  overflow: scroll;
+  // overflow: scroll;
   width: 100vw;
 }
 .empty-table {

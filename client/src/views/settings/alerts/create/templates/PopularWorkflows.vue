@@ -569,7 +569,7 @@ export default {
     for (let i = 0; i < this.slackMessage.length; i++) {
       const titleAndVal = this.slackMessage[i].split('\n')
       const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length - 10)
-      const valFormatted = titleAndVal[1].slice(2, titleAndVal[1].length - 2)
+      const valFormatted = titleAndVal[1].slice(3, titleAndVal[1].length - 2)
       // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
       slackFormat.push({ title: titleFormatted, val: valFormatted })
     }
@@ -649,6 +649,7 @@ export default {
     },
     dragEnd() {
       const slackMesArr = []
+      const slackBindingsArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
         slackMesArr.push(
           '<strong>' +
@@ -657,9 +658,11 @@ export default {
             this.formattedSlackMessage[i].val +
             ' }',
         )
+        slackBindingsArr.push(` ${this.formattedSlackMessage[i].val} `)
       }
       this.slackMessage = slackMesArr
       this.config.messageTemplate.body = this.slackMessage.join('\n\n')
+      this.config.messageTemplate.bindings = slackBindingsArr
       this.drag = false
     },
     bindText(val, title) {
@@ -667,7 +670,7 @@ export default {
       this.slackMessage.push(addedStr)
       this.formattedSlackMessage.push({ title, val })
       this.config.messageTemplate.body = this.slackMessage.join('\n\n')
-      this.config.messageTemplate.bindings.push(val)
+      this.config.messageTemplate.bindings.push(` ${val} `)
     },
     removeMessage(i, removedField) {
       this.slackMessage = this.slackMessage.filter((mes, j) => j !== i)
@@ -992,7 +995,7 @@ export default {
     },
     addedFieldNames() {
       return this.formattedSlackMessage.map((field) => {
-        return field.val
+        return field.val.trim()
       })
     },
     userLevel() {

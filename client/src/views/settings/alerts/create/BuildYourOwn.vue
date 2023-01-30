@@ -759,11 +759,14 @@ export default {
     },
     dragEnd() {
       const slackMesArr = []
+      const slackBindingsArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
         slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+        slackBindingsArr.push(` ${this.formattedSlackMessage[i].val} `)
       }
       this.slackMessage = slackMesArr
       this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage.join('\n\n')
+      this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value = slackBindingsArr
       this.drag = false
     },
     bindText(val, title) {
@@ -856,7 +859,7 @@ export default {
     },
     addedFieldNames() {
       return this.formattedSlackMessage.map((field) => {
-        return field.val
+        return field.val.trim()
       })
     },
     userTargetsOpts() {
@@ -908,7 +911,7 @@ export default {
     this.alertTemplateForm.field.alertConfig.groups[0].field.recipientType.value = 'SLACK_CHANNEL'
     this.alertTemplateForm.field.alertMessages.groups[0].field.body.value =
       this.userCRM === 'SALESFORCE'
-        ? '<strong>Name</strong> \n { Opportunity.Name }'
+        ? '<strong>Opportunity Name</strong> \n { Opportunity.Name }'
         : '<strong>Deal Name</strong> \n { Deal.dealname }'
     this.alertTemplateForm.field.alertMessages.groups[0].field.bindings.value =
       this.userCRM === 'SALESFORCE'

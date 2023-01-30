@@ -367,13 +367,13 @@ def process_get_sobject_list(payload, context):
     value = payload["value"]
     sobject = context.get("resource_type")
     if sobject == "Opportunity":
-        sobject_value = user.owned_opportunities
+        sobject_value = user.base_opportunities
     elif sobject == "Account":
-        sobject_value = user.accounts
+        sobject_value = user.base_accounts
     elif sobject == "Lead":
         sobject_value = user.owned_leads
     elif sobject == "Contact":
-        sobject_value = user.contacts
+        sobject_value = user.base_contacts
     options = (
         [l.as_slack_option for l in sobject_value.filter(email__icontains=value)[:50]]
         if sobject == "Contact"
@@ -518,8 +518,8 @@ def handle_block_suggestion(payload):
         slack_const.GET_SEQUENCE_OPTIONS: process_get_sequences,
         slack_const.GET_CONTACT_OPTIONS: process_get_people,
         slack_const.GET_CALLS: process_get_calls,
-        slack_const.GET_SOBJECT_LIST: process_get_sobject_list,
-        slack_const.COMMAND_FORMS__CONVERT_LEAD: process_get_sobject_list,
+        slack_const.GET_SOBJECT_LIST: process_get_crm_resource_options,
+        slack_const.COMMAND_FORMS__CONVERT_LEAD: process_get_crm_resource_options,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_get_local_resource_options,
         slack_const.GET_PRICEBOOK_ENTRY_OPTIONS: process_get_pricebook_entry_options,
         slack_const.GET_DEAL_STAGE_OPTIONS: process_get_deal_stage_options,
