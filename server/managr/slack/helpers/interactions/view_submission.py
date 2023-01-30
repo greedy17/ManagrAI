@@ -360,12 +360,6 @@ def process_submit_resource_data(payload, context):
         )
     except Exception as e:
         logger.exception(f"Failed to send updating message to {user.email} due to {e}")
-    external_id = payload.get("view", {}).get("external_id", None)
-    try:
-        view_type, __unique_id = external_id.split(".")
-    except ValueError:
-        view_type = external_id
-        pass
     state = swap_public_fields(payload["view"]["state"]["values"])
     current_form_ids = context.get("f").split(",")
     current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
@@ -381,7 +375,6 @@ def process_submit_resource_data(payload, context):
     formatted_saved_data = process_text_field_format(
         str(user.id), main_form.template.resource, all_form_data
     )
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     attempts = 1
     while True:
         crm = user.crm_account
@@ -390,6 +383,7 @@ def process_submit_resource_data(payload, context):
                 main_form.resource_object.update(all_form_data)
                 resource = main_form.resource_object
                 main_form.resource_object.update_database_values(all_form_data)
+
             else:
                 create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
                 resource_func = background_create_resource(user.crm)
@@ -403,6 +397,7 @@ def process_submit_resource_data(payload, context):
             current_forms.update(
                 is_submitted=True, update_source="command", submission_date=timezone.now()
             )
+            print(all_form_data)
             break
         except FieldValidationError as e:
             has_error = True
@@ -515,19 +510,16 @@ def process_submit_resource_data(payload, context):
                 access_token=slack_access_token,
             )
         except Exception as e:
-            return logger.exception(
+            logger.exception(
                 f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
             )
         return {"response_action": "clear"}
-
-    form_id = current_form_ids[0]
     # update the channel message to clear it
     if main_form.template.form_type == "CREATE":
-        text = f"Managr created {main_form.resource_type}"
         message = f"Successfully created *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
     else:
-        text = f"Managr updated {main_form.resource_type}"
         message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
+    print(all_form_data)
     if (
         all_form_data.get("meeting_comments") is not None
         and all_form_data.get("meeting_type") is not None

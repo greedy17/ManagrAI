@@ -586,6 +586,7 @@ def _process_add_call_to_hs(workflow_id, *args):
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
 def _process_add_update_to_hs(form_id, *args):
+    print("here")
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
     resource = routes[form.resource_type]["model"].objects.get(id=form.resource_id)
     user = form.user
