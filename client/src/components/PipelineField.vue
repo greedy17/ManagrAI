@@ -10,7 +10,7 @@
           apiName !== 'StageName' &&
           apiName !== 'dealstage'
         "
-        v-html="fieldData ? fieldData : 'Empty'"
+        v-html="fieldData ? truncate(fieldData, 40) : 'Empty'"
         class="blank"
         :class="!fieldData ? 'gray' : ''"
       >
@@ -62,7 +62,7 @@
       </p>
     </div>
     <div v-else class="blank" :class="!fieldData ? 'gray' : ''">
-      <p>{{ fieldData }}</p>
+      <p>{{ truncate(fieldData, 40) }}</p>
     </div>
   </div>
 </template>
@@ -78,6 +78,9 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    truncate(text, max) {
+      return `${text.slice(0, max)} ${text.length > max ? '...' : ''}`
     },
     getReferenceName() {
       setTimeout(() => {

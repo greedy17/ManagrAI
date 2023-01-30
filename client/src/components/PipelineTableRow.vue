@@ -28,33 +28,28 @@
     </div> -->
 
     <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
-      <!-- flex-row-spread -->
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
           <div>
             <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
-              <img style="filter: invert(40%)" height="13px" src="@/assets/images/expand.svg" />
+              <img style="filter: invert(40%)" height="12px" src="@/assets/images/expand.svg" />
             </button>
           </div>
 
           <div>
             <button @click="emitGetNotes" class="name-cell-note-button-1">
-              <img style="filter: invert(40%)" height="13px" src="@/assets/images/note.svg" />
+              <img style="filter: invert(40%)" height="12px" src="@/assets/images/note.svg" />
             </button>
           </div>
         </div>
         <div
           v-else
           class="flex-row-spread"
-          style="
-            width: 4rem;
-            height: 0.75rem;
-            margin-left: 16px;
-            margin-right: -12px;
-            color: #9596b4;
-          "
+          style="min-width: 4rem; margin-left: 16px; margin-right: -12px; color: #9596b4"
         >
-          {{ index + 1 }}
+          <div style="padding: 0; margin: 0">
+            {{ index + 1 }}
+          </div>
         </div>
 
         <div>
@@ -113,211 +108,7 @@
         height="14px"
       />
 
-      <div
-        style="position: relative"
-        :class="showIcons ? 'hovered' : ''"
-        v-else-if="!updateList.includes(opp.id)"
-      >
-        <!-- <div class="inline-edit" v-if="editing && editIndex === i && currentInlineRow === index">
-          <div
-            v-if="
-              field.dataType === 'TextArea' || (field.length > 250 && field.dataType === 'String')
-            "
-            class="inline-row"
-          >
-            <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
-              id="user-input-wide"
-              :value="
-                field.apiName.includes('__c')
-                  ? opp['secondary_data'][field.apiName]
-                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-              "
-            />
-          </div>
-          <div
-            v-else-if="
-              (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
-              (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-              (field.dataType === 'String' && field.apiName !== 'NextStep') ||
-              (field.dataType === 'Email' && field.apiName !== 'NextStep')
-            "
-            class="inline-row"
-          >
-            <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
-              id="user-input"
-              type="text"
-              :value="
-                field.apiName.includes('__c')
-                  ? opp['secondary_data'][field.apiName]
-                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-              "
-            />
-          </div>
-
-          <div v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'">
-            <Multiselect
-              style="width: 14vw; padding-bottom: 200px; font-size: 12px"
-              v-if="field.apiName !== 'StageName'"
-              :options="picklistOpts[field.id]"
-              openDirection="below"
-              selectLabel="Enter"
-              track-by="value"
-              label="label"
-              v-model="dropdownVal[field.apiName]"
-              :multiple="field.dataType === 'MultiPicklist' ? true : false"
-              @select="
-                setUpdateValues(
-                  field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                  $event.value,
-                  field.dataType,
-                  field.dataType === 'MultiPicklist' ? true : false,
-                )
-              "
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  {{
-                    (
-                      field.apiName.includes('__c')
-                        ? opp['secondary_data'][field.apiName]
-                        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                    )
-                      ? field.apiName.includes('__c')
-                        ? opp['secondary_data'][field.apiName]
-                        : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-                      : field.referenceDisplayLabel
-                  }}
-                </p>
-              </template>
-            </Multiselect>
-            <Multiselect
-              v-else-if="field.apiName === 'StageName'"
-              :options="picklistOpts[field.id]"
-              openDirection="below"
-              selectLabel="Enter"
-              style="width: 14vw; padding-bottom: 200px; font-size: 13px"
-              track-by="value"
-              label="label"
-              @select="emitDropdown($event, opp)"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-          <div class="inline-row" v-else-if="field.dataType === 'Date'">
-            <input
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
-              type="date"
-              id="user-input"
-              :value="
-                field.apiName.includes('__c')
-                  ? opp['secondary_data'][field.apiName]
-                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-              "
-            />
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
-          </div>
-          <div v-else-if="field.dataType === 'DateTime'">
-            <input
-              type="datetime-local"
-              id="user-input"
-              v-on:keyup.enter="setUpdateValues(field.apiName, $event.target.value, field.dataType)"
-              :value="
-                field.apiName.includes('__c')
-                  ? opp['secondary_data'][field.apiName]
-                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-              "
-            />
-            <div v-if="editing" class="save">
-              <p>Press "Enter" to save</p>
-            </div>
-          </div>
-          <div
-            v-else-if="
-              field.dataType === 'Phone' ||
-              field.dataType === 'Double' ||
-              field.dataType === 'Currency'
-            "
-            class="inline-row"
-          >
-            <input
-              v-on:keyup.enter="
-                setUpdateValues(field.apiName, Number($event.target.value), field.dataType)
-              "
-              id="user-input"
-              type="number"
-              :value="
-                field.apiName.includes('__c')
-                  ? opp['secondary_data'][field.apiName]
-                  : opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))]
-              "
-            />
-          </div>
-          <div v-else-if="field.dataType === 'Boolean'">
-            <Multiselect
-              v-model="dropdownVal[field.apiName]"
-              :options="booleans"
-              @select="setUpdateValues(field.apiName, $event)"
-              openDirection="below"
-              style="width: 14vw; padding-bottom: 8rem"
-              selectLabel="Enter"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  {{ opp['secondary_data'][capitalizeFirstLetter(camelize(field.apiName))] }}
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-          <div v-else-if="field.dataType === 'Reference'">
-            <Multiselect
-              style="width: 14vw; padding-bottom: 200px; font-size: 13px"
-              v-model="dropdownVal[field.apiName]"
-              @select="setUpdateValues(field.apiName, $event.id, field.dataType)"
-              :options="referenceOpts[field.apiName]"
-              @open="
-                field.dataType === 'Reference'
-                  ? $emit('get-reference-opts', field.apiName, field.id)
-                  : null
-              "
-              :loading="dropdownLoading"
-              openDirection="below"
-              selectLabel="Enter"
-              label="name"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  {{ field.apiName }}
-                </p>
-              </template>
-            </Multiselect>
-          </div>
-        </div> -->
+      <div :class="showIcons ? 'hovered' : ''" v-else-if="!updateList.includes(opp.id)">
         <div class="limit-cell-height">
           <PipelineField
             :index="i"
@@ -916,23 +707,26 @@ input {
 }
 .table-cell {
   display: table-cell;
-  position: sticky;
   width: fit-content;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding: 0px 32px 0px 12px;
 }
 .cell-name {
-  min-width: 20vw;
   display: table-cell;
+  white-space: nowrap;
+  width: fit-content;
+  text-overflow: ellipsis;
   background-color: white;
   color: $base-gray;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.75px;
   position: sticky;
   left: 0vw;
   z-index: 2;
   padding: 0px 4px;
-  line-height: 1.1;
+  line-height: 1;
   font-size: 13px;
   border-bottom: 1px solid $soft-gray;
   cursor: text !important;
@@ -952,11 +746,13 @@ input {
 
 .table-cell-wide {
   display: table-cell;
-  position: sticky;
-  min-width: 19vw;
+  width: fit-content;
+  text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding-left: 4px;
+  white-space: nowrap;
+  padding: 0px 28px 0px 12px;
 }
 .table-cell-checkbox-header {
   display: table-cell;
@@ -1046,13 +842,15 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-height: 7vh;
   padding: 0;
-  overflow: auto;
+  max-width: 18vw;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .name-cell-note-button-1 {
-  margin-right: 12px;
+  margin-right: 10px;
   padding: 0.25rem;
   border-radius: 4px;
   background-color: transparent;
