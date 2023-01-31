@@ -2433,7 +2433,6 @@ def _process_slack_inline_sf_update(payload, context):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=0)
 def _process_convert_lead(payload, context):
-    pm = payload["view"]["private_metadata"]
     user = User.objects.get(id=context.get("u"))
     state = payload["view"]["state"]["values"]
     sending_blocks = get_block_set("loading", {"message": ":rocket: Converting your Lead"})
@@ -2600,11 +2599,16 @@ def _process_convert_lead(payload, context):
                 )
             ],
         )
-    slack_requests.update_channel_message(
-        sending_res["channel"],
-        sending_res["ts"],
-        block_set=update_blocks,
-        access_token=user.organization.slack_integration.access_token,
-    )
+    try:
+        slack_requests.update_channel_message(
+            sending_res["channel"],
+            sending_res["ts"],
+            block_set=update_blocks,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        logger.exception(
+            f"Failed to send update to lead convert for user {user.email} due to <{e}>"
+        )
 
     return

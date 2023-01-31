@@ -894,7 +894,11 @@ def convert_meeting_lead_block_set(context):
 def convert_lead_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_option = user.as_slack_option
-    status = ObjectField.objects.filter(Q(crm_object="Lead") & Q(api_name="Status")).first()
+    status = (
+        ObjectField.objects.for_user(user)
+        .filter(Q(crm_object="Lead") & Q(api_name="Status"))
+        .first()
+    )
     if status:
         converted_options = [
             option
