@@ -126,6 +126,38 @@
               </template>
             </FormField>
           </div>
+          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <Multiselect
+                  placeholder="Select Team"
+                  @input="checkTeamLead"
+                  v-model="selectedTeam"
+                  :options="allTeams"
+                  openDirection="below"
+                  style="width: 33vw"
+                  selectLabel="Enter"
+                  :customLabel="customTeamLabel"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Team
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+            <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem;">
+              <p style="margin: 0;">Is team lead?</p>
+              <input v-model="selectedTeamLead" :disabled="!selectedTeam || user.team === selectedTeam.id" type="checkbox" style="height: 1rem; align-self: center;" />
+            </div>
+          </div>
         </div>
         <div class="invite-form__actions">
           <div class="invite-form__inner_actions">
@@ -388,6 +420,8 @@ import Modal from '../../../components/InviteModal'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
+import Organization from '@/services/organizations'
+
 export default {
   name: 'Invite',
   components: {
@@ -410,6 +444,9 @@ export default {
       activationLink: null,
       selectedMember: null,
       selectedLevel: null,
+      selectedTeam: null,
+      allTeams: null,
+      selectedTeamLead: false,
       organization: null,
       slackMembers: new SlackUserList(),
       uninviteId: '',
@@ -424,7 +461,6 @@ export default {
         { key: 'SDR', value: User.types.SDR },
       ],
       team: CollectionManager.create({ ModelClass: User }),
-      user: null,
       loading: false,
       userInviteForm: new UserInviteForm({
         role: User.roleChoices[0].key,
@@ -434,6 +470,15 @@ export default {
     }
   },
   async created() {
+    const allTeams = await Organization.api.listTeams(this.user.id)
+    this.allTeams = allTeams.results
+    if (this.user.isAdmin) {
+      this.selectedTeam = this.user.team
+    } else {
+      const orgUsers = await User.api.getAllOrgUsers(this.user.organization)
+      let admin = orgUsers.filter(user => user.is_admin)[0]
+      this.selectedTeam = admin ? admin.team : null
+    }
     this.refresh()
     await this.listUsers()
   },
@@ -466,6 +511,11 @@ export default {
     mapUserLevel() {
       this.userInviteForm.field.userLevel.value = this.selectedLevel.value
     },
+    checkTeamLead() {
+      if (this.selectedTeam && this.user.team === this.selectedTeam.id) {
+        this.selectedTeamLead = false
+      }
+    },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       const results = new SlackUserList({
@@ -475,7 +525,6 @@ export default {
       this.slackMembers = results
     },
     async refresh() {
-      this.user = this.$store.state.user
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
         this.$router.push({ name: 'ListTemplates' })
       }
@@ -503,8 +552,21 @@ export default {
         })
         return
       }
+      if (this.user.organizationRef.isPaid && this.user.isAdmin && !this.selectedTeam) {
+        this.loading = false
+        this.$toast('Please select a team', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       // check form data for this request
       try {
+        this.userInviteForm.field.team.value = this.selectedTeam.id
+        this.userInviteForm.field.teamLead.value = this.selectedTeamLead
         this.userInviteForm.field.email.value = this.slackMembers.members.filter(
           (member) => member.id == this.userInviteForm.field.slackId.value,
         )[0].profile.email
@@ -615,10 +677,20 @@ export default {
     resetData() {
       this.userInviteForm.field.organization.value = this.$store.state.user.organization
     },
+    customTeamLabel(props) {
+      if (this.user.team === props.id) {
+        return "Your Team"
+      } else {
+        return props.name
+      }
+    },
   },
   computed: {
     hasSlack() {
       return !!this.$store.state.user.slackRef
+    },
+    user() {
+      return this.$store.state.user
     },
     userCRM() {
       return this.$store.state.user.crm
