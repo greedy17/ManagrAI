@@ -377,7 +377,7 @@ export default {
       accountSobjectId: null,
       currentAccount: null,
       selectedAccount: null,
-      updateOppForm: null,
+      updateOppForm: [],
       oppFormCopy: null,
       createContactForm: null,
       updateContactForm: null,
@@ -1188,14 +1188,12 @@ export default {
             this.currentRefList = this.referenceOpts
           }
         }
-
         for (let i = 0; i < this.updateContactForm.length; i++) {
           if (this.updateContactForm[i].dataType === 'Reference') {
             this.contactReferenceOpts[this.updateContactForm[i].apiName] =
               this.updateContactForm[i].id
           }
         }
-
         for (let i = 0; i < this.createContactForm.length; i++) {
           if (this.createContactForm[i].dataType === 'Reference') {
             this.contactCreateReferenceOpts[this.createContactForm[i].apiName] =
@@ -1210,17 +1208,15 @@ export default {
             }
           }
         }
-
         for (let i = 0; i < this.updateAccountForm.length; i++) {
           if (this.updateAccountForm[i].dataType === 'Reference') {
             this.accountReferenceOpts[this.updateAccountForm[i].apiName] =
               this.updateAccountForm[i].id
           }
         }
-
         for (let i = 0; i < this.updateLeadForm.length; i++) {
           if (this.updateLeadForm[i].dataType === 'Reference') {
-            this.LeadReferenceOpts[this.updateLeadForm[i].apiName] = this.updateLeadForm[i].id
+            this.leadReferenceOpts[this.updateLeadForm[i].apiName] = this.updateLeadForm[i].id
           }
         }
 
@@ -1289,17 +1285,17 @@ export default {
       }
     },
     filtersAndOppFields() {
-      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
-        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
-            (field) => field.apiName === 'AccountId',
-          )[0].id)
-        : (this.accountSobjectId = null)
+      if (this.updateOppForm[0]) {
+        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
+          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+              (field) => field.apiName === 'AccountId',
+            )[0].id)
+          : (this.accountSobjectId = null)
+      }
     },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
-
-        console.log('check res', res)
 
         this.updateOppForm =
           this.userCRM === 'SALESFORCE'
@@ -1323,7 +1319,7 @@ export default {
             ? res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Account')[0]
                 .fieldsRef
             : res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Company')[0]
-        this.updateAccountForm = this.updateAccountForm ? this.updateAccountForm.fieldsRef : []
+                .fieldsRef
         this.updateLeadForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Lead',
         )[0]
