@@ -473,7 +473,8 @@ export default {
     const allTeams = await Organization.api.listTeams(this.user.id)
     this.allTeams = allTeams.results
     if (this.user.isAdmin) {
-      this.selectedTeam = this.user.team
+      const userTeam = this.allTeams.filter(team => team.id === this.user.team)
+      this.selectedTeam = userTeam[0] ? userTeam[0] : null
     } else {
       const orgUsers = await User.api.getAllOrgUsers(this.user.organization)
       let admin = orgUsers.filter(user => user.is_admin)[0]
