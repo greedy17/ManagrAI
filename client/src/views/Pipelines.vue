@@ -6714,15 +6714,15 @@ a {
 }
 .close-template {
   position: absolute;
-  bottom: 50px;
+  bottom: 76px;
   left: 35.5vw;
   z-index: 3;
   cursor: pointer;
-  background-color: black;
+  // background-color: black;
   border-radius: 3px;
   opacity: 0.6;
   img {
-    filter: invert(99%);
+    // filter: invert(99%);
   }
 }
 .label {
