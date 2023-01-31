@@ -714,7 +714,6 @@ export default {
       } else if (this.teamPipeline == 'Team Pipeline') {
         return 'True'
       } else {
-        console.log('this.config.newConfigs[0]', this.config.newConfigs[0])
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&

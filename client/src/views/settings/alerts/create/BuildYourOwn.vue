@@ -74,9 +74,9 @@
               <span v-for="(day, i) in weeklyOpts" :key="i">
                 <input
                   type="checkbox"
+                  @input="setDay($event.target.value, form)"
                   :id="day.value"
                   :value="day.value"
-                  v-model="form.field.recurrenceDays.value"
                 />
                 <label
                   :for="day.value"
@@ -445,6 +445,7 @@ export default {
       create: false,
       directToUsers: true,
       channelCreated: false,
+      setDaysBool: false,
       slackMessage: [],
       formattedSlackMessage: [],
       fields: CollectionManager.create({
@@ -497,6 +498,7 @@ export default {
   },
   watch: {
     alertIsValid: 'activateSave',
+    setDaysBool: 'activateSave',
     selectedResourceType: {
       immediate: true,
       async handler(val, prev) {
@@ -554,7 +556,7 @@ export default {
     async onSave() {
       this.savingTemplate = true
       this.alertTemplateForm.validate()
-      if (this.alertTemplateForm.isValid) {
+      if (this.alertTemplateForm.isValid && this.setDaysBool) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
@@ -581,7 +583,7 @@ export default {
       this.bindText(`${this.selectedResourceType}.${field.apiName}`, `${field.label}`)
     },
     activateSave() {
-      this.$emit('can-save', !!this.alertIsValid)
+      this.$emit('can-save', (!!this.alertIsValid && this.setDaysBool))
     },
     scrollToTop() {
       this.$refs.top ? this.$refs.top.scrollIntoView({ behavior: 'smooth' }) : null
@@ -802,6 +804,25 @@ export default {
       this.alertTemplateForm.field.alertConfig.groups[0].field.recipients.value = [
         this.selectedChannel.id,
       ]
+    },
+    setDay(n, form) {
+      const recurrenceDays = form.field.recurrenceDays.value
+      let index
+      for (let i = 0; i < recurrenceDays.length; i++) {
+        const day = recurrenceDays[i]
+        if (day === n) {
+          index = i
+          break;
+        }
+      }
+      if (index !== undefined) {
+        // if it exists in the array, remove
+        form.field.recurrenceDays.value = recurrenceDays.filter((day, i) => i !== index)
+      } else {
+        // if it doesn't exist, add
+        form.field.recurrenceDays.value.push(n)
+      }
+      this.setDaysBool = !!form.field.recurrenceDays.value.length
     },
     onAddAlertGroup() {
       // length determines order
