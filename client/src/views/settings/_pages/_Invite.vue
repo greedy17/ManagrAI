@@ -155,7 +155,7 @@
           <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
             <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem;">
               <p style="margin: 0;">Is team lead?</p>
-              <input v-model="selectedTeamLead" :disabled="!selectedTeam || user.team === selectedTeam.id" type="checkbox" style="height: 1rem; align-self: center;" />
+              <input v-model="selectedTeamLead" :disabled="!selectedTeam || user.team === selectedTeam.id" type="checkbox" style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem;" />
             </div>
           </div>
         </div>
