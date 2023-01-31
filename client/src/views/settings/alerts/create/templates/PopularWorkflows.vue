@@ -176,12 +176,12 @@
                 <span v-for="(day, i) in weeklyOpts" :key="i">
                   <input
                     type="checkbox"
-                    @input="setDay"
+                    @input="setDay($event.target.value)"
                     :id="day.value"
                     :value="day.value"
-                    v-model="config.newConfigs[0].recurrenceDays"
                     :disabled="!hasSlack"
                   />
+                  <!-- v-model="config.newConfigs[0].recurrenceDays" -->
                   <label
                     :for="day.value"
                     :class="
@@ -714,6 +714,7 @@ export default {
       } else if (this.teamPipeline == 'Team Pipeline') {
         return 'True'
       } else {
+        console.log('this.config.newConfigs[0]', this.config.newConfigs[0])
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
@@ -874,13 +875,24 @@ export default {
         this.selectedChannel
       this.config.newConfigs[0].recipients = [this.selectedChannel.id]
     },
-    setDay() {
-      // this.config.newConfigs[0].recurrenceDay = 0
-      // let days = []
-      // n.forEach((day) => days.push(day.value))
-      // let newDays = [...new Set(days)]
-      // this.config.newConfigs[0].recurrenceDays = newDays
-      this.setDaysBool = true
+    setDay(n) {
+      const recurrenceDays = this.config.newConfigs[0].recurrenceDays
+      let index
+      for (let i = 0; i < recurrenceDays.length; i++) {
+        const day = recurrenceDays[i]
+        if (day === n) {
+          index = i
+          break;
+        }
+      }
+      if (index !== undefined) {
+        // if it exists in the array, remove
+        this.config.newConfigs[0].recurrenceDays = recurrenceDays.filter((day, i) => i !== index)
+      } else {
+        // if it doesn't exist, add
+        this.config.newConfigs[0].recurrenceDays.push(n)
+      }
+      this.setDaysBool = !!this.config.newConfigs[0].recurrenceDays.length
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
