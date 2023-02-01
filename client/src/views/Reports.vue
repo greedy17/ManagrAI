@@ -721,7 +721,6 @@ export default {
   async created() {
     this.reps.refresh()
     this.workflows.refresh()
-    console.log(this.reps)
   },
   methods: {
     async onUsersNextPage() {

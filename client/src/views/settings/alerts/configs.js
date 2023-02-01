@@ -783,7 +783,7 @@ const TEAM_PIPELINE_HUBSPOT = {
 
 const CLOSING_THIS_MONTH = {
     title: "Closing This Month",
-    subtitle: "Close date's this month",
+    subtitle: "Opportunities closing this month",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -831,7 +831,7 @@ const CLOSING_THIS_MONTH = {
 
 const CLOSING_THIS_MONTH_HUBSPOT = {
     title: "Closing This Month",
-    subtitle: "Close date's this month",
+    subtitle: "Deals closing this month",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -896,7 +896,7 @@ const CLOSING_THIS_MONTH_HUBSPOT = {
 
 const CLOSING_NEXT_MONTH = {
     title: "Closing Next Month",
-    subtitle: "Close date's next month",
+    subtitle: "Opportunities closing next month",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -944,7 +944,7 @@ const CLOSING_NEXT_MONTH = {
 
 const CLOSING_NEXT_MONTH_HUBSPOT = {
     title: "Closing Next Month",
-    subtitle: "Close date's next month",
+    subtitle: "Deals closing next month",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -992,7 +992,7 @@ const CLOSING_NEXT_MONTH_HUBSPOT = {
 
 const CLOSING_THIS_QUARTER = {
     title: "Closing This Quarter",
-    subtitle: "Close date's this quarter",
+    subtitle: "Opportunities closing this quarter",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -1089,7 +1089,6 @@ const CLOSING_THIS_QUARTER = {
 const date = new Date();
 const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
 const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getTime();
-console.log(firstDay)
 // const date = new Date(), y = date.getFullYear(), m = date.getMonth();
 // const firstDay = new Date(y, m, 1);
 // const lastDay = new Date(y, m + 1, 0);
