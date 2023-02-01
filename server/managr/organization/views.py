@@ -1,13 +1,6 @@
-import copy
-import json
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login
-from django.db import transaction
+import logging
 from django.db import IntegrityError
-
 from django.core.exceptions import ValidationError as V
-from django.core import serializers
-from django.template.exceptions import TemplateDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
@@ -55,6 +48,8 @@ from .serializers import (
     ActionChoiceSerializer,
     TeamSerializer,
 )
+
+logger = logging.getLogger("managr")
 
 
 class OrganizationViewSet(
@@ -447,7 +442,7 @@ class TeamViewSet(
             serializer.save()
             emit_generate_form_template(request.data.get("team_lead"), False)
         except Exception as e:
-            print(e)
+            logger.exception(f"Failed to validate data for form creation because of <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
@@ -464,7 +459,7 @@ class TeamViewSet(
         try:
             instance.delete()
         except Exception as e:
-            print(e)
+            logger.exception(f"Failed to delete team {instance.name} due to <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 

@@ -632,7 +632,6 @@ class NylasAccountWebhook(APIView):
 )
 def email_auth_token(request):
     u = request.user
-    print(f"email_auth_token request {request}")
     # if user already has a token revoke it this will make sure we do not have duplicates on Nylas
     try:
         u.nylas.revoke()
@@ -935,7 +934,7 @@ class NoteTemplateViewSet(
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except Exception as e:
-            print(e)
+            logger.exception(f"Error validating data for note template <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_201_CREATED)
 

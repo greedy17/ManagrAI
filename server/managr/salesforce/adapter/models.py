@@ -226,12 +226,10 @@ class SalesforceAuthAccountAdapter:
                 return {}
             try:
                 xmldict = process_xml_dict(response.content)
-                print(f"SUCCESS XMLDICT: {xmldict}")
             except Exception as e:
                 CustomAPIException(e, fn_name)
         else:
             xmldict = process_xml_dict(response.content)
-            print(f"FAIL XMLDICT: {xmldict}")
             status_code = response.status_code
             error_data = xmldict["error_data"]
             error_code = None
@@ -538,51 +536,6 @@ class SalesforceAuthAccountAdapter:
             res = self._handle_response(res)
 
             return self.format_validation_rules(str(self.id), str(self.user), res)
-
-    # def list_resource_data(self, resource, offset, *args, **kwargs):
-    #     # add extra fields to query string
-    #     extra_items = self.object_fields.get(resource)
-    #     from .routes import routes
-
-    #     add_filters = kwargs.get("filter", None)
-    #     resource_class = routes.get(resource)
-    #     relationships = resource_class.get_child_rels()
-    #     additional_filters = (
-    #         resource_class.additional_filters() if add_filters is None else add_filters
-    #     )
-    #     limit = kwargs.pop("limit", sf_consts.SALESFORCE_QUERY_LIMIT)
-    #     url = f"{self.instance_url}{sf_consts.SALESFORCE_RESOURCE_QUERY_URI(self.salesforce_id, resource, extra_items, relationships, limit=limit, additional_filters=additional_filters)}"
-    #     print(url)
-    #     if offset:
-    #         url = f"{url} offset {offset}"
-    #     logger.info(f"{url} was sent")
-    #     with Client as client:
-    #         res = client.get(
-    #             url, headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #         )
-    #         res = self._handle_response(res)
-    #         saved_response = res
-    #         logger.info(
-    #             f"Request returned {res.get('totalSize')} number of results for {resource} at offset {offset} with limit {limit}"
-    #         )
-    #         # regardless of the offset if the data is too large Salesforce will paginate
-    #         while True:
-    #             has_next_page = res.get("nextRecordsUrl", None)
-    #             if has_next_page:
-    #                 logger.info(f"Request returned a next page {has_next_page}")
-    #                 next_page_url = self.instance_url + has_next_page
-    #                 with Client as client:
-    #                     res = client.get(
-    #                         next_page_url,
-    #                         headers=sf_consts.SALESFORCE_USER_REQUEST_HEADERS(self.access_token),
-    #                     )
-    #                     res = self._handle_response(res)
-    #                     saved_response["records"] = [*saved_response["records"], *res["records"]]
-    #             else:
-    #                 break
-
-    #         res = self._format_resource_response(saved_response, resource)
-    #         return res
 
     def list_resource_data(self, resource, offset=None, *args, **kwargs):
         # add extra fields to query string
@@ -1147,7 +1100,6 @@ class LeadAdapter:
                         f"{object.lower()}Id"
                     ]
                 new_objects["success"] = True
-                print(f"CONVERT LEAD NEW OBJECTS: {new_objects}")
                 return new_objects
             else:
                 error_message = success_check.get("result").get("errors").get("message")

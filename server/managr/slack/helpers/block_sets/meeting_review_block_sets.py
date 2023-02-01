@@ -503,7 +503,7 @@ def meeting_review_modal_block_set(context):
                 ],
             )
         except Exception as e:
-            print(e)
+            logger.exception(f"Failed to retrieve current products due to <{e}>")
     blocks = []
     action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
     type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
@@ -894,7 +894,11 @@ def convert_meeting_lead_block_set(context):
 def convert_lead_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_option = user.as_slack_option
-    status = ObjectField.objects.filter(Q(crm_object="Lead") & Q(api_name="Status")).first()
+    status = (
+        ObjectField.objects.for_user(user)
+        .filter(Q(crm_object="Lead") & Q(api_name="Status"))
+        .first()
+    )
     if status:
         converted_options = [
             option
@@ -1067,7 +1071,6 @@ def paginated_meeting_blockset(context):
             block = block_builders.simple_section(
                 f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
             )
-
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             block = block_builders.section_with_button_block(

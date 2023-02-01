@@ -581,7 +581,7 @@ class SlackFormsViewSet(
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            print(e)
+            logger.exception(f"Failed to validate form info for and update due to <{e}>")
         serializer.save()
         instance = serializer.instance
         instance.custom_fields.clear()

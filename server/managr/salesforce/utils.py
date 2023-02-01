@@ -109,17 +109,16 @@ def process_xml_dict(xml_response):
 
 def process_text_field_format(user_id, resource, saved_data):
     from managr.core.models import User
-    from managr.salesforce.models import SObjectField
+    from managr.crm.models import ObjectField
 
     user = User.objects.get(id=user_id)
-    public_fields = SObjectField.objects.filter(
+    public_fields = ObjectField.objects.filter(
         Q(is_public=True) & Q(data_type="String", length__gt=250)
     ).values_list("api_name", flat=True)
     fields = list(
-        SObjectField.objects.for_user(user)
+        ObjectField.objects.for_user(user)
         .filter(
-            Q(salesforce_object=resource, data_type="TextArea")
-            | Q(data_type="String", length__gt=250)
+            Q(crm_object=resource, data_type="TextArea") | Q(data_type="String", length__gt=250)
         )
         .values_list("api_name", flat=True)
     )

@@ -1131,9 +1131,9 @@ def process_stage_selected_command_form(payload, context):
         callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
     else:
         callback_id = (
-            slack_const.COMMAND_FORMS__SUBMIT_FORM
+            slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
             if context.get("type", None) == "alert"
-            else slack_const.PROCESS_SUBMIT_ALERT_RESOURCE_DATA
+            else slack_const.COMMAND_FORMS__SUBMIT_FORM
         )
         submit_button_message = "Update" if main_form.template.form_type == "UPDATE" else "Create"
     data = {
@@ -1815,6 +1815,66 @@ def process_return_to_form_modal(payload, context):
             f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
         )
     return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_return_to_form_button(payload, context):
+    """if an error occurs on create/update commands when the return button is clicked regen form"""
+    form_ids = context.get("f").split(",")
+    trigger_id = payload["trigger_id"]
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    main_form = forms.filter(
+        template__form_type__in=[slack_const.FORM_TYPE_CREATE, slack_const.FORM_TYPE_UPDATE]
+    ).first()
+    stage_form = forms.filter(template__form_type="STAGE_GATING").first()
+    blocks = main_form.generate_form(main_form.saved_data)
+    title = (
+        f"Update {main_form.template.resource}"
+        if main_form.template.form_type == "UPDATE"
+        else f"Create {main_form.template.resource}"
+    )
+    if stage_form:
+        submit_button_text = "Next"
+        callback_id = slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE
+    else:
+        submit_button_text = "Submit"
+        callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    message_ref = f"{payload['channel']['id']}|{payload['message']['ts']}"
+    context.update({"message_ref": message_ref})
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": callback_id,
+            "title": {"type": "plain_text", "text": title},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": submit_button_text},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+            data,
+            access_token=main_form.user.organization.slack_integration.access_token,
+        )
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
+        )
 
 
 @processor(required_context="u")
@@ -3329,6 +3389,7 @@ def handle_block_actions(payload):
         slack_const.INSERT_NOTE_TEMPLATE_DROPDOWN: process_insert_note_templates_dropdown,
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
         slack_const.GET_SUMMARY: process_get_summary_fields,
+        slack_const.RETURN_TO_FORM_BUTTON: process_return_to_form_button,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

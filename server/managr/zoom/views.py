@@ -176,7 +176,6 @@ def zoom_meetings_webhook(request):
     event = request.data.get("event", None)
     obj = request.data.get("payload", None)
     # only tracking meeting.ended
-    # print(f"DATA FROM ZOOM WEBHOOK: obj {obj} / event {event}")
     # if event == zoom_consts.MEETING_EVENT_ENDED:
     #     extra_obj = obj.pop("object", {})
     #     obj = {**obj, **extra_obj}
