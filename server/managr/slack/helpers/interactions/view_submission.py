@@ -359,6 +359,22 @@ def process_submit_resource_data(payload, context):
     if message_ref:
         channel, ts = message_ref.split("|")
     try:
+        loading_data = {
+            "trigger_id": payload["trigger_id"],
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Loading"},
+                "blocks": get_block_set(
+                    "loading", {"message": ":rocket: Sending your data", "fill": True,},
+                ),
+            },
+        }
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            loading_data,
+            access_token=slack_access_token,
+        )
         if message_ref:
             sending_res = slack_requests.update_channel_message(
                 channel, ts, slack_access_token, block_set=sending_blocks,

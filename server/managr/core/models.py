@@ -471,7 +471,6 @@ class NylasAuthAccount(TimeStampModel):
         user_timezone = f"{self.user.timezone}"
         starts_after = convert_local_time_to_unix(user_timezone, 7, 00, date)
         ends_before = convert_local_time_to_unix(user_timezone, 20, 00, date)
-
         query = dict({"starts_after": starts_after, "ends_before": ends_before,})
         if self.event_calendar_id:
             query["calendar_id"] = self.event_calendar_id
