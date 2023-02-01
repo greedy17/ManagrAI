@@ -94,6 +94,10 @@ def emit_process_slack_hs_bulk_update(
     )
 
 
+def emit_generate_team_form_templates(user_id, schedule):
+    return _generate_team_form_templates(user_id, schedule=schedule)
+
+
 def emit_process_slack_inline_hs_update(payload, context):
     _process_slack_inline_update(payload, context)
 
@@ -104,6 +108,34 @@ def _process_pipeline_hs_sync(sync_id):
     sync = HSResourceSync.objects.get(id=sync_id)
     sync.begin_tasks()
     return sync.id
+
+
+@background()
+@log_all_exceptions
+def _generate_team_form_templates(user_id):
+    from managr.organization.models import Team
+
+    user = User.objects.get(id=user_id)
+    org = user.organization
+    team_ref = (
+        Team.objects.filter(organization=user.organization).order_by("datetime_created").first()
+    )
+    forms = team_ref.team_forms.all()
+    for form in forms:
+        f = OrgCustomSlackForm.objects.create(
+            form_type=form.form_type,
+            resource=form.resource,
+            organization=org,
+            team=user.team,
+            config=form.config,
+            stage=form.stage,
+        )
+        if len(f.config):
+            try:
+                f.recreate_form()
+            except Exception as e:
+                logger.exception(f"Couldn't recreate team form due to: {e}")
+                continue
 
 
 @background(schedule=0)

@@ -844,7 +844,7 @@ const CLOSING_THIS_MONTH_HUBSPOT = {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
                     operandOperator: "BETWEEN",
-                    operandValue: `${new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()};${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getTime()}`,
+                    operandValue: `${new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()};${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()}`,
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -854,23 +854,6 @@ const CLOSING_THIS_MONTH_HUBSPOT = {
             groupOrder: 0,
             template: "",
         },
-        {
-            groupCondition: "OR",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: "=",
-                    operandValue: "0",
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
     ],
     messageTemplate: {
         bindings: [
@@ -957,7 +940,7 @@ const CLOSING_NEXT_MONTH_HUBSPOT = {
                     operandCondition: "AND",
                     operandIdentifier: "closedate",
                     operandOperator: "BETWEEN",
-                    operandValue: `${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()};${new Date(new Date().getFullYear(), new Date().getMonth() + 2, 0).getTime()}`,
+                    operandValue: `${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()};${new Date(new Date().getFullYear(), new Date().getMonth() + 2, 1).getTime()}`,
                     operandType: "FIELD",
                     operandOrder: 0,
                     dataType: "DATE",
@@ -1086,12 +1069,6 @@ const CLOSING_THIS_QUARTER = {
 //     alertLevel: "ORGANIZATION",
 // }
 
-const date = new Date();
-const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
-const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getTime();
-// const date = new Date(), y = date.getFullYear(), m = date.getMonth();
-// const firstDay = new Date(y, m, 1);
-// const lastDay = new Date(y, m + 1, 0);
 
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
