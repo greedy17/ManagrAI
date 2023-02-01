@@ -154,6 +154,24 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
     },
     {
+      path: '/closing-this-month',
+      name: 'ClosingThisMonth',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/settings/alerts/create/templates/ClosingThisMonth')
+    },
+    {
+      path: '/closing-next-month',
+      name: 'ClosingNextMonth',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/settings/alerts/create/templates/ClosingNextMonth')
+    },
+    {
+      path: '/closing-this-quarter',
+      name: 'ClosingThisQuarter',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/settings/alerts/create/templates/ClosingThisQuarter')
+    },
+    {
       path: '/team-pipeline',
       name: 'TeamPipeline',
       beforeEnter: Auth.requireAuth,

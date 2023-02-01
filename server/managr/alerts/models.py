@@ -90,7 +90,10 @@ class AlertTemplate(TimeStampModel):
                 user_crm.salesforce_id,
                 self.resource_type,
                 ["Id"],
-                additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+                additional_filters=[
+                    *self.adapter_class.additional_filters(),
+                    operand_groups,
+                ],
             )
             return f"{user_crm.instance_url}{q[0]}"
         else:
@@ -112,7 +115,10 @@ class AlertTemplate(TimeStampModel):
                 user_crm.salesforce_id,
                 self.resource_type,
                 ["Id"],
-                additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+                additional_filters=[
+                    *self.adapter_class.additional_filters(),
+                    operand_groups,
+                ],
                 user_list=user_list,
             )
             return f"{user_crm.instance_url}{q[0]}"
@@ -181,7 +187,10 @@ class AlertGroupQuerySet(models.QuerySet):
 
 class AlertGroup(TimeStampModel):
     group_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -207,6 +216,7 @@ class AlertGroup(TimeStampModel):
     def hs_query_str(self, config_id, user_crm, multi_user=False):
         """returns a grouped qs of operand rows (in ())"""
         q_s = [operand.hs_query_obj(config_id) for operand in self.operands.all()]
+        print(q_s)
         if multi_user:
             q_s.append({"values": user_crm, "operator": "IN", "propertyName": "hubspot_owner_id"})
         else:
@@ -246,7 +256,10 @@ class AlertOperand(TimeStampModel):
         "alerts.AlertGroup", on_delete=models.CASCADE, related_name="operands"
     )
     operand_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -326,7 +339,14 @@ class AlertOperand(TimeStampModel):
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         operator = self.operand_operator
-        if self.data_type == "DATE":
+        if self.data_type == "DATE" and operator == "BETWEEN":
+            return {
+                "highValue": value.split(";")[1],
+                "value": value.split(";")[0],
+                "operator": "BETWEEN",
+                "propertyName": self.operand_identifier,
+            }
+        elif self.data_type == "DATE" and operator != "BETWEEN":
             # try converting value to int
             value = (
                 int(
@@ -554,17 +574,26 @@ class AlertConfig(TimeStampModel):
                 user_ids_to_include.append(self.template.user.id)
             elif target == "MANAGERS":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_MANAGER, is_active=True, crm__isnull=False,
+                    user_level=core_consts.USER_LEVEL_MANAGER,
+                    is_active=True,
+                    crm__isnull=False,
                 )
             elif target == "REPS":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_REP, is_active=True, crm__isnull=False,
+                    user_level=core_consts.USER_LEVEL_REP,
+                    is_active=True,
+                    crm__isnull=False,
                 )
             elif target == "ALL":
-                query |= Q(is_active=True, crm__isnull=False,)
+                query |= Q(
+                    is_active=True,
+                    crm__isnull=False,
+                )
             elif target == "SDR":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_SDR, is_active=True, crm__isnull=False,
+                    user_level=core_consts.USER_LEVEL_SDR,
+                    is_active=True,
+                    crm__isnull=False,
                 )
             elif target == "TEAM":
                 query |= Q(team=self.template.user.team, is_active=True)
@@ -596,7 +625,9 @@ class AlertInstanceQuerySet(models.QuerySet):
 
 class AlertInstance(TimeStampModel):
     template = models.ForeignKey(
-        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
+        "alerts.AlertTemplate",
+        on_delete=models.CASCADE,
+        related_name="instances",
     )
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alerts")
     rendered_text = models.TextField(

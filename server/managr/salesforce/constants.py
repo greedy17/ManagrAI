@@ -123,10 +123,11 @@ def SALESFORCE_RESOURCE_QUERY_URI(
     additional_filters=[],
     limit=SALESFORCE_QUERY_LIMIT,
     SobjectType=None,
+    remove_owner=False,
 ):
     # make a set to remove duplicates
     fields = set(fields)
-    if resource not in REMOVE_OWNER_ID:
+    if resource not in REMOVE_OWNER_ID and remove_owner is False:
         if isinstance(owner_id, list):
             owners = "','".join(owner_id)
             additional_filters.insert(0, f"OwnerId IN ('{owners}')")

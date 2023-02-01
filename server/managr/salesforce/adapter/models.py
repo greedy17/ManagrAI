@@ -546,6 +546,7 @@ class SalesforceAuthAccountAdapter:
 
         owners = kwargs.get("owners", None)
         add_filters = kwargs.get("filter", None)
+        remove_owner = kwargs.get("remove_owner", False)
         resource_class = routes.get(resource)
         relationships = resource_class.get_child_rels()
         if add_filters is not None:
@@ -562,6 +563,7 @@ class SalesforceAuthAccountAdapter:
             relationships,
             limit=limit,
             additional_filters=additional_filters,
+            remove_owner=remove_owner,
         )
         merged_res = None
         for u in url_list:

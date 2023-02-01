@@ -937,7 +937,7 @@ def _process_add_call_to_sf(workflow_id, *args):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(schedule=0)
 @sf_api_exceptions_wf("add_task_log")
 def _process_add_update_to_sf(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()

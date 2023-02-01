@@ -1,5 +1,5 @@
 <template>
-  <div class="red">
+  <div>
     <div v-if="dataType">
       <p
         v-if="
@@ -10,12 +10,12 @@
           apiName !== 'StageName' &&
           apiName !== 'dealstage'
         "
-        v-html="fieldData ? truncate(fieldData, 40) : 'Empty'"
+        @mouseover="showAll = true"
+        @mouseleave="showAll = false"
+        v-html="fieldData ? fieldData : 'Empty'"
         class="blank"
-        :class="!fieldData ? 'gray' : ''"
-      >
-        <!-- {{ fieldData ? fieldData : '' }} -->
-      </p>
+        :class="{ gray: !fieldData }"
+      ></p>
 
       <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="dataType === 'Date'">
         {{ fieldData ? formatDate(fieldData) : 'Empty' }}
@@ -62,7 +62,7 @@
       </p>
     </div>
     <div v-else class="blank" :class="!fieldData ? 'gray' : ''">
-      <p>{{ truncate(fieldData, 40) }}</p>
+      <p>{{ fieldData }}</p>
     </div>
   </div>
 </template>
@@ -73,6 +73,7 @@ export default {
   data() {
     return {
       referenceName: null,
+      showAll: false,
     }
   },
   methods: {
@@ -158,9 +159,7 @@ export default {
 <style lang="scss" >
 @import '@/styles/variables';
 @import '@/styles/buttons';
-.red {
-  // width: fit-content;
-}
+
 .flex-columned {
   display: flex;
   flex-direction: column;
