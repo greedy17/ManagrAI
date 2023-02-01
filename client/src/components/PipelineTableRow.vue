@@ -5,28 +5,6 @@
     class="table-row"
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
-    <!-- <div v-if="opp" :class="showIcons ? 'hovered' : ''" class="table-cell-checkbox">
-      <div
-        v-if="
-          updateList.includes(opp.id) ||
-          updatedList.includes(opp.id) ||
-          (inlineLoader && currentInlineRow === index)
-        "
-      >
-        <SkeletonBox width="10px" height="10px" />
-      </div>
-      <div v-else>
-        <input
-          @click="emitCheckedBox(index)"
-          type="checkbox"
-          :id="index"
-          v-model="primaryCheckList"
-          :value="opp.id"
-        />
-        <label :for="index"></label>
-      </div>
-    </div> -->
-
     <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
@@ -169,18 +147,7 @@
         />
       </div>
     </div>
-    <div :class="showIcons ? 'hovered' : ''" class="cell-end left-border light-gray">
-      <!-- <div
-        v-if="
-          updateList.includes(opp.id) ||
-          updatedList.includes(opp.id) ||
-          (inlineLoader && currentInlineRow === index)
-        "
-        class="flex-row"
-      >
-        <SkeletonBox width="15px" height="14px" />
-      </div> -->
-    </div>
+    <div :class="showIcons ? 'hovered' : ''" class="cell-end left-border light-gray"></div>
   </div>
 </template>
 
@@ -216,13 +183,6 @@ export default {
       editing: false,
       editIndex: null,
       currentOpp: null,
-      // objectFields: CollectionManager.create({
-      //   ModelClass: SObjectField,
-      //   pagination: { size: 300 },
-      //   filters: {
-      //     salesforceObject: 'Opportunity',
-      //   },
-      // }),
       updatedList: [],
       newCloseDate: null,
     }
@@ -254,18 +214,6 @@ export default {
     dropdownLoading: {},
   },
   methods: {
-    // async setForm() {
-    //   try {
-    //     const res = await SObjects.api.createFormInstance({
-    //       resourceType: 'Opportunity',
-    //       formType: 'UPDATE',
-    //       resourceId: this.opp.id,
-    //     })
-    //     this.formId = res.form_id
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
     showActions() {
       this.showIcons = true
     },
@@ -511,10 +459,6 @@ export default {
   // box-shadow: 1px 1px 1px $very-light-gray;
 }
 
-// .left-border {
-//   border-left: 2px solid $off-white !important;
-// }
-
 .tooltip {
   position: relative;
   display: inline-block;
@@ -711,13 +655,14 @@ input {
   white-space: nowrap;
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
+  line-height: 1;
   font-size: 13px;
   padding: 0px 32px 0px 12px;
 }
 .cell-name {
   display: table-cell;
   white-space: nowrap;
-  width: fit-content;
+  width: 18vw;
   text-overflow: ellipsis;
   background-color: white;
   color: $base-gray;
@@ -842,8 +787,8 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  padding: 0;
   max-width: 18vw;
+  padding: 0;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -876,12 +821,6 @@ input[type='checkbox'] + label::before {
   // background-color: rgba(220, 248, 233, 0.2);
   background-color: $off-white;
 }
-// .mar-right {
-//   margin-right: 8px;
-// }
-// .mar-left {
-//   margin-left: 8px;
-// }
 .blank {
   // margin: 0;
 }
