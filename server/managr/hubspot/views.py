@@ -13,6 +13,7 @@ from rest_framework.decorators import (
 from managr.hubspot.tasks import emit_generate_hs_form_template
 
 from . import constants as hubspot_consts
+from managr.core.background import _process_change_team_lead
 
 # from .cron import queue_hubspot_sync
 from .models import HubspotAuthAccount
@@ -71,6 +72,10 @@ def get_hubspot_authentication(request):
             if settings.IN_DEV:
                 schedule = timezone.now() + timezone.timedelta(minutes=2)
             emit_generate_hs_form_template(str(res.user), schedule=schedule)
+        if user.make_team_lead:
+            _process_change_team_lead(
+                str(user.id), schedule=(timezone.now() + timezone.timedelta(minutes=2))
+            )
         sync_operations = [*user.hubspot_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_hubspot_sync(str(user.id), sync_operations, sync_time)

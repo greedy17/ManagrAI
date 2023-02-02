@@ -2431,7 +2431,6 @@ def _process_slack_inline_sf_update(payload, context):
 @background(schedule=0)
 @slack_api_exceptions(rethrow=0)
 def _process_convert_lead(payload, context):
-    pm = payload["view"]["private_metadata"]
     user = User.objects.get(id=context.get("u"))
     state = payload["view"]["state"]["values"]
     sending_blocks = get_block_set("loading", {"message": ":rocket: Converting your Lead"})

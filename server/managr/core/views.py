@@ -45,15 +45,12 @@ from .serializers import (
     NoteTemplateSerializer,
 )
 from managr.organization.models import Team
-from managr.organization.serializers import TeamSerializer
-from .permissions import IsOrganizationManager, IsSuperUser, IsStaff
+from .permissions import IsStaff
 from managr.core.background import emit_process_calendar_meetings
 from .nylas.emails import (
-    send_new_email_legacy,
     return_file_id_from_nylas,
     download_file_from_nylas,
 )
-
 from managr.salesforce.cron import (
     queue_users_sf_resource,
     queue_users_sf_fields,
@@ -455,8 +452,7 @@ class UserViewSet(
         remove_id = request.data.get("remove_id")
         try:
             remove_user = User.objects.get(id=remove_id)
-            remove_user.is_active = False
-            remove_user.save()
+            remove_user.deactivate_user()
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(f"Remove user error: {e}")
@@ -759,6 +755,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     # permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
+        print(request.data)
         u = request.user
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
@@ -767,11 +764,17 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if len(u.organization.users.all()) >= u.organization.number_of_allowed_users:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         slack_id = request.data.get("slack_id", False)
+
+        make_team_lead = request.data.pop("team_lead")
+        if make_team_lead:
+            request.data["make_team_lead"] = True
+        team = Team.objects.get(id=request.data.pop("team"))
+        request.data["team"] = team.id
+        print(request.data)
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
-        user.organization.add_to_admin_team(user.email)
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         if slack_id:
