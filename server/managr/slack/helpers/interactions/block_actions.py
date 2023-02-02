@@ -541,6 +541,7 @@ def process_meeting_selected_resource_option(payload, context):
         action, r = select.split(".")
     except ValueError:
         pass
+
     if not action:
         blocks = []
         try:
@@ -550,8 +551,9 @@ def process_meeting_selected_resource_option(payload, context):
             resource_id = resource.id
         except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
             try:
+                remove_owner = True if resource_type in ["Lead", "Contact"] else False
                 resource_res = user.crm_account.adapter_class.list_resource_data(
-                    resource_type, filter=CRM_FILTERS(user.crm, select),
+                    resource_type, filter=CRM_FILTERS(user.crm, select), remove_owner=remove_owner
                 )
                 serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                     data=resource_res[0].as_dict
