@@ -755,7 +755,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     # permission_classes = (IsSuperUser | IsOrganizationManager,)
 
     def create(self, request, *args, **kwargs):
-        print(request.data)
         u = request.user
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
@@ -770,7 +769,6 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             request.data["make_team_lead"] = True
         team = Team.objects.get(id=request.data.pop("team"))
         request.data["team"] = team.id
-        print(request.data)
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

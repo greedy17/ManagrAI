@@ -566,7 +566,6 @@ class SalesforceAuthAccountAdapter:
         merged_res = None
         for u in url_list:
             url = f"{self.instance_url}{u}"
-            print(url)
             if offset:
                 url = f"{url} offset {offset}"
             # logger.info(f"{url} was sent")
