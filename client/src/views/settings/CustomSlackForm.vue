@@ -510,6 +510,7 @@
               <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
               <label :for="i"></label>
               {{ field.label == 'Price Book Entry ID' ? 'Products' : removeAmp(field.label) }}
+              <!-- {{!!field['createable']}} -->
               <!-- <span v-if="field.required" class="red-text">required</span> -->
             </p>
           </div>
@@ -1098,11 +1099,14 @@ export default {
     },
     searchFields() {
       let fieldParam = {}
-      if (this.formType == this.CREATE) {
+
+      if (this.newFormType == 'CREATE') {
         fieldParam['createable'] = true
-      } else {
+      } else if (this.newFormType == 'UPDATE') {
         fieldParam['updateable'] = true
       }
+
+      console.log({ ...fieldParam }, this.formFields)
 
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
