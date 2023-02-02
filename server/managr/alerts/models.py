@@ -326,7 +326,14 @@ class AlertOperand(TimeStampModel):
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         operator = self.operand_operator
-        if self.data_type == "DATE":
+        if self.data_type == "DATE" and operator == "BETWEEN":
+            return {
+                "highValue": value.split(";")[1],
+                "value": value.split(";")[0],
+                "operator": "BETWEEN",
+                "propertyName": self.operand_identifier,
+            }
+        elif self.data_type == "DATE" and operator != "BETWEEN":
             # try converting value to int
             value = (
                 int(

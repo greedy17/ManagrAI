@@ -937,7 +937,7 @@ def _process_add_call_to_sf(workflow_id, *args):
     return
 
 
-@background(schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(schedule=0)
 @sf_api_exceptions_wf("add_task_log")
 def _process_add_update_to_sf(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
@@ -1992,7 +1992,9 @@ def _send_convert_recap(
     contact = user.crm_account.adapter_class.get_resource_in_list("Contact", [contact_id])[0]
     text = f":zap: *Lead Convert Recap*:\n *Lead*: {lead.email}\n\n:arrows_counterclockwise: _Converted to:_\n\n*Account*: {account.name}\n*Contact*: {contact.secondary_data['Name']}"
     if opportunity_id:
-        opportunity = Opportunity.objects.get(integration_id=opportunity_id)
+        opportunity = user.crm_account.adapter_class.get_resource_in_list(
+            "Opportunity", [opportunity_id]
+        )[0]
         text += f"\n*Opportunity*: {opportunity.name}"
     blocks = [
         block_builders.simple_section(text, "mrkdwn"),
@@ -2597,11 +2599,16 @@ def _process_convert_lead(payload, context):
                 )
             ],
         )
-    slack_requests.update_channel_message(
-        sending_res["channel"],
-        sending_res["ts"],
-        block_set=update_blocks,
-        access_token=user.organization.slack_integration.access_token,
-    )
+    try:
+        slack_requests.update_channel_message(
+            sending_res["channel"],
+            sending_res["ts"],
+            block_set=update_blocks,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        logger.exception(
+            f"Failed to send update to lead convert for user {user.email} due to <{e}>"
+        )
 
     return

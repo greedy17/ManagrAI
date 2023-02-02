@@ -347,7 +347,9 @@
 
             <div class="space-between">
               <div style="margin-left: 0.5rem">
-                <h2 style="margin-bottom: 16px; font-size: 26px">January 2023</h2>
+                <h2 style="margin-bottom: 16px; font-size: 26px">
+                  {{ months[today.getMonth()] + ' ' + today.getFullYear() }}
+                </h2>
                 <p style="margin-top: 8px" class="light-gray-text">
                   {{ selectedUser.userLevel[0] + selectedUser.userLevel.toLowerCase().slice(1) }}:
                   {{ selectedUser.fullName }}
@@ -690,6 +692,20 @@ export default {
       fieldLabels: null,
       noteFieldsLength: null,
       dropdownLoading: false,
+      months: {
+        0: 'January',
+        1: 'February',
+        2: 'March',
+        3: 'April',
+        4: 'May',
+        5: 'June',
+        6: 'July',
+        7: 'August',
+        8: 'September',
+        9: 'October',
+        10: 'November',
+        11: 'December',
+      },
       workflows: CollectionManager.create({
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
@@ -702,7 +718,6 @@ export default {
   async created() {
     this.reps.refresh()
     this.workflows.refresh()
-    console.log(this.reps)
   },
   methods: {
     async onUsersNextPage() {
@@ -795,6 +810,13 @@ export default {
     },
   },
   computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    today() {
+      let date = new Date()
+      return new Date(date.getFullYear(), date.getMonth())
+    },
     allOpps() {
       return this.selectedUser
         ? this.$store.state.allOpps.filter((opp) => opp.owner == this.selectedUser.id)

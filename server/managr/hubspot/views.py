@@ -20,6 +20,7 @@ from .models import HubspotAuthAccount
 from .adapter.models import HubspotAuthAccountAdapter
 from .tasks import emit_gen_next_hubspot_sync, emit_gen_next_hubspot_field_sync
 from .serializers import HubspotAuthAccountSerializer
+from managr.hubspot.tasks import emit_generate_team_form_templates
 
 # Create your views here.
 logger = logging.getLogger("managr")
@@ -71,6 +72,14 @@ def get_hubspot_authentication(request):
             )
             if settings.IN_DEV:
                 schedule = timezone.now() + timezone.timedelta(minutes=2)
+        if (
+            not serializer.instance.user.organization.is_paid
+            and not serializer.instance.user.is_admin
+        ):
+            emit_generate_team_form_templates(
+                str(serializer.instance.user.id),
+                schedule=(timezone.now() + timezone.timedelta(minutes=2)),
+            )
             emit_generate_hs_form_template(str(res.user), schedule=schedule)
         if user.make_team_lead:
             _process_change_team_lead(

@@ -466,7 +466,10 @@ def process_get_crm_resource_options(payload, context):
                     filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)]
                 else:
                     filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
-            res = crm_adapter.list_resource_data(resource, filter=filters, owners=crm_id, limit=50)
+            remove_owner = True if resource in ["Lead", "Contact"] else False
+            res = crm_adapter.list_resource_data(
+                resource, filter=filters, owners=crm_id, limit=25, remove_owner=remove_owner
+            )
             break
         except TokenExpired:
             if attempts >= 5:

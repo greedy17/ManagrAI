@@ -1,3 +1,5 @@
+import { DateTime } from "luxon"
+
 const CLOSE_DATE_PASSED = {
     title: "Close Date Passed",
     subtitle: "Close date is in the past",
@@ -735,7 +737,7 @@ const TEAM_PIPELINE_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: "<=",
                     operandValue: 30,
                     operandType: "FIELD",
@@ -745,7 +747,7 @@ const TEAM_PIPELINE_HUBSPOT = {
                 },
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
+                    operandIdentifier: "closedate",
                     operandOperator: ">",
                     operandValue: -1,
                     operandType: "FIELD",
@@ -779,6 +781,295 @@ const TEAM_PIPELINE_HUBSPOT = {
     alertLevel: "ORGANIZATION",
 }
 
+const CLOSING_THIS_MONTH = {
+    title: "Closing This Month",
+    subtitle: "Opportunities closing this month",
+    user: null,
+    isActive: true,
+    crm: 'SALESFORCE',
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "=",
+                    operandValue: 'THIS_MONTH',
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "String",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        bindings: [
+            " Opportunity.Name ",
+            " Opportunity.CloseDate ",
+        ],
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [],
+            recurrenceDay: "0",
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const CLOSING_THIS_MONTH_HUBSPOT = {
+    title: "Closing This Month",
+    subtitle: "Deals closing this month",
+    user: null,
+    isActive: true,
+    crm: 'HUBSPOT',
+    resourceType: "Deal",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "closedate",
+                    operandOperator: "BETWEEN",
+                    operandValue: `${new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()};${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()}`,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        },
+    ],
+    messageTemplate: {
+        bindings: [
+            " Deal.dealname ",
+            " Deal.closedate ",
+        ],
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [],
+            recurrenceDay: "0",
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const CLOSING_NEXT_MONTH = {
+    title: "Closing Next Month",
+    subtitle: "Opportunities closing next month",
+    user: null,
+    isActive: true,
+    crm: 'SALESFORCE',
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "=",
+                    operandValue: 'NEXT_MONTH',
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "String",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        bindings: [
+            " Opportunity.Name ",
+            " Opportunity.CloseDate ",
+        ],
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [],
+            recurrenceDay: "0",
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const CLOSING_NEXT_MONTH_HUBSPOT = {
+    title: "Closing Next Month",
+    subtitle: "Deals closing next month",
+    user: null,
+    isActive: true,
+    crm: 'HUBSPOT',
+    resourceType: "Deal",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "closedate",
+                    operandOperator: "BETWEEN",
+                    operandValue: `${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()};${new Date(new Date().getFullYear(), new Date().getMonth() + 2, 1).getTime()}`,
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "DATE",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        bindings: [
+            " Deal.dealname ",
+            " Deal.closedate ",
+        ],
+        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [],
+            recurrenceDay: "0",
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+const CLOSING_THIS_QUARTER = {
+    title: "Closing This Quarter",
+    subtitle: "Opportunities closing this quarter",
+    user: null,
+    isActive: true,
+    crm: 'SALESFORCE',
+    resourceType: "Opportunity",
+    newGroups: [
+        {
+            groupCondition: "AND",
+            newOperands: [
+                {
+                    operandCondition: "AND",
+                    operandIdentifier: "CloseDate",
+                    operandOperator: "=",
+                    operandValue: 'THIS_QUARTER',
+                    operandType: "FIELD",
+                    operandOrder: 0,
+                    dataType: "String",
+                    group: "",
+                },
+            ],
+            groupOrder: 0,
+            template: "",
+        }
+    ],
+    messageTemplate: {
+        bindings: [
+            " Opportunity.Name ",
+            " Opportunity.CloseDate ",
+        ],
+        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }",
+    },
+    newConfigs: [
+        {
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: [],
+            recurrenceDay: "0",
+            recipients: ["default"],
+            alertTargets: ["SELF"],
+            recipientType: "SLACK_CHANNEL",
+            alertTemplateId: "",
+            template: "",
+        }
+    ],
+    alertLevel: "ORGANIZATION",
+}
+
+// const CLOSING_THIS_QUARTER_HUBSPOT = {
+//     title: "Closing This Quarter",
+//     subtitle: "Close date's this quarter",
+//     user: null,
+//     isActive: true,
+//     crm: 'HUBSPOT',
+//     resourceType: "Deal",
+//     newGroups: [
+//         {
+//             groupCondition: "AND",
+//             newOperands: [
+//                 {
+//                     operandCondition: "AND",
+//                     operandIdentifier: "closedate",
+//                     operandOperator: "BETWEEN",
+//                     operandValue: ';',
+//                     operandType: "FIELD",
+//                     operandOrder: 0,
+//                     dataType: "DATE",
+//                     group: "",
+//                 },
+//             ],
+//             groupOrder: 0,
+//             template: "",
+//         }
+//     ],
+//     messageTemplate: {
+//         bindings: [
+//             " Deal.dealname ",
+//             " Deal.closedate ",
+//         ],
+//         body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }",
+//     },
+//     newConfigs: [
+//         {
+//             recurrenceFrequency: "WEEKLY",
+//             recurrenceDays: [],
+//             recurrenceDay: "0",
+//             recipients: ["default"],
+//             alertTargets: ["SELF"],
+//             recipientType: "SLACK_CHANNEL",
+//             alertTemplateId: "",
+//             template: "",
+//         }
+//     ],
+//     alertLevel: "ORGANIZATION",
+// }
+
+
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
     CLOSE_DATE_PASSED_HUBSPOT,
@@ -794,6 +1085,11 @@ const ALL_CONFIGS = {
     LARGE_DEALS_HUBSPOT,
     TEAM_PIPELINE,
     TEAM_PIPELINE_HUBSPOT,
+    CLOSING_THIS_MONTH,
+    CLOSING_THIS_MONTH_HUBSPOT,
+    CLOSING_NEXT_MONTH,
+    CLOSING_NEXT_MONTH_HUBSPOT,
+    CLOSING_THIS_QUARTER,
 }
 
 export default ALL_CONFIGS;

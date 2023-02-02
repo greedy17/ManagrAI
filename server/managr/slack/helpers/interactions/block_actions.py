@@ -541,6 +541,7 @@ def process_meeting_selected_resource_option(payload, context):
         action, r = select.split(".")
     except ValueError:
         pass
+
     if not action:
         blocks = []
         try:
@@ -550,8 +551,9 @@ def process_meeting_selected_resource_option(payload, context):
             resource_id = resource.id
         except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
             try:
+                remove_owner = True if resource_type in ["Lead", "Contact"] else False
                 resource_res = user.crm_account.adapter_class.list_resource_data(
-                    resource_type, filter=CRM_FILTERS(user.crm, select),
+                    resource_type, filter=CRM_FILTERS(user.crm, select), remove_owner=remove_owner
                 )
                 serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                     data=resource_res[0].as_dict
@@ -2687,8 +2689,6 @@ def process_get_summary_fields(payload, context):
 #########################################################
 # RECAP ACTIONS
 #########################################################
-
-
 @processor()
 def process_send_recap_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -2711,16 +2711,23 @@ def process_send_recap_modal(payload, context):
     }
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
+        return
     except InvalidBlocksException as e:
-        return logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
+        logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
     except InvalidBlocksFormatException as e:
-        return logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
+        logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
     except UnHandeledBlocksException as e:
-        return logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
+        logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
     except InvalidAccessToken as e:
-        return logger.exception(
+        logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user with workflow {str(user.id)} email {user.email} {e}"
         )
+    except Exception as e:
+        logger.exception(f"Failed to open recap modal due to {e}")
+    data["view"]["blocks"] = block_builders.simple_section(
+        f"An Error occured gathering your users and channels:\n{e}", "mrkdwn"
+    )
+    res = slack_requests.generic_request(url, data, access_token=access_token)
     return
 
 

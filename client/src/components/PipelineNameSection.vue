@@ -3,7 +3,8 @@
     <div>
       <div>
         <!-- margin-bottom: 3px; if including account and owner -->
-        <p>{{ truncate(name, 20) }}</p>
+        <!-- <p>{{ hovering ? name : truncate(name, 20) }}</p> -->
+        <p>{{ name }}</p>
         <!-- <span v-if="userCRM === 'SALESFORCE'" style="color: #199e54; font-size: 12px" :class="!accountName ? 'gray' : ''">
           {{ accountName ? accountName + ' ' : 'No Account ' }}
         </span> -->

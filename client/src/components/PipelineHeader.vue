@@ -547,17 +547,16 @@ export default {
 .table-cell-header {
   display: table-cell;
   padding-left: 12px;
+  line-height: 1;
   border-right: 1px solid $soft-gray;
   border-bottom: 1px solid $soft-gray;
   z-index: 2;
   top: 0;
   position: sticky;
-  // background-color: white;
   background-color: $off-white;
   font-weight: bolder;
   font-size: 12px;
   letter-spacing: 0.75px;
-  // color: $light-gray-blue;
   color: $base-gray;
 }
 .invert {

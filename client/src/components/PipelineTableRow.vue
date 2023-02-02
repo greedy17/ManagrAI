@@ -5,28 +5,6 @@
     class="table-row"
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
-    <!-- <div v-if="opp" :class="showIcons ? 'hovered' : ''" class="table-cell-checkbox">
-      <div
-        v-if="
-          updateList.includes(opp.id) ||
-          updatedList.includes(opp.id) ||
-          (inlineLoader && currentInlineRow === index)
-        "
-      >
-        <SkeletonBox width="10px" height="10px" />
-      </div>
-      <div v-else>
-        <input
-          @click="emitCheckedBox(index)"
-          type="checkbox"
-          :id="index"
-          v-model="primaryCheckList"
-          :value="opp.id"
-        />
-        <label :for="index"></label>
-      </div>
-    </div> -->
-
     <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
@@ -169,18 +147,7 @@
         />
       </div>
     </div>
-    <div :class="showIcons ? 'hovered' : ''" class="cell-end left-border light-gray">
-      <!-- <div
-        v-if="
-          updateList.includes(opp.id) ||
-          updatedList.includes(opp.id) ||
-          (inlineLoader && currentInlineRow === index)
-        "
-        class="flex-row"
-      >
-        <SkeletonBox width="15px" height="14px" />
-      </div> -->
-    </div>
+    <div :class="showIcons ? 'hovered' : ''" class="cell-end left-border light-gray"></div>
   </div>
 </template>
 
@@ -211,13 +178,7 @@ export default {
       dropdownVal: {},
       editing: false,
       editIndex: null,
-      // objectFields: CollectionManager.create({
-      //   ModelClass: SObjectField,
-      //   pagination: { size: 300 },
-      //   filters: {
-      //     salesforceObject: 'Opportunity',
-      //   },
-      // }),
+      currentOpp: null,
       updatedList: [],
       newCloseDate: null,
     }
@@ -249,18 +210,6 @@ export default {
     dropdownLoading: {},
   },
   methods: {
-    // async setForm() {
-    //   try {
-    //     const res = await SObjects.api.createFormInstance({
-    //       resourceType: 'Opportunity',
-    //       formType: 'UPDATE',
-    //       resourceId: this.opp.id,
-    //     })
-    //     this.formId = res.form_id
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
     showActions() {
       this.showIcons = true
     },
@@ -393,9 +342,64 @@ export default {
 //   background-color: $off-white !important;
 // }
 
-// .left-border {
-//   border-left: 2px solid $off-white !important;
-// }
+.img-border {
+  border: none;
+  box-shadow: 1px 1px 2px 1px $very-light-gray !important;
+  padding: 4px 6px 3px 6px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 6px 1px $off-white;
+  background-color: white;
+}
+
+.action-buttons {
+  background-color: white;
+  padding: 8px 8px 8px 24px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 2px 1px $off-white;
+  display: flex;
+  flex-direction: row;
+  align-items: space-evenly;
+  // box-shadow: 1px 1px 1px $very-light-gray;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  opacity: 0.7;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 40%;
+  margin-left: -60px; /* half of width */
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+.tooltip .tooltiptext::after {
+  content: ' ';
+  position: absolute;
+  bottom: 100%; /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
+}
 .save {
   background-color: transparent;
   color: $base-gray;
@@ -554,13 +558,14 @@ input {
   white-space: nowrap;
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
+  line-height: 1;
   font-size: 13px;
   padding: 0px 32px 0px 12px;
 }
 .cell-name {
   display: table-cell;
   white-space: nowrap;
-  width: fit-content;
+  width: 18vw;
   text-overflow: ellipsis;
   background-color: white;
   color: $base-gray;
@@ -673,8 +678,8 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  padding: 0;
   max-width: 18vw;
+  padding: 0;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;

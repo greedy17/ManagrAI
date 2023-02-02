@@ -523,7 +523,13 @@ def _process_calendar_meetings(user_id, slack_int, date):
             processed_data = None
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
-            slack_interaction_check = set([workflow.slack_interaction for workflow in workflows])
+            slack_interaction_check = set(
+                [
+                    workflow.slack_interaction
+                    for workflow in workflows
+                    if len(workflow.slack_interaction) > 0
+                ]
+            )
             if len(list(slack_interaction_check)):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
@@ -584,7 +590,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     block_set=blocks,
                 )
                 slack_interaction = f"{slack_res['ts']}|{slack_res['channel']}"
-            workflows = MeetingWorkflow.objects.for_user(user)
+            workflows = MeetingWorkflow.objects.for_user(user, date)
             workflows.update(slack_interaction=slack_interaction)
         except Exception as e:
             logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
@@ -803,16 +809,16 @@ def timezone_tasks(user_id):
     else:
         tasks = core_consts.TIMEZONE_TASK_TIMES
     user = User.objects.get(id=user_id)
-    logger_str = f"{user.email} - {datetime.now()} - "
+    # logger_str = f"{user.email} - {datetime.now()} - "
     for key in tasks.keys():
-        key_str = f"{key}: False, "
+        # key_str = f"{key}: False, "
         check = check_for_time(user.timezone, tasks[key]["HOUR"], tasks[key]["MINUTE"])
         if check:
-            key_str = f"{key}: True, "
+            # key_str = f"{key}: True, "
             verbose_name = f"{key}-{user.email}-{str(uuid.uuid4())}"
             TIMEZONE_TASK_FUNCTION[key](user_id, verbose_name)
-        logger_str += key_str
-    logger.info(logger_str)
+        # logger_str += key_str
+    # logger.info(logger_str)
     return
 
 
