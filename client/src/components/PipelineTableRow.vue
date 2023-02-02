@@ -5,7 +5,11 @@
     class="table-row"
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
-    <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
+    <div 
+      :class="showIcons ? 'hovered' : ''" 
+      class="cell-name limit-cell-height"
+      :style="(this.resourceName === 'Contact' ? 'max-width: none;' : '')"
+    >
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
           <div>
@@ -45,8 +49,12 @@
           <PipelineNameSection
             v-else
             :name="
-              userCRM === 'SALESFORCE'
+              (resourceName === 'Opportunity' || resourceName === 'Account' || resourceName === 'Company')
                 ? opp['secondary_data']['Name']
+                : resourceName === 'Company'
+                ? opp['secondary_data']['name']
+                : (resourceName === 'Contact' || resourceName === 'Lead')
+                ? (userCRM === 'SALESFORCE' ? opp['secondary_data']['Email'] : opp['secondary_data']['email'])
                 : opp['secondary_data']['dealname']
             "
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
@@ -212,6 +220,8 @@ export default {
     currentInlineRow: {},
     extraPipelineFields: {},
     dropdownLoading: {},
+    resourceName: {},
+    baseResourceType: {},
   },
   methods: {
     showActions() {
@@ -299,7 +309,7 @@ export default {
         SObjects.api
           .updateResource({
             form_data: { StageName: this.stageData },
-            resource_type: 'Opportunity',
+            resource_type: this.baseResourceType,
             form_type: 'UPDATE',
             resource_id: this.opp.id,
             integration_ids: [this.opp.integration_id],
@@ -327,7 +337,7 @@ export default {
         const res = await SObjects.api
           .updateResource({
             form_data: { CloseDate: this.newCloseDate },
-            resource_type: 'Opportunity',
+            resource_type: this.baseResourceType,
             form_type: 'UPDATE',
             resource_id: this.opp.id,
             integration_ids: [this.opp.integration_id],
@@ -355,7 +365,7 @@ export default {
         const res = await SObjects.api
           .updateResource({
             form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-            resource_type: 'Opportunity',
+            resource_type: this.baseResourceType,
             form_type: 'UPDATE',
             resource_id: this.opp.id,
             integration_ids: [this.opp.integration_id],
@@ -395,7 +405,7 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: 'Opportunity',
+            resource_type: this.baseResourceType,
             form_type: 'UPDATE',
             resource_id: this.opp.id,
             integration_ids: [this.opp.integration_id],

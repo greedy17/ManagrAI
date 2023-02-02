@@ -123,7 +123,8 @@
         <div class="flex-row-spread header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
-            <h3>{{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}</h3>
+            <!-- <h3>{{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}</h3> -->
+            <h3>{{ `Create ${resourceName}` }}</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -152,7 +153,7 @@
                 >
                 </textarea>
               </div>
-              <div class="col" v-else-if="field.dataType === 'String'">
+              <div class="col" v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
                 <label class="label">{{ field.referenceDisplayLabel }}</label>
                 <input
                   :disabled="savingCreateForm"
@@ -165,7 +166,7 @@
                 <label class="label">{{ field.referenceDisplayLabel }}</label>
                 <Multiselect
                   v-model="selectedAccount"
-                  :options="allAccounts"
+                  :options="allAccountsForSObjects"
                   @search-change="getAccounts($event)"
                   @select="setUpdateValues(field.apiName, $event.id, false)"
                   openDirection="below"
@@ -336,7 +337,7 @@
                           <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                           <Multiselect
                             v-model="selectedAccount"
-                            :options="allAccounts"
+                            :options="allAccountsForSObjects"
                             @search-change="getAccounts($event)"
                             @select="setUpdateValidationValues(field.apiName, $event.id)"
                             openDirection="below"
@@ -693,7 +694,7 @@
                         <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                         <Multiselect
                           v-model="selectedAccount"
-                          :options="allAccounts"
+                          :options="allAccountsForSObjects"
                           @search-change="getAccounts($event)"
                           @select="setUpdateValidationValues(field.apiName, $event.id)"
                           openDirection="below"
@@ -1000,7 +1001,7 @@
                     </Multiselect>
                   </div>
 
-                  <div class="col" v-else-if="field.dataType === 'String'">
+                  <div class="col" v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
                     <p>{{ field.referenceDisplayLabel }}</p>
                     <input
                       id="user-input"
@@ -1086,7 +1087,7 @@
           </div>
         </div>
         <div class="flex-end-opp">
-          <div v-if="hasProducts && userCRM === 'SALESFORCE'">
+          <div v-if="hasProducts && userCRM === 'SALESFORCE' && resourceName === 'Opportunity'">
             <button
               v-if="!addingProduct"
               @click="addProduct"
@@ -1105,7 +1106,8 @@
 
           <div v-if="!savingCreateForm" style="display: flex; align-items: center">
             <button class="add-button" @click="createResource(addingProduct ? true : false)">
-              {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}
+              <!-- {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }} -->
+              {{ `Create ${resourceName}` }}
             </button>
           </div>
           <div v-else>
@@ -1122,7 +1124,8 @@
               <img src="@/assets/images/logo.png" height="24px" alt="" />
             </span>
 
-            <h3>Update {{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</h3>
+            <!-- <h3>Update {{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</h3> -->
+            <h3>Update {{ resourceName }}</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
@@ -1163,10 +1166,12 @@
               v-else-if="
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                (field.dataType === 'String' && field.apiName !== 'NextStep')
+                (field.dataType === 'String' && field.apiName !== 'NextStep') ||
+                (field.dataType.toLowerCase() === 'email')
               "
               class="col"
             >
+            <!-- work here -->
               <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 id="user-input"
@@ -1201,7 +1206,7 @@
               <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
-                :options="allAccounts"
+                :options="allAccountsForSObjects"
                 @search-change="getAccounts($event)"
                 @select="
                   setUpdateValues(
@@ -1406,7 +1411,7 @@
                       <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                       <Multiselect
                         v-model="selectedAccount"
-                        :options="allAccounts"
+                        :options="allAccountsForSObjects"
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
@@ -1689,7 +1694,7 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String'">
+                <div v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
@@ -1871,7 +1876,7 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String'">
+                <div v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
@@ -1956,7 +1961,7 @@
         </div>
 
         <div class="flex-end-opp">
-          <div v-if="hasProducts && userCRM === 'SALESFORCE'" class="row">
+          <div v-if="hasProducts && userCRM === 'SALESFORCE' && resourceName === 'Opportunity'" class="row">
             <button
               style="padding: 10px; margin-right: 4px"
               v-if="!addingProduct"
@@ -2011,14 +2016,14 @@
           <button @click.stop="showList = !showList" class="text-button" style="cursor: pointer">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
             <span style="margin-left: 2px" class="green">{{
-              selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length
+              selectedWorkflow && currentWorkflow ? currentWorkflow.length : this[objectName].length
             }}</span>
 
             <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
-              <p>{{ userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}</p>
+              <p>{{ resourceName }}</p>
             </div>
             <!-- <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -2030,10 +2035,34 @@
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p> -->
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button @click="allOpportunities" class="list-button">
+              <button @click="allObjects('loadAllOpps', userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals', 'allOpps', userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal', 'Opportunity')" class="list-button">
                 All {{ this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}
                 <span class="green">
-                  {{ allOpps.length }}
+                  {{ allOpps && allOpps.length ? allOpps.length : 0 }}
+                </span>
+              </button>
+            </router-link>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button @click="allObjects('loadAllAccounts', userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies', 'allAccounts', userCRM === 'SALESFORCE' ? 'Account' : 'Company', 'Account')" class="list-button">
+                All {{ this.userCRM === 'SALESFORCE' ? 'Accounts' : 'Companies' }}
+                <span class="green">
+                  {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
+                </span>
+              </button>
+            </router-link>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button @click="allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')" class="list-button">
+                All Contacts
+                <span class="green">
+                  {{ allContacts && allContacts.length ? allContacts.length : 0 }}
+                </span>
+              </button>
+            </router-link>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button v-if="userCRM === 'SALESFORCE'" @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')" class="list-button">
+                All Leads
+                <span @click="test(allLeads)" class="green">
+                  {{ allLeads && allLeads.length ? allLeads.length : 0 }}
                 </span>
               </button>
             </router-link>
@@ -2105,7 +2134,7 @@
                 :filterName="currentFilter"
                 :dropdowns="apiPicklistOptions"
                 :apiName="filterApiName"
-                :accounts="allAccounts"
+                :accounts="allAccountsForSObjects"
                 :owners="allUsers"
               />
             </div>
@@ -2252,6 +2281,7 @@
                 <div
                   v-if="
                     selectedOpp.dataType === 'String' ||
+                    selectedOpp.dataType.toLowerCase() === 'email' ||
                     selectedOpp.dataType === 'TextArea' ||
                     selectedOpp.dataType === 'Email' ||
                     selectedOpp.dataType === 'Address' ||
@@ -2391,7 +2421,8 @@
           </div>
 
           <button @click="createOppInstance()" class="add-button">
-            {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}
+            <!-- {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }} -->
+            {{ `Create ${resourceName}` }}
           </button>
         </div>
       </section>
@@ -2493,7 +2524,7 @@
               <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
               <Multiselect
                 v-model="selectedAccount"
-                :options="allAccounts"
+                :options="allAccountsForSObjects"
                 @search-change="getAccounts($event)"
                 @select="setUpdateValidationValues(field.apiName, $event.id)"
                 openDirection="below"
@@ -2645,11 +2676,12 @@
             :allSelected="selectedWorkflow ? allWorkflowsSelected : allSelected"
             :extraPipelineFields="extraPipelineFields"
             :fieldOpts="objectFields.list"
+            :isContactOrLead="resourceName === 'Contact' || resourceName === 'Lead'"
           />
           <PipelineTableRow
             :ref="selectedWorkflow ? 'workflowTableChild' : 'pipelineTableChild'"
             :key="i"
-            v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : allOpps"
+            v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : this[objectName]"
             @create-form="
               createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
             "
@@ -2669,6 +2701,8 @@
             :dropdownLoading="dropdownLoading"
             :dropdownValue="dropdownValue"
             :closeEdit="closeInline"
+            :resourceName="resourceName"
+            :baseResourceType="baseResourceType"
             :stages="stagesWithForms"
             :inlineLoader="inlineLoader"
             :picklistOpts="allPicklistOptions"
@@ -2691,7 +2725,7 @@
       <div
         class="table-overlay"
         :key="opp.id"
-        v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : allOpps"
+        v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : this[objectName]"
       >
         <div :key="i" v-for="(field, i) in oppFields">
           <div
@@ -2740,7 +2774,7 @@
                   (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                   (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                   (field.dataType === 'String' && field.apiName !== 'NextStep') ||
-                  (field.dataType === 'Email' && field.apiName !== 'NextStep')
+                  (field.dataType.toLowerCase() === 'email' && field.apiName !== 'NextStep')
                 "
                 class="inline-row"
               >
@@ -2772,12 +2806,7 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val:
-                      field.apiName === 'StageName'
-                        ? $event.value
-                        : field.apiName === 'dealstage'
-                        ? [$event.label, $event.id]
-                        : $event.id,
+                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
@@ -3135,6 +3164,7 @@ export default {
       workflowFilterText: '',
       storedFilters: [],
       currentList: 'All Opportunities',
+      resourceName: 'Opportunity',
       alertInstanceId: null,
       showList: false,
       workList: false,
@@ -3160,8 +3190,11 @@ export default {
       stagePicklistQueryOpts: {},
       setFilters: {},
       instanceIds: [],
-      allAccounts: [],
+      allAccountsForSObjects: [],
       allUsers: [],
+      objectName: 'allOpps',
+      baseResourceType: 'Opportunity',
+      loadObject: 'loadAllOpps',
       filtering: false,
       filterSelected: false,
       activeFilters: [],
@@ -3202,7 +3235,8 @@ export default {
   },
   computed: {
     crmObject() {
-      return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+      // return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+      return this.resourceName
     },
     extraPipelineFields() {
       let extras = []
@@ -3245,7 +3279,17 @@ export default {
       }
     },
     allOpps() {
+      console.log('store', this.$store.state)
       return this.$store.state.allOpps
+    },
+    allAccounts() {
+      return this.$store.state.allAccounts
+    },
+    allContacts() {
+      return this.$store.state.allContacts
+    },
+    allLeads() {
+      return this.$store.state.allLeads
     },
     user() {
       return this.$store.state.user
@@ -3321,7 +3365,10 @@ export default {
     }
     this.objectFields.filters = { crmObject: this.crmObject }
     this.objectFields.refresh()
-    this.$store.dispatch('loadAllOpps', [...this.filters])
+    this.$store.dispatch(this.loadObject, [...this.filters])
+    if (this.userCRM === 'HUBSPOT') {
+      this.resourceName = 'Deal'
+    }
     this.getAllForms()
     this.getUsers()
     if (this.userCRM === 'SALESFORCE') {
@@ -3519,12 +3566,12 @@ export default {
     // },
     getFilteredOpps() {
       if (this.userCRM === 'SALESFORCE') {
-        this.$store.dispatch('loadAllOpps', [
+        this.$store.dispatch(this.loadObject, [
           ...this.filters,
           ['CONTAINS', 'Name', this.filterText.toLowerCase()],
         ])
       } else {
-        this.$store.dispatch('loadAllOpps', [
+        this.$store.dispatch(this.loadObject, [
           ...this.filters,
           ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
         ])
@@ -3565,15 +3612,14 @@ export default {
     addToForecastList() {
       let list = []
       for (let i = 0; i < this.currentCheckList.length; i++) {
-        list.push(this.allOpps.filter((opp) => opp.id === this.currentCheckList[i])[0])
+        list.push(this[this.objectName].filter((opp) => opp.id === this.currentCheckList[i])[0])
       }
       this.forecastList = list.map((opp) => opp.integration_id)
     },
     async modifyForecast(action) {
-      const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
       try {
         await User.api.modifyForecast(action, this.forecastList)
-        this.$toast(oppOrDeal + ' added to Tracker.', {
+        this.$toast(this.resourceName + ' added to Tracker.', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -3581,10 +3627,10 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        this.$toast('Error adding ' + oppOrDeal, {
+        this.$toast('Error adding ' + this.resourceName, {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -3610,7 +3656,8 @@ export default {
       try {
         let res
         res = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -3626,7 +3673,7 @@ export default {
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        const firstOpp = this.allOpps.filter((opp) => opp.id === id)[0]
+        const firstOpp = this[this.objectName].filter((opp) => opp.id === id)[0]
         firstOpp && firstOpp.account_ref
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
@@ -3692,7 +3739,8 @@ export default {
         }
         const res = await CRMObjects.api.updateResource({
           form_data: formData,
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           form_type: 'UPDATE',
           resource_id: id,
           integration_ids: [integrationId],
@@ -3701,18 +3749,18 @@ export default {
         })
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'Name', this.filterText.toLowerCase()],
             ])
           } else {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
             ])
           }
         } else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
         setTimeout(() => {
           if (this.selectedWorkflow) {
@@ -3813,7 +3861,7 @@ export default {
           } else {
             textFilters = [...this.filters, ['CONTAINS', 'dealname', this.filterText.toLowerCase()]]
           }
-          this.$store.dispatch('loadAllOpps', textFilters)
+          this.$store.dispatch(this.loadObject, textFilters)
         }
         // else if (this.workflowFilterText) {
         //   const textFilters = [
@@ -3823,7 +3871,7 @@ export default {
         //   res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
         // }
         else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
         if (this.selectedWorkflow) {
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3926,7 +3974,7 @@ export default {
         })
         this.filterValues.push(user[0].full_name)
       } else if (name === 'AccountId') {
-        let account = this.allAccounts.filter((account) => account.id === value)
+        let account = this.allAccountsForSObjects.filter((account) => account.id === value)
         this.filterValues.push(account[0].name)
       } else {
         this.filterValues.push(value)
@@ -4031,7 +4079,7 @@ export default {
         }
       } else {
         if (field === 'Stage' || field === 'Deal Stage') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA =
               userCRM === 'SALESFORCE'
                 ? a['secondary_data']['StageName']
@@ -4043,38 +4091,38 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}` + 'Date']
             const nameB = b['secondary_data'][`${newField}` + 'Date']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
 
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
@@ -4146,7 +4194,7 @@ export default {
         }
       } else {
         if (field === 'Stage' || field === 'Deal Stage') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA =
               userCRM === 'SALESFORCE'
                 ? a['secondary_data']['StageName']
@@ -4158,37 +4206,37 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}` + 'Date']
             const nameB = b['secondary_data'][`${newField}` + 'Date']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
@@ -4250,16 +4298,16 @@ export default {
         }
       } else {
         if (this.primaryCheckList.length < 1) {
-          for (let i = 0; i < this.allOpps.length; i++) {
-            this.primaryCheckList.push(this.allOpps[i].id)
+          for (let i = 0; i < this[this.objectName].length; i++) {
+            this.primaryCheckList.push(this[this.objectName][i].id)
           }
         } else if (
           this.primaryCheckList.length > 0 &&
-          this.primaryCheckList.length < this.allOpps.length
+          this.primaryCheckList.length < this[this.objectName].length
         ) {
-          for (let i = 0; i < this.allOpps.length; i++) {
-            !this.primaryCheckList.includes(this.allOpps[i].id)
-              ? this.primaryCheckList.push(this.allOpps[i].id)
+          for (let i = 0; i < this[this.objectName].length; i++) {
+            !this.primaryCheckList.includes(this[this.objectName][i].id)
+              ? this.primaryCheckList.push(this[this.objectName][i].id)
               : (this.primaryCheckList = this.primaryCheckList)
           }
         } else {
@@ -4303,7 +4351,8 @@ export default {
       this.noteTitle = null
       try {
         const res = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: id,
         })
       } catch (e) {
@@ -4340,7 +4389,8 @@ export default {
       try {
         let res
         res = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -4357,7 +4407,7 @@ export default {
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        const firstOpp = this.allOpps.filter((opp) => opp.id === this.oppId)[0]
+        const firstOpp = this[this.objectName].filter((opp) => opp.id === this.oppId)[0]
         firstOpp && firstOpp.account_ref
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
@@ -4387,7 +4437,8 @@ export default {
       this.stageGateId = null
       try {
         const res = await CRMObjects.api.createFormInstance({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           formType: 'STAGE_GATING',
           stageName: field
             ? field
@@ -4491,7 +4542,8 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            resource_type: this.resourceName,
             form_type: 'UPDATE',
             resource_ids: this.primaryCheckList,
           })
@@ -4518,7 +4570,8 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            resource_type: this.resourceName,
             form_type: 'UPDATE',
             resource_ids: this.workflowCheckList,
           })
@@ -4630,7 +4683,7 @@ export default {
     updateOpps() {
       try {
         if (!this.filterText) {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
           if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
@@ -4736,7 +4789,8 @@ export default {
         }
         const res = await CRMObjects.api.updateResource({
           form_data: newFormData,
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           form_type: 'UPDATE',
           resource_id: this.stageId,
           integration_ids: [this.stageIntegrationId],
@@ -4749,18 +4803,18 @@ export default {
         this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'Name', this.filterText.toLowerCase()],
             ])
           } else {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
             ])
           }
         } else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
 
         setTimeout(() => {
@@ -4873,7 +4927,8 @@ export default {
           stage_name: null,
         })
         const res2 = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: this.oppId,
         })
         this.currentProducts = res2.current_products
@@ -4915,6 +4970,7 @@ export default {
         } else {
           newFormData = this.formData
         }
+        console.log('this.resourceName', this.resourceName)
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: newFormData,
@@ -4922,7 +4978,8 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           resource_id: this.oppId,
           stage_name: this.storedStageName
             ? this.storedStageName
@@ -4933,18 +4990,18 @@ export default {
         this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'Name', this.filterText.toLowerCase()],
             ])
           } else {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
             ])
           }
         } else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
         setTimeout(() => {
           if (this.storedFilters.length) {
@@ -4984,7 +5041,7 @@ export default {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -5011,7 +5068,8 @@ export default {
         let res = await CRMObjects.api.createResource({
           form_data: newFormData,
           form_type: 'CREATE',
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           stage_name: this.storedStageName
             ? this.storedStageName
             : this.stageGateField
@@ -5028,14 +5086,15 @@ export default {
             ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
             : this.filters
         }
-        const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        // const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        const objectType = this.resourceName
         if (this.userCRM === 'SALESFORCE') {
-          this.$store.dispatch('loadAllOpps', [
+          this.$store.dispatch(this.loadObject, [
             ...this.filters,
             ['CONTAINS', 'Name', this.filterText.toLowerCase()],
           ])
         } else {
-          this.$store.dispatch('loadAllOpps', [
+          this.$store.dispatch(this.loadObject, [
             ...this.filters,
             ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
           ])
@@ -5228,15 +5287,17 @@ export default {
           )[0].id)
         : (this.accountSobjectId = null)
 
+      console.log('this.updateOppForm[0].fieldsRef', this.updateOppForm[0].fieldsRef)
+
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
           field.apiName !== 'meeting_comments' &&
           field.apiName !== 'Name' &&
           field.apiName !== 'dealname' &&
-          field.apiName !== 'AccountId' &&
-          field.apiName !== 'OwnerId' &&
-          field.apiName !== 'hubspot_owner_id',
+          field.apiName !== 'name' &&
+          ((this.resourceName === 'Contact' || this.resourceName === 'Lead') ? field.apiName !== 'email' : true) &&
+          ((this.resourceName === 'Contact' || this.resourceName === 'Lead') ? field.apiName !== 'Email' : true)
       )
     },
     async getAllForms() {
@@ -5245,32 +5306,35 @@ export default {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
         let stageGateForms
+        // work here, updateOppForm and createOppForm should be dependent on what type of object is selected
+        // updateOppForm and createOppForm should be updateForm and createForm
+        // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
+            (obj) => obj.formType === 'UPDATE' && obj.resource === this.resourceName,
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === this.resourceName)[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === this.resourceName,
           )
           this.createProductForm = res.filter(
             (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           )[0].fieldsRef
         } else if (this.userCRM === 'HUBSPOT') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal',
+            (obj) => obj.formType === 'UPDATE' && obj.resource === this.resourceName,
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Deal')[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === this.resourceName)[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === this.resourceName,
           )
           // this.createProductForm = res.filter(
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
@@ -5300,6 +5364,8 @@ export default {
           }
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
+        console.log('this.oppFormCopy', this.oppFormCopy)
+        console.log('currentVals', this.currentVals)
         this.loading = false
       } catch (e) {
         console.log(e)
@@ -5336,7 +5402,7 @@ export default {
           const res = await SObjects.api.getSobjectPicklistValues({
             sobject_id: this.accountSobjectId,
           })
-          this.allAccounts = res
+          this.allAccountsForSObjects = res
         } catch (e) {
           console.log(e)
         } finally {
@@ -5351,7 +5417,7 @@ export default {
           sobject_id: this.accountSobjectId,
           value: val,
         })
-        this.allAccounts = res
+        this.allAccountsForSObjects = res
       } catch (e) {
         this.$toast('Error gathering Accounts!', {
           timeout: 2000,
@@ -5432,12 +5498,12 @@ export default {
       } else {
         endOfMonth = `${todayYear}-${nextMonth}-01`
       }
-      this.$store.dispatch('loadAllOpps', [
+      this.$store.dispatch(this.loadObject, [
         ...this.filters,
         ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
         ['LESS_THAN', 'CloseDate', endOfMonth],
       ])
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing this month'
       this.showList = false
@@ -5446,11 +5512,11 @@ export default {
     },
     stillThisMonth() {
       this.currentPage = 1
-      this.allOpps = this.originalList
-      this.allOpps = this.allOpps.filter(
+      this[this.objectName] = this.originalList
+      this[this.objectName] = this[this.objectName].filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing this month'
     },
@@ -5476,12 +5542,12 @@ export default {
       } else {
         endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
       }
-      this.$store.dispatch('loadAllOpps', [
+      this.$store.dispatch(this.loadObject, [
         ...this.filters,
         ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
         ['LESS_THAN', 'CloseDate', endOfMonth],
       ])
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing next month'
       this.showList = false
@@ -5489,19 +5555,31 @@ export default {
     },
     stillNextMonth() {
       this.currentPage = 1
-      this.allOpps = this.originalList
-      this.allOpps = this.allOpps.filter(
+      this[this.objectName] = this.originalList
+      this[this.objectName] = this[this.objectName].filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing next month'
     },
-    allOpportunities() {
+    // allOpportunities() {
+    //   this.selectedWorkflow = false
+    //   this.$store.dispatch('loadAllOpps')
+    //   this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
+    //   this.showList = !this.showList
+    //   this.closeFilterSelection()
+    // },
+    allObjects(loadObject, allName, objectName, resourceName, baseResourceType) {
       this.selectedWorkflow = false
-      this.$store.dispatch('loadAllOpps')
-      this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
+      this.$store.dispatch(loadObject)
+      this.loadObject = loadObject
+      this.currentList = allName
+      this.objectName = objectName
+      this.resourceName = resourceName
+      this.baseResourceType = baseResourceType
       this.showList = !this.showList
+      this.getAllForms()
       this.closeFilterSelection()
     },
     weekDay(input) {

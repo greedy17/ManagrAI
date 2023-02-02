@@ -26,6 +26,8 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class BaseAccountSerializer(serializers.ModelSerializer):
+    owner_ref = UserRefSerializer(source="owner", required=False)
+
     class Meta:
         model = BaseAccount
         fields = (
@@ -36,6 +38,7 @@ class BaseAccountSerializer(serializers.ModelSerializer):
             "integration_source",
             "imported_by",
             "owner",
+            "owner_ref",
             "external_owner",
             "secondary_data",
         )
@@ -52,15 +55,20 @@ class BaseAccountSerializer(serializers.ModelSerializer):
 
 
 class BaseContactSerializer(serializers.ModelSerializer):
+    account_ref = BaseAccountSerializer(source="account", required=False)
+    owner_ref = UserRefSerializer(source="owner", required=False)
+
     class Meta:
         model = BaseContact
         fields = (
             "id",
             "email",
             "account",
+            "account_ref",
             "external_owner",
             "external_account",
             "owner",
+            "owner_ref",
             "integration_source",
             "integration_id",
             "imported_by",

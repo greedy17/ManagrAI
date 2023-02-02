@@ -16,6 +16,7 @@ from managr.organization.serializers import (
     ContactSerializer,
     StageSerializer,
 )
+from managr.crm.serializers import BaseAccountSerializer
 from managr.salesforce.models import SalesforceAuthAccount
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.organization import constants as org_consts
@@ -130,6 +131,9 @@ class LeadSerializer(serializers.ModelSerializer):
     Other users can list
     """
 
+    # account_ref = BaseAccountSerializer(source="account", required=False)
+    owner_ref = UserRefSerializer(source="owner", required=False)
+
     class Meta:
         model = Lead
         fields = (
@@ -139,6 +143,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "integration_source",
             "imported_by",
             "owner",
+            "owner_ref",
             "secondary_data",
             "email",
         )

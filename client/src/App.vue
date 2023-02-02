@@ -60,12 +60,15 @@ export default {
     }
     this.$store.dispatch('loadMeetings')
     this.$store.dispatch('loadAllOpps')
+    this.$store.dispatch('loadAllAccounts')
+    this.$store.dispatch('loadAllContacts')
     this.$store.dispatch('loadAllPicklists')
     this.$store.dispatch('loadApiPicklists')
     this.$store.dispatch('loadPricebooks')
     this.$store.dispatch('loadTemplates')
     if (this.$store.state.user.crm === 'SALESFORCE') {
       this.$store.dispatch('getRecords')
+      this.$store.dispatch('loadAllLeads')
     }
     // this.$store.dispatch('loadWorkflows')
   },

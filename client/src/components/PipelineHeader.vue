@@ -24,7 +24,7 @@
       class="cell-name-header"
     >
       <div class="sort-img-visible">
-        Name
+        {{isContactOrLead ? 'Email' : 'Name'}}
         <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.svg" alt="" />
         <span v-if="nameSort === 2">
           <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
@@ -357,6 +357,9 @@ export default {
     dataType: {},
     extraPipelineFields: {},
     fieldOpts: {},
+    isContactOrLead: {
+      type: Boolean
+    },
   },
 }
 </script>
