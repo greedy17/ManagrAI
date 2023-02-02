@@ -7,7 +7,6 @@ export default {
   name: 'FormSettings',
   data() {
     return {
-      isLoading: false,
       resource: 'Account',
     }
   },

@@ -1311,8 +1311,11 @@ def process_show_update_resource_form(payload, context):
         resource_id = resource.id
     except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
         try:
+            remove_owner = True if resource_type in ["Contact", "Lead"] else False
             resource_res = user.crm_account.adapter_class.list_resource_data(
-                resource_type, filter=CRM_FILTERS(user.crm, integration_id),
+                resource_type,
+                filter=CRM_FILTERS(user.crm, integration_id),
+                remove_owner=remove_owner,
             )
             serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                 data=resource_res[0].as_dict

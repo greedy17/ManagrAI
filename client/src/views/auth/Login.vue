@@ -178,17 +178,6 @@ h2 {
   font-weight: bold;
   text-align: center;
 }
-.input {
-  margin-bottom: 0.3rem;
-  padding: 0.5rem;
-  width: 22vw;
-  height: 6vh;
-  border-radius: 0.3rem;
-  border: 2px solid $soft-gray;
-}
-input:focus {
-  outline: 2px solid $lighter-green;
-}
 ::v-deep .tn-input:focus {
   outline: none;
 }
@@ -218,7 +207,6 @@ input:focus {
     padding: 0rem;
   }
 }
-
 .login-page__form {
   background-color: $white;
   border-radius: 6px;
@@ -242,7 +230,6 @@ input:focus {
     border: 0;
   }
 }
-
 button {
   @include primary-button();
   margin-bottom: 6px;
@@ -252,12 +239,10 @@ button {
   color: white !important;
   box-shadow: none;
 }
-
 a {
   text-decoration: none;
   color: $light-gray-blue;
 }
-
 label {
   font-size: 15px;
 }
@@ -274,11 +259,11 @@ label {
   align-items: center;
   margin-bottom: 1rem;
 }
-.enter-email {
-  @include muted-font();
-  margin-top: -0.5rem;
-  color: $light-gray-blue;
-}
+// .enter-email {
+//   @include muted-font();
+//   margin-top: -0.5rem;
+//   color: $light-gray-blue;
+// }
 img {
   height: 80px;
   margin-top: 4rem;

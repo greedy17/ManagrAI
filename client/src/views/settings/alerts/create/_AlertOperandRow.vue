@@ -234,7 +234,7 @@ import FormField from '@/components/forms/FormField'
  */
 import { AlertOperandForm } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjects, SObjectPicklist, NON_FIELD_ALERT_OPTS } from '@/services/salesforce'
+import { SObjects, SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import {
   ALERT_DATA_TYPE_MAP,
@@ -279,10 +279,6 @@ export default {
       // used by dd as a ref field to retrieve obj of selected opt
       selectedOperandValueRef: null,
       picklistOpts: [],
-      operandDate: '',
-      NON_FIELD_ALERT_OPTS,
-      negativeOperand: false,
-      positiveOperand: false,
       dealStageCheck: false,
       MyOperand: 'Negative',
       intOpts: [
@@ -316,80 +312,6 @@ export default {
         { label: '15 Days PRIOR TO alert day', value: '-15' },
         { label: 'Month  FROM alert day', value: '30' },
         { label: 'Month  PRIOR TO alert day', value: '-30' },
-      ],
-      NegativeDateValues: [
-        { label: 'Day of alert', value: '0' },
-        { label: 'A month before', value: '-30' },
-        { label: "Two month's before", value: '-60' },
-        { label: "Three month's before", value: '-90' },
-        { label: 'A week before', value: '-7' },
-        { label: "Two week's before", value: '-14' },
-        { label: '1 day before', value: '-1' },
-        { label: "2 day's before", value: '-2' },
-        { label: "3 day's before", value: '-3' },
-        { label: "4 day's before", value: '-4' },
-        { label: "5 day's before", value: '-5' },
-        { label: "6 day's before", value: '-6' },
-        { label: "7 day's before", value: '-7' },
-        { label: "8 day's before", value: '-8' },
-        { label: "9 day's before", value: '-9' },
-        { label: "10 day's before", value: '-10' },
-        { label: "11 day's before", value: '-11' },
-        { label: "12 day's before", value: '-12' },
-        { label: "13 day's before", value: '-13' },
-        { label: "14 day's before", value: '-14' },
-        { label: "15 day's before", value: '-15' },
-        { label: "16 day's before", value: '-16' },
-        { label: "17 day's before", value: '-17' },
-        { label: "18 day's before", value: '-18' },
-        { label: "19 day's before", value: '-19' },
-        { label: "20 day's before", value: '-20' },
-        { label: "21 day's before", value: '-21' },
-        { label: "22 day's before", value: '-22' },
-        { label: "23 day's before", value: '-23' },
-        { label: "24 day's before", value: '-24' },
-        { label: "25 day's before", value: '-25' },
-        { label: "26 day's before", value: '-26' },
-        { label: "27 day's before", value: '-27' },
-        { label: "28 day's before", value: '-28' },
-        { label: "29 day's before", value: '-29' },
-      ],
-      PositiveDateValues: [
-        { label: 'Day of alert', value: '0' },
-        { label: 'A month away', value: '30' },
-        { label: "Two month's away", value: '60' },
-        { label: "Three month's away", value: '90' },
-        { label: 'A week away', value: '7' },
-        { label: "Two week's away", value: '14' },
-        { label: '1 day away', value: '1' },
-        { label: "2 day's away", value: '2' },
-        { label: "3 day's away", value: '3' },
-        { label: "4 day's away", value: '4' },
-        { label: "5 day's away", value: '5' },
-        { label: "6 day's away", value: '6' },
-        { label: "7 day's away", value: '7' },
-        { label: "8 day's away", value: '8' },
-        { label: "9 day's away", value: '9' },
-        { label: "10 day's away", value: '10' },
-        { label: "11 day's away", value: '11' },
-        { label: "12 day's away", value: '12' },
-        { label: "13 day's away", value: '13' },
-        { label: "14 day's away", value: '14' },
-        { label: "15 day's away", value: '15' },
-        { label: "16 day's away", value: '16' },
-        { label: "17 day's away", value: '17' },
-        { label: "18 day's away", value: '18' },
-        { label: "19 day's away", value: '19' },
-        { label: "20 day's away", value: '20' },
-        { label: "21 day's away", value: '21' },
-        { label: "22 day's away", value: '22' },
-        { label: "23 day's away", value: '23' },
-        { label: "24 day's away", value: '24' },
-        { label: "25 day's away", value: '25' },
-        { label: "26 day's away", value: '26' },
-        { label: "27 day's away", value: '27' },
-        { label: "28 day's away", value: '28' },
-        { label: "29 day's away", value: '29' },
       ],
       booleanValueOpts: [
         { label: 'True', value: 'true' },
@@ -646,17 +568,6 @@ export default {
 .space-s {
   margin: 0 4px;
 }
-.l-gray {
-  color: $soft-gray;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 8px;
-  // margin-top: -16px;
-  color: $very-light-gray;
-}
 .multi-slot {
   display: flex;
   align-items: center;
@@ -688,7 +599,6 @@ export default {
     }
   }
 }
-
 .slot-icon {
   display: flex;
   flex-direction: row;
@@ -701,17 +611,11 @@ export default {
     filter: invert(70%);
   }
 }
-
 img {
   filter: invert(90%);
 }
 .uninvert {
   filter: invert(10%);
-}
-.centered {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 .toggle__switch {
   display: flex;

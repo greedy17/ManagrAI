@@ -71,9 +71,6 @@ export default {
     isAutoSize() {
       return this.$attrs.hasOwnProperty('autoSize')
     },
-    isBordered() {
-      return this.$attrs.hasOwnProperty('bordered')
-    },
   },
 }
 </script>

@@ -221,6 +221,8 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "organization_ref",
             "user_level",
             "role",
+            "team",
+            "make_team_lead",
         )
         extra_kwargs = {
             "email": {"required": True},

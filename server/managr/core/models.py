@@ -203,6 +203,7 @@ class User(AbstractUser, TimeStampModel):
     team = models.ForeignKey(
         "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
     )
+    make_team_lead = models.BooleanField(default=False)
     objects = UserManager()
 
     @property
@@ -289,6 +290,47 @@ class User(AbstractUser, TimeStampModel):
                 )
                 pass
         self.delete()
+
+    def deactivate_user(self):
+        """
+        Revoke the user's Slack, Zoom, Salesforce and Nylas authentication tokens, but doesn't delete user.
+        """
+        from managr.slack.helpers import requests as slack_requests
+
+        user = self
+        if hasattr(user, "slack_integration"):
+            user.slack_integration.delete()
+
+        if hasattr(user, "salesforce_account"):
+            sf_acc = user.salesforce_account
+            sf_acc.revoke(False)
+
+        if hasattr(user, "zoom_account"):
+            zoom = user.zoom_account
+            try:
+                zoom.helper_class.revoke()
+            except Exception:
+                # revoke token will fail if ether token is expired
+                pass
+            if zoom.refresh_token_task:
+                from background_task.models import Task
+
+                task = Task.objects.filter(id=zoom.refresh_token_task).first()
+                if task:
+                    task.delete()
+        self.is_active = False
+        return self.save()
+
+        if hasattr(user, "nylas"):
+            nylas = user.nylas
+            try:
+                nylas.revoke()
+            except Exception as e:
+                logger.info(
+                    f"Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
+                )
+                pass
+        return
 
     @property
     def has_zoom_integration(self):

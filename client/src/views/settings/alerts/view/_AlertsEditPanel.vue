@@ -309,17 +309,10 @@
  * Components
  * */
 // Pacakges
-import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
-import { quillEditor } from 'vue-quill-editor'
 import Modal from '@/components/InviteModal'
-import debounce from 'lodash.debounce'
 import draggable from 'vuedraggable'
 
 //Internal
-import AlertOperandModal from '@/views/settings/alerts/view/_AlertOperandModal'
-import AlertGroupModal from '@/views/settings/alerts/view/_AlertGroupModal'
 import AlertSettingsModal from '@/views/settings/alerts/view/_AlertSettingsModal'
 import FormField from '@/components/forms/FormField'
 /**
@@ -344,20 +337,12 @@ import AlertTemplate, {
 import { stringRenderer } from '@/services/utils'
 import { ObjectField } from '@/services/crm'
 import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
-const TABS = [
-  { key: 'TEMPLATE', label: 'Workflow Title' },
-  { key: 'GROUPS', label: 'Conditions' },
-  { key: 'MESSAGE', label: 'Message' },
-  { key: 'CONFIG', label: 'Delivery Options' },
-]
+
 export default {
   name: 'AlertsEditPanel',
   components: {
     FormField,
-    AlertOperandModal,
-    AlertGroupModal,
     AlertSettingsModal,
-    quillEditor,
     Modal,
     AlertGroup,
     AlertOperandRow,
@@ -375,20 +360,15 @@ export default {
       modalOpen: false,
       deliveryModalOpen: false,
       groupModalOpen: false,
-      dropdownLoading: false,
       currentForm: null,
       groupForm: null,
       groupIndex: null,
       deliveryForm: null,
       templateTitleField: new FormFieldService({ validators: [new RequiredValidator()] }),
-      // executeUpdateTemplate: debounce(this.updateTemplate, 900),
       // executeUpdateMessageTemplate: debounce(this.updateMessageTemplate, 900),
       messageTemplateForm: new AlertMessageTemplateForm(),
-      TABS,
-      selectedTab: TABS[0].key,
       savedChanges: false,
       savingInTab: false,
-      crmValue: null,
       valuePromise: null,
       slackMessage: [],
       formattedSlackMessage: [],
@@ -411,29 +391,6 @@ export default {
         'Large Opportunities',
         'Team Pipeline',
       ],
-      // fields: CollectionManager.create({
-      //   ModelClass: ObjectField,
-      //   filters: {
-      //     // forAlerts: true,
-      //     // filterable: true,
-      //     page: 1,
-      //     crmObject: alert.resourceType,
-      //   },
-      //   pagination: { size: 1000 },
-      // }),
-      // fields: CollectionManager.create({
-      //   ModelClass: ObjectField,
-      //   filters: {
-      //     crmObject: this.alert.resourceType
-      //   },
-      //   pagination: { size: 1000 },
-      // }),
-      recipientBindings: [
-        { referenceDisplayLabel: 'Recipient Full Name', apiName: 'full_name' },
-        { referenceDisplayLabel: 'Recipient First Name', apiName: 'first_name' },
-        { referenceDisplayLabel: 'Recipient Last Name', apiName: 'last_name' },
-        { referenceDisplayLabel: 'Recipient Email', apiName: 'email' },
-      ],
       intOpts: [
         { label: '>= (Greater or Equal)', value: '>=' },
         { label: '<= (Less or Equal)', value: '<=' },
@@ -455,22 +412,10 @@ export default {
         { label: 'True', value: 'true' },
         { label: 'False', value: 'false' },
       ],
-      weeklyOpts: [
-        { key: 'Monday', value: '0' },
-        { key: 'Tuesday', value: '1' },
-        { key: 'Wednesday', value: '2' },
-        { key: 'Thursday', value: '3' },
-        { key: 'Friday', value: '4' },
-        { key: 'Saturday', value: '5' },
-        { key: 'Sunday', value: '6' },
-      ],
     }
   },
 
   computed: {
-    editor() {
-      return this.$refs['message-body'].quill
-    },
     filteredFields() {
       return this.fields.list.filter(
         (field) => !this.addedFieldNames.includes(`${this.alert.resourceType}.${field.apiName}`),
@@ -493,6 +438,36 @@ export default {
       this.deliveryModalOpen = !this.deliveryModalOpen
       this.deliveryForm = null
       this.groupIndex = null
+    },
+    updateWorkflow() {
+      this.updateTemplate()
+      this.updateMessageTemplate()
+    },
+    async updateTemplate() {
+      this.templateTitleField.validate()
+      if (this.templateTitleField.isValid) {
+        try {
+          this.savingInTab = true
+          await AlertTemplate.api.updateAlertTemplate(this.alert.id, {
+            title: this.templateTitleField.value,
+          })
+          this.savedChanges = true
+          setTimeout(() => {
+            this.savedChanges = false
+          }, 1000)
+        } catch (e) {
+          console.log(e)
+          this.$toast('Error updating template', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } finally {
+          this.savingInTab = false
+        }
+      }
     },
     resetGroupModal() {
       this.groupModalOpen = !this.groupModalOpen
@@ -540,7 +515,6 @@ export default {
       this.currentForm = newForm
       this.modalOpen = true
     },
-
     async onSaveGroup() {
       this.groupForm.validate()
       if (this.groupForm.isValid) {
@@ -633,10 +607,6 @@ export default {
         return num + 'rd'
       }
     },
-    updateWorkflow() {
-      this.updateTemplate()
-      this.updateMessageTemplate()
-    },
     bindText(val, title) {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
       this.slackMessage.push(addedStr)
@@ -683,7 +653,6 @@ export default {
           : 'a #channel'
       } filtering against ${config.alertTargetsRef.map((target) => target.key).join(',')}'s data`
     },
-
     async onDeleteConfig(id, index) {
       let confirmation = confirm('Delete this row ?')
       if (confirmation) {
@@ -772,49 +741,6 @@ export default {
         }
       }
     },
-    async fieldNextPage() {
-      this.dropdownLoading = true
-      await this.fields.addNextPage()
-      setTimeout(() => {
-        this.dropdownLoading = false
-      })
-    },
-
-    // bindText(val, title) {
-    //   this.$refs['message-body'].quill.focus()
-    //   let start = 0
-    //   if (this.editor.selection.lastRange) {
-    //     start = this.editor.selection.lastRange.index
-    //   }
-    //   this.editor.insertText(start, `\n\n${title}: { ${val} }`)
-    // },
-    async updateTemplate() {
-      this.templateTitleField.validate()
-      if (this.templateTitleField.isValid) {
-        try {
-          this.savingInTab = true
-          await AlertTemplate.api.updateAlertTemplate(this.alert.id, {
-            title: this.templateTitleField.value,
-          })
-          this.savedChanges = true
-          setTimeout(() => {
-            this.savedChanges = false
-          }, 1000)
-        } catch (e) {
-          console.log(e)
-          this.$toast('Error updating template', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } finally {
-          this.savingInTab = false
-        }
-      }
-    },
-
     async updateMessageTemplate() {
       // TODO: Sanitize body PB 05/18/21
       this.messageTemplateForm.validate()
@@ -998,39 +924,9 @@ export default {
     cursor: pointer;
   }
 }
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 14px;
-  margin-top: -22px;
-  color: $very-light-gray;
-}
 h3 {
   font-weight: 400;
   letter-spacing: 0.25px;
-}
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.2rem;
-  cursor: pointer;
-  padding: 0.15rem 0.3rem;
-  margin-right: 0.5rem;
-}
-.slot-icon {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 0;
-  margin: 0;
-  img {
-    height: 1rem;
-    margin-right: 0.25rem;
-    filter: invert(70%);
-  }
 }
 input {
   border: none;
@@ -1045,63 +941,6 @@ input {
 input:focus {
   outline: none;
 }
-.multi-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $gray;
-  font-size: 12px;
-  width: 100%;
-  padding: 0.5rem 0rem;
-  margin: 0;
-  cursor: text;
-  &__more {
-    background-color: white;
-    color: $dark-green;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
-    width: 100%;
-    padding: 0.75rem 0rem;
-    margin: 0;
-    cursor: pointer;
-
-    img {
-      height: 0.8rem;
-      margin-left: 0.25rem;
-      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-        brightness(93%) contrast(89%);
-    }
-  }
-}
-.card-rows {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
-}
-.group-card {
-  border-radius: 0.3rem;
-  background-color: $white;
-  padding: 1.2rem;
-  width: 58%;
-  margin-bottom: 2rem;
-  color: $base-gray;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-
-  &__title {
-    width: 100%;
-    height: 2rem;
-    text-align: center;
-    font-size: 1.05rem;
-  }
-}
-
 .green_button {
   color: white;
   background-color: $dark-green;
@@ -1122,7 +961,6 @@ input:focus {
   border: none;
   cursor: text;
 }
-
 .condition-button {
   background-color: white;
   color: $dark-green;
@@ -1141,75 +979,9 @@ input:focus {
   letter-spacing: 0.75px;
   cursor: pointer;
 }
-.even {
-  color: $gray;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  cursor: text;
-  font-size: 14px;
-  img {
-    height: 1rem;
-    filter: invert(70%);
-  }
-}
 .remove-color {
   filter: invert(30%);
   cursor: pointer;
-}
-.invert {
-  filter: invert(80%);
-}
-.message__box {
-  height: 30vh;
-  width: 26vw;
-  background-color: transparent;
-}
-.tab__header-items {
-  display: flex;
-  overflow: scroll;
-  &__item {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    padding: 0.5rem;
-    border-bottom: none;
-    color: $base-gray;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    width: 17vw;
-    &--active {
-      background-color: $dark-green;
-      border-radius: 0.2rem;
-      color: white;
-      position: relative;
-    }
-    &--active:hover {
-      color: white !important;
-    }
-  }
-  &__item:hover {
-    color: $dark-green;
-  }
-  &__group {
-    display: flex;
-    padding: 0.75rem;
-  }
-}
-
-.alerts-template-list__content-message {
-  font-size: 14px;
-  letter-spacing: 0.2px;
-  display: flex;
-  justify-content: flex-start;
-  padding: 0.5rem 2rem;
-  height: 100%;
-  &__form {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    height: 100%;
-  }
 }
 .search-bar {
   background-color: white;
@@ -1274,7 +1046,6 @@ input[type='search']:focus {
     }
   }
 }
-
 .modal-container {
   background-color: $white;
   overflow-y: scroll;
@@ -1308,7 +1079,6 @@ input[type='search']:focus {
     }
   }
 }
-
 .modal-container-large {
   background-color: $white;
   overflow-y: scroll;
@@ -1342,18 +1112,15 @@ input[type='search']:focus {
     }
   }
 }
-
 .rel {
   position: relative;
 }
-
 .flex-row-spread {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
-
 .sticky {
   position: sticky;
   background-color: white;
@@ -1363,11 +1130,9 @@ input[type='search']:focus {
   padding: 0px 6px 8px -2px;
   z-index: 2;
 }
-
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
 }
-
 .flex-row {
   display: flex;
   flex-direction: row;
