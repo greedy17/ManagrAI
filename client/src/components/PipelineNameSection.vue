@@ -37,17 +37,13 @@ export default {
     },
   },
   computed: {
-    userCRM() {
-      return this.$store.state.user.crm
-    },
+    // userCRM() {
+    //   return this.$store.state.user.crm
+    // },
   },
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
-.gray {
-  color: $very-light-gray !important;
-}
 </style>

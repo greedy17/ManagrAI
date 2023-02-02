@@ -1003,10 +1003,12 @@ class SalesforceAuthAccount(TimeStampModel):
         self.scope = res.get("scope", None)
         self.save()
 
-    def revoke(self):
+    def revoke(self, delete=True):
         adapter = self.adapter_class
         adapter.revoke()
-        self.delete()
+        if delete:
+            return self.delete()
+        return
 
     def get_fields(self, resource):
 

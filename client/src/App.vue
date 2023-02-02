@@ -1,7 +1,6 @@
 <template>
   <div id="app">
     <NavBar v-if="!hideNavBar && userIsLoggedIn" />
-    <!-- <SideDrawer :key="$route.fullPath"></SideDrawer> -->
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -17,7 +16,6 @@ import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
-import SideDrawer from '@/components/SideDrawer'
 
 const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
 
@@ -25,11 +23,10 @@ export default {
   name: 'app',
   components: {
     NavBar,
-    SideDrawer,
   },
   data() {
     return {
-      unviewedNotifCount: null,
+      
     }
   },
   watch: {
@@ -130,18 +127,8 @@ input {
   padding: 2px 16px;
 }
 
-.section-shadow {
-  box-shadow: 0 1px 0 0 $soft-gray;
-}
-
 ::-webkit-scrollbar {
   width: 0px;
-}
-
-.muted {
-  color: rgba(47, 48, 53, 0.4);
-  font-family: inherit;
-  font-weight: 300;
 }
 
 .background-logo {

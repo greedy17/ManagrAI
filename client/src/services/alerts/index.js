@@ -13,7 +13,6 @@ import AlertTemplate, {
   AlertConfig,
   AlertInstance,
   AlertGroup,
-  RealTime,
   Config,
 } from './models'
 export default AlertTemplate
@@ -28,7 +27,6 @@ export {
   AlertConfig,
   AlertGroup,
   AlertInstance,
-  RealTime,
   RealTimeAlertForm,
   RealTimeAlertConfigForm,
   Config,

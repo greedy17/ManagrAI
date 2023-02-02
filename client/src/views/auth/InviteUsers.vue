@@ -317,7 +317,7 @@
         </div>
         <div class="profile-info__body">
           <div class="row__">
-            <h2 @click="test">{{ getUser.fullName }}</h2>
+            <h2>{{ getUser.fullName }}</h2>
             <!-- <span @click="selectingOption = !selectingOption" class="img-border">
               <img
                 src="@/assets/images/more_horizontal.svg"
@@ -528,17 +528,12 @@ export default {
   data() {
     return {
       selectingOption: false,
-      noSelection: true,
       manageTeamSelected: true,
       updateInfoSelected: false,
-      createNoteSelected: false,
-      editNoteSelected: false,
-      selectedTemplate: null,
-      noteTemplates: null,
-      isShared: false,
-      savingTemplate: false,
-      noteSubject: null,
-      noteBody: null,
+      // createNoteSelected: false,
+      // editNoteSelected: false,
+      // selectedTemplate: null,
+      // savingTemplate: false,
       inviteOpen: false,
       editTeam: false,
       newTeam: false,
@@ -550,7 +545,7 @@ export default {
       teamLead: '',
       team: CollectionManager.create({ ModelClass: User }),
       teamsList: [],
-      originalTeam: null,
+      originalTeam: {},
       selectedTeam: null,
       selectedUsers: [],
       usersList: [],
@@ -565,67 +560,22 @@ export default {
     viewAdminPage() {
       this.$router.push({ name: 'Staff' })
     },
-    test() {
-      console.log(this.getUser)
-    },
-    manageTeam() {
-      this.manageTeamSelected = true
-      this.updateInfoSelected = false
-      this.createNoteSelected = false
-      this.editNoteSelected = false
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    updateInfo() {
-      this.manageTeamSelected = false
-      this.updateInfoSelected = true
-      this.createNoteSelected = false
-      this.editNoteSelected = false
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    createNote() {
-      this.manageTeamSelected = false
-      this.updateInfoSelected = false
-      this.createNoteSelected = true
-      this.editNoteSelected = false
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    editNote() {
-      this.getTemplates()
-      this.manageTeamSelected = false
-      this.updateInfoSelected = false
-      this.createNoteSelected = false
-      this.editNoteSelected = true
-      this.selectedTemplate = false
-      this.selectingOption = false
-    },
-    selectTemplate(template) {
-      this.selectedTemplate = template
-    },
-    async updateTemplate() {
-      try {
-        const res = await User.api.updateTemplate(this.selectedTemplate.id, this.selectedTemplate)
-        this.$toast('Note template update successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        this.$toast('Error updating template', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.homeView()
-      }
-    },
+    // manageTeam() {
+    //   this.manageTeamSelected = true
+    //   this.updateInfoSelected = false
+    //   this.createNoteSelected = false
+    //   this.editNoteSelected = false
+    //   this.selectedTemplate = false
+    //   this.selectingOption = false
+    // },
+    // updateInfo() {
+    //   this.manageTeamSelected = false
+    //   this.updateInfoSelected = true
+    //   this.createNoteSelected = false
+    //   this.editNoteSelected = false
+    //   this.selectedTemplate = false
+    //   this.selectingOption = false
+    // },
     updateAvailableUsers(team, users) {
       let filterUsers
       if (this.team.list.length) {
@@ -650,69 +600,6 @@ export default {
               filteredUser.team === this.originalTeam.id && !filteredUser.isTeamLead,
           )
         }
-      }
-    },
-    async removeTemplate() {
-      try {
-        const res = await User.api.removeTemplate(this.selectedTemplate.id)
-        this.$toast('Template removal successful', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        this.$toast('Error removing template', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.homeView()
-      }
-    },
-    async getTemplates() {
-      try {
-        const res = await User.api.getTemplates()
-        this.noteTemplates = res.results
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async createTemplate() {
-      this.savingTemplate = true
-      try {
-        const res = await User.api.createTemplate({
-          subject: this.noteSubject,
-          body: this.noteBody,
-          is_shared: this.isShared,
-          user: this.getUser.id,
-        })
-        this.$toast('Note template created successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        console.log(e)
-        this.$toast('Error creating template', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.savingTemplate = false
-        this.noteSubject = null
-        this.noteBody = null
-        this.isShared = null
-        this.homeView()
       }
     },
     async changeAdminSubmit() {
@@ -865,22 +752,6 @@ export default {
       this.team.refresh()
       this.inviteOpen = false
     },
-    async getTeams() {
-      const res = await Organization.api.listTeams(this.getUser.id)
-      const teamList = [res.results[0]]
-      for (let i = 1; i < res.results.length; i++) {
-        if (res.results[i].team_lead === this.getUser.id) {
-          teamList.push(res.results[i])
-        }
-      }
-      this.teamsList = teamList
-      this.originalTeam = res.results[0]
-      const currentTeam = res.results.length
-        ? res.results.filter((team) => team.id === this.getUser.team)[0]
-        : null
-      this.selectedTeam = currentTeam
-      this.updateAvailableUsers(currentTeam)
-    },
     setTime() {
       this.profileForm.field.timezone.value = this.selectedTimezone.value
     },
@@ -942,7 +813,6 @@ export default {
     },
   },
   async created() {
-    this.getTemplates()
     this.profileForm = new UserProfileForm({
       firstName: this.getUser.firstName,
       lastName: this.getUser.lastName,
@@ -967,9 +837,6 @@ export default {
     },
     hasSlack() {
       return !!this.$store.state.user.slackRef
-    },
-    isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
     },
     numberOfAllowedUsers() {
       return this.$store.state.user.organizationRef.numberOfAllowedUsers
@@ -1123,14 +990,6 @@ export default {
   cursor: pointer;
   background-color: white;
 }
-.message__box {
-  margin-top: -16px;
-  margin-bottom: 8px;
-  height: 30vh;
-  width: 40vw;
-  border-radius: 0.25rem;
-  background-color: transparent;
-}
 .template-input {
   border: 1px solid #ccc;
   border-bottom: none;
@@ -1220,13 +1079,6 @@ h2 {
   letter-spacing: 0.75px;
   border: 1px solid #e8e8e8;
 }
-.invite_button2 {
-  background-color: white;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 6px 12px;
-  border: 1px solid #e8e8e8;
-}
 .invite_button:disabled {
   display: flex;
   flex-direction: row;
@@ -1245,8 +1097,7 @@ h2 {
   cursor: text;
 }
 
-.invite_button:hover,
-.invite_button2:hover {
+.invite_button:hover {
   cursor: pointer;
   color: $dark-green;
 }
@@ -1289,9 +1140,6 @@ input[type='checkbox'] + label::before {
   border: 1px solid rgb(182, 180, 180);
   border-radius: 4px;
   margin-right: 0.5em;
-}
-.small {
-  font-size: 12px;
 }
 @mixin epic-sides() {
   position: relative;
@@ -1351,175 +1199,11 @@ input[type='checkbox'] + label::before {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
 }
-.centered {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  height: 40vh;
-}
-.small-container {
-  box-shadow: 1px 1px 2px 1px #ccc;
-  border: 1px solid white;
-  border-radius: 6px;
-  width: 250px;
-  height: 110px;
-  overflow: hidden;
-  cursor: pointer;
-  &__head {
-    border-bottom: 1px solid #ccc;
-    padding: 1px 8px;
-    font-weight: bold;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    height: 40px;
-    display: flex;
-    justify-content: flex-start;
-    background-color: $dark-green;
-    color: white;
-  }
-  &__body {
-    display: flex;
-    justify-content: flex-start;
-    padding: 4px;
-    opacity: 0.8;
-    font-size: 12px;
-  }
-}
-.small-container:hover {
-  opacity: 0.7;
-}
-.row {
-  padding-left: 1.5rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
 .row__ {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
-}
-.hover-img {
-  background-color: white;
-  border: 1px solid white;
-  box-shadow: 1px 1px 2px 1px #ccc;
-  color: #fff;
-  display: inline-block;
-  margin: 8px;
-  max-width: 320px;
-  min-width: 240px;
-  height: 275px;
-  overflow: hidden;
-  position: relative;
-  text-align: center;
-  width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.hover-img * {
-  box-sizing: border-box;
-  transition: all 0.45s ease;
-}
-
-.hover-img:before,
-.hover-img:after {
-  background-color: rgba(0, 0, 0, 0.5);
-  border-top: 2px solid rgba(0, 0, 0, 0.5);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  content: '';
-  transition: all 0.3s ease;
-  z-index: 1;
-  opacity: 0;
-  transform: scaleY(2);
-}
-
-.hover-img img {
-  vertical-align: top;
-  max-width: 100%;
-  backface-visibility: hidden;
-}
-
-.hover-img figcaption {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  align-items: center;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  line-height: 1.1em;
-  opacity: 0;
-  z-index: 2;
-  transition-delay: 0.1s;
-  font-size: 24px;
-  font-family: sans-serif;
-  font-weight: 400;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.hover-img:hover:before,
-.hover-img:hover:after {
-  transform: scale(1);
-  opacity: 1;
-}
-
-.hover-img:hover > img {
-  opacity: 0.7;
-}
-
-.hover-img:hover figcaption {
-  opacity: 1;
-}
-.wide {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
-.figure-title {
-  img {
-    margin-left: 6px;
-    filter: invert(20%);
-    visibility: hidden;
-  }
-  p {
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-  }
-  background-color: $dark-green;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 8px;
-  font-weight: bold;
-  border-radius: 2px;
-
-  small {
-    color: $base-gray;
-    margin-top: -8px;
-    letter-spacing: 0.5px;
-  }
-}
-.align-start {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
 }
 .multi-slot {
   display: flex;
@@ -1630,16 +1314,6 @@ input[type='checkbox'] + label::before {
     margin-top: 1rem;
   }
 }
-.cancel-button {
-  margin-top: 1rem;
-  position: relative;
-  right: 1px;
-  color: $gray;
-  &:hover {
-    cursor: pointer;
-  }
-}
-
 .modal-input {
   width: 15vw;
   height: 2.5rem;

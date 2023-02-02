@@ -59,15 +59,6 @@
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.container2 {
-  min-height: 50vh;
-  padding: 16px 32px 16px 32px;
-  width: 48vw;
-  outline: 1px solid $soft-gray;
-  border-radius: 8px;
-  background-color: white;
-}
-
 .light-gray-text {
   color: $light-gray-blue;
   font-size: 14px;
@@ -197,16 +188,6 @@ small {
   border-radius: 4px;
   font-weight: bold;
 }
-
-.green-filter {
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
-}
-
-.blue-filter {
-  filter: invert(51%) sepia(90%) saturate(2049%) hue-rotate(202deg) brightness(100%) contrast(102%);
-}
-
 .gold-filter {
   filter: invert(81%) sepia(35%) saturate(920%) hue-rotate(343deg) brightness(91%) contrast(90%);
 }

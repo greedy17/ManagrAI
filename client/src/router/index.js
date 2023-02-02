@@ -59,22 +59,10 @@ export default new Router({
       component: () => import('@/views/auth/InviteUsers'),
     },
     {
-      path: '/forms',
-      component: () => import('../views/settings/SlackFormSettings'),
-      beforeEnter: Auth.requireIsAdminAuth,
-      name: 'SlackFormSettings',
-    },
-    {
       path: '/profile-page',
       name: 'ProfilePage',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/user/ProfilePage'),
-    },
-    {
-      path: '/home',
-      component: () => import('../views/Home'),
-      beforeEnter: Auth.requireAuth,
-      name: 'Home',
     },
     {
       path: '/reports',
@@ -82,58 +70,10 @@ export default new Router({
       name: 'Reports',
     },
     {
-      path: '/create-leads',
-      name: 'CreateLeads',
+      path: '/forms',
+      name: 'Forms',
       beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/CreateLeads')
-    },
-    {
-      path: '/update-leads',
-      name: 'UpdateLeads',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/UpdateLeads')
-    },
-    {
-      path: '/update-contacts',
-      name: 'UpdateContacts',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/UpdateContacts')
-    },
-    {
-      path: '/update-accounts',
-      name: 'UpdateAccounts',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/UpdateAccounts')
-    },
-    {
-      path: '/create-accounts',
-      name: 'CreateAccounts',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/CreateAccounts')
-    },
-    {
-      path: '/product-form',
-      name: 'ProductForm',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/ProductForm')
-    },
-    {
-      path: '/create-contacts',
-      name: 'CreateContacts',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/CreateContacts')
-    },
-    {
-      path: '/update-opportunity',
-      name: 'UpdateOpportunity',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/UpdateOpportunity')
-    },
-    {
-      path: '/create-opportunity',
-      name: 'CreateOpportunity',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/CreateOpportunity')
+      component: () => import('@/views/customize/Forms')
     },
     {
       path: '/close-date-passed',
@@ -215,12 +155,6 @@ export default new Router({
       component: () => import('@/views/Pipelines')
     },
     {
-      path: '/forecast',
-      name: 'Forecast',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/Forecast')
-    },
-    {
       path: '/meetings',
       name: 'Meetings',
       beforeEnter: Auth.requireAuth,
@@ -231,57 +165,6 @@ export default new Router({
       name: 'Notes',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/Notes')
-    },
-    {
-      path: '/closed-won',
-      name: 'ClosedWon',
-      beforeEnter: Auth.requireAuth,
-      component: () =>
-        import('../views/settings/alerts/create/templates/ClosedWon'),
-    },
-    {
-      path: '/stage-advanced',
-      name: 'StageAdvanced',
-      beforeEnter: Auth.requireAuth,
-      component: () =>
-        import('../views/settings/alerts/create/templates/StageAdvanced'),
-    },
-    {
-      path: '/moved-to-commit',
-      name: 'MovedToCommit',
-      beforeEnter: Auth.requireAuth,
-      component: () =>
-        import('../views/settings/alerts/create/templates/MovedToCommit'),
-    },
-    {
-      path: '/close-date-pushed',
-      name: 'CloseDatePushed',
-      beforeEnter: Auth.requireAuth,
-      component: () =>
-        import('../views/settings/alerts/create/templates/CloseDatePushed'),
-    },
-    {
-      path: '/map',
-      name: 'CustomizeLandingPage',
-      beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/customize/CustomizeLandingPage'),
-      children: [
-        {
-          path: 'required',
-          name: 'Required',
-          component: () => import('@/views/customize/Required')
-        },
-        {
-          path: 'validation',
-          name: 'ValidationRules',
-          component: () => import('@/views/customize/ValidationRules')
-        },
-        {
-          path: 'custom',
-          name: 'Custom',
-          component: () => import('@/views/customize/Custom')
-        },
-      ]
     },
     {
       path: '/alerts',
@@ -309,14 +192,6 @@ export default new Router({
           component: () =>
             import(
               /* webpackChunkName: "settings" */ '../views/settings/alerts/view/_AlertsTemplateList'
-            ),
-        },
-        {
-          path: '/real-time',
-          name: 'RealTime',
-          component: () =>
-            import(
-              '../views/settings/alerts/create/templates/RealTime'
             ),
         },
       ],

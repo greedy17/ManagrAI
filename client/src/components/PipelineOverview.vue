@@ -51,7 +51,6 @@ export default {
   data() {
     return {
       activeNotis: false,
-      today: null,
       workflows: [],
       users: CollectionManager.create({ ModelClass: User }),
     }
@@ -63,8 +62,8 @@ export default {
     activeWorkflow: {},
   },
   methods: {
-    test(i) {
-      console.log(i)
+    test(log) {
+      console.log('log', log)
     },
     needsAction() {
       let NA = 0
@@ -74,60 +73,6 @@ export default {
 
           NA === 0 ? (this.activeNotis = false) : (this.activeNotis = true)
         }
-      }
-    },
-    async runWorkflows() {
-      let ids = this.templates.list.map((wf) => wf.id)
-      try {
-        for (let i = 0; i < ids.length; i++) {
-          let res = await AlertTemplate.api.runAlertTemplateNow(ids[i], {
-            fromWorkflow: true,
-          })
-          this.workflows.push(res.data.results.length)
-        }
-      } catch (error) {
-        console.log(error)
-      }
-    },
-    owner(usr) {
-      return this.users.list.filter((user) => user.id === usr)[0]
-        ? this.users.list.filter((user) => user.id === usr)[0].fullName
-        : 'Management'
-    },
-    formatDateTimeToTime(input) {
-      let preDate = new Date(input)
-      let newTime = preDate.toLocaleTimeString('en-US')
-      let amPm = newTime.split(' ')[1]
-      let hour = newTime.split(':')[0]
-      let noSeconds = newTime.replace(':', ' ')
-      let noAmPm = newTime.replace(amPm, '')
-      let noAmPmSeconds = noAmPm.replace(':', ' ')
-
-      if (parseInt(hour) < 10) {
-        newTime = '0' + newTime
-        noAmPm = '0' + noAmPm
-        noSeconds = '0' + noSeconds
-        noAmPmSeconds = '0' + noAmPmSeconds
-      }
-      noSeconds = noSeconds.replace(' ', ':')
-      noSeconds = noSeconds.split(':')
-      noSeconds = noSeconds[0] + ':' + noSeconds[1] + amPm
-      return noSeconds
-    },
-    goToWorkflow(id) {
-      this.$router.push({ path: `/pipelines/${id}` })
-    },
-    goToMeetings() {
-      this.$router.push({ name: 'Meetings' })
-    },
-
-    async getMeetingList() {
-      try {
-        const res = await MeetingWorkflows.api.getMeetingList()
-        this.meetings = res.results
-      } catch (e) {
-        console.log(e)
-      } finally {
       }
     },
   },
@@ -220,23 +165,6 @@ export default {
   transition: all 0.3s;
   font-size: 12px;
 }
-.white-button {
-  border: 1px solid $dark-green;
-  padding: 6px 4px 6px 12px;
-  margin-right: 1rem;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  transition: all 0.3s;
-  font-size: 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  img {
-    margin-left: 6px;
-  }
-}
 .button-section {
   display: flex;
   flex-direction: row;
@@ -277,12 +205,5 @@ export default {
       padding: 2px 4px;
     }
   }
-}
-.light-blue {
-  color: $light-gray-blue;
-}
-.filtered {
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
 }
 </style>

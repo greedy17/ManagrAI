@@ -554,7 +554,6 @@ export default {
   name: 'MeetingWorkflow',
   data() {
     return {
-      fields: ['topic', 'participants_count', 'participants.email'],
       resources: ['Opportunity', 'Account', 'Contact', 'Lead'],
       showingAttendees: false,
       dropdownVal: {},
@@ -573,7 +572,6 @@ export default {
       selectedAccount: null,
       selectedOwner: null,
       formData: {},
-      currentVals: [],
       allOpps: null,
     }
   },
@@ -587,11 +585,9 @@ export default {
     resourceRef: {},
     resourceId: {},
     resourceType: {},
-    index: {},
     workflowId: {},
     meetingUpdated: {},
     meetingLoading: {},
-    dropdowns: {},
     contactFields: {},
     accounts: {},
     owners: {},
@@ -610,17 +606,6 @@ export default {
       return lastName
     },
   },
-  // watch: {
-  //   resourceType: 'getObjects',
-  // },
-  // mounted() {
-  //   if (this.resourceId) {
-  //     this.getCurrentVals()
-  //   }
-  // },
-  created() {
-    this.getObjects()
-  },
   created() {
     this.getObjects()
   },
@@ -628,32 +613,29 @@ export default {
     showAttendees() {
       this.showingAttendees = !this.showingAttendees
     },
-    async getAccounts(val) {
-      this.loadingAccounts = true
-      try {
-        const res = await SObjects.api.getSobjectPicklistValues({
-          sobject_id: this.accountSobjectId,
-          value: val,
-          for_meetings: true,
-        })
-        this.allOpps = res
-      } catch (e) {
-        this.$toast('Error gathering Accounts!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loadingAccounts = false
-      }
-    },
+    // async getAccounts(val) {
+    //   this.loadingAccounts = true
+    //   try {
+    //     const res = await SObjects.api.getSobjectPicklistValues({
+    //       sobject_id: this.accountSobjectId,
+    //       value: val,
+    //       for_meetings: true,
+    //     })
+    //     this.allOpps = res
+    //   } catch (e) {
+    //     this.$toast('Error gathering Accounts!', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.loadingAccounts = false
+    //   }
+    // },
     changeMapType(i) {
       this.mapType = i
-    },
-    selectResource() {
-      this.selectingResource = true
     },
     switchResource() {
       this.getObjects()
@@ -692,20 +674,9 @@ export default {
       this.selectingResource = false
       this.getObjects()
     },
-    emitGetNotes(id) {
-      this.$emit('get-notes', id)
-    },
-    async getCurrentVals() {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Contact',
-          formType: 'CREATE',
-          resourceId: this.resourceId,
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    },
+    // emitGetNotes(id) {
+    //   this.$emit('get-notes', id)
+    // },
     setUpdateValues(key, val) {
       if (val) {
         this.formData[key] = val
@@ -734,13 +705,6 @@ export default {
       this.$emit('map-opp', this.workflowId, this.resource, this.mapType)
       this.addingOpp = !this.addingOpp
     },
-    formatUnix(unix) {
-      let date = new Date(unix * 1000)
-      let hours = date.getHours()
-      let minutes = '0' + date.getMinutes()
-      let formattedTime = hours + ':' + minutes.substr(-2)
-      return formattedTime
-    },
     formatDateTimeToTime(input) {
       let preDate = new Date(input)
       let newTime = preDate.toLocaleTimeString('en-US')
@@ -767,10 +731,6 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
-::v-deep .multiselect__content-wrapper {
-  // margin-top: 49vh;
-}
 
 @keyframes tooltips-horz {
   to {
@@ -804,11 +764,6 @@ export default {
     span {
       color: $light-gray-blue;
     }
-  }
-
-  &__scroll {
-    width: 100%;
-    display: none;
   }
 
   &__header {
@@ -1062,15 +1017,6 @@ a {
   cursor: text;
   margin-left: 0.25rem;
 }
-.success {
-  color: $dark-green !important;
-  // background-color: $white-green;
-  // padding: 4px 8px !important;
-  // border-radius: 4px;
-  // max-width: 140px;
-  // display: flex;
-  // align-items: center;
-}
 .red-text {
   color: $coral !important;
   font-weight: 400;
@@ -1085,25 +1031,6 @@ a {
     filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%);
   }
   cursor: pointer;
-}
-.name-cell-edit-note-button-1 {
-  height: 1.1rem;
-  width: 1.1rem;
-  margin: 0 0.2rem;
-  padding: 0.25rem;
-  border-radius: 4px;
-  background-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0.7px solid $gray;
-  cursor: pointer;
-}
-.add-contact {
-  img {
-    height: 0.6rem;
-  }
-  cursor: text;
 }
 .contact-field-section {
   position: absolute;
@@ -1170,26 +1097,6 @@ a {
   padding: 0.5rem 0rem;
   margin: 0;
   cursor: text;
-  &__more {
-    background-color: white;
-    color: $dark-green;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border-top: 1px solid #e8e8e8;
-    width: 100%;
-    padding: 0.75rem 0rem;
-    margin: 0;
-    cursor: pointer;
-
-    img {
-      height: 12px;
-      margin-left: 0.25rem;
-      filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-        brightness(93%) contrast(89%);
-    }
-  }
 }
 .noupdate-field-section {
   position: fixed;
@@ -1329,66 +1236,6 @@ a {
     }
   }
 }
-.table-cell-name {
-  display: table-cell;
-  position: relative;
-  min-width: 18vw;
-  max-width: 24vw;
-  background-color: white;
-  padding: 2vh 3vh;
-  border: none;
-  z-index: 2;
-  left: 0;
-  position: sticky;
-  border-bottom: 2px solid $soft-gray;
-  font-size: 13px;
-}
-.table-row {
-  display: table-row;
-  left: 0;
-}
-.table-cell-small {
-  display: table-cell;
-  position: relative;
-  min-width: 3vw;
-  background-color: $off-white;
-  padding: 2vh;
-  border: none;
-  border-bottom: 3px solid $soft-gray;
-  font-size: 13px;
-}
-.table-cell {
-  display: table-cell;
-  position: relative;
-  min-width: 3vw;
-  background-color: $off-white;
-  padding: 2vh;
-  border: none;
-  border-bottom: 3px solid $soft-gray;
-  font-size: 13px;
-}
-.left-green {
-  border-left: 2px solid $dark-green !important;
-}
-.left-red {
-  border-left: 2px solid $coral !important;
-}
-.wt-bg {
-  background-color: white;
-}
-
-.sticky-header {
-  left: 0;
-  top: 0;
-  position: sticky;
-}
-
-.table-cell:hover,
-.table-cell-small:hover {
-  cursor: text;
-  background-color: white;
-}
-
 .img-button {
   background-color: transparent;
   padding: 4px 6px;

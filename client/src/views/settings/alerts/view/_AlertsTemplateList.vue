@@ -389,35 +389,35 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
  *
  */
 import { CollectionManager } from '@thinknimble/tn-models'
-import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import Onboarder from '@/views/settings/Onboarder'
+import SlackOAuth from '@/services/slack'
+// import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
 
-import AlertTemplate, { AlertGroup } from '@/services/alerts/'
+import AlertTemplate from '@/services/alerts/'
 import allConfigs from '../configs'
 
 export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    Onboarder,
+    // Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
   data() {
     return {
-      templatedAlerts: [
-        'Close Date Passed',
-        '90 Day Pipeline',
-        'Upcoming Next Step',
-        'Requird Field Empty',
-        'Large Opportunities',
-        'Team Pipeline',
-        'Deal Review',
-        'Close Date Approaching',
-      ],
+      // templatedAlerts: [
+      //   'Close Date Passed',
+      //   '90 Day Pipeline',
+      //   'Upcoming Next Step',
+      //   'Requird Field Empty',
+      //   'Large Opportunities',
+      //   'Team Pipeline',
+      //   'Deal Review',
+      //   'Close Date Approaching',
+      // ],
       meetingListOpen: false,
       activeWorkflow: null,
       allConfigs,
@@ -425,23 +425,17 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
-      users: CollectionManager.create({ ModelClass: User }),
       templateTitles: [],
       deleteOpen: false,
       workflowListOpen: false,
       deleteId: '',
       deleteTitle: '',
-      currentAlert: {},
       editing: true,
-      isHiding: false,
       // userConfigForm: new UserConfigForm({}),
-      configName: '',
-      configArray: [],
       currentZoomChannel: '',
       currentRecapChannel: '',
       clicked: [],
       hsStages: {},
-      pageLoaded: false,
     }
   },
   async created() {
@@ -559,41 +553,15 @@ export default {
           console.log(e)
         })
     },
-    alertsCount(num) {
-      if (this.zoomChannel && !this.hasRecapChannel) {
-        return num + 1
-      } else if (this.hasRecapChannel && !this.zoomChannel) {
-        return num + 1
-      } else if (this.hasRecapChannel && this.zoomChannel) {
-        return num + 2
-      } else {
-        return num
-      }
-    },
     goToLogZoom() {
       this.$router.push({ name: 'LogZoom' })
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
     },
-    goToConnect() {
-      this.$router.push({ name: 'Integrations' })
-    },
-    makeAlertCurrent(val) {
-      this.currentAlert = val
-      this.editing = !this.editing
-    },
-    deleteClosed(val) {
-      this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
-      this.deleteId = val
-    },
     deleteClose() {
       this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
     },
-    closeEdit() {
-      this.editing = !this.editing
-    },
-
     async onDeleteTemplate(id) {
       this.deletedTitle(id)
       this.deleteOpen = !this.deleteOpen
@@ -702,9 +670,9 @@ export default {
     meetings() {
       return this.$store.state.meetings
     },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
-    },
+    // isOnboarding() {
+    //   return this.$store.state.user.onboarding
+    // },
     leaderTemplatesFirst() {
       const originalList = this.templates.list
       const leaders = []
@@ -755,11 +723,6 @@ export default {
     transform: translateY(-6px);
   }
 }
-
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
-
 @keyframes dotFlashing {
   0% {
     background-color: $dark-green;
@@ -769,45 +732,10 @@ export default {
     background-color: $lighter-green;
   }
 }
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 $dark-green;
-  }
-
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-  }
-
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-@keyframes pulseYellow {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 $yellow;
-  }
-
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-  }
-
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-
 .tooltip-left {
   position: relative;
   display: inline-block;
 }
-
 /* Tooltip text */
 .tooltip-left .tooltiptext-left {
   visibility: hidden;
@@ -825,14 +753,9 @@ export default {
   top: 1px;
   right: 105%;
 }
-
 /* Show the tooltip text when you mouse over the tooltip container */
 .tooltip-left:hover .tooltiptext-left {
   visibility: visible;
-}
-
-.header {
-  outline: 1px solid red;
 }
 .img-border {
   display: flex;
@@ -896,7 +819,6 @@ export default {
     }
   }
 }
-
 .card-text {
   font-size: 11px;
   color: $light-gray-blue;
@@ -918,28 +840,6 @@ export default {
     filter: grayscale(99%);
   }
 }
-.pulse {
-  box-shadow: 0 0 0 0 $dark-green;
-  transform: scale(1);
-  animation: pulse 1.25s infinite;
-}
-.yellow_pulse {
-  box-shadow: 0 0 0 0 $yellow;
-  transform: scale(1);
-  animation: pulseYellow 1.25s infinite;
-}
-
-#yellow {
-  padding: 4px 8px;
-  margin-left: 16px;
-  margin-top: 4px;
-  border-radius: 6px;
-  background-color: $light-yellow;
-  img {
-    filter: brightness(0%) invert(83%) sepia(28%) saturate(7222%) hue-rotate(6deg) brightness(103%)
-      contrast(104%);
-  }
-}
 #gray {
   padding: 4px 8px;
   margin-left: 16px;
@@ -950,18 +850,6 @@ export default {
     filter: brightness(0%) invert(63%) sepia(13%) saturate(553%) hue-rotate(200deg) brightness(95%)
       contrast(86%);
   }
-}
-
-.yellow {
-  color: $yellow !important;
-  background-color: white;
-}
-.red {
-  background-color: $light-red;
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
-  color: $coral;
-  padding: 4px 6px;
 }
 h2 {
   font-size: 1.4rem;
@@ -999,10 +887,6 @@ button:disabled {
 .tooltip:hover .tooltiptext {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
-}
-.titles {
-  color: $base-gray;
-  font-weight: bold;
 }
 .workflow__modal {
   background-color: $white;
@@ -1101,65 +985,6 @@ button:disabled {
     padding: 8px 0px;
   }
 }
-.edit__modal {
-  background-color: white;
-  border-radius: 0.3rem;
-  color: $base-gray;
-  width: 88vw;
-  height: 92vh;
-  margin-top: -16px;
-  overflow: scroll;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: column;
-  padding: none;
-
-  &__header {
-    background-color: red;
-    padding: 0px 8px;
-    background-color: white;
-    width: 100%;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__button {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    padding: 0px 8px;
-    width: 100%;
-    border-radius: 4px;
-    background: white;
-
-    p {
-      color: $coral;
-      background-color: $light-coral;
-      border-radius: 4px;
-      padding: 4px 6px;
-      font-size: 13px;
-      margin-left: -4px;
-    }
-
-    button {
-      background-color: $dark-green;
-      border: none;
-      border-radius: 0.25rem;
-      color: white;
-      cursor: pointer;
-      padding: 8px 12px;
-    }
-  }
-}
 .delete {
   background-color: white !important;
   border: 1px solid $coral !important;
@@ -1169,24 +994,6 @@ button:disabled {
   padding: 8px 16px;
   margin-right: 8px;
 }
-
-// .edit__modal::-webkit-scrollbar {
-//   width: 2px; /* Mostly for vertical scrollbars */
-//   height: 0px; /* Mostly for horizontal scrollbars */
-// }
-// .edit__modal::-webkit-scrollbar-thumb {
-//   background-color: $coral;
-//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// .edit__modal::-webkit-scrollbar-track {
-//   box-shadow: inset 2px 2px 4px 0 $soft-gray;
-//   border-radius: 0.3rem;
-// }
-// .edit__modal::-webkit-scrollbar-track-piece {
-//   margin-top: 0.25rem;
-// }
-
 .no__button {
   background-color: white;
   border: 1px solid $soft-gray;
@@ -1196,22 +1003,6 @@ button:disabled {
   padding: 8px 16px;
   margin-right: 8px;
 }
-.yes__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 2rem;
-  border-radius: 0.3rem;
-  line-height: 1.14;
-  text-indent: none;
-  border-style: none;
-  letter-spacing: 0.03rem;
-  color: white;
-  background-color: $dark-green;
-  outline: 1px solid $dark-green;
-  cursor: pointer;
-  font-size: 16px;
-}
 .alerts-template-list {
   margin: 16px 0px;
   padding-left: 24px;
@@ -1220,7 +1011,6 @@ button:disabled {
   flex-direction: column;
   align-items: flex-start;
 }
-
 .alert_cards {
   display: flex;
   flex-direction: row;
@@ -1241,97 +1031,74 @@ button:disabled {
   box-shadow: 1px 2px 6px $very-light-gray;
   border: 0.5px solid $soft-gray;
 }
-.yellow-shadow {
-  border: 1px solid $soft-gray;
-}
-.gray-shadow {
-  // box-shadow: 2px 2px 6px $very-light-gray;
-  border: 1px solid $soft-gray;
-}
-.gray {
-  color: $light-gray-blue !important;
-}
-.added-collection {
-  background-color: white;
-  border-radius: 9px;
-  // border: 1px solid #e8e8e8;
-  width: 20.5vw;
-  height: 175px;
-  margin-bottom: 1rem;
-  margin-right: 1rem;
-  padding-bottom: 0;
-  transition: all 0.25s;
-  font-size: 12px;
-  &__header {
-    max-height: 50px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-top: 8px;
-    span {
-      margin-left: auto;
-      margin-right: 16px;
-      font-size: 14px;
-      color: $light-gray-blue !important;
-    }
-    div {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: flex-start;
-      margin-left: 8px;
-      p,
-      h4 {
-        margin: 0;
-        padding: 0;
-      }
-      p {
-        font-size: 10px;
-        color: $light-gray-blue;
-      }
-    }
-  }
-  &__body {
-    display: flex;
-    align-items: flex-start;
-    margin-left: 16px;
-    padding-right: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-    letter-spacing: 0.75px;
-  }
-  &__footer {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    height: 50px;
-    margin-left: 16px;
-  }
-}
+// .yellow-shadow {
+//   border: 1px solid $soft-gray;
+// }
+// .gray {
+//   color: $light-gray-blue !important;
+// }
+// .added-collection {
+//   background-color: white;
+//   border-radius: 9px;
+//   // border: 1px solid #e8e8e8;
+//   width: 20.5vw;
+//   height: 175px;
+//   margin-bottom: 1rem;
+//   margin-right: 1rem;
+//   padding-bottom: 0;
+//   transition: all 0.25s;
+//   font-size: 12px;
+//   &__header {
+//     max-height: 50px;
+//     display: flex;
+//     flex-direction: row;
+//     align-items: center;
+//     margin-top: 8px;
+//     span {
+//       margin-left: auto;
+//       margin-right: 16px;
+//       font-size: 14px;
+//       color: $light-gray-blue !important;
+//     }
+//     div {
+//       display: flex;
+//       flex-direction: column;
+//       align-items: flex-start;
+//       justify-content: flex-start;
+//       margin-left: 8px;
+//       p,
+//       h4 {
+//         margin: 0;
+//         padding: 0;
+//       }
+//       p {
+//         font-size: 10px;
+//         color: $light-gray-blue;
+//       }
+//     }
+//   }
+//   &__body {
+//     display: flex;
+//     align-items: flex-start;
+//     margin-left: 16px;
+//     padding-right: 8px;
+//     margin-top: 8px;
+//     font-size: 12px;
+//     letter-spacing: 0.75px;
+//   }
+//   &__footer {
+//     display: flex;
+//     flex-direction: row;
+//     align-items: center;
+//     justify-content: space-between;
+//     height: 50px;
+//     margin-left: 16px;
+//   }
+// }
 a {
   text-decoration: none;
   color: white;
   cursor: pointer;
-}
-.green-bg {
-  padding: 4px 8px;
-  margin-left: 16px;
-  margin-top: 4px;
-  border-radius: 6px;
-  background-color: $white-green;
-}
-.blue-bg {
-  padding: 4px 8px;
-  margin-left: 16px;
-  margin-top: 4px;
-  border-radius: 6px;
-  background-color: $very-light-blue;
-
-  img {
-    filter: brightness(0%) invert(85%) sepia(36%) saturate(7492%) hue-rotate(188deg)
-      brightness(113%) contrast(97%);
-  }
 }
 .row__ {
   display: flex;
@@ -1341,21 +1108,6 @@ a {
   margin: 0 0.5rem 0 0;
   color: $base-gray;
   font-weight: bold;
-}
-
-.row__two {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 100%;
-  img {
-    height: 0.8rem;
-    cursor: pointer;
-    filter: invert(20%);
-  }
-}
-.invert {
-  filter: invert(20%);
 }
 .green_button:disabled {
   background-color: $soft-gray;
@@ -1382,28 +1134,6 @@ a {
   cursor: pointer;
   text-align: center;
 }
-.yellow_button {
-  color: $yellow;
-  opacity: 0.85;
-  background-color: white;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
-  border: 1px solid $yellow;
-  cursor: pointer;
-  text-align: center;
-}
-.yellow_button_full {
-  color: white;
-  opacity: 0.85;
-  background-color: $yellow;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
-  border: 1px solid $yellow;
-  cursor: pointer;
-  text-align: center;
-}
 // .white_button {
 //   color: $base-gray;
 //   background-color: white;
@@ -1416,42 +1146,12 @@ a {
 //   cursor: pointer;
 //   text-align: center;
 // }
-.gray_button {
-  color: white;
-  background-color: $light-gray-blue;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-}
-.green {
-  color: $dark-green !important;
-}
-.blue {
-  color: rgb(118, 191, 252) !important;
-}
-.center__ {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 82vw;
-}
 .center-loader {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   height: 60vh;
   width: 100%;
-}
-.loading-title {
-  display: none;
-}
-.link {
-  color: $dark-green;
-  border-bottom: 1px solid $dark-green;
-  cursor: pointer;
 }
 .small-text {
   font-size: 10px;

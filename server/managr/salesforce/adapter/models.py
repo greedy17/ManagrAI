@@ -486,25 +486,23 @@ class SalesforceAuthAccountAdapter:
                 )
 
                 res = self._handle_response(res)
-
                 if res.get("totalSize", 0) > 0:
-                    record_type_id = res.get("Id")
+                    record_type_id = res.get("records")[0].get("Id")
                 else:
-                    record_type_id = self.default_record_ids.get(resource, None)
+                    record_type_id = self.default_record_ids.get(resource)
                     if (
                         not record_type_id
                         and self.default_record_ids
                         and len(self.default_record_ids.items())
                     ):
                         items = list(self.default_record_ids.items())
-                        record_type_id = items[0][1] if len(items) else None
+                        record_type_id = items[0][1] if len(items) else self.default_record_id
                         if not record_type_id:
                             return logger.exception(
                                 f"Unable to retreive record id for {url} from field {field_name} for resource {resource}"
                             )
 
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-
         url = f"{url}/{field_name}" if field_name else url
         with Client as client:
             res = client.get(
@@ -632,7 +630,7 @@ class SalesforceAuthAccountAdapter:
                 f"AND ({extra_field.replace(':','=')})"
                 for extra_field in kwargs.get("add_fields").split(",")
             ]
-            if len(kwargs.get("add_fields", []))
+            if kwargs.get("add_fields", None)
             else []
         )
         # always retreive id

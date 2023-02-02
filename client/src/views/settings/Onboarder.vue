@@ -245,11 +245,9 @@
 <script>
 import Modal from '@/components/InviteModal'
 import SlackOAuth from '@/services/slack'
-import { CollectionManager } from '@thinknimble/tn-models'
 import UpdateOppForm from '@/views/settings/UpdateOppForm'
 import CreateContactForm from '@/views/settings/CreateContactForm'
 import LogZoom from '@/views/settings/OnboardingLogMeeting'
-import { SObjectField } from '@/services/salesforce'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
@@ -268,7 +266,6 @@ export default {
   data() {
     return {
       selectedIntegration: null,
-      allForms: null,
       formModalOpen: false,
       workflowModalOpen: false,
       updateOpportunityFields: null,
@@ -276,19 +273,9 @@ export default {
       resource: 'Opportunity',
       generatingToken: false,
       type: 'UPDATE',
-      authLink: null,
-      formFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 500 },
-        filters: {
-          salesforceObject: this.resource,
-        },
-      }),
     }
   },
   async created() {
-    this.formFields.refresh()
-
     if (this.$route.query.code) {
       this.generatingToken = true
       this.selectedIntegration = this.$route.query.state
@@ -421,9 +408,6 @@ export default {
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
-    hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
-    },
     orgHasSlackIntegration() {
       return !!this.$store.state.user.organizationRef.slackIntegration
     },
@@ -453,9 +437,6 @@ export default {
     user() {
       return this.$store.state.user
     },
-    userLevel() {
-      return this.$store.state.user.userLevel
-    },
     hasZoomChannel() {
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.zoomChannel
@@ -468,32 +449,6 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
-// .secondary-button {
-//   box-shadow: none;
-//   font-size: 12px;
-// }
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 $dark-green;
-  }
-
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-  }
-
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-.pulse {
-  box-shadow: 0 0 0 0 $dark-green;
-  transform: scale(1);
-  animation: pulse 1.25s infinite;
-}
 .secondary-button {
   box-shadow: none;
   font-size: 13px;
@@ -510,9 +465,9 @@ article {
   color: $base-gray;
   opacity: 0.9;
 }
-.gray-blue {
-  color: $light-gray-blue;
-}
+// .gray-blue {
+//   color: $light-gray-blue;
+// }
 .header {
   letter-spacing: 0.75px;
   color: $base-gray;
@@ -552,12 +507,6 @@ small {
     // color: $light-gray-blue;
   }
 }
-.filtered-green {
-  filter: invert(55%) sepia(75%) saturate(324%) hue-rotate(101deg) brightness(97%) contrast(91%);
-}
-.hide {
-  display: none;
-}
 .step1 {
   background-color: $coral;
   border-radius: 100%;
@@ -571,7 +520,6 @@ small {
   align-items: center;
   justify-content: center;
 }
-
 .card {
   background-color: $white;
   padding: 16px 24px;
@@ -615,10 +563,6 @@ small {
     }
   }
 }
-.primary-button {
-  box-shadow: none;
-  font-size: 13px;
-}
 .form-modal {
   border-radius: 8px;
   padding: 4px 16px;
@@ -655,9 +599,6 @@ small {
 }
 .green {
   color: $dark-green !important;
-}
-.red {
-  color: $coral !important;
 }
 .green-border {
   border-left: 1px solid $dark-green;

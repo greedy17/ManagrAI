@@ -882,14 +882,11 @@ export default {
   data() {
     return {
       addingTemplate: false,
-      accountSelected: this.selectedAccount,
-      selectedPricebookCopy: this.selectedPricebook,
       booleans: ['true', 'false'],
       selectedPriceBook: null,
     }
   },
   methods: {
-    test(log) {},
     goToProfile() {
       this.$emit('go-to-profile')
     },
@@ -931,9 +928,6 @@ export default {
     },
     setTemplate(arg1, arg2, arg3) {
       this.$emit('set-template', arg1, arg2, arg3)
-    },
-    updateResource() {
-      this.$emit('update-resource')
     },
     onMakeMeetingUpdate() {
       this.$emit('update-meeting')
@@ -1115,13 +1109,6 @@ export default {
     filter: invert(99%);
   }
 }
-.logo {
-  height: 24px;
-  margin-left: 0.5rem;
-  margin-right: 0.25rem;
-  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-    brightness(93%) contrast(89%);
-}
 .divArea {
   -moz-appearance: textfield-multiline;
   -webkit-appearance: textarea;
@@ -1168,7 +1155,6 @@ export default {
     opacity: 0.6;
   }
 }
-
 .note-templates2 {
   display: flex;
   flex-direction: row;
@@ -1272,24 +1258,6 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-.product-text {
-  display: flex;
-  align-items: center;
-  color: $dark-green;
-  border-radius: 4px;
-  padding: 4px 6px;
-  background-color: $white-green;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  font-weight: bold;
-  cursor: pointer;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 16px;
-    margin-left: 4px;
-  }
 }
 .select-btn1 {
   border: 0.7px solid $soft-gray;
