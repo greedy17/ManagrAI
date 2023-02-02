@@ -1106,8 +1106,6 @@ export default {
         fieldParam['updateable'] = true
       }
 
-      console.log({ ...fieldParam }, this.formFields)
-
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 500 },
