@@ -505,14 +505,19 @@ def meeting_review_modal_block_set(context):
         except Exception as e:
             logger.exception(f"Failed to retrieve current products due to <{e}>")
     blocks = []
-    resource = r"Task" if user.crm == "SALESFORCE" else "Meeting"
+    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
     field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
     type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
-    note_options = user.crm_account.get_individual_picklist_values(resource, field).values
+    note_options = user.crm_account.get_individual_picklist_values(resource, field)
+    note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
     note_options_list = [
         block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
     ]
-    blocks.append(block_builders.static_select(type_text, options=note_options_list))
+    blocks.append(
+        block_builders.static_select(
+            type_text, options=note_options_list, block_id="managr_task_type"
+        )
+    )
     # additional validations
     if len(slack_form.saved_data):
         blocks.extend(slack_form.generate_form(slack_form.saved_data))
@@ -668,10 +673,19 @@ def create_modal_block_set(context, *args, **kwargs):
         )
     if template:
         blocks = []
-        action_query = f"{slack_const.GET_EXTERNAL_PICKLIST_OPTIONS}?u={str(user.id)}&resource={'Task' if user.crm == 'SALESFORCE' else 'Meeting'}&field={'Type' if user.crm == 'SALESFORCE' else 'hs_meeting_outcome'}"
         type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+        resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
+        field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
+        type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
         blocks.append(
-            block_builders.external_select(type_text, action_query, block_id="managr_task_type")
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
         )
         workflow.forms.filter(
             template__form_type__in=[
