@@ -238,7 +238,6 @@ def process_get_external_picklist_options(payload, context):
         return {"options": []}
     # if value and len(value):
     #    options = list(filter(lambda opt: value in opt["value"].lower(), options))
-
     if len(options) > 30:
         return {"options": options[:30]}
     else:
