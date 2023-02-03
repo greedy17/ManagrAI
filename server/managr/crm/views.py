@@ -29,15 +29,27 @@ from managr.crm.exceptions import (
     SFNotFoundError,
     InvalidRefreshToken,
 )
-from managr.salesforce.background import _send_instant_alert, _process_pipeline_sf_sync
+from managr.salesforce.background import (
+    _send_instant_alert,
+    _process_pipeline_sf_sync,
+    emit_add_update_to_sf,
+)
 from managr.salesforce.models import SFResourceSync
 from managr.hubspot.models import HSResourceSync
 from .utils import create_form_instance, process_text_field_format
 from managr.hubspot.tasks import _process_pipeline_hs_sync
 from managr.slack.models import OrgCustomSlackFormInstance
+from managr.hubspot.tasks import emit_add_update_to_hs
 
 # Create your views here.
 logger = logging.getLogger("managr")
+
+
+def ADD_UPDATE_TO_CRM_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_add_update_to_sf
+    else:
+        return emit_add_update_to_hs
 
 
 class ObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -270,7 +282,7 @@ class CRMObjectViewSet(
                     break
             if data["success"]:
                 if all_form_data.get("meeting_comments", None) is not None:
-                    (str(main_form.id))
+                    ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
                 ):
