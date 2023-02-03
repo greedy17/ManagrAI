@@ -99,7 +99,10 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = adapters[user.crm][resource_type].create(data, token, object_fields)
+
+        res = adapters[user.crm][resource_type].create(
+            data, token, object_fields, user_id, user.crm_account.instance_url
+        )
         serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
         serializer.is_valid()
         serializer.save()
@@ -340,7 +343,9 @@ class BaseContact(TimeStampModel, IntegrationModel):
         object_fields = user.object_fields.filter(crm_object=resource_type).values_list(
             "api_name", flat=True
         )
-        res = adapters[user.crm][resource_type].create(data, token, object_fields)
+        res = adapters[user.crm][resource_type].create(
+            data, token, object_fields, user_id, user.crm_account.instance_url
+        )
         serializer = model_routes(user.crm)[resource_type]["serializer"](data=res.as_dict)
         serializer.is_valid()
         serializer.save()
