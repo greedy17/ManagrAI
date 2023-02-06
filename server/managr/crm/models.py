@@ -410,12 +410,19 @@ class ObjectField(TimeStampModel, IntegrationModel):
         """helper getter to retrieve related name display keys"""
         if self.reference and len(self.reference_to_infos):
             # some fields are referenced to completely different objects (as in ReportsTo)
-            items = dict(
-                *filter(
-                    lambda details: details["api_name"] == self.relationship_name,
-                    self.reference_to_infos,
-                ),
-            )
+            if self.relationship_name == "Owner" and len(self.reference_to_infos) > 1:
+                items = dict(
+                    *filter(
+                        lambda details: details["api_name"] == "User", self.reference_to_infos,
+                    ),
+                )
+            else:
+                items = dict(
+                    *filter(
+                        lambda details: details["api_name"] == self.relationship_name,
+                        self.reference_to_infos,
+                    ),
+                )
             if not len(items):
 
                 # arbitrarily chosing first option avaliable

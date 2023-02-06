@@ -652,9 +652,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update(data)
             attempts = 1
-            update_forms.update(
-                is_submitted=True, submission_date=timezone.now(), update_source="meeting"
-            )
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
             if len(workflow.failed_task_description):
                 workflow.failed_task_description = []
                 workflow.save()
@@ -749,7 +747,6 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 create_forms.update(
                     is_submitted=True,
                     submission_date=timezone.now(),
-                    update_source="meeting",
                     resource_id=serializer.instance.id,
                 )
                 workflow.resource_id = serializer.instance.id
@@ -1079,7 +1076,7 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
             emit_add_update_to_sf(str(main_form.id))
         if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
-        forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
+        forms.update(is_submitted=True, submission_date=timezone.now())
         value_update = main_form.resource_object.update_database_values(all_form_data)
         # from_workflow = data.get("from_workflow")
         # title = data.get("workflow_title", None)
@@ -1284,7 +1281,6 @@ def _process_create_new_contacts(workflow_id, *args):
                 )
                 attempts = 1
                 form.is_submitted = True
-                form.update_source = "meeting"
                 form.submission_date = timezone.now()
                 form.save()
                 break

@@ -189,7 +189,10 @@ def _process_send_paginated_inline_alerts(payload, context):
     for alert_instance in instances.get("results", []):
         if not alert_instance.form_instance.exists():
             form = OrgCustomSlackFormInstance.objects.create(
-                user=user, template=template, resource_id=alert_instance.resource_id
+                user=user,
+                template=template,
+                resource_id=alert_instance.resource_id,
+                update_source="slack-inline",
             )
             form.alert_instance_id = alert_instance
             form.save()
