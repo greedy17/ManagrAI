@@ -48,6 +48,7 @@ from managr.salesforce.background import (
 )
 from managr.salesforce.utils import process_text_field_format
 from managr.slack.helpers.block_sets import get_block_set
+from managr.slack.background import emit_process_submit_resource_data
 from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -350,13 +351,8 @@ def process_add_products_form(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["f"])
 def process_submit_resource_data(payload, context):
-    has_error = False
     user = User.objects.get(id=context.get("u"))
     slack_access_token = user.organization.slack_integration.access_token
-    sending_blocks = get_block_set("loading", {"message": ":rocket: Sending your data to the CRM"})
-    message_ref = context.get("message_ref", None)
-    if message_ref:
-        channel, ts = message_ref.split("|")
     try:
         loading_data = {
             "trigger_id": payload["trigger_id"],
@@ -374,192 +370,9 @@ def process_submit_resource_data(payload, context):
             loading_data,
             access_token=slack_access_token,
         )
-        if message_ref:
-            sending_res = slack_requests.update_channel_message(
-                channel, ts, slack_access_token, block_set=sending_blocks,
-            )
-        else:
-            sending_res = slack_requests.send_channel_message(
-                user.slack_integration.channel, slack_access_token, block_set=sending_blocks,
-            )
     except Exception as e:
         logger.exception(f"Failed to send updating message to {user.email} due to {e}")
-    state = swap_public_fields(payload["view"]["state"]["values"])
-    current_form_ids = context.get("f").split(",")
-    current_forms = user.custom_slack_form_instances.filter(id__in=current_form_ids)
-    main_form = current_forms.filter(template__form_type__in=["UPDATE", "CREATE"]).first()
-    stage_forms = current_forms.filter(template__form_type="STAGE_GATING")
-    stage_form_data_collector = {}
-    for form in stage_forms:
-        form.save_form(state)
-        stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-    if not len(stage_forms):
-        main_form.save_form(state)
-    all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-    formatted_saved_data = process_text_field_format(
-        str(user.id), main_form.template.resource, all_form_data
-    )
-    attempts = 1
-    while True:
-        crm = user.crm_account
-        try:
-            if main_form.template.form_type == "UPDATE":
-                main_form.resource_object.update(all_form_data)
-                resource = main_form.resource_object
-                main_form.resource_object.update_database_values(all_form_data)
-
-            else:
-                create_route = model_routes if user.crm == "SALESFORCE" else hs_routes
-                resource_func = background_create_resource(user.crm)
-                resource = resource_func.now(current_form_ids)
-                new_resource = create_route[main_form.template.resource]["model"].objects.get(
-                    integration_id=resource.integration_id
-                )
-
-                main_form.resource_id = str(new_resource.id)
-                main_form.save()
-            current_forms.update(
-                is_submitted=True, update_source="command", submission_date=timezone.now()
-            )
-            break
-        except FieldValidationError as e:
-            has_error = True
-            blocks = get_block_set(
-                "error_modal",
-                {
-                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Validations set up by your org\n *Error* : _{e}_"
-                },
-            )
-            break
-        except RequiredFieldError as e:
-            has_error = True
-            blocks = get_block_set(
-                "error_modal",
-                {
-                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is based on Required fields from Salesforce\n *Error* : _{e}_"
-                },
-            )
-            break
-        except UnhandledCRMError as e:
-            has_error = True
-            blocks = get_block_set(
-                "error_modal",
-                {
-                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error is new to us please see below\n *Error* : _{e}_"
-                },
-            )
-            break
-
-        except SFNotFoundError as e:
-            has_error = True
-            blocks = get_block_set(
-                "error_modal",
-                {
-                    "message": f":no_entry: Uh-Ohhh it looks like we found an error, this error one of the resources does not exist\n *Error* : _{e}_"
-                },
-            )
-            break
-
-        except TokenExpired as e:
-            if attempts >= 5:
-                logger.exception(
-                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
-                )
-                has_error = True
-                blocks = get_block_set(
-                    "error_modal",
-                    {
-                        "message": f":no_entry: Uh-Ohhh it looks like we've had an issue with your token\n *Error* : _{e}_"
-                    },
-                )
-                break
-            else:
-                crm.regenerate_token()
-                attempts += 1
-
-        except ConnectionResetError:
-            if attempts >= 5:
-                logger.exception(
-                    f"Failed to Update data for user {str(user.id)} after {attempts} tries because of connection error"
-                )
-                has_error = True
-                blocks = get_block_set(
-                    "error_modal",
-                    {
-                        "message": f":no_entry: Uh-Ohhh we had an error connecting to your salesforce instance please try again"
-                    },
-                )
-                break
-            else:
-                time.sleep(2)
-                attempts += 1
-        except Exception as e:
-            logger.exception(
-                f"Failed to Update data for user {str(user.id)} after {attempts} tries because of {e}"
-            )
-            has_error = True
-            blocks = get_block_set(
-                "error_modal",
-                {"message": f":no_entry: Uh-Ohhh we had an error updating your Salesforce {e}"},
-            )
-            break
-    if has_error:
-        form_id = str(main_form.id) if not len(stage_forms) else str(stage_forms.first().id)
-        blocks = [
-            *blocks,
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "return to form",
-                        form_id,
-                        style="primary",
-                        action_id=action_with_params(
-                            slack_const.RETURN_TO_FORM_BUTTON,
-                            [
-                                f"f={context.get('f')}",
-                                f"u={str(user.id)}",
-                                f"resource_type={main_form.template.resource}",
-                            ],
-                        ),
-                    )
-                ]
-            ),
-        ]
-        try:
-            slack_requests.update_channel_message(
-                sending_res["channel"],
-                sending_res["ts"],
-                block_set=blocks,
-                access_token=slack_access_token,
-            )
-        except Exception as e:
-            logger.exception(
-                f"Failed To Update via command for user  {str(user.id)} email {user.email} {e}"
-            )
-        return {"response_action": "clear"}
-    # update the channel message to clear it
-    if main_form.template.form_type == "CREATE":
-        message = f":white_check_mark: Successfully created *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
-    else:
-        message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
-    if (
-        all_form_data.get("meeting_comments") is not None
-        and all_form_data.get("meeting_type") is not None
-    ):
-        ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
-    try:
-        slack_requests.update_channel_message(
-            sending_res["channel"],
-            sending_res["ts"],
-            block_set=get_block_set(
-                "success_modal", {"message": message, "u": user.id, "form_ids": context.get("f")},
-            ),
-            access_token=slack_access_token,
-        )
-    except Exception as e:
-        logger.exception(
-            f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
-        )
+    emit_process_submit_resource_data(payload, context)
     return {"response_action": "clear"}
 
 
