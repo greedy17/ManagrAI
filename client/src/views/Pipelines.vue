@@ -5586,7 +5586,11 @@ export default {
       this.objectName = objectName
       this.resourceName = resourceName
       this.baseResourceType = baseResourceType
-      this.showList = !this.showList
+      this.showList = !this.showPopularList
+      this.objectFields.filters = {...this.objectFields.filters, crmObject: this.crmObject}
+      this.objectFields.refresh()
+      this.filterText = ''
+      this.workflowFilterText = ''
       this.getAllForms()
       this.closeFilterSelection()
     },
