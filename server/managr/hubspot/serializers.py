@@ -28,6 +28,7 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 
 class HubspotAuthAccountSerializer(serializers.ModelSerializer):
+    extra_pipeline_fields_ref = serializers.SerializerMethodField("get_extra_pipeline_fields")
     class Meta:
         model = HubspotAuthAccount
         fields = (
@@ -38,9 +39,15 @@ class HubspotAuthAccountSerializer(serializers.ModelSerializer):
             "hubspot_id",
             "hobjects",
             "custom_objects",
-            "extra_pipeline_fields",
+            "extra_pipeline_fields_ref",
         )
 
+    def get_extra_pipeline_fields(self,instance):
+        extra_fields_obj = {}
+        for field in instance.extra_pipeline_fields:
+            field_split = field.split(",")
+            extra_fields_obj[field_split[0]] = field_split[1:]
+        return extra_fields_obj
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:

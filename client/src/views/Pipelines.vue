@@ -2677,6 +2677,7 @@
             :extraPipelineFields="extraPipelineFields"
             :fieldOpts="objectFields.list"
             :isContactOrLead="resourceName === 'Contact' || resourceName === 'Lead'"
+            :baseResourceType="baseResourceType"
           />
           <PipelineTableRow
             :ref="selectedWorkflow ? 'workflowTableChild' : 'pipelineTableChild'"
@@ -3257,9 +3258,9 @@ export default {
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef
-        ? this.$store.state.user.salesforceAccountRef.extraPipelineFields
-        : this.$store.state.user.hubspotAccountRef.extraPipelineFields
+      const accountRef = this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef : this.$store.state.user.hubspotAccountRef
+      const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
+      return extraFields && extraFields.length ? extraFields : []
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts

@@ -335,6 +335,7 @@ export default {
       try {
         const res = await SObjects.api.addExtraFields({
           field_ids: this.extraFields,
+          resource_type: this.baseResourceType,
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
@@ -360,6 +361,7 @@ export default {
     isContactOrLead: {
       type: Boolean
     },
+    baseResourceType: {}
   },
 }
 </script>
