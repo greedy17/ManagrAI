@@ -681,7 +681,7 @@ def create_modal_block_set(context, *args, **kwargs):
         note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
         note_options_list = [
             block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
-        ]
+        ][:25]
         blocks.append(
             block_builders.static_select(
                 type_text, options=note_options_list, block_id="managr_task_type"
