@@ -49,7 +49,7 @@
           <PipelineNameSection
             v-else
             :name="
-              (resourceName === 'Opportunity' || resourceName === 'Account' || resourceName === 'Company')
+              (resourceName === 'Opportunity' || resourceName === 'Account')
                 ? opp['secondary_data']['Name']
                 : resourceName === 'Company'
                 ? opp['secondary_data']['name']
