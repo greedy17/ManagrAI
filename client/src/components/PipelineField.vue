@@ -90,12 +90,9 @@ export default {
     getReferenceName() {
       setTimeout(() => {
         const list = this.referenceOpts[this.apiName]
-        // console.log('list', list)
-        console.log('this.referenceOpts', this.referenceOpts)
         for (let i = 0; i < list.length; i++) {
           if (list[i].id === this.fieldData) {
             this.referenceName = list[i].name
-            console.log('this.referenceName')
             return
           }
         }
