@@ -294,7 +294,7 @@ export default {
         })
         this.$toast('Field removed successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -338,7 +338,7 @@ export default {
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],

@@ -3292,7 +3292,6 @@ export default {
       }
     },
     allOpps() {
-      console.log('store', this.$store.state)
       return this.$store.state.allOpps
     },
     allAccounts() {
@@ -4983,7 +4982,6 @@ export default {
         } else {
           newFormData = this.formData
         }
-        console.log('this.resourceName', this.resourceName)
         const res = await CRMObjects.api.updateResource({
           // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: newFormData,
@@ -5265,7 +5263,6 @@ export default {
     },
     async getCreateReferenceOpts(name, id, options = []) {
       this.dropdownLoading = true
-      console.log('name, id, options', name, id, options)
       this.createReferenceOpts[name] = await this.getReferenceFieldList(
         name,
         id,
@@ -5300,8 +5297,6 @@ export default {
             (field) => field.apiName === 'AccountId',
           )[0].id)
         : (this.accountSobjectId = null)
-
-      console.log('this.updateOppForm[0].fieldsRef', this.updateOppForm[0].fieldsRef)
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
@@ -5378,8 +5373,6 @@ export default {
           }
         }
         this.oppFormCopy = this.updateOppForm[0].fieldsRef
-        console.log('this.oppFormCopy', this.oppFormCopy)
-        console.log('currentVals', this.currentVals)
         this.loading = false
       } catch (e) {
         console.log(e)
