@@ -99,7 +99,7 @@
       </div>
     </Modal>
 
-    <div v-if="userCRM !== 'HUBSPOT'" class="alerts-header">
+    <div v-if="userCRM === 'SALESFORCE'" class="alerts-header">
       <section class="row__ light-gray">
         <p
           @click="changeToOpportunity"

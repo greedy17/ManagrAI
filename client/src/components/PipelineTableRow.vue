@@ -8,7 +8,7 @@
     <div 
       :class="showIcons ? 'hovered' : ''" 
       class="cell-name limit-cell-height"
-      :style="(this.resourceName === 'Contact' ? 'max-width: none;' : '')"
+      :style="(this.resourceName === 'Contact' || this.resourceName === 'Lead' ? 'max-width: none;' : '')"
     >
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
@@ -112,6 +112,7 @@
             :field="field"
             :opp="opp"
             :lastStageUpdate="opp['last_stage_update']"
+            :owner="opp.owner_ref.full_name"
           />
         </div>
 

@@ -25,6 +25,10 @@
         {{ fieldData ? formatDateTime(fieldData) : 'Empty' }}
       </p>
 
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="apiName === 'OwnerId'">
+        {{ owner ? owner : 'Empty' }}
+      </p>
+
       <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="dataType === 'Reference'">
         {{ fieldData && apiName ? referenceName : 'Empty' }}
       </p>
@@ -86,9 +90,12 @@ export default {
     getReferenceName() {
       setTimeout(() => {
         const list = this.referenceOpts[this.apiName]
+        // console.log('list', list)
+        console.log('this.referenceOpts', this.referenceOpts)
         for (let i = 0; i < list.length; i++) {
           if (list[i].id === this.fieldData) {
             this.referenceName = list[i].name
+            console.log('this.referenceName')
             return
           }
         }
@@ -153,6 +160,7 @@ export default {
     referenceOpts: {},
     field: {},
     opp: {},
+    owner: {},
   },
 }
 </script>

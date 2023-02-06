@@ -2739,7 +2739,7 @@
           >
             <div class="inline-edit__header">
               <h4>
-                {{ opp.name }}
+                {{ resourceName === 'Contact' || resourceName === 'Lead' ? opp.email : opp.name }}
               </h4>
               <img
                 src="@/assets/images/close.svg"
@@ -2950,10 +2950,23 @@
                 </Multiselect>
               </div>
               <div v-else-if="field.dataType === 'Reference'">
+                <!-- :options="referenceOpts[field.apiName]" -->
+                <div @click="test(createReferenceOpts)">test</div>
                 <Multiselect
                   style="width: 23vw; font-size: 13px"
                   v-model="dropdownVal[field.apiName]"
-                  :options="referenceOpts[field.apiName]"
+                  :options="
+                      field.apiName === 'dealstage'
+                        ? (field.options[0][savedPipeline.id]
+                          ? field.options[0][savedPipeline.id].stages
+                          : [])
+                        : userCRM === 'HUBSPOT' && field.dataType !== 'Reference'
+                        ? field.options
+                        : (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') &&
+                          allPicklistOptions[field.id]
+                        ? allPicklistOptions[field.id]
+                        : createReferenceOpts[field.apiName]
+                    "
                   @open="getCreateReferenceOpts(field.apiName, field.id, field.options)"
                   :loading="dropdownLoading"
                   openDirection="below"
@@ -5252,6 +5265,7 @@ export default {
     },
     async getCreateReferenceOpts(name, id, options = []) {
       this.dropdownLoading = true
+      console.log('name, id, options', name, id, options)
       this.createReferenceOpts[name] = await this.getReferenceFieldList(
         name,
         id,
