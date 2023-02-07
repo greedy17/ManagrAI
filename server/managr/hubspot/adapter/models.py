@@ -229,6 +229,15 @@ class HubspotAuthAccountAdapter:
             [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
         )
         resource_class = routes.get(resource)
+        remove_owner = kwargs.get("remove_owner", False)
+        add_filters = kwargs.get("filters", [])
+        if remove_owner is False:
+            owners = kwargs.get("owners")
+            if isinstance(owners, str):
+                owners = [owners]
+            add_filters = [
+                {"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},
+            ]
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
         add_filters = [*add_filters, *resource_class.additional_filters()]
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
