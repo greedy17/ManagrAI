@@ -72,7 +72,14 @@ class CustomOrgSlackFormsInstance(admin.ModelAdmin):
     list_display = ("template", "user", "submission_date", "update_source")
     ordering = ("-datetime_created",)
     exclude = []
-    readonly_fields = ["user", "template", "saved_data", "previous_data", "alert_instance_id"]
+    readonly_fields = [
+        "user",
+        "template",
+        "saved_data",
+        "previous_data",
+        "alert_instance_id",
+        "recap_data",
+    ]
 
 
 admin.site.register(slack_models.OrgCustomSlackForm, CustomOrgSlackForms)

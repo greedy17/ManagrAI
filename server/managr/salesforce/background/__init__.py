@@ -652,9 +652,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update(data)
             attempts = 1
-            update_forms.update(
-                is_submitted=True, submission_date=timezone.now(), update_source="meeting"
-            )
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
             if len(workflow.failed_task_description):
                 workflow.failed_task_description = []
                 workflow.save()
@@ -749,7 +747,6 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 create_forms.update(
                     is_submitted=True,
                     submission_date=timezone.now(),
-                    update_source="meeting",
                     resource_id=serializer.instance.id,
                 )
                 workflow.resource_id = serializer.instance.id
@@ -1079,7 +1076,7 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
             emit_add_update_to_sf(str(main_form.id))
         if user.has_slack_integration and len(user.slack_integration.realtime_alert_configs):
             _send_instant_alert(form_ids)
-        forms.update(is_submitted=True, update_source="pipeline", submission_date=timezone.now())
+        forms.update(is_submitted=True, submission_date=timezone.now())
         value_update = main_form.resource_object.update_database_values(all_form_data)
         # from_workflow = data.get("from_workflow")
         # title = data.get("workflow_title", None)
@@ -1284,7 +1281,6 @@ def _process_create_new_contacts(workflow_id, *args):
                 )
                 attempts = 1
                 form.is_submitted = True
-                form.update_source = "meeting"
                 form.submission_date = timezone.now()
                 form.save()
                 break
@@ -1787,8 +1783,8 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                 .distinct()
                 .select_related("slack_integration")
             )
-        logger.info(f"USERS LIST RECAP: {user_list}")
         for u in user_list:
+            main_form.add_to_recap_data(channel_id=u.slack_integration.channel)
             if hasattr(u, "slack_integration"):
                 try:
                     r = slack_requests.send_channel_message(
@@ -1797,12 +1793,12 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                         text=f"Recap {main_form.template.resource}",
                         block_set=blocks,
                     )
-                    logger.info(f"SEND RECAP RESPONSE: {r}")
                 except Exception as e:
                     logger.exception(f"Failed to send recap to {u.email} due to {e}")
                     continue
         if send_summ_to_channels is not None:
             for channel in send_summ_to_channels:
+                main_form.add_to_recap_data(channel_id=channel)
                 try:
                     r = slack_requests.send_channel_message(
                         channel,
@@ -1835,6 +1831,8 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                         f"Failed to send recap to channel for user {user.email} due to {e}"
                     )
                     continue
+            main_form.save()
+    return
 
 
 def create_alert_string(operator, data_type, config_value, saved_value, old_value, title):
@@ -2018,7 +2016,6 @@ def _send_convert_recap(
             .distinct()
             .select_related("slack_integration")
         )
-    logger.info(f"USERS LIST RECAP: {user_list}")
     for u in user_list:
         if hasattr(u, "slack_integration"):
             try:
@@ -2028,7 +2025,6 @@ def _send_convert_recap(
                     text="Recap Lead",
                     block_set=blocks,
                 )
-                logger.info(f"SEND RECAP RESPONSE: {r}")
             except Exception as e:
                 logger.exception(f"Failed to send recap to {u.email} due to {e}")
                 continue
@@ -2206,7 +2202,6 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
 
 @background(schedule=0)
 def _processs_bulk_update(data, user):
-    logger.info(f"UPDATE START ---- {data}")
     user = User.objects.get(id=user)
     resource_ids = data.get("resource_ids")
     form_data = data.get("form_data")

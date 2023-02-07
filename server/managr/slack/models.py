@@ -13,6 +13,10 @@ from managr.core.models import TimeStampModel
 logger = logging.getLogger("managr")
 
 
+def DEFAULT_RECAP_DICT():
+    return dict(channels_sent={}, users_opened={})
+
+
 class OrganizationSlackIntegrationQuerySet(models.QuerySet):
     def for_user(self, user):
         if user.is_superuser or user.is_serviceaccount:
@@ -291,6 +295,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     alert_instance_id = models.ForeignKey(
         "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
     )
+    recap_data = JSONField(default=DEFAULT_RECAP_DICT, null=True, blank=True,)
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
     def __str__(self):
@@ -517,6 +522,19 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         self.saved_data = new_data
         self.previous_data = old_data
         self.save()
+
+    def add_to_recap_data(self, channel_id=None, user=None):
+        if channel_id:
+            if channel_id in self.recap_data["channels_sent"].keys():
+                self.recap_data["channels_sent"][channel_id] += 1
+            else:
+                self.recap_data["channels_sent"][channel_id] = 1
+        else:
+            if user in self.recap_data["users_opened"].keys():
+                self.recap_data["users_opened"][user] += 1
+            else:
+                self.recap_data["users_opened"][user] = 1
+        return
 
 
 class FormField(TimeStampModel):

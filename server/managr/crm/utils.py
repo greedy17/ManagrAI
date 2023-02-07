@@ -40,16 +40,18 @@ def create_form_instance(user, resource_type, form_type, resource_id, stage_name
     template = template_list.filter(form_type=form_type).first()
     slack_form = (
         OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, resource_id=resource_id
+            template=template, user=user, resource_id=resource_id, update_source="pipeline"
         )
         if form_type == "UPDATE"
-        else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
+        else OrgCustomSlackFormInstance.objects.create(
+            template=template, user=user, update_source="pipeline"
+        )
     )
     if slack_form:
         if stage_name:
             stage_template = template_list.filter(stage=stage_name).first()
             stage_form = OrgCustomSlackFormInstance.objects.create(
-                template=stage_template, user=user
+                template=stage_template, user=user, update_source="pipeline"
             )
             if stage_form:
                 form_ids.append(str(stage_form.id))
