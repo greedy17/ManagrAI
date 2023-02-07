@@ -2844,6 +2844,7 @@ def process_show_convert_lead_form(payload, context):
 
 @processor(required_context="u")
 def process_view_recap(payload, context):
+    print(payload)
     form_id_str = context.get("form_ids")
     form_ids = form_id_str.split(",")
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
@@ -2852,6 +2853,8 @@ def process_view_recap(payload, context):
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
     ).first()
+    main_form.add_to_recap_data(user=payload["user"]["username"])
+    main_form.save()
     user = main_form.user
     access_token = user.organization.slack_integration.access_token
     loading_view_data = send_loading_screen(
