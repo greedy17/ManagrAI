@@ -7,7 +7,7 @@ from django.db.models import Q
 from managr.slack.helpers import block_builders
 from managr.crm.exceptions import TokenExpired, InvalidRefreshToken, ApiRateLimitExceeded
 from . import constants as slack_consts
-
+from managr.alerts.utils.utils import convertToSlackFormat
 from managr.core.models import TimeStampModel
 
 logger = logging.getLogger("managr")
@@ -416,6 +416,8 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         for field in user_fields:
 
             val = form_values.get(field.api_name, None)
+            if field.data_type == "TextArea" and val is not None:
+                val = convertToSlackFormat(val)
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
@@ -437,6 +439,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     )
                     form_blocks.append({"type": "divider"})
             else:
+
                 generated_field = field.to_slack_field(
                     val,
                     user=self.user,
