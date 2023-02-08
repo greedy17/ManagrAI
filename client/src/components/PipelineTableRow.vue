@@ -6,7 +6,11 @@
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
     <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
-      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
+      <div
+        :style="`width:${defaultWidth}px;`"
+        class="flex-row-spread"
+        :class="{ selected: primaryCheckList.includes(opp.id) }"
+      >
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
           <div>
             <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
@@ -212,6 +216,8 @@ export default {
     currentInlineRow: {},
     extraPipelineFields: {},
     dropdownLoading: {},
+    defaultWidth: {},
+    defaultWideWidth: {},
   },
   methods: {
     showActions() {
@@ -656,13 +662,12 @@ input {
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   line-height: 1;
-  font-size: 13px;
+  font-size: 12px;
   padding: 0px 32px 0px 12px;
 }
 .cell-name {
   display: table-cell;
   white-space: nowrap;
-  width: 18vw;
   text-overflow: ellipsis;
   background-color: white;
   color: $base-gray;
@@ -672,7 +677,7 @@ input {
   z-index: 2;
   padding: 0px 4px;
   line-height: 1;
-  font-size: 13px;
+  font-size: 12px;
   border-bottom: 1px solid $soft-gray;
   cursor: text !important;
 }
@@ -684,6 +689,8 @@ input {
   background-color: white;
   color: $base-gray;
   letter-spacing: 0.75px;
+  border-bottom: 1px solid $soft-gray;
+  border-left: 1px solid $soft-gray;
   position: sticky;
   right: 0;
   z-index: 2;
@@ -691,7 +698,6 @@ input {
 
 .table-cell-wide {
   display: table-cell;
-  width: fit-content;
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
@@ -787,7 +793,7 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-width: 18vw;
+  width: fit-content;
   padding: 0;
   cursor: pointer;
   white-space: nowrap;
