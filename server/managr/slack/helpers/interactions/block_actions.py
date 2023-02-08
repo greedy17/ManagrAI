@@ -1322,6 +1322,7 @@ def process_show_update_resource_form(payload, context):
                 resource_type,
                 filter=CRM_FILTERS(user.crm, integration_id),
                 remove_owner=remove_owner,
+                owners=[str(user.crm_account.crm_id)],
             )
             serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                 data=resource_res[0].as_dict
@@ -2844,7 +2845,6 @@ def process_show_convert_lead_form(payload, context):
 
 @processor(required_context="u")
 def process_view_recap(payload, context):
-    print(payload)
     form_id_str = context.get("form_ids")
     form_ids = form_id_str.split(",")
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
