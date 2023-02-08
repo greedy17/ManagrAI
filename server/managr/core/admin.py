@@ -170,6 +170,7 @@ class CustomUserAdmin(UserAdmin):
                     "onboarding",
                     "activated_managr_configs",
                     "team",
+                    "make_team_lead",
                 )
             },
         ),

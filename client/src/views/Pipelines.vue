@@ -2659,60 +2659,6 @@
           @sort-opps="sortOpps"
           @sort-opps-reverse="sortOppsReverse"
         />
-        <!-- <div class="table">
-          <PipelineHeader
-            :oppFields="oppFields"
-            @check-all="onCheckAll"
-            @sort-opps="sortOpps"
-            @set-opps="setOpps"
-            @sort-opps-reverse="sortOppsReverse"
-            :allSelected="selectedWorkflow ? allWorkflowsSelected : allSelected"
-            :extraPipelineFields="extraPipelineFields"
-            :fieldOpts="objectFields.list"
-          />
-          <PipelineTableRow
-            :ref="selectedWorkflow ? 'workflowTableChild' : 'pipelineTableChild'"
-            :key="i"
-            v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : allOpps"
-            @create-form="
-              createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
-            "
-            @get-notes="
-              getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)
-            "
-            @checked-box="
-              selectedWorkflow ? selectWorkflowCheckbox(opp.id) : selectPrimaryCheckbox(opp.id)
-            "
-            @inline-edit="inlineUpdate"
-            @open-stage-form="openStageForm"
-            @current-inline-row="changeCurrentRow"
-            @set-dropdown-value="setDropdownValue"
-            @get-reference-opts="getReferenceOpts"
-            @updated-values="updateOpps"
-            @close-inline-editor="closeInlineEditor"
-            :dropdownLoading="dropdownLoading"
-            :dropdownValue="dropdownValue"
-            :closeEdit="closeInline"
-            :stages="stagesWithForms"
-            :inlineLoader="inlineLoader"
-            :picklistOpts="allPicklistOptions"
-            :referenceOpts="referenceOpts"
-            :opp="opp"
-            :index="i"
-            :oppFields="oppFields"
-            :primaryCheckList="selectedWorkflow ? workflowCheckList : primaryCheckList"
-            :updateList="updateList"
-            :stageData="newStage"
-            :closeDateData="daysForward"
-            :ForecastCategoryNameData="newForecast"
-            :BulkUpdateName="oppVal ? oppVal.apiName : null"
-            :BulkUpdateValue="oppNewValue"
-            :currentInlineRow="currentInlineRow"
-            :extraPipelineFields="extraPipelineFields"
-            :defaultWidth="defaultWidth"
-            :defaultWideWidth="defaultWideWidth"
-          />
-        </div> -->
       </section>
       <div
         class="table-overlay"
@@ -3006,15 +2952,11 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { SObjects } from '@/services/salesforce'
 import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-import PipelineTableRow from '@/components/PipelineTableRow'
-import PipelineHeader from '@/components/PipelineHeader'
-import WorkflowHeader from '@/components/WorkflowHeader'
-import WorkflowRow from '@/components/WorkflowRow'
 import Modal from '@/components/InviteModal'
 import Loader from '@/components/Loader'
 import PipelineLoader from '@/components/PipelineLoader'
@@ -3029,10 +2971,6 @@ export default {
     Modal,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineTableRow,
-    PipelineHeader,
-    WorkflowHeader,
-    WorkflowRow,
     PipelineLoader,
     Loader,
     Filters,
@@ -3042,13 +2980,11 @@ export default {
   data() {
     return {
       addingNote: false,
-      screenHeight: window.innerHeight,
       task: false,
       checker: null,
       verboseName: null,
       editingInline: false,
       currentCell: null,
-      loadingNext: false,
       viewingProducts: false,
       referenceLoading: false,
       savedOpp: null,
@@ -3056,8 +2992,6 @@ export default {
       storedStageName: '',
       pipelineOptions: [],
       recordOptions: [],
-      defaultWidth: (18 * window.innerWidth) / 100,
-      defaultWideWidth: (18 * window.innerWidth) / 100,
       listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
       dealStages: [],
       stageGateCopy: [],
@@ -3075,11 +3009,8 @@ export default {
       noteTitle: null,
       noteValue: null,
       addingTemplate: false,
-      countSets: 0,
-      updateAccountForm: {},
       createData: {},
       savingCreateForm: false,
-      productQueryOpts: {},
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 300 },
@@ -3093,7 +3024,6 @@ export default {
       hasNextOriginal: false,
       integrationId: null,
       hasNext: false,
-      hasPrev: false,
       currentPage: 1,
       notesLength: 0,
       days: {
@@ -3111,14 +3041,12 @@ export default {
       inlineLoader: false,
       currentWorkflowName: this.$route.params.title,
       id: this.$route.params.id,
-      tableKey: 1200,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
       dropdownProductVal: {},
       selectedAccount: null,
-      selectedOwner: null,
       currentOwner: null,
       currentAccount: null,
       updatingOpps: false,
@@ -3128,15 +3056,11 @@ export default {
       allSelected: false,
       allWorkflowsSelected: false,
       updateList: [],
-      recapList: [],
       currentVals: [],
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
       changeFieldsSelected: false,
-      selection: false,
-      allStages: [],
-      allForecasts: [],
       selectedOpp: null,
       selectedresourceName: null,
       oppNewValue: null,
@@ -3155,7 +3079,6 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
-      users: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: [],
       selectedWorkflow: false,
       modalOpen: false,
@@ -3166,31 +3089,20 @@ export default {
       workflowFilterText: '',
       storedFilters: [],
       currentList: 'All Opportunities',
-      alertInstanceId: null,
       showList: false,
-      workList: false,
-      showWorkflowList: true,
-      showPopularList: true,
+      // showPopularList: true,
       notes: [],
       updateOppForm: [],
       oppFormCopy: [],
       createOppForm: [],
       oppFields: [],
-      instanceId: null,
       dropdownValue: {},
       formData: {},
       updateProductData: {},
-      noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
       productReferenceOpts: {},
-      picklistQueryOpts: {},
-      createQueryOpts: {},
-      createProductOpts: {},
-      picklistQueryOptsContacts: {},
-      stagePicklistQueryOpts: {},
       setFilters: {},
-      instanceIds: [],
       allAccounts: [],
       allUsers: [],
       filtering: false,
@@ -3208,10 +3120,8 @@ export default {
         ['NOT_EQUALS', 'StageName', 'Closed Won'],
         ['NOT_EQUALS', 'StageName', 'Closed Lost'],
       ],
-      operatorsLength: 0,
-      pageX: null,
       stageGateId: null,
-      forecastList: [],
+      // forecastList: [],
       stageIntegrationId: null,
       stageId: null,
       selectedPriceBook: null,
@@ -3351,7 +3261,10 @@ export default {
         ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
-    this.objectFields.filters = { crmObject: this.crmObject }
+    this.objectFields.filters = {
+      ...this.objectFields.filters,
+      crmObject: this.crmObject,
+    }
     this.objectFields.refresh()
     this.$store.dispatch('loadAllOpps', [...this.filters])
     this.getAllForms()
@@ -3392,27 +3305,6 @@ export default {
     },
   },
   methods: {
-    startResize(e) {
-      this.dragging = true
-      this.pageX = e.pageX
-    },
-    resizing(e) {
-      let diffX = e.pageX - this.pageX
-      if (this.dragging) {
-        this.defaultWidth = this.defaultWidth + diffX / 4
-      }
-    },
-    endResize() {
-      this.dragging = false
-      this.pageX = undefined
-    },
-    stopResize() {
-      this.dragging = false
-      this.pageX = undefined
-    },
-    highlight() {
-      console.log('HERE I AM')
-    },
     test(log) {
       console.log('log', log)
     },
@@ -3434,19 +3326,6 @@ export default {
       setTimeout(() => {
         this.$refs.allProducts ? this.$refs.allProducts.scrollIntoView({ behavior: 'smooth' }) : ''
       }, 100)
-    },
-    setUpdateValuesHandler(key, val, oppId, oppIntId, multi) {
-      let formData = {}
-      if (multi) {
-        formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
-      }
-
-      if (val && !multi) {
-        formData[key] = val
-      }
-      setTimeout(() => {
-        this.inlineUpdate(formData, oppId, oppIntId)
-      }, 500)
     },
     async getAllHSPicklists() {
       this.objectFields.refresh()
@@ -3549,28 +3428,12 @@ export default {
         }, 1000)
       }
     },
-    // async getAllPicklist() {
-    //   try {
-    //     const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
-    //     for (let i = 0; i < res.length; i++) {
-    //       this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
-    //       this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
-    //     }
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
     addProduct() {
       this.addingProduct = !this.addingProduct
       setTimeout(() => {
         this.$refs.product ? this.$refs.product.scrollIntoView({ behavior: 'smooth' }) : null
       }, 100)
     },
-    // scrollToFields() {
-    //   setTimeout(() => {
-    //     this.$refs.product ? this.$refs.product.scrollIntoView() : null
-    //   }, 100)
-    // },
     getFilteredOpps() {
       if (this.userCRM === 'SALESFORCE') {
         this.$store.dispatch('loadAllOpps', [
@@ -3590,63 +3453,36 @@ export default {
         this.stillNextMonth()
       }
     },
-    pricebookLabel({ name }) {
-      return name
-    },
-
-    replaceURLs(message, field) {
-      if (!message) return
-
-      var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
-      message.replace(urlRegex, function (url) {
-        var hyperlink = url
-        if (!hyperlink.match('^https?://')) {
-          hyperlink = 'http://' + hyperlink
-        }
-        return (
-          '<a href="' + hyperlink + '" target="_blank" rel="noopener noreferrer">' + url + '</a>'
-        )
-      })
-
-      this.setUpdateValues(field, message)
-    },
     changeCurrentRow(i, cell) {
       this.currentInlineRow = i
       this.currentCell = cell
       this.dropdownVal = {}
       this.editingInline = true
     },
-    addToForecastList() {
-      let list = []
-      for (let i = 0; i < this.currentCheckList.length; i++) {
-        list.push(this.allOpps.filter((opp) => opp.id === this.currentCheckList[i])[0])
-      }
-      this.forecastList = list.map((opp) => opp.integration_id)
-    },
-    async modifyForecast(action) {
-      const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
-      try {
-        await User.api.modifyForecast(action, this.forecastList)
-        this.$toast(oppOrDeal + ' added to Tracker.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch (e) {
-        this.$toast('Error adding ' + oppOrDeal, {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.$store.dispatch('refreshCurrentUser')
-        this.primaryCheckList = []
-      }
-    },
+    // async modifyForecast(action) {
+    //   const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
+    //   try {
+    //     await User.api.modifyForecast(action, this.forecastList)
+    //     this.$toast(oppOrDeal + ' added to Tracker.', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'success',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } catch (e) {
+    //     this.$toast('Error adding ' + oppOrDeal, {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'success',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.$store.dispatch('refreshCurrentUser')
+    //     this.primaryCheckList = []
+    //   }
+    // },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
       if (Array.isArray(field)) {
@@ -3849,9 +3685,6 @@ export default {
     closeListSelect() {
       this.showList = false
     },
-    closeWorkSelect() {
-      this.workList = false
-    },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
       if (value) {
@@ -3956,7 +3789,6 @@ export default {
     },
     applyFilter(value) {
       this.updateFilterValue = value
-      this.operatorsLength += 1
       this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
@@ -4365,7 +4197,7 @@ export default {
         console.log(e)
       }
     },
-    async createFormInstance(opp, id, integrationId, pricebookId, alertInstanceId = null) {
+    async createFormInstance(opp, id, integrationId, pricebookId) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
       this.viewingProducts = false
       this.addingProduct = false
@@ -4380,10 +4212,8 @@ export default {
       this.currentOwner = null
       this.currentAccount = null
       this.selectedAccount = null
-      this.selectedOwner = null
       this.noteValue = null
       this.noteTitle = null
-      this.alertInstanceId = alertInstanceId
       this.oppId = id
       this.currentProducts = []
       this.updateProductData = {}
@@ -4433,7 +4263,6 @@ export default {
       this.createData = {}
       this.currentVals = []
       this.selectedAccount = null
-      this.selectedOwner = null
       this.addOppModalOpen = true
       this.addingProduct = false
       this.stageGateField = null
@@ -4560,7 +4389,6 @@ export default {
         console.log(e)
       }
     },
-
     async onBulkUpdateWorkflow() {
       for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
         if (this.$refs.workflowTableChild[i].isSelected) {
@@ -4587,7 +4415,6 @@ export default {
         console.log(e)
       }
     },
-
     async checkTask() {
       try {
         this.task = await User.api.checkTasks(this.verboseName)
@@ -4595,11 +4422,9 @@ export default {
         console.log(e)
       }
     },
-
     stopChecker() {
       clearInterval(this.checker)
     },
-
     checkAndClearInterval() {
       if (this.task.completed == true) {
         this.stopChecker()
@@ -4718,38 +4543,38 @@ export default {
         })
       }
     },
-    async resourceSync() {
-      if (
-        this.currentDay !== this.syncDay + '/' &&
-        this.currentDay !== this.syncDay &&
-        this.currentDay !== '0' + this.syncDay
-      ) {
-        setTimeout(() => {
-          this.loading = true
-        }, 300)
-        try {
-          await CRMObjects.api.resourceSync()
-          this.$toast('Daily sync complete', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } catch (e) {
-          this.$toast('Error syncing your resources, refresh page', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } finally {
-          this.$store.dispatch('refreshCurrentUser')
-          this.loading = false
-        }
-      }
-    },
+    // async resourceSync() {
+    //   if (
+    //     this.currentDay !== this.syncDay + '/' &&
+    //     this.currentDay !== this.syncDay &&
+    //     this.currentDay !== '0' + this.syncDay
+    //   ) {
+    //     setTimeout(() => {
+    //       this.loading = true
+    //     }, 300)
+    //     try {
+    //       await CRMObjects.api.resourceSync()
+    //       this.$toast('Daily sync complete', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'success',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } catch (e) {
+    //       this.$toast('Error syncing your resources, refresh page', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } finally {
+    //       this.$store.dispatch('refreshCurrentUser')
+    //       this.loading = false
+    //     }
+    //   }
+    // },
     async manualSync() {
       try {
         await CRMObjects.api.resourceSync()
@@ -4910,7 +4735,6 @@ export default {
         return
       }
     },
-
     async updateProduct() {
       this.savingProduct = true
       try {
@@ -4973,7 +4797,6 @@ export default {
           newFormData = this.formData
         }
         const res = await CRMObjects.api.updateResource({
-          // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
@@ -5202,7 +5025,6 @@ export default {
       } finally {
         this.selectedWorkflow = true
         this.showList = false
-        this.workList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
             ? this.sortOppsReverse(
@@ -5263,7 +5085,6 @@ export default {
       this.dropdownLoading = true
       this.productReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'createProduct')
     },
-
     setDropdownValue(val) {
       this.dropdownValue = val
     },
@@ -5471,40 +5292,39 @@ export default {
         this.createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)
       }
     },
-    closeDatesThisMonth() {
-      this.currentPage = 1
-      this.selectedWorkflow = false
-      const today = new Date(Date.now())
-      const todaySplit = today.toLocaleDateString().split('/')
-      const todayYear = Number(todaySplit[2])
-      const todayMonth = Number(todaySplit[0])
-      let nextMonth
-      let nextYear
-      if (todayMonth === 12) {
-        nextMonth = 1
-        nextYear = todayYear + 1
-      } else {
-        nextMonth = todayMonth + 1
-      }
-      const beginningOfMonth = `${todayYear}-${todayMonth}-01`
-      let endOfMonth
-      if (nextYear) {
-        endOfMonth = `${nextYear}-${nextMonth}-01`
-      } else {
-        endOfMonth = `${todayYear}-${nextMonth}-01`
-      }
-      this.$store.dispatch('loadAllOpps', [
-        ...this.filters,
-        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
-        ['LESS_THAN', 'CloseDate', endOfMonth],
-      ])
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+    // closeDatesThisMonth() {
+    //   this.currentPage = 1
+    //   this.selectedWorkflow = false
+    //   const today = new Date(Date.now())
+    //   const todaySplit = today.toLocaleDateString().split('/')
+    //   const todayYear = Number(todaySplit[2])
+    //   const todayMonth = Number(todaySplit[0])
+    //   let nextMonth
+    //   let nextYear
+    //   if (todayMonth === 12) {
+    //     nextMonth = 1
+    //     nextYear = todayYear + 1
+    //   } else {
+    //     nextMonth = todayMonth + 1
+    //   }
+    //   const beginningOfMonth = `${todayYear}-${todayMonth}-01`
+    //   let endOfMonth
+    //   if (nextYear) {
+    //     endOfMonth = `${nextYear}-${nextMonth}-01`
+    //   } else {
+    //     endOfMonth = `${todayYear}-${nextMonth}-01`
+    //   }
+    //   this.$store.dispatch('loadAllOpps', [
+    //     ...this.filters,
+    //     ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+    //     ['LESS_THAN', 'CloseDate', endOfMonth],
+    //   ])
+    //   this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
-      this.currentList = 'Closing this month'
-      this.showList = false
-      this.workList = false
-      this.closeFilterSelection()
-    },
+    //   this.currentList = 'Closing this month'
+    //   this.showList = false
+    //   this.closeFilterSelection()
+    // },
     stillThisMonth() {
       this.currentPage = 1
       this.allOpps = this.originalList
@@ -5515,39 +5335,39 @@ export default {
 
       this.currentList = 'Closing this month'
     },
-    closeDatesNextMonth() {
-      this.currentPage = 1
-      this.selectedWorkflow = false
-      const today = new Date(Date.now())
-      const todaySplit = today.toLocaleDateString().split('/')
-      const nextMonthYear = Number(todaySplit[2])
-      const nextMonthMonth = Number(todaySplit[0]) + 1
-      let nextNextMonth
-      let nextYear
-      if (nextMonthMonth >= 12) {
-        nextNextMonth = nextMonthMonth - 11
-        nextYear = nextMonthYear + 1
-      } else {
-        nextNextMonth = nextMonthMonth + 1
-      }
-      const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
-      let endOfMonth
-      if (nextYear) {
-        endOfMonth = `${nextYear}-${nextNextMonth}-01`
-      } else {
-        endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
-      }
-      this.$store.dispatch('loadAllOpps', [
-        ...this.filters,
-        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
-        ['LESS_THAN', 'CloseDate', endOfMonth],
-      ])
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+    // closeDatesNextMonth() {
+    //   this.currentPage = 1
+    //   this.selectedWorkflow = false
+    //   const today = new Date(Date.now())
+    //   const todaySplit = today.toLocaleDateString().split('/')
+    //   const nextMonthYear = Number(todaySplit[2])
+    //   const nextMonthMonth = Number(todaySplit[0]) + 1
+    //   let nextNextMonth
+    //   let nextYear
+    //   if (nextMonthMonth >= 12) {
+    //     nextNextMonth = nextMonthMonth - 11
+    //     nextYear = nextMonthYear + 1
+    //   } else {
+    //     nextNextMonth = nextMonthMonth + 1
+    //   }
+    //   const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
+    //   let endOfMonth
+    //   if (nextYear) {
+    //     endOfMonth = `${nextYear}-${nextNextMonth}-01`
+    //   } else {
+    //     endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
+    //   }
+    //   this.$store.dispatch('loadAllOpps', [
+    //     ...this.filters,
+    //     ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+    //     ['LESS_THAN', 'CloseDate', endOfMonth],
+    //   ])
+    //   this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
-      this.currentList = 'Closing next month'
-      this.showList = false
-      this.closeFilterSelection()
-    },
+    //   this.currentList = 'Closing next month'
+    //   this.showList = false
+    //   this.closeFilterSelection()
+    // },
     stillNextMonth() {
       this.currentPage = 1
       this.allOpps = this.originalList
@@ -5576,13 +5396,6 @@ export default {
       }
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
-    },
-    formatMostRecent(date2) {
-      let today = new Date()
-      let d = new Date(date2)
-      let diff = today.getTime() - d.getTime()
-      let days = diff / (1000 * 3600 * 24)
-      return Math.floor(days)
     },
   },
   beforeUpdate() {
@@ -6147,25 +5960,25 @@ select {
   color: $light-gray-blue;
   margin-left: 4px;
 }
-.select-btn2 {
-  border: 0.5px solid $very-light-gray;
-  padding: 0.375rem 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
+// .select-btn2 {
+//   border: 0.5px solid $very-light-gray;
+//   padding: 0.375rem 0.75rem;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   border-radius: 6px;
+//   background-color: white;
+//   cursor: pointer;
+//   color: $dark-green;
+//   letter-spacing: 0.2px;
+//   margin-right: 0.5rem;
+//   transition: all 0.25s;
 
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1.05rem !important;
-  }
-}
+//   img {
+//     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+//     height: 1.05rem !important;
+//   }
+// }
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -6504,14 +6317,14 @@ section {
   font-size: 13px;
   padding: 12px;
 }
-.div-placeholder {
-  position: absolute;
-  top: -12px;
-  left: 10px;
-  z-index: -1;
-  color: $very-light-gray;
-  opacity: 0.8;
-}
+// .div-placeholder {
+//   position: absolute;
+//   top: -12px;
+//   left: 10px;
+//   z-index: -1;
+//   color: $very-light-gray;
+//   opacity: 0.8;
+// }
 // .divArea:hover {
 //   border: 1px solid #e8e8e8;
 //   border-radius: 4px;
@@ -6557,7 +6370,6 @@ section {
   align-items: center;
   justify-content: space-between;
 }
-
 .flex-row-spread-start {
   display: flex;
   flex-direction: row;
@@ -6576,9 +6388,9 @@ section {
 .invert {
   filter: invert(80%);
 }
-.fullInvert {
-  filter: invert(99%);
-}
+// .fullInvert {
+//   filter: invert(99%);
+// }
 .add-button:disabled {
   display: flex;
   align-items: center;
@@ -6866,10 +6678,10 @@ main:hover > span {
   color: black;
   background-color: $off-white;
 }
-.filter {
-  color: #41b883;
-  margin-left: 0.2rem;
-}
+// .filter {
+//   color: #41b883;
+//   margin-left: 0.2rem;
+// }
 .cancel {
   color: $dark-green;
   font-weight: bold;
@@ -6963,15 +6775,15 @@ a {
 }
 .close-template {
   position: absolute;
-  bottom: 50px;
+  bottom: 76px;
   left: 35.5vw;
   z-index: 3;
   cursor: pointer;
-  background-color: black;
+  // background-color: black;
   border-radius: 3px;
   opacity: 0.6;
   img {
-    filter: invert(99%);
+    // filter: invert(99%);
   }
 }
 .label {

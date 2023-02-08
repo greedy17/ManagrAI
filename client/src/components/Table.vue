@@ -158,7 +158,7 @@
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
           </td>
-          <td></td>
+          <td :class="{ hovered: currentRow === j }"></td>
         </tr>
       </tbody>
     </table>
@@ -464,7 +464,9 @@ td:last-of-type {
   position: sticky;
   cursor: pointer;
   font-size: 16px;
-  //   background-color: white;
+}
+td:last-of-type {
+  background-color: white;
 }
 .gray {
   color: $light-gray-blue;

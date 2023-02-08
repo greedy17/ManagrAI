@@ -106,7 +106,7 @@ class HubspotContactSerializer(serializers.ModelSerializer):
             hs_account = (
                 HubspotAuthAccount.objects.filter(hubspot_id=owner).select_related("user").first()
             )
-            user = hs_account.user.id if hs_account else hs_account
+            user = hs_account.user.id if hs_account else imported_by
             data.update({"owner": user})
         if company:
             acct = Company.objects.filter(

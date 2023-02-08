@@ -78,6 +78,7 @@ from managr.crm.exceptions import (
 )
 from managr.crm.models import ObjectField
 from .filters import SObjectFieldFilterSet, SalesforceSObjectFilterSet
+from managr.core.background import _process_change_team_lead
 
 logger = logging.getLogger("managr")
 
@@ -126,6 +127,10 @@ def authenticate(request):
                 schedule=(timezone.now() + timezone.timedelta(minutes=2)),
             )
         user = User.objects.get(id=request.user.id)
+        if user.make_team_lead:
+            _process_change_team_lead(
+                str(user.id), schedule=(timezone.now() + timezone.timedelta(minutes=2))
+            )
         sync_operations = [*user.salesforce_account.resource_sync_opts]
         sync_time = (timezone.now() + timezone.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M%Z")
         emit_gen_next_sync(str(request.user.id), sync_operations, sync_time)
@@ -533,7 +538,7 @@ class SalesforceSObjectViewSet(
         )
         slack_form = (
             OrgCustomSlackFormInstance.objects.create(
-                template=template, user=user, resource_id=resource_id
+                template=template, user=user, resource_id=resource_id, update_source="pipeline"
             )
             if form_type == "UPDATE"
             else OrgCustomSlackFormInstance.objects.create(template=template, user=user)
@@ -748,9 +753,7 @@ class SalesforceSObjectViewSet(
                     user.slack_integration.realtime_alert_configs
                 ):
                     _send_instant_alert(form_ids)
-                forms.update(
-                    is_submitted=True, update_source="pipeline", submission_date=timezone.now()
-                )
+                forms.update(is_submitted=True, submission_date=timezone.now())
                 value_update = main_form.resource_object.update_database_values(all_form_data)
                 # from_workflow = data.get("from_workflow")
                 # title = data.get("workflow_title", None)

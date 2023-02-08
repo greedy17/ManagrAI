@@ -44,10 +44,6 @@ export default {
   filter: invert(83%) sepia(28%) saturate(135%) hue-rotate(92deg) brightness(111%) contrast(95%);
   margin-right: 4px;
 }
-.green {
-  filter: invert(57%) sepia(41%) saturate(595%) hue-rotate(101deg) brightness(102%) contrast(85%);
-  margin-right: 4px;
-}
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;

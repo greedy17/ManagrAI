@@ -128,7 +128,6 @@
 import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
-import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
 
 export default {
@@ -144,20 +143,14 @@ export default {
       create: true,
       userChannelOpts: new SlackListResponse(),
       channelName: '',
-      newChannel: {},
       channelCreated: false,
-      slackAccount: {},
       zoomChannel: '',
       createdZoomChannel: '',
-      users: CollectionManager.create({ ModelClass: User }),
     }
   },
   async created() {
     if (this.user.slackRef) {
       await this.listUserChannels()
-    }
-    if (this.user.userLevel == 'MANAGER') {
-      await this.users.refresh()
     }
   },
   methods: {
@@ -337,9 +330,9 @@ export default {
     transform: translateY(-6px);
   }
 }
-.bouncy {
-  animation: bounce 0.2s infinite alternate;
-}
+// .bouncy {
+//   animation: bounce 0.2s infinite alternate;
+// }
 .alerts-header {
   position: fixed;
   z-index: 10;
@@ -396,19 +389,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-.flex-start {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  flex-direction: column;
-}
-.zoom-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: row;
-  width: 700px;
 }
 .back-button {
   color: $base-gray;
@@ -500,13 +480,6 @@ img {
   align-items: center;
   flex-direction: column;
 }
-.card {
-  width: 700px;
-  height: 250px;
-  background-color: $white;
-  border-radius: 0.3rem;
-  border: 1px solid #e8e8e8;
-}
 input[type='text']:focus {
   outline: none;
 }
@@ -536,9 +509,6 @@ input[type='text']:focus {
   color: $white;
   background-color: $dark-green;
   cursor: pointer;
-}
-.green {
-  color: #41b883;
 }
 .green__button:disabled {
   display: flex;

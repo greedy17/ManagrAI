@@ -158,9 +158,7 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import { SObjects } from '@/services/salesforce'
 import User from '@/services/users'
-import debounce from 'lodash.debounce'
 
 export default {
   name: 'PipelineTableRow',
@@ -174,16 +172,14 @@ export default {
   data() {
     return {
       showIcons: false,
-      booleans: ['true', 'false'],
+      // booleans: ['true', 'false'],
       isSelected: false,
       task: false,
       checker: null,
       verboseName: null,
       currentRow: null,
       formData: {},
-      referenceOptions: [],
       dropdownVal: {},
-      executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
       editIndex: null,
       currentOpp: null,
@@ -277,9 +273,9 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox(i) {
-      this.$emit('checked-box', this.opp.id, i)
-    },
+    // emitCheckedBox(i) {
+    //   this.$emit('checked-box', this.opp.id, i)
+    // },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
     },
@@ -298,91 +294,6 @@ export default {
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
     },
-    async onAdvanceStage() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const res = await SObjects.api
-        SObjects.api
-          .updateResource({
-            form_data: { StageName: this.stageData },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.updatedList = []
-        }, 1000)
-      }
-    },
-    async onPushCloseDate() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: { CloseDate: this.newCloseDate },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.updatedList = []
-        }, 1000)
-      }
-    },
-    async onChangeForecast() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const res = await SObjects.api
-          .updateResource({
-            form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then(
-            this.$toast('Salesforce Update Successful', {
-              timeout: 1000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            }),
-          )
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.updatedList = []
-        }, 2000)
-      }
-    },
     async checkTask() {
       try {
         this.task = await User.api.checkTasks(this.verboseName)
@@ -393,29 +304,29 @@ export default {
     stopChecker() {
       clearInterval(this.checker)
     },
-    async onBulkUpdate() {
-      this.updatedList.push(this.opp.id)
-      try {
-        const formData = {}
-        formData[this.BulkUpdateName] = this.BulkUpdateValue
-        const res = await SObjects.api
-          .bulkUpdate({
-            form_data: formData,
-            resource_type: 'Opportunity',
-            form_type: 'UPDATE',
-            resource_id: this.opp.id,
-            integration_ids: [this.opp.integration_id],
-          })
-          .then((res) => {
-            this.verboseName = res.verbose_name
-            this.checker = setInterval(() => {
-              this.checkTask()
-            }, 1000)
-          })
-      } catch (e) {
-        console.log(e)
-      }
-    },
+    // async onBulkUpdate() {
+    //   this.updatedList.push(this.opp.id)
+    //   try {
+    //     const formData = {}
+    //     formData[this.BulkUpdateName] = this.BulkUpdateValue
+    //     const res = await SObjects.api
+    //       .bulkUpdate({
+    //         form_data: formData,
+    //         resource_type: 'Opportunity',
+    //         form_type: 'UPDATE',
+    //         resource_id: this.opp.id,
+    //         integration_ids: [this.opp.integration_id],
+    //       })
+    //       .then((res) => {
+    //         this.verboseName = res.verbose_name
+    //         this.checker = setInterval(() => {
+    //           this.checkTask()
+    //         }, 1000)
+    //       })
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
   },
   computed: {
     userCRM() {
@@ -428,13 +339,6 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
-@keyframes tooltips-horz {
-  to {
-    opacity: 0.95;
-    transform: translate(0%, 50%);
-  }
-}
 .row {
   display: flex;
   flex-direction: row;
@@ -442,7 +346,6 @@ export default {
 }
 // .light-gray {
 //   background-color: $off-white !important;
-
 // }
 
 .img-border {
@@ -705,18 +608,6 @@ input {
   white-space: nowrap;
   padding: 0px 28px 0px 12px;
 }
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 2vh 1vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $white;
-}
 .table-cell-checkbox {
   display: table-cell;
   padding: 0 2vh;
@@ -827,7 +718,10 @@ input[type='checkbox'] + label::before {
   // background-color: rgba(220, 248, 233, 0.2);
   background-color: $off-white;
 }
-.blank {
-  // margin: 0;
-}
+// .mar-right {
+//   margin-right: 8px;
+// }
+// .mar-left {
+//   margin-left: 8px;
+// }
 </style>

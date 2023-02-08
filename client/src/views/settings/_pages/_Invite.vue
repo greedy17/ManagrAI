@@ -126,6 +126,38 @@
               </template>
             </FormField>
           </div>
+          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <Multiselect
+                  placeholder="Select Team"
+                  @input="checkTeamLead"
+                  v-model="selectedTeam"
+                  :options="allTeams"
+                  openDirection="below"
+                  style="width: 33vw"
+                  selectLabel="Enter"
+                  :customLabel="customTeamLabel"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Team
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+            <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem;">
+              <p style="margin: 0;">Make Team Lead</p>
+              <input v-model="selectedTeamLead" :disabled="!selectedTeam || user.team === selectedTeam.id" type="checkbox" style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem;" />
+            </div>
+          </div>
         </div>
         <div class="invite-form__actions">
           <div class="invite-form__inner_actions">
@@ -383,12 +415,13 @@
 <script>
 import User from '@/services/users'
 import { UserInviteForm } from '@/services/users/forms'
-import Organization from '@/services/organizations'
 import CollectionManager from '@/services/collectionManager'
 import Modal from '../../../components/InviteModal'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
+import Organization from '@/services/organizations'
+
 export default {
   name: 'Invite',
   components: {
@@ -411,15 +444,13 @@ export default {
       activationLink: null,
       selectedMember: null,
       selectedLevel: null,
-      sendSlackInvite: false,
+      selectedTeam: null,
+      selectedTeamLead: false,
+      allTeams: null,
       organization: null,
-      organizations: CollectionManager.create({ ModelClass: Organization }),
-      organizationRef: null,
       slackMembers: new SlackUserList(),
-      inviteRecipient: '',
       uninviteId: '',
       uninviteModal: false,
-      selectedUserType: User.types.REP,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
         { key: 'Representative', value: User.types.REP },
@@ -429,10 +460,7 @@ export default {
         { key: 'Representative', value: User.types.REP },
         { key: 'SDR', value: User.types.SDR },
       ],
-      showInvited: true,
       team: CollectionManager.create({ ModelClass: User }),
-      user: null,
-      userRoles: User.roleChoices,
       loading: false,
       userInviteForm: new UserInviteForm({
         role: User.roleChoices[0].key,
@@ -442,6 +470,16 @@ export default {
     }
   },
   async created() {
+    const allTeams = await Organization.api.listTeams(this.user.id)
+    this.allTeams = allTeams.results
+    if (this.user.isAdmin) {
+      const userTeam = this.allTeams.filter(team => team.id === this.user.team)
+      this.selectedTeam = userTeam[0] ? userTeam[0] : null
+    } else {
+      const orgUsers = await User.api.getAllOrgUsers(this.user.organization)
+      let admin = orgUsers.filter(user => user.is_admin)[0]
+      this.selectedTeam = admin ? admin.team : null
+    }
     this.refresh()
     await this.listUsers()
   },
@@ -474,6 +512,11 @@ export default {
     mapUserLevel() {
       this.userInviteForm.field.userLevel.value = this.selectedLevel.value
     },
+    checkTeamLead() {
+      if (this.selectedTeam && this.user.team === this.selectedTeam.id) {
+        this.selectedTeamLead = false
+      }
+    },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
       const results = new SlackUserList({
@@ -483,12 +526,8 @@ export default {
       this.slackMembers = results
     },
     async refresh() {
-      this.user = this.$store.state.user
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
         this.$router.push({ name: 'ListTemplates' })
-      }
-      if (this.user.isStaff) {
-        await this.organizations.refresh()
       }
       this.organization = this.$store.state.user.organization
       this.team.refresh()
@@ -514,8 +553,21 @@ export default {
         })
         return
       }
+      if (this.user.organizationRef.isPaid && this.user.isAdmin && !this.selectedTeam) {
+        this.loading = false
+        this.$toast('Please select a team', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       // check form data for this request
       try {
+        this.userInviteForm.field.team.value = this.selectedTeam.id
+        this.userInviteForm.field.teamLead.value = this.selectedTeamLead
         this.userInviteForm.field.email.value = this.slackMembers.members.filter(
           (member) => member.id == this.userInviteForm.field.slackId.value,
         )[0].profile.email
@@ -544,6 +596,10 @@ export default {
       } finally {
         this.loading = false
         this.inviteOpen = !this.inviteOpen
+        this.selectedMember = null
+        this.selectedLevel = null
+        this.selectedTeam = null
+        this.selectedTeamLead = false
       }
     },
     handleConfirmCancel() {
@@ -625,14 +681,25 @@ export default {
     },
     resetData() {
       this.userInviteForm.field.organization.value = this.$store.state.user.organization
+      this.selectedMember = null
+      this.selectedLevel = null
+      this.selectedTeam = null
+      this.selectedTeamLead = false
+    },
+    customTeamLabel(props) {
+      if (this.user.team === props.id) {
+        return "Your Team"
+      } else {
+        return props.name
+      }
     },
   },
   computed: {
-    isStaff() {
-      return this.$store.state.user.isStaff
-    },
     hasSlack() {
       return !!this.$store.state.user.slackRef
+    },
+    user() {
+      return this.$store.state.user
     },
     userCRM() {
       return this.$store.state.user.crm
@@ -668,17 +735,6 @@ input {
 }
 .red {
   filter: invert(42%) sepia(36%) saturate(937%) hue-rotate(308deg) brightness(114%) contrast(96%);
-}
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid $soft-gray;
-  border-radius: 6px;
-  cursor: pointer;
-
-  margin-left: 8px;
-  background-color: white;
 }
 input:focus {
   outline: none;
@@ -743,27 +799,21 @@ input:focus {
   letter-spacing: 0.75px;
   color: $light-gray-blue;
 }
-.key {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  font-size: 0.75rem;
-  margin-bottom: 1.5rem;
-  margin-left: 16px;
-}
-.right-key {
-  display: flex;
-  flex-direction: row;
-  width: 35%;
-  justify-content: flex-start;
-}
-.left-key {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-  justify-self: flex-start;
-  align-items: center;
-}
+// .key {
+//   display: flex;
+//   align-items: center;
+//   width: 100%;
+//   font-size: 0.75rem;
+//   margin-bottom: 1.5rem;
+//   margin-left: 16px;
+// }
+// .left-key {
+//   display: flex;
+//   width: 100%;
+//   flex-direction: row;
+//   justify-self: flex-start;
+//   align-items: center;
+// }
 .header {
   margin-top: -1.5rem;
   width: 100%;
@@ -776,38 +826,15 @@ input:focus {
   // display: flex;
   // justify-content: space-around;
 }
-.complete {
-  border-bottom: 2.9px solid $dark-green;
-
-  margin-right: 0.5rem;
-  color: $base-gray;
-}
-.incomplete {
-  border-bottom: 2px solid $coral;
-  color: $base-gray;
-}
-.back-logo {
-  position: absolute;
-  z-index: -1;
-  opacity: 0.06;
-  filter: alpha(opacity=50);
-  height: 28%;
-  margin-top: -7rem;
-  margin-left: -2rem;
-}
-
-.active {
-  border-bottom: 2px solid $dark-green;
-  padding: 0.2rem;
-
-  margin-right: 0.25rem;
-}
-.inactive {
-  border-bottom: 2px solid $coral;
-  padding: 0.2rem;
-
-  margin-right: 0.25rem;
-}
+// .back-logo {
+//   position: absolute;
+//   z-index: -1;
+//   opacity: 0.06;
+//   filter: alpha(opacity=50);
+//   height: 28%;
+//   margin-top: -7rem;
+//   margin-left: -2rem;
+// }
 .invite-container {
   display: flex;
   flex-flow: row;
@@ -919,37 +946,6 @@ form {
   &:hover {
     cursor: pointer;
   }
-}
-.invite_button {
-  color: $dark-green;
-  background-color: white;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-  width: 6rem;
-  margin-top: 0.75rem;
-  margin-left: 0.5rem;
-  box-shadow: none;
-  height: 2rem;
-  z-index: 3;
-}
-.invite_button:disabled {
-  color: $base-gray;
-  background-color: $soft-gray;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-weight: 400px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-}
-.invite_button:hover {
-  cursor: pointer;
-  transform: scale(1.025);
-  box-shadow: 1px 2px 3px $mid-gray;
-  background-color: white;
 }
 .flex-row {
   display: flex;

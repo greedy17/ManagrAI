@@ -37,9 +37,9 @@ export default {
     },
   },
   computed: {
-    userCRM() {
-      return this.$store.state.user.crm
-    },
+    // userCRM() {
+    //   return this.$store.state.user.crm
+    // },
   },
 }
 </script>

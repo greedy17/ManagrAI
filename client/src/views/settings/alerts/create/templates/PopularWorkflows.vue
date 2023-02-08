@@ -176,12 +176,12 @@
                 <span v-for="(day, i) in weeklyOpts" :key="i">
                   <input
                     type="checkbox"
-                    @input="setDay"
+                    @input="setDay($event.target.value)"
                     :id="day.value"
                     :value="day.value"
-                    v-model="config.newConfigs[0].recurrenceDays"
                     :disabled="!hasSlack"
                   />
+                  <!-- v-model="config.newConfigs[0].recurrenceDays" -->
                   <label
                     :for="day.value"
                     :class="
@@ -514,7 +514,7 @@ export default {
       addedFields: [],
       dropdownLoading: null,
       selectedUsers: [],
-      selectedDays: null,
+      // selectedDays: null,
       selectedChannel: null,
       userChannelOpts: new SlackListResponse(),
       create: false,
@@ -874,13 +874,24 @@ export default {
         this.selectedChannel
       this.config.newConfigs[0].recipients = [this.selectedChannel.id]
     },
-    setDay() {
-      // this.config.newConfigs[0].recurrenceDay = 0
-      // let days = []
-      // n.forEach((day) => days.push(day.value))
-      // let newDays = [...new Set(days)]
-      // this.config.newConfigs[0].recurrenceDays = newDays
-      this.setDaysBool = true
+    setDay(n) {
+      const recurrenceDays = this.config.newConfigs[0].recurrenceDays
+      let index
+      for (let i = 0; i < recurrenceDays.length; i++) {
+        const day = recurrenceDays[i]
+        if (day === n) {
+          index = i
+          break;
+        }
+      }
+      if (index !== undefined) {
+        // if it exists in the array, remove
+        this.config.newConfigs[0].recurrenceDays = recurrenceDays.filter((day, i) => i !== index)
+      } else {
+        // if it doesn't exist, add
+        this.config.newConfigs[0].recurrenceDays.push(n)
+      }
+      this.setDaysBool = !!this.config.newConfigs[0].recurrenceDays.length
     },
     mapIds() {
       let mappedIds = this.selectedUsers.map((user) => user.id)
@@ -1169,7 +1180,6 @@ export default {
   border-radius: 4px;
   margin-right: 0.5em;
 }
-
 .sendAll {
   display: flex;
   align-items: center;
@@ -1366,25 +1376,6 @@ input {
 .visible {
   visibility: hidden;
 }
-.alert__column {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.bottom_locked {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: auto;
-  margin-bottom: 0.5rem;
-}
-.delivery__row {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-}
 .forecast__collection {
   display: flex;
   flex-direction: column;
@@ -1394,7 +1385,6 @@ input {
 img {
   filter: invert(40%);
 }
-
 .alerts-page {
   height: 100vh;
   color: $base-gray;
@@ -1402,9 +1392,6 @@ img {
 }
 .base {
   color: $base-gray;
-}
-.spacer {
-  height: 20vh;
 }
 .overlay {
   position: absolute;
@@ -1421,9 +1408,6 @@ img {
   background-color: $dark-green;
   border-radius: 5px;
 }
-.container {
-  position: relative;
-}
 .container:hover .overlay {
   opacity: 0.85;
 }
@@ -1438,15 +1422,12 @@ img {
   transform: translate(-50%, -50%);
   text-align: center;
 }
-.margin-right-s {
-  margin-right: 0.5rem;
-}
+// .margin-right-s {
+//   margin-right: 0.5rem;
+// }
 .link {
   border-bottom: 1px solid white;
   cursor: pointer;
-}
-.margin-top {
-  margin-top: 3rem;
 }
 .search-bar {
   background-color: white;

@@ -238,7 +238,6 @@ def process_get_external_picklist_options(payload, context):
         return {"options": []}
     # if value and len(value):
     #    options = list(filter(lambda opt: value in opt["value"].lower(), options))
-
     if len(options) > 30:
         return {"options": options[:30]}
     else:
@@ -394,16 +393,6 @@ def process_get_pricebook_entry_options(payload, context):
     }
 
 
-def CRM_FILTERS(crm, crm_id):
-    if isinstance(crm_id, str) and crm == "HUBSPOT":
-        crm_id = [crm_id]
-    filters = {
-        "HUBSPOT": [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": crm_id,},],
-        "SALESFORCE": None,
-    }
-    return filters[crm]
-
-
 def CRM_RESOURCE_FILTER(crm, resource, value):
     if resource == slack_const.FORM_RESOURCE_DEAL:
         property_name = "dealname"
@@ -460,12 +449,8 @@ def process_get_crm_resource_options(payload, context):
             crm_id = (
                 crm_account.crm_id if user.user_level == "REP" else list(crm_account.crm_user_ids)
             )
-            filters = CRM_FILTERS(user.crm, crm_id)
-            if value:
-                if filters is None:
-                    filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)]
-                else:
-                    filters.append(CRM_RESOURCE_FILTER(user.crm, resource, value))
+
+            filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)] if value else None
             remove_owner = True if resource in ["Lead", "Contact"] else False
             res = crm_adapter.list_resource_data(
                 resource, filter=filters, owners=crm_id, limit=25, remove_owner=remove_owner

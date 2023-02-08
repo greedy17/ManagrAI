@@ -87,6 +87,8 @@ export class UserInviteForm extends Form {
   static organization = new FormField({ validators: [new RequiredValidator()] })
   static slackId = new FormField()
   static email = new FormField()
+  static team = new FormField()
+  static teamLead = new FormField()
 }
 
 export class UserLoginForm extends Form {
