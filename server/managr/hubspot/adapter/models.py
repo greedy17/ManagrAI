@@ -371,6 +371,7 @@ class HObjectFieldAdapter:
         self.api_name = data.get("name", None)
         self.label = data.get("label", f"{self.api_name}")
         self.data_type = data.get("field_type", None)
+        self.data_type_details = data.get("type", None)
         self.display_value = data.get("label", None)
         self.options = data.get("options", None)
         self.createable = data.get("createable", True)

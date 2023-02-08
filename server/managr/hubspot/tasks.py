@@ -631,7 +631,7 @@ def _process_add_update_to_hs(form_id, *args):
     data = dict(
         hs_timestamp=formatted_time,
         hubspot_owner_id=user.crm_account.crm_id,
-        hs_note_body=f"{subject} - {description}",
+        hs_note_body=f"{subject}<br> {description}",
     )
     attempts = 1
     while True:
