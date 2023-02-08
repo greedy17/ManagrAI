@@ -116,135 +116,6 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
     alertLevel: "ORGANIZATION",
 }
 
-const THIRTY_DAY_PIPELINE = {
-    title: "30 Day Pipeline",
-    subtitle: 'Rolling 30 day pipeline based on closed date',
-    user: null,
-    isActive: true,
-    crm: 'SALESFORCE',
-    resourceType: "Opportunity",
-    newGroups: [
-        {
-            groupCondition: "AND",
-            newOperands: [
-                // {
-                //     operandCondition: "AND",
-                //     operandIdentifier: "ForecastCategoryName",
-                //     operandOperator: "<=",
-                //     operandValue: 'Commit',
-                //     operandType: "FIELD",
-                //     operandOrder: 0,
-                //     dataType: "STRING",
-                //     group: "",
-                // },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
-                    operandOperator: "<=",
-                    operandValue: "30",
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
-                    operandOperator: ">=",
-                    operandValue: "0",
-                    operandType: "FIELD",
-                    operandOrder: 1,
-                    dataType: "DATE",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
-    ],
-    messageTemplate: {
-        bindings: [
-            " Opportunity.Name ",
-            " Opportunity.CloseDate ",
-            " Opportunity.StageName ",
-            " Opportunity.LastActivityDate ",
-        ],
-        body: "<strong>Opportunity Name</strong> \n { Opportunity.Name }\n\n<strong>Close Date</strong> \n { Opportunity.CloseDate }\n\n<strong>Stage</strong> \n { Opportunity.StageName }\n\n<strong>Last Activity</strong> \n { Opportunity.LastActivityDate }",
-    },
-    newConfigs: [
-        {
-            recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [],
-            recurrenceDay: "0",
-            recipients: ["default"],
-            alertTargets: ["SELF"],
-            recipientType: "SLACK_CHANNEL",
-            alertTemplateId: "",
-            template: "",
-        }
-    ],
-    alertLevel: "ORGANIZATION",
-}
-
-const THIRTY_DAY_PIPELINE_HUBSPOT = {
-    title: "30 Day Pipeline",
-    subtitle: 'Rolling 30 day pipeline based on closed date',
-    user: null,
-    isActive: true,
-    crm: 'HUBSPOT',
-    resourceType: "Deal",
-    newGroups: [
-        {
-            groupCondition: "AND",
-            newOperands: [
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: "<=",
-                    operandValue: "30",
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: ">=",
-                    operandValue: "0",
-                    operandType: "FIELD",
-                    operandOrder: 1,
-                    dataType: "DATE",
-                    group: "",
-                },
-            ],
-            groupOrder: 0,
-            template: "",
-        }
-    ],
-    messageTemplate: {
-        bindings: [
-            " Deal.dealname ",
-            " Deal.closedate ",
-            " Deal.dealstage ",
-        ],
-        body: "<strong>Deal Name</strong> \n { Deal.dealname }\n\n<strong>Close Date</strong> \n { Deal.closedate }</strong>\n\n<strong>Stage</strong> \n { Deal.dealstage }",
-    },
-    newConfigs: [
-        {
-            recurrenceFrequency: "WEEKLY",
-            recurrenceDays: [],
-            recurrenceDay: "0",
-            recipients: ["default"],
-            alertTargets: ["SELF"],
-            recipientType: "SLACK_CHANNEL",
-            alertTemplateId: "",
-            template: "",
-        }
-    ],
-    alertLevel: "ORGANIZATION",
-}
-
 const DEAL_REVIEW = {
     title: "Deal Review",
     subtitle: 'Closing within 14 days & no recent updates',
@@ -1073,8 +944,6 @@ const CLOSING_THIS_QUARTER = {
 const ALL_CONFIGS = {
     CLOSE_DATE_PASSED,
     CLOSE_DATE_PASSED_HUBSPOT,
-    THIRTY_DAY_PIPELINE,
-    THIRTY_DAY_PIPELINE_HUBSPOT,
     DEAL_REVIEW,
     DEAL_REVIEW_HUBSPOT,
     CLOSE_DATE_APPROACHING,
@@ -1083,13 +952,13 @@ const ALL_CONFIGS = {
     UPCOMING_NEXT_STEP_HUBSPOT,
     LARGE_OPPORTUNITIES,
     LARGE_DEALS_HUBSPOT,
-    TEAM_PIPELINE,
-    TEAM_PIPELINE_HUBSPOT,
     CLOSING_THIS_MONTH,
     CLOSING_THIS_MONTH_HUBSPOT,
     CLOSING_NEXT_MONTH,
     CLOSING_NEXT_MONTH_HUBSPOT,
     CLOSING_THIS_QUARTER,
+    TEAM_PIPELINE,
+    TEAM_PIPELINE_HUBSPOT,
 }
 
 export default ALL_CONFIGS;

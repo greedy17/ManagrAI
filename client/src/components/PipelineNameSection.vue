@@ -4,7 +4,7 @@
       <div>
         <!-- margin-bottom: 3px; if including account and owner -->
         <!-- <p>{{ hovering ? name : truncate(name, 20) }}</p> -->
-        <p>{{ name }}</p>
+        <p class="gray-section">{{ name }}</p>
         <!-- <span v-if="userCRM === 'SALESFORCE'" style="color: #199e54; font-size: 12px" :class="!accountName ? 'gray' : ''">
           {{ accountName ? accountName + ' ' : 'No Account ' }}
         </span> -->
@@ -46,4 +46,15 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.gray {
+  color: $very-light-gray !important;
+}
+
+.gray-section {
+  background-color: $off-white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
 </style>

@@ -2,24 +2,66 @@
   <div @keyup.esc="closeInlineEditor" tabindex="0" class="pipelines">
     <Modal v-if="modalOpen" dimmed>
       <div class="modal-container rel">
-        <div class="flex-row-spread sticky border-bottom">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
-            <h4>{{ selectedresourceName }} Notes</h4>
+        <div class="flex-row-spread sticky">
+          <div v-if="!addingNote" style="margin-left: 8px" class="flex-row set-max-width">
+            <img src="@/assets/images/logo.png" class="logo" height="28px" alt="" />
+            <h4>{{ selectedresourceName }}</h4>
           </div>
-          <div class="flex-row">
+          <h4
+            @click="addingNote = !addingNote"
+            style="margin-left: 16px; margin-top: 24px; cursor: pointer"
+            class="row"
+            v-else
+          >
             <img
-              @click="resetNotes"
-              src="@/assets/images/close.svg"
-              height="24px"
+              src="@/assets/images/back.svg"
+              style="margin-right: 8px"
+              height="18px"
               alt=""
-              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
-            />
-          </div>
+            />View Notes
+          </h4>
+
+          <img
+            @click="resetNotes"
+            v-if="!addingNote"
+            src="@/assets/images/close.svg"
+            height="24px"
+            alt=""
+            style="margin-right: 20px; margin-bottom: 24px; filter: invert(30%); cursor: pointer"
+          />
+
+          <img
+            @click="resetNotes"
+            v-else
+            src="@/assets/images/close.svg"
+            height="24px"
+            alt=""
+            style="margin-right: 20px; filter: invert(30%); cursor: pointer"
+          />
         </div>
 
         <div class="flex-row-spread-start">
-          <div style="margin-top: 8px">
+          <div class="note-container" v-if="notes.length && !addingNote">
+            <section class="note-section" :key="i" v-for="(note, i) in notes">
+              <p class="note-section__title">
+                {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
+              </p>
+              <p class="note-section__date">
+                {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
+              </p>
+              <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
+            </section>
+          </div>
+
+          <div v-else-if="!notes.length && !addingNote" class="note-container">
+            <div class="empty-list">
+              <section class="bg-img"></section>
+              <h4>Nothing here</h4>
+              <p>Start taking your notes in Managr.</p>
+            </div>
+          </div>
+
+          <div class="center" v-else>
             <span class="input-container">
               <input
                 class="input-field"
@@ -32,81 +74,49 @@
 
             <span class="input-container">
               <div
-                style="margin-top: -20px"
+                style="margin-top: -20px; height: 52vh"
                 @input="setUpdateValues('meeting_comments', $event.target.innerHTML)"
                 class="divArea"
                 v-html="noteValue"
                 contenteditable="true"
               ></div>
-              <!-- <span v-if="!formData['meeting_comments']" class="div-placeholder"
-                >Type your note here</span
-              > -->
             </span>
-            <section v-if="!addingTemplate" class="note-templates">
-              <span
-                v-if="noteTemplates.length"
-                @click="addingTemplate = !addingTemplate"
-                class="note-templates__content"
-              >
-                <!-- <img
-                  src="@/assets/images/add-document.svg"
-                  height="18px"
-                  style="margin-right: 2px"
-                  alt=""
-                /> -->
-                Insert template
-              </span>
-
-              <span @click="goToNotes" class="note-templates__content" v-else>
-                Create a template
-                <img src="@/assets/images/note.svg" style="margin-left: 4px" height="18px" alt=""
-              /></span>
-            </section>
-
-            <section class="note-templates2" v-else>
-              <div
-                v-for="(template, i) in noteTemplates"
-                :key="i"
-                @click="setTemplate(template.body, 'meeting_comments', template.subject)"
-                class="note-templates2__content"
-              >
-                {{ template.subject }}
-              </div>
-            </section>
-
-            <div
-              v-if="addingTemplate"
-              @click="addingTemplate = !addingTemplate"
-              class="close-template"
-            >
-              <img src="@/assets/images/close.svg" height="20px" alt="" />
-            </div>
-          </div>
-
-          <div class="note-container" v-if="notes.length">
-            <section class="note-section" :key="i" v-for="(note, i) in notes">
-              <p class="note-section__title">
-                {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
-              </p>
-              <p class="note-section__date">
-                {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
-              </p>
-              <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
-            </section>
-          </div>
-
-          <div v-else class="note-container">
-            <div class="empty-list">
-              <section class="bg-img"></section>
-              <h4>Nothing here</h4>
-              <p>Start taking your notes in Managr.</p>
-            </div>
           </div>
         </div>
 
         <footer class="modal-container__footer">
-          <!-- <p>Total: {{ notesLength }}</p> -->
-          <button @click="updateResource()" class="add-button">Save note</button>
+          <div style="margin-right: 8px; margin-bottom: 8px">
+            <div class="row-end" v-if="addingNote">
+              <Multiselect
+                :options="noteTemplates"
+                @select="setTemplate($event.body, 'meeting_comments', $event.subject)"
+                openDirection="above"
+                style="width: 12vw; margin-left: 16px; margin-top: -16px"
+                selectLabel=""
+                track-by="body"
+                label="subject"
+              >
+                <template v-slot:noResult>
+                  <p class="multi-slot">No results.</p>
+                </template>
+
+                <template v-slot:placeholder>
+                  <p class="slot-icon">
+                    <img src="@/assets/images/search.svg" alt="" />
+                    Insert Template
+                  </p>
+                </template>
+              </Multiselect>
+
+              <button @click="updateResource()" style="margin-top: -8px" class="add-button">
+                Save note
+              </button>
+            </div>
+
+            <div v-else class="flex-end">
+              <button @click="addingNote = !addingNote" class="add-button">Note +</button>
+            </div>
+          </div>
         </footer>
       </div>
     </Modal>
@@ -2633,60 +2643,22 @@
         </div>
       </div>
       <div style="margin-top: 8px"></div>
-      <!-- <div class="results"></div> -->
       <section v-if="!loadingWorkflows" class="table-section">
-        <div class="table">
-          <PipelineHeader
-            :oppFields="oppFields"
-            @check-all="onCheckAll"
-            @sort-opps="sortOpps"
-            @set-opps="setOpps"
-            @sort-opps-reverse="sortOppsReverse"
-            :allSelected="selectedWorkflow ? allWorkflowsSelected : allSelected"
-            :extraPipelineFields="extraPipelineFields"
-            :fieldOpts="objectFields.list"
-          />
-          <PipelineTableRow
-            :ref="selectedWorkflow ? 'workflowTableChild' : 'pipelineTableChild'"
-            :key="i"
-            v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : allOpps"
-            @create-form="
-              createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
-            "
-            @get-notes="
-              getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)
-            "
-            @checked-box="
-              selectedWorkflow ? selectWorkflowCheckbox(opp.id) : selectPrimaryCheckbox(opp.id)
-            "
-            @inline-edit="inlineUpdate"
-            @open-stage-form="openStageForm"
-            @current-inline-row="changeCurrentRow"
-            @set-dropdown-value="setDropdownValue"
-            @get-reference-opts="getReferenceOpts"
-            @updated-values="updateOpps"
-            @close-inline-editor="closeInlineEditor"
-            :dropdownLoading="dropdownLoading"
-            :dropdownValue="dropdownValue"
-            :closeEdit="closeInline"
-            :stages="stagesWithForms"
-            :inlineLoader="inlineLoader"
-            :picklistOpts="allPicklistOptions"
-            :referenceOpts="referenceOpts"
-            :opp="opp"
-            :index="i"
-            :oppFields="oppFields"
-            :primaryCheckList="selectedWorkflow ? workflowCheckList : primaryCheckList"
-            :updateList="updateList"
-            :stageData="newStage"
-            :closeDateData="daysForward"
-            :ForecastCategoryNameData="newForecast"
-            :BulkUpdateName="oppVal ? oppVal.apiName : null"
-            :BulkUpdateValue="oppNewValue"
-            :currentInlineRow="currentInlineRow"
-            :extraPipelineFields="extraPipelineFields"
-          />
-        </div>
+        <Table
+          :allOpps="selectedWorkflow ? filteredWorkflows : allOpps"
+          :oppFields="oppFields"
+          :extraPipelineFields="extraPipelineFields"
+          :fieldOpts="objectFields.list"
+          :closeEdit="closeInline"
+          :inlineLoader="inlineLoader"
+          @create-form="createFormInstance"
+          @get-notes="getNotes"
+          @set-opps="setOpps"
+          @current-inline-row="changeCurrentRow"
+          @close-inline-editor="closeInlineEditor"
+          @sort-opps="sortOpps"
+          @sort-opps-reverse="sortOppsReverse"
+        />
       </section>
       <div
         class="table-overlay"
@@ -2772,7 +2744,12 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
+                    val:
+                      field.apiName === 'StageName'
+                        ? $event.value
+                        : field.apiName === 'dealstage'
+                        ? [$event.label, $event.id]
+                        : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
@@ -2980,14 +2957,13 @@ import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-import PipelineTableRow from '@/components/PipelineTableRow'
-import PipelineHeader from '@/components/PipelineHeader'
 import Modal from '@/components/InviteModal'
 import Loader from '@/components/Loader'
 import PipelineLoader from '@/components/PipelineLoader'
 import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
+import Table from '@/components/Table'
 
 export default {
   name: 'Pipelines',
@@ -2995,15 +2971,15 @@ export default {
     Modal,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineTableRow,
-    PipelineHeader,
     PipelineLoader,
     Loader,
     Filters,
     FilterSelection,
+    Table,
   },
   data() {
     return {
+      addingNote: false,
       task: false,
       checker: null,
       verboseName: null,
@@ -3016,6 +2992,8 @@ export default {
       storedStageName: '',
       pipelineOptions: [],
       recordOptions: [],
+      listViews: ['All Opportunites', 'Closing This Month', 'Closing Next Month'],
+      dealStages: [],
       stageGateCopy: [],
       stageReferenceOpts: {},
       currentSelectedProduct: null,
@@ -3382,6 +3360,7 @@ export default {
       this.currentSelectedProduct = secondaryData
     },
     setTemplate(val, field, title) {
+      console.log(val)
       this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = val
@@ -4191,6 +4170,7 @@ export default {
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen
+      this.addingNote = false
       this.notes = []
     },
     resetEdit() {
@@ -4798,8 +4778,10 @@ export default {
     },
     async updateResource() {
       this.updateList.push(this.oppId)
+      setTimeout(() => {
+        this.editOpModalOpen = false
+      }, 300)
 
-      this.editOpModalOpen = false
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
@@ -4889,6 +4871,7 @@ export default {
       } finally {
         this.updateList = []
         this.formData = {}
+        this.addingNote = false
         // this.closeFilterSelection()
       }
     },
@@ -5260,12 +5243,34 @@ export default {
         this.loadingAccounts = false
       }
     },
-    async getNotes(id) {
+
+    // async getObjects() {
+    //   this.loading = true
+    //   try {
+    //     const res = await SObjects.api.getObjectsForWorkflows('Opportunity', true, this.filters)
+    //     this.allOpps = res.results
+    //     this.originalList = res.results
+    //     this.oppTotal = res.count
+    //     this.originalOppTotal = res.count
+    //   } catch (e) {
+    //     this.$toast('Error gathering Opportunities!', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
+
+    async getNotes(opp) {
+      this.modalOpen = true
       try {
         const res = await CRMObjects.api.getNotes({
-          resourceId: id,
+          resourceId: opp.id,
         })
-        this.modalOpen = true
         if (res.length) {
           this.notes = []
           for (let i = 0; i < res.length; i++) {
@@ -5275,6 +5280,7 @@ export default {
           }
         }
       } catch (e) {
+        this.modalOpen = false
         this.$toast('Error gathering Notes!', {
           timeout: 2000,
           position: 'top-left',
@@ -5282,6 +5288,8 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        this.createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)
       }
     },
     // closeDatesThisMonth() {
@@ -5428,9 +5436,26 @@ export default {
   }
 }
 
+.sortable-chosen,
+sortable-chosen.sortable-ghost {
+  opacity: 0;
+}
+.sortable-ghost {
+  background-color: #dadada;
+  opacity: 1;
+}
+
 .green {
   color: $dark-green;
   background-color: $white-green;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.gray {
+  color: $dark-green;
+  background-color: $very-light-blue;
   padding: 2px 4px;
   border-radius: 4px;
   margin-left: 8px;
@@ -5652,10 +5677,10 @@ export default {
 .sticky {
   position: sticky;
   background-color: white;
+  padding: 8px 0 0 0;
   width: 100%;
   left: 0;
   top: 0;
-  padding: 0px 6px 8px -2px;
 }
 .rel {
   position: relative;
@@ -5852,6 +5877,14 @@ export default {
   flex-direction: row;
   align-items: center;
 }
+.row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  // width: 40vw;
+}
 select {
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -6002,9 +6035,8 @@ h3 {
 }
 .table-section {
   margin: 0;
-  padding: 0;
   min-height: 50vh;
-  max-height: 91vh;
+  max-height: 90vh;
   width: 93vw;
   overflow: scroll;
   border-radius: 12px;
@@ -6095,24 +6127,44 @@ h3 {
 //   display: table-row;
 //   height: 100%;
 // }
+.table-cell {
+  display: table-cell;
+  min-width: 16vw;
+  border: none;
+  font-size: 13px;
+}
+.table-cell-wide {
+  display: table-cell;
+  min-width: 26vw;
+  border: none;
+  font-size: 13px;
+}
+.cell-name {
+  min-width: 21.5vw;
+  display: table-cell;
+  padding-left: 4px;
+}
+.center {
+  display: flex;
+  margin-left: 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 .modal-container {
   background-color: $white;
   overflow-y: scroll;
   overflow-x: hidden;
-  width: 80vw;
-  // min-height: 50vh;
+  width: 40vw;
   height: 80vh;
   align-items: center;
   border-radius: 0.5rem;
   padding: 0px 4px;
 
   &__footer {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    position: sticky;
     bottom: 0;
-    right: 16px;
+    right: 0;
     padding: 0px 8px;
     background-color: white;
 
@@ -6121,11 +6173,11 @@ h3 {
       color: $light-gray-blue;
     }
 
-    button {
-      margin-right: 0px;
-      margin-left: 60vw;
-      margin-bottom: 12px;
-    }
+    // button {
+    //   margin-right: 0px;
+    //   margin-left: 60vw;
+    //   margin-bottom: 12px;
+    // }
   }
 }
 .opp-modal-container {
@@ -6159,28 +6211,28 @@ h3 {
   }
 }
 .note-container {
-  height: 60vh;
+  height: 54vh;
   overflow-y: scroll;
-  width: 80vw;
-  padding: 0px 16px 8px 8px;
+  width: 100%;
+  padding: 0px 16px 8px 16px;
   margin: 0;
 }
-.note-container::-webkit-scrollbar {
-  width: 6px;
-  height: 0px;
-}
-.note-container::-webkit-scrollbar-thumb {
-  background-color: $very-light-gray;
-  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 0.3rem;
-}
-.note-container::-webkit-scrollbar-track {
-  box-shadow: inset 2px 2px 4px 0 $soft-gray;
-  border-radius: 0.3rem;
-}
-.note-container::-webkit-scrollbar-track-piece {
-  margin-top: 0.25rem;
-}
+// .note-container::-webkit-scrollbar {
+//   width: 6px;
+//   height: 0px;
+// }
+// .note-container::-webkit-scrollbar-thumb {
+//   background-color: $very-light-gray;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 0.3rem;
+// }
+// .note-container::-webkit-scrollbar-track {
+//   box-shadow: inset 2px 2px 4px 0 $soft-gray;
+//   border-radius: 0.3rem;
+// }
+// .note-container::-webkit-scrollbar-track-piece {
+//   margin-top: 0.25rem;
+// }
 .note-section {
   background-color: white;
   border-bottom: 1px solid $soft-gray;
@@ -6283,7 +6335,8 @@ section {
   align-items: center;
   letter-spacing: 1px;
   h4 {
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: normal;
   }
 }
 .flex-row-pad {
@@ -6380,6 +6433,7 @@ section {
   color: white;
   transition: all 0.3s;
   letter-spacing: 0.75px;
+  white-space: nowrap;
 }
 .add-button__ {
   display: flex;
@@ -6621,7 +6675,7 @@ main:hover > span {
   letter-spacing: 0.75px;
 }
 .list-button:hover {
-  color: $dark-green;
+  color: black;
   background-color: $off-white;
 }
 // .filter {
@@ -6633,6 +6687,13 @@ main:hover > span {
   font-weight: bold;
   margin-left: 1rem;
   cursor: pointer;
+}
+.flex-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 .flex-end-opp {
   width: 100%;
@@ -6761,11 +6822,15 @@ a {
 }
 .input {
   min-height: 40px;
-  // display: block;
-  // padding: 8px 40px 0 8px;
   border-radius: 5px;
   border: 1px solid #e8e8e8;
   background: #fff;
   font-size: 14px;
+}
+.set-max-width {
+  width: 40vw;
+  overflow-x: scroll;
+  white-space: nowrap;
+  text-align: left;
 }
 </style>
