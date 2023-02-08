@@ -611,7 +611,7 @@ def _process_add_call_to_hs(workflow_id, *args):
     return
 
 
-@background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(schedule=0)
 def _process_add_update_to_hs(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
     resource = routes[form.resource_type]["model"].objects.get(id=form.resource_id)
@@ -627,6 +627,8 @@ def _process_add_update_to_hs(form_id, *args):
         else form.saved_data.get("meeting_type")
     )
     description = form.saved_data.get("meeting_comments")
+    if description is None:
+        description = "No Comments"
     description = replace_tags(description)
     data = dict(
         hs_timestamp=formatted_time,
