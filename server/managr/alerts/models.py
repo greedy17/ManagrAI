@@ -305,6 +305,9 @@ class AlertOperand(TimeStampModel):
                     value = f"'{value}%'"
             else:
                 value = f"'{value}'"
+        elif operator == "IS_BLANK":
+            operator = "="
+            value = "null"
         q_s = f"{self.operand_identifier} {operator} {value}"
         ## TODO: there may be a reason to check id for match in group.operands.first() if there is an issue with order
         if self.operand_order != 0:
@@ -409,7 +412,7 @@ class AlertOperand(TimeStampModel):
                 ).timestamp()
                 # .strftime("%Y-%m-%dT00:00:00Z")
             )
-        elif operator == "NOT_HAS_PROPERTY":
+        elif operator == "IS_BLANK":
             return {"operator": "NOT_HAS_PROPERTY", "propertyName": self.operand_identifier}
         elif self.data_type == "STRING" and self.operand_value != "null":
 
