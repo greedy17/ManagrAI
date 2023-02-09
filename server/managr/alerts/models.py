@@ -409,6 +409,8 @@ class AlertOperand(TimeStampModel):
                 ).timestamp()
                 # .strftime("%Y-%m-%dT00:00:00Z")
             )
+        elif operator == "NOT_HAS_PROPERTY":
+            return {"operator": "NOT_HAS_PROPERTY", "propertyName": self.operand_identifier}
         elif self.data_type == "STRING" and self.operand_value != "null":
 
             # sf requires single quotes for strings only (aka not decimal or date)
