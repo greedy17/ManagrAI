@@ -379,9 +379,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update(data)
             attempts = 1
-            update_forms.update(
-                is_submitted=True, submission_date=timezone.now(), update_source="meeting"
-            )
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -453,10 +451,7 @@ def _process_create_resource_from_meeting(workflow_id, *args):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         create_forms.update(
-            is_submitted=True,
-            submission_date=timezone.now(),
-            update_source="meeting",
-            resource_id=serializer.instance.id,
+            is_submitted=True, submission_date=timezone.now(), resource_id=serializer.instance.id,
         )
         workflow.resource_id = serializer.instance.id
         workflow.save()
@@ -616,7 +611,7 @@ def _process_add_call_to_hs(workflow_id, *args):
     return
 
 
-@background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(schedule=0)
 def _process_add_update_to_hs(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
     resource = routes[form.resource_type]["model"].objects.get(id=form.resource_id)
@@ -632,11 +627,13 @@ def _process_add_update_to_hs(form_id, *args):
         else form.saved_data.get("meeting_type")
     )
     description = form.saved_data.get("meeting_comments")
+    if description is None:
+        description = "No Comments"
     description = replace_tags(description)
     data = dict(
         hs_timestamp=formatted_time,
         hubspot_owner_id=user.crm_account.crm_id,
-        hs_note_body=f"{subject} - {description}",
+        hs_note_body=f"{subject}<br> {description}",
     )
     attempts = 1
     while True:
@@ -711,7 +708,6 @@ def _process_create_new_hs_contacts(workflow_id, *args):
                     data, hs.access_token, object_fields, str(user.id),
                 )
                 form.is_submitted = True
-                form.update_source = "meeting"
                 form.submission_date = timezone.now()
                 form.save()
                 break
@@ -809,7 +805,6 @@ def _process_update_hs_contacts(workflow_id, *args):
                     form.resource_object.update(data,)
                     attempts = 1
                     form.is_submitted = True
-                    form.update_source = "meeting"
                     form.submission_date = timezone.now()
                     form.save()
                     if workflow.resource_type == slack_consts.FORM_RESOURCE_DEAL:
@@ -890,6 +885,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
         "form_type": "UPDATE",
         "user": user,
         "stage_name": None,
+        "update_source": "slack-bulk",
     }
 
     bulk_form_ids = []
@@ -914,7 +910,6 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
             try:
                 resource = form.resource_object.update(all_form_data)
                 form.is_submitted = True
-                form.update_source = "slack-bulk"
                 form.submission_date = timezone.now()
                 form.save()
                 value_update = form.resource_object.update_database_values(all_form_data)
@@ -1029,7 +1024,6 @@ def _process_slack_inline_update(payload, context):
                 try:
                     resource = form.resource_object.update(data)
                     form.is_submitted = True
-                    form.update_source = "slack-inline"
                     form.submission_date = timezone.now()
                     form.save()
                     value_update = form.resource_object.update_database_values(data)

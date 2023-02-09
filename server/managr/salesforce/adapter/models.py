@@ -28,6 +28,7 @@ class SObjectFieldAdapter:
         self.api_name = data.get("api_name", None)
         self.label = data.get("label", None)
         self.data_type = data.get("data_type", None)
+        self.data_type_details = data.get("extra_type_info", None)
         self.display_value = data.get("display_value", "")
         self.options = data.get("options", [])
         self.createable = data.get("createable", True)
@@ -39,35 +40,11 @@ class SObjectFieldAdapter:
         self.integration_source = data.get("integration_source", "")
         self.integration_id = data.get("integration_id", "")
         self.imported_by = data.get("imported_by", None)
-        # self.api_name = data.get("api_name", None)
-        # self.custom = data.get("custom", None)
-        # self.createable = data.get("createable", None)
-        # self.data_type = data.get("data_type", None)
-        # self.label = data.get("label", "")
-        # self.length = data.get("length", 0)
-        # self.reference = data.get("reference", None)
-        # self.reference_to_infos = data.get("reference_to_infos", [])
-        # self.relationship_name = data.get("relationship_name", None)
-        # self.updateable = data.get("updateable", None)
-        # self.required = data.get("required", None)
-        # self.unique = data.get("unique", None)
-        # self.value = data.get("value", None)
-        # self.filterable = data.get("filterable", None)
-        # self.display_value = data.get("display_value", "")
-        # self.options = data.get("options", [])
-        # self.integration_source = data.get("integration_source", "")
-        # self.integration_id = data.get("integration_id", "")
-        # self.salesforce_account = data.get("salesforce_account", None)
-        # self.salesforce_object = data.get("salesforce_object", None)
-        # self.imported_by = data.get("imported_by", None)
-        # self.allow_multiple = data.get("allow_multiple", None)
-        # self.default_filters = data.get("default_filters", [])
 
     @staticmethod
     def from_api(data):
         data["integration_source"] = "SALESFORCE"
         d = object_to_snake_case(data)
-
         return d
 
     @classmethod

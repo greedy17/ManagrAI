@@ -7,10 +7,14 @@ from django.db.models import Q
 from managr.slack.helpers import block_builders
 from managr.crm.exceptions import TokenExpired, InvalidRefreshToken, ApiRateLimitExceeded
 from . import constants as slack_consts
-
+from managr.alerts.utils.utils import convertToSlackFormat
 from managr.core.models import TimeStampModel
 
 logger = logging.getLogger("managr")
+
+
+def DEFAULT_RECAP_DICT():
+    return dict(channels_sent={}, users_opened={})
 
 
 class OrganizationSlackIntegrationQuerySet(models.QuerySet):
@@ -291,6 +295,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     alert_instance_id = models.ForeignKey(
         "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
     )
+    recap_data = JSONField(default=DEFAULT_RECAP_DICT, null=True, blank=True,)
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
     def __str__(self):
@@ -411,6 +416,8 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         for field in user_fields:
 
             val = form_values.get(field.api_name, None)
+            if field.data_type == "TextArea" and val is not None:
+                val = convertToSlackFormat(val)
             if field.is_public:
                 # pass in user as a kwarg
                 generated_field = field.to_slack_field(
@@ -432,6 +439,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
                     )
                     form_blocks.append({"type": "divider"})
             else:
+
                 generated_field = field.to_slack_field(
                     val,
                     user=self.user,
@@ -517,6 +525,19 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         self.saved_data = new_data
         self.previous_data = old_data
         self.save()
+
+    def add_to_recap_data(self, channel_id=None, user=None):
+        if channel_id:
+            if channel_id in self.recap_data["channels_sent"].keys():
+                self.recap_data["channels_sent"][channel_id] += 1
+            else:
+                self.recap_data["channels_sent"][channel_id] = 1
+        else:
+            if user in self.recap_data["users_opened"].keys():
+                self.recap_data["users_opened"][user] += 1
+            else:
+                self.recap_data["users_opened"][user] = 1
+        return
 
 
 class FormField(TimeStampModel):

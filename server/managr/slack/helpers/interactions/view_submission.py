@@ -297,7 +297,6 @@ def process_alert_inline_stage_submitted(payload, context):
         form.saved_data = stage_form.saved_data
     form.is_submitted = True
     form.submission_date = timezone.now()
-    form.update_source = "slack-inline"
     form.save()
     return {"response_action": "clear"}
 

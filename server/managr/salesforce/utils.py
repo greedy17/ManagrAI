@@ -115,24 +115,25 @@ def process_text_field_format(user_id, resource, saved_data):
     public_fields = ObjectField.objects.filter(
         Q(is_public=True) & Q(data_type="String", length__gt=250)
     ).values_list("api_name", flat=True)
-    fields = list(
-        ObjectField.objects.for_user(user)
-        .filter(
-            Q(crm_object=resource, data_type="TextArea") | Q(data_type="String", length__gt=250)
-        )
-        .values_list("api_name", flat=True)
+    fields_ref = ObjectField.objects.for_user(user).filter(
+        Q(crm_object=resource, data_type="TextArea") | Q(data_type="String", length__gt=250)
     )
+    fields = list(fields_ref.values_list("api_name", flat=True))
     fields.extend(public_fields)
     to_check_fields = [field for field in saved_data if field in fields]
     if len(to_check_fields):
         for field in to_check_fields:
+            field_ref = fields_ref.filter(api_name=field).first()
             if saved_data[field]:
                 split_field = saved_data[field].split("\n")
                 if len(split_field) > 1:
-                    salesforce_formatted = "\r\n".join(split_field)
+                    if field_ref and field_ref.data_type_details == "RichTextArea":
+                        salesforce_formatted = "<br>".join(split_field)
+                    else:
+                        salesforce_formatted = "\r\n".join(split_field)
                     saved_data[field] = salesforce_formatted
         return saved_data
-    return False
+    return saved_data
 
 
 def map_records(arr1, arr2):
