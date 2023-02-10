@@ -1,5 +1,5 @@
 <template>
-        <div v-if="page === 'workflows'" class="header">
+        <div v-if="!tabs || !tabs.length" class="header">
             <div>
                 <h3 v-if="!creating && !editing" class="left-margin">{{title}} 
                     <span v-if="titlesLength !== undefined && titlesLength !== null" class="gray-text">: {{ titlesLength }}</span>

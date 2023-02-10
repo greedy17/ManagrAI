@@ -2010,6 +2010,7 @@
       <!-- <h3 class="pipeline-header">
         {{ !currentWorkflowName ? currentList : currentWorkflowName }}
       </h3> -->
+      
       <section style="margin-top: -10px" class="flex-row-spread">
         <div v-if="/*!workflowCheckList.length && !primaryCheckList.length*/ true" class="flex-row">
           <small class="pipeline-header">View:</small>
@@ -2061,7 +2062,7 @@
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button v-if="userCRM === 'SALESFORCE'" @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')" class="list-button">
                 All Leads
-                <span @click="test(allLeads)" class="green">
+                <span class="green">
                   {{ allLeads && allLeads.length ? allLeads.length : 0 }}
                 </span>
               </button>
@@ -2951,16 +2952,17 @@
                 </Multiselect>
               </div>
               <div v-else-if="field.dataType === 'Reference'">
-                <!-- :options="referenceOpts[field.apiName]" -->
-                <div @click="test(createReferenceOpts)">test</div>
                 <Multiselect
                   style="width: 23vw; font-size: 13px"
                   v-model="dropdownVal[field.apiName]"
+                  @search-change="field.apiName === 'AccountId' ? getAccounts($event) : () => null"
                   :options="
                       field.apiName === 'dealstage'
                         ? (field.options[0][savedPipeline.id]
                           ? field.options[0][savedPipeline.id].stages
                           : [])
+                        : field.apiName === 'AccountId'
+                        ? allAccountsForSObjects
                         : userCRM === 'HUBSPOT' && field.dataType !== 'Reference'
                         ? field.options
                         : (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') &&
@@ -3037,6 +3039,7 @@ import Loader from '@/components/Loader'
 import PipelineLoader from '@/components/PipelineLoader'
 import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
+import AlertsHeader from '@/components/AlertsHeader'
 import User from '@/services/users'
 
 export default {
@@ -3053,6 +3056,7 @@ export default {
     Loader,
     Filters,
     FilterSelection,
+    AlertsHeader,
   },
   data() {
     return {
