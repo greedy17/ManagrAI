@@ -168,7 +168,7 @@ const actions = {
   async checkTask({ commit }, vbName) {
     try {
       const task = await User.api.checkTasks(vbName)
-      commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task})
+      commit('UPDATE_CUSTOM_OBJECT', { ...state.customObject, task })
     } catch (e) {
       console.log(e)
     }
@@ -181,7 +181,7 @@ const actions = {
         //   dispatch('checkTask', vbName)
         //   // this.loaderText = this.loaderTextList[this.changeLoaderText()]
         // }, 2000)
-        commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task: null})
+        commit('UPDATE_CUSTOM_OBJECT', { ...state.customObject, task: null })
       })
     } catch (e) {
       console.log(e)
