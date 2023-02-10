@@ -372,6 +372,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
     updateable = models.BooleanField(default=False)
     required = models.BooleanField(default=False)
     data_type = models.CharField(max_length=255)
+    data_type_details = models.CharField(max_length=255, null=True, blank=True)
     display_value = models.CharField(
         max_length=255,
         blank=True,

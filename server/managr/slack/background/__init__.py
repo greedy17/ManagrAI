@@ -377,7 +377,7 @@ def _process_submit_resource_data(payload, context):
     if not len(stage_forms):
         main_form.save_form(state)
     all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-    formatted_saved_data = process_text_field_format(
+    all_form_data = process_text_field_format(
         str(user.id), main_form.template.resource, all_form_data
     )
     attempts = 1
@@ -387,7 +387,6 @@ def _process_submit_resource_data(payload, context):
             if main_form.template.form_type == "UPDATE":
                 main_form.resource_object.update(all_form_data)
                 resource = main_form.resource_object
-                main_form.resource_object.update_database_values(all_form_data)
 
             else:
                 create_route = model_routes(user.crm)
@@ -525,9 +524,10 @@ def _process_submit_resource_data(payload, context):
         message = f":white_check_mark: Successfully updated *{main_form.resource_type}* _{resource.name if hasattr(resource, 'name') else resource.email}_"
     if (
         all_form_data.get("meeting_comments") is not None
-        and all_form_data.get("meeting_type") is not None
+        or all_form_data.get("meeting_type") is not None
     ):
         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
+    main_form.resource_object.update_database_values(all_form_data)
     try:
         slack_requests.update_channel_message(
             sending_res["channel"],
