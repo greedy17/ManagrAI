@@ -25,7 +25,7 @@
         {{ fieldData ? formatDateTime(fieldData) : 'Empty' }}
       </p>
 
-      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="apiName === 'OwnerId'">
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="apiName === 'OwnerId' || apiName === 'hubspot_owner_id'">
         {{ owner ? owner : 'Empty' }}
       </p>
 

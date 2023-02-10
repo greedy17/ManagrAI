@@ -2141,7 +2141,7 @@
             </div>
           </section>
 
-          <section style="position: relative">
+          <section style="position: relative" v-if="baseResourceType === 'Opportunity'">
             <button
               v-if="activeFilters.length < 4 && !selectedWorkflow"
               @click.stop="addingFilter"
@@ -2407,7 +2407,7 @@
             </button>
             <span class="tooltiptext">Sync Fields</span>
           </div>
-          <div v-if="!selectedWorkflow" class="search-bar">
+          <div v-if="!selectedWorkflow && baseResourceType === 'Opportunity'" class="search-bar">
             <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input
               type="search"
@@ -2416,7 +2416,7 @@
               @input="getFilteredOpps"
             />
           </div>
-          <div v-else class="search-bar">
+          <div v-else-if="baseResourceType === 'Opportunity'" class="search-bar">
             <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input type="search" placeholder="search" v-model="workflowFilterText" />
           </div>
