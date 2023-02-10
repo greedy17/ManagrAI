@@ -69,7 +69,6 @@
             v-for="(field, i) in oppFields"
             :key="i * 7777 + 1"
             :class="{ highlight: reverseIndex === i || sortingIndex === i }"
-            :title="field.referenceDisplayLabel"
           >
             <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
             {{ field.referenceDisplayLabel }}
@@ -143,6 +142,7 @@
           v-for="(opp, j) in allOpps"
           :key="j"
           :class="{ hovered: currentRow === j }"
+          :title="oppName(userCRM, opp)"
         >
           <td :class="{ hovered: currentRow === j }">
             <span v-if="currentRow === j">
