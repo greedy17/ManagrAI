@@ -53,7 +53,11 @@
             </section>
           </div>
 
-          <div v-else-if="!notes.length && !addingNote" class="note-container">
+          <div
+            style="margin-top: -8px"
+            v-else-if="!notes.length && !addingNote"
+            class="note-container"
+          >
             <div class="empty-list">
               <section class="bg-img"></section>
               <h4>Nothing here</h4>
@@ -114,7 +118,7 @@
             </div>
 
             <div v-else class="flex-end">
-              <button @click="addingNote = !addingNote" class="add-button">Note +</button>
+              <button @click="addingNote = !addingNote" class="add-button">New Note</button>
             </div>
           </div>
         </footer>
@@ -137,7 +141,7 @@
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            style="height: 1.25rem; margin-top: -1rem; cursor: pointer"
             @click="resetAddOpp"
             alt=""
           />
@@ -1126,22 +1130,57 @@
     </Modal>
     <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
-        <div class="flex-row-spread header">
-          <div class="flex-row">
-            <span class="logo">
+        <div
+          style="border-bottom: 2px solid #eeeeee; padding-bottom: 24px"
+          class="flex-row-spread header"
+        >
+          <div>
+            <!-- <span class="logo">
               <img src="@/assets/images/logo.png" height="24px" alt="" />
-            </span>
+            </span> -->
 
-            <h3>Update {{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</h3>
+            <h3 style="padding: 0; margin: 0">{{ savedOpp.name }}</h3>
+            <small style="margin-top: 12px; color: #aaaaaa; display: block">{{
+              userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+            }}</small>
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -1.5rem; margin-right: 0.75rem; cursor: pointer"
+            style="
+              height: 1.5rem;
+              margin-top: -1.5rem;
+
+              cursor: pointer;
+              filter: invert(45%);
+            "
             @click="resetEdit"
             alt=""
           />
         </div>
         <div class="opp-modal">
+          <div class="even-row">
+            <h4 style="cursor: not-allowed">Update Fields</h4>
+            <h4
+              v-if="hasProducts && userCRM === 'SALESFORCE'"
+              :class="{
+                lightgray: !addingProduct,
+              }"
+              @click="addProduct"
+            >
+              {{ !addingProduct ? 'Add Product' : 'Adding Product' }}
+            </h4>
+            <h4
+              :class="{
+                lightgray: !viewingProducts,
+              }"
+              v-if="
+                hasProducts && userCRM === 'SALESFORCE' && currentProducts && currentProducts.length
+              "
+              @click="toggleViewingProducts"
+            >
+              {{ !viewingProducts ? 'Edit Products' : 'Close Products' }}
+            </h4>
+          </div>
           <section :key="i" v-for="(field, i) in oppFormCopy">
             <div
               style="margin-left: -0.5rem; margin-top: -2rem; display: none"
@@ -1601,7 +1640,10 @@
 
           <div ref="product" class="adding-product" v-if="addingProduct">
             <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
-            <!-- <h4 style="color: #41b883">Add Product</h4> -->
+            <div class="add-section">
+              <div></div>
+              <p>Add Product</p>
+            </div>
 
             <div class="adding-product__body">
               <div v-if="!pricebookId">
@@ -1777,6 +1819,10 @@
           </div>
           <div v-if="hasProducts && currentProducts && currentProducts.length">
             <section ref="allProducts" v-if="!editingProduct && viewingProducts">
+              <div class="add-section">
+                <div></div>
+                <p>Edit Products</p>
+              </div>
               <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
                 <h4>
                   {{ product.secondary_data.Name }}
@@ -1794,14 +1840,14 @@
                       )
                     "
                   >
-                    <img src="@/assets/images/edit.svg" height="16px" alt="" />
+                    <img src="@/assets/images/expand.svg" height="16px" alt="" />
                   </button>
                 </span>
               </div>
             </section>
 
             <div class="current-products" v-if="editingProduct">
-              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+              <p style="font-size: 15px; margin-bottom: 24px">
                 {{ productName }}
               </p>
               <PipelineLoader v-if="savingProduct" />
@@ -1959,42 +2005,15 @@
 
               <div class="current-products__footer">
                 <p @click="cancelEditProduct">Cancel</p>
-                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <button class="add-button__" @click="updateProduct">Update</button>
               </div>
             </div>
           </div>
         </div>
 
         <div class="flex-end-opp">
-          <div v-if="hasProducts && userCRM === 'SALESFORCE'" class="row">
-            <button
-              style="padding: 10px; margin-right: 4px"
-              v-if="!addingProduct"
-              @click="addProduct"
-              class="select-btn1"
-            >
-              Add Product
-            </button>
-
-            <button @click="addProduct" v-else class="cancel" style="margin-right: 4px">
-              Cancel
-            </button>
-            <button
-              v-if="!viewingProducts && currentProducts && currentProducts.length"
-              @click="toggleViewingProducts()"
-              style="margin-left: 8px"
-              class="select-btn1"
-            >
-              View products <span>{{ currentProducts ? currentProducts.length : 0 }}</span>
-            </button>
-            <button v-else-if="viewingProducts" @click="toggleViewingProducts()" class="cancel">
-              Close products
-            </button>
-          </div>
-
-          <div v-else></div>
-
-          <div style="display: flex; align-items: center">
+          <div></div>
+          <div style="display: flex; align-items: flex-end; justify-content: flex-end">
             <button
               style="padding: 10px"
               @click="
@@ -2642,7 +2661,7 @@
           </button>
         </div>
       </div>
-      <div style="margin-top: 8px"></div>
+      <div style="margin-top: 16px"></div>
       <section v-if="!loadingWorkflows" class="table-section">
         <Table
           :allOpps="selectedWorkflow ? filteredWorkflows : allOpps"
@@ -5548,33 +5567,30 @@ sortable-chosen.sortable-ghost {
 }
 .current-products {
   font-size: 12px;
-  padding-left: 4px;
   width: 40.25vw;
-
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border-radius: 6px;
+  outline: 1px solid $soft-gray;
+  border-radius: 4px;
   padding: 8px;
-  margin-top: 16px;
+  margin-top: 24px;
+  margin-left: 2px;
 
   h4 {
     font-weight: bold;
+    margin-bottom: 0;
   }
   span {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: -6px;
+    margin-top: -8px;
 
     p {
-      // background-color: $white-green;
-      color: $dark-green;
-      padding: 4px;
       border-radius: 4px;
+      margin: 0;
     }
 
     button {
-      border: 1px solid $soft-gray;
-
+      border: none;
       color: $dark-green;
       background-color: white;
       border-radius: 4px;
@@ -5585,7 +5601,7 @@ sortable-chosen.sortable-ghost {
       margin-right: 4px;
 
       img {
-        filter: invert(40%);
+        filter: invert(50%);
       }
     }
   }
@@ -5600,9 +5616,10 @@ sortable-chosen.sortable-ghost {
     position: sticky;
 
     p {
-      margin-right: 16px;
+      margin-right: 24px;
+      font-size: 14px;
       cursor: pointer;
-      color: $coral;
+      // color: $coral;
     }
   }
 
@@ -5664,13 +5681,37 @@ sortable-chosen.sortable-ghost {
   }
 
   label {
-    color: $light-gray-blue;
+    color: $base-gray;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 14px;
   }
   p {
-    color: $light-gray-blue;
+    color: $base-gray;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 14px;
   }
 }
-
+.add-section {
+  position: relative;
+  height: 40px;
+  // margin-top: 16px;
+  div {
+    position: absolute;
+    border-bottom: 1px solid $soft-gray;
+    width: 100%;
+    bottom: 0;
+  }
+  p {
+    position: absolute;
+    left: 40%;
+    top: 12px;
+    background-color: white;
+    z-index: 3;
+    padding: 0 12px;
+  }
+}
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
 }
@@ -6033,18 +6074,16 @@ input {
 h3 {
   font-size: 22px;
 }
-.table-section {
-  margin: 0;
-  min-height: 50vh;
-  max-height: 90vh;
-  width: 93vw;
-  overflow: scroll;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  border-collapse: separate;
-  // border-spacing: 3px;
-  background-color: white;
-}
+// .table-section {
+//   margin: 0;
+//   min-height: 50vh;
+//   max-height: 90vh;
+//   width: 93vw;
+//   overflow: scroll;
+//   border-radius: 6px;
+//   border: 1px solid #e8e8e8;
+//   background-color: white;
+// }
 .table-section::-webkit-scrollbar {
   width: 0px;
   height: 8px;
@@ -6188,17 +6227,40 @@ h3 {
   width: 44vw;
   height: 90vh;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 24px 24px 8px 24px;
   // border: 1px solid #e8e8e8;
+}
+.even-row {
+  display: flex;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  padding-bottom: 16px;
+  z-index: 10;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: -16px;
+  h4 {
+    margin-bottom: 0;
+    background-color: $soft-gray;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+}
+.lightgray {
+  color: $light-gray-blue;
 }
 .opp-modal {
   width: 42vw;
   height: 80vh;
   display: flex;
   flex-direction: column;
-  // flex-wrap: wrap;
   gap: 0.25rem;
-  padding: 8px;
+  padding: 0px 12px 4px 0px;
   overflow-y: scroll;
   overflow-x: hidden;
   max-height: 70vh;
@@ -6206,9 +6268,22 @@ h3 {
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
-  div {
-    // margin-right: -1.25rem;
-  }
+}
+.opp-modal::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.opp-modal::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.opp-modal::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.opp-modal::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
 }
 .note-container {
   height: 54vh;
@@ -6217,6 +6292,7 @@ h3 {
   padding: 0px 16px 8px 16px;
   margin: 0;
 }
+
 // .note-container::-webkit-scrollbar {
 //   width: 6px;
 //   height: 0px;
@@ -6275,7 +6351,7 @@ input[type='search']:focus {
   width: 150px;
 }
 input[type='text']:focus {
-  outline: none;
+  outline: 1px solid $dark-green;
   cursor: text;
 }
 input[type='checkbox'] {
@@ -6379,7 +6455,7 @@ section {
 .pipelines {
   padding: 20px 0px 0px 56px;
   color: $base-gray;
-  margin: 0 1rem 0 0.5rem;
+  margin: 4px 1rem 0 0.5rem;
   letter-spacing: 0.75px !important;
 }
 .pipelines:focus {
@@ -6499,7 +6575,7 @@ section {
 }
 #user-input {
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   min-height: 2.5rem;
   width: 40.25vw;
@@ -6507,13 +6583,14 @@ section {
   letter-spacing: 0.75px;
   padding: 8px 12px;
   margin-top: 8px;
+  margin-left: 1px;
 }
 #user-input > div {
   color: red !important;
 }
 #user-input:focus,
 #user-input-inline:focus {
-  outline: none;
+  outline: 1px solid $dark-green;
 }
 .number-input {
   background-color: $off-white;
@@ -6794,10 +6871,13 @@ a {
   min-width: 80px;
   margin-top: 12px;
   letter-spacing: 1px;
-  color: $light-gray-blue;
   border: none;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  color: $base-gray;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 14px;
 }
 .red-label {
   // background-color: $light-red;

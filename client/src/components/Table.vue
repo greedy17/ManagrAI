@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="table-section">
     <div v-if="addingField" class="add-field-section">
       <div class="add-field-section__title">
         <p>Add View Only Field</p>
@@ -38,18 +38,29 @@
     <table class="table">
       <thead>
         <tr>
-          <th class="sort-img-visible" @click="sortByName(sortingForward)">
+          <th
+            :class="{ highlight: nameSort === 1 || nameSort === 2 }"
+            class="sort-img-visible"
+            @click="sortByName(sortingForward)"
+          >
+            <span @mousedown.prevent="onMouseDown($event)" class="ui-column-resizer"></span>
             <span>#</span>
             Name
             <span>
-              <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="12px" alt="" />
+              <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="16px" alt="" />
               <img
                 v-else-if="nameSort === 1"
                 src="@/assets/images/arrowDropUp.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
-              <img v-else-if="nameSort === 0" src="@/assets/images/sort.svg" height="12px" alt="" />
+              <img
+                id="not-sorting"
+                v-else-if="nameSort === 0"
+                src="@/assets/images/sort.svg"
+                height="16px"
+                alt=""
+              />
             </span>
           </th>
           <th
@@ -57,26 +68,29 @@
             @click="fieldSort(field, i)"
             v-for="(field, i) in oppFields"
             :key="i * 7777 + 1"
+            :class="{ highlight: reverseIndex === i || sortingIndex === i }"
             :title="field.referenceDisplayLabel"
           >
+            <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
             {{ field.referenceDisplayLabel }}
             <span>
               <img
                 v-if="sortingIndex === i"
                 src="@/assets/images/arrowDrop.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-else-if="reverseIndex === i"
                 src="@/assets/images/arrowDropUp.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-if="reverseIndex !== i && sortingIndex !== i"
+                id="not-sorting"
                 src="@/assets/images/sort.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
             </span>
@@ -86,28 +100,33 @@
             @click="viewOnlySort(field, i)"
             v-for="(field, i) in extraPipelineFields"
             :key="i * 333333 + 2"
-            :title="field.referenceDisplayLabel"
+            :class="{
+              highlight:
+                reverseIndex === oppFields.length + i || sortingIndex === oppFields.length + i,
+            }"
           >
+            <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
             {{ field.referenceDisplayLabel }}
             <span>
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-else-if="reverseIndex === oppFields.length + i"
                 src="@/assets/images/arrowDropUp.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-if="
                   reverseIndex !== oppFields.length + i && sortingIndex !== oppFields.length + i
                 "
+                id="not-sorting"
                 src="@/assets/images/sort.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
             </span>
@@ -117,7 +136,7 @@
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tablebody">
         <tr
           @mouseenter="setIndex(j)"
           @mouseleave="currentRow = null"
@@ -125,7 +144,7 @@
           :key="j"
           :class="{ hovered: currentRow === j }"
         >
-          <td :title="oppName(userCRM, opp)" :class="{ hovered: currentRow === j }">
+          <td :class="{ hovered: currentRow === j }">
             <span v-if="currentRow === j">
               <img @click="emitCreateForm(opp)" height="13px" src="@/assets/images/expand.svg" />
               <img @click="emitGetNotes(opp)" height="13px" src="@/assets/images/note.svg" />
@@ -135,20 +154,22 @@
           </td>
 
           <td
-            :title="fieldData(field.dataType, userCRM, field, opp)"
-            @click="editInline(i)"
+            @mouseenter="editCell = i"
+            @mouseleave="editCell = null"
+            @click="editInline(i, j)"
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
-              'edit-active': editing && editIndex === i && currentRow === j,
+              'active-cell': editCell === i && currentRow === j,
             }"
             v-for="(field, i) in oppFields"
             :key="field.dataType + i * 4"
           >
-            {{ fieldData(field.dataType, userCRM, field, opp) }}
+            <span :class="{ shimmer: inlineLoader && editIndex === i && currentInlineRow === j }">
+              {{ fieldData(field.dataType, userCRM, field, opp) }}
+            </span>
           </td>
 
           <td
-            :title="fieldData(field.dataType, userCRM, field, opp)"
             class="text-cursor"
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
@@ -182,6 +203,12 @@ export default {
       nameSort: 0,
       sortingIndex: null,
       reverseIndex: null,
+      currentInlineRow: null,
+      editCell: null,
+      start: null,
+      pressed: null,
+      startX: null,
+      startWidth: null,
     }
   },
   components: {
@@ -199,6 +226,25 @@ export default {
     closeEdit: 'closeInline',
   },
   methods: {
+    // onMouseMove(e) {
+    //   if (this.pressed) {
+    //     console.log('1')
+    //     let width = this.startWidth + (e.clientX - this.startX)
+    //     console.log(width, '2')
+    //     this.start.parentElement.style.minWidth = width
+    //     this.start.parentElement.style.maxWidth = width
+    //     console.log(this.start.parentElement.style.minWidth, '3')
+    //     let index = [...this.start.parentElement.parentElement.children].indexOf(this.start) + 1
+
+    //     this.start.parentElement.parentElement.childNodes[index + 1].style.maxWidth = width
+    //     this.start.parentElement.parentElement.childNodes[index + 1].style.minWidth = width
+    //   }
+    // },
+    // onMouseUp() {
+    //   if (this.pressed) {
+    //     this.pressed = false
+    //   }
+    // },
     setIndex(n) {
       this.currentRow = n
     },
@@ -309,8 +355,9 @@ export default {
     emitSetOpps() {
       this.$emit('set-opps')
     },
-    editInline(index) {
+    editInline(index, j) {
       this.editing = true
+      this.currentInlineRow = j
       this.$emit('current-inline-row', this.currentRow, index)
       this.editIndex = index
     },
@@ -389,8 +436,32 @@ export default {
         this.nameSort = 0
       }
     },
+    onMouseDown(e) {
+      this.start = e.target
+      this.pressed = true
+      this.startX = e.clientX
+      this.startWidth = this.start.parentElement.clientWidth
+    },
+    resize() {
+      window.addEventListener('mousemove', (event) => {
+        if (this.pressed) {
+          let width = this.startWidth + (event.clientX - this.startX)
+          this.start.parentElement.style.minWidth = `${width}px`
+          this.start.parentElement.style.maxWidth = `${width}px`
+        }
+      })
+    },
   },
-  mounted() {},
+  mounted() {
+    this.resize()
+
+    window.addEventListener('mouseup', () => {
+      window.removeEventListener('mousemove', this.resize())
+      if (this.pressed) {
+        this.pressed = false
+      }
+    })
+  },
   computed: {
     userCRM() {
       return this.$store.state.user.crm
@@ -402,6 +473,34 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.shimmer {
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2s infinite;
+  background-color: $soft-gray;
+  display: inline-block;
+  width: 90%;
+  color: $soft-gray;
+  opacity: 1.75;
+  border-radius: 4px;
+}
+.table-section {
+  margin: 0;
+  min-height: 50vh;
+  max-height: 89.5vh;
+  width: 93vw;
+  overflow: scroll;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+  background-color: white;
+}
+
 table {
   table-layout: fixed;
   border-collapse: collapse;
@@ -412,18 +511,31 @@ thead {
   top: 0;
   z-index: 3;
 }
+
+thead tr th {
+  position: relative;
+}
 th {
   background-color: $light-gray;
   text-align: left;
   max-width: 11vw;
-  //   color: $light-gray-blue;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: rgba($color: #000000, $alpha: 0.8);
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+th:hover {
+  background-color: $soft-gray;
+  color: $darker-green;
 }
 td {
   max-width: 18vw;
 }
 th,
 td {
-  padding: 13px 16px 13px 8px;
+  padding: 14px 16px 14px 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -448,6 +560,7 @@ td:first-of-type {
 th:first-of-type {
   left: 0;
   position: sticky;
+  z-index: 4;
 }
 th > span {
   display: inline-block;
@@ -560,21 +673,51 @@ img {
 .text-cursor {
   cursor: text;
 }
-.sort-img-visible > span > img {
+.sort-img-visible > span > #not-sorting {
   display: none;
 }
-.sort-img-visible:hover > span > img {
+.sort-img-visible:hover > span > #not-sorting {
   display: block;
+  margin-left: auto;
 }
-label {
-  background-color: $light-gray;
-  padding: 4px 8px 4px 6px;
-  border-radius: 4px;
+.sort-img-visible > span > img {
+  position: absolute;
+  top: 38%;
+  right: 12px;
+  margin: 0;
+  padding: 0;
 }
 
-[title]:hover:after {
-  opacity: 1;
-  transition: all 0.1s ease 0.5s;
-  visibility: visible;
+label {
+  background-color: $light-gray;
+  padding: 4px 8px 4px 4px;
+  border-radius: 4px;
+}
+.highlight {
+  background-color: $soft-gray;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.active-cell {
+}
+
+span.ui-column-resizer {
+  display: block;
+  position: absolute;
+  // background-color: red;
+  top: 0;
+  right: 0;
+  margin: 0;
+  width: 12px;
+  height: 100%;
+  padding: 0;
+  cursor: col-resize;
+  border: 1px solid transparent;
+}
+
+span.ui-column-resizer:hover {
+  border-right: 2px solid $dark-green;
 }
 </style>
