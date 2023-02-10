@@ -973,8 +973,8 @@
         Organization
         <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
       </button>
-      <small v-if="!selected_org" class="pipeline-header">Search Orgs: </small>
-      <div v-if="!selected_org" class="search-bar">
+      <small class="pipeline-header">Search Orgs: </small>
+      <div class="search-bar">
         <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
         <input
           type="search"
