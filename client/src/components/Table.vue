@@ -130,7 +130,7 @@
               />
             </span>
           </th>
-          <th>
+          <th v-show="resourceName === 'Opportunity'">
             <span @click="addField"> + </span>
           </th>
         </tr>
@@ -142,9 +142,8 @@
           v-for="(opp, j) in allOpps"
           :key="j"
           :class="{ hovered: currentRow === j }"
-          :title="oppName(userCRM, opp)"
         >
-          <td :class="{ hovered: currentRow === j }">
+          <td :title="oppName(userCRM, opp)" :class="{ hovered: currentRow === j }">
             <span v-if="currentRow === j">
               <img @click="emitCreateForm(opp)" height="13px" src="@/assets/images/expand.svg" />
               <img @click="emitGetNotes(opp)" height="13px" src="@/assets/images/note.svg" />
@@ -165,8 +164,22 @@
             :key="field.dataType + i * 4"
           >
             <span :class="{ shimmer: inlineLoader && editIndex === i && currentInlineRow === j }">
-              {{ fieldData(field.dataType, userCRM, field, opp) }}
+              {{
+                fieldData(
+                  field.dataType,
+                  userCRM,
+                  field,
+                  opp,
+                  opp.owner_ref ? opp.owner_ref.full_name : '',
+                  opp.account_ref ? opp.account_ref.name : '',
+                )
+              }}
             </span>
+            <!-- <span class="green-section" v-show="field.apiName === 'StageName'">{{
+              (getDaysInStage(opp['last_stage_update']) > 19000
+                ? 0
+                : getDaysInStage(opp['last_stage_update'])) + ' days'
+            }}</span> -->
           </td>
 
           <td
@@ -179,7 +192,7 @@
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
           </td>
-          <td :class="{ hovered: currentRow === j }"></td>
+          <td v-show="resourceName === 'Opportunity'" :class="{ hovered: currentRow === j }"></td>
         </tr>
       </tbody>
     </table>
@@ -221,29 +234,15 @@ export default {
     fieldOpts: {},
     inlineLoader: {},
     closeEdit: {},
+    resourceName: {},
   },
   watch: {
     closeEdit: 'closeInline',
   },
   methods: {
-    // onMouseMove(e) {
-    //   if (this.pressed) {
-    //     console.log('1')
-    //     let width = this.startWidth + (e.clientX - this.startX)
-    //     console.log(width, '2')
-    //     this.start.parentElement.style.minWidth = width
-    //     this.start.parentElement.style.maxWidth = width
-    //     console.log(this.start.parentElement.style.minWidth, '3')
-    //     let index = [...this.start.parentElement.parentElement.children].indexOf(this.start) + 1
-
-    //     this.start.parentElement.parentElement.childNodes[index + 1].style.maxWidth = width
-    //     this.start.parentElement.parentElement.childNodes[index + 1].style.minWidth = width
-    //   }
-    // },
-    // onMouseUp() {
-    //   if (this.pressed) {
-    //     this.pressed = false
-    //   }
+    // getDaysInStage(date) {
+    //   let newDate = new Date(date)
+    //   return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
     // },
     setIndex(n) {
       this.currentRow = n
@@ -256,8 +255,14 @@ export default {
         : opp['secondary_data'][field.apiName]
     },
     oppName(crm, opp) {
-      return crm === 'SALESFORCE'
+      return this.resourceName === 'Opportunity' || this.resourceName === 'Account'
         ? opp['secondary_data']['Name']
+        : this.resourceName === 'Company'
+        ? opp['secondary_data']['name']
+        : this.resourceName === 'Contact' || this.resourceName === 'Lead'
+        ? crm === 'SALESFORCE'
+          ? opp['secondary_data']['Email']
+          : opp['secondary_data']['email']
         : opp['secondary_data']['dealname']
     },
     capitalizeFirstLetter(string) {
@@ -269,8 +274,18 @@ export default {
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
     },
-    fieldData(type, crm, field, opp) {
-      if (type === 'Date') {
+    fieldData(type, crm, field, opp, owner = null, account = null) {
+      if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
+        return owner || 'empty'
+      } else if (field.apiName === 'AccountId') {
+        return account || 'empty'
+      } else if (field.apiName === 'dealstage') {
+        return (
+          field.options[0][opp['secondary_data'].pipeline].stages.filter(
+            (stage) => stage.id === opp['secondary_data'][field.apiName],
+          )[0].label || 'empty'
+        )
+      } else if (type === 'Date') {
         return this.fieldConditions(crm, field, opp)
           ? this.formatDate(this.fieldConditions(crm, field, opp))
           : 'empty'
@@ -322,7 +337,6 @@ export default {
       this.$emit('get-notes', opp)
     },
     addField() {
-      console.log('here', this.addingField)
       this.addingField = true
     },
     closeAddField() {
@@ -466,6 +480,10 @@ export default {
     userCRM() {
       return this.$store.state.user.crm
     },
+    currentDay() {
+      let date = new Date()
+      return date
+    },
   },
 }
 </script>
@@ -505,6 +523,7 @@ table {
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 13px;
+  min-width: 100%;
 }
 thead {
   position: sticky;
@@ -690,7 +709,7 @@ img {
 
 label {
   background-color: $light-gray;
-  padding: 4px 8px 4px 4px;
+  padding: 5px 6px;
   border-radius: 4px;
 }
 .highlight {
@@ -720,4 +739,10 @@ span.ui-column-resizer {
 span.ui-column-resizer:hover {
   border-right: 2px solid $dark-green;
 }
+// .green-section {
+//   background-color: $white-green;
+//   color: $dark-green;
+//   padding: 4px 8px 4px 4px;
+//   border-radius: 4px;
+// }
 </style>

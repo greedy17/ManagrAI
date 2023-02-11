@@ -25,6 +25,14 @@
         {{ fieldData ? formatDateTime(fieldData) : 'Empty' }}
       </p>
 
+      <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="apiName === 'OwnerId' || apiName === 'hubspot_owner_id'">
+        {{ owner ? owner : 'Empty' }}
+      </p>
+
+      <p class="blank" :class="!opp.account_ref ? 'gray' : ''" v-else-if="apiName === 'AccountId'">
+        {{ opp.account_ref ? opp.account_ref.name : 'Empty' }}
+      </p>
+
       <p class="blank" :class="!fieldData ? 'gray' : ''" v-else-if="dataType === 'Reference'">
         {{ fieldData && apiName ? referenceName : 'Empty' }}
       </p>
@@ -153,6 +161,7 @@ export default {
     referenceOpts: {},
     field: {},
     opp: {},
+    owner: {},
   },
 }
 </script>

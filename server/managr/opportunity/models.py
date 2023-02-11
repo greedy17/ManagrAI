@@ -86,14 +86,15 @@ class Lead(TimeStampModel, IntegrationModel):
             self.save()
             return res
 
-    def create(self, data=None, user_id=None):
-        if self.owner and hasattr(self.owner, "salesforce_account"):
-            token = self.owner.salesforce_account.access_token
-            base_url = self.owner.salesforce_account.instance_url
-            object_fields = self.owner.object_fields.filter(crm_object="Lead").values_list(
+    def create(data, user_id, resource_type):
+        user = User.objects.get(id=user_id)
+        if user and hasattr(user, "salesforce_account"):
+            token = user.salesforce_account.access_token
+            base_url = user.salesforce_account.instance_url
+            object_fields = user.object_fields.filter(crm_object="Lead").values_list(
                 "api_name", flat=True
             )
-            res = LeadAdapter.create(data, token, base_url, self.integration_id, object_fields)
+            res = LeadAdapter.create(data, token,object_fields, user_id,base_url)
             from managr.salesforce.routes import routes
 
             serializer = routes["Lead"]["serializer"](data=res.as_dict)

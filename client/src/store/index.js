@@ -25,7 +25,10 @@ const state = {
   templates: null,
   pollingItems: [],
   pricebooks: null,
-  allOpps: null,
+  allOpps: [],
+  allContacts: [],
+  allAccounts: [],
+  allLeads: [],
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -59,6 +62,15 @@ const mutations = {
   },
   SAVE_ALL_OPPS(state, allOpps) {
     state.allOpps = allOpps
+  },
+  SAVE_ALL_CONTACTS(state, allContacts) {
+    state.allContacts = allContacts
+  },
+  SAVE_ALL_LEADS(state, allLeads) {
+    state.allLeads = allLeads
+  },
+  SAVE_ALL_ACCOUNTS(state, allAccounts) {
+    state.allAccounts = allAccounts
   },
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
@@ -120,6 +132,35 @@ const actions = {
         res = await CRMObjects.api.getObjectsForWorkflows('Deal', true, filters)
       }
       commit('SAVE_ALL_OPPS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllAccounts({ state, commit }, ) {
+    try {
+      let res
+      if (state.user.crm === 'SALESFORCE') {
+        res = await CRMObjects.api.getObjectsForWorkflows('Account')
+      } else {
+        res = await CRMObjects.api.getObjectsForWorkflows('Company')
+      }
+      commit('SAVE_ALL_ACCOUNTS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllContacts({ commit }) {
+    try {
+      const res = await CRMObjects.api.getObjectsForWorkflows('Contact')
+      commit('SAVE_ALL_CONTACTS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllLeads({ commit }) {
+    try {
+      const res = await CRMObjects.api.getObjectsForWorkflows('Lead')
+      commit('SAVE_ALL_LEADS', res.results)
     } catch (e) {
       console.log(e)
     }

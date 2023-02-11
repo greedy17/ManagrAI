@@ -24,7 +24,7 @@
       class="cell-name-header"
     >
       <div class="sort-img-visible">
-        Name
+        {{isContactOrLead ? 'Email' : 'Name'}}
         <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.svg" alt="" />
         <span v-if="nameSort === 2">
           <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
@@ -285,7 +285,7 @@ export default {
         })
         this.$toast('Field removed successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -326,10 +326,11 @@ export default {
       try {
         const res = await SObjects.api.addExtraFields({
           field_ids: this.extraFields,
+          resource_type: this.baseResourceType,
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -348,6 +349,10 @@ export default {
     dataType: {},
     extraPipelineFields: {},
     fieldOpts: {},
+    isContactOrLead: {
+      type: Boolean
+    },
+    baseResourceType: {}
   },
 }
 </script>

@@ -9,8 +9,6 @@
         Back
       </p>
 
-      <!-- <h3>Current Template Name</h3> -->
-
       <div v-if="!isPaid && !editing" class="tooltip">
         <button disabled class="green_button row">
           Create Template
@@ -50,6 +48,18 @@
         <button class="green_button" type="submit" @click="updateTemplate">Update</button>
       </div>
     </div>
+
+    <!-- <AlertsHeader
+      page="workflows"
+      :pulseLoading="false"
+      :title="'Templates'"
+      :isPaid="isPaid"
+      :templates="noteTemplates"
+      @on-save="onSave"
+      @update-workflow="updateWorkflow"
+      @delete-workflow="deleteWorkflow"
+      @switch-build-custom="switchBuildCustom"
+    /> -->
 
     <section v-if="!creating">
       <div v-if="noteTemplates.length" :class="editing ? 'update-container' : 'container'">
@@ -151,6 +161,7 @@
 <script>
 import User from '@/services/users'
 import PipelineLoader from '@/components/PipelineLoader'
+import AlertsHeader from '@/components/AlertsHeader'
 import { SObjects } from '@/services/salesforce'
 import { quillEditor } from 'vue-quill-editor'
 import 'quill/dist/quill.core.css'
@@ -162,6 +173,7 @@ export default {
   components: {
     quillEditor,
     PipelineLoader,
+    AlertsHeader
   },
   data() {
     return {
