@@ -210,8 +210,6 @@
 
 <script>
 import { SObjects } from '@/services/salesforce'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField } from '@/services/salesforce'
 
 export default {
   name: 'WorkflowHeader',
@@ -222,22 +220,12 @@ export default {
       reverseIndexWorkflows: null,
       sortingForwardWorkflows: true,
       nameSortWorkflows: 0,
-      extraFields: [],
-      extraFieldObjs: [],
-      addingField: false,
       removingField: false,
       removingIndex: null,
-      objectFields: CollectionManager.create({
-        ModelClass: SObjectField,
-        pagination: { size: 200 },
-        filters: {
-          salesforceObject: 'Opportunity',
-        },
-      }),
     }
   },
   async created() {
-    await this.objectFields.refresh()
+    
   },
   methods: {
     async removeField(id) {
@@ -267,14 +255,9 @@ export default {
       this.removingField = true
       this.removingIndex = i
     },
-    closeAddField() {
-      this.addingField = false
-      this.extraFields = []
-      this.extraFieldObjs = []
-    },
-    emitCheckAll() {
-      this.$emit('check-all')
-    },
+    // emitCheckAll() {
+    //   this.$emit('check-all')
+    // },
     emitSetOpps() {
       this.$emit('set-opps')
     },
@@ -311,18 +294,18 @@ export default {
 .table-row {
   display: table-row;
 }
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 2vh 1vh;
-  border: none;
-  border-bottom: 1px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $white;
-}
+// .table-cell-checkbox-header {
+//   display: table-cell;
+//   padding: 2vh 1vh;
+//   border: none;
+//   border-bottom: 1px solid $light-orange-gray;
+//   z-index: 3;
+//   width: 4vw;
+//   top: 0;
+//   left: 0;
+//   position: sticky;
+//   background-color: $white;
+// }
 .remove-field-section {
   z-index: 5;
   position: absolute;

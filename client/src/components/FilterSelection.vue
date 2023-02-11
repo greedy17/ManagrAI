@@ -151,7 +151,6 @@ export default {
     return {
       selectedOperator: '',
       inputValue: null,
-      counter: 0,
     }
   },
   props: {

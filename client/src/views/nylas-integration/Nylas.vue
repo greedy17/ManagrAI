@@ -27,9 +27,6 @@ export default {
   data() {
     return {
       filterBy: '',
-      email: '',
-      loading: false,
-      authUrl: '',
       threads: {},
       emailsLoading: false,
     }

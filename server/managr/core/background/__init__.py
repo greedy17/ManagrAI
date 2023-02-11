@@ -884,3 +884,16 @@ def _morning_refresh_message(user_id):
         except Exception as e:
             logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     return
+
+
+@background()
+def _process_change_team_lead(user_id):
+    user = User.objects.get(id=user_id)
+    try:
+        user.team.change_team_lead(user, True)
+        user.make_team_lead = False
+        user.save()
+    except Exception as e:
+        logger.exception(f"Failed to change team lead for {user.team.name} due to <{e}>")
+    return
+

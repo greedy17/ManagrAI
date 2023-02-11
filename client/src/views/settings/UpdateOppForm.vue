@@ -17,46 +17,23 @@
 </template>
 
 <script>
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import SlackForm from '@/views/settings/SlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
-import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
-import { SOBJECTS_LIST } from '@/services/salesforce'
-import * as FORM_CONSTS from '@/services/slack'
+import { SObjectField, SObjectPicklist } from '@/services/salesforce'
 
 export default {
   name: 'UpdateOppForm',
   components: { SlackForm },
   data() {
     return {
-      ...FORM_CONSTS,
-      SOBJECTS_LIST,
       allForms: [],
       allFields: [],
-      formsByType: [],
-      isLoading: false,
-      selectedTab: null,
-      resource: null,
       selectedForm: null,
-      newForms: [],
-      selectedStage: null,
-      selectedFormFields: [],
       stages: [],
-      loadingStages: false,
-      formType: null,
-      search: '',
-      fieldParam: null,
-      loading: false,
       formFields: CollectionManager.create({ ModelClass: SObjectField }),
-      stageDropDownOpen: false,
-      isVisible: false,
-      validations: CollectionManager.create({
-        ModelClass: SObjectValidation,
-        pagination: Pagination.create({ size: 2 }),
-      }),
       formStages: [],
-      started: false,
     }
   },
   watch: {},
@@ -126,18 +103,6 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          // res = await ObjectField.api.listFields({
-          //   crmObject: this.DEAL,
-          //   search: 'Deal Stage',
-          // })
-          // let dealStage
-          // for (let i = 0; i < res.length; i++) {
-          //   if (res[i].apiName === 'dealstage') {
-          //     dealStage = res[i]
-          //     break
-          //   }
-          // }
-          // this.stages = dealStage ? dealStage.options : []
           res = await ObjectField.api.listFields({
             crmObject: this.DEAL,
             search: 'Deal Stage',
@@ -151,13 +116,6 @@ export default {
           }
           let dealStage = []
           if (dealStages.optionsRef.length) {
-            // const items = dealStages.options[0]
-            // for (let key in items) {
-            //   // dealStage = [...dealStage, items[key].stages]
-            //   for (let j = 0; j < items[key].stages.length; j++) {
-            //     dealStage.push(items[key].stages[j])
-            //   }
-            // }
             for (let i = 0; i < dealStages.optionsRef.length; i++) {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
@@ -181,14 +139,6 @@ export default {
 .update_opportunity {
   color: $base-gray;
   overflow: auto;
-}
-
-.opportunity_title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 4.2rem;
-  margin-top: 3rem;
 }
 h3 {
   font-size: 1.35rem;

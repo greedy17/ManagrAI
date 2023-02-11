@@ -1,39 +1,32 @@
 <template>
   <div class="update_opportunity">
-    <div class="opportunity_title">
-      <h3>Create Opportunity</h3>
-      <p style="color: #5d5e5e; margin-top: -0.5rem; font-size: 0.95rem">
-        Select the Fields you’d like to display when creating Opportunities via Slack
-      </p>
-    </div>
-    <div class="box__content--expanded">
-      <CustomSlackForm
-        :formType="CREATE"
-        :customForm="
-          (this.selectedForm = this.allForms.find(
-            (f) => f.resource == OPPORTUNITY && f.formType == CREATE,
-          ))
-        "
-        :resource="OPPORTUNITY"
-        v-on:update:selectedForm="updateForm($event)"
-        :loading="formFields.refreshing"
-        :stageForms="formStages"
-      />
-    </div>
+    <CustomSlackForm
+      :formType="UPDATE"
+      :customForm="
+        (this.selectedForm = this.allForms.find(
+          (f) => f.resource == currentResource && f.formType == UPDATE,
+        ))
+      "
+      :resource="currentResource"
+      v-on:update:selectedForm="updateForm($event)"
+      :loading="formFields.refreshing"
+      :stageForms="formStages"
+    />
   </div>
 </template>
 
 <script>
-import { CollectionManager, Pagination } from '@thinknimble/tn-models'
+import { CollectionManager } from '@thinknimble/tn-models'
 import CustomSlackForm from '@/views/settings/CustomSlackForm'
 import { mapState } from 'vuex'
 import SlackOAuth from '@/services/slack'
-import { SObjectField, SObjectValidation, SObjectPicklist } from '@/services/salesforce'
+import { SObjectPicklist } from '@/services/salesforce'
+import { ObjectField } from '@/services/crm'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
 
 export default {
-  name: 'CreateOpportunity',
+  name: 'Forms',
   components: { CustomSlackForm },
   data() {
     return {
@@ -41,37 +34,26 @@ export default {
       SOBJECTS_LIST,
       allForms: [],
       allFields: [],
-      formsByType: [],
-      isLoading: false,
-      selectedTab: null,
-      resource: null,
       selectedForm: null,
-      newForms: [],
-      selectedStage: null,
-      selectedFormFields: [],
       stages: [],
-      loadingStages: false,
-      formType: null,
-      search: '',
-      fieldParam: null,
-      loading: false,
-      formFields: CollectionManager.create({ ModelClass: SObjectField }),
-      stageDropDownOpen: false,
-      isVisible: false,
-      validations: CollectionManager.create({
-        ModelClass: SObjectValidation,
-        pagination: Pagination.create({ size: 2 }),
-      }),
+      formFields: CollectionManager.create({ ModelClass: ObjectField }),
+      currentResource: '',
       formStages: [],
-      started: false,
     }
   },
+  watch: {},
+
   async created() {
     try {
+      if (this.userCRM === 'HUBSPOT') {
+        this.currentResource = this.DEAL
+      } else if (this.userCRM === 'SALESFORCE') {
+        this.currentResource = this.OPPORTUNITY
+      }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       this.allFields = await this.listFields()
       await this.listPicklists({
-        salesforceObject: this.Opportunity,
+        salesforceObject: this.currentResource,
         picklistFor: 'StageName',
       })
     } catch (error) {
@@ -82,8 +64,12 @@ export default {
 
     this.getStageForms()
   },
+
   computed: {
     ...mapState(['user']),
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
   methods: {
     async listFields(query_params = {}) {
@@ -101,7 +87,9 @@ export default {
       }
     },
     updateForm(event) {
+      console.log(event)
       this.selectedForm = event
+
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
 
       if (~index) {
@@ -128,7 +116,12 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          const form = this.allForms.find(
+            (f) => f.resource == this.currentResource && f.formType == this.UPDATE,
+          )
+          const hsPicklist = form.fieldsRef.filter(
+            (item) => query_params.picklistFor === item.apiName,
+          )
           this.stages = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
@@ -147,17 +140,9 @@ export default {
 
 .update_opportunity {
   color: $base-gray;
-  overflow: auto;
+  // overflow: auto;
+  padding-left: 60px;
 }
-
-.opportunity_title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 4.2rem;
-  margin-top: 3rem;
-}
-
 h3 {
   font-size: 1.35rem;
 }

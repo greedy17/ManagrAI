@@ -264,7 +264,7 @@
           :key="i"
           @map-opp="mapOpp"
           @update-Opportunity="updateMeeting"
-          @no-update="NoMeetingUpdate"
+          @no-update="noMeetingUpdate"
           @remove-participant="removeParticipant"
           @add-participant="addParticipant"
           @get-notes="getNotes"
@@ -304,14 +304,11 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectPicklist, MeetingWorkflows } from '@/services/salesforce'
+import { SObjects, MeetingWorkflows } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
-import AlertTemplate from '@/services/alerts/'
-import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
 import Zoom from '@/services/zoom/account'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
-import MeetingWorkflowHeader from '@/components/MeetingWorkflowHeader'
 import UpdateForm from '@/components/updateForm/'
 import User from '@/services/users'
 
@@ -321,7 +318,6 @@ export default {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    MeetingWorkflowHeader,
     MeetingWorkflow,
     UpdateForm,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
@@ -329,7 +325,6 @@ export default {
   },
   data() {
     return {
-      selectedDate: null,
       contactCreateReferenceOpts: {},
       currentSelectedProduct: null,
       savingProduct: null,
@@ -341,19 +336,16 @@ export default {
       updateProductData: {},
       resourceType: 'Opportunity',
       resourceFields: null,
-      selectedPricebook: null,
       pricebookId: null,
       createData: {},
       productRefCopy: {},
       productReferenceOpts: {},
-      createReferenceOpts: {},
       page: 1,
       savingCreateForm: false,
       hasNext: false,
       noteTitle: null,
       noteTemplates: null,
       noteValue: null,
-      addingTemplate: false,
       submitting: false,
       meetingOpen: false,
       integrationId: null,
@@ -364,72 +356,38 @@ export default {
       countSets: 0,
       dropdownLoading: false,
       loadingProducts: false,
-      selectedPriceBook: null,
       pricebookPage: 1,
       savedPricebookEntryId: '',
       showLoadMore: false,
       updatingMeeting: false,
       meetingWorkflowId: null,
       meetingLoading: null,
-      updatingOpps: false,
-      oppInstanceId: null,
       oppId: null,
-      primaryCheckList: [],
-      workflowCheckList: [],
-      allSelected: false,
-      allWorkflowsSelected: false,
-      createQueryOpts: {},
       updateList: [],
-      recapList: [],
       currentVals: [],
-      closeDateSelected: false,
-      advanceStageSelected: false,
-      forecastSelected: false,
-      selection: false,
-      allStages: [],
-      allForecasts: [],
       originalList: null,
-      daysForward: null,
       allOpps: null,
       loading: false,
-      loadingWorkflows: false,
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      users: CollectionManager.create({ ModelClass: User }),
       stagePicklistQueryOpts: {},
       currentWorkflow: null,
       selectedWorkflow: false,
       modalOpen: false,
       editOpModalOpen: false,
-      addOppModalOpen: false,
-      refreshId: null,
-      currentList: "Today's Meetings",
-      alertInstanceId: null,
-      showList: false,
-      showWorkflowList: true,
       loadingAccounts: false,
       accountSobjectId: null,
-      currentOwner: null,
       currentAccount: null,
       selectedAccount: null,
-      selectedOwner: null,
-      showPopularList: true,
-      updateOppForm: null,
+      updateOppForm: [],
       oppFormCopy: null,
       createContactForm: null,
       updateContactForm: null,
       updateAccountForm: null,
       updateLeadForm: null,
-      instanceId: null,
-      contactInstanceId: null,
       formData: {},
-      picklistQueryOpts: {},
       picklistQueryOptsContacts: {},
       allAccounts: null,
       allUsers: null,
-      showMeetingList: true,
-      selectedMeeting: false,
       createProductForm: null,
-      // meetings: null,
       referenceOpts: {},
       accountReferenceOpts: {},
       contactReferenceOpts: {},
@@ -465,10 +423,6 @@ export default {
     }
   },
   computed: {
-    allMeetingsUpdated() {
-      return this.$store.state.meetings.every((meeting) => meeting.is_completed)
-      // console.log(this.$store.state.meetings.every((meeting) => meeting.is_completed))
-    },
     user() {
       return this.$store.state.user
     },
@@ -488,9 +442,7 @@ export default {
       return this.$store.state.allPicklistOptions
     },
     apiPicklistOptions() {
-      console.log('state', this.$store.state)
       if (this.userCRM === 'HUBSPOT') {
-        console.log('hi')
         return this.getHubspotOptions()
       } else {
         return this.$store.state.apiPicklistOptions
@@ -503,7 +455,6 @@ export default {
   created() {
     // this.resourceType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
     this.getAllForms()
-    this.templates.refresh()
   },
   beforeMount() {
     this.getUsers()
@@ -525,26 +476,9 @@ export default {
     //   return i
     // },
     async getHubspotOptions() {
-      console.log('sanity')
       let stages = []
       if (this.userCRM === 'HUBSPOT') {
         try {
-          // let res = await ObjectField.api.listFields({
-          //   crmObject: this.DEAL,
-          //   search: 'Deal Stage',
-          // })
-          // console.log('res please', res)
-          // let dealStage
-          // for (let i = 0; i < res.length; i++) {
-          //   if (res[i].apiName === 'dealstage') {
-          //     dealStage = res[i]
-          //     break
-          //   }
-          // }
-          // if (dealStage) {
-          //   // stages = dealStage
-          //   return dealStage.options
-          // }
           let res = await ObjectField.api.listFields({
             crmObject: this.DEAL,
             search: 'Deal Stage',
@@ -558,13 +492,6 @@ export default {
           }
           let dealStage = []
           if (dealStages.optionsRef.length) {
-            // const items = dealStages.options[0]
-            // for (let key in items) {
-            //   // dealStage = [...dealStage, items[key].stages]
-            //   for (let j = 0; j < items[key].stages.length; j++) {
-            //     dealStage.push(items[key].stages[j])
-            //   }
-            // }
             for (let i = 0; i < dealStages.optionsRef.length; i++) {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
@@ -574,7 +501,6 @@ export default {
           console.log(e)
         }
       }
-      console.log('stages', stages)
       return stages
     },
     cancelEditProduct() {
@@ -623,7 +549,6 @@ export default {
     },
     setTemplate(val, field, title) {
       this.noteTitle = title
-      this.addingTemplate = false
       this.noteValue = val
       this.setUpdateValues(field, val)
       this.setUpdateValues('meeting_type', title ? title : null)
@@ -806,7 +731,6 @@ export default {
       this.externalParticipantsSelected = []
       this.extraParticipantsSelected = ''
     },
-
     async stageGateInstance(field) {
       this.stageGateId = null
       try {
@@ -969,13 +893,6 @@ export default {
           })
       } catch (e) {
         console.log(e)
-        // this.$toast('Error adding contact', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
       } finally {
         setTimeout(() => {
           this.meetingLoading = false
@@ -992,33 +909,10 @@ export default {
     goToProfile() {
       this.$router.push({ name: 'InviteUsers' })
     },
-    selectMeeting(name) {
-      this.currentList = name
-      this.showList = false
-      this.selectedMeeting = true
-      this.selectedWorkflow = false
-    },
-    closeListSelect() {
-      this.showList = false
-    },
     resetEdit() {
       this.editOpModalOpen = !this.editOpModalOpen
     },
-    resetAddOpp() {
-      this.addOppModalOpen = !this.addOppModalOpen
-    },
-    async updateContactInstance() {
-      try {
-        const res = await SObjects.api.createFormInstance({
-          resourceType: 'Contact',
-          formType: 'UPDATE',
-        })
-        this.contactInstanceId = res.form_id
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async NoMeetingUpdate(meetingWorkflow) {
+    async noMeetingUpdate(meetingWorkflow) {
       this.meetingLoading = true
       try {
         const res = await MeetingWorkflows.api
@@ -1058,7 +952,7 @@ export default {
         const res = await SObjects.api
           .updateResource({
             form_data: this.updateProductData,
-            from_workflow: this.selectedWorkflow ? true : false,
+            from_workflow: this.selectedWorkflow,
             workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
             form_type: 'UPDATE',
             integration_ids: [this.productIntegrationId],
@@ -1121,10 +1015,6 @@ export default {
         })
         this.currentVals = res.current_values
         this.currentProducts = res.current_products
-        this.currentOwner = this.allUsers.filter(
-          (user) => user.salesforce_account_ref.salesforce_id === this.currentVals['OwnerId'],
-        )[0].full_name
-
         this.allOpps.filter((opp) => opp.id === this.oppId)[0].account_ref
           ? (this.currentAccount = this.allOpps.filter(
               (opp) => opp.id === this.oppId,
@@ -1204,9 +1094,6 @@ export default {
         }, 1000)
       }
     },
-    async getPricebooks() {
-      this.$store.dispatch('loadPricebooks')
-    },
     async getPricebookEntries(id) {
       try {
         this.loadingProducts = true
@@ -1231,7 +1118,6 @@ export default {
         }, 1000)
       }
     },
-
     setUpdateValues(key, val, multi = null) {
       if (multi) {
         this.formData[key] = this.formData[key]
@@ -1302,14 +1188,12 @@ export default {
             this.currentRefList = this.referenceOpts
           }
         }
-
         for (let i = 0; i < this.updateContactForm.length; i++) {
           if (this.updateContactForm[i].dataType === 'Reference') {
             this.contactReferenceOpts[this.updateContactForm[i].apiName] =
               this.updateContactForm[i].id
           }
         }
-
         for (let i = 0; i < this.createContactForm.length; i++) {
           if (this.createContactForm[i].dataType === 'Reference') {
             this.contactCreateReferenceOpts[this.createContactForm[i].apiName] =
@@ -1324,17 +1208,15 @@ export default {
             }
           }
         }
-
         for (let i = 0; i < this.updateAccountForm.length; i++) {
           if (this.updateAccountForm[i].dataType === 'Reference') {
             this.accountReferenceOpts[this.updateAccountForm[i].apiName] =
               this.updateAccountForm[i].id
           }
         }
-
         for (let i = 0; i < this.updateLeadForm.length; i++) {
           if (this.updateLeadForm[i].dataType === 'Reference') {
-            this.LeadReferenceOpts[this.updateLeadForm[i].apiName] = this.updateLeadForm[i].id
+            this.leadReferenceOpts[this.updateLeadForm[i].apiName] = this.updateLeadForm[i].id
           }
         }
 
@@ -1403,17 +1285,17 @@ export default {
       }
     },
     filtersAndOppFields() {
-      this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
-        ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
-            (field) => field.apiName === 'AccountId',
-          )[0].id)
-        : (this.accountSobjectId = null)
+      if (this.updateOppForm[0]) {
+        this.updateOppForm[0].fieldsRef.filter((field) => field.apiName === 'AccountId').length
+          ? (this.accountSobjectId = this.updateOppForm[0].fieldsRef.filter(
+              (field) => field.apiName === 'AccountId',
+            )[0].id)
+          : (this.accountSobjectId = null)
+      }
     },
     async getAllForms() {
       try {
         let res = await SlackOAuth.api.getOrgCustomForm()
-
-        console.log('check res', res)
 
         this.updateOppForm =
           this.userCRM === 'SALESFORCE'
@@ -1437,7 +1319,7 @@ export default {
             ? res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Account')[0]
                 .fieldsRef
             : res.filter((obj) => obj.formType === 'UPDATE' && obj.resource === 'Company')[0]
-        this.updateAccountForm = this.updateAccountForm ? this.updateAccountForm.fieldsRef : []
+                .fieldsRef
         this.updateLeadForm = res.filter(
           (obj) => obj.formType === 'UPDATE' && obj.resource === 'Lead',
         )[0]
@@ -1485,7 +1367,6 @@ export default {
         console.log(error)
       }
     },
-
     async getUsers() {
       try {
         const res = await SObjects.api.getObjects('User')
@@ -1573,14 +1454,6 @@ export default {
         this.loading = false
       }
     },
-
-    allOpportunities() {
-      this.$router.replace({ path: '/Pipelines' })
-    },
-    weekDay(input) {
-      let newer = new Date(input)
-      return this.days[newer.getDay()]
-    },
     formatDateTime(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -1653,12 +1526,6 @@ export default {
   img {
     margin-right: 8px;
   }
-}
-.transparent-container {
-  min-height: 94vh;
-  width: 48vw;
-  background-color: transparent;
-  position: relative;
 }
 #container {
   width: 100%;
@@ -1745,77 +1612,6 @@ export default {
     @content;
   }
 }
-
-.input-container {
-  position: relative;
-  display: inline-block;
-  margin: 30px 10px;
-  @include epic-sides() {
-    background: inherit;
-  }
-}
-
-.greenBackground {
-  background-color: $white-green;
-  color: $dark-green;
-}
-.basic-slide {
-  display: inline-block;
-  width: 36vw;
-  margin-left: -8px;
-  padding: 9px 0 10px 16px;
-  font-family: $base-font-family !important;
-  font-weight: 400;
-  color: $base-gray;
-  background: $white;
-  border: 1px solid $soft-gray !important;
-  border: 0;
-  border-radius: 3px;
-  outline: 0;
-  text-indent: 70px; // Arbitrary.
-  transition: all 0.3s ease-in-out;
-
-  &::-webkit-input-placeholder {
-    color: #efefef;
-    text-indent: 0;
-    font-weight: 300;
-  }
-
-  + label {
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 9px 8px;
-    font-size: 15px;
-    text-align: center;
-    margin-left: -8px;
-    width: 80px;
-    // text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
-    background: $white-green;
-    color: $dark-green;
-    transition: all 0.3s ease-in-out;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 2px;
-  }
-}
-.basic-slide:focus,
-.basic-slide:active {
-  color: $base-gray;
-  text-indent: 0;
-  background: #fff;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-
-  &::-webkit-input-placeholder {
-    color: #aaa;
-  }
-  + label {
-    transform: translateX(-100%);
-  }
-}
-
 :disabled {
   color: $base-gray !important;
   background-color: $soft-gray !important;
@@ -1825,26 +1621,6 @@ export default {
   font-size: 12px;
   border: none;
   cursor: pointer;
-}
-
-.dark-button {
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  font-size: 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-top: 16px;
-
-  img {
-    filter: invert(99%);
-    margin-left: 8px;
-  }
 }
 .light-green-bg {
   background-color: $white-green;
@@ -1872,101 +1648,6 @@ export default {
 .rel {
   position: relative;
 }
-.adding-stage-gate {
-  // border: 2px solid $coral;
-  border-radius: 0.3rem;
-  margin: 0.5rem 0rem;
-  width: 42vw;
-  // min-height: 30vh;
-  &__header {
-    font-size: 11px;
-    color: white;
-    padding: 0.5rem;
-    width: 100%;
-    // border-bottom: 1px solid $coral;
-    // background-color: $coral;
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    img {
-      height: 16px;
-      filter: invert(90%);
-    }
-  }
-  &__body {
-    // padding: 0.25rem;
-    font-size: 11px !important;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.2rem;
-    overflow: auto;
-    // height: 30vh;
-    input {
-      width: 10vw;
-      height: 1.5rem !important;
-    }
-    .multiselect {
-      width: 12vw;
-      font-weight: 11px !important;
-    }
-    p {
-      margin-left: 0.25rem;
-    }
-  }
-  &__body::-webkit-scrollbar {
-    width: 2px; /* Mostly for vertical scrollbars */
-    height: 0px; /* Mostly for horizontal scrollbars */
-  }
-  &__body::-webkit-scrollbar-thumb {
-    background-color: $coral;
-    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track {
-    box-shadow: inset 2px 2px 4px 0 $soft-gray;
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track-piece {
-    margin-top: 1rem;
-  }
-}
-
-.hide {
-  display: none;
-}
-.slot-icon {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 0;
-  margin: 0;
-  img {
-    height: 1rem;
-    margin-right: 0.25rem;
-    filter: invert(70%);
-  }
-}
-
-.results {
-  width: 100%;
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  z-index: 20;
-  padding: 0 12px 16px 12px;
-  h4 {
-    span {
-      background-color: $yellow;
-      color: white;
-      padding: 4px 6px;
-      border-radius: 4px;
-    }
-  }
-}
-
 .results-title {
   display: flex;
   flex-direction: column;
@@ -2002,10 +1683,6 @@ select {
   border: 1px solid #ccc;
   padding-left: 0.75rem;
   border-radius: 0;
-}
-.select-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 1px 2px 3px $very-light-gray;
 }
 [type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
@@ -2066,26 +1743,6 @@ input[type='date']::-webkit-datetime-edit-year-field {
 input {
   padding: 7px;
 }
-
-.table-section {
-  margin: 0;
-  padding: 0;
-  min-height: 78vh;
-  max-height: 80vh;
-  overflow: scroll;
-  margin-top: 0.5rem;
-  border-radius: 8px;
-  border: 1px solid #e8e8e8;
-  background-color: white;
-}
-
-.table {
-  display: table;
-  overflow: scroll;
-  border-collapse: separate;
-  border-spacing: 4px;
-  width: 100vw;
-}
 .modal-container {
   background-color: $white;
   overflow: auto;
@@ -2096,36 +1753,6 @@ input {
   align-items: center;
   border-radius: 0.5rem;
   border: 1px solid #e8e8e8;
-}
-.opp-modal-container {
-  overflow: hidden;
-  background-color: white;
-  width: 44vw;
-  align-items: center;
-  border-radius: 0.6rem;
-  padding: 1rem;
-  border: 1px solid #e8e8e8;
-}
-.opp-modal {
-  width: 42vw;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 56vh;
-  border-radius: 0.3rem;
-  border-bottom: 3px solid $white;
-  color: $base-gray;
-  font-size: 16px;
-  letter-spacing: 0.75px;
-}
-.centered {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 select {
   cursor: pointer;
@@ -2163,195 +1790,6 @@ section {
 .invert {
   filter: invert(85%);
 }
-.add-button:disabled {
-  display: flex;
-  align-items: center;
-  border: none;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $gray;
-  cursor: text;
-  color: white;
-}
-.add-button:disabled:hover {
-  transform: none;
-}
-.add-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  height: 4.5vh;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  img {
-    margin-left: 0.5rem;
-  }
-}
-.add-button__ {
-  display: flex;
-  align-items: center;
-  border: none;
-  padding: 8px 12px;
-  font-size: 14px;
-  border-radius: 6px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-}
-.product-text {
-  display: flex;
-  align-items: center;
-  color: $dark-green;
-  border-radius: 4px;
-  padding: 4px 6px;
-  background-color: $white-green;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  font-weight: bold;
-  cursor: pointer;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 16px;
-    margin-left: 4px;
-  }
-}
-.select-btn1 {
-  border: 0.7px solid $dark-green;
-  padding: 0.45rem 1.25rem;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
-
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
-}
-
-.adding-product {
-  border: 1px solid $dark-green;
-  border-radius: 0.3rem;
-  margin: 0.5rem 0rem;
-  width: 40.25vw;
-  min-height: 30vh;
-  &__header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    font-size: 14px;
-    padding: 0.5rem;
-    color: $white;
-    width: 100%;
-    border-bottom: 1px solid $dark-green;
-    background-color: $dark-green;
-    img {
-      height: 1rem;
-      margin-right: 0.5rem;
-    }
-  }
-  &__body {
-    padding: 0.25rem;
-    font-size: 11px !important;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.2rem;
-    overflow: auto;
-    height: 30vh;
-    input {
-      width: 10vw;
-      height: 1.5rem !important;
-    }
-    .multiselect {
-      width: 12vw;
-      font-weight: 11px !important;
-    }
-    p {
-      margin-left: 0.25rem;
-    }
-    span {
-      color: $coral;
-    }
-  }
-
-  &__body::-webkit-scrollbar {
-    width: 2px; /* Mostly for vertical scrollbars */
-    height: 0px; /* Mostly for horizontal scrollbars */
-  }
-  &__body::-webkit-scrollbar-thumb {
-    background-color: $dark-green;
-    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track {
-    box-shadow: inset 2px 2px 4px 0 $soft-gray;
-    border-radius: 0.3rem;
-  }
-  &__body::-webkit-scrollbar-track-piece {
-    margin-top: 0.25rem;
-  }
-}
-
-.fullInvert {
-  filter: invert(99%);
-}
-.soon-button {
-  display: flex;
-  align-items: center;
-  border: none;
-  height: 4.5vh;
-  margin: 0 0.5rem 0 0;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.2rem;
-  background-color: $very-light-gray;
-  cursor: text;
-  color: $base-gray;
-  font-weight: bold;
-  font-size: 11px;
-
-  img {
-    filter: invert(80%);
-  }
-}
-
-.add-button:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-}
-.add-button__:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-}
-.search-bar {
-  height: 4.5vh;
-  background-color: $off-white;
-  border: 1px solid #e8e8e8;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  border-radius: 5px;
-  margin-right: 0.5rem;
-}
-#user-input {
-  border: 1px solid #e8e8e8;
-  border-radius: 0.3rem;
-  background-color: white;
-  min-height: 2.5rem;
-  width: 45vw;
-}
-
 .zoom-input {
   border: 1px solid $soft-gray;
   border-radius: 6px;
@@ -2369,100 +1807,6 @@ section {
   font-family: inherit;
   resize: none;
 }
-#user-input:focus {
-  outline: 1px solid $dark-green;
-}
-.header {
-  font-size: 18px;
-  padding: 0;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.2rem;
-}
-.list-section {
-  z-index: 4;
-  position: absolute;
-  top: 20vh;
-  left: 1rem;
-  border-radius: 0.33rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  background-color: $white;
-  min-width: 20vw;
-  max-height: 70vh;
-  overflow: scroll;
-  margin-right: 0.5rem;
-  box-shadow: 1px 1px 7px 2px $very-light-gray;
-  &__title {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    color: $base-gray;
-    background-color: $off-white;
-    letter-spacing: 0.25px;
-    padding-left: 0.75rem;
-    font-weight: bold;
-    font-size: 15px;
-    width: 100%;
-  }
-  &__sub-title {
-    font-size: 12px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    margin-left: 0.75rem;
-    color: $base-gray;
-    cursor: pointer;
-    width: 100%;
-    img {
-      margin: 2px 0px 0px 3px;
-      height: 0.75rem;
-      filter: invert(70%);
-    }
-  }
-}
-.list-button {
-  display: flex;
-  align-items: center;
-  height: 4.5vh;
-  width: 100%;
-  background-color: transparent;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 0.2rem;
-  color: $mid-gray;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: bold;
-}
-.list-button:hover {
-  color: $dark-green;
-  background-color: $off-white;
-}
-.filter {
-  color: #199e54;
-  margin-left: 0.2rem;
-}
-.cancel {
-  color: $dark-green;
-  font-weight: bold;
-  margin-left: 1rem;
-  cursor: pointer;
-}
-.flex-end {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-.flex-end-opp {
-  width: 100%;
-  padding: 0.25rem 1.5rem;
-  height: 4rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
 textarea {
   resize: vertical;
 }
@@ -2478,22 +1822,6 @@ a {
   font-size: 12px;
   border: none;
   cursor: pointer;
-}
-.white_button {
-  color: $dark-green;
-  background-color: white;
-  max-height: 2rem;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1.25rem;
-  font-weight: bold;
-  font-size: 12px;
-  border: 1px solid $soft-gray;
-  cursor: pointer;
-}
-
-.sized {
-  height: 3em;
-  align-self: center;
 }
 .logo {
   height: 1.75rem;
@@ -2532,80 +1860,8 @@ a {
     letter-spacing: 0.6px;
   }
 }
-.logged {
-  border-left: 1px solid $dark-green;
-}
 .light-gray-placeholder::placeholder {
   color: #adadad;
-}
-.multiselect-span {
-  display: flex;
-  align-items: center;
-
-  label {
-    margin-right: 0.5rem;
-  }
-}
-.multiselect-width {
-  // max-width: 23vw;
-  width: 23vw;
-}
-.label {
-  margin-right: 0.5rem;
-  margin-top: 8px;
-}
-.select-btn {
-  border: 0.5px solid $dark-green;
-  padding: 0.375rem 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
-
-  img {
-    // filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    // height: 1rem !important;
-    margin-left: 0.25rem;
-  }
-}
-.select-btn:disabled {
-  border: none;
-  box-shadow: none;
-  background-color: $soft-gray;
-  cursor: text;
-  color: $base-gray;
-  opacity: 0.6;
-}
-.select-btn:disabled:hover {
-  transform: none;
-}
-
-.create-modal {
-  width: 100%;
-  // background-color: white;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 16px;
-}
-
-.cloud {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  // color: #41b883;
-  background-color: white;
-  transition: all 0.25s;
-  img {
-    height: 1.05rem !important;
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-  }
 }
 @keyframes tooltips-horz {
   to {
@@ -2647,130 +1903,6 @@ a {
 .tooltip:hover .tooltiptext {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
-}
-.close-template {
-  position: absolute;
-  bottom: 56px;
-  right: 8px;
-  z-index: 3;
-  cursor: pointer;
-  background-color: black;
-  border-radius: 3px;
-  opacity: 0.6;
-  img {
-    filter: invert(99%);
-  }
-}
-.note-templates {
-  margin-left: 2px;
-  display: flex;
-  justify-content: flex-end;
-  font-size: 12px;
-  padding: 12px 6px;
-  margin-top: -34px;
-  border: 1px solid $soft-gray;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  cursor: pointer;
-  width: 40.25vw;
-  margin-left: 10px;
-
-  &__content {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
-  img {
-    filter: invert(50%);
-    height: 12px;
-  }
-  &__content:hover {
-    opacity: 0.6;
-  }
-}
-
-.note-templates2 {
-  margin-left: 2px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 12px;
-  padding: 12px 6px;
-  margin-top: -34px;
-  margin-left: 10px;
-  border: 1px solid $soft-gray;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  width: 40.25vw;
-  height: 80px;
-  overflow: scroll;
-
-  &__content {
-    border-radius: 4px;
-    border: 0.5px solid $base-gray;
-    color: $base-gray;
-    padding: 8px 6px;
-    margin-bottom: 8px;
-    cursor: pointer;
-  }
-  &__content:hover {
-    opacity: 0.6;
-  }
-}
-.close-template {
-  position: absolute;
-  bottom: 56px;
-  right: 8px;
-  z-index: 3;
-  cursor: pointer;
-  background-color: black;
-  border-radius: 3px;
-  opacity: 0.6;
-  img {
-    filter: invert(99%);
-  }
-}
-.divArea:focus {
-  outline: none;
-}
-.divArea {
-  -moz-appearance: textfield-multiline;
-  -webkit-appearance: textarea;
-  resize: both;
-  height: 30px;
-  width: 40.25vw;
-  min-height: 20vh;
-  margin-bottom: 4px;
-  border: 1px solid #e8e8e8;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  overflow-y: scroll;
-  font-family: inherit;
-  font-style: inherit;
-  font-size: 13px;
-  padding: 12px;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.red-label {
-  background-color: #fa646a;
-  color: white;
-  display: inline-block;
-  padding: 6px;
-  font-size: 14px;
-  text-align: center;
-  min-width: 80px;
-  margin-top: 12px;
-  margin-left: 2px;
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
 }
 .img-button {
   background-color: transparent;

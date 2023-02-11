@@ -177,6 +177,7 @@ class ObjectFieldSerializer(serializers.ModelSerializer):
             "createable",
             "updateable",
             "data_type",
+            "data_type_details",
             "display_value",
             "label",
             "length",

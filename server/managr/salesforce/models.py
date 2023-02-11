@@ -817,7 +817,7 @@ class MeetingWorkflow(SFSyncOperation):
 
             # check if a form with that template already exists and remove it
             self.forms.filter(template__id=template.id).delete()
-            kwargs = dict(user=self.user, template=template, workflow=self,)
+            kwargs = dict(user=self.user, template=template, workflow=self, update_source="meeting")
             if self.resource:
                 kwargs["resource_id"] = str(self.resource.id)
 
@@ -1018,10 +1018,12 @@ class SalesforceAuthAccount(TimeStampModel):
         self.scope = res.get("scope", None)
         self.save()
 
-    def revoke(self):
+    def revoke(self, delete=True):
         adapter = self.adapter_class
         adapter.revoke()
-        self.delete()
+        if delete:
+            return self.delete()
+        return
 
     def get_fields(self, resource):
 

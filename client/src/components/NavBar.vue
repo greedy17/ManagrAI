@@ -49,7 +49,7 @@
         <router-link
           v-if="(isTeamLead || isAdmin) && userCRM"
           exact-active-class="active"
-          :to="{ name: 'UpdateOpportunity' }"
+          :to="{ name: 'Forms' }"
         >
           <div class="tooltip">
             <img src="@/assets/images/upload.svg" height="16px" alt="" />
@@ -94,13 +94,6 @@
           </div>
         </router-link>
 
-        <!-- <router-link v-if="user.isStaff" exact-active-class="active" :to="{ name: 'Staff' }">
-          <div class="tooltip">
-            <img src="@/assets/images/adminPanel.svg" class="nav-img" height="16px" alt="" />
-            <span class="tooltiptext">Admin</span>
-          </div>
-        </router-link> -->
-
         <router-link style="margin-top: auto" :to="{ name: 'Login' }">
           <div>
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
@@ -123,24 +116,14 @@ export default {
   },
   data() {
     return {
-      showMenus: {
-        user: false,
-      },
       items: [],
-      tooltipOpen: false,
-      dropdownOpen: false,
-      userInitials: this.$store.state.user.firstName[0] + this.$store.state.user.lastName[0],
-      userLevel: this.$store.state.user.userLevel,
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
 
   async created() {
-    this.templates.refresh()
     if (this.isTeamLead || this.isAdmin) {
       this.items = [
         { key: 'Integrations', value: 'Integrations' },
-        { key: 'Slack Forms', value: 'SlackFormSettings' },
         { key: 'Invite Users', value: 'InviteUsers' },
         { key: 'Log Out', value: 'logout' },
       ]
@@ -156,9 +139,6 @@ export default {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
       localStorage.isLoggedOut = true
-    },
-    goToProfile(id) {
-      this.$router.push({ path: `/invite-users/${id}` })
     },
   },
   computed: {
@@ -179,12 +159,6 @@ export default {
     },
     isTeamLead() {
       return this.userIsLoggedIn && this.$store.state.user.isTeamLead
-    },
-    user() {
-      return this.$store.state.user
-    },
-    isOnboarding() {
-      return this.$store.state.user.onboarding
     },
   },
 }
@@ -218,17 +192,6 @@ export default {
 .nav-img {
   height: 16px;
 }
-.overlay {
-  background-color: white;
-  filter: blur(30%);
-  position: relative;
-  top: 10px;
-  left: -6px;
-  height: fit-content;
-  width: 100%;
-  z-index: 10;
-  outline: 1px solid red;
-}
 span {
   font-size: 11px;
   color: $dark-green;
@@ -236,20 +199,6 @@ span {
   margin-left: 0.25rem;
   padding: 0.2rem;
   border-radius: 0.2rem;
-}
-.logout {
-  border: 1px solid #e8e8e8;
-  padding: 0.25rem 0.5rem;
-  margin-top: 0.75rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.3rem;
-  background-color: $soft-gray;
-  cursor: pointer;
-  color: $base-gray;
-  font-size: 11px;
 }
 nav {
   height: 100vh;
@@ -305,10 +254,6 @@ a {
 }
 a:hover {
   color: white;
-}
-
-.mar {
-  margin-top: 1rem;
 }
 .active {
   // img {
@@ -391,30 +336,4 @@ a:hover {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
 }
-.end {
-  height: 20vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-// @media screen and (max-width: 700px) {
-//   nav {
-//     width: 100%;
-//     display: flex;
-//     flex-direction: row;
-//   }
-//   nav a {
-//     float: left;
-//   }
-//   div.content {
-//     margin-left: 0;
-//   }
-// }
-
-// @media screen and (max-width: 400px) {
-//   nav a {
-//     text-align: center;
-//     float: none;
-//   }
-// }
 </style>

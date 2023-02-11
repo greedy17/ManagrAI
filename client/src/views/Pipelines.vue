@@ -2,111 +2,90 @@
   <div @keyup.esc="closeInlineEditor" tabindex="0" class="pipelines">
     <Modal v-if="modalOpen" dimmed>
       <div class="modal-container rel">
-        <div class="flex-row-spread sticky border-bottom">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
-            <h4>{{ selectedresourceName }} Notes</h4>
+        <div class="flex-row-header sticky-header">
+          <div class="set-max-width">
+            <h4>{{ selectedresourceName || resourceEmail }}</h4>
+            <small>Notes</small>
           </div>
-          <div class="flex-row">
-            <img
-              @click="resetNotes"
-              src="@/assets/images/close.svg"
-              height="24px"
-              alt=""
-              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
-            />
+          <img
+            @click="resetNotes"
+            src="@/assets/images/close.svg"
+            height="24px"
+            alt=""
+            style="filter: invert(50%); cursor: pointer"
+          />
+        </div>
+        <div style="margin-bottom: 4px" class="even-row">
+          <h4 style="cursor: not-allowed" v-if="!addingNote">Total: {{ notes.length }}</h4>
+          <h4 class="lightgray" @click="addingNote = !addingNote" v-if="!addingNote">New Note</h4>
+          <div class="row-section" v-else>
+            <h4
+              @click="addingNote = !addingNote"
+              style="width: fit-content; margin-right: 16px; position: sticky; left: 0"
+              class="row"
+            >
+              <img src="@/assets/images/back.svg" style="margin-right: 8px" height="18px" alt="" />
+              Back
+            </h4>
+
+            <h4
+              @click="setTemplate(template.body, 'meeting_comments', template.subject)"
+              :class="{
+                lightgray: noteValue !== template.body,
+              }"
+              v-for="(template, i) in noteTemplates"
+              :key="i"
+            >
+              {{ template.subject }}
+            </h4>
           </div>
         </div>
 
-        <div class="flex-row-spread-start">
-          <div style="margin-top: 8px">
-            <span class="input-container">
-              <input
-                class="input-field"
-                placeholder="Note Title"
-                type="text"
-                v-model="noteTitle"
-                @input=";(value = $event.target.value), setUpdateValues('meeting_type', value)"
-              />
-            </span>
+        <div class="note-container" v-if="notes.length && !addingNote">
+          <section class="note-section" :key="i" v-for="(note, i) in notes">
+            <p class="note-section__title">
+              {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
+            </p>
+            <p class="note-section__date">
+              {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
+            </p>
+            <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
+          </section>
+        </div>
 
-            <span class="input-container">
-              <div
-                style="margin-top: -20px"
-                @input="setUpdateValues('meeting_comments', $event.target.innerHTML)"
-                class="divArea"
-                v-html="noteValue"
-                contenteditable="true"
-              ></div>
-              <!-- <span v-if="!formData['meeting_comments']" class="div-placeholder"
-                >Type your note here</span
-              > -->
-            </span>
-            <section v-if="!addingTemplate" class="note-templates">
-              <span
-                v-if="noteTemplates.length"
-                @click="addingTemplate = !addingTemplate"
-                class="note-templates__content"
-              >
-                <!-- <img
-                  src="@/assets/images/add-document.svg"
-                  height="18px"
-                  style="margin-right: 2px"
-                  alt=""
-                /> -->
-                Insert template
-              </span>
+        <div v-else-if="!notes.length && !addingNote" class="note-container">
+          <div class="empty-list">
+            <section class="bg-img"></section>
+            <h4>Nothing here</h4>
+            <p>Start taking your notes in Managr.</p>
+          </div>
+        </div>
 
-              <span @click="goToNotes" class="note-templates__content" v-else>
-                Create a template
-                <img src="@/assets/images/note.svg" style="margin-left: 4px" height="18px" alt=""
-              /></span>
-            </section>
+        <div v-else>
+          <span class="input-container">
+            <input
+              class="input-field"
+              placeholder="Note Title"
+              type="text"
+              v-model="noteTitle"
+              @input=";(value = $event.target.value), setUpdateValues('meeting_type', value)"
+            />
+          </span>
 
-            <section class="note-templates2" v-else>
-              <div
-                v-for="(template, i) in noteTemplates"
-                :key="i"
-                @click="setTemplate(template.body, 'meeting_comments', template.subject)"
-                class="note-templates2__content"
-              >
-                {{ template.subject }}
-              </div>
-            </section>
-
+          <span class="input-container">
             <div
-              v-if="addingTemplate"
-              @click="addingTemplate = !addingTemplate"
-              class="close-template"
-            >
-              <img src="@/assets/images/close.svg" height="20px" alt="" />
-            </div>
-          </div>
-
-          <div class="note-container" v-if="notes.length">
-            <section class="note-section" :key="i" v-for="(note, i) in notes">
-              <p class="note-section__title">
-                {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
-              </p>
-              <p class="note-section__date">
-                {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
-              </p>
-              <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
-            </section>
-          </div>
-
-          <div v-else class="note-container">
-            <div class="empty-list">
-              <section class="bg-img"></section>
-              <h4>Nothing here</h4>
-              <p>Start taking your notes in Managr.</p>
-            </div>
-          </div>
+              @input="setUpdateValues('meeting_comments', $event.target.innerHTML)"
+              class="divArea"
+              v-html="noteValue"
+              contenteditable="true"
+            ></div>
+          </span>
         </div>
 
         <footer class="modal-container__footer">
-          <!-- <p>Total: {{ notesLength }}</p> -->
-          <button @click="updateResource()" class="add-button">Save note</button>
+          <h4></h4>
+          <button v-if="addingNote" @click="updateResource()" class="add-button">Save note</button>
+          <div v-else></div>
         </footer>
       </div>
     </Modal>
@@ -128,7 +107,7 @@
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            style="height: 1.25rem; margin-top: -1rem; cursor: pointer"
             @click="resetAddOpp"
             alt=""
           />
@@ -153,7 +132,10 @@
                 >
                 </textarea>
               </div>
-              <div class="col" v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
+              <div
+                class="col"
+                v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'"
+              >
                 <label class="label">{{ field.referenceDisplayLabel }}</label>
                 <input
                   :disabled="savingCreateForm"
@@ -1001,7 +983,12 @@
                     </Multiselect>
                   </div>
 
-                  <div class="col" v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
+                  <div
+                    class="col"
+                    v-else-if="
+                      field.dataType === 'String' || field.dataType.toLowerCase() === 'email'
+                    "
+                  >
                     <p>{{ field.referenceDisplayLabel }}</p>
                     <input
                       id="user-input"
@@ -1118,23 +1105,61 @@
     </Modal>
     <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
-        <div class="flex-row-spread header">
-          <div class="flex-row">
-            <span class="logo">
+        <div
+          style="border-bottom: 2px solid #eeeeee; padding-bottom: 24px"
+          class="flex-row-spread header"
+        >
+          <div>
+            <!-- <span class="logo">
               <img src="@/assets/images/logo.png" height="24px" alt="" />
-            </span>
+            </span> -->
 
-            <!-- <h3>Update {{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</h3> -->
-            <h3>Update {{ resourceName }}</h3>
+            <h3 style="padding: 0; margin: 0">{{ savedOpp.name || resourceEmail }}</h3>
+            <small style="margin-top: 12px; color: #aaaaaa; display: block">{{
+              resourceName
+            }}</small>
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -1.5rem; margin-right: 0.75rem; cursor: pointer"
+            style="
+              height: 1.5rem;
+              margin-top: -1.5rem;
+
+              cursor: pointer;
+              filter: invert(45%);
+            "
             @click="resetEdit"
             alt=""
           />
         </div>
         <div class="opp-modal">
+          <div class="even-row">
+            <h4 style="cursor: not-allowed">Update Fields</h4>
+            <h4
+              v-if="hasProducts && userCRM === 'SALESFORCE' && resourceName === 'Opportunity'"
+              :class="{
+                lightgray: !addingProduct,
+              }"
+              @click="addProduct"
+            >
+              {{ !addingProduct ? 'Add Product' : 'Adding Product' }}
+            </h4>
+            <h4
+              :class="{
+                lightgray: !viewingProducts,
+              }"
+              v-if="
+                hasProducts &&
+                userCRM === 'SALESFORCE' &&
+                currentProducts &&
+                currentProducts.length &&
+                resourceName === 'Opportunity'
+              "
+              @click="toggleViewingProducts"
+            >
+              {{ !viewingProducts ? 'Edit Products' : 'Close Products' }}
+            </h4>
+          </div>
           <section :key="i" v-for="(field, i) in oppFormCopy">
             <div
               style="margin-left: -0.5rem; margin-top: -2rem; display: none"
@@ -1167,11 +1192,11 @@
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                 (field.dataType === 'String' && field.apiName !== 'NextStep') ||
-                (field.dataType.toLowerCase() === 'email')
+                field.dataType.toLowerCase() === 'email'
               "
               class="col"
             >
-            <!-- work here -->
+              <!-- work here -->
               <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 id="user-input"
@@ -1596,7 +1621,10 @@
 
           <div ref="product" class="adding-product" v-if="addingProduct">
             <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
-            <!-- <h4 style="color: #41b883">Add Product</h4> -->
+            <div class="add-section">
+              <div></div>
+              <p>Add Product</p>
+            </div>
 
             <div class="adding-product__body">
               <div v-if="!pricebookId">
@@ -1694,7 +1722,11 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
+                <div
+                  v-else-if="
+                    field.dataType === 'String' || field.dataType.toLowerCase() === 'email'
+                  "
+                >
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
@@ -1772,6 +1804,10 @@
           </div>
           <div v-if="hasProducts && currentProducts && currentProducts.length">
             <section ref="allProducts" v-if="!editingProduct && viewingProducts">
+              <div class="add-section">
+                <div></div>
+                <p>Edit Products</p>
+              </div>
               <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
                 <h4>
                   {{ product.secondary_data.Name }}
@@ -1789,14 +1825,14 @@
                       )
                     "
                   >
-                    <img src="@/assets/images/edit.svg" height="16px" alt="" />
+                    <img src="@/assets/images/expand.svg" height="16px" alt="" />
                   </button>
                 </span>
               </div>
             </section>
 
             <div class="current-products" v-if="editingProduct">
-              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+              <p style="font-size: 15px; margin-bottom: 24px">
                 {{ productName }}
               </p>
               <PipelineLoader v-if="savingProduct" />
@@ -1876,7 +1912,11 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'">
+                <div
+                  v-else-if="
+                    field.dataType === 'String' || field.dataType.toLowerCase() === 'email'
+                  "
+                >
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
@@ -1954,42 +1994,15 @@
 
               <div class="current-products__footer">
                 <p @click="cancelEditProduct">Cancel</p>
-                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <button class="add-button__" @click="updateProduct">Update</button>
               </div>
             </div>
           </div>
         </div>
 
         <div class="flex-end-opp">
-          <div v-if="hasProducts && userCRM === 'SALESFORCE' && resourceName === 'Opportunity'" class="row">
-            <button
-              style="padding: 10px; margin-right: 4px"
-              v-if="!addingProduct"
-              @click="addProduct"
-              class="select-btn1"
-            >
-              Add Product
-            </button>
-
-            <button @click="addProduct" v-else class="cancel" style="margin-right: 4px">
-              Cancel
-            </button>
-            <button
-              v-if="!viewingProducts && currentProducts && currentProducts.length"
-              @click="toggleViewingProducts()"
-              style="margin-left: 8px"
-              class="select-btn1"
-            >
-              View products <span>{{ currentProducts ? currentProducts.length : 0 }}</span>
-            </button>
-            <button v-else-if="viewingProducts" @click="toggleViewingProducts()" class="cancel">
-              Close products
-            </button>
-          </div>
-
-          <div v-else></div>
-
-          <div style="display: flex; align-items: center">
+          <div></div>
+          <div style="display: flex; align-items: flex-end; justify-content: flex-end">
             <button
               style="padding: 10px"
               @click="
@@ -2010,13 +2023,13 @@
       <!-- <h3 class="pipeline-header">
         {{ !currentWorkflowName ? currentList : currentWorkflowName }}
       </h3> -->
-      
+
       <section style="margin-top: -10px" class="flex-row-spread">
         <div v-if="/*!workflowCheckList.length && !primaryCheckList.length*/ true" class="flex-row">
           <small class="pipeline-header">View:</small>
           <button @click.stop="showList = !showList" class="text-button" style="cursor: pointer">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-            <span style="margin-left: 2px" class="green">{{
+            <span style="margin-left: 2px; color: #41b883">{{
               selectedWorkflow && currentWorkflow ? currentWorkflow.length : this[objectName].length
             }}</span>
 
@@ -2024,7 +2037,7 @@
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
-              <p>{{ resourceName }}</p>
+              <p>{{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</p>
             </div>
             <!-- <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -2036,31 +2049,82 @@
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p> -->
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button @click="allObjects('loadAllOpps', userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals', 'allOpps', userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal', 'Opportunity')" class="list-button">
+              <button
+                @click="
+                  allObjects(
+                    'loadAllOpps',
+                    userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals',
+                    'allOpps',
+                    userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+                    'Opportunity',
+                  )
+                "
+                class="list-button"
+              >
                 All {{ this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}
                 <span class="green">
                   {{ allOpps && allOpps.length ? allOpps.length : 0 }}
                 </span>
               </button>
             </router-link>
+            <button
+              @click="goToWorkflow(template.id)"
+              class="list-button"
+              v-for="template in templates.list"
+              :key="template.id"
+            >
+              {{ template.title }}
+              <span class="green">{{
+                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+              }}</span>
+            </button>
+            <div class="list-section__title flex-row-spread">
+              <p>{{ userCRM == 'SALESFORCE' ? 'Account' : 'Company' }}</p>
+            </div>
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button @click="allObjects('loadAllAccounts', userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies', 'allAccounts', userCRM === 'SALESFORCE' ? 'Account' : 'Company', 'Account')" class="list-button">
+              <button
+                @click="
+                  allObjects(
+                    'loadAllAccounts',
+                    userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies',
+                    'allAccounts',
+                    userCRM === 'SALESFORCE' ? 'Account' : 'Company',
+                    'Account',
+                  )
+                "
+                class="list-button"
+              >
                 All {{ this.userCRM === 'SALESFORCE' ? 'Accounts' : 'Companies' }}
                 <span class="green">
                   {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
                 </span>
               </button>
             </router-link>
+            <div class="list-section__title flex-row-spread">
+              <p>Contact</p>
+            </div>
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button @click="allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')" class="list-button">
+              <button
+                @click="
+                  allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')
+                "
+                class="list-button"
+              >
                 All Contacts
                 <span class="green">
                   {{ allContacts && allContacts.length ? allContacts.length : 0 }}
                 </span>
               </button>
             </router-link>
+            <div class="list-section__title flex-row-spread">
+              <p>Lead</p>
+            </div>
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button v-if="userCRM === 'SALESFORCE'" @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')" class="list-button">
+              <button
+                v-if="userCRM === 'SALESFORCE'"
+                @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
+                class="list-button"
+              >
                 All Leads
                 <span class="green">
                   {{ allLeads && allLeads.length ? allLeads.length : 0 }}
@@ -2085,17 +2149,6 @@
                 active</span
               >
             </button> -->
-            <button
-              @click="goToWorkflow(template.id)"
-              class="list-button"
-              v-for="template in templates.list"
-              :key="template.id"
-            >
-              {{ template.title }}
-              <span class="green">{{
-                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
-              }}</span>
-            </button>
           </div>
           <div
             v-for="(filter, i) in activeFilters"
@@ -2664,65 +2717,24 @@
           </button>
         </div>
       </div>
-      <div style="margin-top: 8px"></div>
-      <!-- <div class="results"></div> -->
+      <div style="margin-top: 16px"></div>
       <section v-if="!loadingWorkflows" class="table-section">
-        <div class="table">
-          <PipelineHeader
-            :oppFields="oppFields"
-            @check-all="onCheckAll"
-            @sort-opps="sortOpps"
-            @set-opps="setOpps"
-            @sort-opps-reverse="sortOppsReverse"
-            :allSelected="selectedWorkflow ? allWorkflowsSelected : allSelected"
-            :extraPipelineFields="extraPipelineFields"
-            :fieldOpts="objectFields.list"
-            :isContactOrLead="resourceName === 'Contact' || resourceName === 'Lead'"
-            :baseResourceType="baseResourceType"
-          />
-          <PipelineTableRow
-            :ref="selectedWorkflow ? 'workflowTableChild' : 'pipelineTableChild'"
-            :key="i"
-            v-for="(opp, i) in selectedWorkflow ? filteredWorkflows : this[objectName]"
-            @create-form="
-              createFormInstance(opp, opp.id, opp.integration_id, opp.secondary_data.Pricebook2Id)
-            "
-            @get-notes="
-              getNotes(opp.id), createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)
-            "
-            @checked-box="
-              selectedWorkflow ? selectWorkflowCheckbox(opp.id) : selectPrimaryCheckbox(opp.id)
-            "
-            @inline-edit="inlineUpdate"
-            @open-stage-form="openStageForm"
-            @current-inline-row="changeCurrentRow"
-            @set-dropdown-value="setDropdownValue"
-            @get-reference-opts="getReferenceOpts"
-            @updated-values="updateOpps"
-            @close-inline-editor="closeInlineEditor"
-            :dropdownLoading="dropdownLoading"
-            :dropdownValue="dropdownValue"
-            :closeEdit="closeInline"
-            :resourceName="resourceName"
-            :baseResourceType="baseResourceType"
-            :stages="stagesWithForms"
-            :inlineLoader="inlineLoader"
-            :picklistOpts="allPicklistOptions"
-            :referenceOpts="referenceOpts"
-            :opp="opp"
-            :index="i"
-            :oppFields="oppFields"
-            :primaryCheckList="selectedWorkflow ? workflowCheckList : primaryCheckList"
-            :updateList="updateList"
-            :stageData="newStage"
-            :closeDateData="daysForward"
-            :ForecastCategoryNameData="newForecast"
-            :BulkUpdateName="oppVal ? oppVal.apiName : null"
-            :BulkUpdateValue="oppNewValue"
-            :currentInlineRow="currentInlineRow"
-            :extraPipelineFields="extraPipelineFields"
-          />
-        </div>
+        <Table
+          :allOpps="selectedWorkflow ? filteredWorkflows : this[objectName]"
+          :oppFields="oppFields"
+          :extraPipelineFields="extraPipelineFields"
+          :fieldOpts="objectFields.list"
+          :closeEdit="closeInline"
+          :inlineLoader="inlineLoader"
+          @create-form="createFormInstance"
+          @get-notes="getNotes"
+          @set-opps="setOpps"
+          @current-inline-row="changeCurrentRow"
+          @close-inline-editor="closeInlineEditor"
+          @sort-opps="sortOpps"
+          @sort-opps-reverse="sortOppsReverse"
+          :resourceName="resourceName"
+        />
       </section>
       <div
         class="table-overlay"
@@ -2808,7 +2820,12 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
+                    val:
+                      field.apiName === 'StageName'
+                        ? $event.value
+                        : field.apiName === 'dealstage'
+                        ? [$event.label, $event.id]
+                        : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
@@ -2957,19 +2974,19 @@
                   v-model="dropdownVal[field.apiName]"
                   @search-change="field.apiName === 'AccountId' ? getAccounts($event) : () => null"
                   :options="
-                      field.apiName === 'dealstage'
-                        ? (field.options[0][savedPipeline.id]
-                          ? field.options[0][savedPipeline.id].stages
-                          : [])
-                        : field.apiName === 'AccountId'
-                        ? allAccountsForSObjects
-                        : userCRM === 'HUBSPOT' && field.dataType !== 'Reference'
-                        ? field.options
-                        : (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') &&
-                          allPicklistOptions[field.id]
-                        ? allPicklistOptions[field.id]
-                        : createReferenceOpts[field.apiName]
-                    "
+                    field.apiName === 'dealstage'
+                      ? field.options[0][savedPipeline.id]
+                        ? field.options[0][savedPipeline.id].stages
+                        : []
+                      : field.apiName === 'AccountId'
+                      ? allAccountsForSObjects
+                      : userCRM === 'HUBSPOT' && field.dataType !== 'Reference'
+                      ? field.options
+                      : (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') &&
+                        allPicklistOptions[field.id]
+                      ? allPicklistOptions[field.id]
+                      : createReferenceOpts[field.apiName]
+                  "
                   @open="getCreateReferenceOpts(field.apiName, field.id, field.options)"
                   :loading="dropdownLoading"
                   openDirection="below"
@@ -3025,22 +3042,18 @@
   </div>
 </template>
 <script>
-import { SObjects, SObjectField, SObjectPicklist } from '@/services/salesforce'
+import { SObjects } from '@/services/salesforce'
 import { ObjectField, CRMObjects } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import CollectionManager from '@/services/collectionManager'
 import SlackOAuth from '@/services/slack'
-import PipelineTableRow from '@/components/PipelineTableRow'
-import PipelineHeader from '@/components/PipelineHeader'
-import WorkflowHeader from '@/components/WorkflowHeader'
-import WorkflowRow from '@/components/WorkflowRow'
 import Modal from '@/components/InviteModal'
 import Loader from '@/components/Loader'
 import PipelineLoader from '@/components/PipelineLoader'
 import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
-import AlertsHeader from '@/components/AlertsHeader'
 import User from '@/services/users'
+import Table from '@/components/Table'
 
 export default {
   name: 'Pipelines',
@@ -3048,25 +3061,21 @@ export default {
     Modal,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineTableRow,
-    PipelineHeader,
-    WorkflowHeader,
-    WorkflowRow,
     PipelineLoader,
     Loader,
     Filters,
     FilterSelection,
-    AlertsHeader,
+    Table,
   },
   data() {
     return {
-      screenHeight: window.innerHeight,
+      resourceEmail: null,
+      addingNote: false,
       task: false,
       checker: null,
       verboseName: null,
       editingInline: false,
       currentCell: null,
-      loadingNext: false,
       viewingProducts: false,
       referenceLoading: false,
       savedOpp: null,
@@ -3091,11 +3100,8 @@ export default {
       noteTitle: null,
       noteValue: null,
       addingTemplate: false,
-      countSets: 0,
-      updateAccountForm: {},
       createData: {},
       savingCreateForm: false,
-      productQueryOpts: {},
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 300 },
@@ -3109,7 +3115,6 @@ export default {
       hasNextOriginal: false,
       integrationId: null,
       hasNext: false,
-      hasPrev: false,
       currentPage: 1,
       notesLength: 0,
       days: {
@@ -3127,14 +3132,12 @@ export default {
       inlineLoader: false,
       currentWorkflowName: this.$route.params.title,
       id: this.$route.params.id,
-      tableKey: 1200,
       stageGateField: null,
       stageValidationFields: {},
       stagesWithForms: [],
       dropdownVal: {},
       dropdownProductVal: {},
       selectedAccount: null,
-      selectedOwner: null,
       currentOwner: null,
       currentAccount: null,
       updatingOpps: false,
@@ -3144,15 +3147,11 @@ export default {
       allSelected: false,
       allWorkflowsSelected: false,
       updateList: [],
-      recapList: [],
       currentVals: [],
       closeDateSelected: false,
       advanceStageSelected: false,
       forecastSelected: false,
       changeFieldsSelected: false,
-      selection: false,
-      allStages: [],
-      allForecasts: [],
       selectedOpp: null,
       selectedresourceName: null,
       oppNewValue: null,
@@ -3171,7 +3170,6 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
-      users: CollectionManager.create({ ModelClass: User }),
       currentWorkflow: [],
       selectedWorkflow: false,
       modalOpen: false,
@@ -3185,30 +3183,22 @@ export default {
       resourceName: 'Opportunity',
       alertInstanceId: null,
       showList: false,
-      workList: false,
-      showWorkflowList: true,
-      showPopularList: true,
+      // showPopularList: true,
       notes: [],
       updateOppForm: [],
       oppFormCopy: [],
       createOppForm: [],
       oppFields: [],
-      instanceId: null,
       dropdownValue: {},
       formData: {},
       updateProductData: {},
-      noteInfo: '',
       referenceOpts: {},
       createReferenceOpts: {},
       productReferenceOpts: {},
-      picklistQueryOpts: {},
-      createQueryOpts: {},
-      createProductOpts: {},
-      picklistQueryOptsContacts: {},
-      stagePicklistQueryOpts: {},
       setFilters: {},
       instanceIds: [],
       allAccountsForSObjects: [],
+      // allAccounts: [],
       allUsers: [],
       objectName: 'allOpps',
       baseResourceType: 'Opportunity',
@@ -3228,9 +3218,8 @@ export default {
         ['NOT_EQUALS', 'StageName', 'Closed Won'],
         ['NOT_EQUALS', 'StageName', 'Closed Lost'],
       ],
-      operatorsLength: 0,
       stageGateId: null,
-      forecastList: [],
+      // forecastList: [],
       stageIntegrationId: null,
       stageId: null,
       selectedPriceBook: null,
@@ -3262,7 +3251,9 @@ export default {
       return extras
     },
     hasExtraFields() {
-      const accountRef = this.$store.state.user.salesforceAccountRef ? this.$store.state.user.salesforceAccountRef : this.$store.state.user.hubspotAccountRef
+      const accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
       const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },
@@ -3380,7 +3371,10 @@ export default {
         ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
-    this.objectFields.filters = { crmObject: this.crmObject }
+    this.objectFields.filters = {
+      ...this.objectFields.filters,
+      crmObject: this.crmObject,
+    }
     this.objectFields.refresh()
     this.$store.dispatch(this.loadObject, [...this.filters])
     if (this.userCRM === 'HUBSPOT') {
@@ -3446,19 +3440,6 @@ export default {
         this.$refs.allProducts ? this.$refs.allProducts.scrollIntoView({ behavior: 'smooth' }) : ''
       }, 100)
     },
-    setUpdateValuesHandler(key, val, oppId, oppIntId, multi) {
-      let formData = {}
-      if (multi) {
-        formData[key] = this.formData[key] ? this.formData[key] + ';' + val : val
-      }
-
-      if (val && !multi) {
-        formData[key] = val
-      }
-      setTimeout(() => {
-        this.inlineUpdate(formData, oppId, oppIntId)
-      }, 500)
-    },
     async getAllHSPicklists() {
       this.objectFields.refresh()
       const picklistOpts = {}
@@ -3492,6 +3473,7 @@ export default {
       this.currentSelectedProduct = secondaryData
     },
     setTemplate(val, field, title) {
+      console.log(val)
       this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = val
@@ -3559,28 +3541,12 @@ export default {
         }, 1000)
       }
     },
-    // async getAllPicklist() {
-    //   try {
-    //     const res = await SObjectPicklist.api.listPicklists({ pageSize: 1000 })
-    //     for (let i = 0; i < res.length; i++) {
-    //       this.allPicklistOptions[res[i].fieldRef.id] = res[i].values
-    //       this.apiPicklistOptions[res[i].fieldRef.apiName] = res[i].values
-    //     }
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
     addProduct() {
       this.addingProduct = !this.addingProduct
       setTimeout(() => {
         this.$refs.product ? this.$refs.product.scrollIntoView({ behavior: 'smooth' }) : null
       }, 100)
     },
-    // scrollToFields() {
-    //   setTimeout(() => {
-    //     this.$refs.product ? this.$refs.product.scrollIntoView() : null
-    //   }, 100)
-    // },
     getFilteredOpps() {
       if (this.userCRM === 'SALESFORCE') {
         this.$store.dispatch(this.loadObject, [
@@ -3599,26 +3565,6 @@ export default {
       } else if (this.currentList === 'Closing next month') {
         this.stillNextMonth()
       }
-    },
-    pricebookLabel({ name }) {
-      return name
-    },
-
-    replaceURLs(message, field) {
-      if (!message) return
-
-      var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
-      message.replace(urlRegex, function (url) {
-        var hyperlink = url
-        if (!hyperlink.match('^https?://')) {
-          hyperlink = 'http://' + hyperlink
-        }
-        return (
-          '<a href="' + hyperlink + '" target="_blank" rel="noopener noreferrer">' + url + '</a>'
-        )
-      })
-
-      this.setUpdateValues(field, message)
     },
     changeCurrentRow(i, cell) {
       this.currentInlineRow = i
@@ -3792,11 +3738,11 @@ export default {
                 )
               : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
           }
-          if (this.currentList === 'Closing this month') {
-            this.stillThisMonth()
-          } else if (this.currentList === 'Closing next month') {
-            this.stillNextMonth()
-          }
+          // if (this.currentList === 'Closing this month') {
+          //   this.stillThisMonth()
+          // } else if (this.currentList === 'Closing next month') {
+          //   this.stillNextMonth()
+          // }
           this.$toast(
             `${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`,
             {
@@ -3859,9 +3805,6 @@ export default {
     },
     closeListSelect() {
       this.showList = false
-    },
-    closeWorkSelect() {
-      this.workList = false
     },
     async getFilteredObjects(value) {
       this.loadingWorkflows = true
@@ -3967,7 +3910,6 @@ export default {
     },
     applyFilter(value) {
       this.updateFilterValue = value
-      this.operatorsLength += 1
       this.getFilteredObjects(value)
       this.filterSelected = false
       this.activeFilters.push(this.currentFilter)
@@ -4349,6 +4291,7 @@ export default {
     },
     resetNotes() {
       this.modalOpen = !this.modalOpen
+      this.addingNote = false
       this.notes = []
     },
     resetEdit() {
@@ -4376,8 +4319,12 @@ export default {
         console.log(e)
       }
     },
-    async createFormInstance(opp, id, integrationId, pricebookId, alertInstanceId = null) {
+    async createFormInstance(opp, id, integrationId, pricebookId) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
+      this.resourceEmail =
+        this.userCRM === 'SALESFORCE'
+          ? opp['secondary_data']['Email']
+          : opp['secondary_data']['email']
       this.viewingProducts = false
       this.addingProduct = false
       this.formData = {}
@@ -4391,10 +4338,8 @@ export default {
       this.currentOwner = null
       this.currentAccount = null
       this.selectedAccount = null
-      this.selectedOwner = null
       this.noteValue = null
       this.noteTitle = null
-      this.alertInstanceId = alertInstanceId
       this.oppId = id
       this.currentProducts = []
       this.updateProductData = {}
@@ -4445,7 +4390,6 @@ export default {
       this.createData = {}
       this.currentVals = []
       this.selectedAccount = null
-      this.selectedOwner = null
       this.addOppModalOpen = true
       this.addingProduct = false
       this.stageGateField = null
@@ -4574,7 +4518,6 @@ export default {
         console.log(e)
       }
     },
-
     async onBulkUpdateWorkflow() {
       for (let i = 0; i < this.$refs.workflowTableChild.length; i++) {
         if (this.$refs.workflowTableChild[i].isSelected) {
@@ -4602,7 +4545,6 @@ export default {
         console.log(e)
       }
     },
-
     async checkTask() {
       try {
         this.task = await User.api.checkTasks(this.verboseName)
@@ -4610,11 +4552,9 @@ export default {
         console.log(e)
       }
     },
-
     stopChecker() {
       clearInterval(this.checker)
     },
-
     checkAndClearInterval() {
       if (this.task.completed == true) {
         this.stopChecker()
@@ -4733,38 +4673,38 @@ export default {
         })
       }
     },
-    async resourceSync() {
-      if (
-        this.currentDay !== this.syncDay + '/' &&
-        this.currentDay !== this.syncDay &&
-        this.currentDay !== '0' + this.syncDay
-      ) {
-        setTimeout(() => {
-          this.loading = true
-        }, 300)
-        try {
-          await CRMObjects.api.resourceSync()
-          this.$toast('Daily sync complete', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } catch (e) {
-          this.$toast('Error syncing your resources, refresh page', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } finally {
-          this.$store.dispatch('refreshCurrentUser')
-          this.loading = false
-        }
-      }
-    },
+    // async resourceSync() {
+    //   if (
+    //     this.currentDay !== this.syncDay + '/' &&
+    //     this.currentDay !== this.syncDay &&
+    //     this.currentDay !== '0' + this.syncDay
+    //   ) {
+    //     setTimeout(() => {
+    //       this.loading = true
+    //     }, 300)
+    //     try {
+    //       await CRMObjects.api.resourceSync()
+    //       this.$toast('Daily sync complete', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'success',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } catch (e) {
+    //       this.$toast('Error syncing your resources, refresh page', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } finally {
+    //       this.$store.dispatch('refreshCurrentUser')
+    //       this.loading = false
+    //     }
+    //   }
+    // },
     async manualSync() {
       try {
         await CRMObjects.api.resourceSync()
@@ -4926,7 +4866,6 @@ export default {
         return
       }
     },
-
     async updateProduct() {
       this.savingProduct = true
       try {
@@ -4971,8 +4910,10 @@ export default {
     },
     async updateResource() {
       this.updateList.push(this.oppId)
+      setTimeout(() => {
+        this.editOpModalOpen = false
+      }, 300)
 
-      this.editOpModalOpen = false
       this.modalOpen = false
       this.addOppModalOpen = false
       try {
@@ -4988,7 +4929,6 @@ export default {
           newFormData = this.formData
         }
         const res = await CRMObjects.api.updateResource({
-          // form_id: this.stageGateField ? [this.instanceId, this.stageGateId] : [this.instanceId],
           form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
@@ -5064,6 +5004,7 @@ export default {
       } finally {
         this.updateList = []
         this.formData = {}
+        this.addingNote = false
         // this.closeFilterSelection()
       }
     },
@@ -5219,7 +5160,6 @@ export default {
       } finally {
         this.selectedWorkflow = true
         this.showList = false
-        this.workList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
             ? this.sortOppsReverse(
@@ -5280,7 +5220,6 @@ export default {
       this.dropdownLoading = true
       this.productReferenceOpts[name] = await this.getReferenceFieldList(name, id, 'createProduct')
     },
-
     setDropdownValue(val) {
       this.dropdownValue = val
     },
@@ -5310,8 +5249,12 @@ export default {
           field.apiName !== 'Name' &&
           field.apiName !== 'dealname' &&
           field.apiName !== 'name' &&
-          ((this.resourceName === 'Contact' || this.resourceName === 'Lead') ? field.apiName !== 'email' : true) &&
-          ((this.resourceName === 'Contact' || this.resourceName === 'Lead') ? field.apiName !== 'Email' : true)
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead'
+            ? field.apiName !== 'email'
+            : true) &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead'
+            ? field.apiName !== 'Email'
+            : true),
       )
     },
     async getAllForms() {
@@ -5464,12 +5407,12 @@ export default {
     //   }
     // },
 
-    async getNotes(id) {
+    async getNotes(opp) {
+      this.modalOpen = true
       try {
         const res = await CRMObjects.api.getNotes({
-          resourceId: id,
+          resourceId: opp.id,
         })
-        this.modalOpen = true
         if (res.length) {
           this.notes = []
           for (let i = 0; i < res.length; i++) {
@@ -5479,6 +5422,7 @@ export default {
           }
         }
       } catch (e) {
+        this.modalOpen = false
         this.$toast('Error gathering Notes!', {
           timeout: 2000,
           position: 'top-left',
@@ -5486,6 +5430,21 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        let name = opp.name
+        if (
+          this.userCRM === 'SALESFORCE' &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead')
+        ) {
+          name = opp['secondary_data']['Email']
+        } else if (
+          this.userCRM !== 'SALESFORCE' &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead')
+        ) {
+          name = opp['secondary_data']['email']
+        }
+
+        this.createFormInstanceForNotes(opp.id, name, opp.integration_id)
       }
     },
     closeDatesThisMonth() {
@@ -5591,12 +5550,13 @@ export default {
       this.resourceName = resourceName
       this.baseResourceType = baseResourceType
       this.showList = !this.showPopularList
-      this.objectFields.filters = {...this.objectFields.filters, crmObject: this.crmObject}
+      this.objectFields.filters = { ...this.objectFields.filters, crmObject: this.crmObject }
       this.objectFields.refresh()
       this.filterText = ''
       this.workflowFilterText = ''
       this.getAllForms()
       this.closeFilterSelection()
+      this.closeListSelect()
     },
     weekDay(input) {
       let newer = new Date(input)
@@ -5610,13 +5570,6 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
-    formatMostRecent(date2) {
-      let today = new Date()
-      let d = new Date(date2)
-      let diff = today.getTime() - d.getTime()
-      let days = diff / (1000 * 3600 * 24)
-      return Math.floor(days)
-    },
   },
   beforeUpdate() {
     if (this.id) {
@@ -5629,6 +5582,7 @@ export default {
   },
 }
 </script>
+
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
@@ -5656,9 +5610,26 @@ export default {
   }
 }
 
+.sortable-chosen,
+sortable-chosen.sortable-ghost {
+  opacity: 0;
+}
+.sortable-ghost {
+  background-color: #dadada;
+  opacity: 1;
+}
+
 .green {
   color: $dark-green;
-  background-color: $white-green;
+  // background-color: $white-green;
+  // padding: 2px 4px;
+  // border-radius: 4px;
+  margin-left: 8px;
+}
+
+.gray {
+  color: $dark-green;
+  background-color: $very-light-blue;
   padding: 2px 4px;
   border-radius: 4px;
   margin-left: 8px;
@@ -5669,7 +5640,7 @@ export default {
   background-color: white;
   box-shadow: 1px 1px 20px 1px $very-light-gray;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-left: 2px;
   width: 25vw;
   // width: 32vw;
@@ -5710,8 +5681,8 @@ export default {
   align-items: center;
   justify-content: center;
   color: $light-gray-blue;
+  height: 100%;
   letter-spacing: 0.76px !important;
-  margin-top: 20vh;
 
   .bg-img {
     background-image: url(../assets/images/logo.png);
@@ -5734,50 +5705,44 @@ export default {
 
 .input-field {
   border: 1px solid #e8e8e8;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
-  width: 36vw !important;
-  // border-bottom: none !important;
+  border-radius: 4px;
+  width: 39vw !important;
   letter-spacing: 0.8px;
   padding: 8px;
-  // color: $base-gray;
 }
 .input-field,
 .input-field::placeholder {
-  font: 18px $base-font-family;
+  font: 16px $base-font-family;
 }
 ::placeholder {
   color: $very-light-gray;
 }
 .current-products {
   font-size: 12px;
-  padding-left: 4px;
   width: 40.25vw;
-
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border-radius: 6px;
+  outline: 1px solid $soft-gray;
+  border-radius: 4px;
   padding: 8px;
-  margin-top: 16px;
+  margin-top: 24px;
+  margin-left: 2px;
 
   h4 {
     font-weight: bold;
+    margin-bottom: 0;
   }
   span {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: -6px;
+    margin-top: -8px;
 
     p {
-      // background-color: $white-green;
-      color: $dark-green;
-      padding: 4px;
       border-radius: 4px;
+      margin: 0;
     }
 
     button {
-      border: 1px solid $soft-gray;
-
+      border: none;
       color: $dark-green;
       background-color: white;
       border-radius: 4px;
@@ -5788,7 +5753,7 @@ export default {
       margin-right: 4px;
 
       img {
-        filter: invert(40%);
+        filter: invert(50%);
       }
     }
   }
@@ -5803,9 +5768,10 @@ export default {
     position: sticky;
 
     p {
-      margin-right: 16px;
+      margin-right: 24px;
+      font-size: 14px;
       cursor: pointer;
-      color: $coral;
+      // color: $coral;
     }
   }
 
@@ -5854,7 +5820,11 @@ export default {
 .input-container {
   position: relative;
   display: inline-block;
-  margin: 10px;
+  margin: 10px 0px;
+
+  label {
+    margin-bottom: 8px;
+  }
 }
 
 .col {
@@ -5867,23 +5837,61 @@ export default {
   }
 
   label {
-    color: $light-gray-blue;
+    color: $base-gray;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 14px;
   }
   p {
-    color: $light-gray-blue;
+    color: $base-gray;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 14px;
   }
 }
-
+.add-section {
+  position: relative;
+  height: 40px;
+  // margin-top: 16px;
+  div {
+    position: absolute;
+    border-bottom: 1px solid $soft-gray;
+    width: 100%;
+    bottom: 0;
+  }
+  p {
+    position: absolute;
+    left: 40%;
+    top: 12px;
+    background-color: white;
+    z-index: 3;
+    padding: 0 12px;
+  }
+}
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
+}
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  width: 100%;
+  height: 10vh;
+  border-bottom: 1px solid $soft-gray;
+}
+.flex-row-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 .sticky {
   position: sticky;
   background-color: white;
+  padding: 8px 0 0 0;
   width: 100%;
   left: 0;
   top: 0;
-  padding: 0px 6px 8px -2px;
 }
 .rel {
   position: relative;
@@ -5991,7 +5999,7 @@ export default {
 }
 
 .adding-product {
-  border-radius: 8px;
+  border-radius: 4px;
   margin: 8px 0px;
   width: 40.25vw;
 
@@ -6046,7 +6054,7 @@ export default {
   display: flex;
   align-items: center;
   color: $base-gray;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px;
   border: 1px solid $soft-gray;
   font-size: 14px;
@@ -6079,6 +6087,44 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.row-section {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow-x: scroll;
+  text-overflow: ellipsis;
+  gap: 16px;
+  white-space: nowrap;
+  padding-bottom: 16px;
+}
+
+.row-section::-webkit-scrollbar {
+  width: 0px;
+  height: 6px;
+}
+.row-section::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.row-section::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.row-section::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
+}
+
+.row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  // width: 40vw;
 }
 select {
   -webkit-appearance: none !important;
@@ -6115,7 +6161,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   cursor: pointer;
   margin-right: 0.5rem;
@@ -6139,7 +6185,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 4px;
   background-color: white;
   cursor: pointer;
   // color: $dark-green;
@@ -6155,25 +6201,25 @@ select {
   color: $light-gray-blue;
   margin-left: 4px;
 }
-.select-btn2 {
-  border: 0.5px solid $very-light-gray;
-  padding: 0.375rem 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  letter-spacing: 0.2px;
-  margin-right: 0.5rem;
-  transition: all 0.25s;
+// .select-btn2 {
+//   border: 0.5px solid $very-light-gray;
+//   padding: 0.375rem 0.75rem;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   border-radius: 6px;
+//   background-color: white;
+//   cursor: pointer;
+//   color: $dark-green;
+//   letter-spacing: 0.2px;
+//   margin-right: 0.5rem;
+//   transition: all 0.25s;
 
-  img {
-    filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
-    height: 1.05rem !important;
-  }
-}
+//   img {
+//     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
+//     height: 1.05rem !important;
+//   }
+// }
 input[type='checkbox']:checked + label::after {
   content: '';
   position: absolute;
@@ -6228,19 +6274,16 @@ input {
 h3 {
   font-size: 22px;
 }
-.table-section {
-  margin: 0;
-  padding: 0;
-  min-height: 50vh;
-  max-height: 91vh;
-  width: 93vw;
-  overflow: scroll;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  border-collapse: separate;
-  // border-spacing: 3px;
-  background-color: white;
-}
+// .table-section {
+//   margin: 0;
+//   min-height: 50vh;
+//   max-height: 90vh;
+//   width: 93vw;
+//   overflow: scroll;
+//   border-radius: 6px;
+//   border: 1px solid #e8e8e8;
+//   background-color: white;
+// }
 .table-section::-webkit-scrollbar {
   width: 0px;
   height: 8px;
@@ -6340,37 +6383,47 @@ h3 {
   display: table-cell;
   padding-left: 4px;
 }
+.center {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
 .modal-container {
   background-color: $white;
   overflow-y: scroll;
   overflow-x: hidden;
-  width: 80vw;
-  // min-height: 50vh;
-  height: 80vh;
+  width: 42vw;
+  height: 90vh;
   align-items: center;
   border-radius: 0.5rem;
-  padding: 0px 4px;
+  padding: 32px 22px 16px 22px;
 
   &__footer {
-    position: absolute;
+    position: sticky;
+    bottom: 0;
+    padding: 0px;
+
+    width: 100%;
+    height: 9vh;
     display: flex;
     flex-direction: row;
-    align-items: center;
-    bottom: 0;
-    right: 16px;
-    padding: 0px 8px;
+    align-items: flex-end;
+    justify-content: space-between;
     background-color: white;
-
     p {
       font-size: 12px;
       color: $light-gray-blue;
     }
-
-    button {
-      margin-right: 0px;
-      margin-left: 60vw;
-      margin-bottom: 12px;
+    h4 {
+      margin-bottom: 0;
     }
+
+    // button {
+    //   margin-right: 0px;
+    //   margin-left: 60vw;
+    //   margin-bottom: 12px;
+    // }
   }
 }
 .opp-modal-container {
@@ -6381,17 +6434,40 @@ h3 {
   width: 44vw;
   height: 90vh;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 24px 24px 8px 24px;
   // border: 1px solid #e8e8e8;
+}
+.even-row {
+  display: flex;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  padding-bottom: 16px;
+  z-index: 10;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: -16px;
+  h4 {
+    margin-bottom: 0;
+    background-color: $soft-gray;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+}
+.lightgray {
+  color: $light-gray-blue;
 }
 .opp-modal {
   width: 42vw;
   height: 80vh;
   display: flex;
   flex-direction: column;
-  // flex-wrap: wrap;
   gap: 0.25rem;
-  padding: 8px;
+  padding: 0px 12px 4px 0px;
   overflow-y: scroll;
   overflow-x: hidden;
   max-height: 70vh;
@@ -6399,17 +6475,31 @@ h3 {
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
-  div {
-    // margin-right: -1.25rem;
-  }
+}
+.opp-modal::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.opp-modal::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.opp-modal::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.opp-modal::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
 }
 .note-container {
-  height: 60vh;
+  height: 54vh;
   overflow-y: scroll;
-  width: 80vw;
-  padding: 0px 16px 8px 8px;
+  width: 100%;
+  padding: 8px 0px;
   margin: 0;
 }
+
 .note-container::-webkit-scrollbar {
   width: 6px;
   height: 0px;
@@ -6468,7 +6558,7 @@ input[type='search']:focus {
   width: 150px;
 }
 input[type='text']:focus {
-  outline: none;
+  outline: 1px solid $dark-green;
   cursor: text;
 }
 input[type='checkbox'] {
@@ -6496,28 +6586,25 @@ section {
   -moz-appearance: textfield-multiline;
   -webkit-appearance: textarea;
   resize: both;
-  height: 50vh;
-  width: 36vw;
+  height: 40vh;
+  width: 39vw;
   min-height: 20vh;
-  // margin-top: -20px;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-radius: 4px;
   border: 1px solid #e8e8e8;
-  border-top: none;
   overflow-y: scroll;
   font-family: inherit;
   font-style: inherit;
   font-size: 13px;
   padding: 12px;
 }
-.div-placeholder {
-  position: absolute;
-  top: -12px;
-  left: 10px;
-  z-index: -1;
-  color: $very-light-gray;
-  opacity: 0.8;
-}
+// .div-placeholder {
+//   position: absolute;
+//   top: -12px;
+//   left: 10px;
+//   z-index: -1;
+//   color: $very-light-gray;
+//   opacity: 0.8;
+// }
 // .divArea:hover {
 //   border: 1px solid #e8e8e8;
 //   border-radius: 4px;
@@ -6528,7 +6615,8 @@ section {
   align-items: center;
   letter-spacing: 1px;
   h4 {
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: normal;
   }
 }
 .flex-row-pad {
@@ -6562,7 +6650,6 @@ section {
   align-items: center;
   justify-content: space-between;
 }
-
 .flex-row-spread-start {
   display: flex;
   flex-direction: row;
@@ -6572,7 +6659,7 @@ section {
 .pipelines {
   padding: 20px 0px 0px 56px;
   color: $base-gray;
-  margin: 0 1rem 0 0.5rem;
+  margin: 4px 1rem 0 0.5rem;
   letter-spacing: 0.75px !important;
 }
 .pipelines:focus {
@@ -6581,9 +6668,9 @@ section {
 .invert {
   filter: invert(80%);
 }
-.fullInvert {
-  filter: invert(99%);
-}
+// .fullInvert {
+//   filter: invert(99%);
+// }
 .add-button:disabled {
   display: flex;
   align-items: center;
@@ -6617,7 +6704,7 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  margin: 0 0.5rem 0 0;
+  margin: 0;
   padding: 9px 12px;
   font-size: 13px;
   border-radius: 6px;
@@ -6626,6 +6713,7 @@ section {
   color: white;
   transition: all 0.3s;
   letter-spacing: 0.75px;
+  white-space: nowrap;
 }
 .add-button__ {
   display: flex;
@@ -6661,12 +6749,12 @@ section {
   align-items: center;
   justify-content: center;
   padding: 6px;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-right: 0.5rem;
 }
 #user-input-inline {
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   width: 23vw;
   font-family: $base-font-family;
@@ -6677,7 +6765,7 @@ section {
   border: 1px solid #e8e8e8;
   // height: 140px;
   height: 180px;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   min-height: 2.5rem;
   // width: 23vw;
@@ -6691,7 +6779,7 @@ section {
 }
 #user-input {
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   min-height: 2.5rem;
   width: 40.25vw;
@@ -6699,19 +6787,20 @@ section {
   letter-spacing: 0.75px;
   padding: 8px 12px;
   margin-top: 8px;
+  margin-left: 1px;
 }
 #user-input > div {
   color: red !important;
 }
 #user-input:focus,
 #user-input-inline:focus {
-  outline: none;
+  outline: 1px solid $dark-green;
 }
 .number-input {
   background-color: $off-white;
   box-shadow: 1px 1px 1px $gray;
   border: 2px solid $light-orange-gray;
-  border-radius: 5px;
+  border-radius: 4px;
   min-height: 4vh;
   margin-right: 1rem;
   margin-left: 0.5rem;
@@ -6867,18 +6956,26 @@ main:hover > span {
   letter-spacing: 0.75px;
 }
 .list-button:hover {
-  color: $dark-green;
+  color: black;
   background-color: $off-white;
 }
-.filter {
-  color: #41b883;
-  margin-left: 0.2rem;
-}
+// .filter {
+//   color: #41b883;
+//   margin-left: 0.2rem;
+// }
 .cancel {
   color: $dark-green;
   font-weight: bold;
   margin-left: 1rem;
   cursor: pointer;
+}
+.flex-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+  width: 100%;
 }
 .flex-end-opp {
   width: 100%;
@@ -6960,15 +7057,15 @@ a {
 }
 .close-template {
   position: absolute;
-  bottom: 50px;
+  bottom: 76px;
   left: 35.5vw;
   z-index: 3;
   cursor: pointer;
-  background-color: black;
+  // background-color: black;
   border-radius: 3px;
   opacity: 0.6;
   img {
-    filter: invert(99%);
+    // filter: invert(99%);
   }
 }
 .label {
@@ -6979,10 +7076,13 @@ a {
   min-width: 80px;
   margin-top: 12px;
   letter-spacing: 1px;
-  color: $light-gray-blue;
   border: none;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  color: $base-gray;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 14px;
 }
 .red-label {
   // background-color: $light-red;
@@ -7007,11 +7107,23 @@ a {
 }
 .input {
   min-height: 40px;
-  // display: block;
-  // padding: 8px 40px 0 8px;
-  border-radius: 5px;
+  border-radius: 4px;
   border: 1px solid #e8e8e8;
   background: #fff;
   font-size: 14px;
+}
+.set-max-width {
+  width: 40vw;
+  font-size: 18px;
+  h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+  small {
+    color: $very-light-gray;
+  }
+  overflow-x: scroll;
+  white-space: nowrap;
+  text-align: left;
 }
 </style>

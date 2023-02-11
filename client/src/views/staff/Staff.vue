@@ -1153,7 +1153,6 @@
             </div>
           </div>
 
-          <!-- <div>{{allForms}}</div> -->
           <div class="form__list">
             <div class="added-collection">
               <p class="added-collection__header">
@@ -1346,15 +1345,14 @@
 import SlackOAuth from '@/services/slack'
 import AlertTemplate from '@/services/alerts'
 import { MeetingWorkflows } from '@/services/salesforce'
-import CollectionManager from '@/services/collectionManager'
 import Organization from '@/services/organizations'
 import User from '@/services/users'
-import CustomSlackForm from '@/views/settings/CustomSlackForm'
+// import CustomSlackForm from '@/views/settings/CustomSlackForm'
 
 export default {
   name: 'Staff',
   components: {
-    CustomSlackForm,
+    // CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
@@ -1366,9 +1364,6 @@ export default {
         { label: 'Salesforce Fields', value: 'SALESFORCE_FIELDS' },
         { label: 'Pull Usage Data', value: 'PULL_USAGE_DATA' },
       ],
-      allUsers: CollectionManager.create({
-        ModelClass: User,
-      }),
       days: {
         0: 'Sunday',
         1: 'Monday',
@@ -1406,10 +1401,6 @@ export default {
       showOrgList: false,
       showCommandList: false,
       filtering: false,
-      filterApiName: '',
-      filterType: null,
-      currentFilter: '',
-      filterSelected: false,
       teamOrUser: [{ name: 'team' }, { name: 'user' }],
       selectedTeamOrUser: null,
       selectedFilter: null,
@@ -1436,22 +1427,13 @@ export default {
       states: ['ACTIVE', 'INACTIVE'],
       stateActive: null,
       ignoreEmails: [],
-      eventCalendarIDObj: {},
-      fakeMeetingIDObj: {},
-      zoomChannelObj: {},
-      recapObj: {},
-      realTimeAlertConfigObj: {},
       hasProducts: false,
-      allForms: null,
-      allMeetingWorkflows: null,
       orgMeetingWorkflows: null,
       selected_org: null,
       old_selected_org: null,
-      slackFormInstances: null,
       adminTasks: null,
       modalName: '',
       page: null,
-      orgForms: null,
       organizations: [],
       invitedUsers: null,
       activeUsers: null,
@@ -1524,15 +1506,7 @@ export default {
         this.filtering = false
       } else {
         this.filtering = true
-        this.filterSelected = false
       }
-    },
-    selectFilter(name, type, label) {
-      this.filtering = !this.filtering
-      this.filterApiName = name
-      this.filterType = type
-      this.currentFilter = label
-      this.filterSelected = true
     },
     applyFilter(value) {
       this.getFilteredObjects(value)
@@ -1581,22 +1555,6 @@ export default {
     async getAllOrgUsers(orgId) {
       const res = await User.api.getAllOrgUsers(orgId)
       return res
-    },
-    async getAllForms() {
-      try {
-        let res = await SlackOAuth.api.getOrgCustomForm(null, true)
-        this.allForms = res
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async getAllMeetingWorkflows() {
-      try {
-        let res = await MeetingWorkflows.api.getMeetingList(true)
-        this.allMeetingWorkflows = res.results
-      } catch (e) {
-        console.log(e)
-      }
     },
     async getTasks() {
       try {
@@ -1697,14 +1655,6 @@ export default {
         this.commandButtonLoading = false
       }
     },
-    async getSlackFormInstance() {
-      try {
-        const res = await SlackOAuth.api.slackFormInstances()
-        this.slackFormInstances = res
-      } catch (e) {
-        console.log('Error in getSlackFormInstance', e)
-      }
-    },
     async postOrgUpdates() {
       let noSpacesEmails = ''
       for (let i = 0; i < this.ignoreEmails.length; i++) {
@@ -1735,19 +1685,6 @@ export default {
           timeout: 3000,
         })
       }
-    },
-    async postUserInfo(index, userID) {
-      const data = {
-        event_calendar_id: this.eventCalendarIDObj[index],
-        fake_meeting_id: this.fakeMeetingIDObj[index],
-        zoom_channel: this.zoomChannelObj[index],
-        recap_receivers: this.recapObj[index],
-        realtime_alert_config: this.realTimeAlertConfigObj[index],
-        user_id: userID,
-      }
-      const res = await User.api.usersUpdate(data).then(() => {
-        this.allUsers.refresh()
-      })
     },
     weekDay(input) {
       let newer = new Date(input)
@@ -1803,14 +1740,6 @@ export default {
     closeListSelect() {
       this.showOrgList = false
       this.showCommandList = false
-    },
-    goToSlackForm() {
-      if (!this.selectedSlackForms) {
-        return
-      }
-      this.old_selected_org = this.selected_org
-      this.selected_org = null
-      this.page = 'SlackForm'
     },
     goToSlackFormInstace() {
       this.old_selected_org = this.selected_org
@@ -1956,23 +1885,12 @@ export default {
       }
       return `${formattedFormType} ${resource}`
     },
-    filterUsers(org_id) {
-      return this.allUsers.list.filter((user) => user.organization == org_id)
-    },
   },
   created() {
     this.getTasks()
     this.getStaffOrgs()
-    this.allUsers.refresh()
   },
   watch: {
-    async organizations() {
-      if (this.selected_org) {
-        // this.orgUsers = this.filterUsers(this.selected_org.id)
-        // this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
-        // this.orgMeetingWorkflows = await MeetingWorkflows.api.getStaffMeetings(this.selected_org.id)
-      }
-    },
     async selected_org() {
       if (this.selected_org) {
         this.loading = false
@@ -2010,22 +1928,10 @@ export default {
   height: 100vh;
   padding-left: 60px;
 }
-
-.staff__drawer {
-  // width: 20vw;
-  // height: 40%;
-  display: flex;
-  background-color: #fafbfc;
-  border-right: 2px solid $soft-gray;
-  border-bottom: 2px solid $soft-gray;
-  padding-right: 1rem;
-}
-
 .staff__main_page {
   width: 70vw;
   margin-left: 1rem;
 }
-
 p {
   font-size: 14px;
 }
@@ -2046,11 +1952,6 @@ ul {
   margin: 0;
   padding: 0;
 }
-
-.command_dropdown {
-  display: flex;
-}
-
 .green_button {
   color: white;
   background-color: $dark-green;
@@ -2061,12 +1962,10 @@ ul {
   border: none;
   cursor: pointer;
 }
-
 .sized {
   height: 3em;
   align-self: center;
 }
-
 input[type='search'] {
   margin: 0 1rem 0 0;
   background-color: white;
@@ -2158,9 +2057,9 @@ input[type='search']:focus {
   align-items: center;
   justify-content: space-between;
 }
-.copy-margin {
-  margin-right: 1rem;
-}
+// .copy-margin {
+//   margin-right: 1rem;
+// }
 .sticky {
   position: sticky;
   background-color: white;
@@ -2318,9 +2217,6 @@ input[type='search']:focus {
   margin-top: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid black;
-}
-.bottom-margin {
-  margin-bottom: 1rem;
 }
 .green {
   color: $dark-green;

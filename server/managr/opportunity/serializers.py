@@ -154,14 +154,14 @@ class LeadSerializer(serializers.ModelSerializer):
             data.update({"email": ""})
         if not data.get("external_owner", None):
             data.update({"external_owner": ""})
-
+        imported_by = data.get("imported_by", None)
         if owner:
             sf_account = (
                 SalesforceAuthAccount.objects.filter(salesforce_id=owner)
                 .select_related("user")
                 .first()
             )
-            user = sf_account.user.id if sf_account else sf_account
+            user = sf_account.user.id if sf_account else imported_by
             data.update({"owner": user})
         # remove contacts from validation
         internal_data = super().to_internal_value(data)

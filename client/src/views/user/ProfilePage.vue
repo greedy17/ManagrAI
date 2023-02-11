@@ -175,7 +175,6 @@ export default {
     border: 0;
   }
 }
-
 .update-button {
   background-color: $dark-green;
   box-shadow: none;

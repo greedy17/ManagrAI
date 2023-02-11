@@ -541,6 +541,7 @@ def process_meeting_selected_resource_option(payload, context):
         action, r = select.split(".")
     except ValueError:
         pass
+
     if not action:
         blocks = []
         try:
@@ -550,8 +551,12 @@ def process_meeting_selected_resource_option(payload, context):
             resource_id = resource.id
         except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
             try:
+                remove_owner = True if resource_type in ["Lead", "Contact"] else False
                 resource_res = user.crm_account.adapter_class.list_resource_data(
-                    resource_type, filter=CRM_FILTERS(user.crm, select),
+                    resource_type,
+                    filter=CRM_FILTERS(user.crm, select),
+                    remove_owner=remove_owner,
+                    limit=25,
                 )
                 serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                     data=resource_res[0].as_dict
@@ -1120,7 +1125,10 @@ def process_stage_selected_command_form(payload, context):
         )
         if stage_form:
             new_form = OrgCustomSlackFormInstance.objects.create(
-                user=user, template=stage_form, resource_id=main_form.resource_id
+                user=user,
+                template=stage_form,
+                resource_id=main_form.resource_id,
+                update_source="command",
             )
             added_form_ids.append(str(new_form.id))
 
@@ -1309,8 +1317,12 @@ def process_show_update_resource_form(payload, context):
         resource_id = resource.id
     except CRM_SWITCHER[user.crm][resource_type]["model"].DoesNotExist:
         try:
+            remove_owner = True if resource_type in ["Contact", "Lead"] else False
             resource_res = user.crm_account.adapter_class.list_resource_data(
-                resource_type, filter=CRM_FILTERS(user.crm, integration_id),
+                resource_type,
+                filter=CRM_FILTERS(user.crm, integration_id),
+                remove_owner=remove_owner,
+                owners=[str(user.crm_account.crm_id)],
             )
             serializer = CRM_SWITCHER[user.crm][resource_type]["serializer"](
                 data=resource_res[0].as_dict
@@ -1333,7 +1345,7 @@ def process_show_update_resource_form(payload, context):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user,
+            template=template, resource_id=resource_id, user=user, update_source="command"
         )
         if slack_form:
             stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
@@ -1346,7 +1358,10 @@ def process_show_update_resource_form(payload, context):
             form_ids = [str(slack_form.id)]
             if stage_template:
                 stage_form = OrgCustomSlackFormInstance.objects.create(
-                    template=stage_template, resource_id=resource_id, user=user,
+                    template=stage_template,
+                    resource_id=resource_id,
+                    user=user,
+                    update_source="command",
                 )
                 form_ids.append(str(stage_form.id))
             context.update({"f": ",".join(form_ids)})
@@ -2361,7 +2376,11 @@ def process_show_alert_update_resource_form(payload, context):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user, alert_instance_id=alert_instance,
+            template=template,
+            resource_id=resource_id,
+            user=user,
+            alert_instance_id=alert_instance,
+            update_source="alert",
         )
     if slack_form:
         stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
@@ -2374,7 +2393,7 @@ def process_show_alert_update_resource_form(payload, context):
         form_ids = [str(slack_form.id)]
         if stage_template:
             stage_form = OrgCustomSlackFormInstance.objects.create(
-                template=stage_template, resource_id=resource_id, user=user,
+                template=stage_template, resource_id=resource_id, user=user, update_source="alert"
             )
             form_ids.append(str(stage_form.id))
         context.update({"f": ",".join(form_ids)})
@@ -2834,6 +2853,8 @@ def process_view_recap(payload, context):
     main_form = submitted_forms.filter(
         template__form_type__in=["CREATE", "UPDATE", "MEETING_REVIEW"]
     ).first()
+    main_form.add_to_recap_data(user=payload["user"]["username"])
+    main_form.save()
     user = main_form.user
     access_token = user.organization.slack_integration.access_token
     loading_view_data = send_loading_screen(

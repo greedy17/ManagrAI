@@ -224,11 +224,21 @@ class HubspotAuthAccountAdapter:
         resource_fields = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
         )
-        add_filters = kwargs.get(
-            "filter",
-            [{"propertyName": "hubspot_owner_id", "operator": "EQ", "value": self.hubspot_id}],
-        )
+        add_filters = kwargs.get("filter", [])
         resource_class = routes.get(resource)
+        remove_owner = kwargs.get("remove_owner", False)
+        if remove_owner is False:
+            owners = kwargs.get("owners", [self.hubspot_id])
+            if isinstance(owners, str):
+                owners = [owners]
+            if add_filters is not None:
+                add_filters.extend(
+                    [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},]
+                )
+            else:
+                add_filters = [
+                    {"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},
+                ]
         limit = kwargs.pop("limit", hubspot_consts.HUBSPOT_QUERY_LIMIT)
         add_filters = [*add_filters, *resource_class.additional_filters()]
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
@@ -361,6 +371,7 @@ class HObjectFieldAdapter:
         self.api_name = data.get("name", None)
         self.label = data.get("label", f"{self.api_name}")
         self.data_type = data.get("field_type", None)
+        self.data_type_details = data.get("type", None)
         self.display_value = data.get("label", None)
         self.options = data.get("options", None)
         self.createable = data.get("createable", True)

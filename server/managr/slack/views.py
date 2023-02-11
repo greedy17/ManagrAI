@@ -563,8 +563,12 @@ class SlackFormsViewSet(
         serializer.save()
         instance = serializer.instance
         instance.custom_fields.clear()
+        fields_state = {}
         for i, field in enumerate(fields):
             instance.custom_fields.add(field, through_defaults={"order": i})
+            fields_state[i] = field["apiName"]
+
+        instance.config = fields_state
         instance.save()
         return Response(serializer.data)
 
@@ -632,7 +636,7 @@ class SlackFormsViewSet(
     def form_refresh(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""
         user = request.user
-        forms = OrgCustomSlackForm.objects.filter(organization=user.organization)
+        forms = OrgCustomSlackForm.objects.for_user(user)
         for form in forms:
             form.recreate_form()
         return Response(status=status.HTTP_200_OK)

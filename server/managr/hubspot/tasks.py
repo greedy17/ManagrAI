@@ -94,6 +94,10 @@ def emit_process_slack_hs_bulk_update(
     )
 
 
+def emit_generate_team_form_templates(user_id, schedule):
+    return _generate_team_form_templates(user_id, schedule=schedule)
+
+
 def emit_process_slack_inline_hs_update(payload, context):
     _process_slack_inline_update(payload, context)
 
@@ -104,6 +108,34 @@ def _process_pipeline_hs_sync(sync_id):
     sync = HSResourceSync.objects.get(id=sync_id)
     sync.begin_tasks()
     return sync.id
+
+
+@background()
+@log_all_exceptions
+def _generate_team_form_templates(user_id):
+    from managr.organization.models import Team
+
+    user = User.objects.get(id=user_id)
+    org = user.organization
+    team_ref = (
+        Team.objects.filter(organization=user.organization).order_by("datetime_created").first()
+    )
+    forms = team_ref.team_forms.all()
+    for form in forms:
+        f = OrgCustomSlackForm.objects.create(
+            form_type=form.form_type,
+            resource=form.resource,
+            organization=org,
+            team=user.team,
+            config=form.config,
+            stage=form.stage,
+        )
+        if len(f.config):
+            try:
+                f.recreate_form()
+            except Exception as e:
+                logger.exception(f"Couldn't recreate team form due to: {e}")
+                continue
 
 
 @background(schedule=0)
@@ -347,9 +379,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
         try:
             res = workflow.resource.update(data)
             attempts = 1
-            update_forms.update(
-                is_submitted=True, submission_date=timezone.now(), update_source="meeting"
-            )
+            update_forms.update(is_submitted=True, submission_date=timezone.now())
             break
         except TokenExpired as e:
             if attempts >= 5:
@@ -421,10 +451,7 @@ def _process_create_resource_from_meeting(workflow_id, *args):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         create_forms.update(
-            is_submitted=True,
-            submission_date=timezone.now(),
-            update_source="meeting",
-            resource_id=serializer.instance.id,
+            is_submitted=True, submission_date=timezone.now(), resource_id=serializer.instance.id,
         )
         workflow.resource_id = serializer.instance.id
         workflow.save()
@@ -584,7 +611,7 @@ def _process_add_call_to_hs(workflow_id, *args):
     return
 
 
-@background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
+@background(schedule=0)
 def _process_add_update_to_hs(form_id, *args):
     form = OrgCustomSlackFormInstance.objects.filter(id=form_id).first()
     resource = routes[form.resource_type]["model"].objects.get(id=form.resource_id)
@@ -600,11 +627,13 @@ def _process_add_update_to_hs(form_id, *args):
         else form.saved_data.get("meeting_type")
     )
     description = form.saved_data.get("meeting_comments")
+    if description is None:
+        description = "No Comments"
     description = replace_tags(description)
     data = dict(
         hs_timestamp=formatted_time,
         hubspot_owner_id=user.crm_account.crm_id,
-        hs_note_body=f"{subject} - {description}",
+        hs_note_body=f"{subject}<br> {description}",
     )
     attempts = 1
     while True:
@@ -679,7 +708,6 @@ def _process_create_new_hs_contacts(workflow_id, *args):
                     data, hs.access_token, object_fields, str(user.id),
                 )
                 form.is_submitted = True
-                form.update_source = "meeting"
                 form.submission_date = timezone.now()
                 form.save()
                 break
@@ -777,7 +805,6 @@ def _process_update_hs_contacts(workflow_id, *args):
                     form.resource_object.update(data,)
                     attempts = 1
                     form.is_submitted = True
-                    form.update_source = "meeting"
                     form.submission_date = timezone.now()
                     form.save()
                     if workflow.resource_type == slack_consts.FORM_RESOURCE_DEAL:
@@ -858,6 +885,7 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
         "form_type": "UPDATE",
         "user": user,
         "stage_name": None,
+        "update_source": "slack-bulk",
     }
 
     bulk_form_ids = []
@@ -882,7 +910,6 @@ def _process_slack_bulk_update(user_id, resource_ids, data, message_ts, channel_
             try:
                 resource = form.resource_object.update(all_form_data)
                 form.is_submitted = True
-                form.update_source = "slack-bulk"
                 form.submission_date = timezone.now()
                 form.save()
                 value_update = form.resource_object.update_database_values(all_form_data)
@@ -997,7 +1024,6 @@ def _process_slack_inline_update(payload, context):
                 try:
                     resource = form.resource_object.update(data)
                     form.is_submitted = True
-                    form.update_source = "slack-inline"
                     form.submission_date = timezone.now()
                     form.save()
                     value_update = form.resource_object.update_database_values(data)

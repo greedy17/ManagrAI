@@ -5,10 +5,12 @@
     class="table-row"
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
-    <div 
-      :class="showIcons ? 'hovered' : ''" 
+    <div
+      :class="showIcons ? 'hovered' : ''"
       class="cell-name limit-cell-height"
-      :style="(this.resourceName === 'Contact' || this.resourceName === 'Lead' ? 'max-width: none;' : '')"
+      :style="
+        this.resourceName === 'Contact' || this.resourceName === 'Lead' ? 'max-width: none;' : ''
+      "
     >
       <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
@@ -49,12 +51,14 @@
           <PipelineNameSection
             v-else
             :name="
-              (resourceName === 'Opportunity' || resourceName === 'Account')
+              resourceName === 'Opportunity' || resourceName === 'Account'
                 ? opp['secondary_data']['Name']
                 : resourceName === 'Company'
                 ? opp['secondary_data']['name']
-                : (resourceName === 'Contact' || resourceName === 'Lead')
-                ? (userCRM === 'SALESFORCE' ? opp['secondary_data']['Email'] : opp['secondary_data']['email'])
+                : resourceName === 'Contact' || resourceName === 'Lead'
+                ? userCRM === 'SALESFORCE'
+                  ? opp['secondary_data']['Email']
+                  : opp['secondary_data']['email']
                 : opp['secondary_data']['dealname']
             "
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
@@ -163,9 +167,7 @@
 <script>
 import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
-import { SObjects } from '@/services/salesforce'
 import User from '@/services/users'
-import debounce from 'lodash.debounce'
 
 export default {
   name: 'PipelineTableRow',
@@ -179,16 +181,14 @@ export default {
   data() {
     return {
       showIcons: false,
-      booleans: ['true', 'false'],
+      // booleans: ['true', 'false'],
       isSelected: false,
       task: false,
       checker: null,
       verboseName: null,
       currentRow: null,
       formData: {},
-      referenceOptions: [],
       dropdownVal: {},
-      executeUpdateValues: debounce(this.setUpdateValues, 2000),
       editing: false,
       editIndex: null,
       currentOpp: null,
@@ -282,9 +282,9 @@ export default {
     emitGetNotes() {
       this.$emit('get-notes')
     },
-    emitCheckedBox(i) {
-      this.$emit('checked-box', this.opp.id, i)
-    },
+    // emitCheckedBox(i) {
+    //   this.$emit('checked-box', this.opp.id, i)
+    // },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
     },
@@ -433,13 +433,6 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-
-@keyframes tooltips-horz {
-  to {
-    opacity: 0.95;
-    transform: translate(0%, 50%);
-  }
-}
 .row {
   display: flex;
   flex-direction: row;
@@ -447,7 +440,6 @@ export default {
 }
 // .light-gray {
 //   background-color: $off-white !important;
-
 // }
 
 .img-border {
@@ -667,13 +659,12 @@ input {
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   line-height: 1;
-  font-size: 13px;
+  font-size: 12px;
   padding: 0px 32px 0px 12px;
 }
 .cell-name {
   display: table-cell;
   white-space: nowrap;
-  width: 18vw;
   text-overflow: ellipsis;
   background-color: white;
   color: $base-gray;
@@ -683,7 +674,7 @@ input {
   z-index: 2;
   padding: 0px 4px;
   line-height: 1;
-  font-size: 13px;
+  font-size: 12px;
   border-bottom: 1px solid $soft-gray;
   cursor: text !important;
 }
@@ -695,6 +686,8 @@ input {
   background-color: white;
   color: $base-gray;
   letter-spacing: 0.75px;
+  border-bottom: 1px solid $soft-gray;
+  border-left: 1px solid $soft-gray;
   position: sticky;
   right: 0;
   z-index: 2;
@@ -702,25 +695,12 @@ input {
 
 .table-cell-wide {
   display: table-cell;
-  width: fit-content;
   text-overflow: ellipsis;
   border-bottom: 1px solid $soft-gray;
   font-size: 13px;
   padding-left: 4px;
   white-space: nowrap;
   padding: 0px 28px 0px 12px;
-}
-.table-cell-checkbox-header {
-  display: table-cell;
-  padding: 2vh 1vh;
-  border: none;
-  border-bottom: 3px solid $light-orange-gray;
-  z-index: 3;
-  width: 4vw;
-  top: 0;
-  left: 0;
-  position: sticky;
-  background-color: $white;
 }
 .table-cell-checkbox {
   display: table-cell;
@@ -798,7 +778,7 @@ input[type='checkbox'] + label::before {
   margin-right: 0.5em;
 }
 .limit-cell-height {
-  max-width: 18vw;
+  width: fit-content;
   padding: 0;
   cursor: pointer;
   white-space: nowrap;
@@ -832,7 +812,10 @@ input[type='checkbox'] + label::before {
   // background-color: rgba(220, 248, 233, 0.2);
   background-color: $off-white;
 }
-.blank {
-  // margin: 0;
-}
+// .mar-right {
+//   margin-right: 8px;
+// }
+// .mar-left {
+//   margin-left: 8px;
+// }
 </style>

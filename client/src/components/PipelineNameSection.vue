@@ -37,9 +37,9 @@ export default {
     },
   },
   computed: {
-    userCRM() {
-      return this.$store.state.user.crm
-    },
+    // userCRM() {
+    //   return this.$store.state.user.crm
+    // },
   },
 }
 </script>
@@ -51,11 +51,19 @@ export default {
   color: $very-light-gray !important;
 }
 
+<<<<<<< HEAD
 .pipeline-name {
   &__background {
     background-color: $soft-gray;
     padding: 4px;
     border-radius: 4px;
   }
+=======
+.gray-section {
+  background-color: $off-white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  width: fit-content;
+>>>>>>> 91e96476eb1e1ca325c1e7db3ddb8bdfee324e6d
 }
 </style>

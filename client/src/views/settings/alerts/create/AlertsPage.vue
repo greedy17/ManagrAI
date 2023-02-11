@@ -645,34 +645,19 @@ import { UserOnboardingForm } from '@/services/users/forms'
  * Services
  */
 
-import AlertTemplate, { AlertTemplateForm } from '@/services/alerts/'
-import { stringRenderer } from '@/services/utils'
-import { CollectionManager } from '@thinknimble/tn-models'
-import { SObjectField, NON_FIELD_ALERT_OPTS, SOBJECTS_LIST } from '@/services/salesforce'
+import { AlertTemplateForm } from '@/services/alerts/'
 import User from '@/services/users'
-import { SlackListResponse } from '@/services/slack'
 
 export default {
   name: 'AlertsPage',
   data() {
     return {
-      channelOpts: new SlackListResponse(),
-      savingTemplate: false,
-      listVisible: true,
-      dropdownVisible: true,
-      NON_FIELD_ALERT_OPTS,
-      stringRenderer,
-      SOBJECTS_LIST,
       alertTemplateForm: new AlertTemplateForm(),
-      selectedBindings: [],
       userOnboardingForm: new UserOnboardingForm({}),
-      fields: CollectionManager.create({ ModelClass: SObjectField }),
-      users: CollectionManager.create({ ModelClass: User }),
-      templates: CollectionManager.create({ ModelClass: AlertTemplate }),
     }
   },
   async created() {
-    this.templates.refresh()
+    
   },
   methods: {
     handleUpdate() {
@@ -798,10 +783,6 @@ export default {
 .filter-loft {
   filter: invert(40%) sepia(96%) brightness(101%) contrast(82%);
 }
-.onboarding {
-  filter: blur(10px);
-}
-
 .alerts-page {
   color: $base-gray;
 }
@@ -853,7 +834,6 @@ export default {
     justify-content: space-evenly;
   }
 }
-
 .filter-plus {
   filter: invert(10%);
 }

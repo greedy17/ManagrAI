@@ -28,6 +28,7 @@ class SObjectFieldAdapter:
         self.api_name = data.get("api_name", None)
         self.label = data.get("label", None)
         self.data_type = data.get("data_type", None)
+        self.data_type_details = data.get("extra_type_info", None)
         self.display_value = data.get("display_value", "")
         self.options = data.get("options", [])
         self.createable = data.get("createable", True)
@@ -39,35 +40,11 @@ class SObjectFieldAdapter:
         self.integration_source = data.get("integration_source", "")
         self.integration_id = data.get("integration_id", "")
         self.imported_by = data.get("imported_by", None)
-        # self.api_name = data.get("api_name", None)
-        # self.custom = data.get("custom", None)
-        # self.createable = data.get("createable", None)
-        # self.data_type = data.get("data_type", None)
-        # self.label = data.get("label", "")
-        # self.length = data.get("length", 0)
-        # self.reference = data.get("reference", None)
-        # self.reference_to_infos = data.get("reference_to_infos", [])
-        # self.relationship_name = data.get("relationship_name", None)
-        # self.updateable = data.get("updateable", None)
-        # self.required = data.get("required", None)
-        # self.unique = data.get("unique", None)
-        # self.value = data.get("value", None)
-        # self.filterable = data.get("filterable", None)
-        # self.display_value = data.get("display_value", "")
-        # self.options = data.get("options", [])
-        # self.integration_source = data.get("integration_source", "")
-        # self.integration_id = data.get("integration_id", "")
-        # self.salesforce_account = data.get("salesforce_account", None)
-        # self.salesforce_object = data.get("salesforce_object", None)
-        # self.imported_by = data.get("imported_by", None)
-        # self.allow_multiple = data.get("allow_multiple", None)
-        # self.default_filters = data.get("default_filters", [])
 
     @staticmethod
     def from_api(data):
         data["integration_source"] = "SALESFORCE"
         d = object_to_snake_case(data)
-
         return d
 
     @classmethod
@@ -486,25 +463,23 @@ class SalesforceAuthAccountAdapter:
                 )
 
                 res = self._handle_response(res)
-
                 if res.get("totalSize", 0) > 0:
-                    record_type_id = res.get("Id")
+                    record_type_id = res.get("records")[0].get("Id")
                 else:
-                    record_type_id = self.default_record_ids.get(resource, None)
+                    record_type_id = self.default_record_ids.get(resource)
                     if (
                         not record_type_id
                         and self.default_record_ids
                         and len(self.default_record_ids.items())
                     ):
                         items = list(self.default_record_ids.items())
-                        record_type_id = items[0][1] if len(items) else None
+                        record_type_id = items[0][1] if len(items) else self.default_record_id
                         if not record_type_id:
                             return logger.exception(
                                 f"Unable to retreive record id for {url} from field {field_name} for resource {resource}"
                             )
 
         url = f"{self.instance_url}{sf_consts.SALESFORCE_PICKLIST_URI(sf_consts.SALESFORCE_FIELDS_URI(resource), record_type_id)}"
-
         url = f"{url}/{field_name}" if field_name else url
         with Client as client:
             res = client.get(
@@ -632,7 +607,7 @@ class SalesforceAuthAccountAdapter:
                 f"AND ({extra_field.replace(':','=')})"
                 for extra_field in kwargs.get("add_fields").split(",")
             ]
-            if len(kwargs.get("add_fields", []))
+            if kwargs.get("add_fields", None)
             else []
         )
         # always retreive id

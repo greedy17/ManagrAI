@@ -270,7 +270,7 @@ class ContactSerializer(serializers.ModelSerializer):
                 .select_related("user")
                 .first()
             )
-            user = sf_account.user.id if sf_account else sf_account
+            user = sf_account.user.id if sf_account else imported_by
             data.update({"owner": user})
         if account:
             acct = BaseAccount.objects.filter(
