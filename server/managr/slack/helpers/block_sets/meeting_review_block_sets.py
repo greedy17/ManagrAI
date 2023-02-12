@@ -508,16 +508,19 @@ def meeting_review_modal_block_set(context):
     resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
     field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
     type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
-    note_options = user.crm_account.get_individual_picklist_values(resource, field)
-    note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
-    note_options_list = [
-        block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
-    ]
-    blocks.append(
-        block_builders.static_select(
-            type_text, options=note_options_list, block_id="managr_task_type"
+    try:
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
+        blocks.append(
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
         )
-    )
+    except Exception as e:
+        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
     # additional validations
     if len(slack_form.saved_data):
         blocks.extend(slack_form.generate_form(slack_form.saved_data))

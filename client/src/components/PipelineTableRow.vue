@@ -5,12 +5,14 @@
     class="table-row"
     :class="{ selected: primaryCheckList.includes(opp.id) }"
   >
-    <div :class="showIcons ? 'hovered' : ''" class="cell-name limit-cell-height">
-      <div
-        :style="`width:${defaultWidth}px;`"
-        class="flex-row-spread"
-        :class="{ selected: primaryCheckList.includes(opp.id) }"
-      >
+    <div
+      :class="showIcons ? 'hovered' : ''"
+      class="cell-name limit-cell-height"
+      :style="
+        this.resourceName === 'Contact' || this.resourceName === 'Lead' ? 'max-width: none;' : ''
+      "
+    >
+      <div class="flex-row-spread" :class="{ selected: primaryCheckList.includes(opp.id) }">
         <div v-if="showIcons" class="flex-row" style="margin-left: 8px">
           <div>
             <button @click="emitCreateForm(opp)" class="name-cell-edit-note-button-1">
@@ -49,8 +51,14 @@
           <PipelineNameSection
             v-else
             :name="
-              userCRM === 'SALESFORCE'
+              resourceName === 'Opportunity' || resourceName === 'Account'
                 ? opp['secondary_data']['Name']
+                : resourceName === 'Company'
+                ? opp['secondary_data']['name']
+                : resourceName === 'Contact' || resourceName === 'Lead'
+                ? userCRM === 'SALESFORCE'
+                  ? opp['secondary_data']['Email']
+                  : opp['secondary_data']['email']
                 : opp['secondary_data']['dealname']
             "
             :accountName="opp.account_ref ? opp.account_ref.name : ''"
@@ -108,6 +116,7 @@
             :field="field"
             :opp="opp"
             :lastStageUpdate="opp['last_stage_update']"
+            :owner="opp.owner_ref.full_name"
           />
         </div>
 
@@ -212,8 +221,8 @@ export default {
     currentInlineRow: {},
     extraPipelineFields: {},
     dropdownLoading: {},
-    defaultWidth: {},
-    defaultWideWidth: {},
+    resourceName: {},
+    baseResourceType: {},
   },
   methods: {
     showActions() {
@@ -294,6 +303,91 @@ export default {
       let dateString = currentYear + '-' + (currentMonth + 1) + '-' + currentDayOfMonth
       this.newCloseDate = dateString
     },
+    async onAdvanceStage() {
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+        SObjects.api
+          .updateResource({
+            form_data: { StageName: this.stageData },
+            resource_type: this.baseResourceType,
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 1000)
+      }
+    },
+    async onPushCloseDate() {
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: { CloseDate: this.newCloseDate },
+            resource_type: this.baseResourceType,
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 1000)
+      }
+    },
+    async onChangeForecast() {
+      this.updatedList.push(this.opp.id)
+      try {
+        const res = await SObjects.api
+          .updateResource({
+            form_data: { ForecastCategoryName: this.ForecastCategoryNameData },
+            resource_type: this.baseResourceType,
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
+          })
+          .then(
+            this.$toast('Salesforce Update Successful', {
+              timeout: 1000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            }),
+          )
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.updatedList = []
+        }, 2000)
+      }
+    },
     async checkTask() {
       try {
         this.task = await User.api.checkTasks(this.verboseName)
@@ -304,29 +398,29 @@ export default {
     stopChecker() {
       clearInterval(this.checker)
     },
-    // async onBulkUpdate() {
-    //   this.updatedList.push(this.opp.id)
-    //   try {
-    //     const formData = {}
-    //     formData[this.BulkUpdateName] = this.BulkUpdateValue
-    //     const res = await SObjects.api
-    //       .bulkUpdate({
-    //         form_data: formData,
-    //         resource_type: 'Opportunity',
-    //         form_type: 'UPDATE',
-    //         resource_id: this.opp.id,
-    //         integration_ids: [this.opp.integration_id],
-    //       })
-    //       .then((res) => {
-    //         this.verboseName = res.verbose_name
-    //         this.checker = setInterval(() => {
-    //           this.checkTask()
-    //         }, 1000)
-    //       })
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
+    async onBulkUpdate() {
+      this.updatedList.push(this.opp.id)
+      try {
+        const formData = {}
+        formData[this.BulkUpdateName] = this.BulkUpdateValue
+        const res = await SObjects.api
+          .bulkUpdate({
+            form_data: formData,
+            resource_type: this.baseResourceType,
+            form_type: 'UPDATE',
+            resource_id: this.opp.id,
+            integration_ids: [this.opp.integration_id],
+          })
+          .then((res) => {
+            this.verboseName = res.verbose_name
+            this.checker = setInterval(() => {
+              this.checkTask()
+            }, 1000)
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
   },
   computed: {
     userCRM() {

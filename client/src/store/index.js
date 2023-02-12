@@ -25,7 +25,10 @@ const state = {
   templates: null,
   pollingItems: [],
   pricebooks: null,
-  allOpps: null,
+  allOpps: [],
+  allContacts: [],
+  allAccounts: [],
+  allLeads: [],
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -59,6 +62,15 @@ const mutations = {
   },
   SAVE_ALL_OPPS(state, allOpps) {
     state.allOpps = allOpps
+  },
+  SAVE_ALL_CONTACTS(state, allContacts) {
+    state.allContacts = allContacts
+  },
+  SAVE_ALL_LEADS(state, allLeads) {
+    state.allLeads = allLeads
+  },
+  SAVE_ALL_ACCOUNTS(state, allAccounts) {
+    state.allAccounts = allAccounts
   },
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
@@ -124,6 +136,35 @@ const actions = {
       console.log(e)
     }
   },
+  async loadAllAccounts({ state, commit }, ) {
+    try {
+      let res
+      if (state.user.crm === 'SALESFORCE') {
+        res = await CRMObjects.api.getObjectsForWorkflows('Account')
+      } else {
+        res = await CRMObjects.api.getObjectsForWorkflows('Company')
+      }
+      commit('SAVE_ALL_ACCOUNTS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllContacts({ commit }) {
+    try {
+      const res = await CRMObjects.api.getObjectsForWorkflows('Contact')
+      commit('SAVE_ALL_CONTACTS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async loadAllLeads({ commit }) {
+    try {
+      const res = await CRMObjects.api.getObjectsForWorkflows('Lead')
+      commit('SAVE_ALL_LEADS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
   async loadPricebooks({ commit }) {
     try {
       const res = await SObjects.api.getObjects('Pricebook2')
@@ -168,7 +209,7 @@ const actions = {
   async checkTask({ commit }, vbName) {
     try {
       const task = await User.api.checkTasks(vbName)
-      commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task})
+      commit('UPDATE_CUSTOM_OBJECT', { ...state.customObject, task })
     } catch (e) {
       console.log(e)
     }
@@ -181,7 +222,7 @@ const actions = {
         //   dispatch('checkTask', vbName)
         //   // this.loaderText = this.loaderTextList[this.changeLoaderText()]
         // }, 2000)
-        commit('UPDATE_CUSTOM_OBJECT', {...state.customObject, task: null})
+        commit('UPDATE_CUSTOM_OBJECT', { ...state.customObject, task: null })
       })
     } catch (e) {
       console.log(e)
