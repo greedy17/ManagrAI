@@ -319,7 +319,6 @@ class HubspotAuthAccount(TimeStampModel):
         ).values_list("hubspot_id", flat=True)
 
     def add_to_pipeline_fields(self, resource, field_id):
-        print(resource, "RESOURCEEEEECEFERBSHNTDHN ")
         in_list = False
         for index, resource_type in enumerate(self.extra_pipeline_fields):
             index_list = resource_type.split(",")
