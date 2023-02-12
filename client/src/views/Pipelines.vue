@@ -2460,7 +2460,7 @@
             </button>
             <span class="tooltiptext">Sync Fields</span>
           </div>
-          <div v-if="!selectedWorkflow && baseResourceType === 'Opportunity'" class="search-bar">
+          <div v-if="!selectedWorkflow" class="search-bar">
             <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input
               type="search"
@@ -3549,21 +3549,35 @@ export default {
     },
     getFilteredOpps() {
       if (this.userCRM === 'SALESFORCE') {
-        this.$store.dispatch(this.loadObject, [
-          ...this.filters,
-          ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-        ])
+        if (this.resourceName === 'Opportunity') {
+          this.$store.dispatch(this.loadObject, [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+        } else if (this.resourceName === 'Account') {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+        } else {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'Email', this.filterText.toLowerCase()],
+          ])
+        }
       } else {
-        this.$store.dispatch(this.loadObject, [
-          ...this.filters,
-          ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-        ])
-      }
-
-      if (this.currentList === 'Closing this month') {
-        this.stillThisMonth()
-      } else if (this.currentList === 'Closing next month') {
-        this.stillNextMonth()
+        if (this.resourceName === 'Deal') {
+          this.$store.dispatch(this.loadObject, [
+            ...this.filters,
+            ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+          ])
+        } else if (this.resourceName === 'Company') {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'name', this.filterText.toLowerCase()],
+          ])
+        } else {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'email', this.filterText.toLowerCase()],
+          ])
+        }
       }
     },
     changeCurrentRow(i, cell) {
@@ -3723,7 +3737,7 @@ export default {
             ])
           }
         } else {
-          this.$store.dispatch(this.loadObject, [...this.filters])
+          this.$store.dispatch(this.loadObject)
         }
         setTimeout(() => {
           if (this.selectedWorkflow) {
@@ -3738,11 +3752,6 @@ export default {
                 )
               : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
           }
-          // if (this.currentList === 'Closing this month') {
-          //   this.stillThisMonth()
-          // } else if (this.currentList === 'Closing next month') {
-          //   this.stillNextMonth()
-          // }
           this.$toast(
             `${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`,
             {

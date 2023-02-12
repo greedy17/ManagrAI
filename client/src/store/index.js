@@ -136,30 +136,30 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllAccounts({ state, commit }, ) {
+  async loadAllAccounts({ state, commit }, filters = []) {
     try {
       let res
       if (state.user.crm === 'SALESFORCE') {
-        res = await CRMObjects.api.getObjectsForWorkflows('Account')
+        res = await CRMObjects.api.getObjectsForWorkflows('Account', true, filters)
       } else {
-        res = await CRMObjects.api.getObjectsForWorkflows('Company')
+        res = await CRMObjects.api.getObjectsForWorkflows('Company', true, filters)
       }
       commit('SAVE_ALL_ACCOUNTS', res.results)
     } catch (e) {
       console.log(e)
     }
   },
-  async loadAllContacts({ commit }) {
+  async loadAllContacts({ commit }, filters = []) {
     try {
-      const res = await CRMObjects.api.getObjectsForWorkflows('Contact')
+      const res = await CRMObjects.api.getObjectsForWorkflows('Contact', true, filters)
       commit('SAVE_ALL_CONTACTS', res.results)
     } catch (e) {
       console.log(e)
     }
   },
-  async loadAllLeads({ commit }) {
+  async loadAllLeads({ commit }, filters = []) {
     try {
-      const res = await CRMObjects.api.getObjectsForWorkflows('Lead')
+      const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
       commit('SAVE_ALL_LEADS', res.results)
     } catch (e) {
       console.log(e)

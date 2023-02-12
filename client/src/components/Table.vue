@@ -38,15 +38,11 @@
     <table class="table">
       <thead>
         <tr>
-          <th
-            :class="{ highlight: nameSort === 1 || nameSort === 2 }"
-            class="sort-img-visible"
-            @click="sortByName(sortingForward)"
-          >
+          <th :class="{ highlight: nameSort === 1 || nameSort === 2 }" class="sort-img-visible">
             <span @mousedown.prevent="onMouseDown($event)" class="ui-column-resizer"></span>
             <span>#</span>
             Name
-            <span>
+            <span @click="sortByName(sortingForward)">
               <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="16px" alt="" />
               <img
                 v-else-if="nameSort === 1"
@@ -65,14 +61,14 @@
           </th>
           <th
             class="sort-img-visible"
-            @click="fieldSort(field, i)"
             v-for="(field, i) in oppFields"
             :key="i * 7777 + 1"
             :class="{ highlight: reverseIndex === i || sortingIndex === i }"
+            :title="field.referenceDisplayLabel"
           >
             <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
             {{ field.referenceDisplayLabel }}
-            <span>
+            <span @click="fieldSort(field, i)">
               <img
                 v-if="sortingIndex === i"
                 src="@/assets/images/arrowDrop.svg"
@@ -162,6 +158,16 @@
             }"
             v-for="(field, i) in oppFields"
             :key="field.dataType + i * 4"
+            :title="
+              fieldData(
+                field.dataType,
+                userCRM,
+                field,
+                opp,
+                opp.owner_ref ? opp.owner_ref.full_name : '',
+                opp.account_ref ? opp.account_ref.name : '',
+              )
+            "
           >
             <span :class="{ shimmer: inlineLoader && editIndex === i && currentInlineRow === j }">
               {{
@@ -189,6 +195,7 @@
             }"
             v-for="(field, i) in extraPipelineFields"
             :key="field.dataType + i * 3"
+            :title="fieldData(field.dataType, userCRM, field, opp)"
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
           </td>

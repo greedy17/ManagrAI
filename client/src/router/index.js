@@ -94,6 +94,12 @@ export default new Router({
       component: () => import('@/views/settings/alerts/create/templates/LargeOpps')
     },
     {
+      path: '/empty-field',
+      name: 'EmptyField',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/settings/alerts/create/templates/EmptyField')
+    },
+    {
       path: '/closing-this-month',
       name: 'ClosingThisMonth',
       beforeEnter: Auth.requireAuth,

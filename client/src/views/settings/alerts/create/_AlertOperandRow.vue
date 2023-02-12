@@ -9,7 +9,9 @@
         offColor="#41b883"
         onColor="#41b883"
       />
-      <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
+      <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'OR' ? 'inactive' : ''"
+        >OR</label
+      >
       <!-- <small @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
@@ -79,7 +81,13 @@
       </div>
 
       <div class="alert-operand-row__value">
-        <div v-if="(selectedFieldTypeRaw == 'Picklist' || selectedFieldTypeRaw == 'Reference') && selectedFieldType == 'STRING'">
+        <div
+          v-if="
+            (selectedFieldTypeRaw == 'Picklist' || selectedFieldTypeRaw == 'Reference') &&
+            selectedFieldType == 'STRING' &&
+            selectedOperator.value !== 'IS_BLANK'
+          "
+        >
           <FormField :errors="form.field.operandValue.errors">
             <template v-slot:input>
               <Multiselect
@@ -168,7 +176,7 @@
                 </FormField>
               </div>
 
-              <div>
+              <div v-if="selectedOperator.value !== 'IS_BLANK'">
                 <small @click="toggleSelectedOperand" class="andOr">
                   <span :class="MyOperand !== 'Negative' ? 'inactive' : ''">In the past</span>
                   <span class="space-s">|</span>
@@ -206,6 +214,7 @@
 
             <div v-else>
               <FormField
+                v-if="selectedOperator.value !== 'IS_BLANK'"
                 @blur="form.field.operandValue.validate()"
                 :errors="form.field.operandValue.errors"
                 v-model="form.field.operandValue.value"
@@ -288,6 +297,7 @@ export default {
         { label: 'Less than', value: '<' },
         { label: 'Equal to', value: '=' },
         { label: 'Not equal to', value: '!=' },
+        { label: 'Empty', value: 'IS_BLANK' },
         // string based equality
       ],
       strOpts: [
@@ -303,6 +313,7 @@ export default {
         { label: 'Less than', value: '<' },
         { label: 'Equal to', value: '=' },
         { label: 'Not equal to', value: '!=' },
+        { label: 'Empty', value: 'IS_BLANK' },
       ],
       dateValueOpts: [
         { label: 'Same Day as alert day', value: '0' },
@@ -339,6 +350,10 @@ export default {
     },
     selectedOperator: function () {
       if (this.selectedOperator) {
+        if (this.selectedOperator.value === 'IS_BLANK') {
+          this.form.field.operandValue.value = 'null'
+          this.form.field.operandValue._value = 'null'
+        }
         this.form.field.operandOperator.value = this.selectedOperator.value
         this.form.field._operandOperator.value = this.selectedOperator
       } else {
@@ -368,8 +383,11 @@ export default {
       async handler(val) {
         if (val && val.apiName === 'RecordTypeId') {
           this.getRecords()
-        }
-        else if (val && val.apiName && (val.dataType == 'Picklist' || val.dataType == 'Reference')) {
+        } else if (
+          val &&
+          val.apiName &&
+          (val.dataType == 'Picklist' || val.dataType == 'Reference')
+        ) {
           await this.listPicklists({
             picklistFor: val.apiName,
             salesforceObject: this.resourceType,
@@ -430,7 +448,9 @@ export default {
       try {
         let res
         if (this.userCRM === 'HUBSPOT') {
-          const hsPicklist = this.objectFields.list.filter(item => query_params.picklistFor === item.apiName)
+          const hsPicklist = this.objectFields.list.filter(
+            (item) => query_params.picklistFor === item.apiName,
+          )
           this.picklistOpts = hsPicklist && hsPicklist[0] ? hsPicklist[0].options : []
           if (query_params.picklistFor === 'dealstage') {
             this.dealStageCheck = true
