@@ -3725,17 +3725,7 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
         if (this.filterText) {
-          if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch(this.loadObject, [
-              ...this.filters,
-              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-            ])
-          } else {
-            this.$store.dispatch(this.loadObject, [
-              ...this.filters,
-              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-            ])
-          }
+          this.getFilteredOpps()
         } else {
           this.$store.dispatch(this.loadObject)
         }
