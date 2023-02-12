@@ -92,7 +92,6 @@
           </th>
           <th
             class="sort-img-visible"
-            @click="viewOnlySort(field, i)"
             v-for="(field, i) in extraPipelineFields"
             :key="i * 333333 + 2"
             :class="{
@@ -102,7 +101,7 @@
           >
             <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
             {{ field.referenceDisplayLabel }}
-            <span>
+            <span @click="viewOnlySort(field, i)">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
@@ -126,7 +125,7 @@
               />
             </span>
           </th>
-          <th v-show="resourceName === 'Opportunity'">
+          <th v-show="userCRM === 'SALESFORCE'">
             <span @click="addField"> + </span>
           </th>
         </tr>
@@ -199,7 +198,7 @@
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
           </td>
-          <td v-show="resourceName === 'Opportunity'" :class="{ hovered: currentRow === j }"></td>
+          <td v-show="userCRM === 'SALESFORCE'" :class="{ hovered: currentRow === j }"></td>
         </tr>
       </tbody>
     </table>
@@ -357,11 +356,12 @@ export default {
       }
       try {
         const res = await SObjects.api.addExtraFields({
+          resource_type: this.resourceName,
           field_ids: this.extraFields,
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
