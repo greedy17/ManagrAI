@@ -315,7 +315,7 @@
             <h4>{{ config.title }}</h4>
             <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
             <div
-              v-if="config.title !== 'Team Pipeline'"
+              v-if="config.title !== 'Empty Field'"
               class="card__body__between"
               style="margin-top: 8px"
             >

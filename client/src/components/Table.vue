@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="table-section">
     <div v-if="addingField" class="add-field-section">
       <div class="add-field-section__title">
         <p>Add View Only Field</p>
@@ -38,86 +38,99 @@
     <table class="table">
       <thead>
         <tr>
-          <th class="sort-img-visible" @click="sortByName(sortingForward)">
+          <th :class="{ highlight: nameSort === 1 || nameSort === 2 }" class="sort-img-visible">
+            <span @mousedown.prevent="onMouseDown($event)" class="ui-column-resizer"></span>
             <span>#</span>
             Name
-            <span>
-              <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="12px" alt="" />
+            <span @click="sortByName(sortingForward)">
+              <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="16px" alt="" />
               <img
                 v-else-if="nameSort === 1"
                 src="@/assets/images/arrowDropUp.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
-              <img v-else-if="nameSort === 0" src="@/assets/images/sort.svg" height="12px" alt="" />
+              <img
+                id="not-sorting"
+                v-else-if="nameSort === 0"
+                src="@/assets/images/sort.svg"
+                height="16px"
+                alt=""
+              />
             </span>
           </th>
           <th
             class="sort-img-visible"
-            @click="fieldSort(field, i)"
             v-for="(field, i) in oppFields"
             :key="i * 7777 + 1"
+            :class="{ highlight: reverseIndex === i || sortingIndex === i }"
             :title="field.referenceDisplayLabel"
           >
+            <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
             {{ field.referenceDisplayLabel }}
-            <span>
+            <span @click="fieldSort(field, i)">
               <img
                 v-if="sortingIndex === i"
                 src="@/assets/images/arrowDrop.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-else-if="reverseIndex === i"
                 src="@/assets/images/arrowDropUp.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-if="reverseIndex !== i && sortingIndex !== i"
+                id="not-sorting"
                 src="@/assets/images/sort.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
             </span>
           </th>
           <th
             class="sort-img-visible"
-            @click="viewOnlySort(field, i)"
             v-for="(field, i) in extraPipelineFields"
             :key="i * 333333 + 2"
-            :title="field.referenceDisplayLabel"
+            :class="{
+              highlight:
+                reverseIndex === oppFields.length + i || sortingIndex === oppFields.length + i,
+            }"
           >
+            <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
             {{ field.referenceDisplayLabel }}
-            <span>
+            <span @click="viewOnlySort(field, i)">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-else-if="reverseIndex === oppFields.length + i"
                 src="@/assets/images/arrowDropUp.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
               <img
                 v-if="
                   reverseIndex !== oppFields.length + i && sortingIndex !== oppFields.length + i
                 "
+                id="not-sorting"
                 src="@/assets/images/sort.svg"
-                height="12px"
+                height="16px"
                 alt=""
               />
             </span>
           </th>
-          <th>
+          <th v-show="userCRM === 'SALESFORCE'">
             <span @click="addField"> + </span>
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tablebody">
         <tr
           @mouseenter="setIndex(j)"
           @mouseleave="currentRow = null"
@@ -135,30 +148,57 @@
           </td>
 
           <td
-            :title="fieldData(field.dataType, userCRM, field, opp)"
-            @click="editInline(i)"
+            @mouseenter="editCell = i"
+            @mouseleave="editCell = null"
+            @click="editInline(i, j)"
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
-              'edit-active': editing && editIndex === i && currentRow === j,
+              'active-cell': editCell === i && currentRow === j,
             }"
             v-for="(field, i) in oppFields"
             :key="field.dataType + i * 4"
+            :title="
+              fieldData(
+                field.dataType,
+                userCRM,
+                field,
+                opp,
+                opp.owner_ref ? opp.owner_ref.full_name : '',
+                opp.account_ref ? opp.account_ref.name : '',
+              )
+            "
           >
-            {{ fieldData(field.dataType, userCRM, field, opp) }}
+            <span :class="{ shimmer: inlineLoader && editIndex === i && currentInlineRow === j }">
+              {{
+                fieldData(
+                  field.dataType,
+                  userCRM,
+                  field,
+                  opp,
+                  opp.owner_ref ? opp.owner_ref.full_name : '',
+                  opp.account_ref ? opp.account_ref.name : '',
+                )
+              }}
+            </span>
+            <!-- <span class="green-section" v-show="field.apiName === 'StageName'">{{
+              (getDaysInStage(opp['last_stage_update']) > 19000
+                ? 0
+                : getDaysInStage(opp['last_stage_update'])) + ' days'
+            }}</span> -->
           </td>
 
           <td
-            :title="fieldData(field.dataType, userCRM, field, opp)"
             class="text-cursor"
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
             }"
             v-for="(field, i) in extraPipelineFields"
             :key="field.dataType + i * 3"
+            :title="fieldData(field.dataType, userCRM, field, opp)"
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
           </td>
-          <td :class="{ hovered: currentRow === j }"></td>
+          <td v-show="userCRM === 'SALESFORCE'" :class="{ hovered: currentRow === j }"></td>
         </tr>
       </tbody>
     </table>
@@ -182,6 +222,12 @@ export default {
       nameSort: 0,
       sortingIndex: null,
       reverseIndex: null,
+      currentInlineRow: null,
+      editCell: null,
+      start: null,
+      pressed: null,
+      startX: null,
+      startWidth: null,
     }
   },
   components: {
@@ -194,11 +240,16 @@ export default {
     fieldOpts: {},
     inlineLoader: {},
     closeEdit: {},
+    resourceName: {},
   },
   watch: {
     closeEdit: 'closeInline',
   },
   methods: {
+    // getDaysInStage(date) {
+    //   let newDate = new Date(date)
+    //   return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
+    // },
     setIndex(n) {
       this.currentRow = n
     },
@@ -210,8 +261,14 @@ export default {
         : opp['secondary_data'][field.apiName]
     },
     oppName(crm, opp) {
-      return crm === 'SALESFORCE'
+      return this.resourceName === 'Opportunity' || this.resourceName === 'Account'
         ? opp['secondary_data']['Name']
+        : this.resourceName === 'Company'
+        ? opp['secondary_data']['name']
+        : this.resourceName === 'Contact' || this.resourceName === 'Lead'
+        ? crm === 'SALESFORCE'
+          ? opp['secondary_data']['Email']
+          : opp['secondary_data']['email']
         : opp['secondary_data']['dealname']
     },
     capitalizeFirstLetter(string) {
@@ -223,8 +280,18 @@ export default {
         return index === 0 ? match.toLowerCase() : match.toUpperCase()
       })
     },
-    fieldData(type, crm, field, opp) {
-      if (type === 'Date') {
+    fieldData(type, crm, field, opp, owner = null, account = null) {
+      if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
+        return owner || 'empty'
+      } else if (field.apiName === 'AccountId') {
+        return account || 'empty'
+      } else if (field.apiName === 'dealstage') {
+        return (
+          field.options[0][opp['secondary_data'].pipeline].stages.filter(
+            (stage) => stage.id === opp['secondary_data'][field.apiName],
+          )[0].label || 'empty'
+        )
+      } else if (type === 'Date') {
         return this.fieldConditions(crm, field, opp)
           ? this.formatDate(this.fieldConditions(crm, field, opp))
           : 'empty'
@@ -276,7 +343,6 @@ export default {
       this.$emit('get-notes', opp)
     },
     addField() {
-      console.log('here', this.addingField)
       this.addingField = true
     },
     closeAddField() {
@@ -290,11 +356,12 @@ export default {
       }
       try {
         const res = await SObjects.api.addExtraFields({
+          resource_type: this.resourceName,
           field_ids: this.extraFields,
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -309,8 +376,9 @@ export default {
     emitSetOpps() {
       this.$emit('set-opps')
     },
-    editInline(index) {
+    editInline(index, j) {
       this.editing = true
+      this.currentInlineRow = j
       this.$emit('current-inline-row', this.currentRow, index)
       this.editIndex = index
     },
@@ -389,11 +457,39 @@ export default {
         this.nameSort = 0
       }
     },
+    onMouseDown(e) {
+      this.start = e.target
+      this.pressed = true
+      this.startX = e.clientX
+      this.startWidth = this.start.parentElement.clientWidth
+    },
+    resize() {
+      window.addEventListener('mousemove', (event) => {
+        if (this.pressed) {
+          let width = this.startWidth + (event.clientX - this.startX)
+          this.start.parentElement.style.minWidth = `${width}px`
+          this.start.parentElement.style.maxWidth = `${width}px`
+        }
+      })
+    },
   },
-  mounted() {},
+  mounted() {
+    this.resize()
+
+    window.addEventListener('mouseup', () => {
+      window.removeEventListener('mousemove', this.resize())
+      if (this.pressed) {
+        this.pressed = false
+      }
+    })
+  },
   computed: {
     userCRM() {
       return this.$store.state.user.crm
+    },
+    currentDay() {
+      let date = new Date()
+      return date
     },
   },
 }
@@ -402,28 +498,70 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.shimmer {
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 2s infinite;
+  background-color: $soft-gray;
+  display: inline-block;
+  width: 90%;
+  color: $soft-gray;
+  opacity: 1.75;
+  border-radius: 4px;
+}
+.table-section {
+  margin: 0;
+  min-height: 50vh;
+  max-height: 89.5vh;
+  width: 93vw;
+  overflow: scroll;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+  background-color: white;
+}
+
 table {
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 13px;
+  min-width: 100%;
 }
 thead {
   position: sticky;
   top: 0;
   z-index: 3;
 }
+
+thead tr th {
+  position: relative;
+}
 th {
   background-color: $light-gray;
   text-align: left;
   max-width: 11vw;
-  //   color: $light-gray-blue;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: rgba($color: #000000, $alpha: 0.8);
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+th:hover {
+  background-color: $soft-gray;
+  color: $darker-green;
 }
 td {
   max-width: 18vw;
 }
 th,
 td {
-  padding: 13px 16px 13px 8px;
+  padding: 14px 16px 14px 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -448,6 +586,7 @@ td:first-of-type {
 th:first-of-type {
   left: 0;
   position: sticky;
+  z-index: 4;
 }
 th > span {
   display: inline-block;
@@ -560,21 +699,57 @@ img {
 .text-cursor {
   cursor: text;
 }
-.sort-img-visible > span > img {
+.sort-img-visible > span > #not-sorting {
   display: none;
 }
-.sort-img-visible:hover > span > img {
+.sort-img-visible:hover > span > #not-sorting {
   display: block;
+  margin-left: auto;
 }
-label {
-  background-color: $light-gray;
-  padding: 4px 8px 4px 6px;
-  border-radius: 4px;
+.sort-img-visible > span > img {
+  position: absolute;
+  top: 38%;
+  right: 12px;
+  margin: 0;
+  padding: 0;
 }
 
-[title]:hover:after {
-  opacity: 1;
-  transition: all 0.1s ease 0.5s;
-  visibility: visible;
+label {
+  background-color: $light-gray;
+  padding: 5px 6px;
+  border-radius: 4px;
 }
+.highlight {
+  background-color: $soft-gray;
+  img {
+    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+      brightness(93%) contrast(89%);
+  }
+}
+.active-cell {
+}
+
+span.ui-column-resizer {
+  display: block;
+  position: absolute;
+  // background-color: red;
+  top: 0;
+  right: 0;
+  margin: 0;
+  width: 12px;
+  height: 100%;
+  padding: 0;
+  cursor: col-resize;
+  border: 1px solid transparent;
+}
+
+span.ui-column-resizer:hover {
+  border-right: 2px solid $dark-green;
+}
+// .green-section {
+//   background-color: $white-green;
+//   color: $dark-green;
+//   padding: 4px 8px 4px 4px;
+//   border-radius: 4px;
+// }
 </style>

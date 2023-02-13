@@ -104,6 +104,7 @@ class OrgCustomSlackFormInstanceSerializer(serializers.ModelSerializer):
             "template_ref",
             "saved_data",
             "previous_data",
+            "recap_data",
         )
 
 

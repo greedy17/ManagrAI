@@ -387,9 +387,15 @@ export default {
         'Close Date Approaching',
         'Update Forecast',
         'Deal Rotting',
+        'Deal Review',
         'Upcoming Next Step',
         'Large Opportunities',
-        'Team Pipeline',
+        'Large Deals',
+        'Closing This Month',
+        'Closing Next Month',
+        'Closing This Quarter',
+        'Empty Field',
+        'Empty Property',
       ],
       intOpts: [
         { label: '>= (Greater or Equal)', value: '>=' },
@@ -593,7 +599,7 @@ export default {
       const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
         this.valuePromise ? this.valuePromise : valueLabel
       } `
-      this.valuePromise = null;
+      this.valuePromise = null
       return operandString
     },
     addSuffix(num) {
@@ -704,7 +710,13 @@ export default {
       const slackMesArr = []
       const slackBindingsArr = []
       for (let i = 0; i < this.formattedSlackMessage.length; i++) {
-        slackMesArr.push('<strong>' + this.formattedSlackMessage[i].title + '</strong> \n { ' + this.formattedSlackMessage[i].val + ' }')
+        slackMesArr.push(
+          '<strong>' +
+            this.formattedSlackMessage[i].title +
+            '</strong> \n { ' +
+            this.formattedSlackMessage[i].val +
+            ' }',
+        )
         slackBindingsArr.push(` ${this.formattedSlackMessage[i].val} `)
       }
       this.slackMessage = slackMesArr

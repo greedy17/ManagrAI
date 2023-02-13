@@ -1,102 +1,23 @@
 <template>
   <div class="alerts">
-    <div class="header">
-      <div>
-        <h3 v-if="!buildingCustom && !editingWorkflow" class="left-margin">Workflows</h3>
-        <h3 @click="closeBuilder" v-else-if="buildingCustom" class="left-margin-s centered">
-          <img
-            style="margin-right: 4px; filter: invert(40%)"
-            src="@/assets/images/left.svg"
-            height="13px"
-            alt=""
-          />
-          Back
-        </h3>
-
-        <h3 @click="closeBuilder" v-else class="left-margin-s centered">
-          <img
-            style="margin-right: 4px; filter: invert(40%)"
-            src="@/assets/images/left.svg"
-            height="13px"
-            alt=""
-          />
-          Cancel
-        </h3>
-      </div>
-
-      <div v-if="editingWorkflow">
-        <span class="gray-text">{{ currentAlert.title }}</span>
-      </div>
-
-      <div v-if="isPaid">
-        <button
-          v-if="!buildingCustom && !editingWorkflow"
-          class="green_button right-margin"
-          @click="buildingCustom = !buildingCustom"
-          :class="!buildingCustom ? 'inactive' : ''"
-        >
-          Create Workflow
-        </button>
-
-        <button
-          @click="saveWorkflow"
-          :disabled="!canSave"
-          class="green_button right-margin"
-          :class="canSave ? 'pulse' : ''"
-          v-else-if="buildingCustom"
-        >
-          Create Workflow
-        </button>
-
-        <div v-else>
-          <button @click="deleteWorkflow(currentAlert.id)" class="delete">Delete</button>
-          <button
-            @click="updateWorkflow"
-            style="margin-left: 8px"
-            class="green_button right-margin"
-          >
-            Update
-          </button>
-        </div>
-      </div>
-
-      <div v-else>
-        <div class="tooltip" v-if="!buildingCustom && !editingWorkflow">
-          <button disabled class="green_button right-margin center-row">
-            Create Workflow
-            <img
-              class="shimmer"
-              style="filter: invert(40%)"
-              src="@/assets/images/lock.svg"
-              height="16px"
-              alt=""
-            />
-          </button>
-          <small class="tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
-        </div>
-
-        <button
-          @click="saveWorkflow"
-          :disabled="!canSave"
-          class="green_button right-margin"
-          :class="canSave ? 'pulse' : ''"
-          v-else-if="buildingCustom"
-        >
-          Create Workflow
-        </button>
-
-        <div v-else>
-          <button @click="deleteWorkflow(currentAlert.id)" class="delete">Delete</button>
-          <button
-            @click="updateWorkflow"
-            style="margin-left: 8px"
-            class="green_button right-margin"
-          >
-            Update
-          </button>
-        </div>
-      </div>
-    </div>
+    <AlertsHeader
+      page="workflows"
+      title="Workflows"
+      :saving="false"
+      :currentAlert="currentAlert"
+      :creating="buildingCustom"
+      :editing="editingWorkflow"
+      :canSave="canSave"
+      :isPaid="isPaid"
+      :deleteId="currentAlert ? currentAlert.id : ''"
+      :subtitle="currentAlert ? currentAlert.title : ''"
+      :buttonText="'Create Workflow'"
+      @cancel="closeBuilder"
+      @save-item="saveWorkflow"
+      @update-item="updateWorkflow"
+      @delete-item="deleteWorkflow"
+      @button-action="switchBuildCustom"
+    />
 
     <!-- <div class="onboarding-header" v-else>
       <div>
@@ -136,6 +57,7 @@ import AlertTemplate from '@/services/alerts/'
 import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import User from '@/services/users'
+import AlertsHeader from '@/components/AlertsHeader'
 
 export default {
   name: 'AlertsDashboardMenu',
@@ -143,6 +65,7 @@ export default {
     CollectionManager,
     BuildYourOwn,
     AlertsEditPanel,
+    AlertsHeader,
   },
   data() {
     return {
@@ -190,6 +113,27 @@ export default {
         toastClassName: 'custom',
         bodyClassName: ['custom'],
       })
+    },
+    deleteWorkflow(id) {
+      this.$emit('delete-workflow')
+    },
+    switchBuildCustom() {
+      this.buildingCustom = !this.buildingCustom
+    },
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
+    },
+    handleUpdate() {
+      User.api
+        .update(this.user.id)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
     },
     async deleteWorkflow(id) {
       this.deletedTitle(id)

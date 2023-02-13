@@ -2,121 +2,90 @@
   <div @keyup.esc="closeInlineEditor" tabindex="0" class="pipelines">
     <Modal v-if="modalOpen" dimmed>
       <div class="modal-container rel">
-        <div class="flex-row-spread sticky">
-          <div v-if="!addingNote" style="margin-left: 8px" class="flex-row set-max-width">
-            <img src="@/assets/images/logo.png" class="logo" height="28px" alt="" />
-            <h4>{{ selectedresourceName }}</h4>
+        <div class="flex-row-header sticky-header">
+          <div class="set-max-width">
+            <h4>{{ selectedresourceName || resourceEmail }}</h4>
+            <small>Notes</small>
           </div>
-          <h4
-            @click="addingNote = !addingNote"
-            style="margin-left: 16px; margin-top: 24px; cursor: pointer"
-            class="row"
-            v-else
-          >
-            <img
-              src="@/assets/images/back.svg"
-              style="margin-right: 8px"
-              height="18px"
-              alt=""
-            />View Notes
-          </h4>
-
           <img
             @click="resetNotes"
-            v-if="!addingNote"
             src="@/assets/images/close.svg"
             height="24px"
             alt=""
-            style="margin-right: 20px; margin-bottom: 24px; filter: invert(30%); cursor: pointer"
-          />
-
-          <img
-            @click="resetNotes"
-            v-else
-            src="@/assets/images/close.svg"
-            height="24px"
-            alt=""
-            style="margin-right: 20px; filter: invert(30%); cursor: pointer"
+            style="filter: invert(50%); cursor: pointer"
           />
         </div>
+        <div style="margin-bottom: 4px" class="even-row">
+          <h4 style="cursor: not-allowed" v-if="!addingNote">Total: {{ notes.length }}</h4>
+          <h4 class="lightgray" @click="addingNote = !addingNote" v-if="!addingNote">New Note</h4>
+          <div class="row-section" v-else>
+            <h4
+              @click="addingNote = !addingNote"
+              style="width: fit-content; margin-right: 16px; position: sticky; left: 0"
+              class="row"
+            >
+              <img src="@/assets/images/back.svg" style="margin-right: 8px" height="18px" alt="" />
+              Back
+            </h4>
 
-        <div class="flex-row-spread-start">
-          <div class="note-container" v-if="notes.length && !addingNote">
-            <section class="note-section" :key="i" v-for="(note, i) in notes">
-              <p class="note-section__title">
-                {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
-              </p>
-              <p class="note-section__date">
-                {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
-              </p>
-              <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
-            </section>
+            <h4
+              @click="setTemplate(template.body, 'meeting_comments', template.subject)"
+              :class="{
+                lightgray: noteValue !== template.body,
+              }"
+              v-for="(template, i) in noteTemplates"
+              :key="i"
+            >
+              {{ template.subject }}
+            </h4>
           </div>
+        </div>
 
-          <div v-else-if="!notes.length && !addingNote" class="note-container">
-            <div class="empty-list">
-              <section class="bg-img"></section>
-              <h4>Nothing here</h4>
-              <p>Start taking your notes in Managr.</p>
-            </div>
+        <div class="note-container" v-if="notes.length && !addingNote">
+          <section class="note-section" :key="i" v-for="(note, i) in notes">
+            <p class="note-section__title">
+              {{ note.saved_data__meeting_type ? note.saved_data__meeting_type : 'Untitled' }}
+            </p>
+            <p class="note-section__date">
+              {{ weekDay(note.submission_date) }} {{ formatDateTime(note.submission_date) }}
+            </p>
+            <pre v-html="note.saved_data__meeting_comments" class="note-section__body"></pre>
+          </section>
+        </div>
+
+        <div v-else-if="!notes.length && !addingNote" class="note-container">
+          <div class="empty-list">
+            <section class="bg-img"></section>
+            <h4>Nothing here</h4>
+            <p>Start taking your notes in Managr.</p>
           </div>
+        </div>
 
-          <div class="center" v-else>
-            <span class="input-container">
-              <input
-                class="input-field"
-                placeholder="Note Title"
-                type="text"
-                v-model="noteTitle"
-                @input=";(value = $event.target.value), setUpdateValues('meeting_type', value)"
-              />
-            </span>
+        <div v-else>
+          <span class="input-container">
+            <input
+              class="input-field"
+              placeholder="Note Title"
+              type="text"
+              v-model="noteTitle"
+              @input=";(value = $event.target.value), setUpdateValues('meeting_type', value)"
+            />
+          </span>
 
-            <span class="input-container">
-              <div
-                style="margin-top: -20px; height: 52vh"
-                @input="setUpdateValues('meeting_comments', $event.target.innerHTML)"
-                class="divArea"
-                v-html="noteValue"
-                contenteditable="true"
-              ></div>
-            </span>
-          </div>
+          <span class="input-container">
+            <div
+              @input="setUpdateValues('meeting_comments', $event.target.innerHTML)"
+              class="divArea"
+              v-html="noteValue"
+              contenteditable="true"
+            ></div>
+          </span>
         </div>
 
         <footer class="modal-container__footer">
-          <div style="margin-right: 8px; margin-bottom: 8px">
-            <div class="row-end" v-if="addingNote">
-              <Multiselect
-                :options="noteTemplates"
-                @select="setTemplate($event.body, 'meeting_comments', $event.subject)"
-                openDirection="above"
-                style="width: 12vw; margin-left: 16px; margin-top: -16px"
-                selectLabel=""
-                track-by="body"
-                label="subject"
-              >
-                <template v-slot:noResult>
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template v-slot:placeholder>
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Insert Template
-                  </p>
-                </template>
-              </Multiselect>
-
-              <button @click="updateResource()" style="margin-top: -8px" class="add-button">
-                Save note
-              </button>
-            </div>
-
-            <div v-else class="flex-end">
-              <button @click="addingNote = !addingNote" class="add-button">Note +</button>
-            </div>
-          </div>
+          <h4></h4>
+          <button v-if="addingNote" @click="updateResource()" class="add-button">Save note</button>
+          <div v-else></div>
         </footer>
       </div>
     </Modal>
@@ -133,11 +102,12 @@
         <div class="flex-row-spread header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" height="26px" alt="" />
-            <h3>{{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}</h3>
+            <!-- <h3>{{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}</h3> -->
+            <h3>{{ `Create ${resourceName}` }}</h3>
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.25rem; margin-top: -1rem; margin-right: 0.75rem; cursor: pointer"
+            style="height: 1.25rem; margin-top: -1rem; cursor: pointer"
             @click="resetAddOpp"
             alt=""
           />
@@ -162,7 +132,10 @@
                 >
                 </textarea>
               </div>
-              <div class="col" v-else-if="field.dataType === 'String'">
+              <div
+                class="col"
+                v-else-if="field.dataType === 'String' || field.dataType.toLowerCase() === 'email'"
+              >
                 <label class="label">{{ field.referenceDisplayLabel }}</label>
                 <input
                   :disabled="savingCreateForm"
@@ -175,7 +148,7 @@
                 <label class="label">{{ field.referenceDisplayLabel }}</label>
                 <Multiselect
                   v-model="selectedAccount"
-                  :options="allAccounts"
+                  :options="allAccountsForSObjects"
                   @search-change="getAccounts($event)"
                   @select="setUpdateValues(field.apiName, $event.id, false)"
                   openDirection="below"
@@ -346,7 +319,7 @@
                           <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                           <Multiselect
                             v-model="selectedAccount"
-                            :options="allAccounts"
+                            :options="allAccountsForSObjects"
                             @search-change="getAccounts($event)"
                             @select="setUpdateValidationValues(field.apiName, $event.id)"
                             openDirection="below"
@@ -703,7 +676,7 @@
                         <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                         <Multiselect
                           v-model="selectedAccount"
-                          :options="allAccounts"
+                          :options="allAccountsForSObjects"
                           @search-change="getAccounts($event)"
                           @select="setUpdateValidationValues(field.apiName, $event.id)"
                           openDirection="below"
@@ -1010,7 +983,12 @@
                     </Multiselect>
                   </div>
 
-                  <div class="col" v-else-if="field.dataType === 'String'">
+                  <div
+                    class="col"
+                    v-else-if="
+                      field.dataType === 'String' || field.dataType.toLowerCase() === 'email'
+                    "
+                  >
                     <p>{{ field.referenceDisplayLabel }}</p>
                     <input
                       id="user-input"
@@ -1096,7 +1074,7 @@
           </div>
         </div>
         <div class="flex-end-opp">
-          <div v-if="hasProducts && userCRM === 'SALESFORCE'">
+          <div v-if="hasProducts && userCRM === 'SALESFORCE' && resourceName === 'Opportunity'">
             <button
               v-if="!addingProduct"
               @click="addProduct"
@@ -1115,7 +1093,8 @@
 
           <div v-if="!savingCreateForm" style="display: flex; align-items: center">
             <button class="add-button" @click="createResource(addingProduct ? true : false)">
-              {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}
+              <!-- {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }} -->
+              {{ `Create ${resourceName}` }}
             </button>
           </div>
           <div v-else>
@@ -1126,22 +1105,61 @@
     </Modal>
     <Modal v-if="editOpModalOpen" dimmed>
       <div class="opp-modal-container">
-        <div class="flex-row-spread header">
-          <div class="flex-row">
-            <span class="logo">
+        <div
+          style="border-bottom: 2px solid #eeeeee; padding-bottom: 24px"
+          class="flex-row-spread header"
+        >
+          <div>
+            <!-- <span class="logo">
               <img src="@/assets/images/logo.png" height="24px" alt="" />
-            </span>
+            </span> -->
 
-            <h3>Update {{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</h3>
+            <h3 style="padding: 0; margin: 0">{{ savedOpp.name || resourceEmail }}</h3>
+            <small style="margin-top: 12px; color: #aaaaaa; display: block">{{
+              resourceName
+            }}</small>
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.5rem; margin-top: -1.5rem; margin-right: 0.75rem; cursor: pointer"
+            style="
+              height: 1.5rem;
+              margin-top: -1.5rem;
+
+              cursor: pointer;
+              filter: invert(45%);
+            "
             @click="resetEdit"
             alt=""
           />
         </div>
         <div class="opp-modal">
+          <div class="even-row">
+            <h4 style="cursor: not-allowed">Update Fields</h4>
+            <h4
+              v-if="hasProducts && userCRM === 'SALESFORCE' && resourceName === 'Opportunity'"
+              :class="{
+                lightgray: !addingProduct,
+              }"
+              @click="addProduct"
+            >
+              {{ !addingProduct ? 'Add Product' : 'Adding Product' }}
+            </h4>
+            <h4
+              :class="{
+                lightgray: !viewingProducts,
+              }"
+              v-if="
+                hasProducts &&
+                userCRM === 'SALESFORCE' &&
+                currentProducts &&
+                currentProducts.length &&
+                resourceName === 'Opportunity'
+              "
+              @click="toggleViewingProducts"
+            >
+              {{ !viewingProducts ? 'Edit Products' : 'Close Products' }}
+            </h4>
+          </div>
           <section :key="i" v-for="(field, i) in oppFormCopy">
             <div
               style="margin-left: -0.5rem; margin-top: -2rem; display: none"
@@ -1173,10 +1191,12 @@
               v-else-if="
                 (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                 (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
-                (field.dataType === 'String' && field.apiName !== 'NextStep')
+                (field.dataType === 'String' && field.apiName !== 'NextStep') ||
+                field.dataType.toLowerCase() === 'email'
               "
               class="col"
             >
+              <!-- work here -->
               <label class="label">{{ field.referenceDisplayLabel }}</label>
               <input
                 id="user-input"
@@ -1211,7 +1231,7 @@
               <label class="label">{{ field.referenceDisplayLabel }}</label>
               <Multiselect
                 v-model="selectedAccount"
-                :options="allAccounts"
+                :options="allAccountsForSObjects"
                 @search-change="getAccounts($event)"
                 @select="
                   setUpdateValues(
@@ -1416,7 +1436,7 @@
                       <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
                       <Multiselect
                         v-model="selectedAccount"
-                        :options="allAccounts"
+                        :options="allAccountsForSObjects"
                         @search-change="getAccounts($event)"
                         @select="setUpdateValidationValues(field.apiName, $event.id)"
                         openDirection="below"
@@ -1601,7 +1621,10 @@
 
           <div ref="product" class="adding-product" v-if="addingProduct">
             <!-- <img class="fullInvert" src="@/assets/images/tag.svg" alt="" /> -->
-            <!-- <h4 style="color: #41b883">Add Product</h4> -->
+            <div class="add-section">
+              <div></div>
+              <p>Add Product</p>
+            </div>
 
             <div class="adding-product__body">
               <div v-if="!pricebookId">
@@ -1699,7 +1722,11 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String'">
+                <div
+                  v-else-if="
+                    field.dataType === 'String' || field.dataType.toLowerCase() === 'email'
+                  "
+                >
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
@@ -1777,6 +1804,10 @@
           </div>
           <div v-if="hasProducts && currentProducts && currentProducts.length">
             <section ref="allProducts" v-if="!editingProduct && viewingProducts">
+              <div class="add-section">
+                <div></div>
+                <p>Edit Products</p>
+              </div>
               <div class="current-products" v-for="(product, i) in currentProducts" :key="i">
                 <h4>
                   {{ product.secondary_data.Name }}
@@ -1794,14 +1825,14 @@
                       )
                     "
                   >
-                    <img src="@/assets/images/edit.svg" height="16px" alt="" />
+                    <img src="@/assets/images/expand.svg" height="16px" alt="" />
                   </button>
                 </span>
               </div>
             </section>
 
             <div class="current-products" v-if="editingProduct">
-              <p style="color: #41b883; font-size: 15px; margin-bottom: 24px">
+              <p style="font-size: 15px; margin-bottom: 24px">
                 {{ productName }}
               </p>
               <PipelineLoader v-if="savingProduct" />
@@ -1881,7 +1912,11 @@
                   </Multiselect>
                 </div>
 
-                <div v-else-if="field.dataType === 'String'">
+                <div
+                  v-else-if="
+                    field.dataType === 'String' || field.dataType.toLowerCase() === 'email'
+                  "
+                >
                   <p>{{ field.referenceDisplayLabel }}</p>
                   <input
                     id="user-input"
@@ -1959,42 +1994,15 @@
 
               <div class="current-products__footer">
                 <p @click="cancelEditProduct">Cancel</p>
-                <button class="add-button__" @click="updateProduct">Update Product</button>
+                <button class="add-button__" @click="updateProduct">Update</button>
               </div>
             </div>
           </div>
         </div>
 
         <div class="flex-end-opp">
-          <div v-if="hasProducts && userCRM === 'SALESFORCE'" class="row">
-            <button
-              style="padding: 10px; margin-right: 4px"
-              v-if="!addingProduct"
-              @click="addProduct"
-              class="select-btn1"
-            >
-              Add Product
-            </button>
-
-            <button @click="addProduct" v-else class="cancel" style="margin-right: 4px">
-              Cancel
-            </button>
-            <button
-              v-if="!viewingProducts && currentProducts && currentProducts.length"
-              @click="toggleViewingProducts()"
-              style="margin-left: 8px"
-              class="select-btn1"
-            >
-              View products <span>{{ currentProducts ? currentProducts.length : 0 }}</span>
-            </button>
-            <button v-else-if="viewingProducts" @click="toggleViewingProducts()" class="cancel">
-              Close products
-            </button>
-          </div>
-
-          <div v-else></div>
-
-          <div style="display: flex; align-items: center">
+          <div></div>
+          <div style="display: flex; align-items: flex-end; justify-content: flex-end">
             <button
               style="padding: 10px"
               @click="
@@ -2015,20 +2023,21 @@
       <!-- <h3 class="pipeline-header">
         {{ !currentWorkflowName ? currentList : currentWorkflowName }}
       </h3> -->
+
       <section style="margin-top: -10px" class="flex-row-spread">
         <div v-if="/*!workflowCheckList.length && !primaryCheckList.length*/ true" class="flex-row">
           <small class="pipeline-header">View:</small>
           <button @click.stop="showList = !showList" class="text-button" style="cursor: pointer">
             {{ !currentWorkflowName ? currentList : currentWorkflowName }}
-            <span style="margin-left: 2px" class="green">{{
-              selectedWorkflow && currentWorkflow ? currentWorkflow.length : allOpps.length
+            <span style="margin-left: 2px; color: #41b883">{{
+              selectedWorkflow && currentWorkflow ? currentWorkflow.length : this[objectName].length
             }}</span>
 
             <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
           </button>
           <div v-outside-click="closeListSelect" v-show="showList" class="list-section">
             <div class="list-section__title flex-row-spread">
-              <p>{{ userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}</p>
+              <p>{{ userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</p>
             </div>
             <!-- <p @click="showPopularList = !showPopularList" class="list-section__sub-title">
               Standard Lists
@@ -2040,10 +2049,85 @@
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p> -->
             <router-link style="width: 100%" v-bind:to="'/pipelines/'">
-              <button @click="allOpportunities" class="list-button">
+              <button
+                @click="
+                  allObjects(
+                    'loadAllOpps',
+                    userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals',
+                    'allOpps',
+                    userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+                    'Opportunity',
+                  )
+                "
+                class="list-button"
+              >
                 All {{ this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}
                 <span class="green">
-                  {{ allOpps.length }}
+                  {{ allOpps && allOpps.length ? allOpps.length : 0 }}
+                </span>
+              </button>
+            </router-link>
+            <button
+              @click="goToWorkflow(template.id)"
+              class="list-button"
+              v-for="template in templates.list"
+              :key="template.id"
+            >
+              {{ template.title }}
+              <span class="green">{{
+                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+              }}</span>
+            </button>
+            <div class="list-section__title flex-row-spread">
+              <p>{{ userCRM == 'SALESFORCE' ? 'Account' : 'Company' }}</p>
+            </div>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button
+                @click="
+                  allObjects(
+                    'loadAllAccounts',
+                    userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies',
+                    'allAccounts',
+                    userCRM === 'SALESFORCE' ? 'Account' : 'Company',
+                    'Account',
+                  )
+                "
+                class="list-button"
+              >
+                All {{ this.userCRM === 'SALESFORCE' ? 'Accounts' : 'Companies' }}
+                <span class="green">
+                  {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
+                </span>
+              </button>
+            </router-link>
+            <div class="list-section__title flex-row-spread">
+              <p>Contact</p>
+            </div>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button
+                @click="
+                  allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')
+                "
+                class="list-button"
+              >
+                All Contacts
+                <span class="green">
+                  {{ allContacts && allContacts.length ? allContacts.length : 0 }}
+                </span>
+              </button>
+            </router-link>
+            <div class="list-section__title flex-row-spread">
+              <p>Lead</p>
+            </div>
+            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+              <button
+                v-if="userCRM === 'SALESFORCE'"
+                @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
+                class="list-button"
+              >
+                All Leads
+                <span class="green">
+                  {{ allLeads && allLeads.length ? allLeads.length : 0 }}
                 </span>
               </button>
             </router-link>
@@ -2065,17 +2149,6 @@
                 active</span
               >
             </button> -->
-            <button
-              @click="goToWorkflow(template.id)"
-              class="list-button"
-              v-for="template in templates.list"
-              :key="template.id"
-            >
-              {{ template.title }}
-              <span class="green">{{
-                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
-              }}</span>
-            </button>
           </div>
           <div
             v-for="(filter, i) in activeFilters"
@@ -2115,13 +2188,13 @@
                 :filterName="currentFilter"
                 :dropdowns="apiPicklistOptions"
                 :apiName="filterApiName"
-                :accounts="allAccounts"
+                :accounts="allAccountsForSObjects"
                 :owners="allUsers"
               />
             </div>
           </section>
 
-          <section style="position: relative">
+          <section style="position: relative" v-if="baseResourceType === 'Opportunity'">
             <button
               v-if="activeFilters.length < 4 && !selectedWorkflow"
               @click.stop="addingFilter"
@@ -2262,6 +2335,7 @@
                 <div
                   v-if="
                     selectedOpp.dataType === 'String' ||
+                    selectedOpp.dataType.toLowerCase() === 'email' ||
                     selectedOpp.dataType === 'TextArea' ||
                     selectedOpp.dataType === 'Email' ||
                     selectedOpp.dataType === 'Address' ||
@@ -2395,13 +2469,14 @@
               @input="getFilteredOpps"
             />
           </div>
-          <div v-else class="search-bar">
+          <div v-else-if="baseResourceType === 'Opportunity'" class="search-bar">
             <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input type="search" placeholder="search" v-model="workflowFilterText" />
           </div>
 
           <button @click="createOppInstance()" class="add-button">
-            {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }}
+            <!-- {{ userCRM === 'SALESFORCE' ? 'Create Opportunity' : 'Create Deal' }} -->
+            {{ `Create ${resourceName}` }}
           </button>
         </div>
       </section>
@@ -2503,7 +2578,7 @@
               <label class="red-label">{{ field.referenceDisplayLabel }}*</label>
               <Multiselect
                 v-model="selectedAccount"
-                :options="allAccounts"
+                :options="allAccountsForSObjects"
                 @search-change="getAccounts($event)"
                 @select="setUpdateValidationValues(field.apiName, $event.id)"
                 openDirection="below"
@@ -2642,10 +2717,10 @@
           </button>
         </div>
       </div>
-      <div style="margin-top: 8px"></div>
+      <div style="margin-top: 16px"></div>
       <section v-if="!loadingWorkflows" class="table-section">
         <Table
-          :allOpps="selectedWorkflow ? filteredWorkflows : allOpps"
+          :allOpps="selectedWorkflow ? filteredWorkflows : this[objectName]"
           :oppFields="oppFields"
           :extraPipelineFields="extraPipelineFields"
           :fieldOpts="objectFields.list"
@@ -2658,12 +2733,13 @@
           @close-inline-editor="closeInlineEditor"
           @sort-opps="sortOpps"
           @sort-opps-reverse="sortOppsReverse"
+          :resourceName="resourceName"
         />
       </section>
       <div
         class="table-overlay"
         :key="opp.id"
-        v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : allOpps"
+        v-for="(opp, j) in selectedWorkflow ? filteredWorkflows : this[objectName]"
       >
         <div :key="i" v-for="(field, i) in oppFields">
           <div
@@ -2677,7 +2753,7 @@
           >
             <div class="inline-edit__header">
               <h4>
-                {{ opp.name }}
+                {{ resourceName === 'Contact' || resourceName === 'Lead' ? opp.email : opp.name }}
               </h4>
               <img
                 src="@/assets/images/close.svg"
@@ -2712,7 +2788,7 @@
                   (field.dataType === 'String' && field.apiName !== 'meeting_type') ||
                   (field.dataType === 'String' && field.apiName !== 'meeting_comments') ||
                   (field.dataType === 'String' && field.apiName !== 'NextStep') ||
-                  (field.dataType === 'Email' && field.apiName !== 'NextStep')
+                  (field.dataType.toLowerCase() === 'email' && field.apiName !== 'NextStep')
                 "
                 class="inline-row"
               >
@@ -2896,7 +2972,21 @@
                 <Multiselect
                   style="width: 23vw; font-size: 13px"
                   v-model="dropdownVal[field.apiName]"
-                  :options="referenceOpts[field.apiName]"
+                  @search-change="field.apiName === 'AccountId' ? getAccounts($event) : () => null"
+                  :options="
+                    field.apiName === 'dealstage'
+                      ? field.options[0][savedPipeline.id]
+                        ? field.options[0][savedPipeline.id].stages
+                        : []
+                      : field.apiName === 'AccountId'
+                      ? allAccountsForSObjects
+                      : userCRM === 'HUBSPOT' && field.dataType !== 'Reference'
+                      ? field.options
+                      : (field.dataType === 'Picklist' || field.dataType === 'MultiPicklist') &&
+                        allPicklistOptions[field.id]
+                      ? allPicklistOptions[field.id]
+                      : createReferenceOpts[field.apiName]
+                  "
                   @open="getCreateReferenceOpts(field.apiName, field.id, field.options)"
                   :loading="dropdownLoading"
                   openDirection="below"
@@ -2979,6 +3069,7 @@ export default {
   },
   data() {
     return {
+      resourceEmail: null,
       addingNote: false,
       task: false,
       checker: null,
@@ -3089,6 +3180,8 @@ export default {
       workflowFilterText: '',
       storedFilters: [],
       currentList: 'All Opportunities',
+      resourceName: 'Opportunity',
+      alertInstanceId: null,
       showList: false,
       // showPopularList: true,
       notes: [],
@@ -3103,8 +3196,13 @@ export default {
       createReferenceOpts: {},
       productReferenceOpts: {},
       setFilters: {},
-      allAccounts: [],
+      instanceIds: [],
+      allAccountsForSObjects: [],
+      // allAccounts: [],
       allUsers: [],
+      objectName: 'allOpps',
+      baseResourceType: 'Opportunity',
+      loadObject: 'loadAllOpps',
       filtering: false,
       filterSelected: false,
       activeFilters: [],
@@ -3144,7 +3242,8 @@ export default {
   },
   computed: {
     crmObject() {
-      return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+      // return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+      return this.resourceName
     },
     extraPipelineFields() {
       let extras = []
@@ -3152,9 +3251,11 @@ export default {
       return extras
     },
     hasExtraFields() {
-      return this.$store.state.user.salesforceAccountRef
-        ? this.$store.state.user.salesforceAccountRef.extraPipelineFields
-        : this.$store.state.user.hubspotAccountRef.extraPipelineFields
+      const accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
+      const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
+      return extraFields && extraFields.length ? extraFields : []
     },
     hasProducts() {
       return this.$store.state.user.organizationRef.hasProducts
@@ -3188,6 +3289,15 @@ export default {
     },
     allOpps() {
       return this.$store.state.allOpps
+    },
+    allAccounts() {
+      return this.$store.state.allAccounts
+    },
+    allContacts() {
+      return this.$store.state.allContacts
+    },
+    allLeads() {
+      return this.$store.state.allLeads
     },
     user() {
       return this.$store.state.user
@@ -3266,7 +3376,10 @@ export default {
       crmObject: this.crmObject,
     }
     this.objectFields.refresh()
-    this.$store.dispatch('loadAllOpps', [...this.filters])
+    this.$store.dispatch(this.loadObject, [...this.filters])
+    if (this.userCRM === 'HUBSPOT') {
+      this.resourceName = 'Deal'
+    }
     this.getAllForms()
     this.getUsers()
     if (this.userCRM === 'SALESFORCE') {
@@ -3436,21 +3549,35 @@ export default {
     },
     getFilteredOpps() {
       if (this.userCRM === 'SALESFORCE') {
-        this.$store.dispatch('loadAllOpps', [
-          ...this.filters,
-          ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-        ])
+        if (this.resourceName === 'Opportunity') {
+          this.$store.dispatch(this.loadObject, [
+            ...this.filters,
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+        } else if (this.resourceName === 'Account') {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+          ])
+        } else {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'Email', this.filterText.toLowerCase()],
+          ])
+        }
       } else {
-        this.$store.dispatch('loadAllOpps', [
-          ...this.filters,
-          ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-        ])
-      }
-
-      if (this.currentList === 'Closing this month') {
-        this.stillThisMonth()
-      } else if (this.currentList === 'Closing next month') {
-        this.stillNextMonth()
+        if (this.resourceName === 'Deal') {
+          this.$store.dispatch(this.loadObject, [
+            ...this.filters,
+            ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+          ])
+        } else if (this.resourceName === 'Company') {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'name', this.filterText.toLowerCase()],
+          ])
+        } else {
+          this.$store.dispatch(this.loadObject, [
+            ['CONTAINS', 'email', this.filterText.toLowerCase()],
+          ])
+        }
       }
     },
     changeCurrentRow(i, cell) {
@@ -3459,30 +3586,36 @@ export default {
       this.dropdownVal = {}
       this.editingInline = true
     },
-    // async modifyForecast(action) {
-    //   const oppOrDeal = this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals'
-    //   try {
-    //     await User.api.modifyForecast(action, this.forecastList)
-    //     this.$toast(oppOrDeal + ' added to Tracker.', {
-    //       timeout: 2000,
-    //       position: 'top-left',
-    //       type: 'success',
-    //       toastClassName: 'custom',
-    //       bodyClassName: ['custom'],
-    //     })
-    //   } catch (e) {
-    //     this.$toast('Error adding ' + oppOrDeal, {
-    //       timeout: 2000,
-    //       position: 'top-left',
-    //       type: 'success',
-    //       toastClassName: 'custom',
-    //       bodyClassName: ['custom'],
-    //     })
-    //   } finally {
-    //     this.$store.dispatch('refreshCurrentUser')
-    //     this.primaryCheckList = []
-    //   }
-    // },
+    addToForecastList() {
+      let list = []
+      for (let i = 0; i < this.currentCheckList.length; i++) {
+        list.push(this[this.objectName].filter((opp) => opp.id === this.currentCheckList[i])[0])
+      }
+      this.forecastList = list.map((opp) => opp.integration_id)
+    },
+    async modifyForecast(action) {
+      try {
+        await User.api.modifyForecast(action, this.forecastList)
+        this.$toast(this.resourceName + ' added to Tracker.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error adding ' + this.resourceName, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.$store.dispatch('refreshCurrentUser')
+        this.primaryCheckList = []
+      }
+    },
     async openStageForm(field, id, integrationId) {
       this.setUpdateValues(this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage', field)
       if (Array.isArray(field)) {
@@ -3500,7 +3633,8 @@ export default {
       try {
         let res
         res = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -3516,7 +3650,7 @@ export default {
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        const firstOpp = this.allOpps.filter((opp) => opp.id === id)[0]
+        const firstOpp = this[this.objectName].filter((opp) => opp.id === id)[0]
         firstOpp && firstOpp.account_ref
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
@@ -3582,7 +3716,8 @@ export default {
         }
         const res = await CRMObjects.api.updateResource({
           form_data: formData,
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           form_type: 'UPDATE',
           resource_id: id,
           integration_ids: [integrationId],
@@ -3590,19 +3725,9 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
         if (this.filterText) {
-          if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch('loadAllOpps', [
-              ...this.filters,
-              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-            ])
-          } else {
-            this.$store.dispatch('loadAllOpps', [
-              ...this.filters,
-              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-            ])
-          }
+          this.getFilteredOpps()
         } else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject)
         }
         setTimeout(() => {
           if (this.selectedWorkflow) {
@@ -3616,11 +3741,6 @@ export default {
                   this.storedFilters[2],
                 )
               : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
-          }
-          if (this.currentList === 'Closing this month') {
-            this.stillThisMonth()
-          } else if (this.currentList === 'Closing next month') {
-            this.stillNextMonth()
           }
           this.$toast(
             `${this.userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'} Update Successful`,
@@ -3700,7 +3820,7 @@ export default {
           } else {
             textFilters = [...this.filters, ['CONTAINS', 'dealname', this.filterText.toLowerCase()]]
           }
-          this.$store.dispatch('loadAllOpps', textFilters)
+          this.$store.dispatch(this.loadObject, textFilters)
         }
         // else if (this.workflowFilterText) {
         //   const textFilters = [
@@ -3710,7 +3830,7 @@ export default {
         //   res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
         // }
         else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
         if (this.selectedWorkflow) {
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3812,7 +3932,7 @@ export default {
         })
         this.filterValues.push(user[0].full_name)
       } else if (name === 'AccountId') {
-        let account = this.allAccounts.filter((account) => account.id === value)
+        let account = this.allAccountsForSObjects.filter((account) => account.id === value)
         this.filterValues.push(account[0].name)
       } else {
         this.filterValues.push(value)
@@ -3917,7 +4037,7 @@ export default {
         }
       } else {
         if (field === 'Stage' || field === 'Deal Stage') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA =
               userCRM === 'SALESFORCE'
                 ? a['secondary_data']['StageName']
@@ -3929,38 +4049,38 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (field === 'Last Activity') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}` + 'Date']
             const nameB = b['secondary_data'][`${newField}` + 'Date']
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
 
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
@@ -4032,7 +4152,7 @@ export default {
         }
       } else {
         if (field === 'Stage' || field === 'Deal Stage') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA =
               userCRM === 'SALESFORCE'
                 ? a['secondary_data']['StageName']
@@ -4044,37 +4164,37 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (field === 'Last Activity') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}` + 'Date']
             const nameB = b['secondary_data'][`${newField}` + 'Date']
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (dT === 'TextArea' && !apiName.includes('__c')) {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT !== 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (apiName.includes('__c') && dT === 'TextArea') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${apiName}`]
             const nameB = b['secondary_data'][`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else {
-          this.allOpps.sort(function (a, b) {
+          this[this.objectName].sort(function (a, b) {
             const nameA = a['secondary_data'][`${newField}`]
             const nameB = b['secondary_data'][`${newField}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
@@ -4136,16 +4256,16 @@ export default {
         }
       } else {
         if (this.primaryCheckList.length < 1) {
-          for (let i = 0; i < this.allOpps.length; i++) {
-            this.primaryCheckList.push(this.allOpps[i].id)
+          for (let i = 0; i < this[this.objectName].length; i++) {
+            this.primaryCheckList.push(this[this.objectName][i].id)
           }
         } else if (
           this.primaryCheckList.length > 0 &&
-          this.primaryCheckList.length < this.allOpps.length
+          this.primaryCheckList.length < this[this.objectName].length
         ) {
-          for (let i = 0; i < this.allOpps.length; i++) {
-            !this.primaryCheckList.includes(this.allOpps[i].id)
-              ? this.primaryCheckList.push(this.allOpps[i].id)
+          for (let i = 0; i < this[this.objectName].length; i++) {
+            !this.primaryCheckList.includes(this[this.objectName][i].id)
+              ? this.primaryCheckList.push(this[this.objectName][i].id)
               : (this.primaryCheckList = this.primaryCheckList)
           }
         } else {
@@ -4190,7 +4310,8 @@ export default {
       this.noteTitle = null
       try {
         const res = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: id,
         })
       } catch (e) {
@@ -4199,6 +4320,10 @@ export default {
     },
     async createFormInstance(opp, id, integrationId, pricebookId) {
       pricebookId ? (this.pricebookId = pricebookId) : (this.pricebookId = null)
+      this.resourceEmail =
+        this.userCRM === 'SALESFORCE'
+          ? opp['secondary_data']['Email']
+          : opp['secondary_data']['email']
       this.viewingProducts = false
       this.addingProduct = false
       this.formData = {}
@@ -4225,7 +4350,8 @@ export default {
       try {
         let res
         res = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: id,
         })
         this.currentVals = res ? res.current_values : {}
@@ -4242,7 +4368,7 @@ export default {
           ? (this.currentOwner = usersForCurrentOwner[0].full_name)
           : (this.currentOwner = 'Owner')
 
-        const firstOpp = this.allOpps.filter((opp) => opp.id === this.oppId)[0]
+        const firstOpp = this[this.objectName].filter((opp) => opp.id === this.oppId)[0]
         firstOpp && firstOpp.account_ref
           ? (this.currentAccount = firstOpp.account_ref.name)
           : (this.currentAccount = 'Account')
@@ -4271,7 +4397,8 @@ export default {
       this.stageGateId = null
       try {
         const res = await CRMObjects.api.createFormInstance({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           formType: 'STAGE_GATING',
           stageName: field
             ? field
@@ -4375,7 +4502,8 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            resource_type: this.resourceName,
             form_type: 'UPDATE',
             resource_ids: this.primaryCheckList,
           })
@@ -4401,7 +4529,8 @@ export default {
         const res = await SObjects.api
           .bulkUpdate({
             form_data: formData,
-            resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+            resource_type: this.resourceName,
             form_type: 'UPDATE',
             resource_ids: this.workflowCheckList,
           })
@@ -4510,7 +4639,7 @@ export default {
     updateOpps() {
       try {
         if (!this.filterText) {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
           if (this.currentList === 'Closing this month') {
             this.stillThisMonth()
           } else if (this.currentList === 'Closing next month') {
@@ -4616,7 +4745,8 @@ export default {
         }
         const res = await CRMObjects.api.updateResource({
           form_data: newFormData,
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           form_type: 'UPDATE',
           resource_id: this.stageId,
           integration_ids: [this.stageIntegrationId],
@@ -4629,18 +4759,18 @@ export default {
         this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'Name', this.filterText.toLowerCase()],
             ])
           } else {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
             ])
           }
         } else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
 
         setTimeout(() => {
@@ -4752,7 +4882,8 @@ export default {
           stage_name: null,
         })
         const res2 = await CRMObjects.api.getCurrentValues({
-          resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resourceType: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resourceType: this.resourceName,
           resourceId: this.oppId,
         })
         this.currentProducts = res2.current_products
@@ -4802,7 +4933,8 @@ export default {
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
           form_type: 'UPDATE',
           integration_ids: [this.integrationId],
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           resource_id: this.oppId,
           stage_name: this.storedStageName
             ? this.storedStageName
@@ -4813,18 +4945,18 @@ export default {
         this.storedStageName = ''
         if (this.filterText) {
           if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'Name', this.filterText.toLowerCase()],
             ])
           } else {
-            this.$store.dispatch('loadAllOpps', [
+            this.$store.dispatch(this.loadObject, [
               ...this.filters,
               ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
             ])
           }
         } else {
-          this.$store.dispatch('loadAllOpps', [...this.filters])
+          this.$store.dispatch(this.loadObject, [...this.filters])
         }
         setTimeout(() => {
           if (this.storedFilters.length) {
@@ -4864,7 +4996,7 @@ export default {
         this.$toast(`${e.response.data.error}`, {
           timeout: 2000,
           position: 'top-left',
-          type: 'success',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
@@ -4892,7 +5024,8 @@ export default {
         let res = await CRMObjects.api.createResource({
           form_data: newFormData,
           form_type: 'CREATE',
-          resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          // resource_type: this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+          resource_type: this.resourceName,
           stage_name: this.storedStageName
             ? this.storedStageName
             : this.stageGateField
@@ -4909,14 +5042,15 @@ export default {
             ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
             : this.filters
         }
-        const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        // const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+        const objectType = this.resourceName
         if (this.userCRM === 'SALESFORCE') {
-          this.$store.dispatch('loadAllOpps', [
+          this.$store.dispatch(this.loadObject, [
             ...this.filters,
             ['CONTAINS', 'Name', this.filterText.toLowerCase()],
           ])
         } else {
-          this.$store.dispatch('loadAllOpps', [
+          this.$store.dispatch(this.loadObject, [
             ...this.filters,
             ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
           ])
@@ -5113,9 +5247,13 @@ export default {
           field.apiName !== 'meeting_comments' &&
           field.apiName !== 'Name' &&
           field.apiName !== 'dealname' &&
-          field.apiName !== 'AccountId' &&
-          field.apiName !== 'OwnerId' &&
-          field.apiName !== 'hubspot_owner_id',
+          field.apiName !== 'name' &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead'
+            ? field.apiName !== 'email'
+            : true) &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead'
+            ? field.apiName !== 'Email'
+            : true),
       )
     },
     async getAllForms() {
@@ -5124,32 +5262,35 @@ export default {
         let res = await SlackOAuth.api.getOrgCustomForm()
 
         let stageGateForms
+        // work here, updateOppForm and createOppForm should be dependent on what type of object is selected
+        // updateOppForm and createOppForm should be updateForm and createForm
+        // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Opportunity',
+            (obj) => obj.formType === 'UPDATE' && obj.resource === this.resourceName,
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Opportunity')[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === this.resourceName)[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Opportunity',
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === this.resourceName,
           )
           this.createProductForm = res.filter(
             (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           )[0].fieldsRef
         } else if (this.userCRM === 'HUBSPOT') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === 'Deal',
+            (obj) => obj.formType === 'UPDATE' && obj.resource === this.resourceName,
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === 'Deal')[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === this.resourceName)[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === 'Deal',
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === this.resourceName,
           )
           // this.createProductForm = res.filter(
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
@@ -5215,7 +5356,7 @@ export default {
           const res = await SObjects.api.getSobjectPicklistValues({
             sobject_id: this.accountSobjectId,
           })
-          this.allAccounts = res
+          this.allAccountsForSObjects = res
         } catch (e) {
           console.log(e)
         } finally {
@@ -5230,7 +5371,7 @@ export default {
           sobject_id: this.accountSobjectId,
           value: val,
         })
-        this.allAccounts = res
+        this.allAccountsForSObjects = res
       } catch (e) {
         this.$toast('Error gathering Accounts!', {
           timeout: 2000,
@@ -5289,101 +5430,132 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.createFormInstanceForNotes(opp.id, opp.name, opp.integration_id)
+        let name = opp.name
+        if (
+          this.userCRM === 'SALESFORCE' &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead')
+        ) {
+          name = opp['secondary_data']['Email']
+        } else if (
+          this.userCRM !== 'SALESFORCE' &&
+          (this.resourceName === 'Contact' || this.resourceName === 'Lead')
+        ) {
+          name = opp['secondary_data']['email']
+        }
+
+        this.createFormInstanceForNotes(opp.id, name, opp.integration_id)
       }
     },
-    // closeDatesThisMonth() {
-    //   this.currentPage = 1
-    //   this.selectedWorkflow = false
-    //   const today = new Date(Date.now())
-    //   const todaySplit = today.toLocaleDateString().split('/')
-    //   const todayYear = Number(todaySplit[2])
-    //   const todayMonth = Number(todaySplit[0])
-    //   let nextMonth
-    //   let nextYear
-    //   if (todayMonth === 12) {
-    //     nextMonth = 1
-    //     nextYear = todayYear + 1
-    //   } else {
-    //     nextMonth = todayMonth + 1
-    //   }
-    //   const beginningOfMonth = `${todayYear}-${todayMonth}-01`
-    //   let endOfMonth
-    //   if (nextYear) {
-    //     endOfMonth = `${nextYear}-${nextMonth}-01`
-    //   } else {
-    //     endOfMonth = `${todayYear}-${nextMonth}-01`
-    //   }
-    //   this.$store.dispatch('loadAllOpps', [
-    //     ...this.filters,
-    //     ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
-    //     ['LESS_THAN', 'CloseDate', endOfMonth],
-    //   ])
-    //   this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+    closeDatesThisMonth() {
+      this.currentPage = 1
+      this.selectedWorkflow = false
+      const today = new Date(Date.now())
+      const todaySplit = today.toLocaleDateString().split('/')
+      const todayYear = Number(todaySplit[2])
+      const todayMonth = Number(todaySplit[0])
+      let nextMonth
+      let nextYear
+      if (todayMonth === 12) {
+        nextMonth = 1
+        nextYear = todayYear + 1
+      } else {
+        nextMonth = todayMonth + 1
+      }
+      const beginningOfMonth = `${todayYear}-${todayMonth}-01`
+      let endOfMonth
+      if (nextYear) {
+        endOfMonth = `${nextYear}-${nextMonth}-01`
+      } else {
+        endOfMonth = `${todayYear}-${nextMonth}-01`
+      }
+      this.$store.dispatch(this.loadObject, [
+        ...this.filters,
+        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+        ['LESS_THAN', 'CloseDate', endOfMonth],
+      ])
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
-    //   this.currentList = 'Closing this month'
-    //   this.showList = false
-    //   this.closeFilterSelection()
-    // },
+      this.currentList = 'Closing this month'
+      this.showList = false
+      this.workList = false
+      this.closeFilterSelection()
+    },
     stillThisMonth() {
       this.currentPage = 1
-      this.allOpps = this.originalList
-      this.allOpps = this.allOpps.filter(
+      this[this.objectName] = this.originalList
+      this[this.objectName] = this[this.objectName].filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth,
       )
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing this month'
     },
-    // closeDatesNextMonth() {
-    //   this.currentPage = 1
-    //   this.selectedWorkflow = false
-    //   const today = new Date(Date.now())
-    //   const todaySplit = today.toLocaleDateString().split('/')
-    //   const nextMonthYear = Number(todaySplit[2])
-    //   const nextMonthMonth = Number(todaySplit[0]) + 1
-    //   let nextNextMonth
-    //   let nextYear
-    //   if (nextMonthMonth >= 12) {
-    //     nextNextMonth = nextMonthMonth - 11
-    //     nextYear = nextMonthYear + 1
-    //   } else {
-    //     nextNextMonth = nextMonthMonth + 1
-    //   }
-    //   const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
-    //   let endOfMonth
-    //   if (nextYear) {
-    //     endOfMonth = `${nextYear}-${nextNextMonth}-01`
-    //   } else {
-    //     endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
-    //   }
-    //   this.$store.dispatch('loadAllOpps', [
-    //     ...this.filters,
-    //     ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
-    //     ['LESS_THAN', 'CloseDate', endOfMonth],
-    //   ])
-    //   this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+    closeDatesNextMonth() {
+      this.currentPage = 1
+      this.selectedWorkflow = false
+      const today = new Date(Date.now())
+      const todaySplit = today.toLocaleDateString().split('/')
+      const nextMonthYear = Number(todaySplit[2])
+      const nextMonthMonth = Number(todaySplit[0]) + 1
+      let nextNextMonth
+      let nextYear
+      if (nextMonthMonth >= 12) {
+        nextNextMonth = nextMonthMonth - 11
+        nextYear = nextMonthYear + 1
+      } else {
+        nextNextMonth = nextMonthMonth + 1
+      }
+      const beginningOfMonth = `${nextMonthYear}-${nextMonthMonth}-01`
+      let endOfMonth
+      if (nextYear) {
+        endOfMonth = `${nextYear}-${nextNextMonth}-01`
+      } else {
+        endOfMonth = `${nextMonthYear}-${nextNextMonth}-01`
+      }
+      this.$store.dispatch(this.loadObject, [
+        ...this.filters,
+        ['GREATER_THAN_EQUALS', 'CloseDate', beginningOfMonth],
+        ['LESS_THAN', 'CloseDate', endOfMonth],
+      ])
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
-    //   this.currentList = 'Closing next month'
-    //   this.showList = false
-    //   this.closeFilterSelection()
-    // },
+      this.currentList = 'Closing next month'
+      this.showList = false
+      this.closeFilterSelection()
+    },
     stillNextMonth() {
       this.currentPage = 1
-      this.allOpps = this.originalList
-      this.allOpps = this.allOpps.filter(
+      this[this.objectName] = this.originalList
+      this[this.objectName] = this[this.objectName].filter(
         (opp) => new Date(opp.secondary_data.CloseDate).getUTCMonth() == this.currentMonth + 1,
       )
-      this.allOpps.length < 20 ? (this.hasNext = false) : (this.hasNext = true)
+      this[this.objectName].length < 20 ? (this.hasNext = false) : (this.hasNext = true)
 
       this.currentList = 'Closing next month'
     },
-    allOpportunities() {
+    // allOpportunities() {
+    //   this.selectedWorkflow = false
+    //   this.$store.dispatch('loadAllOpps')
+    //   this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
+    //   this.showList = !this.showList
+    //   this.closeFilterSelection()
+    // },
+    allObjects(loadObject, allName, objectName, resourceName, baseResourceType) {
       this.selectedWorkflow = false
-      this.$store.dispatch('loadAllOpps')
-      this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
-      this.showList = !this.showList
+      this.$store.dispatch(loadObject)
+      this.loadObject = loadObject
+      this.currentList = allName
+      this.objectName = objectName
+      this.resourceName = resourceName
+      this.baseResourceType = baseResourceType
+      this.showList = !this.showPopularList
+      this.objectFields.filters = { ...this.objectFields.filters, crmObject: this.crmObject }
+      this.objectFields.refresh()
+      this.filterText = ''
+      this.workflowFilterText = ''
+      this.getAllForms()
       this.closeFilterSelection()
+      this.closeListSelect()
     },
     weekDay(input) {
       let newer = new Date(input)
@@ -5409,6 +5581,7 @@ export default {
   },
 }
 </script>
+
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
@@ -5447,9 +5620,9 @@ sortable-chosen.sortable-ghost {
 
 .green {
   color: $dark-green;
-  background-color: $white-green;
-  padding: 2px 4px;
-  border-radius: 4px;
+  // background-color: $white-green;
+  // padding: 2px 4px;
+  // border-radius: 4px;
   margin-left: 8px;
 }
 
@@ -5466,7 +5639,7 @@ sortable-chosen.sortable-ghost {
   background-color: white;
   box-shadow: 1px 1px 20px 1px $very-light-gray;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-left: 2px;
   width: 25vw;
   // width: 32vw;
@@ -5507,8 +5680,8 @@ sortable-chosen.sortable-ghost {
   align-items: center;
   justify-content: center;
   color: $light-gray-blue;
+  height: 100%;
   letter-spacing: 0.76px !important;
-  margin-top: 20vh;
 
   .bg-img {
     background-image: url(../assets/images/logo.png);
@@ -5531,50 +5704,44 @@ sortable-chosen.sortable-ghost {
 
 .input-field {
   border: 1px solid #e8e8e8;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
-  width: 36vw !important;
-  // border-bottom: none !important;
+  border-radius: 4px;
+  width: 39vw !important;
   letter-spacing: 0.8px;
   padding: 8px;
-  // color: $base-gray;
 }
 .input-field,
 .input-field::placeholder {
-  font: 18px $base-font-family;
+  font: 16px $base-font-family;
 }
 ::placeholder {
   color: $very-light-gray;
 }
 .current-products {
   font-size: 12px;
-  padding-left: 4px;
   width: 40.25vw;
-
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border-radius: 6px;
+  outline: 1px solid $soft-gray;
+  border-radius: 4px;
   padding: 8px;
-  margin-top: 16px;
+  margin-top: 24px;
+  margin-left: 2px;
 
   h4 {
     font-weight: bold;
+    margin-bottom: 0;
   }
   span {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: -6px;
+    margin-top: -8px;
 
     p {
-      // background-color: $white-green;
-      color: $dark-green;
-      padding: 4px;
       border-radius: 4px;
+      margin: 0;
     }
 
     button {
-      border: 1px solid $soft-gray;
-
+      border: none;
       color: $dark-green;
       background-color: white;
       border-radius: 4px;
@@ -5585,7 +5752,7 @@ sortable-chosen.sortable-ghost {
       margin-right: 4px;
 
       img {
-        filter: invert(40%);
+        filter: invert(50%);
       }
     }
   }
@@ -5600,9 +5767,10 @@ sortable-chosen.sortable-ghost {
     position: sticky;
 
     p {
-      margin-right: 16px;
+      margin-right: 24px;
+      font-size: 14px;
       cursor: pointer;
-      color: $coral;
+      // color: $coral;
     }
   }
 
@@ -5651,7 +5819,11 @@ sortable-chosen.sortable-ghost {
 .input-container {
   position: relative;
   display: inline-block;
-  margin: 10px;
+  margin: 10px 0px;
+
+  label {
+    margin-bottom: 8px;
+  }
 }
 
 .col {
@@ -5664,15 +5836,53 @@ sortable-chosen.sortable-ghost {
   }
 
   label {
-    color: $light-gray-blue;
+    color: $base-gray;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 14px;
   }
   p {
-    color: $light-gray-blue;
+    color: $base-gray;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 14px;
   }
 }
-
+.add-section {
+  position: relative;
+  height: 40px;
+  // margin-top: 16px;
+  div {
+    position: absolute;
+    border-bottom: 1px solid $soft-gray;
+    width: 100%;
+    bottom: 0;
+  }
+  p {
+    position: absolute;
+    left: 40%;
+    top: 12px;
+    background-color: white;
+    z-index: 3;
+    padding: 0 12px;
+  }
+}
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
+}
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  width: 100%;
+  height: 10vh;
+  border-bottom: 1px solid $soft-gray;
+}
+.flex-row-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 .sticky {
   position: sticky;
@@ -5788,7 +5998,7 @@ sortable-chosen.sortable-ghost {
 }
 
 .adding-product {
-  border-radius: 8px;
+  border-radius: 4px;
   margin: 8px 0px;
   width: 40.25vw;
 
@@ -5843,7 +6053,7 @@ sortable-chosen.sortable-ghost {
   display: flex;
   align-items: center;
   color: $base-gray;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px;
   border: 1px solid $soft-gray;
   font-size: 14px;
@@ -5876,7 +6086,37 @@ sortable-chosen.sortable-ghost {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
+.row-section {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow-x: scroll;
+  text-overflow: ellipsis;
+  gap: 16px;
+  white-space: nowrap;
+  padding-bottom: 16px;
+}
+
+.row-section::-webkit-scrollbar {
+  width: 0px;
+  height: 6px;
+}
+.row-section::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.row-section::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.row-section::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
+}
+
 .row-end {
   display: flex;
   flex-direction: row;
@@ -5920,7 +6160,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   cursor: pointer;
   margin-right: 0.5rem;
@@ -5944,7 +6184,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 4px;
   background-color: white;
   cursor: pointer;
   // color: $dark-green;
@@ -6033,18 +6273,16 @@ input {
 h3 {
   font-size: 22px;
 }
-.table-section {
-  margin: 0;
-  min-height: 50vh;
-  max-height: 90vh;
-  width: 93vw;
-  overflow: scroll;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  border-collapse: separate;
-  // border-spacing: 3px;
-  background-color: white;
-}
+// .table-section {
+//   margin: 0;
+//   min-height: 50vh;
+//   max-height: 90vh;
+//   width: 93vw;
+//   overflow: scroll;
+//   border-radius: 6px;
+//   border: 1px solid #e8e8e8;
+//   background-color: white;
+// }
 .table-section::-webkit-scrollbar {
   width: 0px;
   height: 8px;
@@ -6146,31 +6384,38 @@ h3 {
 }
 .center {
   display: flex;
-  margin-left: 16px;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 .modal-container {
   background-color: $white;
   overflow-y: scroll;
   overflow-x: hidden;
-  width: 40vw;
-  height: 80vh;
+  width: 42vw;
+  height: 90vh;
   align-items: center;
   border-radius: 0.5rem;
-  padding: 0px 4px;
+  padding: 32px 22px 16px 22px;
 
   &__footer {
     position: sticky;
     bottom: 0;
-    right: 0;
-    padding: 0px 8px;
-    background-color: white;
+    padding: 0px;
 
+    width: 100%;
+    height: 9vh;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    background-color: white;
     p {
       font-size: 12px;
       color: $light-gray-blue;
+    }
+    h4 {
+      margin-bottom: 0;
     }
 
     // button {
@@ -6188,17 +6433,40 @@ h3 {
   width: 44vw;
   height: 90vh;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 24px 24px 8px 24px;
   // border: 1px solid #e8e8e8;
+}
+.even-row {
+  display: flex;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  padding-bottom: 16px;
+  z-index: 10;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: -16px;
+  h4 {
+    margin-bottom: 0;
+    background-color: $soft-gray;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+}
+.lightgray {
+  color: $light-gray-blue;
 }
 .opp-modal {
   width: 42vw;
   height: 80vh;
   display: flex;
   flex-direction: column;
-  // flex-wrap: wrap;
   gap: 0.25rem;
-  padding: 8px;
+  padding: 0px 12px 4px 0px;
   overflow-y: scroll;
   overflow-x: hidden;
   max-height: 70vh;
@@ -6206,33 +6474,47 @@ h3 {
   color: $base-gray;
   font-size: 16px;
   letter-spacing: 0.75px;
-  div {
-    // margin-right: -1.25rem;
-  }
+}
+.opp-modal::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.opp-modal::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.opp-modal::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.opp-modal::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
 }
 .note-container {
   height: 54vh;
   overflow-y: scroll;
   width: 100%;
-  padding: 0px 16px 8px 16px;
+  padding: 8px 0px;
   margin: 0;
 }
-// .note-container::-webkit-scrollbar {
-//   width: 6px;
-//   height: 0px;
-// }
-// .note-container::-webkit-scrollbar-thumb {
-//   background-color: $very-light-gray;
-//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 0.3rem;
-// }
-// .note-container::-webkit-scrollbar-track {
-//   box-shadow: inset 2px 2px 4px 0 $soft-gray;
-//   border-radius: 0.3rem;
-// }
-// .note-container::-webkit-scrollbar-track-piece {
-//   margin-top: 0.25rem;
-// }
+
+.note-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.note-container::-webkit-scrollbar-thumb {
+  background-color: $very-light-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 0.3rem;
+}
+.note-container::-webkit-scrollbar-track {
+  box-shadow: inset 2px 2px 4px 0 $soft-gray;
+  border-radius: 0.3rem;
+}
+.note-container::-webkit-scrollbar-track-piece {
+  margin-top: 0.25rem;
+}
 .note-section {
   background-color: white;
   border-bottom: 1px solid $soft-gray;
@@ -6275,7 +6557,7 @@ input[type='search']:focus {
   width: 150px;
 }
 input[type='text']:focus {
-  outline: none;
+  outline: 1px solid $dark-green;
   cursor: text;
 }
 input[type='checkbox'] {
@@ -6303,14 +6585,11 @@ section {
   -moz-appearance: textfield-multiline;
   -webkit-appearance: textarea;
   resize: both;
-  height: 50vh;
-  width: 36vw;
+  height: 40vh;
+  width: 39vw;
   min-height: 20vh;
-  // margin-top: -20px;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-radius: 4px;
   border: 1px solid #e8e8e8;
-  border-top: none;
   overflow-y: scroll;
   font-family: inherit;
   font-style: inherit;
@@ -6379,7 +6658,7 @@ section {
 .pipelines {
   padding: 20px 0px 0px 56px;
   color: $base-gray;
-  margin: 0 1rem 0 0.5rem;
+  margin: 4px 1rem 0 0.5rem;
   letter-spacing: 0.75px !important;
 }
 .pipelines:focus {
@@ -6424,7 +6703,7 @@ section {
   display: flex;
   align-items: center;
   border: none;
-  margin: 0 0.5rem 0 0;
+  margin: 0;
   padding: 9px 12px;
   font-size: 13px;
   border-radius: 6px;
@@ -6469,12 +6748,12 @@ section {
   align-items: center;
   justify-content: center;
   padding: 6px;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-right: 0.5rem;
 }
 #user-input-inline {
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   width: 23vw;
   font-family: $base-font-family;
@@ -6485,7 +6764,7 @@ section {
   border: 1px solid #e8e8e8;
   // height: 140px;
   height: 180px;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   min-height: 2.5rem;
   // width: 23vw;
@@ -6499,7 +6778,7 @@ section {
 }
 #user-input {
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: white;
   min-height: 2.5rem;
   width: 40.25vw;
@@ -6507,19 +6786,20 @@ section {
   letter-spacing: 0.75px;
   padding: 8px 12px;
   margin-top: 8px;
+  margin-left: 1px;
 }
 #user-input > div {
   color: red !important;
 }
 #user-input:focus,
 #user-input-inline:focus {
-  outline: none;
+  outline: 1px solid $dark-green;
 }
 .number-input {
   background-color: $off-white;
   box-shadow: 1px 1px 1px $gray;
   border: 2px solid $light-orange-gray;
-  border-radius: 5px;
+  border-radius: 4px;
   min-height: 4vh;
   margin-right: 1rem;
   margin-left: 0.5rem;
@@ -6694,6 +6974,7 @@ main:hover > span {
   align-items: center;
   justify-content: flex-end;
   margin-top: 16px;
+  width: 100%;
 }
 .flex-end-opp {
   width: 100%;
@@ -6794,10 +7075,13 @@ a {
   min-width: 80px;
   margin-top: 12px;
   letter-spacing: 1px;
-  color: $light-gray-blue;
   border: none;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  color: $base-gray;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 14px;
 }
 .red-label {
   // background-color: $light-red;
@@ -6822,13 +7106,21 @@ a {
 }
 .input {
   min-height: 40px;
-  border-radius: 5px;
+  border-radius: 4px;
   border: 1px solid #e8e8e8;
   background: #fff;
   font-size: 14px;
 }
 .set-max-width {
   width: 40vw;
+  font-size: 18px;
+  h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+  small {
+    color: $very-light-gray;
+  }
   overflow-x: scroll;
   white-space: nowrap;
   text-align: left;

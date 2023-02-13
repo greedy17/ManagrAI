@@ -992,6 +992,21 @@ class SalesforceAuthAccount(TimeStampModel):
             user__organization=self.user.organization
         ).values_list("salesforce_id", flat=True)
 
+    def add_to_pipeline_fields(self,resource, field_id):
+        in_list = False
+        for index, resource_type in enumerate(self.extra_pipeline_fields):
+            index_list = resource_type.split(",")
+            if index_list[0] == resource:
+                in_list = True
+                index_list.append(field_id)
+                self.extra_pipeline_fields[index] = ",".join(index_list)
+        if in_list is False:
+            first_for_resource = ",".join([resource,field_id])
+            self.extra_pipeline_fields.append(first_for_resource)
+        self.save()
+        return self.extra_pipeline_fields
+
+
     def regenerate_token(self):
         data = self.__dict__
         data["id"] = str(data.get("id"))
