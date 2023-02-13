@@ -128,6 +128,13 @@ class Organization(TimeStampModel):
         user.save()
         return
 
+    def deactivate_org(self):
+        for user in self.users.all():
+            user.deactivate_user()
+        self.state = "Inactive"
+        self.save()
+        return True
+
 
 class AccountQuerySet(models.QuerySet):
     def for_user(self, user):
