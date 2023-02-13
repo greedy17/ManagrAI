@@ -99,6 +99,15 @@
       </div>
     </Modal>
 
+    <!-- <AlertsHeader
+      page="forms"
+      buttonText="Save Form"
+      :tabs="tabs"
+      :saving="pulseLoading"
+      :refreshForms="refreshForms"
+      :onSave="onSave"
+    /> -->
+
     <div v-if="userCRM === 'SALESFORCE'" class="alerts-header">
       <section class="row__ light-gray">
         <p
@@ -144,12 +153,6 @@
         </p>
         <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
           Custom Object
-          <!-- <span 
-            v-if="customForms && customForms.length" 
-            class="option__small" 
-            style="margin-left: 0; font-size: .7rem"
-            >active -->
-          </span>
         </p>
       </section>
       <div class="save-refresh-section">
@@ -570,6 +573,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
+import AlertsHeader from '@/components/AlertsHeader.vue'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
@@ -589,6 +593,7 @@ export default {
     Modal,
     draggable,
     ToggleCheckBox,
+    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -656,6 +661,7 @@ export default {
           crmObject: this.newResource,
         },
       }),
+      tabs: [],
       customFields: null,
       newFormType: this.formType,
       newResource: this.resource,
@@ -1030,6 +1036,39 @@ export default {
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
     },
+    opportunityClassLogic() {
+      return this.newResource == 'Opportunity' && this.newFormType !== 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+    },
+    dealClassLogic() {
+      return this.newResource == 'Deal' && this.newFormType !== 'STAGE_GATING' ? 'green' : ''
+    },
+    oppStageClassLogic() {
+      return this.newResource == 'Opportunity' && this.newFormType == 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+    },
+    dealStageClassLogic() {
+      return this.newResource == 'Deal' && this.newFormType == 'STAGE_GATING' ? 'green' : ''
+    },
+    accountClassLogic() {
+      return this.newResource == 'Account' && !this.customObjectView ? 'green' : ''
+    },
+    companyClassLogic() {
+      return this.newResource == 'Company' ? 'green' : ''
+    },
+    contactClassLogic() {
+      return this.newResource == 'Contact' && !this.customObjectView ? 'green' : ''
+    },
+    hsContactClassLogic() {
+      return this.newResource == 'Contact' ? 'green' : ''
+    },
+    leadClassLogic() {
+      return this.newResource == 'Lead' && !this.customObjectView ? 'green' : ''
+    },
+    productClassLogic() {
+      return this.newResource == 'OpportunityLineItem' && !this.customObjectView ? 'green' : ''
+    },
+    customObjectClassLogic() {
+      return this.customObjectView ? 'green' : ''
+    },
     user() {
       return this.$store.state.user
     },
@@ -1055,6 +1094,67 @@ export default {
       })
       if (this.userCRM == 'SALESFORCE') {
         this.getCustomObjects()
+        this.tabs = [
+          {
+            name: 'Opportunity',
+            classLogic: this.opportunityClassLogic,
+            function: this.changeToOpportunity,
+          },
+          {
+            name: 'Opp - Stage related',
+            classLogic: this.oppStageClassLogic,
+            function: this.changeToStage,
+          },
+          {
+            name: 'Account',
+            classLogic: this.accountClassLogic,
+            function: this.changeToAccount,
+          },
+          {
+            name: 'Contact',
+            classLogic: this.contactClassLogic,
+            function: this.changeToContact,
+          },
+          {
+            name: 'Lead',
+            classLogic: this.leadClassLogic,
+            function: this.changeToLead,
+          },
+          {
+            name: 'Products',
+            classLogic: this.productClassLogic,
+            function: this.changeToProducts,
+          },
+          {
+            name: 'Custom Object',
+            classLogic: this.customObjectClassLogic,
+            function: this.toggleCustomObjectView,
+          },
+        ]
+      }
+      if (this.userCRM === 'HUBSPOT') {
+        this.tabs = [
+          {
+            name: 'Deal',
+            classLogic: this.dealClassLogic,
+            function: this.changeToDeal,
+          },
+          {
+            name: 'Deal - Stage related',
+            classLogic: this.dealStageClassLogic,
+            function: this.changeToStage,
+          },
+          {
+            name: 'Account',
+            classLogic: this.companyClassLogic,
+            function: this.changeToCompany,
+          },
+          {
+            name: 'Contact',
+            classLogic: this.hsContactClassLogic,
+            function: this.changeToContact,
+          },
+        ]
       }
     } catch (e) {
       console.log(e)
