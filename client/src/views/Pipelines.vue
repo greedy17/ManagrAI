@@ -2820,12 +2820,7 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val:
-                      field.apiName === 'StageName'
-                        ? $event.value
-                        : field.apiName === 'dealstage'
-                        ? [$event.label, $event.id]
-                        : $event.id,
+                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
@@ -3254,6 +3249,7 @@ export default {
       const accountRef = this.$store.state.user.salesforceAccountRef
         ? this.$store.state.user.salesforceAccountRef
         : this.$store.state.user.hubspotAccountRef
+      // console.log('tests', accountRef, this.baseResourceType)
       const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },

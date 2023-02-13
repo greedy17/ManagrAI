@@ -477,7 +477,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'PopularWorkflows',
-  props: ['selectField', 'largeOpps', 'config'],
+  props: ['selectField', 'largeOpps', 'config', 'isEmpty'],
   components: {
     ToggleCheckBox,
     FormField,
@@ -489,7 +489,7 @@ export default {
     return {
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
-        pagination: { size: 200 },
+        pagination: { size: 1000 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       slackMessage: [],
@@ -554,7 +554,25 @@ export default {
       ...this.objectFields.filters,
       crmObject: this.selectedResourceType,
     }
+    if (this.isEmpty) {
+      this.objectFields.filters = {
+        crmObject: this.selectedResourceType,
+        search: '',
+        updatable: true,
+      }
+    }
     await this.objectFields.refresh()
+    this.fields.filters = {
+      ...this.fields.filters,
+    }
+    if (this.isEmpty) {
+      this.fields.filters = {
+        crmObject: this.selectedResourceType,
+        search: '',
+        updatable: true,
+      }
+    }
+    await this.fields.refresh()
     this.slackMessage = this.config.messageTemplate.body.split('\n\n')
     const slackFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
@@ -577,6 +595,13 @@ export default {
         if (this.selectedResourceType) {
           this.fields.filters.crmObject = this.selectedResourceType
           this.fields.filters.page = 1
+          if (this.isEmpty) {
+            this.fields.filters = {
+              crmObject: this.selectedResourceType,
+              search: '',
+              updatable: true,
+            }
+          }
           await this.fields.refresh()
         }
       },
@@ -585,9 +610,15 @@ export default {
       async handler(val) {
         this.objectFields.filters = {
           ...this.objectFields.filters,
-          forAlerts: true,
           filterable: true,
           crmObject: val,
+        }
+        if (this.isEmpty) {
+          this.objectFields.filters = {
+            crmObject: val,
+            search: '',
+            updatable: true,
+          }
         }
         this.objectFields.refresh()
       },
