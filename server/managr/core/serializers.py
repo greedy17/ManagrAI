@@ -257,6 +257,7 @@ class NoteTemplateSerializer(serializers.ModelSerializer):
 class UserTrialSerializer(serializers.ModelSerializer):
     days_active = serializers.SerializerMethodField("get_days_active")
     updates_this_month = serializers.SerializerMethodField("get_updates_made_this_month")
+    total_updates = serializers.SerializerMethodField("get_total_updates_made")
 
     class Meta:
         model = User
@@ -264,11 +265,13 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "email",
             "datetime_created",
             "days_active",
+            "total_updates",
+            "updates_this_month",
             "crm",
             "salesforce_account",
             "hubspot_account",
             "nylas",
-            "slack_account",
+            "slack_integration",
         )
 
     def get_days_active(self, instance):
@@ -276,6 +279,17 @@ class UserTrialSerializer(serializers.ModelSerializer):
         return (today - instance.datetime_created).days
 
     def get_updates_made_this_month(self, instance):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
         today = datetime.today().astimezone(pytz.UTC)
         thirty_past = today - timezone.timedelta(30)
-        return
+        updates = OrgCustomSlackFormInstance.objects.for_user(instance).filter(
+            is_submitted=True, datetime_created__range=(thirty_past, today)
+        )
+        return len(updates)
+
+    def get_total_updates_made(self, instance):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
+        updates = OrgCustomSlackFormInstance.objects.for_user(instance).filter(is_submitted=True)
+        return len(updates)
