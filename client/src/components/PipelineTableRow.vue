@@ -47,23 +47,6 @@
           >
             <SkeletonBox width="125px" height="14px" style="margin: 6px 8px" />
           </div>
-
-          <PipelineNameSection
-            v-else
-            :name="
-              resourceName === 'Opportunity' || resourceName === 'Account'
-                ? opp['secondary_data']['Name']
-                : resourceName === 'Company'
-                ? opp['secondary_data']['name']
-                : resourceName === 'Contact' || resourceName === 'Lead'
-                ? userCRM === 'SALESFORCE'
-                  ? opp['secondary_data']['Email']
-                  : opp['secondary_data']['email']
-                : opp['secondary_data']['dealname']
-            "
-            :accountName="opp.account_ref ? opp.account_ref.name : ''"
-            :owner="opp.owner_ref.first_name"
-          />
         </div>
       </div>
     </div>
@@ -165,14 +148,12 @@
 </template>
 
 <script>
-import PipelineNameSection from '@/components/PipelineNameSection'
 import PipelineField from '@/components/PipelineField'
 import User from '@/services/users'
 
 export default {
   name: 'PipelineTableRow',
   components: {
-    PipelineNameSection,
     PipelineField,
     SkeletonBox: () => import(/* webpackPrefetch: true */ '@/components/SkeletonBox'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),

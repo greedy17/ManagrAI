@@ -2,6 +2,7 @@
   <PopularWorkflows
     :config="userCRM === 'HUBSPOT' ? allConfigs.EMPTY_FIELD_HUBSPOT : allConfigs.EMPTY_FIELD"
     :selectField="true"
+    :isEmpty="true"
   />
 </template>
 
