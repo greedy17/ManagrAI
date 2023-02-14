@@ -7,6 +7,8 @@ import requests
 from datetime import datetime
 from copy import copy
 import re
+from django.template.loader import render_to_string
+from managr.api.emails import send_html_email
 from background_task import background
 from django.conf import settings
 
@@ -96,6 +98,10 @@ def emit_process_workflow_config_check(user_id, verbose_name):
 
 def emit_morning_refresh_message(user_id, verbose_name):
     return _morning_refresh_message(user_id, verbose_name=verbose_name)
+
+
+def emit_process_check_trial_status(user_id, verbose_name):
+    return _process_check_trial_status(user_id, verbose_name=verbose_name)
 
 
 #########################################################
@@ -772,6 +778,26 @@ def _process_workflow_config_check(user_id):
         return
 
 
+@background()
+def _process_check_trial_status(user_id):
+    user = User.objects.get(id=user_id)
+    today = datetime.now().astimezone(pytz.UTC)
+    days_active = (today - user.organization.datetime_created).days
+    if days_active > 60 and not user.organization.is_paid:
+        logger.info(f"Organization {user.organization.name} has expired and is being deactivated")
+        user.organization.deactivate_org()
+        subject = f"Trial {user.organization.name} Expiration"
+        recipient = ["support@mymanagr.com"]
+        send_html_email(
+            subject,
+            "core/email-templates/deactivated-trial.html",
+            settings.SERVER_EMAIL,
+            recipient,
+            context={"name": user.organization.name},
+        )
+    return
+
+
 ####################################################
 # TIMEZONE TASK FUNCTIONS
 ####################################################
@@ -782,6 +808,7 @@ TIMEZONE_TASK_FUNCTION = {
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
     core_consts.MORNING_REFRESH: emit_morning_refresh_message,
     core_consts.MEETING_REMINDER: emit_process_send_meeting_reminder,
+    core_consts.TRIAL_STATUS: emit_process_check_trial_status,
 }
 
 

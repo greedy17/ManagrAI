@@ -385,7 +385,8 @@ def _process_submit_resource_data(payload, context):
         crm = user.crm_account
         try:
             if main_form.template.form_type == "UPDATE":
-                main_form.resource_object.update(all_form_data)
+                res = main_form.resource_object.update(all_form_data)
+                all_form_data.update(res)
                 resource = main_form.resource_object
 
             else:
