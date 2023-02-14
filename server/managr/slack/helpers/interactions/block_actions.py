@@ -2040,8 +2040,10 @@ def process_get_notes(payload, context):
             if current_stage and previous_stage:
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
-            print(note[2])
-            note_message = replace_tags(note[2])
+            try:
+                note_message = replace_tags(note[2])
+            except Exception:
+                note_message = note[2]
             if len(note_message) > 255:
                 note_message = str(note_message)[:255] + "..."
             block_message += f"\nNotes:\n {note_message}"
