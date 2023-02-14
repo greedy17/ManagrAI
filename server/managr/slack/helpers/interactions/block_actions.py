@@ -2044,7 +2044,7 @@ def process_get_notes(payload, context):
                 note_message = replace_tags(note[2])
             except Exception:
                 note_message = note[2]
-            if len(note_message) > 255:
+            if note_message and len(note_message) > 255:
                 note_message = str(note_message)[:255] + "..."
             block_message += f"\nNotes:\n {note_message}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))

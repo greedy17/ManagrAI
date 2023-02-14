@@ -552,22 +552,28 @@ class SlackFormsViewSet(
     def create(self, request, *args, **kwargs):
         data = self.request.data
         fields = data.pop("fields", [])
-        data.pop("fields_ref", [])
+        fields_ref = data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
         data.update(
             {"organization": self.request.user.organization_id, "team": self.request.user.team.id}
         )
-        serializer = self.get_serializer(data=data)
+        form = OrgCustomSlackForm.objects.filter(
+            Q(resource=data.get("resource"), stage=data.get("stage"))
+            | Q(resource=data.get("resource"), custom_object=data["custom_object"])
+        ).first()
+        if form:
+            serializer = self.get_serializer(instance=form, data=data)
+        else:
+            serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
         instance.custom_fields.clear()
         fields_state = {}
-        for i, field in enumerate(fields):
-            instance.custom_fields.add(field, through_defaults={"order": i})
+        for i, field in enumerate(fields_ref):
+            instance.custom_fields.add(field["id"], through_defaults={"order": i})
             fields_state[i] = field["apiName"]
-
         instance.config = fields_state
         instance.save()
         return Response(serializer.data)
