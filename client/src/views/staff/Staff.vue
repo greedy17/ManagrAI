@@ -1344,8 +1344,8 @@
       </template>
       <template v-else>
         <div class="" style="margin-top: 1rem;">
-          <div style="display: flex; flex-direction: row; justify-content: space-around; height: 20vh; width: 100%;">
-            <div class="added-collection padding" style="width: 25vw; height: 16vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start;">
+          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 20vh; width: 100%;">
+            <div class="added-collection padding" style="width: 25vw; height: 16vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
             </div>
@@ -1367,14 +1367,14 @@
                   </template>
                 </Multiselect>
                 <div>
-                  <button @click="deactivateOrg">Delete</button>
+                  <button @click="deactivateOrg" class="green_button">Delete</button>
                 </div>
             </div>
           </div>
           <div class="added-collection padding" style="width: 100%; justify-content: center;">
-            <div class="flex-row-spread" style="width: 20vw;">
+            <div class="flex-row-spread" style="width: 10rem;">
               <h4>Filter by day:</h4>
-              <input type="number" min="0" v-model="filterByDay" style="width: 20%" />
+              <input type="number" min="0" v-model="filterByDay" style="width: 3.5rem; padding: 4px;" class="search-bar" />
             </div>
             <div style="height: 45vh;">
               <div class="flex-row-spread" style="margin-bottom: 0.5rem;">
@@ -1421,19 +1421,21 @@
             </div>
           </div>
         </div>
-        <h2>Completed Tasks</h2>
-        <div v-for="(task, i) in adminTasks" :key="task.pk">
-          <div
-            :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-            @click="openModal('task', task)"
-          >
-            <h4 class="click click_width">
-              {{ task.fields.task_name }} ({{ formatDateTime(task.fields.run_at) }},
-              {{ getTime(task.fields.run_at) }})
-              <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{
-                task.fields.last_error ? '[ERROR]' : '[SUCCESS]'
-              }}</span>
-            </h4>
+        <h2>Completed Tasks <span v-if="!showAdminTasks" @click="showAdminTasks = !showAdminTasks" style="cursor: pointer;">></span><span v-else @click="showAdminTasks = !showAdminTasks" style="cursor: pointer;">v</span></h2>
+        <div v-if="showAdminTasks">
+          <div v-for="(task, i) in adminTasks" :key="task.pk">
+            <div
+              :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
+              @click="openModal('task', task)"
+            >
+              <h4 class="click click_width">
+                {{ task.fields.task_name }} ({{ formatDateTime(task.fields.run_at) }},
+                {{ getTime(task.fields.run_at) }})
+                <span :style="task.fields.last_error ? 'color: red;' : 'color: green;'">{{
+                  task.fields.last_error ? '[ERROR]' : '[SUCCESS]'
+                }}</span>
+              </h4>
+            </div>
           </div>
         </div>
       </template>
@@ -1543,6 +1545,7 @@ export default {
       invitedUsers: null,
       activeUsers: null,
       filterText: '',
+      showAdminTasks: false,
     }
   },
   computed: {
