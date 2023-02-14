@@ -503,7 +503,10 @@ class CompanyAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            return HubspotAuthAccountAdapter._handle_response(r)
+            r = HubspotAuthAccountAdapter._handle_response(r)
+            if "properties" in r.keys():
+                return r["properties"]
+            return r
 
     @staticmethod
     def create(data, access_token, object_fields, user_id, custom_base=None):
@@ -655,7 +658,10 @@ class DealAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            return HubspotAuthAccountAdapter._handle_response(r)
+            r = HubspotAuthAccountAdapter._handle_response(r)
+            if "properties" in r.keys():
+                return r["properties"]
+            return r
 
     @staticmethod
     def create(data, access_token, object_fields, user_id, custom_base=None):
@@ -788,7 +794,10 @@ class HubspotContactAdapter:
                 data=json_data,
                 headers={**hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)},
             )
-            return HubspotAuthAccountAdapter._handle_response(r)
+            r = HubspotAuthAccountAdapter._handle_response(r)
+            if "properties" in r.keys():
+                return r["properties"]
+            return r
 
     @staticmethod
     def create(data, access_token, object_fields, user_id, custom_base=None):
