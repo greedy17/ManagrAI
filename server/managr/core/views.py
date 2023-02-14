@@ -486,6 +486,18 @@ class UserViewSet(
         data = get_user_totals(user_id)
         return Response(data=data)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-trial-users",
+    )
+    def get_trial_users(self, request, *args, **kwargs):
+        from managr.core.serializers import UserTrialSerializer
+        users = User.objects.filter(is_active=True)
+        serialized = UserTrialSerializer(users, many=True)
+        return Response(data=serialized.data, status=status.HTTP_200_OK)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
