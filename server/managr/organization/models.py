@@ -131,7 +131,7 @@ class Organization(TimeStampModel):
     def deactivate_org(self):
         for user in self.users.all():
             user.deactivate_user()
-        self.state = "Inactive"
+        self.state = "INACTIVE"
         self.save()
         return True
 

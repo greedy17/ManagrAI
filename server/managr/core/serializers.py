@@ -271,7 +271,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "salesforce_account",
             "hubspot_account",
             "nylas",
-            "slack_account",
+            "slack_integration",
         )
 
     def get_days_active(self, instance):

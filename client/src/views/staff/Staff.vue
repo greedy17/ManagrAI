@@ -1,5 +1,27 @@
 <template>
   <div class="staff">
+    <Modal v-if="deleteOpen">
+      <div class="delete_modal">
+        <div class="delete_modal__header">
+          <h4>Delete Org</h4>
+          <img
+            @click="deleteOpen = !deleteOpen"
+            src="@/assets/images/close.svg"
+            height="22px"
+            alt=""
+          />
+        </div>
+
+        <div class="delete_modal__body">
+          <p>This can't be reversed. Are you sure?</p>
+        </div>
+
+        <div class="delete_modal__footer">
+          <button class="no__button" @click="deleteClose">Cancel</button>
+          <button class="delete" @click.stop="onDeleteOrg">Delete</button>
+        </div>
+      </div>
+    </Modal>
     <Modal
       v-if="editOpModalOpen"
       dimmed
@@ -1321,6 +1343,84 @@
         </div>
       </template>
       <template v-else>
+        <div class="" style="margin-top: 1rem;">
+          <div style="display: flex; flex-direction: row; justify-content: space-around; height: 20vh; width: 100%;">
+            <div class="added-collection padding" style="width: 25vw; height: 16vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start;">
+              <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
+              <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
+            </div>
+            <div class="added-collection padding flex-row-spread" style="flex-direction: row; width: 35vw; height: 16vh; align-items: center;">
+              <h4>Deactivate</h4>
+              <Multiselect
+                  placeholder="Select Org to Deactivate"
+                  style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
+                  v-model="selectedDeactivateOrg"
+                  :options="filteredActiveOrganizations"
+                  openDirection="below"
+                  selectLabel="Enter"
+                  track-by="id"
+                  label="name"
+                  :multiple="false"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                </Multiselect>
+                <div>
+                  <button @click="deactivateOrg">Delete</button>
+                </div>
+            </div>
+          </div>
+          <div class="added-collection padding" style="width: 100%; justify-content: center;">
+            <div class="flex-row-spread" style="width: 20vw;">
+              <h4>Filter by day:</h4>
+              <input type="number" min="0" v-model="filterByDay" style="width: 20%" />
+            </div>
+            <div style="height: 45vh;">
+              <div class="flex-row-spread" style="margin-bottom: 0.5rem;">
+                <div style="width: 35%">Email</div>
+                <div style="width: 25%">Integrations</div>
+                <div style="width: 25%">Days Active</div>
+                <div style="width: 25%">Total Updates</div>
+              </div>
+              <div style="overflow: scroll; height: 85%;">
+                <div v-for="user in dayTrialUsers" :key="user.id" class="flex-row-spread" style="margin-bottom: 0.25rem;">
+                  <div style="width: 35%">{{ user.email }}</div>
+                  <div class="flex-row-spread" style="width: 25%">
+                    <div
+                      style="display: flex; align-items: flex-start;"
+                      class="invite-list-users__section__item invite-list-users__status"
+                    >
+                      <span :class="user.slack_integration ? '' : 'grayscale'">
+                        <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
+                      </span>
+                      <span
+                        v-if="user.crm === 'SALESFORCE'"
+                        :class="user.salesforce_account ? '' : 'grayscale'"
+                      >
+                        <img src="@/assets/images/salesforce.png" height="18px" alt="" />
+                      </span>
+                      <span
+                        v-else-if="user.crm === 'HUBSPOT'"
+                        :class="user.hubspot_account ? '' : 'grayscale'"
+                      >
+                        <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
+                      </span>
+                      <span v-else :class="'grayscale'">
+                        <img src="@/assets/images/revoke.svg" height="18px" alt="" />
+                      </span>
+                      <span :class="user.nylas ? '' : 'grayscale'">
+                        <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
+                      </span>
+                    </div>
+                  </div>
+                  <div style="width: 25%">{{user.days_active}}</div>
+                  <div style="width: 25%">{{user.total_updates}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <h2>Completed Tasks</h2>
         <div v-for="(task, i) in adminTasks" :key="task.pk">
           <div
@@ -1355,7 +1455,7 @@ export default {
     // CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader')
   },
   data() {
     return {
@@ -1404,6 +1504,11 @@ export default {
       teamOrUser: [{ name: 'team' }, { name: 'user' }],
       selectedTeamOrUser: null,
       selectedFilter: null,
+      selectedDeactivateOrg: null,
+      filterByDay: 0,
+      usersFilteredByDays: [],
+      deleteOpen: false,
+      trialUsers: [],
       teamList: [],
       activeFilters: [],
       orgUsers: [],
@@ -1446,13 +1551,23 @@ export default {
     },
     filteredOrganizations() {
       if (!this.filterText) {
-        return this.organizations
+        return this.filteredActiveOrganizations
       } else {
-        return this.organizations.filter((org) =>
+        return this.filteredActiveOrganizations.filter((org) =>
           org.name.toLowerCase().includes(this.filterText.toLowerCase()),
         )
       }
     },
+    filteredActiveOrganizations() {
+      return this.organizations.filter(org => org.state === 'ACTIVE')
+    },
+    activeTrialUsers() {
+      return this.trialUsers.filter(user => user.updates_this_month >= 10)
+    },
+    dayTrialUsers() {
+      const trialUsers = this.trialUsers.filter(user => user.days_active <= this.filterByDay)
+      return trialUsers.sort((a, b) => a.days_active - b.days_active)
+    }
   },
   mounted() {
     this.stateActive = this.user.organizationRef.state
@@ -1864,6 +1979,53 @@ export default {
       `
       return stringObj
     },
+    deactivateOrg() {
+      if (!this.selectedDeactivateOrg) {
+        this.$toast('Please select an org to delete', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      this.deleteOpen = true
+    },
+    deleteClose() {
+      this.deleteOpen = false
+    },
+    async onDeleteOrg() {
+      this.deleteOpen = !this.deleteOpen
+      try {
+        const res = await Organization.api.orgDeactivate(this.selectedDeactivateOrg.id)
+        this.getStaffOrgs()
+        this.selectedDeactivateOrg = null
+        this.$toast('Organization removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch {
+        this.$toast('Error removing organization', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    async getTrialUsers() {
+      try {
+        const res = await User.api.getTrialUsers()
+        this.trialUsers = res
+      } catch(e) {
+        console.log('Error in getTrialUsers', e)
+      }
+    },
     formatCopyObject(obj) {
       let string = '{'
       if (obj.length) {
@@ -1889,6 +2051,7 @@ export default {
   created() {
     this.getTasks()
     this.getStaffOrgs()
+    this.getTrialUsers()
   },
   watch: {
     async selected_org() {
@@ -1929,7 +2092,7 @@ export default {
   padding-left: 60px;
 }
 .staff__main_page {
-  width: 70vw;
+  width: 80vw;
   margin-left: 1rem;
 }
 p {

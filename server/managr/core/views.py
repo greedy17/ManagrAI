@@ -490,15 +490,13 @@ class UserViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="get_trial_users",
+        url_path="get-trial-users",
     )
     def get_trial_users(self, request, *args, **kwargs):
         from managr.core.serializers import UserTrialSerializer
-
-        user = request.user
         users = User.objects.filter(is_active=True)
-        serialized = UserTrialSerializer(source=users, many=True)
-        return Response(data=serialized, status=status.HTTP_200_OK)
+        serialized = UserTrialSerializer(users, many=True)
+        return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):
