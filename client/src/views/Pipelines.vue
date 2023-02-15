@@ -1121,10 +1121,8 @@
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="
-              height: 1.5rem;
+            style="height: 1.5rem;
               margin-top: -1.5rem;
-
               cursor: pointer;
               filter: invert(45%);
             "
@@ -2070,7 +2068,7 @@
             <button
               @click="goToWorkflow(template.id)"
               class="list-button"
-              v-for="template in templates.list"
+              v-for="template in templateOpps"
               :key="template.id"
             >
               {{ template.title }}
@@ -2100,6 +2098,17 @@
                 </span>
               </button>
             </router-link>
+            <button
+              @click="goToWorkflow(template.id)"
+              class="list-button"
+              v-for="template in templateAccs"
+              :key="template.id"
+            >
+              {{ template.title }}
+              <span class="green">{{
+                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+              }}</span>
+            </button>
             <div class="list-section__title flex-row-spread">
               <p>Contact</p>
             </div>
@@ -2116,10 +2125,21 @@
                 </span>
               </button>
             </router-link>
-            <div class="list-section__title flex-row-spread">
+            <button
+              @click="goToWorkflow(template.id)"
+              class="list-button"
+              v-for="template in templateContacts"
+              :key="template.id"
+            >
+              {{ template.title }}
+              <span class="green">{{
+                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+              }}</span>
+            </button>
+            <div v-if="userCRM === 'SALESFORCE'" class="list-section__title flex-row-spread">
               <p>Lead</p>
             </div>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
+            <router-link v-if="userCRM === 'SALESFORCE'" style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 v-if="userCRM === 'SALESFORCE'"
                 @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
@@ -2131,6 +2151,17 @@
                 </span>
               </button>
             </router-link>
+            <button
+              @click="goToWorkflow(template.id)"
+              class="list-button"
+              v-for="template in templateLeads"
+              :key="template.id"
+            >
+              {{ template.title }}
+              <span class="green">{{
+                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+              }}</span>
+            </button>
             <!-- <button v-if="!selectedWorkflow" @click="closeDatesThisMonth" class="list-button">
               Closing this month
               <span
@@ -3249,7 +3280,6 @@ export default {
       const accountRef = this.$store.state.user.salesforceAccountRef
         ? this.$store.state.user.salesforceAccountRef
         : this.$store.state.user.hubspotAccountRef
-      // console.log('tests', accountRef, this.baseResourceType)
       const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },
@@ -3295,6 +3325,18 @@ export default {
     allLeads() {
       return this.$store.state.allLeads
     },
+    templateOpps() {
+      return this.templates.list.filter(temp => temp.resourceType === (this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'))
+    },
+    templateAccs() {
+      return this.templates.list.filter(temp => temp.resourceType === (this.userCRM === 'SALESFORCE' ? 'Account' : 'Company'))
+    },
+    templateContacts() {
+      return this.templates.list.filter(temp => temp.resourceType === 'Contact')
+    },
+    templateLeads() {
+      return this.templates.list.filter(temp => temp.resourceType === 'Lead')
+    },
     user() {
       return this.$store.state.user
     },
@@ -3303,9 +3345,13 @@ export default {
     },
     filteredWorkflows: {
       get: function () {
-        return this.currentWorkflow.filter((opp) =>
-          opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase()),
-        )
+        return this.currentWorkflow.filter((opp) => {
+          if (opp.name) {
+            return opp.name.toLowerCase().includes(this.workflowFilterText.toLowerCase())
+          } else {
+            return opp.email.toLowerCase().includes(this.workflowFilterText.toLowerCase())
+          }
+        })
       },
       set: function (newvalue) {
         this.currentWorkflow = newvalue
@@ -3469,7 +3515,6 @@ export default {
       this.currentSelectedProduct = secondaryData
     },
     setTemplate(val, field, title) {
-      console.log(val)
       this.noteTitle = title
       this.addingTemplate = false
       this.noteValue = val
