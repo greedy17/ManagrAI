@@ -115,10 +115,7 @@ class OrganizationViewSet(
         return Response(data=status.HTTP_200_OK)
 
     @action(
-        methods=["POST"],
-        # permission_classes=(IsSalesPerson,),
-        detail=False,
-        url_path="change-admin",
+        methods=["POST"], detail=False, url_path="change-admin",
     )
     def change_admin(self, request, *args, **kwargs):
         """endpoint to update the State, Ignore Emails, and Has Products sections"""
