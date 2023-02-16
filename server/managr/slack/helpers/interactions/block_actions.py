@@ -1332,7 +1332,7 @@ def process_show_update_resource_form(payload, context):
             resource_id = serializer.instance.id
         except Exception as e:
             logger.exception(
-                f"Failed to sync new resource with id {integration_id} for {user.email}"
+                f"Failed to sync new resource with id {integration_id} for {user.email} due to <{e}>"
             )
     show_submit_button_if_fields_added = False
     stage_form = None
@@ -1345,7 +1345,7 @@ def process_show_update_resource_form(payload, context):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user, update_source="command"
+            template=template, resource_id=resource_id, user=user, update_source="command",
         )
         if slack_form:
             stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
