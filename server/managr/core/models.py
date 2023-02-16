@@ -322,7 +322,7 @@ class User(AbstractUser, TimeStampModel):
                 nylas.revoke()
             except Exception as e:
                 logger.info(
-                    f"Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
+                    f"Error occured removing user token from nylas for user {self.email} {nylas.email_address} {e}"
                 )
                 pass
         self.is_active = False
