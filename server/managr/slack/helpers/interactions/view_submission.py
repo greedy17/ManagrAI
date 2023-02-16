@@ -2321,6 +2321,7 @@ def process_submit_alert_resource_data(payload, context):
                 data,
                 access_token=user.organization.slack_integration.access_token,
             )
+            all_form_data.update(resource)
             main_form.resource_object.update_database_values(all_form_data)
             break
         except FieldValidationError as e:
