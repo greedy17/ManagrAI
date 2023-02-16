@@ -2765,6 +2765,7 @@
           @sort-opps="sortOpps"
           @sort-opps-reverse="sortOppsReverse"
           :resourceName="resourceName"
+          :baseResourceType="baseResourceType"
         />
       </section>
       <div
@@ -3132,7 +3133,7 @@ export default {
         ModelClass: ObjectField,
         pagination: { size: 300 },
         filters: {
-          crmObject: this.crmObject,
+          crmObject: this.resourceName,
         },
       }),
       currentProducts: [],
@@ -3267,10 +3268,10 @@ export default {
     }
   },
   computed: {
-    crmObject() {
-      // return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
-      return this.resourceName
-    },
+    // crmObject() {
+    //   // return this.$store.state.user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+    //   return this.resourceName
+    // },
     extraPipelineFields() {
       let extras = []
       extras = this.objectFields.list.filter((field) => this.hasExtraFields.includes(field.id))
@@ -3413,9 +3414,12 @@ export default {
         ['NOT_EQUALS', 'dealstage', '1aee0da2-e076-423c-ac92-559d324215e3'],
       ]
     }
+    if (this.userCRM === 'HUBSPOT') {
+      this.resourceName = 'Deal'
+    }
     this.objectFields.filters = {
       ...this.objectFields.filters,
-      crmObject: this.crmObject,
+      crmObject: this.resourceName,
     }
     this.objectFields.refresh()
     this.$store.dispatch(this.loadObject, [...this.filters])
@@ -4968,6 +4972,7 @@ export default {
         } else {
           newFormData = this.formData
         }
+        console.log('hi', newFormData)
         const res = await CRMObjects.api.updateResource({
           form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
@@ -4997,6 +5002,8 @@ export default {
             ])
           }
         } else {
+          console.log('loadObject', this.loadObject)
+          console.log('some filters', this.filters)
           this.$store.dispatch(this.loadObject, [...this.filters])
         }
         setTimeout(() => {
@@ -5010,6 +5017,7 @@ export default {
               : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
           }
           if (this.selectedWorkflow) {
+            console.log('hit?', this.currentWorkflowName, this.refreshId)
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
           }
           if (this.activeFilters.length) {
@@ -5202,11 +5210,11 @@ export default {
         this.showList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
-            ? this.sortOppsReverse(
-                this.storedFilters[0],
-                this.storedFilters[1],
-                this.storedFilters[2],
-              )
+          ? this.sortOppsReverse(
+            this.storedFilters[0],
+            this.storedFilters[1],
+            this.storedFilters[2],
+            )
             : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
         }
       }
@@ -5590,7 +5598,7 @@ export default {
       this.resourceName = resourceName
       this.baseResourceType = baseResourceType
       this.showList = !this.showPopularList
-      this.objectFields.filters = { ...this.objectFields.filters, crmObject: this.crmObject }
+      this.objectFields.filters = { ...this.objectFields.filters, crmObject: this.resourceName }
       this.objectFields.refresh()
       this.filterText = ''
       this.workflowFilterText = ''

@@ -69,12 +69,12 @@
               </div>
               <div v-else-if="activeWorkflow.resourceType === 'Account' || activeWorkflow.resourceType === 'Company'">
                 <h4>
-                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
+                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.name }}
                 </h4>
               </div>
               <div v-else-if="activeWorkflow.resourceType === 'Contact' || activeWorkflow.resourceType === 'Lead'">
                 <h4>
-                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
+                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.firstname + ' ' + opp.lastname }}
                 </h4>
                 <p>
                   Email:

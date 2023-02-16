@@ -158,7 +158,7 @@
               </div>
             </div> -->
           </th>
-          <th v-show="userCRM === 'SALESFORCE'">
+          <th v-show="userCRM === 'SALESFORCE' || userCRM === 'HUBSPOT'">
             <span @click="addField"> + </span>
           </th>
         </tr>
@@ -278,6 +278,7 @@ export default {
     inlineLoader: {},
     closeEdit: {},
     resourceName: {},
+    baseResourceType: {},
   },
   watch: {
     closeEdit: 'closeInline',
@@ -392,8 +393,9 @@ export default {
         this.extraFields.push(this.extraFieldObjs[i].id)
       }
       try {
+        console.log('this.baseResourceType', this.baseResourceType)
         const res = await SObjects.api.addExtraFields({
-          resource_type: this.resourceName,
+          resource_type: this.baseResourceType,
           field_ids: this.extraFields,
         })
         this.$toast('Field added successfully', {
@@ -417,7 +419,7 @@ export default {
       try {
         const res = await SObjects.api.removeExtraField({
           field_ids: [id],
-          resource_type: this.resourceName
+          resource_type: this.baseResourceType
         })
         this.$toast('Field removed successfully', {
           timeout: 2000,
