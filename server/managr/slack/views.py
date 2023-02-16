@@ -560,7 +560,11 @@ class SlackFormsViewSet(
         )
         form = OrgCustomSlackForm.objects.filter(
             Q(resource=data.get("resource"), stage=data.get("stage"))
-            | Q(resource=data.get("resource"), custom_object=data["custom_object"])
+            | Q(
+                resource=data.get("resource"),
+                custom_object=data["custom_object"],
+                stage=data.get("stage"),
+            )
         ).first()
         if form:
             serializer = self.get_serializer(instance=form, data=data)
