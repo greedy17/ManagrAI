@@ -1507,7 +1507,7 @@ export default {
       selectedTeamOrUser: null,
       selectedFilter: null,
       selectedDeactivateOrg: null,
-      filterByDay: 0,
+      filterByDay: 30,
       usersFilteredByDays: [],
       deleteOpen: false,
       trialUsers: [],
