@@ -72,7 +72,7 @@ def get_hubspot_authentication(request):
             )
             if settings.IN_DEV:
                 schedule = timezone.now() + timezone.timedelta(minutes=2)
-                emit_generate_hs_form_template(str(res.user), schedule=schedule)
+            emit_generate_hs_form_template(str(res.user), schedule=schedule)
         if (
             not serializer.instance.user.organization.is_paid
             and not serializer.instance.user.is_admin
