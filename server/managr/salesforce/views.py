@@ -249,8 +249,19 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         sf = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
-        for id in ids:
-            sf.extra_pipeline_fields.remove(id)
+        resource = ids[0].split(',')[0]
+        id = ids[0].split(',')[1]
+        for field in sf.extra_pipeline_fields:
+            if field.split(',')[0] == resource:
+                saved_field = field
+                break
+        # for id in ids:
+        #     sf.extra_pipeline_fields.remove(id)
+        sf.extra_pipeline_fields.remove(saved_field)
+        saved_field = saved_field.split(',')
+        saved_field.remove(id)
+        saved_field = ','.join(saved_field)
+        sf.extra_pipeline_fields.append(saved_field)
         sf.save()
         return Response()
 

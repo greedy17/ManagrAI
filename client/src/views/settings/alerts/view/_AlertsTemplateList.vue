@@ -53,8 +53,8 @@
             :key="opp.id"
             v-for="opp in activeWorkflow.sobjectInstances"
           >
-            <div class="title" @click="test(opp)">
-              <div>
+            <div class="title" @click="test(activeWorkflow)">
+              <div v-if="activeWorkflow.resourceType === 'Opportunity' || activeWorkflow.resourceType === 'Deal'">
                 <h4>
                   {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
                 </h4>
@@ -65,6 +65,20 @@
                 <p>
                   Close Date:
                   {{ userCRM === 'SALESFORCE' ? opp.CloseDate : opp.closedate.split('T')[0] }}
+                </p>
+              </div>
+              <div v-else-if="activeWorkflow.resourceType === 'Account' || activeWorkflow.resourceType === 'Company'">
+                <h4>
+                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
+                </h4>
+              </div>
+              <div v-else-if="activeWorkflow.resourceType === 'Contact' || activeWorkflow.resourceType === 'Lead'">
+                <h4>
+                  {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
+                </h4>
+                <p>
+                  Email:
+                  {{ userCRM === 'SALESFORCE' ? opp.Email : opp.email }}
                 </p>
               </div>
             </div>

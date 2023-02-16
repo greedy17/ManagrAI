@@ -1,5 +1,19 @@
 <template>
   <div class="table-section">
+    <Modal
+      v-if="removingField"
+      @close-modal="cancelRemoveField"
+      style="margin-top: 15rem;"
+    >
+      <div class="modal-container">
+        <div class="modal-container__header">Remove {{ savedField.referenceDisplayLabel }}?</div>
+        <!-- <div class="modal-container__body">Are you sure ?</div> -->
+        <div class="modal-container__footer">
+          <p style="color: #fa646a; cursor: pointer;" @click="removeField(savedField.id)">Remove</p>
+          <p style="color: #9b9b9b; cursor: pointer;" @click="cancelRemoveField">Cancel</p>
+        </div>
+      </div>
+    </Modal>
     <div v-if="addingField" class="add-field-section">
       <div class="add-field-section__title">
         <p>Add View Only Field</p>
@@ -101,7 +115,7 @@
           >
             <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
             {{ field.referenceDisplayLabel }}
-            <span @click="viewOnlySort(field, i)">
+            <span @click="viewOnlySort(field, i)" style="width: 0px;">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
@@ -124,6 +138,25 @@
                 alt=""
               />
             </span>
+            <span>
+              <img
+                style="margin-left: 0.1rem; right: 4px;"
+                id="delete-col"
+                class="red"
+                @click="removeExtraField(i, field)"
+                src="@/assets/images/close.svg"
+                alt=""
+              />
+            </span>
+
+            <!-- <div v-if="removingField && removingIndex === i" class="remove-field-section">
+              <div class="remove-field-section__title">Remove {{ field.referenceDisplayLabel }}</div>
+              <div class="remove-field-section__body">Are you sure ?</div>
+              <div class="remove-field-section__footer">
+                <p style="color: #fa646a" @click="removeField(field.id)">Remove</p>
+                <p style="color: #9b9b9b" @click="cancelRemoveField">Cancel</p>
+              </div>
+            </div> -->
           </th>
           <th v-show="userCRM === 'SALESFORCE'">
             <span @click="addField"> + </span>
@@ -216,6 +249,9 @@ export default {
       addingField: false,
       extraFields: [],
       extraFieldObjs: [],
+      removingField: false,
+      removingIndex: null,
+      savedField: null,
       editing: false,
       editIndex: null,
       sortingForward: true,
@@ -232,6 +268,7 @@ export default {
   },
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   props: {
     allOpps: {},
@@ -376,6 +413,37 @@ export default {
     emitSetOpps() {
       this.$emit('set-opps')
     },
+    async removeField(id) {
+      try {
+        console.log('id', id)
+        const res = await SObjects.api.removeExtraField({
+          field_ids: [`${this.resourceName},${id}`],
+        })
+        this.$toast('Field removed successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.cancelRemoveField()
+        this.emitSetOpps()
+      }
+    },
+    removeExtraField(i, field) {
+      this.removingField = true
+      this.removingIndex = i
+      this.savedField = field
+      this.$emit('close-inline-editor')
+    },
+    cancelRemoveField() {
+      this.removingField = false
+      this.removingIndex = null
+      this.savedField = null
+    },
     editInline(index, j) {
       this.editing = true
       this.currentInlineRow = j
@@ -466,6 +534,7 @@ export default {
     resize() {
       window.addEventListener('mousemove', (event) => {
         if (this.pressed) {
+          console.log('check')
           let width = this.startWidth + (event.clientX - this.startX)
           this.start.parentElement.style.minWidth = `${width}px`
           this.start.parentElement.style.maxWidth = `${width}px`
@@ -706,6 +775,13 @@ img {
   display: block;
   margin-left: auto;
 }
+.sort-img-visible > span > #delete-col {
+  display: none;
+}
+.sort-img-visible:hover > span > #delete-col {
+  display: block;
+  margin-left: auto;
+}
 .sort-img-visible > span > img {
   position: absolute;
   top: 38%;
@@ -745,6 +821,97 @@ span.ui-column-resizer {
 
 span.ui-column-resizer:hover {
   border-right: 2px solid $dark-green;
+}
+.red {
+  filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%) !important;
+  height: 0.75rem;
+}
+.remove-field-section {
+  z-index: 5;
+  position: absolute;
+  right: 0;
+  // top: 9vh;
+  border-radius: 0.33rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: white;
+  min-width: 16rem;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $light-gray-blue;
+    // background-color: white;
+    letter-spacing: 0.4px;
+    padding-left: 1rem;
+    font-weight: bolder;
+    font-size: 12px;
+    width: 100%;
+    height: 3rem;
+  }
+  &__body {
+    height: 3rem;
+    margin-left: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+    height: 3rem;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-weight: bolder;
+    }
+  }
+}
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  width: 20vw;
+  height: 15vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  // border: 1px solid #e8e8e8;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e8e8e8;
+    margin-bottom: 1rem;
+    img {
+      filter: invert(80%);
+      height: 1.25rem;
+      margin-top: 0.75rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+  }
+  &__body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-top: 2vh;
+    padding: 0 1rem;
+    // min-height: 28vh;
+  }
+  &__footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    position: sticky;
+    height: 8vh;
+    padding: 0.5rem;
+  }
 }
 // .green-section {
 //   background-color: $white-green;
