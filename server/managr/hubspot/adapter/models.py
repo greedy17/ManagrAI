@@ -224,6 +224,7 @@ class HubspotAuthAccountAdapter:
         resource_fields = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
         )
+        by_id = kwargs.get("by_id", None)
         add_filters = kwargs.get("filter", [])
         resource_class = routes.get(resource)
         remove_owner = kwargs.get("remove_owner", False)
@@ -231,10 +232,12 @@ class HubspotAuthAccountAdapter:
             owners = kwargs.get("owners", [self.hubspot_id])
             if isinstance(owners, str):
                 owners = [owners]
-            if add_filters is not None:
+            if add_filters is not None and by_id is not None:
                 add_filters.extend(
                     [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},]
                 )
+            elif by_id:
+                add_filters.extend([{"propertyName": "id", "operator": "EQ", "value": by_id}])
             else:
                 add_filters = [
                     {"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},
