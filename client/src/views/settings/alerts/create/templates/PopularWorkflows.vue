@@ -427,7 +427,7 @@
             </div>
           </div>
           <div style="margin-right: 8px; height: fit-content" class="start">
-            <section>
+            <section style="max-width: 19vw;">
               <div class="search-bar">
                 <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
                 <input
