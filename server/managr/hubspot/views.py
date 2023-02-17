@@ -51,7 +51,7 @@ def get_hubspot_authentication(request):
         serializer.save()
 
     except Exception as e:
-        logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}")
+        logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}\n RES: {res}")
         return Response(data={"success": False})
     if serializer.instance:
         user.crm = "HUBSPOT"
