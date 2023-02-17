@@ -286,11 +286,11 @@ export default {
       } else if (field.apiName === 'AccountId') {
         return account || 'empty'
       } else if (field.apiName === 'dealstage') {
-        return (
-          field.options[0][opp['secondary_data'].pipeline].stages.filter(
-            (stage) => stage.id === opp['secondary_data'][field.apiName],
-          )[0].label || 'empty'
-        )
+        return field.options[0][opp['secondary_data'].pipeline]
+          ? field.options[0][opp['secondary_data'].pipeline].stages.filter(
+              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            )[0].label
+          : 'empty'
       } else if (type === 'Date') {
         return this.fieldConditions(crm, field, opp)
           ? this.formatDate(this.fieldConditions(crm, field, opp))
