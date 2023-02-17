@@ -261,6 +261,7 @@ const actions = {
 const plugins = [
   createPersistedState({
     key: STORAGE_KEY,
+    storage: window.sessionStorage
   }),
 ]
 

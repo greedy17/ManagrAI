@@ -2820,7 +2820,12 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
+                    val:
+                      field.apiName === 'StageName'
+                        ? $event.value
+                        : field.apiName === 'dealstage'
+                        ? [$event.label, $event.id]
+                        : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
