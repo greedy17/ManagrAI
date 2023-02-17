@@ -1,16 +1,12 @@
 <template>
   <div class="table-section">
-    <Modal
-      v-if="removingField"
-      @close-modal="cancelRemoveField"
-      style="margin-top: 15rem;"
-    >
+    <Modal v-if="removingField" @close-modal="cancelRemoveField" style="margin-top: 15rem">
       <div class="modal-container">
         <div class="modal-container__header">Remove {{ savedField.referenceDisplayLabel }}?</div>
         <!-- <div class="modal-container__body">Are you sure ?</div> -->
         <div class="modal-container__footer">
-          <p style="color: #fa646a; cursor: pointer;" @click="removeField(savedField.id)">Remove</p>
-          <p style="color: #9b9b9b; cursor: pointer;" @click="cancelRemoveField">Cancel</p>
+          <p style="color: #fa646a; cursor: pointer" @click="removeField(savedField.id)">Remove</p>
+          <p style="color: #9b9b9b; cursor: pointer" @click="cancelRemoveField">Cancel</p>
         </div>
       </div>
     </Modal>
@@ -115,7 +111,7 @@
           >
             <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
             {{ field.referenceDisplayLabel }}
-            <span @click="viewOnlySort(field, i)" style="width: 0px;">
+            <span @click="viewOnlySort(field, i)" style="width: 0px">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
@@ -140,7 +136,7 @@
             </span>
             <span>
               <img
-                style="margin-left: 0.1rem; right: 4px;"
+                style="margin-left: 0.1rem; right: 4px"
                 id="delete-col"
                 class="red"
                 @click="removeExtraField(i, field)"
@@ -225,7 +221,7 @@
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
             }"
-            v-for="(field) in extraPipelineFields"
+            v-for="field in extraPipelineFields"
             :key="field.id"
             :title="fieldData(field.dataType, userCRM, field, opp)"
           >
@@ -420,7 +416,7 @@ export default {
       try {
         const res = await SObjects.api.removeExtraField({
           field_ids: [id],
-          resource_type: this.baseResourceType
+          resource_type: this.baseResourceType,
         })
         this.$toast('Field removed successfully', {
           timeout: 2000,

@@ -2,7 +2,7 @@
   <div class="notes">
     <div class="alerts-header">
       <p v-if="!creating && !editing">
-        Templates: <span class="gray-blue">{{ noteTemplates.length }}</span>
+        Templates: <span class="gray-blue">{{ noteTemplates ? noteTemplates.length : 0 }}</span>
       </p>
       <p class="center" @click="cancel" v-else>
         <img src="@/assets/images/left.svg" height="14px" alt="" />
@@ -173,7 +173,7 @@ export default {
   components: {
     quillEditor,
     PipelineLoader,
-    AlertsHeader
+    AlertsHeader,
   },
   data() {
     return {
