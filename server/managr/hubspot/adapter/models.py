@@ -232,7 +232,7 @@ class HubspotAuthAccountAdapter:
             owners = kwargs.get("owners", [self.hubspot_id])
             if isinstance(owners, str):
                 owners = [owners]
-            if add_filters is not None and by_id is None:
+            if add_filters is not None and by_id is not None:
                 add_filters.extend(
                     [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},]
                 )
