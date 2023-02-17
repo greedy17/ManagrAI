@@ -30,7 +30,7 @@
       </div>
     </Modal>
     <div class="header">
-      <h1>Welcome {{ user.firstName }}!</h1>
+      <h1>Welcome {{ user.firstName }}! 🎉</h1>
       <p>
         Lets start automating your sales process so you can
         <span class="gray">reclaim your time and focus on selling.</span>
@@ -42,7 +42,7 @@
         1
       </div>
       <small>3 SIMPLE STEPS</small>
-      <h3 v-if="!hasSalesforceIntegration && !hasNylasIntegration">Step 1: Integrations</h3>
+      <h3 v-if="!hasSalesforceIntegration && !hasNylasIntegration">Step 1: Connect CRM</h3>
 
       <div v-else>
         <h3>Step 1: Completed <span>✅</span></h3>
@@ -170,7 +170,7 @@
         Step 2: Completed <span>✅</span>
       </h3>
 
-      <h3 v-else>Step 2: Forms</h3>
+      <h3 v-else>Step 2: Select the fields you regularly update</h3>
 
       <section class="section">
         <div class="section__body">
@@ -449,6 +449,9 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 
+.onboarder {
+  margin-left: -4px;
+}
 .secondary-button {
   box-shadow: none;
   font-size: 13px;
@@ -472,10 +475,16 @@ article {
   letter-spacing: 0.75px;
   color: $base-gray;
   border-bottom: 1px solid $soft-gray;
-  width: 87vw;
-  padding-bottom: 16px;
+  width: 100%;
+  padding: 8px 46px;
   margin-bottom: 32px;
-
+  margin-left: -16px;
+  margin-top: 0;
+  position: sticky;
+  top: 0;
+  background-color: $off-white;
+  z-index: 10;
+  // background-color: red;
   p {
     color: $light-gray-blue;
   }

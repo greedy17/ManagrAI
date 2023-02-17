@@ -1,6 +1,7 @@
 <template>
   <div class="alerts">
     <AlertsHeader
+      v-if="!isOnboarding"
       page="workflows"
       title="Workflows"
       :saving="false"
@@ -187,6 +188,9 @@ export default {
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     // hasZoomChannel() {
     //   if (this.hasSlack) {
     //     return this.$store.state.user.slackAccount.zoomChannel
@@ -266,7 +270,7 @@ img {
   height: 96vh;
   width: 94vw;
   overflow: scroll;
-  margin-top: 48px;
+  // margin-top: 48px;
   border-radius: 6px;
 }
 a {

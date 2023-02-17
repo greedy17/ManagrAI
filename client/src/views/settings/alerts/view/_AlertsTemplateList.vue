@@ -119,7 +119,7 @@
       </div>
     </Modal>
 
-    <template v-if="!templates.refreshing">
+    <template v-if="!templates.refreshing && !isOnboarding">
       <!-- <transition name="fade">
       </transition> -->
 
@@ -367,13 +367,13 @@
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <!-- <div v-else-if="isOnboarding">
+    <div v-else-if="isOnboarding">
       <Onboarder />
-    </div> -->
-
-    <div class="center-loader" v-else>
-      <Loader loaderText="Gathering your workflows" />
     </div>
+
+    <!-- <div class="center-loader" v-else>
+      <Loader loaderText="Gathering your workflows" />
+    </div> -->
   </div>
 </template>
 
@@ -390,7 +390,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth from '@/services/slack'
-// import Onboarder from '@/views/settings/Onboarder'
+import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
@@ -402,7 +402,7 @@ export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    // Onboarder,
+    Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
@@ -670,9 +670,9 @@ export default {
     meetings() {
       return this.$store.state.meetings
     },
-    // isOnboarding() {
-    //   return this.$store.state.user.onboarding
-    // },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     leaderTemplatesFirst() {
       const originalList = this.templates.list
       const leaders = []
@@ -1004,7 +1004,7 @@ button:disabled {
   margin-right: 8px;
 }
 .alerts-template-list {
-  margin: 16px 0px;
+  // margin: 16px 0px;
   padding-left: 24px;
   color: $base-gray;
   display: flex;
