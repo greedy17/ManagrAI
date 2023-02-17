@@ -235,7 +235,7 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
-            crm.add_to_pipeline_fields(resource_type,id)
+            crm.add_to_pipeline_fields(resource_type, id)
         return Response()
 
     @action(
@@ -246,12 +246,12 @@ class SObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def remove_pipeline_fields(self, request, *args, **kwargs):
         user = self.request.user
-        sf = user.crm_account
+        resource_type = self.request.data.get("resource_type")
+        crm = user.crm_account
         data = self.request.data
         ids = data.get("field_ids")
         for id in ids:
-            sf.extra_pipeline_fields.remove(id)
-        sf.save()
+            crm.remove_pipeline_fields(resource_type, id)
         return Response()
 
     @action(

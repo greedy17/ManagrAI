@@ -246,7 +246,7 @@ class HubspotAuthAccountAdapter:
         add_filters = [*add_filters, *resource_class.additional_filters()]
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
-        # logger.info(f"{url} was sent with data: {data}")
+        logger.info(f"{url} was sent with data: {data}")
         with Client as client:
             attempts = 1
             while True:
