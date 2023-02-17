@@ -138,7 +138,11 @@
             </div>
           </div>
         </div>
-        <div v-else class="section" :errors="form.field.recurrenceDay.errors">
+        <div
+          v-if="!selectField || isEmpty"
+          class="section"
+          :errors="form.field.recurrenceDay.errors"
+        >
           <h4 class="section__head">Select Delivery Day</h4>
 
           <section class="section__body">
