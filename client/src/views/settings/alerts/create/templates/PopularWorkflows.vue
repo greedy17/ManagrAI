@@ -108,7 +108,7 @@
                 </div>
               </div>
             </div>
-            <div style="padding-left: 12px" class="section">
+            <div v-else style="padding-left: 12px" class="section">
               <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
