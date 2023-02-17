@@ -107,7 +107,7 @@
           <th
             class="sort-img-visible"
             v-for="(field, i) in extraPipelineFields"
-            :key="i * 333333 + 2"
+            :key="field.id"
             :class="{
               highlight:
                 reverseIndex === oppFields.length + i || sortingIndex === oppFields.length + i,
@@ -225,8 +225,8 @@
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
             }"
-            v-for="(field, i) in extraPipelineFields"
-            :key="field.dataType + i * 3"
+            v-for="(field) in extraPipelineFields"
+            :key="field.id"
             :title="fieldData(field.dataType, userCRM, field, opp)"
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
@@ -324,11 +324,13 @@ export default {
       } else if (field.apiName === 'AccountId') {
         return account || 'empty'
       } else if (field.apiName === 'dealstage') {
-        return (
-          field.options[0][opp['secondary_data'].pipeline].stages.filter(
-            (stage) => stage.id === opp['secondary_data'][field.apiName],
-          )[0].label || 'empty'
-        )
+        if (field.options[0][opp['secondary_data'].pipeline]) {
+          return (
+            field.options[0][opp['secondary_data'].pipeline].stages.filter(
+              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            )[0].label || 'empty'
+          )
+        } else return 'empty'
       } else if (type === 'Date') {
         return this.fieldConditions(crm, field, opp)
           ? this.formatDate(this.fieldConditions(crm, field, opp))
@@ -393,7 +395,6 @@ export default {
         this.extraFields.push(this.extraFieldObjs[i].id)
       }
       try {
-        console.log('this.baseResourceType', this.baseResourceType)
         const res = await SObjects.api.addExtraFields({
           resource_type: this.baseResourceType,
           field_ids: this.extraFields,

@@ -187,6 +187,8 @@
                           allPicklistOptions[field.id]
                         ? allPicklistOptions[field.id]
                         : createReferenceOpts[field.apiName]
+                        ? createReferenceOpts[field.apiName]
+                        : []
                     "
                     @select="
                       setUpdateValues(
@@ -2066,7 +2068,7 @@
               </button>
             </router-link>
             <button
-              @click="goToWorkflow(template.id)"
+              @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal')"
               class="list-button"
               v-for="template in templateOpps"
               :key="template.id"
@@ -2099,7 +2101,7 @@
               </button>
             </router-link>
             <button
-              @click="goToWorkflow(template.id)"
+              @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Account' : 'Company')"
               class="list-button"
               v-for="template in templateAccs"
               :key="template.id"
@@ -2126,7 +2128,7 @@
               </button>
             </router-link>
             <button
-              @click="goToWorkflow(template.id)"
+              @click="goToWorkflow(template.id, 'Contact')"
               class="list-button"
               v-for="template in templateContacts"
               :key="template.id"
@@ -2152,7 +2154,7 @@
               </button>
             </router-link>
             <button
-              @click="goToWorkflow(template.id)"
+              @click="goToWorkflow(template.id, 'Lead')"
               class="list-button"
               v-for="template in templateLeads"
               :key="template.id"
@@ -3417,15 +3419,15 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
+    if (this.$route.params.title) {
+      this.resourceName = this.$route.params.title
+    }
     this.objectFields.filters = {
       ...this.objectFields.filters,
       crmObject: this.resourceName,
     }
     this.objectFields.refresh()
     this.$store.dispatch(this.loadObject, [...this.filters])
-    if (this.userCRM === 'HUBSPOT') {
-      this.resourceName = 'Deal'
-    }
     this.getAllForms()
     this.getUsers()
     if (this.userCRM === 'SALESFORCE') {
@@ -3477,8 +3479,8 @@ export default {
     closeInlineEditor() {
       this.editingInline = false
     },
-    goToWorkflow(id) {
-      this.$router.push({ name: 'Pipelines', params: { id: id } })
+    goToWorkflow(id, title) {
+      this.$router.push({ name: 'Pipelines', params: { id: id, title: title } })
     },
     toggleViewingProducts() {
       this.viewingProducts == true ? (this.viewingProducts = false) : (this.viewingProducts = true)
@@ -3593,36 +3595,60 @@ export default {
       }, 100)
     },
     getFilteredOpps() {
-      if (this.userCRM === 'SALESFORCE') {
+      if (this.filterText) {
+        if (this.userCRM === 'SALESFORCE') {
+          if (this.resourceName === 'Opportunity') {
+            this.$store.dispatch(this.loadObject, [
+              ...this.filters,
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else if (this.resourceName === 'Account') {
+            this.$store.dispatch(this.loadObject, [
+              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch(this.loadObject, [
+              ['CONTAINS', 'Email', this.filterText.toLowerCase()],
+            ])
+          }
+        } else {
+          if (this.resourceName === 'Deal') {
+            this.$store.dispatch(this.loadObject, [
+              ...this.filters,
+              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
+            ])
+          } else if (this.resourceName === 'Company') {
+            this.$store.dispatch(this.loadObject, [
+              ['CONTAINS', 'name', this.filterText.toLowerCase()],
+            ])
+          } else {
+            this.$store.dispatch(this.loadObject, [
+              ['CONTAINS', 'email', this.filterText.toLowerCase()],
+            ])
+          }
+        }
+      } else {
+        if (this.userCRM === 'SALESFORCE') {
         if (this.resourceName === 'Opportunity') {
           this.$store.dispatch(this.loadObject, [
             ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
           ])
         } else if (this.resourceName === 'Account') {
-          this.$store.dispatch(this.loadObject, [
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
+          this.$store.dispatch(this.loadObject)
         } else {
-          this.$store.dispatch(this.loadObject, [
-            ['CONTAINS', 'Email', this.filterText.toLowerCase()],
-          ])
+          this.$store.dispatch(this.loadObject)
         }
       } else {
         if (this.resourceName === 'Deal') {
           this.$store.dispatch(this.loadObject, [
             ...this.filters,
-            ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
           ])
         } else if (this.resourceName === 'Company') {
-          this.$store.dispatch(this.loadObject, [
-            ['CONTAINS', 'name', this.filterText.toLowerCase()],
-          ])
+          this.$store.dispatch(this.loadObject)
         } else {
-          this.$store.dispatch(this.loadObject, [
-            ['CONTAINS', 'email', this.filterText.toLowerCase()],
-          ])
+          this.$store.dispatch(this.loadObject)
         }
+      }
       }
     },
     changeCurrentRow(i, cell) {
@@ -3769,11 +3795,7 @@ export default {
           from_workflow: this.selectedWorkflow ? true : false,
           workflow_title: this.selectedWorkflow ? this.currentWorkflowName : 'None',
         })
-        if (this.filterText) {
-          this.getFilteredOpps()
-        } else {
-          this.$store.dispatch(this.loadObject)
-        }
+        this.getFilteredOpps()
         setTimeout(() => {
           if (this.selectedWorkflow) {
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
@@ -3857,26 +3879,7 @@ export default {
         this.setFilters[this.activeFilters.length] = [this.operatorValue, value]
       }
       try {
-        let res
-        if (this.filterText) {
-          let textFilters
-          if (this.userCRM === 'SALESFORCE') {
-            textFilters = [...this.filters, ['CONTAINS', 'Name', this.filterText.toLowerCase()]]
-          } else {
-            textFilters = [...this.filters, ['CONTAINS', 'dealname', this.filterText.toLowerCase()]]
-          }
-          this.$store.dispatch(this.loadObject, textFilters)
-        }
-        // else if (this.workflowFilterText) {
-        //   const textFilters = [
-        //     ...this.filters,
-        //     ['CONTAINS', 'Name', this.workflowFilterText.toLowerCase()],
-        //   ]
-        //   res = await SObjects.api.getObjects('Opportunity', 1, true, textFilters)
-        // }
-        else {
-          this.$store.dispatch(this.loadObject, [...this.filters])
-        }
+        this.getFilteredOpps()
         if (this.selectedWorkflow) {
           this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
         } else if (this.currentList === 'Closing this month') {
@@ -4683,15 +4686,11 @@ export default {
     },
     updateOpps() {
       try {
-        if (!this.filterText) {
-          this.$store.dispatch(this.loadObject, [...this.filters])
-          if (this.currentList === 'Closing this month') {
-            this.stillThisMonth()
-          } else if (this.currentList === 'Closing next month') {
-            this.stillNextMonth()
-          }
-        } else {
-          this.getFilteredOpps()
+        this.getFilteredOpps()
+        if (this.currentList === 'Closing this month') {
+          this.stillThisMonth()
+        } else if (this.currentList === 'Closing next month') {
+          this.stillNextMonth()
         }
         setTimeout(() => {
           if (this.storedFilters.length) {
@@ -4802,22 +4801,7 @@ export default {
             : null,
         })
         this.storedStageName = ''
-        if (this.filterText) {
-          if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch(this.loadObject, [
-              ...this.filters,
-              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-            ])
-          } else {
-            this.$store.dispatch(this.loadObject, [
-              ...this.filters,
-              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-            ])
-          }
-        } else {
-          this.$store.dispatch(this.loadObject, [...this.filters])
-        }
-
+        this.getFilteredOpps()
         setTimeout(() => {
           if (this.storedFilters.length) {
             this.storedFilters[3].reversed
@@ -4972,7 +4956,6 @@ export default {
         } else {
           newFormData = this.formData
         }
-        console.log('hi', newFormData)
         const res = await CRMObjects.api.updateResource({
           form_data: newFormData,
           from_workflow: this.selectedWorkflow ? true : false,
@@ -4989,23 +4972,7 @@ export default {
             : null,
         })
         this.storedStageName = ''
-        if (this.filterText) {
-          if (this.userCRM === 'SALESFORCE') {
-            this.$store.dispatch(this.loadObject, [
-              ...this.filters,
-              ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-            ])
-          } else {
-            this.$store.dispatch(this.loadObject, [
-              ...this.filters,
-              ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-            ])
-          }
-        } else {
-          console.log('loadObject', this.loadObject)
-          console.log('some filters', this.filters)
-          this.$store.dispatch(this.loadObject, [...this.filters])
-        }
+        this.getFilteredOpps()
         setTimeout(() => {
           if (this.storedFilters.length) {
             this.storedFilters[3].reversed
@@ -5017,7 +4984,6 @@ export default {
               : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
           }
           if (this.selectedWorkflow) {
-            console.log('hit?', this.currentWorkflowName, this.refreshId)
             this.updateWorkflowList(this.currentWorkflowName, this.refreshId)
           }
           if (this.activeFilters.length) {
@@ -5085,25 +5051,7 @@ export default {
         if (product) {
           this.createProduct(res.integration_id)
         }
-        let filter = []
-        if (this.filters.length) {
-          filter = this.filterText
-            ? [...this.filters, ['CONTAINS', 'Name', this.filterText]]
-            : this.filters
-        }
-        // const objectType = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
-        const objectType = this.resourceName
-        if (this.userCRM === 'SALESFORCE') {
-          this.$store.dispatch(this.loadObject, [
-            ...this.filters,
-            ['CONTAINS', 'Name', this.filterText.toLowerCase()],
-          ])
-        } else {
-          this.$store.dispatch(this.loadObject, [
-            ...this.filters,
-            ['CONTAINS', 'dealname', this.filterText.toLowerCase()],
-          ])
-        }
+        this.getFilteredOpps()
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
             ? this.sortOppsReverse(
@@ -5113,7 +5061,7 @@ export default {
               )
             : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
         }
-        this.$toast(objectType + ' created successfully.', {
+        this.$toast(this.resourceName + ' created successfully.', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -5289,7 +5237,6 @@ export default {
             (field) => field.apiName === 'AccountId',
           )[0].id)
         : (this.accountSobjectId = null)
-
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -5316,30 +5263,30 @@ export default {
         // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === this.resourceName,
+            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === this.resourceName)[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === this.resourceName,
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createProductForm = res.filter(
             (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           )[0].fieldsRef
         } else if (this.userCRM === 'HUBSPOT') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === this.resourceName,
+            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === this.resourceName)[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === this.resourceName,
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           // this.createProductForm = res.filter(
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
