@@ -108,7 +108,7 @@
                 </div>
               </div>
             </div>
-            <div style="padding-left: 12px" class="section">
+            <div v-else style="padding-left: 12px" class="section">
               <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
@@ -431,7 +431,7 @@
             </div>
           </div>
           <div style="margin-right: 8px; height: fit-content" class="start">
-            <section>
+            <section style="max-width: 19vw;">
               <div class="search-bar">
                 <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
                 <input

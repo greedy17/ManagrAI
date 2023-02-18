@@ -1378,7 +1378,7 @@
             </div>
             <div style="height: 45vh;">
               <div class="flex-row-spread" style="margin-bottom: 0.5rem;">
-                <div style="width: 35%">Email</div>
+                <div style="width: 35%">User</div>
                 <div style="width: 25%">Integrations</div>
                 <div style="width: 25%">Days Active</div>
                 <div style="width: 25%">Total Updates</div>
@@ -1507,7 +1507,7 @@ export default {
       selectedTeamOrUser: null,
       selectedFilter: null,
       selectedDeactivateOrg: null,
-      filterByDay: 0,
+      filterByDay: 30,
       usersFilteredByDays: [],
       deleteOpen: false,
       trialUsers: [],
