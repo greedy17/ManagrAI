@@ -2073,7 +2073,7 @@
             >
               {{ template.title }}
               <span class="green">{{
-                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+                template.sobjectInstances ? noClosedWorkflow(template) : 'N/A'
               }}</span>
             </button>
             <div class="list-section__title flex-row-spread">
@@ -3543,6 +3543,15 @@ export default {
     },
     goToNotes() {
       this.$router.push({ name: 'Notes' })
+    },
+    noClosedWorkflow(template) {
+      if (template.resourceType === 'Deal') {
+        return template.sobjectInstances.filter(instance => instance.dealstage !== 'closedlost' && instance.dealstage !== 'closedwon').length
+      } else if (template.resourceType === 'Opportunity') {
+        return template.sobjectInstances.filter(instance => instance.stage !== 'ClosedLost' && instance.stage !== 'ClosedWon').length
+      } else {
+        return template.sobjectInstances.length
+      }
     },
     async loadMore() {
       if (!this.savedPricebookEntryId) {
