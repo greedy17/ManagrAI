@@ -3415,7 +3415,7 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    if (this.$route.params.title) {
+    if (this.$route.params && this.$route.params.title) {
       this.resourceName = this.$route.params.title
       if (!this.$route.params.id) {
         if (this.$route.params.title === 'Opportunity' || this.$route.params.title === 'Deal') {
@@ -3475,6 +3475,9 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    goToPipeline() {
+      this.$router.push({ name: 'Pipelines' })
     },
     getPipelineOptions(field) {
       const tempPipelineOpts = []
@@ -5128,13 +5131,18 @@ export default {
             this.updateWorkflow(id ? id : this.id)
           }
         } catch (error) {
-          this.$toast('Error gathering workflow!', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
+          const objectNames = ['Opportunity', 'Deal', 'Account', 'Company', 'Contact', 'Lead']
+          if (objectNames.includes(this.$route.params.id)) {
+            this.goToPipeline()
+          } else  {
+            this.$toast('Error gathering workflow!', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
         } finally {
           this.loadingWorkflows = false
           this.hasNext = false
@@ -5270,30 +5278,30 @@ export default {
         // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createProductForm = res.filter(
             (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           )[0].fieldsRef
         } else if (this.userCRM === 'HUBSPOT') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           // this.createProductForm = res.filter(
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
