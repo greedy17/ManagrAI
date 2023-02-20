@@ -1091,7 +1091,6 @@ export default {
           ...fieldParam,
         },
       })
-      console.log('this.formFields', this.formFields)
     },
     async refreshForms() {
       this.pulseLoading = true
