@@ -154,8 +154,8 @@
               </div>
             </div> -->
           </th>
-          <th v-show="userCRM === 'SALESFORCE' || userCRM === 'HUBSPOT'">
-            <span @click="addField"> + </span>
+          <th v-show="userCRM === 'SALESFORCE' || userCRM === 'HUBSPOT'" @click="addField">
+            <span> + </span>
           </th>
         </tr>
       </thead>
@@ -284,6 +284,9 @@ export default {
     //   let newDate = new Date(date)
     //   return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
     // },
+    test(log) {
+      console.log('log', log)
+    },
     setIndex(n) {
       this.currentRow = n
     },

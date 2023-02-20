@@ -2452,7 +2452,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if (
         all_form_data.get("meeting_comments") is not None
-        and all_form_data.get("meeting_type") is not None
+        or all_form_data.get("meeting_type") is not None
     ):
         if user.crm == "SALESFORCE":
             emit_add_update_to_sf(str(main_form.id))
