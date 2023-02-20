@@ -2048,7 +2048,6 @@
                 alt=""
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p> -->
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 @click="
                   allObjects(
@@ -2066,7 +2065,6 @@
                   {{ allOpps && allOpps.length ? allOpps.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal')"
               class="list-button"
@@ -2081,7 +2079,6 @@
             <div class="list-section__title flex-row-spread">
               <p>{{ userCRM == 'SALESFORCE' ? 'Account' : 'Company' }}</p>
             </div>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 @click="
                   allObjects(
@@ -2099,7 +2096,6 @@
                   {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Account' : 'Company')"
               class="list-button"
@@ -2114,7 +2110,6 @@
             <div class="list-section__title flex-row-spread">
               <p>Contact</p>
             </div>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 @click="
                   allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')
@@ -2126,7 +2121,6 @@
                   {{ allContacts && allContacts.length ? allContacts.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, 'Contact')"
               class="list-button"
@@ -2141,7 +2135,6 @@
             <div v-if="userCRM === 'SALESFORCE'" class="list-section__title flex-row-spread">
               <p>Lead</p>
             </div>
-            <router-link v-if="userCRM === 'SALESFORCE'" style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 v-if="userCRM === 'SALESFORCE'"
                 @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
@@ -2152,7 +2145,6 @@
                   {{ allLeads && allLeads.length ? allLeads.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, 'Lead')"
               class="list-button"
@@ -3425,6 +3417,17 @@ export default {
     }
     if (this.$route.params.title) {
       this.resourceName = this.$route.params.title
+      if (!this.$route.params.id) {
+        if (this.$route.params.title === 'Opportunity' || this.$route.params.title === 'Deal') {
+          this.objectName = 'allOpps'
+        } else if (this.$route.params.title === 'Account' || this.$route.params.title === 'Company') {
+          this.objectName = 'allAccounts'
+        } else if (this.$route.params.title === 'Contact') {
+          this.objectName = 'allContacts'
+        } else if (this.$route.params.title === 'Lead') {
+          this.objectName = 'allLeads'
+        }
+      }
     }
     this.objectFields.filters = {
       ...this.objectFields.filters,
@@ -5556,6 +5559,7 @@ export default {
       this.getAllForms()
       this.closeFilterSelection()
       this.closeListSelect()
+      this.$router.push({ name: 'Pipelines', params: { title: resourceName } })
     },
     weekDay(input) {
       let newer = new Date(input)
