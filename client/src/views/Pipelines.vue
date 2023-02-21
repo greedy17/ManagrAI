@@ -2048,7 +2048,6 @@
                 alt=""
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p> -->
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 @click="
                   allObjects(
@@ -2066,7 +2065,6 @@
                   {{ allOpps && allOpps.length ? allOpps.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal')"
               class="list-button"
@@ -2075,13 +2073,12 @@
             >
               {{ template.title }}
               <span class="green">{{
-                template.sobjectInstances ? template.sobjectInstances.length : 'N/A'
+                template.sobjectInstances ? noClosedWorkflow(template) : 'N/A'
               }}</span>
             </button>
             <div class="list-section__title flex-row-spread">
               <p>{{ userCRM == 'SALESFORCE' ? 'Account' : 'Company' }}</p>
             </div>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 @click="
                   allObjects(
@@ -2099,7 +2096,6 @@
                   {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Account' : 'Company')"
               class="list-button"
@@ -2114,7 +2110,6 @@
             <div class="list-section__title flex-row-spread">
               <p>Contact</p>
             </div>
-            <router-link style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 @click="
                   allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')
@@ -2126,7 +2121,6 @@
                   {{ allContacts && allContacts.length ? allContacts.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, 'Contact')"
               class="list-button"
@@ -2141,7 +2135,6 @@
             <div v-if="userCRM === 'SALESFORCE'" class="list-section__title flex-row-spread">
               <p>Lead</p>
             </div>
-            <router-link v-if="userCRM === 'SALESFORCE'" style="width: 100%" v-bind:to="'/pipelines/'">
               <button
                 v-if="userCRM === 'SALESFORCE'"
                 @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
@@ -2152,7 +2145,6 @@
                   {{ allLeads && allLeads.length ? allLeads.length : 0 }}
                 </span>
               </button>
-            </router-link>
             <button
               @click="goToWorkflow(template.id, 'Lead')"
               class="list-button"
@@ -2857,10 +2849,9 @@
                     val:
                       field.apiName === 'StageName'
                         ? $event.value
-                        : field.apiName === 'dealstage'
-                        ? [$event.label, $event.id]
-                        : $event.id,
-                    oppId: opp.id,
+                        : field.apiName === 'dealstage' ? [$event.label, $event.id] 
+                        : $event.id, 
+                    oppId: opp.id, 
                     oppIntegrationId: opp.integration_id,
                   })
                 "
@@ -3424,9 +3415,37 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    if (this.$route.params.title) {
+    if (this.$route.params && this.$route.params.title) {
       this.resourceName = this.$route.params.title
+      if (!this.$route.params.id) {
+        if (this.$route.params.title === 'Opportunity' || this.$route.params.title === 'Deal') {
+          this.loadObject = 'loadAllOpps'
+          this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
+          this.objectName = 'allOpps'
+          this.resourceName = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+          this.baseResourceType = 'Opportunity'
+        } else if (this.$route.params.title === 'Account' || this.$route.params.title === 'Company') {
+          this.loadObject = 'loadAllAccounts'
+          this.currentList = this.userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies'
+          this.objectName = 'allAccounts'
+          this.resourceName = this.userCRM === 'SALESFORCE' ? 'Account' : 'Company'
+          this.baseResourceType = 'Account'
+        } else if (this.$route.params.title === 'Contact') {
+          this.loadObject = 'loadAllContacts'
+          this.currentList = 'All Contacts'
+          this.objectName = 'allContacts'
+          this.resourceName = 'Contact'
+          this.baseResourceType = 'Contact'
+        } else if (this.$route.params.title === 'Lead') {
+          this.loadObject = 'loadAllLeads'
+          this.currentList = 'All Leads'
+          this.objectName = 'allLeads'
+          this.resourceName = 'Lead'
+          this.baseResourceType = 'Lead'
+        }
+      }
     }
+    this.$store.dispatch(this.loadObject)
     this.objectFields.filters = {
       ...this.objectFields.filters,
       crmObject: this.resourceName,
@@ -3473,6 +3492,9 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    goToPipeline() {
+      this.$router.push({ name: 'Pipelines' })
     },
     getPipelineOptions(field) {
       const tempPipelineOpts = []
@@ -3538,6 +3560,15 @@ export default {
     },
     goToNotes() {
       this.$router.push({ name: 'Notes' })
+    },
+    noClosedWorkflow(template) {
+      if (template.resourceType === 'Deal') {
+        return template.sobjectInstances.filter(instance => instance.dealstage !== 'closedlost' && instance.dealstage !== 'closedwon').length
+      } else if (template.resourceType === 'Opportunity') {
+        return template.sobjectInstances.filter(instance => instance.stage !== 'ClosedLost' && instance.stage !== 'ClosedWon').length
+      } else {
+        return template.sobjectInstances.length
+      }
     },
     async loadMore() {
       if (!this.savedPricebookEntryId) {
@@ -5126,13 +5157,18 @@ export default {
             this.updateWorkflow(id ? id : this.id)
           }
         } catch (error) {
-          this.$toast('Error gathering workflow!', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
+          const objectNames = ['Opportunity', 'Deal', 'Account', 'Company', 'Contact', 'Lead']
+          if (objectNames.includes(this.$route.params.id)) {
+            this.goToPipeline()
+          } else  {
+            this.$toast('Error gathering workflow!', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
         } finally {
           this.loadingWorkflows = false
           this.hasNext = false
@@ -5268,30 +5304,30 @@ export default {
         // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createProductForm = res.filter(
             (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           )[0].fieldsRef
         } else if (this.userCRM === 'HUBSPOT') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
+            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
           // this.createProductForm = res.filter(
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
@@ -5557,6 +5593,7 @@ export default {
       this.getAllForms()
       this.closeFilterSelection()
       this.closeListSelect()
+      this.$router.push({ name: 'Pipelines', params: { title: resourceName } })
     },
     weekDay(input) {
       let newer = new Date(input)

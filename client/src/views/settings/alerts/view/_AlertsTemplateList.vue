@@ -41,7 +41,7 @@
           <button
             style="margin-left: 16px"
             class="green_button"
-            @click="goToPipeline(activeWorkflow.id)"
+            @click="goToPipeline(activeWorkflow.id, activeWorkflow.resourceType)"
           >
             Open in Pipeline
           </button>
@@ -529,9 +529,8 @@ export default {
     goToMeetings() {
       this.$router.push({ name: 'Meetings' })
     },
-    goToPipeline(id) {
-      // this.$router.push({ path: `pipelines/${id}` })
-      this.$router.push({ name: 'Pipelines', params: { id: id } })
+    goToPipeline(id, title) {
+      this.$router.push({ name: 'Pipelines', params: { id: id, title: title, } })
     },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')

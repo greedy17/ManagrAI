@@ -510,6 +510,7 @@ export default {
           this.fields.filters.crmObject = this.selectedResourceType
           this.fields.filters.page = 1
           await this.fields.refresh()
+          this.changeDefaultSlackMessage()
         }
       },
       directToUsers: 'setDefaultChannel',
@@ -758,6 +759,33 @@ export default {
       let new_str = ''
       new_str = str.replace(/\s+/g, '-').toLowerCase()
       this.channelName = new_str
+    },
+    changeDefaultSlackMessage() {
+      if (this.selectedResourceType === 'Deal') {
+        this.slackMessage = ["<strong>Deal Name</strong> \n { Deal.dealname }"]
+      } else if (this.selectedResourceType === 'Company') {
+        this.slackMessage = ["<strong>Company Name</strong> \n { Company.name }"]
+      } else if (this.selectedResourceType === 'Contact' && this.userCRM === 'HUBSPOT') {
+        this.slackMessage = ["<strong>Email</strong> \n { Contact.email }"]
+      } else if (this.selectedResourceType === 'Opportunity') {
+        this.slackMessage = ["<strong>Opportunity Name</strong> \n { Opportunity.Name }"]
+      } else if (this.selectedResourceType === 'Account') {
+        this.slackMessage = ["<strong>Account Name</strong> \n { Account.Name }"]
+      } else if (this.selectedResourceType === 'Contact' && this.userCRM === 'SALESFORCE') {
+        this.slackMessage = ["<strong>Email</strong> \n { Contact.Email }"]
+      } else if (this.selectedResourceType === 'Lead') {
+        this.slackMessage = ["<strong>Email</strong> \n { Lead.Email }"]
+      }
+      this.alertTemplateForm.field.alertMessages.groups[0].field.body.value = this.slackMessage[0]
+      const slackFormat = []
+      for (let i = 0; i < this.slackMessage.length; i++) {
+        const titleAndVal = this.slackMessage[i].split('\n')
+        const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length - 10)
+        const valFormatted = titleAndVal[1].slice(3, titleAndVal[1].length - 2)
+        // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
+        slackFormat.push({ title: titleFormatted, val: valFormatted })
+      }
+      this.formattedSlackMessage = slackFormat
     },
     dragEnd() {
       const slackMesArr = []
