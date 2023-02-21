@@ -61,6 +61,22 @@ def INLINE_UPDATE_FUNCTION(crm):
         return emit_process_slack_inline_hs_update
 
 
+def USER_APP_OPTIONS(user, resource_type):
+    options = [
+        block_builders.option(f"Update {resource_type}", "update_crm"),
+        block_builders.option("View Notes", "view_notes"),
+    ]
+    if user.has_salesloft_integration or user.has_outreach_integration:
+        contact_label = "People Details" if user.has_salesloft_integration else "Prospect Details"
+        engagement_state = "Add to Cadence" if user.has_salesloft_integration else "Add to Sequence"
+        options.append(block_builders.option(contact_label, "engagement_details"))
+        options.append(block_builders.option(engagement_state, "engagement_state"))
+    if user.has_gong_integration:
+        options.append(block_builders.option("Call Recordings", "call_recordings"))
+    options.append(block_builders.option("Open in CRM", "open_in_crm"))
+    return options
+
+
 #########################################################
 # MEETING REVIEW ACTIONS
 #########################################################
@@ -2271,39 +2287,54 @@ def process_switch_alert_message(payload, context):
         form_type="UPDATE", resource=config.template.resource_type
     ).first()
     switch_to = context.get("switch_to")
+    header_block = payload["message"]["blocks"][0]
+    blocks = [
+        header_block,
+        get_block_set(
+            "initial_inline_blockset",
+            context={
+                "u": str(user.id),
+                "invocation": invocation,
+                "config_id": str(config_id),
+                "channel": channel_id,
+                "switch_to": f"{'message' if switch_to == 'inline' else 'inline'}",
+            },
+        ),
+    ]
     if context.get("switch_to") == "inline":
         fields = form.to_slack_options()
-        blocks = [
-            get_block_set(
-                "initial_inline_blockset",
-                context={
-                    "u": str(user.id),
-                    "invocation": invocation,
-                    "config_id": str(config_id),
-                    "channel": channel_id,
-                    "switch_to": f"{'message' if switch_to == 'inline' else 'inline'}",
-                },
-            )
-        ]
         blocks.append(
             block_builders.static_select(
                 "Choose Field",
                 fields,
                 action_id=action_with_params(
                     slack_const.PROCESS_INLINE_FIELD_SELECTED,
+                    params=[f"invocation={invocation}", f"config_id={config_id}",],
+                ),
+            ),
+        )
+
+    else:
+        options = USER_APP_OPTIONS(user, config.template.resource_type)
+        blocks.append(
+            block_builders.static_select(
+                "Pick an action",
+                options,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SHOW_APP_SELECT,
                     params=[
                         f"invocation={invocation}",
                         f"config_id={config_id}",
                         f"u={str(user.id)}",
                     ],
                 ),
+                placeholder="Connected Apps",
             ),
         )
-        slack_requests.update_channel_message(
-            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
-        )
-    else:
-        process_paginate_alerts(payload, context)
+        # process_paginate_alerts(payload, context)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
     return
 
 
@@ -2322,6 +2353,12 @@ def process_inline_field_selected(payload, context):
     slack_requests.update_channel_message(
         channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
     )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_connected_app_selected(payload, context):
     return
 
 
@@ -3396,6 +3433,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SWITCH_ALERT_MESSAGE: process_switch_alert_message,
         slack_const.PROCESS_INLINE_FIELD_SELECTED: process_inline_field_selected,
         slack_const.ALERT_INLINE_STAGE_SELECTED: process_alert_inline_stage_selected,
+        slack_const.PROCESS_SHOW_APP_SELECT: process_connected_app_selected,
         slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA: process_submit_inline_alert_data,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,
