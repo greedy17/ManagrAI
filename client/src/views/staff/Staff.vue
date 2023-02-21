@@ -1,5 +1,45 @@
 <template>
   <div class="staff">
+    <!-- Change Admin Confirmation -->
+    <Modal
+      v-if="changeAdminConfirmModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleConfirmCancel()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
+        <div class="header">
+          <div class="flex-row">
+            <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <h3 class="invite-form__title">Are you sure?</h3>
+          </div>
+          <div class="flex-row">
+            <h4 @click="test(orgUsers)" class="invite-form__subtitle">
+              By clicking Confirm, you will be transferring the Admin role to
+              {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
+            </h4>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="changeAdminSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div>
+        </div>
+      </form>
+    </Modal>
     <Modal v-if="deleteOpen">
       <div class="delete_modal">
         <div class="delete_modal__header">
@@ -1123,55 +1163,91 @@
                 ({{ selected_org.days_since_created_ref }} days in Managr)
               </h4>
             </div>
-            <div class="invite-list__section__container">
-              <div class="line-up">
-                <div class="invite-list__section__item">State</div>
+            <div style="display: flex;">
+              <div>
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">State</div>
+                  </div>
+                  <div>
+                    <Multiselect
+                      placeholder="State"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
+                      v-model="stateActive"
+                      :options="states"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      track-by="id"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">Ignore Emails</div>
+                  </div>
+                  <div class="z-more" style="width: 48%">
+                    <input
+                      class="wide gray-border z-more"
+                      type="search"
+                      v-model="ignoreEmails"
+                      placeholder="Ignore Emails"
+                    />
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">Has Products</div>
+                  </div>
+                  <div>
+                    <input type="checkbox" v-model="hasProducts" />
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <button
+                    style="margin: 1rem 0 0 0; align-self: center"
+                    class="green_button"
+                    @click="postOrgUpdates()"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
               <div>
-                <Multiselect
-                  placeholder="State"
-                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
-                  v-model="stateActive"
-                  :options="states"
-                  openDirection="below"
-                  selectLabel="Enter"
-                  track-by="id"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                </Multiselect>
+                <div class="invite-list__section__container">
+                  <div>
+                    <Multiselect
+                      placeholder="Select New Admin"
+                      v-model="newAdmin"
+                      :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
+                      openDirection="below"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
+                      selectLabel="Enter"
+                      label="email"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          Select New Admin
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                  <button
+                    style="margin: 0 0 0 1rem; align-self: center; z-index: 3"
+                    class="green_button"
+                    @click="handleConfirm"
+                  >
+                    Change Admin
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="invite-list__section__container">
-              <div class="line-up">
-                <div class="invite-list__section__item">Ignore Emails</div>
-              </div>
-              <div class="z-more" style="width: 48%">
-                <input
-                  class="wide gray-border z-more"
-                  type="search"
-                  v-model="ignoreEmails"
-                  placeholder="Ignore Emails"
-                />
-              </div>
-            </div>
-            <div class="invite-list__section__container">
-              <div class="line-up">
-                <div class="invite-list__section__item">Has Products</div>
-              </div>
-              <div>
-                <input type="checkbox" v-model="hasProducts" />
-              </div>
-            </div>
-            <div class="invite-list__section__container">
-              <button
-                style="margin: 1rem 0 0 0; align-self: center"
-                class="green_button"
-                @click="postOrgUpdates()"
-              >
-                Save Changes
-              </button>
             </div>
           </div>
 
@@ -1449,6 +1525,9 @@ import AlertTemplate from '@/services/alerts'
 import { MeetingWorkflows } from '@/services/salesforce'
 import Organization from '@/services/organizations'
 import User from '@/services/users'
+import CollectionManager from '@/services/collectionManager'
+import FormField from '@/components/forms/FormField'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 // import CustomSlackForm from '@/views/settings/CustomSlackForm'
 
 export default {
@@ -1457,7 +1536,9 @@ export default {
     // CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader')
+    PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
+    FormField,
+    PulseLoadingSpinnerButton,
   },
   data() {
     return {
@@ -1546,6 +1627,10 @@ export default {
       activeUsers: null,
       filterText: '',
       showAdminTasks: false,
+      newAdmin: null,
+      pulseLoading: false,
+      changeAdminConfirmModal: false,
+      team: CollectionManager.create({ ModelClass: User }), // might need to change based off of org users
     }
   },
   computed: {
@@ -1923,6 +2008,59 @@ export default {
         bodyClassName: ['custom'],
       })
     },
+    handleConfirm() {
+      if (this.newAdmin) {
+        this.changeAdminConfirmModal = !this.changeAdminConfirmModal
+      }
+    },
+    handleConfirmCancel() {
+      this.changeAdminConfirmModal = false
+    },
+    async changeAdminSubmit() {
+      this.pulseLoading = true
+      if (!this.newAdmin || this.newAdmin.is_admin) {
+        setTimeout(() => {
+          this.$toast('Please choose a new admin', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const data = {
+            new_admin: this.newAdmin.id,
+          }
+          const teamRes = await Organization.api.changeAdmin(data)
+          setTimeout(() => {
+            this.handleConfirmCancel()
+            this.$toast('Sucessfully submitted', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.pulseLoading = false
+            this.$router.go()
+          }, 1400)
+        } catch (e) {
+          console.log('Error: ', e)
+          this.$toast('Error changing admin', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false
+        }
+      }
+    },
     getObjString(obj, i) {
       const orgs = obj.orgs
       let orgsString = ''
@@ -2073,6 +2211,7 @@ export default {
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
         this.teamList = this.selected_org.teams_ref
         this.filteredOrgUsers = this.orgUsers
+        this.team = this.orgUsers
         this.filteredOrgSlackForms = this.orgSlackForms
         this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows
         this.filteredOrgSlackFormInstances = this.orgSlackFormInstances
@@ -2619,5 +2758,111 @@ input[type='search'] {
 }
 input[type='search']:focus {
   outline: none;
+}
+.header {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  height: 13vh;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.invite-form {
+  border: none;
+  border-radius: 0.75rem;
+  min-width: 37vw;
+  // min-height: 64vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-direction: column;
+  background-color: white;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.modal-form {
+  width: 100%;
+  background-color: $white;
+  height: 40vh;
+  // justify-content: space-evenly;
+}
+.confirm-form {
+  width: 37vw;
+  height: 38vh;
+}
+.form-margin-small {
+  margin-top: 10rem;
+}
+.invite-button {
+  background-color: $dark-green;
+  color: white;
+  margin-top: 2.5rem;
+  width: 15vw;
+  font-size: 16px;
+  box-shadow: none;
+}
+.modal-button {
+  @include primary-button();
+  box-shadow: none;
+  margin-top: 1.5rem;
+  height: 2.5rem;
+  width: 19rem;
+  font-size: 14px;
+}
+.slot-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  img {
+    height: 1rem;
+    margin-right: 0.25rem;
+    filter: invert(70%);
+  }
 }
 </style>
