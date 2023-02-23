@@ -248,7 +248,7 @@
         </div>
       </div>
     </Modal>
-    <div class="invite-list__container">
+    <div class="invite-list__container" :style="selectedTeamUsers ? 'width: 70vw;' : ''">
       <!-- <div class="key">
         <div class="left-key">
           <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
@@ -283,7 +283,7 @@
         <div style="position: relative; right: 3%"></div>
       </div>
 
-      <div class="invite-list__section__container">
+      <div class="invite-list__section__container" v-if="!selectedTeamUsers">
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div
           style="display: flex; align-items: flex-start; font-size: 14px"
@@ -329,13 +329,14 @@
           <img src="@/assets/images/remove.svg" style="filter: invert(60%)" height="22px" alt="" />
         </div>
       </div>
-      <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
+      <div v-for="member in (selectedTeamUsers ? selectedTeamUsers : usersInTeam)" :key="member.id" class="invite-list__section__container">
         <template
           v-if="
-            member.id !== user.id &&
+            (member.id !== user.id &&
             member.team === $store.state.user.team &&
-            !(member.firstName && !member.isActive)
+            !((member.firstName || member.first_name) && (!member.isActive && !member.is_active))) || selectedTeamUsers
           "
+          @click="test(member)"
         >
           <div
             style="display: flex; align-items: flex-start; font-size: 14px"
@@ -343,27 +344,27 @@
             @click="test(member)"
           >
             <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
-            {{ !member.firstName ? 'Pending' : member.isActive ? member.firstName : member.firstName }}
+            {{ (!member.firstName && !member.first_name) ? 'Pending' : member.isActive ? member.firstName : member.first_name }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
-              {{ !member.firstName ? member.email : member.isActive ? member.email : member.email }}
+              {{ (!member.firstName && !member.first_name) ? member.email : (member.isActive || member.is_active) ? member.email : member.email }}
             </p>
           </div>
           <div
-            v-if="member.userLevel == 'MANAGER'"
+            v-if="member.userLevel == 'MANAGER' || member.user_level === 'MANAGER'"
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             Manager
           </div>
           <div
-            v-else-if="member.userLevel == 'SDR'"
+            v-else-if="member.userLevel == 'SDR' || member.user_level === 'SDR'"
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             SDR
           </div>
           <div
-            v-else-if="member.userLevel == 'REP'"
+            v-else-if="member.userLevel == 'REP' || member.user_level === 'REP'"
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
@@ -374,33 +375,33 @@
             class="invite-list__section__item"
           >
             <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
-            {{ !member.firstName ? 'Pending...' : member.isActive ? 'Registered' : 'Deactivated' }}
+            {{ (!member.firstName && !member.first_name) ? 'Pending...' : (member.isActive || member.is_active) ? 'Registered' : 'Deactivated' }}
           </div>
           <div
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item invite-list__status"
           >
-            <span :class="member.slackRef ? '' : 'grayscale'">
+            <span :class="(member.slackRef || member.slack_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <span v-if="member.crm === 'SALESFORCE'" :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
+            <span v-if="member.crm === 'SALESFORCE'" :class="(member.hasSalesforceIntegration || member.has_salesforce_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/salesforce.png" height="18px" alt="" />
             </span>
-            <span v-else-if="member.crm === 'HUBSPOT'" :class="member.hasHubspotIntegration ? '' : 'grayscale'">
+            <span v-else-if="member.crm === 'HUBSPOT'" :class="(member.hasHubspotIntegration || member.has_hubspot_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
             </span>
             <span v-else :class="'grayscale'">
               <img src="@/assets/images/revoke.svg" height="18px" alt="" />
             </span>
-            <span :class="member.hasZoomIntegration ? '' : 'grayscale'">
+            <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/zoom.png" alt="" height="18px" />
             </span>
-            <span :class="member.nylasRef ? '' : 'grayscale'">
+            <span :class="(member.nylasRef || member.nylas_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
             </span>
           </div>
           <div
-            v-if="!member.isAdmin && member.isActive"
+            v-if="(!member.isAdmin && !member.is_admin) && (member.isActive || member.is_active)"
             style="position: relative; right: 3%; cursor: pointer"
             @click="openUninviteModal(member.id)"
           >
@@ -437,6 +438,9 @@ export default {
     },
     handleEdit: {
       type: Function,
+    },
+    selectedTeamUsers: {
+      type: Array,
     },
   },
   data() {
