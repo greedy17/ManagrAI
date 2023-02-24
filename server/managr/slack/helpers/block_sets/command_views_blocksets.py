@@ -159,6 +159,35 @@ def custom_inline_paginator_block(pagination_object, invocation, config_id, api_
     return blocks
 
 
+def custom_alert_app_paginator_block(pagination_object, invocation, config_id, app_value):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = []
+    button_blocks = []
+    page_context = {"invocation": invocation, "config_id": config_id, "app": app_value}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="danger",
+            action_id=f"{slack_const.PAGINATE_APP_ALERTS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Next",
+            str(next_page),
+            action_id=f"{slack_const.PAGINATE_APP_ALERTS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
 @block_set(required_context=["instance_id"])
 def alert_instance_block_set(context):
     """
@@ -534,7 +563,7 @@ def initial_inline_blockset(context, *args, **kwargs):
     config_id = context.get("config_id")
     action_blocks = [
         block_builders.simple_button_block(
-            f"Switch to {'Message' if switch_to == 'message' else 'In-Line'}",
+            f"Switch to {'Connected Apps' if switch_to == 'message' else 'In-Line'}",
             "switch_inline",
             action_id=action_with_params(
                 slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
@@ -542,7 +571,7 @@ def initial_inline_blockset(context, *args, **kwargs):
                     f"invocation={invocation}",
                     f"config_id={config_id}",
                     f"u={str(user.id)}",
-                    f"switch_to={'message' if switch_to == 'inline' else 'message'}",
+                    f"switch_to={'message' if switch_to == 'message' else 'inline'}",
                     f"channel={context.get('channel')}",
                 ],
             ),

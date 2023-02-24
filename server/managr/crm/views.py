@@ -457,9 +457,9 @@ class CRMObjectViewSet(
     def resource_sync(self, request, *args, **kwargs):
         user = self.request.user
         operations = (
-            ["Account", "Opportunity", "OpportunityLineItem"]
+            ["Account", "Opportunity", "OpportunityLineItem", "Contact"]
             if user.crm == "SALESFORCE"
-            else ["Deal"]
+            else ["Deal", "Contact", "Company"]
         )
         currenttime = datetime.now()
         to_sync_ids = []
@@ -482,8 +482,8 @@ class CRMObjectViewSet(
         )
         sync_function(str(sync.id))
         attempts = 1
-        logger.info(f"TO SYNC: {to_sync_ids}")
-        logger.info(f"SYNCED: {synced_ids}")
+        # logger.info(f"TO SYNC: {to_sync_ids}")
+        # logger.info(f"SYNCED: {synced_ids}")
         has_error = False
         while True:
             for index, id in enumerate(to_sync_ids):
@@ -495,8 +495,8 @@ class CRMObjectViewSet(
                     if resource_sync.status == "Completed":
                         synced_ids.append(id)
                         to_sync_ids.pop(index)
-                        logger.info(f"IN LOOP TO SYNC: {to_sync_ids}")
-                        logger.info(f"IN LOOP SYNCED: {synced_ids}")
+                        # logger.info(f"IN LOOP TO SYNC: {to_sync_ids}")
+                        # logger.info(f"IN LOOP SYNCED: {synced_ids}")
                         if len(to_sync_ids) == 0:
                             break
                         else:
