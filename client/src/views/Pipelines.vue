@@ -3419,16 +3419,33 @@ export default {
       this.resourceName = this.$route.params.title
       if (!this.$route.params.id) {
         if (this.$route.params.title === 'Opportunity' || this.$route.params.title === 'Deal') {
+          this.loadObject = 'loadAllOpps'
+          this.currentList = this.userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals'
           this.objectName = 'allOpps'
+          this.resourceName = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
+          this.baseResourceType = 'Opportunity'
         } else if (this.$route.params.title === 'Account' || this.$route.params.title === 'Company') {
+          this.loadObject = 'loadAllAccounts'
+          this.currentList = this.userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies'
           this.objectName = 'allAccounts'
+          this.resourceName = this.userCRM === 'SALESFORCE' ? 'Account' : 'Company'
+          this.baseResourceType = 'Account'
         } else if (this.$route.params.title === 'Contact') {
+          this.loadObject = 'loadAllContacts'
+          this.currentList = 'All Contacts'
           this.objectName = 'allContacts'
+          this.resourceName = 'Contact'
+          this.baseResourceType = 'Contact'
         } else if (this.$route.params.title === 'Lead') {
+          this.loadObject = 'loadAllLeads'
+          this.currentList = 'All Leads'
           this.objectName = 'allLeads'
+          this.resourceName = 'Lead'
+          this.baseResourceType = 'Lead'
         }
       }
     }
+    this.$store.dispatch(this.loadObject)
     this.objectFields.filters = {
       ...this.objectFields.filters,
       crmObject: this.resourceName,
