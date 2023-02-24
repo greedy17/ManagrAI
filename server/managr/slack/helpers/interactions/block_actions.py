@@ -26,6 +26,9 @@ from managr.slack.background import (
     emit_send_paginated_alerts,
     emit_send_paginated_inline_alerts,
     emit_send_next_page_paginated_inline_alerts,
+    emit_send_paginated_notes,
+    emit_process_paginated_engagement_state,
+    emit_process_paginated_call_recordings,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
@@ -73,7 +76,6 @@ def USER_APP_OPTIONS(user, resource_type):
         options.append(block_builders.option(engagement_state, "engagement_state"))
     if user.has_gong_integration:
         options.append(block_builders.option("Call Recordings", "call_recordings"))
-    options.append(block_builders.option("Open in CRM", "open_in_crm"))
     return options
 
 
@@ -2240,18 +2242,18 @@ def process_meeting_details(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_alerts(payload, context):
-    emit_send_paginated_alerts(payload, context)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
-    blocks = [
-        *get_block_set("loading", {"message": "Gathering workflow data..."}),
-    ]
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
     slack_requests.update_channel_message(
         channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
     )
-
+    emit_send_paginated_alerts(payload, context)
     return
 
 
@@ -2264,13 +2266,31 @@ def process_paginate_inline_alerts(payload, context):
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(
         channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
     )
 
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_notes(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:2]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_send_paginated_notes(payload, context)
     return
 
 
@@ -2347,7 +2367,7 @@ def process_inline_field_selected(payload, context):
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(
@@ -2358,7 +2378,74 @@ def process_inline_field_selected(payload, context):
 
 @slack_api_exceptions(rethrow=True)
 @processor()
+def process_paginate_engagement_state(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_process_paginated_engagement_state(payload, context)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_call_recordings(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_process_paginated_call_recordings(payload, context)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_engagement_details(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+
+    return
+
+
+CONNECTED_APPS_SWITCHER = {
+    "view_notes": process_paginate_notes,
+    "update_crm": process_paginate_alerts,
+    "engagement_state": process_paginate_engagement_state,
+    "engagement_details": process_engagement_details,
+    "call_recordings": process_paginate_call_recordings,
+}
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
 def process_connected_app_selected(payload, context):
+    context_app = context.get("app", None)
+    app = payload["actions"][0]["selected_option"]["value"] if context_app is None else context_app
+    app_func = CONNECTED_APPS_SWITCHER[app]
+    app_func(payload, context)
     return
 
 
@@ -3434,6 +3521,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_INLINE_FIELD_SELECTED: process_inline_field_selected,
         slack_const.ALERT_INLINE_STAGE_SELECTED: process_alert_inline_stage_selected,
         slack_const.PROCESS_SHOW_APP_SELECT: process_connected_app_selected,
+        slack_const.PAGINATE_APP_ALERTS: process_connected_app_selected,
         slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA: process_submit_inline_alert_data,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,

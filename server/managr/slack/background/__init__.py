@@ -17,6 +17,7 @@ from managr.crm.models import ObjectField
 from managr.slack.helpers.block_sets.command_views_blocksets import (
     custom_paginator_block,
     custom_inline_paginator_block,
+    custom_alert_app_paginator_block,
 )
 from managr.crm import exceptions as crm_exceptions
 from managr.slack.helpers import exceptions as slack_exceptions
@@ -54,12 +55,24 @@ def emit_send_paginated_inline_alerts(payload, context):
     _process_send_paginated_inline_alerts(payload, context)
 
 
+def emit_send_paginated_notes(payload, context):
+    _process_send_paginated_notes(payload, context)
+
+
 def emit_send_next_page_paginated_inline_alerts(payload, context):
     _prcocess_send_next_page_paginated_inline_alerts(payload, context)
 
 
 def emit_process_submit_resource_data(payload, context):
     return _process_submit_resource_data(payload, context)
+
+
+def emit_process_paginated_engagement_state(payload, context):
+    return _process_paginated_engagement_state(payload, context)
+
+
+def emit_process_paginated_call_recordings(payload, context):
+    return _process_paginated_call_recordings(payload, context)
 
 
 @background(schedule=0)
@@ -73,10 +86,9 @@ def _process_send_paginated_alerts(payload, context):
         return
     access_token = user.organization.slack_integration.access_token
     invocation = context.get("invocation")
-    channel = context.get("channel")
     config_id = context.get("config_id")
     alert_instances = AlertInstance.objects.filter(
-        invocation=invocation, channel=channel, config_id=config_id
+        invocation=invocation, channel=channel_id, config_id=config_id
     ).filter(completed=False)
     alert_instance = alert_instances.first()
     if not alert_instance:
@@ -127,13 +139,7 @@ def _process_send_paginated_alerts(payload, context):
             ),
         )
     )
-    blocks = [
-        block_builders.header_block(
-            f":bell: {len(alert_instances)} results for workflow {alert_template.title}"
-        ),
-        block_builders.actions_block(action_blocks),
-        {"type": "divider"},
-    ]
+    blocks = payload.get("message").get("blocks")[:3]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
     for alert_instance in alert_instances.get("results", []):
         blocks = [
@@ -151,7 +157,7 @@ def _process_send_paginated_alerts(payload, context):
     if len(blocks):
         blocks = [
             *blocks,
-            *custom_paginator_block(alert_instances, invocation, channel, config_id),
+            *custom_paginator_block(alert_instances, invocation, channel_id, config_id),
         ]
     try:
         slack_requests.generic_request(
@@ -165,7 +171,7 @@ def _process_send_paginated_alerts(payload, context):
             *get_block_set(
                 "initial_alert_blockset",
                 {
-                    "channel": channel,
+                    "channel": channel_id,
                     "user": str(user.id),
                     "config_id": config_id,
                     "invocation": invocation,
@@ -203,7 +209,7 @@ def _process_send_paginated_inline_alerts(payload, context):
     field = ObjectField.objects.get(
         api_name=value, user=user, crm_object=instances.first().template.resource_type
     )
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     template = (
         OrgCustomSlackForm.objects.for_user(user)
@@ -249,6 +255,160 @@ def _process_send_paginated_inline_alerts(payload, context):
         blocks = [
             *blocks,
             *custom_inline_paginator_block(instances, invocation, config_id, value),
+        ]
+    slack_requests.generic_request(
+        payload["response_url"],
+        {"replace_original": True, "blocks": blocks},
+        access_token=access_token,
+    )
+    return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_send_paginated_notes(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    config_id = context.get("config_id")
+    instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    instances = custom_paginator(instances, page=int(context.get("new_page", 1)))
+    for alert_instance in instances.get("results", []):
+        name = (
+            alert_instance.resource.email
+            if alert_instance.template.resource_type in ["Lead", "Contact"]
+            else alert_instance.resource.name
+        )
+        blocks.append(
+            block_builders.section_with_button_block(
+                "View Notes",
+                "VIEW_NOTES",
+                name,
+                action_id=action_with_params(
+                    slack_const.GET_NOTES,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource={alert_instance.template.resource_type}",
+                        "type=alert",
+                        f"resource_id={str(alert_instance.resource.id)}",
+                    ],
+                ),
+            )
+        )
+    if len(blocks):
+        blocks.append({"type": "divider"})
+        blocks = [
+            *blocks,
+            *custom_alert_app_paginator_block(instances, invocation, config_id, "view_notes"),
+        ]
+    slack_requests.generic_request(
+        payload["response_url"],
+        {"replace_original": True, "blocks": blocks},
+        access_token=access_token,
+    )
+    return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_paginated_engagement_state(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    config_id = context.get("config_id")
+    instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    instances = custom_paginator(instances, page=int(context.get("new_page", 1)))
+    for alert_instance in instances.get("results", []):
+        name = (
+            alert_instance.resource.email
+            if alert_instance.template.resource_type in ["Lead", "Contact"]
+            else alert_instance.resource.name
+        )
+        label = "Add to Cadence" if user.has_salesloft_integration else "Add to Sequence"
+        blocks.append(
+            block_builders.section_with_button_block(
+                label,
+                "ENGAGEMENT_STATE",
+                name,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource={alert_instance.template.resource_type}",
+                        "type=alert",
+                        f"resource_id={str(alert_instance.resource.id)}",
+                        f"resource_type={alert_instance.template.resource_type}",
+                    ],
+                ),
+            )
+        )
+    if len(blocks):
+        blocks.append({"type": "divider"})
+        blocks = [
+            *blocks,
+            *custom_alert_app_paginator_block(instances, invocation, config_id),
+            "engagement_state",
+        ]
+    slack_requests.generic_request(
+        payload["response_url"],
+        {"replace_original": True, "blocks": blocks},
+        access_token=access_token,
+    )
+    return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_paginated_call_recordings(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    config_id = context.get("config_id")
+    instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    instances = custom_paginator(instances, page=int(context.get("new_page", 1)))
+    for alert_instance in instances.get("results", []):
+        name = (
+            alert_instance.resource.email
+            if alert_instance.template.resource_type in ["Lead", "Contact"]
+            else alert_instance.resource.name
+        )
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Call Recording",
+                "CALL_RECORDING",
+                name,
+                action_id=action_with_params(
+                    slack_const.GONG_CALL_RECORDING,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource={alert_instance.template.resource_type}",
+                        "type=alert",
+                        f"resource_id={str(alert_instance.resource.id)}",
+                        f"resource_type={alert_instance.template.resource_type}",
+                    ],
+                ),
+            )
+        )
+    if len(blocks):
+        blocks.append({"type": "divider"})
+        blocks = [
+            *blocks,
+            *custom_alert_app_paginator_block(instances, invocation, config_id, "call_recordings"),
         ]
     slack_requests.generic_request(
         payload["response_url"],
