@@ -225,6 +225,13 @@ class CRMObjectViewSet(
             attempts = 1
             while True:
                 crm = user.crm_account
+                if "meeting_comments" in all_form_data.keys():
+                    if all_form_data.get("meeting_comments", None) is not None:
+                        ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
+                    data = {
+                        "success": True,
+                    }
+                    break
                 try:
                     if resource_type == "OpportunityLineItem":
                         resource = main_form.resource_object.update_in_salesforce(
@@ -281,8 +288,6 @@ class CRMObjectViewSet(
                     data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
             if data["success"]:
-                if all_form_data.get("meeting_comments", None) is not None:
-                    ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
                 ):

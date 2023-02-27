@@ -217,31 +217,14 @@ def alert_instance_block_set(context):
         )
     else:
         blocks = [
-            block_builders.simple_section(
-                instance.render_text(), text_type="mrkdwn", block_id=f"{instance.id}_text",
-            ),
-        ]
-        options = [
-            block_builders.option(f"Update {instance.template.resource_type}", "update_crm"),
-            block_builders.option("Get Notes", "get_notes"),
-        ]
-        if user.crm == "SALESFORCE":
-            if hasattr(user, "gong_account"):
-                options.extend(
-                    [block_builders.option("Call Details", "call_details"),]
-                )
-            if instance.template.resource_type != "Lead":
-                if hasattr(user, "outreach_account"):
-                    options.append(block_builders.option("Add to Sequence", "add_to_sequence"))
-                if hasattr(user, "salesloft_account"):
-                    options.append(block_builders.option("Add to Cadence", "add_to_cadence"))
-        blocks.append(
-            block_builders.static_select_input(
-                label=" ",
-                options=options,
-                block_id=str(instance.id),
+            block_builders.section_with_button_block(
+                f"Update {instance.template.resource_type}",
+                "update_crm",
+                instance.render_text(),
+                text_type="mrkdwn",
+                block_id=f"{instance.id}_text",
                 action_id=action_with_params(
-                    slack_const.PROCESS_ALERT_ACTIONS,
+                    slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM,
                     params=[
                         f"u={str(user.id)}",
                         f"alert_id={str(instance.id)}",
@@ -250,9 +233,9 @@ def alert_instance_block_set(context):
                         f"resource_type={instance.template.resource_type}",
                     ],
                 ),
-                placeholder="Select an Action",
-            )
-        )
+            ),
+        ]
+
     if in_channel or (user.id != resource_owner.id):
         blocks.append(
             block_builders.context_block(
