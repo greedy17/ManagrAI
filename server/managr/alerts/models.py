@@ -699,6 +699,8 @@ class AlertInstance(TimeStampModel):
             else:
                 value = str(v)
             body = body.replace(str_rep, value)
+        crm = "Salesforce" if self.user.crm == "SALESFORCE" else "HubSpot"
+        body += f"\n<{self.resource.adapter_class.crm_link}|Open in {crm}>"
         return body
 
     @property

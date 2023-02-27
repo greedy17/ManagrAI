@@ -45,6 +45,7 @@ class OutreachAccountAdapter:
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
         self.token_generated_date = kwargs.get("token_generated_date", None)
+        self.instance_url = kwargs.get("instance_url", None)
 
     @property
     def as_dict(self):
@@ -132,6 +133,7 @@ class OutreachAccountAdapter:
             data["access_token"] = auth_data["access_token"]
             data["refresh_token"] = auth_data["refresh_token"]
             data["token_generated_date"] = datetime.now()
+            data["instance_url"] = user_data["meta"]["instanceUrl"]
             return cls(**data)
         except ObjectDoesNotExist:
             return None
@@ -167,6 +169,26 @@ class OutreachAccountAdapter:
         res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
         return OutreachAccountAdapter._handle_response(res)
 
+    def get_contacts_for_account(self, account_name):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        query = urlencode(
+            {"filter[account][name]": account_name, "page[limit]": 1000, "sort": "-updatedAt"}
+        )
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
+        return OutreachAccountAdapter._handle_response(res)
+
+    def get_contacts_by_email(self, email):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        query = urlencode({"filter[emails]": email, "page[limit]": 1000, "sort": "-updatedAt"})
+        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
+        return OutreachAccountAdapter._handle_response(res)
+
 
 class OutreachAccount(TimeStampModel):
     user = models.OneToOneField(
@@ -181,7 +203,7 @@ class OutreachAccount(TimeStampModel):
     access_token = models.TextField(blank=True)
     refresh_token = models.TextField(blank=True)
     token_generated_date = models.DateTimeField(null=True, blank=True)
-
+    instance_url = models.CharField(max_length=150, null=True)
     objects = OutreachAccountQuerySet.as_manager()
 
     class Meta:
