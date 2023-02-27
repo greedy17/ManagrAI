@@ -830,7 +830,7 @@
                     <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
                   </span>
                   <span v-else :class="'grayscale'">
-                    <img src="@/assets/images/revoke.svg" height="18px" alt="" />
+                    <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
                   </span>
                   <span :class="member.has_zoom_integration ? '' : 'grayscale'">
                     <img src="@/assets/images/zoom.png" alt="" height="18px" />
@@ -1107,7 +1107,7 @@
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Add Members to Team</h3>
+            <h3 @click="test(selectedUsers)" class="invite-form__title">Add Members to Team</h3>
           </div>
         </div>
 
@@ -1141,7 +1141,7 @@
               </template>
             </FormField>
           </div>
-          <div style="display: flex; align-items: flex-start; flex-direction: column">
+          <!-- <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
               <template v-slot:input>
                 <Multiselect
@@ -1154,7 +1154,6 @@
                   label="email"
                   :multiple="true"
                 >
-                <!-- :options="selectedTeamUsers" -->
                   <template slot="noResult">
                     <p class="multi-slot">Please select a team.</p>
                   </template>
@@ -1167,10 +1166,9 @@
                 </Multiselect>
               </template>
             </FormField>
-          </div>
+          </div> -->
         </div>
         <div class="invite-form__actions">
-          <!-- <div style="width: 10vw;"></div> -->
           <div class="invite-form__inner_actions">
             <template>
               <PulseLoadingSpinnerButton
@@ -1251,173 +1249,178 @@
         </div>
       </form>
     </Modal>
-    <div class="flex-row">
-      <small class="pipeline-header">Quick Commands:</small>
-      <button
-        @click.stop="
-          showCommandList = !showCommandList
-          showOrgList = false
-        "
-        class="text-button"
-        style="cursor: pointer"
-      >
-        Commands
-        <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
-      </button>
-      <div v-outside-click="closeListSelect" v-show="showCommandList" class="list-section">
-        <div class="list-section__title flex-row-spread">
-          <p>Commands</p>
-        </div>
+    <div class="flex-row" style="justify-content: space-between; width: 82vw; margin-left: 2rem;">
+      <div class="flex-row">
+        <small class="pipeline-header">Quick Commands:</small>
         <button
-          @click="selectCommand(command)"
-          :v-model="selectedCommand"
-          class="list-button"
-          v-for="command in commandOptions"
-          :key="command.id"
+          @click.stop="
+            showCommandList = !showCommandList
+            showOrgList = false
+          "
+          class="text-button"
+          style="cursor: pointer"
         >
-          {{ command.label }}
+          Commands
+          <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
         </button>
-      </div>
-      <small class="pipeline-header">Organization:</small>
-      <button
-        @click.stop="
-          showOrgList = !showOrgList
-          showCommandList = false
-        "
-        class="text-button"
-        style="cursor: pointer"
-      >
-        Organization
-        <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
-      </button>
-      <small class="pipeline-header">Search Orgs: </small>
-      <div class="search-bar">
-        <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
-        <input
-          type="search"
-          placeholder="search"
-          v-model="filterText"
-          @input="showOrgList = true"
-        />
-      </div>
-      <div
-        v-outside-click="closeListSelect"
-        v-show="showOrgList"
-        class="list-section"
-        style="left: 310px"
-      >
-        <div class="list-section__title flex-row-spread">
-          <p>Organizations</p>
+        <div v-outside-click="closeListSelect" v-show="showCommandList" class="list-section">
+          <div class="list-section__title flex-row-spread">
+            <p>Commands</p>
+          </div>
+          <button
+            @click="selectCommand(command)"
+            :v-model="selectedCommand"
+            class="list-button"
+            v-for="command in commandOptions"
+            :key="command.id"
+          >
+            {{ command.label }}
+          </button>
         </div>
+        <small class="pipeline-header">Organization:</small>
         <button
-          @click="selectOrg(org)"
-          :v-model="selected_org"
-          class="list-button"
-          v-for="org in filteredOrganizations"
-          :key="org.id"
+          @click.stop="
+            showOrgList = !showOrgList
+            showCommandList = false
+          "
+          class="text-button"
+          style="cursor: pointer"
         >
-          {{ org.name }}
+          Organization
+          <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
         </button>
-      </div>
-      <div v-for="(filter, i) in activeFilters" :key="i" class="main">
-        <strong style="font-size: 14px">{{ filter }}</strong>
-        <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
-        <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
-      </div>
-
-      <section style="position: relative">
-        <div style="display: flex">
-          <button
-            v-if="activeFilters.length < 4 && selected_org"
-            @click.stop="addingFilter"
-            class="add-filter-button"
-          >
-            <img
-              src="@/assets/images/filter.svg"
-              class="invert"
-              height="12px"
-              style="margin-right: 0.25rem"
-              alt=""
-            />Filter
-          </button>
-          <button
-            v-if="activeFilters.length && selected_org"
-            @click.stop="resetFilters"
-            class="add-filter-button"
-          >
-            <img
-              src="@/assets/images/filter.svg"
-              class="invert"
-              height="12px"
-              style="margin-right: 0.25rem"
-              alt=""
-            />Clear
-          </button>
-          <h4 v-if="selected_org" @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0;">
-            <img
-              style="margin-right: 4px; filter: invert(40%);"
-              src="@/assets/images/left.svg"
-              height="13px"
-            />
-            Back
-          </h4>
+        <small class="pipeline-header">Search Orgs: </small>
+        <div class="search-bar">
+          <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
+          <input
+            type="search"
+            placeholder="search"
+            v-model="filterText"
+            @input="showOrgList = true"
+          />
         </div>
-        <div v-outside-click="closeFilters" v-if="filtering">
-          <div v-if="filtering" class="filter-selection">
-            <div class="filter-selection__body">
-              <Multiselect
-                placeholder="Team/User"
-                @select="resetFilters"
-                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4"
-                v-model="selectedTeamOrUser"
-                :options="teamOrUser"
-                openDirection="below"
-                selectLabel="Enter"
-                track-by="name"
-                label="name"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-              </Multiselect>
-            </div>
-            <div class="filter-selection__body">
-              <Multiselect
-                placeholder="Filter"
-                style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
-                @select="applyFilter($event)"
-                v-model="selectedFilter"
-                :options="
-                  selectedTeamOrUser
-                    ? selectedTeamOrUser.name === 'team'
-                      ? teamList
-                      : orgUsers
-                    : []
-                "
-                openDirection="below"
-                selectLabel="Enter"
-                track-by="name"
-                :customLabel="filtersLabel"
-                :label="
-                  selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? 'name' : 'email') : ''
-                "
-              >
-                <template slot="placeholder">
-                  <p class="multi-slot">
-                    {{ selectedTeamOrUser ? `Filters` : `Please select User/Team.` }}
-                  </p>
-                </template>
-              </Multiselect>
+        <div
+          v-outside-click="closeListSelect"
+          v-show="showOrgList"
+          class="list-section"
+          style="left: 310px"
+        >
+          <div class="list-section__title flex-row-spread">
+            <p>Organizations</p>
+          </div>
+          <button
+            @click="selectOrg(org)"
+            :v-model="selected_org"
+            class="list-button"
+            v-for="org in filteredOrganizations"
+            :key="org.id"
+          >
+            {{ org.name }}
+          </button>
+        </div>
+        <div v-for="(filter, i) in activeFilters" :key="i" class="main">
+          <strong style="font-size: 14px">{{ filter }}</strong>
+          <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
+          <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
+        </div>
+  
+        <section style="position: relative">
+          <div style="display: flex">
+            <button
+              v-if="activeFilters.length < 4 && selected_org"
+              @click.stop="addingFilter"
+              class="add-filter-button"
+            >
+              <img
+                src="@/assets/images/filter.svg"
+                class="invert"
+                height="12px"
+                style="margin-right: 0.25rem"
+                alt=""
+              />Filter
+            </button>
+            <button
+              v-if="activeFilters.length && selected_org"
+              @click.stop="resetFilters"
+              class="add-filter-button"
+            >
+              <img
+                src="@/assets/images/filter.svg"
+                class="invert"
+                height="12px"
+                style="margin-right: 0.25rem"
+                alt=""
+              />Clear
+            </button>
+          </div>
+          <div v-outside-click="closeFilters" v-if="filtering">
+            <div v-if="filtering" class="filter-selection">
+              <div class="filter-selection__body">
+                <Multiselect
+                  placeholder="Team/User"
+                  @select="resetFilters"
+                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4"
+                  v-model="selectedTeamOrUser"
+                  :options="teamOrUser"
+                  openDirection="below"
+                  selectLabel="Enter"
+                  track-by="name"
+                  label="name"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                </Multiselect>
+              </div>
+              <div class="filter-selection__body">
+                <Multiselect
+                  placeholder="Filter"
+                  style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
+                  @select="applyFilter($event)"
+                  v-model="selectedFilter"
+                  :options="
+                    selectedTeamOrUser
+                      ? selectedTeamOrUser.name === 'team'
+                        ? teamList
+                        : orgUsers
+                      : []
+                  "
+                  openDirection="below"
+                  selectLabel="Enter"
+                  track-by="name"
+                  :customLabel="filtersLabel"
+                  :label="
+                    selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? 'name' : 'email') : ''
+                  "
+                >
+                  <template slot="placeholder">
+                    <p class="multi-slot">
+                      {{ selectedTeamOrUser ? `Filters` : `Please select User/Team.` }}
+                    </p>
+                  </template>
+                </Multiselect>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+      <div>
+        <h4 v-if="selected_org" @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0; font-size: 14px; justify-self: flex-end;">
+          <img
+            style="margin-right: 0px; filter: invert(40%); height: 0.6rem;"
+            src="@/assets/images/left.svg"
+            height="13px"
+          />
+          Back
+        </h4>
+      </div>
     </div>
     <div class="staff__main_page">
       <template v-if="selected_org && selected_org.id && page !== 'TeamManager'">
         <div v-if="loading">Loading</div>
         <template v-else>
           <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
+          <!-- Top Section -->
           <div class="invite-list__container" style="margin-top: 1rem;">
             <!-- <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" /> -->
             <!-- <h4 @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0;">
@@ -1465,7 +1468,7 @@
                     @select="handleConfirm"
                     :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
                     openDirection="below"
-                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 5;"
+                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem;"
                     selectLabel="Enter"
                     label="email"
                   >
@@ -1475,6 +1478,214 @@
                     <template slot="placeholder">
                       <p class="slot-icon">
                         <!-- <img src="@/assets/images/search.svg" alt="" /> -->
+                        {{`${admin ? admin.email : ''}`}}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">Ignore Emails:</div>
+                  </div>
+                  <div class="" style="width: 48%">
+                    <input
+                      class="wide gray-border"
+                      style="border: 1px solid #e8e8e8; padding: 0.5rem;"
+                      type="search"
+                      v-model="ignoreEmails"
+                      placeholder="None"
+                    />
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">Has Products:</div>
+                  </div>
+                  <div>
+                    <Multiselect
+                      v-model="hasProducts"
+                      :options="[{label: 'Yes', value: true}, {label: 'No', value: false}]"
+                      openDirection="below"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem;"
+                      selectLabel="Enter"
+                      label="label"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <!-- <img src="@/assets/images/search.svg" alt="" /> -->
+                          {{`${hasProducts.label}`}}
+                        </p>
+                      </template>
+                    </Multiselect>
+                    <!-- <input type="checkbox" v-model="hasProducts" /> -->
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <button
+                    style="margin: 1rem 0 0 0; align-self: center"
+                    class="invite_button"
+                    @click="postOrgUpdates()"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+              <div class="right-actions">
+                <div class="invite-list__section__container">
+                  <div style="display: flex; flex-direction: column; margin-left: 1rem;">
+                    <p style="margin: 0">
+                      Users:
+                      <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span>
+                    </p>
+                    <Multiselect
+                      placeholder="Select User"
+                      @select="openModal('user', $event)"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
+                      v-model="selectedUser"
+                      :options="filteredOrgUsers"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      track-by="id"
+                      :custom-label="customUserLabel"
+                      :multiple="false"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <div style="display: flex; flex-direction: column; margin-left: 1rem; margin-top: 3rem;">
+                    <p style="margin: 0;">
+                      Select Action:
+                    </p>
+                    <Multiselect
+                      placeholder="Select Action"
+                      @select="selectAction($event)"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
+                      v-model="selectedAction"
+                      :options="actionOptions"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      track-by="label"
+                      label="label"
+                      :multiple="false"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Team Section -->
+          <div class="invite-list__container" style="margin-top: 1rem;">
+            <!-- <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" /> -->
+            <!-- <h4 @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0;">
+              <img
+                style="margin-right: 4px; filter: invert(40%);"
+                src="@/assets/images/left.svg"
+                height="13px"
+              />
+              Back
+            </h4> -->
+            <div class="team-top-container">
+              <div>
+                <div style="margin-bottom: 1rem; margin-left: 0.5rem">Teams: <span class="green">{{ teamList.length }}</span></div>
+                <div>
+                  <Multiselect
+                    placeholder="Select Team"
+                    v-model="selectedViewedTeam"
+                    :options="teamList"
+                    openDirection="below"
+                    style="width: 20vw; z-index: 3; margin-left: 0.5rem"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="name"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results. Try loading more</p>
+                    </template>
+                    <template slot="afterList">
+                      <!-- <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
+                        Load More
+                        <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
+                      </p> -->
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        Select Team
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+              </div>
+              <div>
+                <button class="green_button" type="submit" @click="handleNewTeam">
+                  Create Team
+                </button>
+              </div>
+            </div>
+            <div class="">
+              <section v-if="manageTeamSelected">
+                <Invite
+                  class="invite-users__inviter"
+                  :handleEdit="handleEdit"
+                  :inviteOpen="inviteOpen"
+                  :selectedTeamUsers="selectedTeamUsers"
+                  :inviteActions="inviteActions"
+                  @cancel="handleCancel"
+                  @handleRefresh="() => inviteOpen = false"
+                />
+              </section>
+            </div>
+            <!-- <div style="display: flex; margin-left: 1.2rem; width: 75vw; justify-content: space-between;">
+              <div class="left-actions">
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">State:</div>
+                  </div>
+                  <div>
+                    <Multiselect
+                      placeholder="State"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
+                      v-model="stateActive"
+                      :options="states"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      track-by="id"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
+                <div class="invite-list__section__container">
+                  <div class="line-up">
+                    <div class="invite-list__section__item">Admin:</div>
+                  </div>
+                  <Multiselect
+                    v-model="newAdmin"
+                    @select="handleConfirm"
+                    :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
+                    openDirection="below"
+                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 5;"
+                    selectLabel="Enter"
+                    label="email"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                    <template slot="placeholder">
+                      <p class="slot-icon">
                         {{`${admin ? admin.email : ''}`}}
                       </p>
                     </template>
@@ -1512,12 +1723,10 @@
                       </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
-                          <!-- <img src="@/assets/images/search.svg" alt="" /> -->
                           {{`${hasProducts.label}`}}
                         </p>
                       </template>
                     </Multiselect>
-                    <!-- <input type="checkbox" v-model="hasProducts" /> -->
                   </div>
                 </div>
                 <div class="invite-list__section__container">
@@ -1568,7 +1777,7 @@
                       :options="actionOptions"
                       openDirection="below"
                       selectLabel="Enter"
-                      track-by="id"
+                      track-by="label"
                       label="label"
                       :multiple="false"
                     >
@@ -1579,10 +1788,10 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
 
-          <div class="form__list">
+          <!-- <div class="form__list">
             <div class="added-collection">
               <p class="added-collection__header">
                 Users
@@ -1677,7 +1886,7 @@
                 <button class="green_button" @click="goToAlerts()">Go</button>
               </div>
             </div>
-          </div>
+          </div> -->
         </template>
       </template>
       <template v-else-if="page === 'SlackForm'">
@@ -1690,10 +1899,27 @@
             :goBackAdmin="goBack"
           /> -->
           <button class="green_button back" @click="goBack">Back</button>
-          <h2>{{ selectedSlackForms.form_type }} {{ selectedSlackForms.resource }}</h2>
-          <div v-for="(field, i) in selectedSlackForms.fields_ref" :key="field.field">
-            <div style="margin-bottom: 1rem">
-              {{ i + 1 }} | {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
+          <div class="invite-list__container">
+            <Multiselect
+              placeholder="Select Slack Form"
+              style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="selectedSlackForms"
+              :options="filteredOrgSlackForms"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="id"
+              :custom-label="slackFormLabel"
+              :multiple="false"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+            <h2>{{ selectedSlackForms.form_type }} {{ selectedSlackForms.resource }}</h2>
+            <div v-for="field in selectedSlackForms.fields_ref" :key="field.field">
+              <div style="margin-bottom: 1rem">
+                {{ field.field_ref.label }} ({{ field.field_ref.api_name }})
+              </div>
             </div>
           </div>
         </div>
@@ -1817,14 +2043,13 @@
       </template>
       <template v-else>
         <div class="" style="margin-top: 1rem;">
-          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 20vh; width: 100%;">
-            <div class="added-collection padding" style="width: 25vw; height: 16vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
+          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 30vh; width: 100%;">
+            <div class="added-collection padding" style="width: 25vw; height: 28vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
-            </div>
-            <div class="added-collection padding flex-row-spread" style="flex-direction: row; width: 35vw; height: 16vh; align-items: center;">
-              <h4>Deactivate</h4>
-              <Multiselect
+              <h4 style="margin-bottom: 0rem; margin-top: 0.75rem;">Deactivate:</h4>
+              <div style="display: flex; align-items: center;">
+                <Multiselect
                   placeholder="Select Org to Deactivate"
                   style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
                   v-model="selectedDeactivateOrg"
@@ -1839,10 +2064,12 @@
                     <p class="multi-slot">No results.</p>
                   </template>
                 </Multiselect>
-                <div>
-                  <button @click="deactivateOrg" class="green_button">Deactivate</button>
-                </div>
+                <button @click="deactivateOrg" class="green_button" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
+              </div>
             </div>
+            <!-- <div class="added-collection padding" style="flex-direction: row; width: 35vw; height: 16vh; align-items: center;">
+              Chart Here
+            </div> -->
           </div>
           <div class="added-collection padding" style="width: 100%; justify-content: center;">
             <div class="flex-row-spread" style="width: 10rem;">
@@ -1880,7 +2107,7 @@
                         <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
                       </span>
                       <span v-else :class="'grayscale'">
-                        <img src="@/assets/images/revoke.svg" height="18px" alt="" />
+                        <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
                       </span>
                       <span :class="user.nylas ? '' : 'grayscale'">
                         <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
@@ -2032,7 +2259,75 @@ export default {
       newAdmin: null,
       admin: null,
       selectedAction: null,
-      actionOptions: [{label: 'Action', value: 1}],
+      actionOptions: [
+        {label: 'Users Overview', action: () => this.openModal('usersOverview', this.filteredOrgUsers)},
+        {label: 'Forms', action: () => this.goToSlackForms() /*this.openModal('slackForm', this.selectedSlackForms)*/},
+        {label: 'Submissions', action: () => this.goToSlackFormInstace()},
+        {label: 'Alerts', action: () => this.goToAlerts()},
+      ],
+      inviteActions: [
+          {
+            label: 'Uninvite', 
+            action: (thisPassed, member) => {
+              if ((member.isAdmin || member.is_admin)) {
+                thisPassed.$toast('Cannot uninvite the current admin.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              if (!member.isActive && !member.is_active) {
+                thisPassed.$toast('User already deactivated.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              thisPassed.openUninviteModal(member.id)
+            },
+          },
+          {
+            label: 'Change Team',
+            action: (thisPassed, member) => {
+              if ((member.isAdmin || member.is_admin)) {
+                thisPassed.$toast('Cannot change the team of the current admin.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              this.selectedUsers = [member]
+              this.selectedTeam = this.teamList.filter(team => team.id === member.team)[0]
+              this.handleEdit()
+            },
+          },
+          {
+            label: 'Make Team Lead',
+            action: (thisPassed, member) => {
+              if (member.team === this.admin.team) {
+                thisPassed.$toast('Cannot change the team lead of admin\'s team.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              this.selectedTeamLead = member
+              this.changeTeamLeader()
+            },
+          },
+      ],
       pulseLoading: false,
       changeAdminConfirmModal: false,
       team: CollectionManager.create({ ModelClass: User }), // might need to change based off of org users
@@ -2156,6 +2451,7 @@ export default {
           await Organization.api.addTeamMember(addTeamData)
           this.orgUsers = await this.getAllOrgUsers(this.selected_org.id)
           this.team = this.orgUsers
+          this.getStaffOrgs()
           setTimeout(() => {
             this.handleCancel()
             this.teamName = ''
@@ -2365,12 +2661,21 @@ export default {
       }
     },
     selectAction(e) {
-      console.log('e', e)
+      if (e.action) {
+        e.action()
+        setTimeout(() => {
+          this.selectedAction = null
+        }, 0)
+      }
     },
     async getStaffOrgs() {
       try {
         let res = await Organization.api.getStaffOrganizations()
         this.organizations = res
+        if (this.selected_org) {
+          const orgForTeam = this.organizations.filter(org => org.id === this.selected_org.id)[0]
+          this.teamList = orgForTeam.teams_ref
+        }
       } catch (e) {
         console.log(e)
       }
@@ -2551,6 +2856,11 @@ export default {
       // this.old_selected_org = this.selected_org
       // this.selected_org = null
       this.page = 'TeamManager'
+    },
+    goToSlackForms() {
+      this.old_selected_org = this.selected_org
+      this.selected_org = null
+      this.page = 'SlackForm'
     },
     goToSlackFormInstace() {
       this.old_selected_org = this.selected_org
@@ -2824,6 +3134,7 @@ export default {
         this.filteredOrgUsers = this.orgUsers
         this.team = this.orgUsers
         this.filteredOrgSlackForms = this.orgSlackForms
+        this.selectedSlackForms = this.filteredOrgSlackForms[0]
         this.filteredOrgMeetingWorkflows = this.orgMeetingWorkflows
         this.filteredOrgSlackFormInstances = this.orgSlackFormInstances
         this.filteredOrgAlerts = this.orgAlerts
@@ -2874,7 +3185,7 @@ ul {
   border-radius: 0.25rem;
   padding: 0.5rem 1rem;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 14px;
   border: none;
   cursor: pointer;
 }
@@ -3222,7 +3533,6 @@ input[type='search']:focus {
   &__title {
     position: sticky;
     top: 0;
-    z-index: 5;
     color: $base-gray;
     background-color: $off-white;
     letter-spacing: 0.75px;
@@ -3315,7 +3625,6 @@ main:hover > span {
   }
 }
 .filter-selection {
-  z-index: 5;
   position: absolute;
   top: 6vh;
   left: 0;
@@ -3701,5 +4010,15 @@ input[type='search']:focus {
 }
 .main-content {
   margin-top: 15vh;
+}
+.team-top-container {
+  display: flex; 
+  flex-direction: row; 
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 1.2rem;
+  border-bottom: 1px solid $very-light-gray;
+  padding-bottom: 1rem;
+  width: 75vw
 }
 </style>
