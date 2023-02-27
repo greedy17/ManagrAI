@@ -71,6 +71,10 @@ def emit_process_paginated_engagement_state(payload, context):
     return _process_paginated_engagement_state(payload, context)
 
 
+def emit_process_paginated_engagement_details(payload, context):
+    return _process_paginated_engagement_details(payload, context)
+
+
 def emit_process_paginated_call_recordings(payload, context):
     return _process_paginated_call_recordings(payload, context)
 
@@ -356,8 +360,60 @@ def _process_paginated_engagement_state(payload, context):
         blocks.append({"type": "divider"})
         blocks = [
             *blocks,
-            *custom_alert_app_paginator_block(instances, invocation, config_id),
-            "engagement_state",
+            *custom_alert_app_paginator_block(instances, invocation, config_id, "engagement_state"),
+        ]
+    slack_requests.generic_request(
+        payload["response_url"],
+        {"replace_original": True, "blocks": blocks},
+        access_token=access_token,
+    )
+    return
+
+
+@background(schedule=0)
+@log_all_exceptions
+def _process_paginated_engagement_details(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    if not user:
+        return
+    access_token = user.organization.slack_integration.access_token
+    invocation = context.get("invocation")
+    config_id = context.get("config_id")
+    instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    instances = custom_paginator(instances, page=int(context.get("new_page", 1)))
+    for alert_instance in instances.get("results", []):
+        name = (
+            alert_instance.resource.email
+            if alert_instance.template.resource_type in ["Lead", "Contact"]
+            else alert_instance.resource.name
+        )
+        blocks.append(
+            block_builders.section_with_button_block(
+                "Contact Details",
+                "ENGAGEMENT_DETAILS",
+                name,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SHOW_ENGAGEMENT_DETAILS,
+                    params=[
+                        f"u={str(user.id)}",
+                        f"resource={alert_instance.template.resource_type}",
+                        "type=alert",
+                        f"resource_id={str(alert_instance.resource.id)}",
+                        f"resource_type={alert_instance.template.resource_type}",
+                    ],
+                ),
+            )
+        )
+    if len(blocks):
+        blocks.append({"type": "divider"})
+        blocks = [
+            *blocks,
+            *custom_alert_app_paginator_block(
+                instances, invocation, config_id, "engagement_details"
+            ),
         ]
     slack_requests.generic_request(
         payload["response_url"],
