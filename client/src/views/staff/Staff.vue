@@ -2035,7 +2035,7 @@
           :key="alert.id"
         >
           <h5 class="click click_width" @click="openModal('alert', alert)">
-            {{ alert.title ? alert.title : 'N/A' }}
+            {{ alert.title ? alert.title : 'N/A' }} ({{ getUserName(alert.user) }})
             <!-- ({{ alert.alert_level ? alert.alert_level : 'N/A' }}) by
             {{ getUserName(alert.user) }} -->
           </h5>
@@ -2878,6 +2878,7 @@ export default {
       this.page = 'OrgAlerts'
     },
     openModal(name, data) {
+      console.log('data', data)
       if ((!data || !Object.keys(data).length) && name !== 'task') {
         this.$toast('Please select an item', {
           timeout: 2000,
