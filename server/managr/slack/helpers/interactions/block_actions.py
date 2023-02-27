@@ -2272,7 +2272,7 @@ def process_paginate_notes(payload, context):
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(
@@ -2448,7 +2448,7 @@ def process_submit_inline_alert_data(payload, context):
     ts = payload.get("message", {}).get("ts", None)
 
     loading_block = get_block_set("loading", {"message": "Submitting data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(

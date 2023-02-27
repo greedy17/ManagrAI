@@ -186,9 +186,7 @@ class OutreachAccountAdapter:
             "Content-Type": "application/json",
         }
         query = urlencode({"filter[emails]": email, "page[limit]": 1000, "sort": "-updatedAt"})
-        print(query)
         res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
-        print(res.json())
         return OutreachAccountAdapter._handle_response(res)
 
 

@@ -297,7 +297,7 @@ def _process_send_paginated_notes(payload, context):
                     slack_const.GET_NOTES,
                     params=[
                         f"u={str(user.id)}",
-                        f"resource={alert_instance.template.resource_type}",
+                        f"resource_type={alert_instance.template.resource_type}",
                         "type=alert",
                         f"resource_id={str(alert_instance.resource.id)}",
                     ],
@@ -505,7 +505,7 @@ def _prcocess_send_next_page_paginated_inline_alerts(payload, context):
     field = ObjectField.objects.get(
         api_name=value, user=user, crm_object=instances.first().template.resource_type
     )
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     template = (
         OrgCustomSlackForm.objects.for_user(user)
