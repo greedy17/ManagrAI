@@ -2854,9 +2854,9 @@ def process_get_engagement_details(payload, context):
         for contact in contacts:
             contact_data = contact["attributes"]
             contact_string = f"Name: {contact_data['name']}\nEmails: {','.join(contact_data['emails'])}\nStage: {contact_data['stageName']}\nOpens: {contact_data['openCount']}\nReplies: {contact_data['replyCount']}\nLast Touched: {contact_data['touchedAt']}\n<{user.engagement_account.instance_url}/prospects/{contact['id']}/overview|Open in Outreach>"
-        blocks.extend(
-            [block_builders.simple_section(contact_string, "mrkdwn"), {"type": "divider"}]
-        )
+            blocks.extend(
+                [block_builders.simple_section(contact_string, "mrkdwn"), {"type": "divider"}]
+            )
     else:
         blocks.append(
             block_builders.simple_section(
