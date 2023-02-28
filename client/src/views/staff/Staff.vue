@@ -17,7 +17,7 @@
             <h3 class="invite-form__title">Are you sure?</h3>
           </div>
           <div class="flex-row">
-            <h4 @click="test(orgUsers)" class="invite-form__subtitle">
+            <h4 class="invite-form__subtitle">
               By clicking Confirm, you will be transferring the Admin role to
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
             </h4>
@@ -222,7 +222,6 @@
                   <!-- {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }} -->
                   <div v-for="(value,propertyName) in modalInfo.saved_data" :key="value" style="margin-left: 1rem;">
                     {{propertyName}}: <span 
-                    @click="test(modalInfo.previous_data[propertyName] !== value)" 
                     :class="
                     modalInfo.previous_data[propertyName] === undefined
                     ||
@@ -239,7 +238,7 @@
                     style="margin-left: 1rem"
                   >
                     {{ propertyName }}:
-                    <span @click="test(modalInfo.saved_data[propertyName] !== value)" :class="''">{{
+                    <span>{{
                       `${value}`
                     }}</span>
                     <!-- (
@@ -1107,7 +1106,7 @@
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 @click="test(selectedUsers)" class="invite-form__title">Add Members to Team</h3>
+            <h3 class="invite-form__title">Add Members to Team</h3>
           </div>
         </div>
 
@@ -2043,8 +2042,8 @@
       </template>
       <template v-else>
         <div class="" style="margin-top: 1rem;">
-          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 30vh; width: 100%;">
-            <div class="added-collection padding" style="width: 25vw; height: 28vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
+          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 40vh; width: 100%;">
+            <div class="added-collection padding" style="width: 25vw; height: 38vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
               <h4 style="margin-bottom: 0rem; margin-top: 0.75rem;">Deactivate:</h4>
@@ -2067,9 +2066,9 @@
                 <button @click="deactivateOrg" class="green_button" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
               </div>
             </div>
-            <!-- <div class="added-collection padding" style="flex-direction: row; width: 35vw; height: 16vh; align-items: center;">
-              Chart Here
-            </div> -->
+            <div class="added-collection padding" style="flex-direction: row; width: 40vw; height: 38vh; align-items: center;">
+              <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 35vw;" />
+            </div>
           </div>
           <div class="added-collection padding" style="width: 100%; justify-content: center;">
             <div class="flex-row-spread" style="width: 10rem;">
@@ -2220,6 +2219,7 @@ export default {
       filterByDay: 30,
       usersFilteredByDays: [],
       deleteOpen: false,
+      allSubmissions: [],
       trialUsers: [],
       teamList: [],
       activeFilters: [],
@@ -2340,6 +2340,64 @@ export default {
       teamLead: null,
       teamName: '',
       selectedTeamLead: null,
+      usageData: null,
+      chartOptions: {
+        series: [{
+          name: 'Active Users',
+          data: []
+        }, {
+          name: 'Total Users',
+          data: []
+        }],
+        tooltip: {
+          custom: function({series, seriesIndex, dataPointIndex, w}) {
+            if (seriesIndex === 1) {
+              return '<div class="arrow_box">' + 
+                  '<div>' +
+                    `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
+                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[seriesIndex][dataPointIndex]) + '</span>' + '</div>' +
+                  '</div>' +
+                '</div>'
+            } else {
+              return '<div class="arrow_box">' + 
+                  '<div>' +
+                    `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
+                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Active Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + series[seriesIndex][dataPointIndex] + '</span>' + '</div>' +
+                  '</div>' +
+                '</div>'
+            }
+          }
+        },
+        // <div class="apexcharts-tooltip apexcharts-theme-light" style="left: 51.6074px; top: 25.535px;"><div class="apexcharts-tooltip-title" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">Jan</div><div class="apexcharts-tooltip-series-group apexcharts-active" style="order: 1; display: flex;"><span class="apexcharts-tooltip-marker" style="background-color: rgb(0, 143, 251);"></span><div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"><div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">Active Users: </span><span class="apexcharts-tooltip-text-y-value">44</span></div><div class="apexcharts-tooltip-goals-group"><span class="apexcharts-tooltip-text-goals-label"></span><span class="apexcharts-tooltip-text-goals-value"></span></div><div class="apexcharts-tooltip-z-group"><span class="apexcharts-tooltip-text-z-label"></span><span class="apexcharts-tooltip-text-z-value"></span></div></div></div><div class="apexcharts-tooltip-series-group" style="order: 2; display: none;"><span class="apexcharts-tooltip-marker" style="background-color: rgb(0, 143, 251);"></span><div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"><div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">Active Users: </span><span class="apexcharts-tooltip-text-y-value">44</span></div><div class="apexcharts-tooltip-goals-group"><span class="apexcharts-tooltip-text-goals-label"></span><span class="apexcharts-tooltip-text-goals-value"></span></div><div class="apexcharts-tooltip-z-group"><span class="apexcharts-tooltip-text-z-label"></span><span class="apexcharts-tooltip-text-z-value"></span></div></div></div></div>
+        chart: {
+          type: 'bar',
+          height: 350,
+          stacked: true,
+          stackType: '100%'
+        },
+        responsive: [{
+          breakpoint: 480,
+          options: {
+            legend: {
+              position: 'bottom',
+              offsetX: -10,
+              offsetY: 0
+            }
+          }
+        }],
+        xaxis: {
+          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        },
+        fill: {
+          opacity: 1
+        },
+        legend: {
+          position: 'right',
+          offsetX: 0,
+          offsetY: 50
+        },
+      },
     }
   },
   computed: {
@@ -2348,6 +2406,9 @@ export default {
     },
     hasSlack() {
       return !!this.$store.state.user.slackRef
+    },
+    series() {
+      return this.chartOptions.series
     },
     filteredOrganizations() {
       if (!this.filterText) {
@@ -2878,7 +2939,6 @@ export default {
       this.page = 'OrgAlerts'
     },
     openModal(name, data) {
-      console.log('data', data)
       if ((!data || !Object.keys(data).length) && name !== 'task') {
         this.$toast('Please select an item', {
           timeout: 2000,
@@ -3082,9 +3142,43 @@ export default {
       try {
         const res = await User.api.getTrialUsers()
         this.trialUsers = res
+        await this.getUsageData()
+        this.setChartOptions()
       } catch(e) {
         console.log('Error in getTrialUsers', e)
       }
+    },
+    async getUsageData() {
+      const res = await User.api.callCommand('PULL_USAGE_DATA')
+      this.usageData = res.data
+    },
+    setChartOptions() {
+      const today = new Date(Date.now())
+      const currentMonth = today.getMonth()
+      let newCategories = this.chartOptions.xaxis.categories.slice(0, currentMonth+1)
+      this.$refs.chartRef.updateOptions({xaxis: { categories: [...newCategories] }})
+      const currentYear = today.getFullYear()
+      const totalsArr = []
+      const activeArr = []
+      for (let i = 0; i <= currentMonth; i++) {
+        let totalsCount = 0;
+        for (let j = 0; j < this.trialUsers.length; j++) {
+          const yearMonthDay = this.trialUsers[j].datetime_created.split('T')[0].split('-')
+          if (Number(yearMonthDay[0]) !== currentYear) {
+            totalsCount++
+          }
+          else if (Number(yearMonthDay[1]) <= i+1) {
+            totalsCount++
+          }
+        }
+        totalsArr.push(totalsCount)
+      }
+      for (let key in this.usageData.totals) {
+        activeArr.push(this.usageData.totals[key]['total active users'])
+      }
+      this.chartOptions.series = [{name: 'Active Users', data: []}, {name: 'Total Users', data: []}]
+      this.chartOptions.series[1].data = [...totalsArr]
+      this.chartOptions.series[0].data = [...activeArr]
     },
     formatCopyObject(obj) {
       let string = '{'

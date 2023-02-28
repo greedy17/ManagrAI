@@ -35,6 +35,7 @@ import outsideClickDirective from "@/services/directives/outside-click";
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import VueSanitize from "vue-sanitize";
+import VueApexCharts from 'vue-apexcharts'
 
 
 let defaults = VueSanitize.defaults;
@@ -59,7 +60,9 @@ Vue.use(VueGoogleMaps, {
     libraries: 'places',
   },
 })
+Vue.use(VueApexCharts)
 
+Vue.component('apexchart', VueApexCharts)
 Vue.component('drag', Drag);
 Vue.component('drop', Drop);
 Vue.component('Modal', Modal)
