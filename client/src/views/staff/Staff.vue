@@ -12,9 +12,17 @@
     >
       <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
         <div class="header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Are you sure?</h3>
+          <div class="flex-row" style="justify-content: space-between;">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" alt="" />
+              <h3 class="invite-form__title">Are you sure?</h3>
+            </div>
+            <img
+              src="@/assets/images/close.svg"
+              style="height: 1.25rem; margin-top: -6rem; cursor: pointer; margin-right: 1rem;"
+              @click="handleConfirmCancel"
+              alt=""
+            />
           </div>
           <div class="flex-row">
             <h4 class="invite-form__subtitle">
@@ -182,13 +190,21 @@
         <div v-if="modalName === 'slackFormInstance'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
-              <div class="flex-row">
-                <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>
-                  {{ modalInfo.template_ref ? modalInfo.template_ref.resource : '--' }}
-                  {{ modalInfo.template_ref ? modalInfo.template_ref.form_type : '' }} by
-                  {{ getUserName(modalInfo.user) }}
-                </h4>
+              <div class="flex-row" style="justify-content: space-between; width: 100%;">
+                <div class="flex-row">
+                  <img src="@/assets/images/logo.png" class="logo" alt="" />
+                  <h4>
+                    {{ modalInfo.template_ref ? modalInfo.template_ref.resource : '--' }}
+                    {{ modalInfo.template_ref ? modalInfo.template_ref.form_type : '' }} by
+                    {{ getUserName(modalInfo.user) }}
+                  </h4>
+                </div>
+                <img
+                  src="@/assets/images/close.svg"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  @click="resetEdit"
+                  alt=""
+                />
               </div>
             </div>
             <section class="note-section">
@@ -399,11 +415,19 @@
         <div v-else-if="modalName === 'alert'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
-              <div class="flex-row">
-                <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>
-                  {{ modalInfo.title ? modalInfo.title : 'None' }}
-                </h4>
+              <div class="flex-row" style="justify-content: space-between; width: 100%;">
+                <div class="flex-row">
+                  <img src="@/assets/images/logo.png" class="logo" alt="" />
+                  <h4>
+                    {{ modalInfo.title ? modalInfo.title : 'None' }}
+                  </h4>
+                </div>
+                <img
+                  src="@/assets/images/close.svg"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  @click="resetEdit"
+                  alt=""
+                />
               </div>
             </div>
             <section class="note-section" v-if="modalInfo">
@@ -479,9 +503,17 @@
         <div v-else-if="modalName === 'user'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
-              <div class="flex-row">
-                <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>{{ modalInfo.first_name }} {{ modalInfo.last_name }}</h4>
+              <div class="flex-row" style="justify-content: space-between; width: 100%">
+                <div class="flex-row">
+                  <img src="@/assets/images/logo.png" class="logo" alt="" />
+                  <h4>{{ modalInfo.first_name }} {{ modalInfo.last_name }}</h4>
+                </div>
+                <img
+                  src="@/assets/images/close.svg"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  @click="resetEdit"
+                  alt=""
+                />
               </div>
             </div>
             <section class="note-section">
@@ -730,9 +762,17 @@
               class="flex-row-spread sticky border-bottom"
               style="margin-bottom: 1rem; background-color: white; z-index: 3"
             >
-              <div class="flex-row">
-                <img src="@/assets/images/logo.png" class="logo" alt="" />
-                <h4>{{ this.selected_org.name }}'s Users</h4>
+              <div class="flex-row" style="justify-content: space-between; width: 100%">
+                <div class="flex-row">
+                  <img src="@/assets/images/logo.png" class="logo" alt="" />
+                  <h4>{{ this.selected_org.name }}'s Users</h4>
+                </div>
+                <img
+                  src="@/assets/images/close.svg"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  @click="resetEdit"
+                  alt=""
+                />
               </div>
             </div>
             <div class="invite-list-users__section__container" style="margin-bottom: 1rem">
@@ -1007,9 +1047,17 @@
     >
       <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
         <div class="header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Create a Team</h3>
+          <div class="flex-row" style="justify-content: space-between; width: 100%">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" alt="" />
+              <h3 class="invite-form__title">Create a Team</h3>
+            </div>
+            <img
+              src="@/assets/images/close.svg"
+              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+              @click="handleCancel"
+              alt=""
+            />
           </div>
           <!-- <div class="flex-row">
             <img
@@ -1104,9 +1152,17 @@
     >
       <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
         <div class="header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Add Members to Team</h3>
+          <div class="flex-row" style="justify-content: space-between; width: 100%;">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" alt="" />
+              <h3 class="invite-form__title">Add Members to Team</h3>
+            </div>
+            <img
+              src="@/assets/images/close.svg"
+              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+              @click="handleCancel"
+              alt=""
+            />
           </div>
         </div>
 
@@ -2042,8 +2098,8 @@
       </template>
       <template v-else>
         <div class="" style="margin-top: 1rem;">
-          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 40vh; width: 100%;">
-            <div class="added-collection padding" style="width: 25vw; height: 38vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
+          <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 41vh; width: 100%;">
+            <div class="added-collection padding" style="width: 25vw; height: 39vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
               <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
               <h4 style="margin-bottom: 0rem; margin-top: 0.75rem;">Deactivate:</h4>
@@ -2066,7 +2122,7 @@
                 <button @click="deactivateOrg" class="green_button" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
               </div>
             </div>
-            <div class="added-collection padding" style="flex-direction: row; width: 40vw; height: 38vh; align-items: center;">
+            <div class="added-collection padding" style="flex-direction: row; width: 40vw; height: 39vh; align-items: center;">
               <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 35vw;" />
             </div>
           </div>
