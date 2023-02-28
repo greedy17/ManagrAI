@@ -15,6 +15,7 @@ class OutreachAccountSerializer(serializers.ModelSerializer):
             "access_token",
             "refresh_token",
             "token_generated_date",
+            "instance_url",
         )
 
 

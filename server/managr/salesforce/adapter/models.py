@@ -706,6 +706,16 @@ class AccountAdapter:
         parent_integration_id="ParentId",
     )
 
+    @property
+    def internal_user(self):
+        from managr.core.models import User
+
+        return User.objects.get(id=self.owner)
+
+    @property
+    def crm_link(self):
+        return f"{self.internal_user.salesforce_account.instance_url}/lightning/r/Account/{self.integration_id}/view"
+
     @staticmethod
     def reverse_integration_mapping():
         """mapping of 'standard' data when sending from the SF API"""
@@ -830,6 +840,16 @@ class ContactAdapter:
         external_account="AccountId",
         external_owner="OwnerId",
     )
+
+    @property
+    def internal_user(self):
+        from managr.core.models import User
+
+        return User.objects.get(id=self.owner)
+
+    @property
+    def crm_link(self):
+        return f"{self.internal_user.salesforce_account.instance_url}/lightning/r/Contact/{self.integration_id}/view"
 
     @property
     def name(self):
@@ -958,6 +978,16 @@ class LeadAdapter:
         external_account="AccountId",
         external_owner="OwnerId",
     )
+
+    @property
+    def internal_user(self):
+        from managr.core.models import User
+
+        return User.objects.get(id=self.owner)
+
+    @property
+    def crm_link(self):
+        return f"{self.internal_user.salesforce_account.instance_url}/lightning/r/Lead/{self.integration_id}/view"
 
     @staticmethod
     def get_child_rels():
@@ -1131,6 +1161,16 @@ class OpportunityAdapter:
         external_account="AccountId",
         external_owner="OwnerId",
     )
+
+    @property
+    def internal_user(self):
+        from managr.core.models import User
+
+        return User.objects.get(id=self.owner)
+
+    @property
+    def crm_link(self):
+        return f"{self.internal_user.salesforce_account.instance_url}/lightning/r/Opportunity/{self.integration_id}/view"
 
     @staticmethod
     def get_child_rels():

@@ -349,6 +349,15 @@ class User(AbstractUser, TimeStampModel):
             return self.hubspot_account
 
     @property
+    def engagement_account(self):
+        if not self.has_outreach_integration and not self.has_salesloft_integration:
+            return None
+        elif self.has_outreach_integration:
+            return self.outreach_account
+        else:
+            return self.salesloft_account
+
+    @property
     def has_slack_integration(self):
         return hasattr(self, "slack_integration")
 

@@ -257,6 +257,34 @@ class SalesloftAccountAdapter:
         except ObjectDoesNotExist:
             return None
 
+    def get_account_id_from_name(self, account_id):
+        headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(self.auth_account.access_token)
+        filter = urlencode({"account_id": account_id})
+        url = f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.PEOPLE}?{filter}"
+        res = client.get(url, headers=headers)
+        return self.auth_account._handle_response(res)
+
+    def get_contacts_for_account(self, account_name):
+        headers = salesloft_consts.SALESLOFT_REQUEST_HEADERS(self.auth_account.access_token)
+        attempts = 1
+        while True:
+            try:
+                account_res = self.get_account_id_from_name(account_name)
+                print(account_res)
+                filter = urlencode({"name": account_name})
+                url = f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}?{filter}"
+                res = client.get(url, headers=headers)
+                break
+            except TokenExpired:
+                if attempts > 5:
+                    break
+                self.auth_account.regenerate_token()
+                attempts += 1
+            except Exception as e:
+                logger.exception(f"Error getting contacts for salesloft: <{e}>")
+                break
+        return self.auth_account._handle_response(res)
+
 
 class SalesloftAccount(TimeStampModel):
     auth_account = models.ForeignKey(
