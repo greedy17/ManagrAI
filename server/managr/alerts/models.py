@@ -99,7 +99,11 @@ class AlertTemplate(TimeStampModel):
             ]
             return (
                 hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
-                {"filterGroups": operand_groups, "limit": 100},
+                {
+                    "filterGroups": operand_groups,
+                    "limit": 100,
+                    "sorts": [{"propertyName": "hs_lastmodifieddate", "direction": "DESCENDING"}],
+                },
             )
 
     def manager_url_str(self, user_list, config_id):
