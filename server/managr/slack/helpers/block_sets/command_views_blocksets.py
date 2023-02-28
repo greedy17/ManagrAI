@@ -218,7 +218,7 @@ def alert_instance_block_set(context):
     else:
         blocks = [
             block_builders.section_with_button_block(
-                f"{instance.template.resource_type} Details",
+                f"Update {instance.template.resource_type}",
                 "update_crm",
                 instance.render_text(),
                 text_type="mrkdwn",
