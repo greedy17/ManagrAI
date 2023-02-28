@@ -35,7 +35,9 @@ def _update_slack_message(context, main_form_id):
     alert_instance = alert_instances.first()
     text = instance.template.title
     blocks = [
-        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
+        block_builders.simple_section(
+            f"*New Task:* {len(alert_instances)} results for workflow {text}", "mrkdwn"
+        ),
     ]
     action_blocks = (
         get_block_set(

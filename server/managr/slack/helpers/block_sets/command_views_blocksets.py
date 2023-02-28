@@ -218,7 +218,7 @@ def alert_instance_block_set(context):
     else:
         blocks = [
             block_builders.section_with_button_block(
-                f"Update {instance.template.resource_type}",
+                f"{instance.template.resource_type} Details",
                 "update_crm",
                 instance.render_text(),
                 text_type="mrkdwn",
@@ -546,7 +546,7 @@ def initial_inline_blockset(context, *args, **kwargs):
     config_id = context.get("config_id")
     action_blocks = [
         block_builders.simple_button_block(
-            f"Switch to {'Connected Apps' if switch_to == 'message' else 'In-Line'}",
+            f"Switch to {'Additional Details' if switch_to == 'message' else 'In-Line'}",
             "switch_inline",
             action_id=action_with_params(
                 slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
