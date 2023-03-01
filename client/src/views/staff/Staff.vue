@@ -2405,13 +2405,23 @@ export default {
           name: 'Total Users',
           data: []
         }],
+        dataLabels: {
+          enabled: true,
+          formatter: function(val, opt) {
+            if (opt.seriesIndex === 1) {
+              return opt.globals.series[0][opt.dataPointIndex] + val
+            } else {
+              return val
+            }
+          },
+        },
         tooltip: {
           custom: function({series, seriesIndex, dataPointIndex, w}) {
             if (seriesIndex === 1) {
               return '<div class="arrow_box">' + 
                   '<div>' +
                     `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
-                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[seriesIndex][dataPointIndex]) + '</span>' + '</div>' +
+                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[seriesIndex][dataPointIndex] + series[0][dataPointIndex]) + '</span>' + '</div>' +
                   '</div>' +
                 '</div>'
             } else {
@@ -2429,7 +2439,8 @@ export default {
           type: 'bar',
           height: 350,
           stacked: true,
-          stackType: '100%'
+          // stackType: '100%',
+          stackType: 'normal',
         },
         responsive: [{
           breakpoint: 480,
@@ -3216,9 +3227,16 @@ export default {
       const currentYear = today.getFullYear()
       const totalsArr = []
       const activeArr = []
+      for (let key in this.usageData.totals) {
+        console.log('key', key)
+        activeArr.push(this.usageData.totals[key]['total active users'])
+      }
       for (let i = 0; i <= currentMonth; i++) {
         let totalsCount = 0;
         for (let j = 0; j < this.trialUsers.length; j++) {
+          console.log('trial users', i, this.trialUsers[j])
+          // if user is already in active, then they should not be in total
+          // however, total number should still be displayed in box
           const yearMonthDay = this.trialUsers[j].datetime_created.split('T')[0].split('-')
           if (Number(yearMonthDay[0]) !== currentYear) {
             totalsCount++
@@ -3227,10 +3245,8 @@ export default {
             totalsCount++
           }
         }
+        totalsCount = totalsCount - activeArr[i]
         totalsArr.push(totalsCount)
-      }
-      for (let key in this.usageData.totals) {
-        activeArr.push(this.usageData.totals[key]['total active users'])
       }
       this.chartOptions.series = [{name: 'Active Users', data: []}, {name: 'Total Users', data: []}]
       this.chartOptions.series[1].data = [...totalsArr]
@@ -4170,6 +4186,5 @@ input[type='search']:focus {
   margin-left: 1.2rem;
   border-bottom: 1px solid $very-light-gray;
   padding-bottom: 1rem;
-  width: 75vw
-}
+  width: 75v}
 </style>
