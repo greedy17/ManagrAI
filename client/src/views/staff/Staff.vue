@@ -2405,7 +2405,7 @@ export default {
           name: 'Active Users',
           data: []
         }],
-        colors: ['#41b883', '#8341b8'],
+        colors: ['#41b883', '#008FFB'],
         dataLabels: {
           enabled: true,
           formatter: function(val, opt) {
