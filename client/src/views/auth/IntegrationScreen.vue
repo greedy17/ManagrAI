@@ -368,7 +368,7 @@
 
             <p class="card-text">Add Contacts to Sequences</p>
 
-            <div v-if="isPaid">
+            <div v-if="true/*isPaid*/">
               <PulseLoadingSpinnerButton
                 v-if="!hasOutreachIntegration"
                 :disabled="hasOutreachIntegration"
