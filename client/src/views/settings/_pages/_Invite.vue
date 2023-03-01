@@ -248,7 +248,7 @@
         </div>
       </div>
     </Modal>
-    <div class="invite-list__container">
+    <div class="invite-list__container" :style="selectedTeamUsers ? 'width: 75vw;' : ''">
       <!-- <div class="key">
         <div class="left-key">
           <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
@@ -278,12 +278,24 @@
           style="display: flex; align-items: flex-start"
           class="invite-list__section__item section-header"
         >
+          Team Lead
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
           Integrations
+        </div>
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item section-header"
+        >
+          Actions
         </div>
         <div style="position: relative; right: 3%"></div>
       </div>
 
-      <div class="invite-list__section__container">
+      <div class="invite-list__section__container" v-if="!selectedTeamUsers">
         <!-- <img class="back-logo" src="@/assets/images/logo.png" /> -->
         <div
           style="display: flex; align-items: flex-start; font-size: 14px"
@@ -304,7 +316,12 @@
         >
           Registered
         </div>
-
+        <div
+          style="display: flex; align-items: flex-start; font-size: 14px;"
+          class="invite-list__section__item"
+        >
+          <img class="green-check" style="margin-left: 2.5rem; margin-right: 1rem;" src="@/assets/images/configCheck.svg" alt="" />
+        </div>
         <div
           style="display: flex; align-items: flex-start"
           class="invite-list__section__item invite-list__status"
@@ -325,17 +342,38 @@
             <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
           </span>
         </div>
-        <div style="position: relative; right: 3%; cursor: text; visibility: hidden">
-          <img src="@/assets/images/remove.svg" style="filter: invert(60%)" height="22px" alt="" />
+        <div
+          style="display: flex; align-items: flex-start"
+          class="invite-list__section__item invite-list__status"
+        >
+          <Multiselect
+            placeholder="Action"
+            :options="[]"
+            openDirection="below"
+            style="width: 12vw; margin-right: 1rem;"
+            selectLabel="Enter"
+            label="label"
+          >
+            <template slot="noResult">
+              <p class="multi-slot">No results.</p>
+            </template>
+            <template slot="placeholder">
+              <p class="slot-icon">
+                <img src="@/assets/images/search.svg" alt="" />
+                Select Action
+              </p>
+            </template>
+          </Multiselect>
         </div>
       </div>
-      <div v-for="member in usersInTeam" :key="member.id" class="invite-list__section__container">
+      <div v-for="member in (selectedTeamUsers ? selectedTeamUsers : usersInTeam)" :key="member.id" class="invite-list__section__container">
         <template
           v-if="
-            member.id !== user.id &&
+            (member.id !== user.id &&
             member.team === $store.state.user.team &&
-            !(member.firstName && !member.isActive)
+            !((member.firstName || member.first_name) && (!member.isActive && !member.is_active))) || selectedTeamUsers
           "
+          @click="test(member)"
         >
           <div
             style="display: flex; align-items: flex-start; font-size: 14px"
@@ -343,27 +381,27 @@
             @click="test(member)"
           >
             <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
-            {{ !member.firstName ? 'Pending' : member.isActive ? member.firstName : member.firstName }}
+            {{ (!member.firstName && !member.first_name) ? 'Pending' : member.isActive ? member.firstName : member.first_name }}
             <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">
-              {{ !member.firstName ? member.email : member.isActive ? member.email : member.email }}
+              {{ (!member.firstName && !member.first_name) ? member.email : (member.isActive || member.is_active) ? member.email : member.email }}
             </p>
           </div>
           <div
-            v-if="member.userLevel == 'MANAGER'"
+            v-if="member.userLevel == 'MANAGER' || member.user_level === 'MANAGER'"
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             Manager
           </div>
           <div
-            v-else-if="member.userLevel == 'SDR'"
+            v-else-if="member.userLevel == 'SDR' || member.user_level === 'SDR'"
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
             SDR
           </div>
           <div
-            v-else-if="member.userLevel == 'REP'"
+            v-else-if="member.userLevel == 'REP' || member.user_level === 'REP'"
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item"
           >
@@ -374,39 +412,71 @@
             class="invite-list__section__item"
           >
             <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
-            {{ !member.firstName ? 'Pending...' : member.isActive ? 'Registered' : 'Deactivated' }}
+            {{ (!member.firstName && !member.first_name) ? 'Pending...' : (member.isActive || member.is_active) ? 'Registered' : 'Deactivated' }}
+          </div>
+          <div
+            style="display: flex; align-items: flex-start; font-size: 14px;"
+            class="invite-list__section__item"
+          >
+            <img v-if="member.is_team_lead || member.isTeamLead" class="green-check" src="@/assets/images/configCheck.svg" alt="" />
+            <div v-else style="margin-left: 2rem;">-</div>
           </div>
           <div
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item invite-list__status"
           >
-            <span :class="member.slackRef ? '' : 'grayscale'">
+            <span :class="(member.slackRef || member.slack_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <span v-if="member.crm === 'SALESFORCE'" :class="member.hasSalesforceIntegration ? '' : 'grayscale'">
+            <span v-if="member.crm === 'SALESFORCE'" :class="(member.hasSalesforceIntegration || member.has_salesforce_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/salesforce.png" height="18px" alt="" />
             </span>
-            <span v-else-if="member.crm === 'HUBSPOT'" :class="member.hasHubspotIntegration ? '' : 'grayscale'">
+            <span v-else-if="member.crm === 'HUBSPOT'" :class="(member.hasHubspotIntegration || member.has_hubspot_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
             </span>
             <span v-else :class="'grayscale'">
-              <img src="@/assets/images/revoke.svg" height="18px" alt="" />
+              <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
             </span>
-            <span :class="member.hasZoomIntegration ? '' : 'grayscale'">
+            <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/zoom.png" alt="" height="18px" />
             </span>
-            <span :class="member.nylasRef ? '' : 'grayscale'">
+            <span :class="(member.nylasRef || member.nylas_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
             </span>
           </div>
           <div
-            v-if="!member.isAdmin && member.isActive"
+            style="display: flex; align-items: flex-start"
+            class="invite-list__section__item invite-list__status"
+          >
+            <Multiselect
+              placeholder="Action"
+              @select="runInviteAction($event, member)"
+              v-model="selectedAction[member.id]"
+              :options="inviteActions"
+              openDirection="below"
+              style="width: 12vw; margin-right: 1rem;"
+              selectLabel="Enter"
+              label="label"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  Select Action
+                </p>
+              </template>
+            </Multiselect>
+          </div>
+          <!-- <div
+            v-if="(!member.isAdmin && !member.is_admin) && (member.isActive || member.is_active)"
             style="position: relative; right: 3%; cursor: pointer"
             @click="openUninviteModal(member.id)"
           >
             <img src="@/assets/images/remove.svg" class="red" height="22px" alt="" />
           </div>
-          <div v-else style="width: 28px;"></div>
+          <div v-else style="width: 28px;"></div> -->
         </template>
       </div>
     </div>
@@ -438,6 +508,12 @@ export default {
     handleEdit: {
       type: Function,
     },
+    selectedTeamUsers: {
+      type: Array,
+    },
+    inviteActions: {
+      type: Array,
+    },
   },
   data() {
     return {
@@ -451,6 +527,7 @@ export default {
       slackMembers: new SlackUserList(),
       uninviteId: '',
       uninviteModal: false,
+      selectedAction: {},
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
         { key: 'Representative', value: User.types.REP },
@@ -612,6 +689,7 @@ export default {
     },
     async handleUninvite(id) {
       this.loading = true
+      // work here
       try {
         const res = await User.api.uninvite(id)
         this.$toast('User Removed Successfully', {
@@ -692,6 +770,12 @@ export default {
       } else {
         return props.name
       }
+    },
+    runInviteAction(event, member) {
+      event.action(this, member)
+      setTimeout(() => {
+        this.selectedAction[member.id] = null
+      }, 0)
     },
   },
   computed: {
@@ -924,7 +1008,7 @@ form {
       width: 100%;
       display: flex;
       // margin-bottom: 0.5rem;
-      z-index: 2;
+      // z-index: 2;
       margin-left: 16px;
     }
     &__item {
@@ -978,5 +1062,15 @@ form {
   margin-right: 0.5rem;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
+}
+.green-check {
+  height: 1rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+  margin-left: 1.75rem;
+  // margin-top: 0.1rem;
+}
+.margin-left-one {
+  margin-left: 1rem
 }
 </style>

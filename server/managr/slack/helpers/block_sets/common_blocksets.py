@@ -575,7 +575,7 @@ def initial_alert_message(context):
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Access Apps",
+                    "Additional Details",
                     "access_apps",
                     action_id=action_with_params(
                         slack_const.PROCESS_SWITCH_ALERT_MESSAGE,

@@ -89,4 +89,10 @@ export default class OrganizationAPI {
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.addTeamMember' }))
   }
+  async changeTeamLead(data) {
+    return this.client
+      .patch(TEAM_ENDPOINT + data.id + '/', data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.changeTeamLead' }))
+  }
 }

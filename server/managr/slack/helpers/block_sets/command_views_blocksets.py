@@ -546,7 +546,7 @@ def initial_inline_blockset(context, *args, **kwargs):
     config_id = context.get("config_id")
     action_blocks = [
         block_builders.simple_button_block(
-            f"Switch to {'Connected Apps' if switch_to == 'message' else 'In-Line'}",
+            f"Switch to {'Additional Details' if switch_to == 'message' else 'In-Line'}",
             "switch_inline",
             action_id=action_with_params(
                 slack_const.PROCESS_SWITCH_ALERT_MESSAGE,

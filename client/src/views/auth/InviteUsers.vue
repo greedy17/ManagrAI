@@ -490,6 +490,7 @@
           class="invite-users__inviter"
           :handleEdit="handleEdit"
           :inviteOpen="inviteOpen"
+          :inviteActions="inviteActions"
           @cancel="handleCancel"
           @handleRefresh="refresh"
         />
@@ -553,6 +554,7 @@ export default {
       user: this.getUser,
       timezones: moment.tz.names(),
       profileForm: new UserProfileForm({}),
+      inviteActions: [{label: 'Uninvite', action: () => console.log('uninvite')}],
       loading: false,
     }
   },
