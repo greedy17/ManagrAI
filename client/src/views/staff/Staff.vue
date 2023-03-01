@@ -2399,29 +2399,46 @@ export default {
       usageData: null,
       chartOptions: {
         series: [{
-          name: 'Active Users',
-          data: []
-        }, {
           name: 'Total Users',
           data: []
+        }, {
+          name: 'Active Users',
+          data: []
         }],
+        colors: ['#41b883', '#008FFB'],
+        dataLabels: {
+          enabled: true,
+          formatter: function(val, opt) {
+            // uncomment if we want numbers in the bars
+            if (opt.seriesIndex === 1) {
+              // return opt.globals.series[0][opt.dataPointIndex] + val
+            } else {
+              // return val
+            }
+          },
+        },
         tooltip: {
           custom: function({series, seriesIndex, dataPointIndex, w}) {
-            if (seriesIndex === 1) {
+            // if (seriesIndex === 1) {
+            //   return '<div class="arrow_box">' + 
+            //       '<div>' +
+            //         `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
+            //         '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Active Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + series[seriesIndex][dataPointIndex] + '</span>' + '</div>' +
+            //         '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[seriesIndex][dataPointIndex] + series[0][dataPointIndex]) + '</span>' + '</div>' +
+            //       '</div>' +
+            //     '</div>'
+            // } else {
+              const divided = (series[1][dataPointIndex] / (series[1][dataPointIndex] + series[0][dataPointIndex]) * 100)
+              const percentage = Number.parseFloat(divided).toFixed(0)
               return '<div class="arrow_box">' + 
                   '<div>' +
                     `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
-                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[seriesIndex][dataPointIndex]) + '</span>' + '</div>' +
+                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Active Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + series[1][dataPointIndex] + '</span>' + '</div>' +
+                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[1][dataPointIndex] + series[0][dataPointIndex]) + '</span>' + '</div>' +
+                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Percent Active: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + percentage + '%' + '</span>' + '</div>' +
                   '</div>' +
                 '</div>'
-            } else {
-              return '<div class="arrow_box">' + 
-                  '<div>' +
-                    `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
-                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Active Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + series[seriesIndex][dataPointIndex] + '</span>' + '</div>' +
-                  '</div>' +
-                '</div>'
-            }
+            // }
           }
         },
         // <div class="apexcharts-tooltip apexcharts-theme-light" style="left: 51.6074px; top: 25.535px;"><div class="apexcharts-tooltip-title" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">Jan</div><div class="apexcharts-tooltip-series-group apexcharts-active" style="order: 1; display: flex;"><span class="apexcharts-tooltip-marker" style="background-color: rgb(0, 143, 251);"></span><div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"><div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">Active Users: </span><span class="apexcharts-tooltip-text-y-value">44</span></div><div class="apexcharts-tooltip-goals-group"><span class="apexcharts-tooltip-text-goals-label"></span><span class="apexcharts-tooltip-text-goals-value"></span></div><div class="apexcharts-tooltip-z-group"><span class="apexcharts-tooltip-text-z-label"></span><span class="apexcharts-tooltip-text-z-value"></span></div></div></div><div class="apexcharts-tooltip-series-group" style="order: 2; display: none;"><span class="apexcharts-tooltip-marker" style="background-color: rgb(0, 143, 251);"></span><div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"><div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">Active Users: </span><span class="apexcharts-tooltip-text-y-value">44</span></div><div class="apexcharts-tooltip-goals-group"><span class="apexcharts-tooltip-text-goals-label"></span><span class="apexcharts-tooltip-text-goals-value"></span></div><div class="apexcharts-tooltip-z-group"><span class="apexcharts-tooltip-text-z-label"></span><span class="apexcharts-tooltip-text-z-value"></span></div></div></div></div>
@@ -2429,8 +2446,44 @@ export default {
           type: 'bar',
           height: 350,
           stacked: true,
-          stackType: '100%'
+          // stackType: '100%',
+          stackType: 'normal',
         },
+        states: {
+          hover: {
+            filter: {
+              type: 'none'
+            }
+          }
+        },
+        // legend: {
+        //   // customLegendItems: ['Active Users'],
+        //   // labels: {
+        //   //   formatter: (value) => {
+        //   //     console.log('value', value)
+        //   //     return value
+        //   //   }
+        //   // },
+        //   // formatter: (value) => {
+        //   //   console.log('value', value)
+        //   //   return value
+        //   // }
+        //   show: true,
+        //   position: 'right',
+        //   customLegendItems: [ 'Active Users', 'Total Users'],
+        // },
+        // customLegendItems: [
+        //     {
+        //       name: "Active Users",
+        //       seriesIndex: 0,
+        //       color: "#008FFB"
+        //     },
+        //     {
+        //       name: "Total Users",
+        //       seriesIndex: 1,
+        //       color: "#FF4560"
+        //     },
+        // ],
         responsive: [{
           breakpoint: 480,
           options: {
@@ -3216,6 +3269,9 @@ export default {
       const currentYear = today.getFullYear()
       const totalsArr = []
       const activeArr = []
+      for (let key in this.usageData.totals) {
+        activeArr.push(this.usageData.totals[key]['total active users'])
+      }
       for (let i = 0; i <= currentMonth; i++) {
         let totalsCount = 0;
         for (let j = 0; j < this.trialUsers.length; j++) {
@@ -3227,14 +3283,12 @@ export default {
             totalsCount++
           }
         }
+        totalsCount = totalsCount - activeArr[i]
         totalsArr.push(totalsCount)
       }
-      for (let key in this.usageData.totals) {
-        activeArr.push(this.usageData.totals[key]['total active users'])
-      }
-      this.chartOptions.series = [{name: 'Active Users', data: []}, {name: 'Total Users', data: []}]
-      this.chartOptions.series[1].data = [...totalsArr]
-      this.chartOptions.series[0].data = [...activeArr]
+      this.chartOptions.series = [{name: 'Total Users', data: []}, {name: 'Active Users', data: []}]
+      this.chartOptions.series[0].data = [...totalsArr]
+      this.chartOptions.series[1].data = [...activeArr]
     },
     formatCopyObject(obj) {
       let string = '{'
@@ -4171,5 +4225,8 @@ input[type='search']:focus {
   border-bottom: 1px solid $very-light-gray;
   padding-bottom: 1rem;
   width: 75vw
+}
+.apexcharts-legend {
+  flex-direction: row-reverse
 }
 </style>

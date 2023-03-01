@@ -3060,7 +3060,7 @@
     <div v-if="loading">
       <Loader
         :loaderText="`Pulling in your latest ${
-          userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot'
+          userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot'
         } data`"
       />
     </div>
