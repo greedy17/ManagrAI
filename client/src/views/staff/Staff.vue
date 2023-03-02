@@ -1589,7 +1589,7 @@
                 </div>
               </div>
               <div class="right-actions">
-                <div class="invite-list__section__container">
+                <!-- <div class="invite-list__section__container">
                   <div style="display: flex; flex-direction: column; margin-left: 1rem;">
                     <p style="margin: 0">
                       Users:
@@ -1612,7 +1612,7 @@
                       </template>
                     </Multiselect>
                   </div>
-                </div>
+                </div> -->
                 <div class="invite-list__section__container">
                   <div style="display: flex; flex-direction: column; margin-left: 1rem; margin-top: 3rem;">
                     <p style="margin: 0;">
@@ -2317,8 +2317,8 @@ export default {
       selectedAction: null,
       actionOptions: [
         {label: 'Users Overview', action: () => this.openModal('usersOverview', this.filteredOrgUsers)},
-        {label: 'Forms', action: () => this.goToSlackForms() /*this.openModal('slackForm', this.selectedSlackForms)*/},
         {label: 'Submissions', action: () => this.goToSlackFormInstace()},
+        {label: 'Forms', action: () => this.goToSlackForms() /*this.openModal('slackForm', this.selectedSlackForms)*/},
         {label: 'Alerts', action: () => this.goToAlerts()},
       ],
       inviteActions: [
