@@ -871,9 +871,9 @@
                   <span v-else :class="'grayscale'">
                     <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
                   </span>
-                  <span :class="member.has_zoom_integration ? '' : 'grayscale'">
+                  <!-- <span :class="member.has_zoom_integration ? '' : 'grayscale'">
                     <img src="@/assets/images/zoom.png" alt="" height="18px" />
-                  </span>
+                  </span> -->
                   <span :class="member.nylas_ref ? '' : 'grayscale'">
                     <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
                   </span>
@@ -2169,6 +2169,9 @@
                       </span>
                       <span v-else :class="'grayscale'">
                         <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
+                      </span>
+                      <span :class="user.outreach_account ? '' : 'grayscale'">
+                        <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
                       </span>
                       <span :class="user.nylas ? '' : 'grayscale'">
                         <img src="@/assets/images/gmailCal.png" alt="" height="18px" />

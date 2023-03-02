@@ -335,8 +335,11 @@
           <span v-else-if="userCRM === 'HUBSPOT'" :class="user.hasHubspotIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
           </span>
-          <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
+          <!-- <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/zoom.png" alt="" height="18px" />
+          </span> -->
+          <span :class="user.hasOutreachIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
           </span>
           <span :class="user.nylasRef ? '' : 'grayscale'">
             <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
@@ -373,12 +376,10 @@
             member.team === $store.state.user.team &&
             !((member.firstName || member.first_name) && (!member.isActive && !member.is_active))) || selectedTeamUsers
           "
-          @click="test(member)"
         >
           <div
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item col"
-            @click="test(member)"
           >
             <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
             {{ (!member.firstName && !member.first_name) ? 'Pending' : member.isActive ? member.firstName : member.first_name }}
@@ -437,8 +438,11 @@
             <span v-else :class="'grayscale'">
               <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
             </span>
-            <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
+            <!-- <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/zoom.png" alt="" height="18px" />
+            </span> -->
+            <span :class="(member.hasOutreachIntegration || member.has_outreach_integration) ? '' : 'grayscale'">
+              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
             </span>
             <span :class="(member.nylasRef || member.nylas_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
