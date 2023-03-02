@@ -1388,7 +1388,7 @@
           <section style="position: relative">
             <div style="display: flex">
               <button
-                v-if="activeFilters.length < 4 && selected_org"
+                v-if="activeFilters.length < 4"
                 @click.stop="addingFilter"
                 class="add-filter-button"
               >
@@ -1401,7 +1401,7 @@
                 />Filter
               </button>
               <button
-                v-if="activeFilters.length && selected_org"
+                v-if="activeFilters.length"
                 @click.stop="resetFilters"
                 class="add-filter-button"
               >
@@ -1415,7 +1415,7 @@
               </button>
             </div>
             <div v-outside-click="closeFilters" v-if="filtering">
-              <div v-if="filtering" class="filter-selection">
+              <div v-if="filtering && selected_org" class="filter-selection" style="z-index: 5;">
                 <div class="filter-selection__body">
                   <Multiselect
                     placeholder="Team/User"
@@ -1457,6 +1457,44 @@
                     <template slot="placeholder">
                       <p class="multi-slot">
                         {{ selectedTeamOrUser ? `Filters` : `Please select User/Team.` }}
+                      </p>
+                    </template>
+                  </Multiselect>
+                </div>
+              </div>
+              <div v-else class="filter-selection" style="z-index: 5;">
+                <!-- <div class="filter-selection__body">
+                  <Multiselect
+                    placeholder="Team/User"
+                    @select="resetFilters"
+                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4"
+                    v-model="selectedTeamOrUser"
+                    :options="teamOrUser"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    track-by="name"
+                    label="name"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                  </Multiselect>
+                </div> -->
+                <div class="filter-selection__body">
+                  <Multiselect
+                    placeholder="Filter"
+                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0rem; z-index: 3"
+                    @select="applyOrgFilter($event)"
+                    v-model="selectedOrgFilter"
+                    :options="selectedOrgFilterOptions"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    track-by="name"
+                    label="name"
+                  >
+                    <template slot="placeholder">
+                      <p class="multi-slot">
+                        {{ `Please select Org.` }}
                       </p>
                     </template>
                   </Multiselect>
@@ -1512,7 +1550,6 @@
                         :options="states"
                         openDirection="below"
                         selectLabel="Enter"
-                        track-by="id"
                       >
                         <template slot="noResult">
                           <p class="multi-slot">No results.</p>
@@ -1563,7 +1600,7 @@
                   <div class="invite-list__section__container">
                     <button
                       style="margin: 1rem 0 0 0; align-self: center"
-                      class="invite_button"
+                      class="green_button"
                       @click="postOrgUpdates()"
                     >
                       Save Changes
@@ -1687,8 +1724,8 @@
                   </div>
                 </div>
                 <div>
-                  <button class="green_button" type="submit" @click="handleNewTeam">
-                    Create Team
+                  <button class="invite_button" type="submit" @click="handleNewTeam">
+                    Create Team +
                   </button>
                 </div>
               </div>
@@ -2313,6 +2350,10 @@ export default {
       selectedViewedTeam: null,
       selectedTeam: null,
       selectedFilter: null,
+      selectedOrgFilter: {name: 'Active Orgs'},
+      selectedOrgFilterOptions: [
+        {name: 'Active Orgs'}, {name: 'Inactive Orgs'}, {name: 'All'},
+      ],
       selectedDeactivateOrg: null,
       filterByDay: 30,
       usersFilteredByDays: [],
@@ -2537,12 +2578,17 @@ export default {
       return this.chartOptions.series
     },
     filteredOrganizations() {
-      if (!this.filterText) {
-        return this.filteredActiveOrganizations
-      } else {
+      if (this.filterText) {
         return this.filteredActiveOrganizations.filter((org) =>
           org.name.toLowerCase().includes(this.filterText.toLowerCase()),
         )
+      }
+      else if (!this.selectedOrgFilter || this.selectedOrgFilter.name === 'Active Orgs') {
+        return this.filteredActiveOrganizations
+      } else if (this.selectedOrgFilter.name === 'Inactive Orgs') {
+        return this.filteredInactiveOrganizations
+      } else {
+        return this.organizations
       }
     },
     selectedTeamUsers() {
@@ -2555,6 +2601,9 @@ export default {
     },
     filteredActiveOrganizations() {
       return this.organizations.filter(org => org.state === 'ACTIVE')
+    },
+    filteredInactiveOrganizations() {
+      return this.organizations.filter(org => org.state !== 'ACTIVE')
     },
     activeTrialUsers() {
       return this.trialUsers.filter(user => user.updates_this_month >= 10)
@@ -2798,6 +2847,16 @@ export default {
       this.activeFilters.push(this.selectedFilter)
       this.selectedFilter = null
       this.selectedTeamOrUser = null
+      this.filtering = false
+    },
+    applyOrgFilter(value) {
+      if (!value) {
+        this.selectedOrgFilter = {name: 'Active Orgs'}
+        this.filtering = false
+      }
+      else {
+        this.selectedOrgFilter = null
+      }
       this.filtering = false
     },
     async getFilteredObjects(value) {
