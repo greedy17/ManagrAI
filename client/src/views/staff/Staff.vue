@@ -1492,7 +1492,7 @@
                 {{ selected_org.days_since_created_ref }} days active
               </h4>
             </div>
-            <div style="display: flex; margin-left: 1.2rem; width: 75vw; justify-content: space-between;">
+            <div style="display: flex; margin-left: 1.2rem; width: 75vw; justify-content: space-between; height: 28vh;">
               <div class="left-actions">
                 <div class="invite-list__section__container">
                   <div class="line-up">
@@ -1985,6 +1985,7 @@
         <button class="green_button back" @click="goBack">Back</button>
         <div
           :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
+          style="display: flex; justify-content: space-between;"
           v-for="(slackFormInstance, i) in filteredOrgSlackFormInstances"
           :key="slackFormInstance.id"
         >
@@ -2000,6 +2001,9 @@
                 : `(Not Submitted)`
             }}
           </h5>
+          <h6>
+            {{ getTime(slackFormInstance.submission_date) }}
+          </h6>
         </div>
       </template>
       <template v-else-if="page === 'TeamManager'">
@@ -2318,7 +2322,7 @@ export default {
       admin: null,
       selectedAction: null,
       actionOptions: [
-        {label: 'Users Overview', action: () => this.openModal('usersOverview', this.filteredOrgUsers)},
+        // {label: 'Users Overview', action: () => this.openModal('usersOverview', this.filteredOrgUsers)},
         {label: 'Submissions', action: () => this.goToSlackFormInstace()},
         {label: 'Forms', action: () => this.goToSlackForms() /*this.openModal('slackForm', this.selectedSlackForms)*/},
         {label: 'Alerts', action: () => this.goToAlerts()},
@@ -2458,34 +2462,6 @@ export default {
             }
           }
         },
-        // legend: {
-        //   // customLegendItems: ['Active Users'],
-        //   // labels: {
-        //   //   formatter: (value) => {
-        //   //     console.log('value', value)
-        //   //     return value
-        //   //   }
-        //   // },
-        //   // formatter: (value) => {
-        //   //   console.log('value', value)
-        //   //   return value
-        //   // }
-        //   show: true,
-        //   position: 'right',
-        //   customLegendItems: [ 'Active Users', 'Total Users'],
-        // },
-        // customLegendItems: [
-        //     {
-        //       name: "Active Users",
-        //       seriesIndex: 0,
-        //       color: "#008FFB"
-        //     },
-        //     {
-        //       name: "Total Users",
-        //       seriesIndex: 1,
-        //       color: "#FF4560"
-        //     },
-        // ],
         responsive: [{
           breakpoint: 480,
           options: {
@@ -2531,7 +2507,10 @@ export default {
       }
     },
     selectedTeamUsers() {
-      if (this.selectedViewedTeam) {
+      if (this.selectedViewedTeam && this.selectedViewedTeam.id === 'all') {
+        return this.orgUsers
+      }
+      else if (this.selectedViewedTeam) {
         return this.orgUsers.filter(user => user.team === this.selectedViewedTeam.id)
       } else return []
     },
@@ -2846,7 +2825,12 @@ export default {
         this.organizations = res
         if (this.selected_org) {
           const orgForTeam = this.organizations.filter(org => org.id === this.selected_org.id)[0]
-          this.teamList = orgForTeam.teams_ref
+          this.teamList = [{
+            id: 'all',
+            name: 'All Users', 
+            organization: this.selected_org,
+            team_lead: null,
+          }, ...orgForTeam.teams_ref]
         }
       } catch (e) {
         console.log(e)
@@ -3334,10 +3318,15 @@ export default {
           this.selected_org.id,
         )
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
-        this.teamList = this.selected_org.teams_ref
+        this.teamList = [{
+          id: 'all',
+          name: 'All Users', 
+          organization: this.selected_org,
+          team_lead: null,
+        }, ...this.selected_org.teams_ref]
         this.admin = this.orgUsers.filter(user => user.is_admin)[0]
         this.newAdmin = this.admin
-        this.selectedViewedTeam = this.teamList.filter(team => team.id === this.admin.team)[0]
+        this.selectedViewedTeam = this.teamList.filter(team => team.id === 'all')[0]
         this.filteredOrgUsers = this.orgUsers
         this.team = this.orgUsers
         this.filteredOrgSlackForms = this.orgSlackForms
