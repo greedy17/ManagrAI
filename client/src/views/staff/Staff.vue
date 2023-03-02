@@ -1516,30 +1516,6 @@
                 </div>
                 <div class="invite-list__section__container">
                   <div class="line-up">
-                    <div class="invite-list__section__item">Admin:</div>
-                  </div>
-                  <Multiselect
-                    v-model="newAdmin"
-                    @select="handleConfirm"
-                    :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
-                    openDirection="below"
-                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem;"
-                    selectLabel="Enter"
-                    label="email"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <!-- <img src="@/assets/images/search.svg" alt="" /> -->
-                        {{`${admin ? admin.email : ''}`}}
-                      </p>
-                    </template>
-                  </Multiselect>
-                </div>
-                <div class="invite-list__section__container">
-                  <div class="line-up">
                     <div class="invite-list__section__item">Ignore Emails:</div>
                   </div>
                   <div class="" style="width: 48%">
@@ -1589,6 +1565,32 @@
                 </div>
               </div>
               <div class="right-actions">
+                <div class="invite-list__section__container">
+                  <div style="display: flex; flex-direction: column; margin-left: 1rem;">
+                    <p style="margin: 0">
+                      Admin:
+                    </p>
+                    <Multiselect
+                      v-model="newAdmin"
+                      @select="handleConfirm"
+                      :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
+                      openDirection="below"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
+                      selectLabel="Enter"
+                      label="email"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <!-- <img src="@/assets/images/search.svg" alt="" /> -->
+                          {{`${admin ? admin.email : ''}`}}
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
                 <!-- <div class="invite-list__section__container">
                   <div style="display: flex; flex-direction: column; margin-left: 1rem;">
                     <p style="margin: 0">
