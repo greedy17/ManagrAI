@@ -2130,8 +2130,25 @@
                   <button @click="deactivateOrg" class="green_button" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
                 </div>
               </div>
-              <div class="added-collection padding" style="flex-direction: row; width: 40vw; height: 39vh; align-items: center;">
-                <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 35vw;" />
+              <div class="added-collection padding" style="display: flex; flex-direction: row; width: 55vw; height: 39vh; align-items: center;">
+                <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 32vw;" />
+                <!-- <div>
+                  <Multiselect
+                    placeholder="Select Chart to View"
+                    style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
+                    v-model="selectedChart"
+                    :options="selectedChartOptions"
+                    openDirection="below"
+                    selectLabel="Enter"
+                    track-by="id"
+                    label="name"
+                    :multiple="false"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                  </Multiselect>
+                </div> -->
               </div>
             </div>
             <div class="added-collection padding" style="width: 100%; justify-content: center;">
@@ -2505,6 +2522,8 @@ export default {
           offsetY: 50
         },
       },
+      selectedChart: null,
+      selectedChartOptions: [],
     }
   },
   computed: {
@@ -3257,6 +3276,7 @@ export default {
       try {
         const res = await User.api.getTrialUsers()
         this.trialUsers = res
+        // console.log('this.trialUsers', this.trialUsers)
         await this.getUsageData()
         this.setChartOptions()
       } catch(e) {
@@ -3266,6 +3286,7 @@ export default {
     async getUsageData() {
       const res = await User.api.callCommand('PULL_USAGE_DATA')
       this.usageData = res.data
+      // console.log('this.usageData', this.usageData)
     },
     setChartOptions() {
       const today = new Date(Date.now())
