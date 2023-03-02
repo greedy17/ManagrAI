@@ -1564,12 +1564,11 @@
                   </button>
                 </div>
               </div>
-              <div class="right-actions">
+              <div class="right-actions" style="margin-left: 1rem;">
                 <div class="invite-list__section__container">
-                  <div style="display: flex; flex-direction: column; margin-left: 1rem;">
-                    <p style="margin: 0">
-                      Admin:
-                    </p>
+                    <div class="line-up">
+                      <div class="invite-list__section__item">Admin:</div>
+                    </div>
                     <Multiselect
                       v-model="newAdmin"
                       @select="handleConfirm"
@@ -1589,7 +1588,6 @@
                         </p>
                       </template>
                     </Multiselect>
-                  </div>
                 </div>
                 <!-- <div class="invite-list__section__container">
                   <div style="display: flex; flex-direction: column; margin-left: 1rem;">
@@ -1616,10 +1614,9 @@
                   </div>
                 </div> -->
                 <div class="invite-list__section__container">
-                  <div style="display: flex; flex-direction: column; margin-left: 1rem; margin-top: 3rem;">
-                    <p style="margin: 0;">
-                      Select Action:
-                    </p>
+                    <div class="line-up">
+                      <div class="invite-list__section__item">Select Action:</div>
+                    </div>
                     <Multiselect
                       placeholder="Select Action"
                       @select="selectAction($event)"
@@ -1636,7 +1633,6 @@
                         <p class="multi-slot">No results.</p>
                       </template>
                     </Multiselect>
-                  </div>
                 </div>
               </div>
             </div>
