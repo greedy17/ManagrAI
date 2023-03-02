@@ -2139,43 +2139,54 @@
             </div>
             <div style="height: 45vh;">
               <div class="flex-row-spread" style="margin-bottom: 0.5rem;">
-                <div style="width: 35%">User</div>
+                <div style="width: 25%">User</div>
                 <div style="width: 25%">Integrations</div>
                 <div style="width: 25%">Days Active</div>
                 <div style="width: 25%">Total Updates</div>
               </div>
               <div style="overflow: scroll; height: 85%;">
                 <div v-for="user in dayTrialUsers" :key="user.id" class="flex-row-spread" style="margin-bottom: 0.25rem;">
-                  <div style="width: 35%">{{ user.email }}</div>
+                  <div style="width: 25%">{{ user.email }}</div>
                   <div class="flex-row-spread" style="width: 25%">
                     <div
-                      style="display: flex; align-items: flex-start;"
+                      style="display: flex; flex-direction: column;"
                       class="invite-list-users__section__item invite-list-users__status"
                     >
-                      <span :class="user.slack_integration ? '' : 'grayscale'">
-                        <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
-                      </span>
-                      <span
-                        v-if="user.crm === 'SALESFORCE'"
-                        :class="user.salesforce_account ? '' : 'grayscale'"
-                      >
-                        <img src="@/assets/images/salesforce.png" height="18px" alt="" />
-                      </span>
-                      <span
-                        v-else-if="user.crm === 'HUBSPOT'"
-                        :class="user.hubspot_account ? '' : 'grayscale'"
-                      >
-                        <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
-                      </span>
-                      <span v-else :class="'grayscale'">
-                        <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
-                      </span>
-                      <span :class="user.outreach_account ? '' : 'grayscale'">
-                        <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-                      </span>
-                      <span :class="user.nylas ? '' : 'grayscale'">
-                        <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
-                      </span>
+                      <div style="display: flex; align-items: flex-start;">
+                        <span
+                          v-if="user.crm === 'SALESFORCE'"
+                          :class="user.salesforce_account ? '' : 'grayscale'"
+                          >
+                          <img src="@/assets/images/salesforce.png" height="18px" alt="" />
+                        </span>
+                        <span
+                          v-else-if="user.crm === 'HUBSPOT'"
+                          :class="user.hubspot_account ? '' : 'grayscale'"
+                        >
+                          <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
+                        </span>
+                        <span v-else :class="'grayscale'">
+                          <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
+                        </span>
+                        <span :class="user.slack_integration ? '' : 'grayscale'">
+                          <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
+                        </span>
+                        <span :class="user.nylas ? '' : 'grayscale'">
+                          <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
+                        </span>
+                        <span v-if="user.outreach_account">
+                          <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+                        </span>
+                        <span v-else-if="user.salesloft_account">
+                          <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
+                        </span>
+                        <span v-else class="grayscale">
+                          <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+                        </span>
+                        <span :class="user.gong_account ? '' : 'grayscale'">
+                          <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div style="width: 25%">{{user.days_active}}</div>
