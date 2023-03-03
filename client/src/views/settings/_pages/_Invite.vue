@@ -263,19 +263,19 @@
           User
         </div>
         <div
-          style="display: flex; align-items: flex-start"
+          style="display: flex; align-items: flex-start; width: 20%;"
           class="invite-list__section__item section-header"
         >
           User Level
         </div>
         <div
-          style="display: flex; align-items: flex-start"
+          style="display: flex; align-items: flex-start; width: 15%;"
           class="invite-list__section__item section-header"
         >
           Status
         </div>
         <div
-          style="display: flex; align-items: flex-start"
+          style="display: flex; align-items: flex-start; width: 20%;"
           class="invite-list__section__item section-header"
         >
           Team Lead
@@ -305,41 +305,54 @@
           <p style="color: #beb5cc; font-size: 0.65rem; margin-top: 0.25rem">{{ user.email }}</p>
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 14px"
+          style="display: flex; align-items: flex-start; font-size: 14px; width: 20%;"
           class="invite-list__section__item"
         >
           {{ user.userLevel == 'MANAGER' ? 'Team Leader (You)' : 'Rep(You)' }}
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 14px"
+          style="display: flex; align-items: flex-start; font-size: 14px; width: 15%;"
           class="invite-list__section__item"
         >
           Registered
         </div>
         <div
-          style="display: flex; align-items: flex-start; font-size: 14px;"
+          style="display: flex; align-items: flex-start; font-size: 14px; width: 20%;"
           class="invite-list__section__item"
         >
-          <img class="green-check" style="margin-left: 2.5rem; margin-right: 1rem;" src="@/assets/images/configCheck.svg" alt="" />
+          <img class="green-check" style="margin-left: 1.75rem; margin-right: 1rem;" src="@/assets/images/configCheck.svg" alt="" />
         </div>
         <div
           style="display: flex; align-items: flex-start"
+          @click="test(user)"
           class="invite-list__section__item invite-list__status"
         >
-          <span :class="user.slackRef ? '' : 'grayscale'">
-            <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
-          </span>
           <span v-if="userCRM === 'SALESFORCE'" :class="user.hasSalesforceIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/salesforce.png" height="18px" alt="" />
           </span>
           <span v-else-if="userCRM === 'HUBSPOT'" :class="user.hasHubspotIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
           </span>
-          <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
-            <img src="@/assets/images/zoom.png" alt="" height="18px" />
+          <span :class="user.slackRef ? '' : 'grayscale'">
+            <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
           </span>
           <span :class="user.nylasRef ? '' : 'grayscale'">
             <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
+          </span>
+          <!-- <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/zoom.png" alt="" height="18px" />
+          </span> -->
+          <span v-if="user.hasOutreachIntegration">
+            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+          </span>
+          <span v-else-if="user.hasSalesloftIntegration">
+            <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
+          </span>
+          <span v-else class="grayscale">
+            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+          </span>
+          <span :class="user.hasGongIntegration ? '' : 'grayscale'">
+            <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
           </span>
         </div>
         <div
@@ -373,12 +386,10 @@
             member.team === $store.state.user.team &&
             !((member.firstName || member.first_name) && (!member.isActive && !member.is_active))) || selectedTeamUsers
           "
-          @click="test(member)"
         >
           <div
             style="display: flex; align-items: flex-start; font-size: 14px"
             class="invite-list__section__item col"
-            @click="test(member)"
           >
             <!-- {{member.isActive ? member.firstName : 'Pending'}} -->
             {{ (!member.firstName && !member.first_name) ? 'Pending' : member.isActive ? member.firstName : member.first_name }}
@@ -388,34 +399,34 @@
           </div>
           <div
             v-if="member.userLevel == 'MANAGER' || member.user_level === 'MANAGER'"
-            style="display: flex; align-items: flex-start; font-size: 14px"
+            style="display: flex; align-items: flex-start; font-size: 14px; width: 20%;"
             class="invite-list__section__item"
           >
             Manager
           </div>
           <div
             v-else-if="member.userLevel == 'SDR' || member.user_level === 'SDR'"
-            style="display: flex; align-items: flex-start; font-size: 14px"
+            style="display: flex; align-items: flex-start; font-size: 14px; width: 20%;"
             class="invite-list__section__item"
           >
             SDR
           </div>
           <div
             v-else-if="member.userLevel == 'REP' || member.user_level === 'REP'"
-            style="display: flex; align-items: flex-start; font-size: 14px"
+            style="display: flex; align-items: flex-start; font-size: 14px; width: 20%;"
             class="invite-list__section__item"
           >
             REP
           </div>
           <div
-            style="display: flex; align-items: flex-start; font-size: 14px"
+            style="display: flex; align-items: flex-start; font-size: 14px; width: 15%;"
             class="invite-list__section__item"
           >
             <!-- {{ member.isActive ? 'Registered' : 'Pending...' }} -->
             {{ (!member.firstName && !member.first_name) ? 'Pending...' : (member.isActive || member.is_active) ? 'Registered' : 'Deactivated' }}
           </div>
           <div
-            style="display: flex; align-items: flex-start; font-size: 14px;"
+            style="display: flex; align-items: flex-start; font-size: 14px; width: 20%;"
             class="invite-list__section__item"
           >
             <img v-if="member.is_team_lead || member.isTeamLead" class="green-check" src="@/assets/images/configCheck.svg" alt="" />
@@ -425,9 +436,6 @@
             style="display: flex; align-items: flex-start"
             class="invite-list__section__item invite-list__status"
           >
-            <span :class="(member.slackRef || member.slack_ref) ? '' : 'grayscale'">
-              <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
-            </span>
             <span v-if="member.crm === 'SALESFORCE'" :class="(member.hasSalesforceIntegration || member.has_salesforce_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/salesforce.png" height="18px" alt="" />
             </span>
@@ -437,11 +445,29 @@
             <span v-else :class="'grayscale'">
               <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
             </span>
-            <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
-              <img src="@/assets/images/zoom.png" alt="" height="18px" />
+            <span :class="(member.slackRef || member.slack_ref) ? '' : 'grayscale'">
+              <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
+            <!-- <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
+              <img src="@/assets/images/zoom.png" alt="" height="18px" />
+            </span> -->
+            <!-- <span :class="(member.hasOutreachIntegration || member.has_outreach_integration) ? '' : 'grayscale'">
+              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+            </span> -->
             <span :class="(member.nylasRef || member.nylas_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
+            </span>
+            <span v-if="(member.hasOutreachIntegration || member.has_outreach_integration)">
+              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+            </span>
+            <span v-else-if="(member.hasSalesloftIntegration || member.has_salesloft_integration)">
+              <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
+            </span>
+            <span v-else class="grayscale">
+              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+            </span>
+            <span style="" :class="(member.hasGongIntegration || member.has_gong_integration) ? '' : 'grayscale'">
+              <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
             </span>
           </div>
           <div
