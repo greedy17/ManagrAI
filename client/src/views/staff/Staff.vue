@@ -2483,13 +2483,14 @@ export default {
       usageData: null,
       chartOptions: {
         series: [{
-          name: 'Total Users',
+          name: 'Users',
           data: []
         }, {
           name: 'Active Users',
           data: []
         }],
-        colors: ['#41b883', '#008FFB'],
+        // colors: ['#41b883', '#008FFB'], // original colors
+        colors: ['#c7c7cc', '#41b883'],
         dataLabels: {
           enabled: true,
           formatter: function(val, opt) {
@@ -3372,7 +3373,7 @@ export default {
         totalsCount = totalsCount - activeArr[i]
         totalsArr.push(totalsCount)
       }
-      this.chartOptions.series = [{name: 'Total Users', data: []}, {name: 'Active Users', data: []}]
+      this.chartOptions.series = [{name: 'Users', data: []}, {name: 'Active Users', data: []}]
       this.chartOptions.series[0].data = [...totalsArr]
       this.chartOptions.series[1].data = [...activeArr]
     },
