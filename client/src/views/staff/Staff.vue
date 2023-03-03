@@ -463,8 +463,8 @@
                     <div style="margin-left: 1rem">
                       <div>ID: {{ config.id }}</div>
                       <div>Recurrence Frequency: {{ config.recurrence_frequency }}</div>
-                      <div>Recurrence Day: {{ weekdays[config.recurrence_day] }}</div>
-                      <div>Recurrence Days: {{ getWeekdays(config.recurrence_days) }}</div>
+                      <div v-if="!config.recurrence_days.length">Recurrence Day: {{ weekdays[config.recurrence_day] }}</div>
+                      <div v-else>Recurrence Days: {{ getWeekdays(config.recurrence_days) }}</div>
                       <div>Recipients: {{ config.recipients }}</div>
                       <div>Recipient Type: {{ config.recipient_type }}</div>
                       <div>Template: {{ config.template }}</div>
