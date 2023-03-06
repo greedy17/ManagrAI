@@ -10,18 +10,11 @@
         </p>
 
         <!-- <p
-          style="margin-left: 16px"
-          @click="selectStoryReport"
-          :class="reportType == 'Performance' ? '' : 'light-green-section'"
-        >
-          Story Reports
-        </p> -->
-        <p
           style="margin-left: 16px; cursor: text"
           :class="reportType == 'Performance' ? '' : 'light-green-section'"
         >
           Story Reports <span class="purple-section">Coming Soon</span>
-        </p>
+        </p> -->
       </div>
 
       <div class="results-title" v-else-if="isPaid">
@@ -424,7 +417,9 @@
                 <span class="center-line">|</span>
               </div>
 
-              <p class="small-text">Avg: {{ performanceReport['total sessions'] / totalMonths }}</p>
+              <p class="small-text">
+                Avg: {{ roundNumber(performanceReport['total sessions'] / totalMonths) }}
+              </p>
             </div>
 
             <div class="card">
@@ -456,7 +451,9 @@
                 <span class="center-line">|</span>
               </div>
 
-              <p class="small-text">Avg: {{ performanceReport['updates'] / totalMonths }}</p>
+              <p class="small-text">
+                Avg: {{ roundNumber(performanceReport['updates'] / totalMonths) }}
+              </p>
             </div>
 
             <div class="card">
@@ -499,7 +496,10 @@
               <p class="small-text">
                 Avg:
                 {{
-                  Object.keys(performanceReport['fields']).length - noteFieldsLength / totalMonths
+                  roundNumber(
+                    Object.keys(performanceReport['fields']).length -
+                      noteFieldsLength / totalMonths,
+                  )
                 }}
               </p>
             </div>
@@ -538,7 +538,9 @@
                 <span class="center-line">|</span>
               </div>
 
-              <p class="small-text">Avg: {{ performanceReport['meetings'] / totalMonths }}</p>
+              <p class="small-text">
+                Avg: {{ roundNumber(performanceReport['meetings'] / totalMonths) }}
+              </p>
             </div>
 
             <div class="card">
@@ -594,9 +596,11 @@
               <p class="small-text">
                 Avg:
                 {{
-                  performanceReport['fields']['meeting_comments']
-                    ? performanceReport['fields']['meeting_comments']
-                    : 0 / totalMonths
+                  roundNumber(
+                    performanceReport['fields']['meeting_comments']
+                      ? performanceReport['fields']['meeting_comments']
+                      : 0 / totalMonths,
+                  )
                 }}
               </p>
             </div>
@@ -720,6 +724,9 @@ export default {
     this.workflows.refresh()
   },
   methods: {
+    roundNumber(num) {
+      return Math.round(num)
+    },
     async onUsersNextPage() {
       this.dropdownLoading = true
       await this.reps.addNextPage()

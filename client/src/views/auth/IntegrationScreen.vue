@@ -60,7 +60,7 @@
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div>
 
-    <div v-show="!isOnboarding">
+    <div v-if="!isOnboarding">
       <div class="integrations__cards">
         <div class="card" v-if="userCRM === 'SALESFORCE'">
           <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
@@ -359,7 +359,7 @@
 
             <p class="card-text">Add Contacts to Sequences</p>
 
-            <div v-if="true/*isPaid*/">
+            <div v-if="true /*isPaid*/">
               <PulseLoadingSpinnerButton
                 v-if="!hasOutreachIntegration"
                 :disabled="hasOutreachIntegration"
@@ -510,7 +510,7 @@
       </div>
     </div>
 
-    <div>
+    <div v-else>
       <Loader loaderText="Loading your onboarding progress, one moment." />
     </div>
 
