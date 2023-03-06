@@ -55,12 +55,12 @@
         </div>
       </form>
     </Modal>
-    <div class="welcome">
+    <div v-show="!isOnboarding" class="welcome">
       <!-- <img src="@/assets/images/logo.png" height="16px" alt="" /> -->
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div>
 
-    <div>
+    <div v-show="!isOnboarding">
       <div class="integrations__cards">
         <div class="card" v-if="userCRM === 'SALESFORCE'">
           <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
@@ -510,6 +510,10 @@
       </div>
     </div>
 
+    <div>
+      <Loader loaderText="Loading your onboarding progress, one moment." />
+    </div>
+
     <!-- <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.svg" />
     <p class="privacy">SOC2 certified, and GDPR compliant</p> -->
   </div>
@@ -531,6 +535,7 @@ import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import { CollectionManager } from '@thinknimble/tn-models'
 import Modal from '@/components/InviteModal'
+import Loader from '@/components/Loader'
 
 export default {
   name: 'Integrations',
@@ -538,6 +543,7 @@ export default {
     PulseLoadingSpinnerButton,
     CollectionManager,
     Modal,
+    Loader,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },

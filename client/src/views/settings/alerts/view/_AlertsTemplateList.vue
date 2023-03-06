@@ -371,9 +371,9 @@
       <Onboarder />
     </div>
 
-    <!-- <div class="center-loader" v-else>
+    <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />
-    </div> -->
+    </div>
   </div>
 </template>
 
@@ -440,12 +440,12 @@ export default {
   },
   async created() {
     this.templates.refresh()
-    if (this.zoomChannel) {
-      this.getZoomChannel()
-    }
-    if (this.hasRecapChannel) {
-      this.getRecapChannel()
-    }
+    // if (this.zoomChannel) {
+    //   this.getZoomChannel()
+    // }
+    // if (this.hasRecapChannel) {
+    //   this.getRecapChannel()
+    // }
     if (this.userCRM === 'HUBSPOT') {
       this.getHSStages()
     }
@@ -566,9 +566,12 @@ export default {
       this.deletedTitle(id)
       this.deleteOpen = !this.deleteOpen
       try {
-        await AlertTemplate.api.deleteAlertTemplate(id)
-        await this.templates.refresh()
-        this.handleUpdate()
+        await AlertTemplate.api.deleteAlertTemplate(id).then(() => {
+          User.api.getUser(this.user.id).then((response) => {
+            this.$store.commit('UPDATE_USER', response)
+          })
+        })
+        this.templates.refresh()
         this.$toast('Workflow removed', {
           timeout: 2000,
           position: 'top-left',
@@ -824,14 +827,16 @@ export default {
   color: $light-gray-blue;
 }
 .lb-bg {
-  background: rgb(242, 242, 242);
-  background: rgb(242, 242, 242);
-  background: linear-gradient(
-    90deg,
-    rgba(242, 242, 242, 1) 0%,
-    rgba(238, 255, 247, 1) 0%,
-    rgba(208, 251, 232, 1) 100%
-  );
+  // background: rgb(242, 242, 242);
+  // background: rgb(242, 242, 242);
+  // background: linear-gradient(
+  //   90deg,
+  //   rgba(242, 242, 242, 1) 0%,
+  //   rgba(238, 255, 247, 1) 0%,
+  //   rgba(208, 251, 232, 1) 100%
+  // );
+  background-color: $off-white;
+  border: 1px solid $off-white;
 }
 .lg-bg {
   background-color: $off-white;
@@ -1005,6 +1010,7 @@ button:disabled {
 }
 .alerts-template-list {
   // margin: 16px 0px;
+  height: 100vh;
   padding-left: 24px;
   color: $base-gray;
   display: flex;
@@ -1150,7 +1156,7 @@ a {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: 60vh;
+  height: 70vh;
   width: 100%;
 }
 .small-text {

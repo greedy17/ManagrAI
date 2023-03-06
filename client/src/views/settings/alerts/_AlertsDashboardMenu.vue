@@ -267,10 +267,10 @@ img {
   margin-left: 0.5rem;
 }
 .alerts {
-  height: 96vh;
+  height: 100vh;
   width: 94vw;
-  overflow: scroll;
-  // margin-top: 48px;
+  overflow-y: scroll;
+  margin-top: 4rem;
   border-radius: 6px;
 }
 a {
