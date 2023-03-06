@@ -34,12 +34,22 @@
         </footer>
       </div>
     </Modal>
-    <div class="header">
-      <h1>Welcome {{ user.firstName }}! 🎉</h1>
-      <p>
-        Lets start automating your sales process so you can
-        <span>reclaim your time and focus on selling.</span>
-      </p>
+    <div class="header row">
+      <div>
+        <h1>Welcome {{ user.firstName }}! 🎉</h1>
+        <p>
+          Lets start automating your sales process so you can
+          <span>reclaim your time and focus on selling.</span>
+        </p>
+      </div>
+      <div style="margin-top: 3rem" class="wrapper">
+        <label class="icon workflow">
+          <span style="width: 200px" class="tooltip"
+            >Having trouble? Send us an email: cx@mymanagr.com</span
+          >
+          <span>?</span>
+        </label>
+      </div>
     </div>
 
     <article
@@ -509,9 +519,9 @@ export default {
     // selectedWorkflows: 'scrollToChannel',
   },
   mounted() {
-    setTimeout(() => {
-      this.checkOnboardStatus()
-    }, 5000)
+    // setTimeout(() => {
+    //   this.checkOnboardStatus()
+    // }, 5000)
     // this.checkCrm()
   },
   async created() {
@@ -703,7 +713,9 @@ export default {
           window.location.href = res.link
         }
       } finally {
-        this.generatingToken = false
+        setTimeout(() => {
+          this.generatingToken = false
+        }, 2000)
       }
     },
 
@@ -1278,6 +1290,10 @@ article {
     top: 64px;
   }
 }
+.row {
+  display: flex;
+  flex-direction: row;
+}
 .header {
   letter-spacing: 0.5px;
   color: $base-gray;
@@ -1298,6 +1314,12 @@ article {
     font-weight: bold;
     letter-spacing: 1px;
   }
+}
+.space-between {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
 }
 small {
   font-size: 11px;
