@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
+import * as Cookies from 'js-cookie'
 import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
@@ -261,6 +262,7 @@ const actions = {
 const plugins = [
   createPersistedState({
     key: STORAGE_KEY,
+    // storage: window.sessionStorage
   }),
 ]
 

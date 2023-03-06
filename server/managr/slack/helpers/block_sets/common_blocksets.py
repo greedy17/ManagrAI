@@ -561,19 +561,6 @@ def initial_alert_message(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "View Message",
-                    "update_in_slack",
-                    action_id=action_with_params(
-                        slack_const.PAGINATE_ALERTS,
-                        params=[
-                            f"invocation={invocation}",
-                            f"channel={channel}",
-                            f"config_id={config_id}",
-                        ],
-                    ),
-                    style="primary",
-                ),
-                block_builders.simple_button_block(
                     "In-Line Edit",
                     "switch_inline",
                     action_id=action_with_params(
@@ -583,6 +570,21 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                             f"u={user}",
                             f"switch_to={'inline'}",
+                        ],
+                    ),
+                    style="primary",
+                ),
+                block_builders.simple_button_block(
+                    "Additional Details",
+                    "access_apps",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
+                        params=[
+                            f"invocation={invocation}",
+                            f"channel={channel}",
+                            f"u={user}",
+                            f"config_id={config_id}",
+                            f"switch_to={'message'}",
                         ],
                     ),
                 ),

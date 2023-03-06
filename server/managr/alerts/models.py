@@ -99,23 +99,27 @@ class AlertTemplate(TimeStampModel):
             ]
             return (
                 hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
-                {"filterGroups": operand_groups, "limit": 100},
+                {
+                    "filterGroups": operand_groups,
+                    "limit": 100,
+                    "sorts": [{"propertyName": "hs_lastmodifieddate", "direction": "DESCENDING"}],
+                },
             )
 
     def manager_url_str(self, user_list, config_id):
         """Generates Url Str for request when executing alert"""
-        user_crm = self.user.crm_account if hasattr(self.user, "crm_account") else None
-        if user_crm == "SALESFORCE":
+
+        if self.user.crm == "SALESFORCE":
             operand_groups = [group.sf_query_str(config_id) for group in self.groups.all()]
             operand_groups = f"AND ({' '.join(operand_groups)})"
             q = sf_consts.SALESFORCE_MULTIPLE_OWNER_RESOURCE_QUERY_URI(
-                user_crm.salesforce_id,
+                self.user.crm_account.salesforce_id,
                 self.resource_type,
                 ["Id"],
                 additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
                 user_list=user_list,
             )
-            return f"{user_crm.instance_url}{q[0]}"
+            return f"{self.user.crm_account.instance_url}{q[0]}"
         else:
             operand_groups = [
                 group.hs_query_str(config_id, user_list, True) for group in self.groups.all()
@@ -699,6 +703,8 @@ class AlertInstance(TimeStampModel):
             else:
                 value = str(v)
             body = body.replace(str_rep, value)
+        crm = "Salesforce" if self.user.crm == "SALESFORCE" else "HubSpot"
+        body += f"\n<{self.resource.adapter_class.crm_link}|Open in {crm}>"
         return body
 
     @property

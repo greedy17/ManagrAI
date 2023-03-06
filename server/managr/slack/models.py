@@ -317,7 +317,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         from managr.hubspot.routes import routes as hs_routes
 
         routes = sf_routes if self.user.crm == "SALESFORCE" else hs_routes
-        route = routes[self.resource_type]
+        route = routes[self.template.resource]
         model_class = route["model"]
 
         model_object = model_class.objects.filter(id=self.resource_id).first()

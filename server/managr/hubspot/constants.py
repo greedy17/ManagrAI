@@ -1,7 +1,6 @@
 from django.conf import settings
 
 
-TOKEN_INFO_URI = "oauth/v1/access-tokens"
 REFRESH_TOKEN_URI = "oauth/v1/token"
 
 HUBSPOT_PROPERTIES_URI = "crm/v3/properties/"
@@ -127,6 +126,10 @@ def HUBSPOT_OWNERS_URI(email=None):
     if email and len(email) > 0:
         return f"{BASE_URL}crm/v3/owners?email={email}"
     return f"{BASE_URL}crm/v3/owners"
+
+
+def TOKEN_INFO_URI(token):
+    return f"{BASE_URL}oauth/v1/access-tokens/{token}"
 
 
 def HUBSPOT_SEARCH_SYNC_BODY(fields, filters, limit):

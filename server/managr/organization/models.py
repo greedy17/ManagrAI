@@ -104,6 +104,7 @@ class Organization(TimeStampModel):
         current_admin.save()
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
+        new_admin.team = admin_team
         new_admin.save()
         admin_team.team_lead = new_admin
         admin_team.save()

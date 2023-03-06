@@ -45,6 +45,7 @@ class HubspotAuthAccountAdapter:
         self.access_token = kwargs.get("access_token", None)
         self.refresh_token = kwargs.get("refresh_token", None)
         self.hubspot_id = kwargs.get("hubspot_id", None)
+        self.hubspot_app_id = kwargs.get("hubspot_app_id", None)
         self.user = kwargs.get("user", None)
         self.hubspot_fields = kwargs.get("hubspot_fields", None)
         self.object_fields = kwargs.get("object_fields", {})
@@ -84,19 +85,31 @@ class HubspotAuthAccountAdapter:
         return data
 
     @classmethod
+    def access_token_info(cls, access_token):
+        with Client as client:
+            res = client.get(
+                hubspot_consts.TOKEN_INFO_URI(access_token),
+                headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
+            )
+        return HubspotAuthAccountAdapter._handle_response(res)
+
+    @classmethod
     def create_account(cls, code, user_id):
         user = User.objects.get(id=user_id)
         res = cls.authenticate(code)
         if settings.IN_DEV:
             user_res = cls.get_user_info(res["access_token"], "support@mymanagr.com")["results"]
+            token_info = cls.access_token_info(res["access_token"])
             # user_res = cls.get_user_info(res["access_token"], user.email)["results"]
         else:
             user_res = cls.get_user_info(res["access_token"], user.email)["results"]
+            token_info = cls.access_token_info(res["access_token"])
         data = {
             "user": user.id,
             "access_token": res.get("access_token"),
             "refresh_token": res.get("refresh_token"),
             "hubspot_id": user_res[0].get("id") if len(user_res) else None,
+            "hubspot_app_id": token_info["hub_id"],
         }
         return cls(**data)
 
@@ -224,6 +237,7 @@ class HubspotAuthAccountAdapter:
         resource_fields = self.internal_user.object_fields.filter(crm_object=resource).values_list(
             "api_name", flat=True
         )
+        by_id = kwargs.get("by_id", None)
         add_filters = kwargs.get("filter", [])
         resource_class = routes.get(resource)
         remove_owner = kwargs.get("remove_owner", False)
@@ -231,10 +245,12 @@ class HubspotAuthAccountAdapter:
             owners = kwargs.get("owners", [self.hubspot_id])
             if isinstance(owners, str):
                 owners = [owners]
-            if add_filters is not None:
+            if add_filters is not None and by_id is None:
                 add_filters.extend(
                     [{"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},]
                 )
+            elif by_id:
+                add_filters.extend([{"propertyName": "id", "operator": "EQ", "value": by_id}])
             else:
                 add_filters = [
                     {"propertyName": "hubspot_owner_id", "operator": "IN", "values": owners,},
@@ -431,6 +447,10 @@ class CompanyAdapter:
         external_owner="hubspot_owner_id",
     )
 
+    @property
+    def crm_link(self):
+        return f"https://app.hubspot.com/contacts/{self.internal_user.hubspot_account.hubspot_app_id}/company/{self.integration_id}"
+
     @staticmethod
     def additional_filters():
         """pass custom additional filters to the url"""
@@ -583,6 +603,10 @@ class DealAdapter:
         account="company",
     )
 
+    @property
+    def crm_link(self):
+        return f"https://app.hubspot.com/contacts/{self.internal_user.hubspot_account.hubspot_app_id}/deal/{self.integration_id}"
+
     @staticmethod
     def reverse_integration_mapping():
         """mapping of 'standard' data when sending from the SF API"""
@@ -721,6 +745,10 @@ class HubspotContactAdapter:
         external_owner="hubspot_owner_id",
         external_account="associatedcompanyid",
     )
+
+    @property
+    def crm_link(self):
+        return f"https://app.hubspot.com/contacts/{self.internal_user.hubspot_account.hubspot_app_id}/contact/{self.integration_id}"
 
     @staticmethod
     def additional_filters():

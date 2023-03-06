@@ -8,9 +8,10 @@ from background_task import background
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.slack.helpers.utils import USER_APP_OPTIONS, action_with_params
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.slack.models import OrgCustomSlackFormInstance
+from managr.slack import constants as slack_const
 
 logger = logging.getLogger("managr")
 
@@ -34,8 +35,40 @@ def _update_slack_message(context, main_form_id):
     alert_instance = alert_instances.first()
     text = instance.template.title
     blocks = [
-        block_builders.header_block(f"{len(alert_instances)} results for workflow {text}"),
+        block_builders.simple_section(
+            f"*New Task:* {len(alert_instances)} results for workflow {text}", "mrkdwn"
+        ),
     ]
+    action_blocks = (
+        get_block_set(
+            "initial_inline_blockset",
+            context={
+                "u": str(user.id),
+                "invocation": instance.invocation,
+                "config_id": str(instance.config_id),
+                "channel": context.get("channel_id"),
+                "switch_to": "inline",
+            },
+        ),
+    )
+    blocks.extend(action_blocks)
+
+    options = USER_APP_OPTIONS(user, instance.config.template.resource_type)
+    blocks.append(
+        block_builders.static_select(
+            "Pick an action",
+            options,
+            action_id=action_with_params(
+                slack_const.PROCESS_SHOW_APP_SELECT,
+                params=[
+                    f"invocation={instance.invocation}",
+                    f"config_id={str(instance.config_id)}",
+                    f"u={str(user.id)}",
+                ],
+            ),
+            placeholder="Connected Apps",
+        ),
+    )
     if alert_instance:
         alert_instances = custom_paginator(alert_instances, page=int(context.get("current_page")))
         for alert_instance in alert_instances.get("results", []):

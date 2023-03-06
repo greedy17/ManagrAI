@@ -2328,7 +2328,7 @@ def _process_slack_inline_sf_update(payload, context):
     invocation = context.get("invocation")
     config_id = context.get("config_id")
     instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     success_resources = 0
     failed_resources = 0

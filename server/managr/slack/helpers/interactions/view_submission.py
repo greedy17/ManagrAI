@@ -2322,7 +2322,6 @@ def process_submit_alert_resource_data(payload, context):
                 access_token=user.organization.slack_integration.access_token,
             )
             all_form_data.update(resource)
-            main_form.resource_object.update_database_values(all_form_data)
             break
         except FieldValidationError as e:
             has_error = True
@@ -2453,7 +2452,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if (
         all_form_data.get("meeting_comments") is not None
-        and all_form_data.get("meeting_type") is not None
+        or all_form_data.get("meeting_type") is not None
     ):
         if user.crm == "SALESFORCE":
             emit_add_update_to_sf(str(main_form.id))
@@ -2463,6 +2462,7 @@ def process_submit_alert_resource_data(payload, context):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
+    main_form.resource_object.update_database_values(all_form_data)
     return {"response_action": "clear"}
 
 
