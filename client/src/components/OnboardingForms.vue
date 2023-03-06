@@ -3,9 +3,11 @@
     <section class="set-height">
       <div class="top-row">
         <Multiselect
-          :options="selectedFields"
+          :options="formFields.list"
           :multiple="true"
-          placeholder="Search for your fields"
+          :placeholder="
+            userCRM === 'SALESFORCE' ? 'Search for your fields' : 'Search for your properties'
+          "
           label="label"
           track-by="apiName"
           openDirection="below"
@@ -35,16 +37,8 @@
           </template>
           <template v-slot:noOptions>
             <div class="slot-icon">
-              <p>
-                {{
-                  userCRM === 'SALESFORCE'
-                    ? 'Dont see your fields ?'
-                    : userCRM === 'HUBSPOT'
-                    ? 'Dont see your properties ?'
-                    : 'Connect CRM'
-                }}
-              </p>
-              <span @click="refreshFields()" class="button">refresh</span>
+              <p>Sync in progress... Reload in a minute</p>
+              <span @click="refreshFields()" class="button">Reload</span>
             </div>
           </template>
         </Multiselect>
