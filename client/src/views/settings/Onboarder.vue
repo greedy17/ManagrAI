@@ -236,8 +236,9 @@
               <div class="wrapper top-row">
                 <h3>Log Meeting</h3>
                 <label style="margin-top: 0" class="icon workflow">
-                  <span class="tooltip"
-                    >This channel will display your upcoming meetings for the day</span
+                  <span style="top: -90px" class="tooltip"
+                    >This channel will display your upcoming meetings along with the ability to log
+                    notes and update fields</span
                   >
                   <span>?</span>
                 </label>
@@ -615,16 +616,9 @@ export default {
     ...mapActions(['refreshCurrentUser']),
     completeOnboarding() {
       this.userOnboardingForm.field.onboarding.value = false
-      User.api
-        .update(this.user.id, this.userOnboardingForm.value)
-        .then(() => {
-          User.api.getUser(this.user.id).then((response) => {
-            this.$store.commit('UPDATE_USER', response)
-          })
-        })
-        .catch((e) => {
-          console.log(e)
-        })
+      User.api.update(this.user.id, this.userOnboardingForm.value)
+      this.handleUpdate()
+      this.$emit('refresh-workflows')
       this.$toast("You're all set! Onboarding complete", {
         timeout: 2000,
         position: 'top-left',
@@ -806,21 +800,30 @@ export default {
       let userId = this.$store.state.user.id
       this.selectedWorkflows.forEach(async function (item, i) {
         try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...item,
-            user: userId,
-            directToUsers: true,
-          })
+          const res = await AlertTemplate.api
+            .createAlertTemplate({
+              ...item,
+              user: userId,
+              directToUsers: true,
+            })
+            .then(() => {
+              User.api.getUser(this.user.id).then((response) => {
+                this.$store.commit('UPDATE_USER', response)
+              })
+            })
         } catch (e) {
           console.log(e)
         }
       })
       setTimeout(() => {
         this.workflows.refresh()
+      }, 3000)
+
+      setTimeout(() => {
         this.showModal = true
         this.submitting = false
         this.selectedWorkflows = []
-      }, 3000)
+      }, 4000)
     },
     async createChannel(name, type) {
       this.submitting = true

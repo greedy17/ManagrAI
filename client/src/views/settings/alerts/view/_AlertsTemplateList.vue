@@ -123,7 +123,7 @@
       <!-- <transition name="fade">
       </transition> -->
 
-      <div v-if="editing" class="alert_cards">
+      <div style="margin-top: 5.5rem" v-if="editing" class="alert_cards">
         <!-- <div v-if="!zoomChannel" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="gray">
@@ -368,7 +368,7 @@
     </template>
 
     <div v-else-if="isOnboarding">
-      <Onboarder />
+      <Onboarder @refresh-workflows="refreshWorkflows" />
     </div>
 
     <div class="center-loader" v-else>
@@ -443,9 +443,9 @@ export default {
     // if (this.zoomChannel) {
     //   this.getZoomChannel()
     // }
-    // if (this.hasRecapChannel) {
-    //   this.getRecapChannel()
-    // }
+    if (this.hasRecapChannel) {
+      this.getRecapChannel()
+    }
     if (this.userCRM === 'HUBSPOT') {
       this.getHSStages()
     }
@@ -458,6 +458,9 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    refreshWorkflows() {
+      this.templates.refresh()
     },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)
@@ -589,6 +592,7 @@ export default {
         })
       } finally {
         this.editing = true
+        this.templates.refresh()
       }
     },
     async onToggleAlert(id, value) {
@@ -1026,6 +1030,7 @@ button:disabled {
   width: 100%;
   border-radius: 6px;
   margin-top: 16px;
+  margin-left: -8px;
 }
 
 // .added-collection:hover {

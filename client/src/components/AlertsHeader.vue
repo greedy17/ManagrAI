@@ -13,12 +13,12 @@
           <label class="icon workflow">
             <label class="tooltip">
               <span>
-                <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                <img src="@/assets/images/slackLogo.png" height="14px" alt="" class="grayscale" />
                 Send to Slack
               </span>
               <span>
                 <img src="@/assets/images/listed.svg" height="14px" class="invert" />
-                View List
+                List View
               </span>
               <span>
                 <img src="@/assets/images/edit.svg" height="14px" alt="" class="invert" />
@@ -26,7 +26,7 @@
               </span>
               <span>
                 <img src="@/assets/images/toggle.svg" height="16px" alt="" class="invert" />
-                Send to Slack
+                Schedule on/off
               </span>
             </label>
             <span>?</span>
@@ -290,7 +290,10 @@ export default {
   border: none;
 }
 .invert {
-  filter: invert(60%);
+  filter: invert(80%);
+}
+.grayscale {
+  filter: brightness(0) invert(80%);
 }
 .img-border {
   border: 1px solid #eeeeee;

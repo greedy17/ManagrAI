@@ -34,11 +34,11 @@
       </div>
     </div> -->
 
-    <div v-if="buildingCustom && !editingWorkflow">
+    <div style="margin-top: 4rem" v-if="buildingCustom && !editingWorkflow">
       <BuildYourOwn ref="workflowBuilder" @can-save="setCanSave" />
     </div>
 
-    <div v-if="editingWorkflow && !buildingCustom">
+    <div style="margin-top: 4rem" v-if="editingWorkflow && !buildingCustom">
       <AlertsEditPanel :alert="currentAlert" ref="editAlertsPanel" />
     </div>
 
@@ -138,10 +138,8 @@ export default {
     },
     async deleteWorkflow(id) {
       this.deletedTitle(id)
-
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
-        this.handleUpdate()
         this.$router.go()
       } catch (e) {
         this.$toast('Error removing workflow', {
@@ -270,7 +268,7 @@ img {
   height: 100vh;
   width: 94vw;
   overflow-y: scroll;
-  margin-top: 4rem;
+
   border-radius: 6px;
 }
 a {
