@@ -169,8 +169,8 @@
                 <h3>Slack</h3>
                 <label style="margin-top: 0" class="icon workflow">
                   <span class="tooltip-large">
-                    Under "search for channel" select yourself, then click "allow"
-                    <img src="@/assets/images/slackExample.png" height="100px" width="auto" alt=""
+                    Under "Where should Managr post" find yourself then click "Allow"
+                    <img src="@/assets/images/slackExample.png" height="200px" width="auto" alt=""
                   /></span>
                   <span>?</span>
                 </label>
@@ -438,6 +438,7 @@ import CollectionManager from '@/services/collectionManager'
 import ZoomAccount from '@/services/zoom/account/'
 import Nylas from '@/services/nylas'
 import Salesforce from '@/services/salesforce'
+import Hubspot from '@/services/hubspot'
 import AlertTemplate from '@/services/alerts/'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import OnboardingForms from '@/components/OnboardingForms'
@@ -946,7 +947,7 @@ export default {
         : null
     },
     userInitials() {
-      return this.user.firstName[0] + this.user.lastName[0]
+      return this.user.firstName[0] + this.user.lastName ? this.user.lastName[0] : ''
     },
     filteredConfigs() {
       let filtered = []
@@ -982,6 +983,8 @@ export default {
       switch (this.selectedIntegration) {
         case 'SALESFORCE':
           return Salesforce
+        case 'HUBSPOT':
+          return Hubspot
         case 'ZOOM':
           return ZoomAccount
         case 'NYLAS':
@@ -1215,7 +1218,7 @@ export default {
   pointer-events: auto;
 }
 .wrapper .icon:hover .tooltip-large {
-  top: -190px;
+  top: -290px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
