@@ -736,7 +736,9 @@ export default {
             }
           } catch (e) {
           } finally {
-            this.generatingToken = false
+            setTImeout(() => {
+              this.generatingToken = false
+            }, 2000)
           }
         }
       }
