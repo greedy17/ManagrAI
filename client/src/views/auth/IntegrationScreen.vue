@@ -55,12 +55,12 @@
         </div>
       </form>
     </Modal>
-    <div class="welcome">
+    <div v-show="!isOnboarding" class="welcome">
       <!-- <img src="@/assets/images/logo.png" height="16px" alt="" /> -->
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div>
 
-    <div>
+    <div v-show="!isOnboarding">
       <div class="integrations__cards">
         <div class="card" v-if="userCRM === 'SALESFORCE'">
           <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
@@ -120,8 +120,6 @@
           <div class="card__header og-bg" style="padding-left: 18px; padding-right: 18px">
             <img style="height: 30px; width: auto" src="@/assets/images/salesforce.png" />
             <img style="height: 30px" src="@/assets/images/hubspot-single-logo.svg" />
-            <!-- <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 32px" />
-            <img src="@/assets/images/outlookMail.png" style="height: 32px" /> -->
           </div>
           <div
             class="card__body"
@@ -163,13 +161,6 @@
                     </p>
                   </template>
                 </Multiselect>
-                <!-- <PulseLoadingSpinnerButton
-                  @click="selectedCRM ? onGetAuthLink(selectedCRM.value) : () => null"
-                  class="orange_button"
-                  text="Connect"
-                  :loading="generatingToken && selectedIntegration == selectedCRM.value"
-                  >Connect</PulseLoadingSpinnerButton
-                > -->
               </div>
             </div>
           </div>
@@ -519,6 +510,10 @@
       </div>
     </div>
 
+    <div>
+      <Loader loaderText="Loading your onboarding progress, one moment." />
+    </div>
+
     <!-- <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.svg" />
     <p class="privacy">SOC2 certified, and GDPR compliant</p> -->
   </div>
@@ -540,6 +535,7 @@ import OutreachAccount from '@/services/outreach'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import { CollectionManager } from '@thinknimble/tn-models'
 import Modal from '@/components/InviteModal'
+import Loader from '@/components/Loader'
 
 export default {
   name: 'Integrations',
@@ -547,6 +543,7 @@ export default {
     PulseLoadingSpinnerButton,
     CollectionManager,
     Modal,
+    Loader,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
