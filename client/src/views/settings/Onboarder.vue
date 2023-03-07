@@ -591,7 +591,6 @@ export default {
       }
     }
     this.workflows.refresh()
-    // this.getAllForms()
   },
   methods: {
     test() {
@@ -655,7 +654,11 @@ export default {
     },
 
     async getAllForms() {
-      this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.allForms = await SlackOAuth.api.getOrgCustomForm().then(() => {
+        User.api.getUser(this.user.id).then((response) => {
+          this.$store.commit('UPDATE_USER', response)
+        })
+      })
     },
     logNewName(str, type) {
       let new_str = ''
@@ -781,6 +784,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.getAllForms()
         setTimeout(() => {
           this.$refs.stepThree ? this.$refs.stepThree.scrollIntoView({ behavior: 'smooth' }) : ''
         }, 100)
