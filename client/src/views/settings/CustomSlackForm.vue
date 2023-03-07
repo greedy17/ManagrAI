@@ -46,7 +46,7 @@
 
                   <template slot="option" slot-scope="props">
                     <div>
-                      <span class="option__title">{{removeAmp(props.option.label)}}</span
+                      <span class="option__title">{{ removeAmp(props.option.label) }}</span
                       ><span
                         v-if="currentStagesWithForms.includes(props.option.label)"
                         class="option__small"
@@ -148,8 +148,8 @@
             v-if="customForms && customForms.length" 
             class="option__small" 
             style="margin-left: 0; font-size: .7rem"
-            >active -->
-          </span>
+            >active
+          </span> -->
         </p>
       </section>
       <div class="save-refresh-section">
@@ -309,7 +309,9 @@
               <template slot="option" slot-scope="props">
                 <div>
                   <span class="option__title">{{
-                    userCRM === 'SALESFORCE' ? removeAmp(props.option.value) : removeAmp(props.option.label)
+                    userCRM === 'SALESFORCE'
+                      ? removeAmp(props.option.value)
+                      : removeAmp(props.option.label)
                   }}</span
                   ><span
                     v-if="currentStagesWithForms.includes(props.option.label)"
@@ -530,10 +532,12 @@
 
           <div class="field-section__fields">
             <div>
-              <p v-if="(!COfilteredFields.length && createdCustomFields)">
-                Fields still syncing...
-              </p>
-              <p v-else-if="COfilteredFields.length" v-for="(field, i) in COfilteredFields" :key="field.id">
+              <p v-if="!COfilteredFields.length && createdCustomFields">Fields still syncing...</p>
+              <p
+                v-else-if="COfilteredFields.length"
+                v-for="(field, i) in COfilteredFields"
+                :key="field.id"
+              >
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
                 {{ removeAmp(field.label) }}
@@ -552,9 +556,7 @@
 
           <div class="field-section__fields">
             <div>
-              <p v-if="createdCustomFields">
-                Fields still syncing...
-              </p>
+              <p v-if="createdCustomFields">Fields still syncing...</p>
               <p v-else>Nothing here. Try selecting an object</p>
             </div>
           </div>

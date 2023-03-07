@@ -237,6 +237,7 @@ export default {
     refreshFields() {
       this.refreshing = true
       this.$emit('refresh-fields')
+      this.formFields.refresh()
       setTimeout(() => {
         this.formFields.refresh()
         this.refreshing = false
