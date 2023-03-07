@@ -299,10 +299,19 @@
         </label>
       </div>
 
-      <h3 v-else-if="userCRM">
-        Step 3: Add the {{ camelize(userCRM) }}
-        {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }} you regularly update
-      </h3>
+      <div v-else-if="userCRM" class="wrapper">
+        <h3>
+          Step 3: Add the {{ camelize(userCRM) }}
+          {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }} you regularly update
+        </h3>
+        <label class="icon workflow">
+          <span style="top: -110px" class="tooltip">
+            We recommend at least 3 of the following: Name , Stage , Close Date , Next Step , Notes.
+            Try searching for them below.</span
+          >
+          <span>?</span>
+        </label>
+      </div>
 
       <h3 v-else>Add the fields/properties you regularly update</h3>
 
@@ -519,9 +528,10 @@ export default {
     // selectedWorkflows: 'scrollToChannel',
   },
   mounted() {
-    // setTimeout(() => {
-    //   this.checkOnboardStatus()
-    // }, 5000)
+    setTimeout(() => {
+      this.checkOnboardStatus()
+    }, 5000)
+
     // this.checkCrm()
   },
   async created() {
@@ -959,7 +969,7 @@ export default {
         : null
     },
     userInitials() {
-      return this.user.firstName[0] + this.user.lastName ? this.user.lastName[0] : ''
+      return this.user.firstName[0] + (this.user.lastName ? this.user.lastName[0] : '')
     },
     filteredConfigs() {
       let filtered = []
