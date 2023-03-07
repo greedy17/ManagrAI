@@ -25,13 +25,14 @@ export default {
     NavBar,
   },
   data() {
-    return {
-      
-    }
+    return {}
   },
   watch: {
     // When route changes,
     '$route.path': function watchRoutePath() {
+      if (this.isOnboarding) {
+        this.$router.push({ name: 'ListTemplates' })
+      }
       const newDateTime = Date.now()
       // If it's been more than an hour,
       if (newDateTime - localStorage.dateTime > 3600000) {
@@ -80,6 +81,9 @@ export default {
     },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
     },
   },
 }

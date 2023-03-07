@@ -269,7 +269,10 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "updates_this_month",
             "crm",
             "salesforce_account",
+            "outreach_account",
             "hubspot_account",
+            "gong_account",
+            "salesloft_account",
             "nylas",
             "slack_integration",
         )

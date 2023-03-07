@@ -463,7 +463,7 @@ def get_crm_value(slack_state):
 
 def USER_APP_OPTIONS(user, resource_type):
     options = [
-        block_builders.option(f"Update {resource_type}", "update_crm"),
+        block_builders.option(f"{resource_type} Details", "update_crm"),
         block_builders.option("View Notes", "view_notes"),
     ]
     if user.has_salesloft_integration or user.has_outreach_integration:

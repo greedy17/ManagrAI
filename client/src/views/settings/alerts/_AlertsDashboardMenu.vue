@@ -1,6 +1,7 @@
 <template>
   <div class="alerts">
     <AlertsHeader
+      v-if="!isOnboarding"
       page="workflows"
       title="Workflows"
       :saving="false"
@@ -33,11 +34,11 @@
       </div>
     </div> -->
 
-    <div v-if="buildingCustom && !editingWorkflow">
+    <div style="margin-top: 4rem" v-if="buildingCustom && !editingWorkflow">
       <BuildYourOwn ref="workflowBuilder" @can-save="setCanSave" />
     </div>
 
-    <div v-if="editingWorkflow && !buildingCustom">
+    <div style="margin-top: 4rem" v-if="editingWorkflow && !buildingCustom">
       <AlertsEditPanel :alert="currentAlert" ref="editAlertsPanel" />
     </div>
 
@@ -137,10 +138,8 @@ export default {
     },
     async deleteWorkflow(id) {
       this.deletedTitle(id)
-
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
-        this.handleUpdate()
         this.$router.go()
       } catch (e) {
         this.$toast('Error removing workflow', {
@@ -186,6 +185,9 @@ export default {
   computed: {
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
+    },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
     },
     // hasZoomChannel() {
     //   if (this.hasSlack) {
@@ -263,10 +265,10 @@ img {
   margin-left: 0.5rem;
 }
 .alerts {
-  height: 96vh;
+  height: 100vh;
   width: 94vw;
-  overflow: scroll;
-  margin-top: 48px;
+  overflow-y: scroll;
+
   border-radius: 6px;
 }
 a {

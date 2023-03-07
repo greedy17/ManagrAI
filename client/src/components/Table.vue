@@ -51,7 +51,7 @@
           <th :class="{ highlight: nameSort === 1 || nameSort === 2 }" class="sort-img-visible">
             <span @mousedown.prevent="onMouseDown($event)" class="ui-column-resizer"></span>
             <span>#</span>
-            Name
+            <span @click="sortByName(sortingForward)">Name</span>
             <span @click="sortByName(sortingForward)">
               <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="16px" alt="" />
               <img
@@ -77,7 +77,7 @@
             :title="field.referenceDisplayLabel"
           >
             <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
-            {{ field.referenceDisplayLabel }}
+            <span @click="fieldSort(field, i)">{{ field.referenceDisplayLabel }}</span>
             <span @click="fieldSort(field, i)">
               <img
                 v-if="sortingIndex === i"
@@ -110,19 +110,21 @@
             }"
           >
             <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
-            {{ field.referenceDisplayLabel }}
+            <span @click="viewOnlySort(field, i)">{{ field.referenceDisplayLabel }}</span>
             <span @click="viewOnlySort(field, i)" style="width: 0px">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
                 height="16px"
                 alt=""
+                style="margin-right: 1rem;"
               />
               <img
                 v-else-if="reverseIndex === oppFields.length + i"
                 src="@/assets/images/arrowDropUp.svg"
                 height="16px"
                 alt=""
+                style="margin-right: 1rem;"
               />
               <img
                 v-if="
@@ -132,11 +134,12 @@
                 src="@/assets/images/sort.svg"
                 height="16px"
                 alt=""
+                style="margin-right: 1rem;"
               />
             </span>
             <span>
               <img
-                style="margin-left: 0.1rem; right: 4px"
+                style="margin-left: 0.1rem; right: 8px"
                 id="delete-col"
                 class="red"
                 @click="removeExtraField(i, field)"

@@ -87,7 +87,6 @@ export default {
       }
     },
     updateForm(event) {
-      console.log(event)
       this.selectedForm = event
 
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)

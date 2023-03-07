@@ -189,9 +189,11 @@ def get_totals_for_year(month_only=False):
         creates["opportunities"] = create_forms.filter(template__resource="Opportunity").count()
         creates["products"] = create_forms.filter(template__resource="OpportunityLineItem").count()
         curr_month["creates"] = creates
-        curr_month["total active users"] = len(
-            slack_form_instances.order_by().values("user").distinct("user")
-        )
+        total_active = 0
+        for user in slack_form_instances.order_by().values_list("user", flat=True).distinct("user"):
+            if len(slack_form_instances.filter(user__id=user)) >= 10:
+                total_active += 1
+        curr_month["total active users"] = total_active
         totals[date[1]] = curr_month
     return totals
 
@@ -287,7 +289,7 @@ def get_user_totals(user_id, month_only=False):
     return totals
 
 
-def pull_usage_data(month_only=True):
+def pull_usage_data(month_only=False):
     totals = get_totals_for_year(month_only)
     orgs = get_organization_totals(month_only)
     return {"totals": totals, "org": orgs}
