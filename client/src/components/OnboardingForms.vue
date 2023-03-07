@@ -48,7 +48,8 @@
         <PipelineLoader v-else />
       </div>
       <label v-show="isInvalid" :class="{ invalid: isInvalid }" for=""
-        >You must select at least one {{ userCRM === 'SALESFORCE' ? 'field' : 'property' }}</label
+        >You must select at least three
+        {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }}</label
       >
     </section>
     <draggable
@@ -112,7 +113,7 @@ export default {
         ModelClass: ObjectField,
         pagination: { size: 500 },
         filters: {
-          crmObject: this.resourceType,
+          crmObject: this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity',
           updateable: true,
         },
       }),
@@ -168,7 +169,6 @@ export default {
         } else if (val && val.formType == 'STAGE_GATING' && !val.customFields.length) {
           this.addedFields = []
         }
-        // this.onSave()
       },
     },
   },
