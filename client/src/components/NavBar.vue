@@ -13,7 +13,7 @@
         </div>
       </router-link>
 
-      <div style="height: 100%" class="align-left">
+      <div v-if="!isOnboarding" style="height: 100%" class="align-left">
         <router-link v-if="userCRM" active-class="active" :to="{ name: 'ListTemplates' }">
           <div class="tooltip">
             <img src="@/assets/images/workflows.svg" height="16px" alt="" />
@@ -101,6 +101,14 @@
           </div>
         </router-link>
       </div>
+      <div v-else style="height: 100%" class="align-left">
+        <router-link v-if="userCRM" active-class="active" :to="{ name: 'ListTemplates' }">
+          <div class="tooltip">
+            <img src="@/assets/images/handshake.svg" height="18px" alt="" />
+            <span class="tooltiptext">Onboarding</span>
+          </div>
+        </router-link>
+      </div>
     </nav>
   </div>
 </template>
@@ -143,6 +151,9 @@ export default {
     },
   },
   computed: {
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },

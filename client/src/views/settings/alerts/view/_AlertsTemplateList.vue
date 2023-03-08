@@ -133,11 +133,11 @@
       </div>
     </Modal>
 
-    <template v-if="!templates.refreshing">
+    <template v-if="!templates.refreshing && !isOnboarding">
       <!-- <transition name="fade">
       </transition> -->
 
-      <div v-if="editing" class="alert_cards">
+      <div style="margin-top: 5.5rem" v-if="editing" class="alert_cards">
         <!-- <div v-if="!zoomChannel" class="added-collection yellow-shadow">
           <div class="added-collection__header">
             <div id="gray">
@@ -381,9 +381,9 @@
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <!-- <div v-else-if="isOnboarding">
-      <Onboarder />
-    </div> -->
+    <div v-else-if="isOnboarding">
+      <Onboarder @refresh-workflows="refreshWorkflows" />
+    </div>
 
     <div class="center-loader" v-else>
       <Loader loaderText="Gathering your workflows" />
@@ -404,7 +404,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth from '@/services/slack'
-// import Onboarder from '@/views/settings/Onboarder'
+import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
@@ -416,7 +416,7 @@ export default {
   name: 'AlertsTemplateList',
   components: {
     ToggleCheckBox,
-    // Onboarder,
+    Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
@@ -454,9 +454,9 @@ export default {
   },
   async created() {
     this.templates.refresh()
-    if (this.zoomChannel) {
-      this.getZoomChannel()
-    }
+    // if (this.zoomChannel) {
+    //   this.getZoomChannel()
+    // }
     if (this.hasRecapChannel) {
       this.getRecapChannel()
     }
@@ -472,6 +472,9 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    refreshWorkflows() {
+      this.templates.refresh()
     },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)
@@ -579,9 +582,12 @@ export default {
       this.deletedTitle(id)
       this.deleteOpen = !this.deleteOpen
       try {
-        await AlertTemplate.api.deleteAlertTemplate(id)
-        await this.templates.refresh()
-        this.handleUpdate()
+        await AlertTemplate.api.deleteAlertTemplate(id).then(() => {
+          User.api.getUser(this.user.id).then((response) => {
+            this.$store.commit('UPDATE_USER', response)
+          })
+        })
+        this.templates.refresh()
         this.$toast('Workflow removed', {
           timeout: 2000,
           position: 'top-left',
@@ -599,6 +605,7 @@ export default {
         })
       } finally {
         this.editing = true
+        this.templates.refresh()
       }
     },
     async onToggleAlert(id, value) {
@@ -683,9 +690,9 @@ export default {
     meetings() {
       return this.$store.state.meetings
     },
-    // isOnboarding() {
-    //   return this.$store.state.user.onboarding
-    // },
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     leaderTemplatesFirst() {
       const originalList = this.templates.list
       const leaders = []
@@ -837,14 +844,16 @@ export default {
   color: $light-gray-blue;
 }
 .lb-bg {
-  background: rgb(242, 242, 242);
-  background: rgb(242, 242, 242);
-  background: linear-gradient(
-    90deg,
-    rgba(242, 242, 242, 1) 0%,
-    rgba(238, 255, 247, 1) 0%,
-    rgba(208, 251, 232, 1) 100%
-  );
+  // background: rgb(242, 242, 242);
+  // background: rgb(242, 242, 242);
+  // background: linear-gradient(
+  //   90deg,
+  //   rgba(242, 242, 242, 1) 0%,
+  //   rgba(238, 255, 247, 1) 0%,
+  //   rgba(208, 251, 232, 1) 100%
+  // );
+  background-color: $off-white;
+  border: 1px solid $off-white;
 }
 .lg-bg {
   background-color: $off-white;
@@ -1017,7 +1026,8 @@ button:disabled {
   margin-right: 8px;
 }
 .alerts-template-list {
-  margin: 16px 0px;
+  // margin: 16px 0px;
+  height: 100vh;
   padding-left: 24px;
   color: $base-gray;
   display: flex;
@@ -1033,6 +1043,7 @@ button:disabled {
   width: 100%;
   border-radius: 6px;
   margin-top: 16px;
+  margin-left: -8px;
 }
 
 // .added-collection:hover {
@@ -1163,7 +1174,7 @@ a {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: 60vh;
+  height: 70vh;
   width: 100%;
 }
 .small-text {

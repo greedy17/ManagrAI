@@ -1,5 +1,3 @@
-import { DateTime } from "luxon"
-
 const CLOSE_DATE_PASSED = {
     title: "Close Date Passed",
     subtitle: "Close date is in the past",
