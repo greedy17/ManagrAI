@@ -150,16 +150,17 @@
           <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column;">
               <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
-                <div>View: </div>
+                <div @click="test(currentStagesWithForms)">View: </div>
                 <Multiselect
                   @input="changeObject(selectedObject, $event, false)"
                   :options="formattedTypes"
                   openDirection="below"
-                  style="width: 16vw;"
-                  selectLabel="Enter"
+                  style="width: 41vw;"
+                  :showLabels="false"
                   track-by="label"
                   label="label"
                   v-model="selectedType"
+                  class="multiselect-font"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
@@ -170,6 +171,18 @@
                       <img src="@/assets/images/search.svg" alt="" />
                       {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
                     </p>
+                  </template>
+
+                  <template slot="option" slot-scope="props">
+                    <div>
+                      <span class="option__title">{{removeAmp(props.option.label)}}</span
+                      ><span
+                        v-if="currentStagesWithForms.includes(props.option.label.split(': ')[1])"
+                        class="option__small"
+                      >
+                      <img class="green-check" style="" src="@/assets/images/configCheck.svg" alt="" />
+                      </span>
+                    </div>
                   </template>
                 </Multiselect>
                 <div class="wrapper">
@@ -1387,7 +1400,6 @@ export default {
     }
     this.getStageForms()
     this.formattedTypes = [...this.types, {label: '---'}, ...this.stages]
-    console.log('this.formattedTypes', this.formattedTypes)
   },
   methods: {
     test(log) {
@@ -1413,7 +1425,6 @@ export default {
           {value: 'CREATE', label: 'Create'}
         ]
       }
-      console.log('this.selectedType', this.selectedType)
       if (this.selectedType.label !== 'Create' && this.selectedType.label !== 'Update') {
         this.selectedType = this.formattedTypes[0]
       }
@@ -1549,7 +1560,6 @@ export default {
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
         this.newResource = this.selectedCustomObjectName
-        console.log('hi resource')
       }
       // if (this.customObjectModalView) {
         this.closeCustomModal()
@@ -1559,7 +1569,6 @@ export default {
       this.formFields.refresh()
     },
     async getCustomObjects() {
-      console.log('where')
       const res = await SObjects.api.getCustomObjects()
       const names = []
       for (let i = 0; i < this.customForms.length; i++) {
@@ -1711,12 +1720,10 @@ export default {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
           }
-          console.log('dealStage', dealStage)
           dealStage.map(stage => stage.label = 'Stage: ' + stage.label)
           this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
-          console.log('reesss', res)
           let values = res[0]['values']
           values.map(val => val.label = 'Stage: ' + val.label)
           this.stages = res.length ? res[0]['values'] : []
@@ -1752,10 +1759,7 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      console.log('type', type)
-      // console.log('label split', type.label.split(' '))
       if (type.attributes || type.label.split(' ')[0] === 'Stage:') {
-        console.log('att')
         this.setStage(type)
         return
       } else {
@@ -1787,7 +1791,6 @@ export default {
         this.selectedType = {value: 'CREATE', label: 'Create'}
         this.changeResource(object.value, this.selectedType.value)
       } else  {
-        console.log('down in else', object.value, type.value)
         this.changeResource(object.value, type.value)
       }
     },
@@ -2203,8 +2206,9 @@ export default {
   &__small {
     background-color: $white-green;
     border-radius: 4px;
-    margin-left: 16px;
-    padding: 2px 6px;
+    margin-left: 8px;
+    margin-top: 8px;
+    padding: 4px 4px 2px 4px;
     color: $dark-green;
   }
 }
@@ -2904,5 +2908,14 @@ img:hover {
   background: $grape;
   color: #FFFFFF;
 }
-
+.multiselect-font {
+  font-size: 12px !important;
+}
+.green-check {
+  height: 0.6rem;
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+  // margin-left: 1.75rem;
+  // margin-top: 0.1rem;
+}
 </style>
