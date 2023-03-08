@@ -29,6 +29,17 @@
         </router-link>
 
         <router-link
+          v-if="(isTeamLead || isAdmin) && userCRM"
+          exact-active-class="active"
+          :to="{ name: 'Forms' }"
+        >
+          <div class="tooltip">
+            <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
+            <span class="tooltiptext">Forms</span>
+          </div>
+        </router-link>
+
+        <router-link
           v-if="userCRM === 'SALESFORCE'"
           exact-active-class="active"
           :to="{ name: 'Meetings' }"
@@ -46,16 +57,6 @@
           </div>
         </router-link>
         <!-- <div style="width: 60px; height: 1px; border-bottom: 1px solid rgb(230 230 230);"></div> -->
-        <router-link
-          v-if="(isTeamLead || isAdmin) && userCRM"
-          exact-active-class="active"
-          :to="{ name: 'Forms' }"
-        >
-          <div class="tooltip">
-            <img src="@/assets/images/upload.svg" height="16px" alt="" />
-            <span class="tooltiptext">Forms</span>
-          </div>
-        </router-link>
 
         <router-link exact-active-class="active" :to="{ name: 'Integrations' }">
           <div class="tooltip">
