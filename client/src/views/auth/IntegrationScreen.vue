@@ -511,7 +511,7 @@
     </div>
 
     <div v-else>
-      <Loader loaderText="Loading your onboarding progress, one moment." />
+      <Loader loaderText="Loading your progress, one moment..." />
     </div>
 
     <!-- <img style="margin-top: 1rem" class="lock" src="@/assets/images/blackLock.svg" />
@@ -707,6 +707,9 @@ export default {
     }
   },
   computed: {
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },

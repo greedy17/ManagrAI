@@ -10,25 +10,6 @@
           <img src="@/assets/images/slackSection.png" width="100%" height="auto" alt="" />
           <img class="absolute-img" src="@/assets/images/slackLogo.png" height="16px" alt="" />
         </section>
-
-        <!-- <section>
-          <p class="gray-blue">Now test your workflows by clicking "Send to Slack"</p>
-          <div class="modal__section" v-for="(workflow, i) in workflows.list" :key="i">
-            <div>
-              <p>
-                {{ workflow.title }}
-              </p>
-              <p>{{ workflow.subtitle }}</p>
-            </div>
-
-            <PipelineLoader style="margin-left: 8px" v-if="pressed && pressedIndex === i" />
-
-            <button v-else :disabled="pressed" @click="onRunAlertTemplateNow(workflow.id, i)">
-              Send to Slack <span>|</span>
-              <img src="@/assets/images/slackLogo.png" height="10px" alt="" />
-            </button>
-          </div>
-        </section> -->
         <footer>
           <button @click="completeOnboarding()">Finish Onboarding</button>
         </footer>
@@ -318,11 +299,14 @@
       <section class="section">
         <div>
           <OnboardingForms
-            @refresh-fields="refreshFields"
+            @refresh-forms="refreshForms"
             :customForm="
-              this.allForms.find((f) => f.resource == currentResource && f.formType == 'UPDATE')
+              (this.selectedForm = this.allForms.find(
+                (f) => f.resource == currentResource && f.formType == 'UPDATE',
+              ))
             "
             :disable="!!workflows.list.length"
+            :resourceType="userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'"
           />
         </div>
       </section>
@@ -390,9 +374,6 @@
                   >{{ day.key.charAt(0) }}</label
                 >
               </div>
-              <!-- <small class="grape" v-if="selectedWorkflows.includes(config)"
-                >Choose delivery days</small
-              > -->
             </div>
           </div>
         </div>
@@ -416,7 +397,6 @@
               @input="logNewName(channelName, 'recap')"
             />
           </section>
-
           <button
             style="margin-left: 12px"
             v-if="!submitting"
@@ -439,10 +419,6 @@
         </div>
       </div>
     </article>
-
-    <!-- <footer>
-      <button class="secondary-button">Continue</button>
-    </footer> -->
   </div>
 </template>
 
@@ -541,7 +517,8 @@ export default {
       } else if (this.userCRM === 'SALESFORCE') {
         this.currentResource = 'Opportunity'
       }
-      this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.getAllForms()
+      // this.allForms = await SlackOAuth.api.getOrgCustomForm()
     } catch (e) {
       console.log(e)
     }
@@ -593,11 +570,15 @@ export default {
     this.workflows.refresh()
   },
   methods: {
-    test() {
-      console.log(this.user)
-    },
-    refreshFields() {
-      this.getAllForms()
+    refreshForms(event) {
+      this.selectedForm = event
+
+      let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
+
+      if (~index) {
+        this.allForms[index] = this.selectedForm
+        this.allForms = [...this.allForms]
+      }
     },
     checkCrm() {
       if (this.userCRM) {
@@ -639,26 +620,31 @@ export default {
       User.api.update(this.user.id, this.userOnboardingForm.value)
       this.handleUpdate()
       this.$emit('refresh-workflows')
-      this.$toast("You're all set! Onboarding complete", {
-        timeout: 2000,
-        position: 'top-left',
-        type: 'success',
-        toastClassName: 'custom',
-        bodyClassName: ['custom'],
-      })
+      setTimeout(() => {
+        this.$toast("You're all set! Onboarding complete", {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }, 300)
     },
     filterUpdateFields() {
-      this.updateFields = this.updateForm.fieldsRef.filter(
-        (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
-      )
+      this.updateForm
+        ? (this.updateFields = this.updateForm.fieldsRef.filter(
+            (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
+          ))
+        : ''
     },
-
     async getAllForms() {
-      this.allForms = await SlackOAuth.api.getOrgCustomForm().then(() => {
-        User.api.getUser(this.user.id).then((response) => {
-          this.$store.commit('UPDATE_USER', response)
-        })
-      })
+      try {
+        this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.handleUpdate()
+      }
     },
     logNewName(str, type) {
       let new_str = ''
@@ -776,6 +762,8 @@ export default {
             this.$store.commit('UPDATE_USER', response)
           })
         })
+      } catch (e) {
+        console.log(e)
       } finally {
         this.$toast('Success! Channel created', {
           timeout: 2000,
@@ -784,10 +772,12 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this.getAllForms()
         setTimeout(() => {
           this.$refs.stepThree ? this.$refs.stepThree.scrollIntoView({ behavior: 'smooth' }) : ''
         }, 100)
+        setTimeout(() => {
+          this.getAllForms()
+        }, 3000)
       }
     },
     async handleRecapUpdate(recap_channel) {
