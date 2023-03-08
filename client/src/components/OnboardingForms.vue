@@ -102,7 +102,6 @@ export default {
   },
   data() {
     return {
-      resourceType: this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity',
       formType: 'UPDATE',
       savingForm: false,
       addedFields: [],
@@ -113,7 +112,7 @@ export default {
         ModelClass: ObjectField,
         pagination: { size: 500 },
         filters: {
-          crmObject: this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+          crmObject: this.resourceType,
           updateable: true,
         },
       }),
@@ -121,6 +120,7 @@ export default {
     }
   },
   watch: {
+    formFields: 'refreshFormFields',
     customForm: {
       immediate: true,
       deep: true,
@@ -229,17 +229,20 @@ export default {
     disable: {
       type: Boolean,
     },
+    resourceType: {},
   },
-  async created() {
+  created() {
     this.formFields.refresh()
   },
   methods: {
+    refreshFormFields() {
+      this.formFields.refresh()
+    },
     refreshFields() {
       this.refreshing = true
       this.$emit('refresh-fields')
       this.formFields.refresh()
       setTimeout(() => {
-        this.formFields.refresh()
         this.refreshing = false
       }, 3000)
     },
