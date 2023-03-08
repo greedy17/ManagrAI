@@ -101,6 +101,14 @@
     <div class="alerts-header">
       <section class="row__">
         <h3>Field Mapping</h3>
+        <div class="side-wrapper">
+          <label class="side-icon side-workflow" style="margin-top: 0;">
+            <span class="side-tooltip"
+              >{{user.crm === 'SALESFORCE' ? `Select the Salesforce fields you'd like to update using Managr.` : `Select the HubSpot properties you'd like to update using Managr.`}}</span
+            >
+            <span>?</span>
+          </label>
+        </div>
       </section>
       <div class="save-refresh-section">
         <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
@@ -120,8 +128,10 @@
     <div class="fields-container">
       <div 
         class="row__ border-bottom-top" 
-        style="justify-content: space-between; margin: 1.5rem 3rem 0 3rem;"
+        
+        style="margin: 1.5rem 2rem 0 2rem;"
       >
+      <!-- :style="user.crm === 'SALESFORCE' ? 'justify-content: space-between;' : 'justify-content: space-around;'" -->
         <div
           v-for="object in resources" :key="object.value"
         >
@@ -135,7 +145,7 @@
       <div class="row__" style="justify-content: space-between;">
         <section 
           v-if="!customObjectView && (newResource && (selectedType && selectedType.value === 'STAGE_GATING' ? currentlySelectedStage : true))"
-          style="margin-left: 2rem; width: 20vw;"
+          style="margin-left: 1rem; width: 20vw;"
         >
           <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column;">
@@ -162,6 +172,14 @@
                     </p>
                   </template>
                 </Multiselect>
+                <div class="wrapper">
+                  <label class="icon workflow" style="margin-top: 0;">
+                    <span class="tooltip"
+                      >You can also add {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} to Stages. These {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} will appear as you move to the Stage.</span
+                    >
+                    <span>?</span>
+                  </label>
+                </div>
               </div>
               <div class="small-subtitle">Select the fields you regularly update</div>
             </div>
@@ -229,8 +247,8 @@
             </div>
           </div>
         </section>
-        <div style="height: 52vh; margin-right: 2rem; margin-top: 5rem; width: 25vw;">
-          <div class="" style="margin-bottom: 5rem;">
+        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 25vw;">
+          <div class="" style="margin-bottom: 2rem;">
             <!-- <div class="row__">
               <div>Object: </div>
               <Multiselect
@@ -1693,6 +1711,8 @@ export default {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
           }
+          console.log('dealStage', dealStage)
+          dealStage.map(stage => stage.label = 'Stage: ' + stage.label)
           this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
@@ -1732,7 +1752,9 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      if (type.attributes) {
+      console.log('type', type)
+      // console.log('label split', type.label.split(' '))
+      if (type.attributes || type.label.split(' ')[0] === 'Stage:') {
         console.log('att')
         this.setStage(type)
         return
@@ -2287,7 +2309,7 @@ input[type='search']:focus {
       padding: 4px 8px;
       // margin-top: 16px;
       // height: 76vh;
-      height: 42vh;
+      height: 52vh;
       overflow: scroll;
       section {
         span {
@@ -2537,7 +2559,7 @@ input[type='search']:focus {
   flex-direction: row;
   align-items: flex-start;
   padding: 0rem;
-  margin-top: 10vh;
+  margin-top: 13vh;
   overflow: hidden;
   color: $base-gray;
 }
@@ -2729,7 +2751,7 @@ img:hover {
   margin-left: 20%;
 }
 .drag-section {
-  height: 38vh;
+  height: 48vh;
   overflow: auto;
   // outline: 1px solid #eeeeee;
   // border-radius: 6px;
@@ -2751,4 +2773,136 @@ img:hover {
   margin-top: 0.5rem;
   color: $very-light-gray;
 }
+.side-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.side-wrapper .side-icon {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 50%;
+  padding: 10px;
+  margin: 20px 12px 0px 12px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip {
+  display: block;
+  width: 250px;
+  height: auto;
+  position: absolute;
+  top: 0;
+  left: 30px;
+  font-size: 14px;
+  background: #FFFFFF;
+  color: #FFFFFF;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #FFFFFF;
+  bottom: 50%;
+  left: 0%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-icon:hover .side-tooltip {
+  top: -15px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.side-wrapper .side-icon:hover span,
+.side-wrapper .side-icon:hover .side-tooltip {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+.side-wrapper .side-workflow:hover,
+.side-wrapper .side-workflow:hover .side-tooltip,
+.side-wrapper .side-workflow:hover .side-tooltip::before {
+  background: $grape;
+  color: #FFFFFF;
+}
+.wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.wrapper .icon {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 50%;
+  padding: 10px;
+  margin: 20px 12px 0px 12px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.wrapper .tooltip {
+  display: block;
+  width: 250px;
+  height: auto;
+  position: absolute;
+  top: 0;
+  font-size: 14px;
+  background: #FFFFFF;
+  color: #FFFFFF;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+} 
+.wrapper .tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #FFFFFF;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.wrapper .icon:hover .tooltip {
+  top: -85px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.wrapper .icon:hover span,
+.wrapper .icon:hover .tooltip {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+.wrapper .workflow:hover,
+.wrapper .workflow:hover .tooltip,
+.wrapper .workflow:hover .tooltip::before {
+  background: $grape;
+  color: #FFFFFF;
+}
+
 </style>
