@@ -42,7 +42,7 @@
             </div>
           </template>
         </Multiselect>
-        <button v-if="!savingForm" @click="onSave" :disabled="!(addedFields.length > 2)">
+        <button v-if="!savingForm" @click="onSave()" :disabled="!(addedFields.length > 2)">
           Save
         </button>
         <PipelineLoader v-else />
@@ -117,6 +117,90 @@ export default {
         },
       }),
       isTouched: false,
+      noteTitle: {
+        model: 'crm.ObjectField',
+        id: '6407b7a1-a877-44e2-979d-1effafec5034', // '6407b7a1-a877-44e2-979d-1effafec5035'
+        includeInRecap: true,
+        apiName: 'meeting_type',
+        createable: true,
+        required: false,
+        updateable: true,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Note Subject',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 0,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
+      noteTitleHubspot: {
+        model: 'crm.ObjectField',
+        id: '6407b7a1-a877-44e2-979d-1effafec5034', //'6407b7a1-a877-44e2-979d-1effafec5035',
+        includeInRecap: true,
+        apiName: 'meeting_type',
+        createable: true,
+        required: false,
+        updateable: true,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Note Subject',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 0,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
+      noteSubject: {
+        model: 'crm.ObjectField',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2', // '0bb152b5-aac1-4ee0-9c25-51ae98d55af1'
+        includeInRecap: true,
+        apiName: 'meeting_comments',
+        createable: true,
+        updateable: true,
+        required: false,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Notes',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 255,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
+      noteSubjectHubspot: {
+        model: 'crm.ObjectField',
+        id: '0bb152b5-aac1-4ee0-9c25-51ae98d55af2', //'0bb152b5-aac1-4ee0-9c25-51ae98d55af1',
+        includeInRecap: true,
+        apiName: 'meeting_comments',
+        createable: true,
+        updateable: true,
+        required: false,
+        dataType: 'String',
+        displayValue: '',
+        label: 'Notes',
+        reference: false,
+        referenceToInfos: [],
+        relationshipName: null,
+        options: [],
+        length: 255,
+        isPublic: true,
+        filterable: true,
+        datetimeCreated: '2020-08-03 11:39:23.632256Z',
+        lastEdited: '2020-08-03 11:39:23.632256Z',
+      },
     }
   },
   watch: {
@@ -173,6 +257,9 @@ export default {
     },
   },
   computed: {
+    currentFields() {
+      return this.customForm ? this.customForm.customFields : []
+    },
     isInvalid() {
       return this.isTouched && this.addedFields.length < 3
     },
@@ -240,7 +327,6 @@ export default {
     },
     refreshFields() {
       this.refreshing = true
-      this.$emit('refresh-fields')
       this.formFields.refresh()
       setTimeout(() => {
         this.refreshing = false
@@ -277,117 +363,6 @@ export default {
         this.pulseLoading = false
         this.$router.go()
       }, 300)
-    },
-
-    changeToAccount() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToAccount
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'Account'
-      this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.ACCOUNT && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
-    changeToCompany() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToCompany
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'Company'
-      this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.COMPANY && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
-    changeToOpportunity() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToOpportunity
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'Opportunity'
-      this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.OPPORTUNITY && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
-    changeToDeal() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToDeal
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'Deal'
-      this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.DEAL && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
-    changeToProducts() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToProducts
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'OpportunityLineItem'
-      this.newFormType = 'CREATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.OPPORTUNITYLINEITEM && f.formType == this.CREATE,
-      )
-      this.storedField = null
-    },
-    changeToContact() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToContact
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'Contact'
-      this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find(
-        (f) => f.resource == this.CONTACT && f.formType == this.UPDATE,
-      )
-      this.storedField = null
-    },
-    changeToLead() {
-      this.customObjectView = false
-      if (this.formChange) {
-        this.modalOpen = !this.modalOpen
-        this.storedModalFunction = this.changeToLead
-        return
-      }
-      this.customResource = null
-      this.filterText = ''
-      this.newResource = 'Lead'
-      this.newFormType = 'UPDATE'
-      this.newCustomForm = this.allForms.find((f) => f.resource == 'Lead' && f.formType == 'UPDATE')
-      this.storedField = null
     },
 
     canRemoveField(field) {
@@ -469,7 +444,7 @@ export default {
             this.$store.commit('UPDATE_USER', response)
           })
 
-          this.customForm = res
+          // this.customForm = res
 
           this.$toast('Form saved!', {
             timeout: 2000,
@@ -484,7 +459,7 @@ export default {
         .finally(() => {
           this.savingForm = false
           this.formChange = false
-          this.$emit('refresh-fields')
+          this.$emit('refresh-forms', this.customForm)
           this.formFields.refresh()
         })
     },

@@ -30,7 +30,7 @@ export default {
   watch: {
     // When route changes,
     '$route.path': function watchRoutePath() {
-      if (this.isOnboarding) {
+      if (this.isOnboarding && this.$route.path !== '/alerts/list-templates') {
         this.$router.push({ name: 'ListTemplates' })
       }
       const newDateTime = Date.now()
