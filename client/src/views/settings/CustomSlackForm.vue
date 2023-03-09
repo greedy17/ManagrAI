@@ -1445,11 +1445,7 @@ export default {
       console.log(e)
     }
     this.getStageForms()
-<<<<<<< HEAD
-    this.formattedTypes = [...this.types, { label: '---' }, ...this.stages]
-=======
-    this.formattedTypes = [...this.types, {label: '--- Stages ---'}, ...this.stages]
->>>>>>> d94f4cc06db73201412f12bdfcc2cacab22b5d1c
+    this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
   },
   methods: {
     test(log) {
@@ -1470,11 +1466,7 @@ export default {
       this.selectedObject = { label, value }
       this.changeObject(this.selectedObject, this.selectedType)
       if (this.selectedObject.value === 'Opportunity' || this.selectedObject.value === 'Deal') {
-<<<<<<< HEAD
-        this.formattedTypes = [...this.types, { label: '---' }, ...this.stages]
-=======
-        this.formattedTypes = [...this.types, {label: '--- Stages ---'}, ...this.stages]
->>>>>>> d94f4cc06db73201412f12bdfcc2cacab22b5d1c
+        this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
       } else if (this.selectedObject.label === 'Products') {
         this.formattedTypes = [{ value: 'CREATE', label: 'Create' }]
       } else {
@@ -1786,20 +1778,12 @@ export default {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
           }
-<<<<<<< HEAD
-          dealStage.map((stage) => (stage.label = 'Stage: ' + stage.label))
-=======
           // dealStage.map(stage => stage.label = 'Stage: ' + stage.label)
->>>>>>> d94f4cc06db73201412f12bdfcc2cacab22b5d1c
           this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           let values = res[0]['values']
-<<<<<<< HEAD
-          values.map((val) => (val.label = 'Stage: ' + val.label))
-=======
           // values.map(val => val.label = 'Stage: ' + val.label)
->>>>>>> d94f4cc06db73201412f12bdfcc2cacab22b5d1c
           this.stages = res.length ? res[0]['values'] : []
         }
       } catch (e) {
