@@ -177,7 +177,7 @@
                     <div>
                       <span class="option__title">{{removeAmp(props.option.label)}}</span
                       ><span
-                        v-if="currentStagesWithForms.includes(props.option.label.split(': ')[1])"
+                        v-if="currentStagesWithForms.includes(props.option.label)"
                         class="option__small"
                       >
                       <img class="green-check" style="" src="@/assets/images/configCheck.svg" alt="" />
@@ -202,7 +202,7 @@
             <input
               @input="searchFields"
               type="search"
-              :placeholder="`Search ${newResource} Fields`"
+              :placeholder="`Search`"
               v-model="filterText"
             />
           </div>
@@ -1402,7 +1402,7 @@ export default {
       console.log(e)
     }
     this.getStageForms()
-    this.formattedTypes = [...this.types, {label: '---'}, ...this.stages]
+    this.formattedTypes = [...this.types, {label: '--- Stages ---'}, ...this.stages]
   },
   methods: {
     test(log) {
@@ -1423,7 +1423,7 @@ export default {
       this.selectedObject = {label, value}
       this.changeObject(this.selectedObject, this.selectedType)
       if (this.selectedObject.value === 'Opportunity' || this.selectedObject.value === 'Deal') {
-        this.formattedTypes = [...this.types, {label: '---'}, ...this.stages]
+        this.formattedTypes = [...this.types, {label: '--- Stages ---'}, ...this.stages]
       } else if (this.selectedObject.label === 'Products') {
         this.formattedTypes = [{value: 'CREATE', label: 'Create'}]
       } else {
@@ -1727,12 +1727,12 @@ export default {
               dealStage = [...dealStage, ...dealStages.optionsRef[i]]
             }
           }
-          dealStage.map(stage => stage.label = 'Stage: ' + stage.label)
+          // dealStage.map(stage => stage.label = 'Stage: ' + stage.label)
           this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
           let values = res[0]['values']
-          values.map(val => val.label = 'Stage: ' + val.label)
+          // values.map(val => val.label = 'Stage: ' + val.label)
           this.stages = res.length ? res[0]['values'] : []
         }
       } catch (e) {
@@ -1766,7 +1766,8 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      if (type.attributes || type.label.split(' ')[0] === 'Stage:') {
+      console.log('type', type)
+      if (type.label !== 'Create' && type.label !== 'Update' && type.label !== '--- Stages ---') {
         this.setStage(type)
         return
       } else {
