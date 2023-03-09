@@ -135,17 +135,17 @@
         <div
           v-for="object in resources" :key="object.value"
         >
-          <h3 
+          <h4 
             :class="selectedObject.label === object.label ? 'green-highlight cursor' : 'cursor'" 
             @click="clickChangeObject(object.label, object.value)"
             style="margin-bottom: 0; padding-bottom: 0.75rem;"
-          >{{ object.label }}</h3>
+          >{{ object.label }}</h4>
         </div>
       </div>
       <div class="row__" style="justify-content: space-between;">
         <section 
           v-if="!customObjectView && (newResource && (selectedType && selectedType.value === 'STAGE_GATING' ? currentlySelectedStage : true))"
-          style="margin-left: 1rem; width: 20vw;"
+          style="margin-left: 1rem; width: 23.5vw;"
         >
           <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column;">
@@ -194,7 +194,7 @@
                   </label>
                 </div>
               </div>
-              <div class="small-subtitle">Select the fields you regularly update</div>
+              <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
           </div>
           <div class="search-bar">
@@ -206,13 +206,14 @@
               v-model="filterText"
             />
           </div>
+          <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
 
           <div class="field-section__fields">
             <div>
-              <p v-for="(field, i) in filteredFields" :key="field.id">
+              <p v-for="(field, i) in filteredFields" :key="field.id" :title="field.label">
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
-                {{ field.label == 'Price Book Entry ID' ? 'Products' : removeAmp(field.label) }}
+                {{ field.label == 'Price Book Entry ID' ? 'Products' : truncate(removeAmp(field.label), 38) }}
               </p>
             </div>
           </div>
@@ -260,7 +261,7 @@
             </div>
           </div>
         </section>
-        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 25vw;">
+        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 30vw;">
           <div class="" style="margin-bottom: 2rem;">
             <!-- <div class="row__">
               <div>Object: </div>
@@ -403,8 +404,8 @@
                   <div class="drag-item">
                     <div class="drag-item-left">
                       <img src="@/assets/images/drag.svg" height="16px" alt="" />
-                      <p id="formField">
-                        {{ field.label }}
+                      <p id="formField" :title="field.label">
+                        {{ truncate(field.label, 38) }}
                       </p>
                     </div>
                     <div class="drag-item-right">
@@ -1411,8 +1412,12 @@ export default {
       const label = prop.customObject ? `${prop.customObject}` : `${prop.label}`
       return label.replace('&amp;', '&')
     },
+    truncate(text, max) {
+      return `${text.slice(0, max)} ${text.length > max ? '...' : ''}`
+    },
     removeAmp(label) {
       return label.replace('&amp;', '&')
+      // Global Term Line Item Recurring Billing
     },
     clickChangeObject(label, value) {
       this.selectedObject = {label, value}
@@ -2264,7 +2269,7 @@ input[type='checkbox'] + label::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 6px 0;
   // border-radius: 8px;
   margin-top: 16px;
 }
@@ -2276,7 +2281,7 @@ input[type='search'] {
   width: 25vw;
   letter-spacing: 0.75px;
   border: none;
-  padding: 4px;
+  padding: 4px 0;
   margin: 0;
   background: none;
 }
@@ -2312,7 +2317,7 @@ input[type='search']:focus {
     div {
       // outline: 1px solid $soft-gray;
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 4px 0px;
       // margin-top: 16px;
       // height: 76vh;
       height: 52vh;
@@ -2497,7 +2502,7 @@ input[type='search']:focus {
   filter: invert(60%);
 }
 #remove {
-  filter: invert(40%);
+  // filter: invert(40%);
 }
 // .drag-item {
 //   display: flex;
@@ -2537,6 +2542,9 @@ input[type='search']:focus {
     cursor: grab;
     margin: 0 0.75rem 0 0.5rem;
   }
+  p {
+    font-size: 12px;
+  }
 }
 .drag-item-right {
   display: flex;
@@ -2551,13 +2559,13 @@ input[type='search']:focus {
   span {
     color: $base-gray;
     font-size: 16px;
-    padding: 6px 8px 8px 6px;
+    padding: 0px 6px 4px 6px;
     border-radius: 4px;
   }
   span:hover {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(153, 153, 153, 0.6);
     cursor: pointer;
-    color: $white;
+    color: white;
   }
 }
 .slack-form-builder {
@@ -2749,12 +2757,13 @@ img:hover {
   background-color: white;
 }
 .fields-container {
-  border: 1px solid $very-light-gray;
+  border: 1px solid $soft-gray;
+  background-color: white;
   border-radius: 4px;
-  box-shadow: 0 0 10px $very-light-gray;
-  width: 50vw;
+  // box-shadow: 0 0 10px $very-light-gray;
+  width: 60vw;
   height: 80vh;
-  margin-left: 20%;
+  margin: 0rem auto;
 }
 .drag-section {
   height: 48vh;
@@ -2764,7 +2773,7 @@ img:hover {
   padding: 4px;
 }
 .border-bottom-top {
-  border-bottom: 1px solid $very-light-gray;
+  border-bottom: 1px solid $soft-gray;
   overflow: auto;
 }
 .green-highlight {
@@ -2777,6 +2786,7 @@ img:hover {
 .small-subtitle {
   font-size: 12px;
   margin-top: 0.5rem;
+  margin-left: 0.5rem;
   color: $very-light-gray;
 }
 .side-wrapper {
