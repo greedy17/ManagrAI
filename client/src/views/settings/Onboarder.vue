@@ -620,15 +620,6 @@ export default {
       User.api.update(this.user.id, this.userOnboardingForm.value)
       this.handleUpdate()
       this.$emit('refresh-workflows')
-      setTimeout(() => {
-        this.$toast("You're all set! Onboarding complete", {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }, 300)
     },
     filterUpdateFields() {
       this.updateForm
