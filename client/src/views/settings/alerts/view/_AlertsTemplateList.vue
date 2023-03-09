@@ -54,7 +54,12 @@
             v-for="opp in activeWorkflow.sobjectInstances"
           >
             <div class="title" @click="test(activeWorkflow)">
-              <div v-if="activeWorkflow.resourceType === 'Opportunity' || activeWorkflow.resourceType === 'Deal'">
+              <div
+                v-if="
+                  activeWorkflow.resourceType === 'Opportunity' ||
+                  activeWorkflow.resourceType === 'Deal'
+                "
+              >
                 <h4>
                   {{ userCRM === 'SALESFORCE' ? opp.Name : opp.dealname }}
                 </h4>
@@ -67,12 +72,22 @@
                   {{ userCRM === 'SALESFORCE' ? opp.CloseDate : opp.closedate.split('T')[0] }}
                 </p>
               </div>
-              <div v-else-if="activeWorkflow.resourceType === 'Account' || activeWorkflow.resourceType === 'Company'">
+              <div
+                v-else-if="
+                  activeWorkflow.resourceType === 'Account' ||
+                  activeWorkflow.resourceType === 'Company'
+                "
+              >
                 <h4>
                   {{ userCRM === 'SALESFORCE' ? opp.Name : opp.name }}
                 </h4>
               </div>
-              <div v-else-if="activeWorkflow.resourceType === 'Contact' || activeWorkflow.resourceType === 'Lead'">
+              <div
+                v-else-if="
+                  activeWorkflow.resourceType === 'Contact' ||
+                  activeWorkflow.resourceType === 'Lead'
+                "
+              >
                 <h4>
                   {{ userCRM === 'SALESFORCE' ? opp.Name : opp.firstname + ' ' + opp.lastname }}
                 </h4>
@@ -475,6 +490,15 @@ export default {
     },
     refreshWorkflows() {
       this.templates.refresh()
+      setTimeout(() => {
+        this.$toast("You're all set! Onboarding complete", {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }, 2000)
     },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)
@@ -533,7 +557,7 @@ export default {
       this.$router.push({ name: 'Meetings' })
     },
     goToPipeline(id, title) {
-      this.$router.push({ name: 'Pipelines', params: { id: id, title: title, } })
+      this.$router.push({ name: 'Pipelines', params: { id: id, title: title } })
     },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
