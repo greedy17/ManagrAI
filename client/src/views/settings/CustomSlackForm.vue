@@ -99,7 +99,7 @@
     </Modal>
 
     <div class="alerts-header">
-      <section class="row__">
+      <section class="row__" style="gap: 0px;">
         <h3>Field Mapping</h3>
         <div class="side-wrapper">
           <label class="side-icon side-workflow" style="margin-top: 0;">
