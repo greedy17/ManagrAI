@@ -467,4 +467,6 @@ if USE_HUBSPOT:
     HUBSPOT_BASE_URL = _env_get_required("HUBSPOT_BASE_URL")
     HUBSPOT_REDIRECT_URI = _env_get_required("HUBSPOT_REDIRECT_URI")
 
+OPEN_AI_SECRET = _env_get_required("OPEN_AI_SECRET")
+
 MAX_ATTEMPTS = 5
