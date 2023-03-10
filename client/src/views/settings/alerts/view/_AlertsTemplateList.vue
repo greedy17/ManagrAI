@@ -498,7 +498,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-      }, 2000)
+      }, 1500)
     },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)

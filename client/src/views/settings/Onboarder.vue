@@ -17,27 +17,15 @@
     </Modal>
     <Modal v-if="showFieldModal" dimmed>
       <div style="height: 40vh; width: 30vw" class="modal">
-        <!-- <header>
-          <h2>Syncing your {{ userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} 🤑</h2>
-          <p>
-            Waiting on {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}... This could take
-            a few minutes.
-          </p>
-        </header> -->
+        <header>
+          <h3>Syncing with {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}</h3>
+        </header>
 
-        <div
-          v-if="!toggleReady"
-          class="center"
-          style="margin-top: -4.5rem; height: 50%; margin-bottom: 6rem"
-        >
-          <Loader
-            :loaderText="`Syncing with ${
-              userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot'
-            }... This could take
-            a few minutes.`"
-          />
+        <div style="margin-top: 1rem" v-if="!toggleReady" class="center">
+          <PipelineLoader />
+          <p class="gray-blue">This takes a few minutes... Do not refresh your browser!</p>
         </div>
-        <div style="margin-top: 3rem" v-else>
+        <div style="margin-top: 1rem" v-else>
           <div class="center">
             <img src="@/assets/images/check.svg" class="green-filter" height="50px" alt="" />
           </div>
@@ -474,7 +462,6 @@ import OnboardingForms from '@/components/OnboardingForms'
 import allConfigs from '@/views/settings/alerts/completeConfigs'
 import { UserOnboardingForm } from '@/services/users/forms'
 import { mapActions } from 'vuex'
-import Loader from '@/components/Loader'
 
 export default {
   name: 'Onboarder',
@@ -485,7 +472,6 @@ export default {
     LogZoom,
     PulseLoadingSpinnerButton,
     OnboardingForms,
-    Loader,
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -545,8 +531,7 @@ export default {
     setTimeout(() => {
       this.checkOnboardStatus()
     }, 5000)
-
-    // this.checkCrm()
+    this.checkCrm()
   },
   async created() {
     try {
@@ -802,7 +787,7 @@ export default {
         console.log(e)
       } finally {
         this.$toast('Success! Channel created', {
-          timeout: 2000,
+          timeout: 1000,
           position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
