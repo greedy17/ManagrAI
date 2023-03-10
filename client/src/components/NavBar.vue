@@ -95,8 +95,17 @@
           </div>
         </router-link>
 
-        <router-link style="margin-top: auto" :to="{ name: 'Login' }">
-          <div>
+        <div class="side-wrapper" style="margin-top: auto">
+          <label class="side-icon side-workflow" style="">
+            <span class="side-tooltip"
+              >Need help? Email us: cx@mymanagr.com</span
+            >
+            <img src="@/assets/images/help.png" class="side-img" style="margin-top: 0" height="16px" alt="" />
+          </label>
+        </div>
+
+        <router-link :to="{ name: 'Login' }">
+          <div style="margin-left: 3px;">
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </div>
         </router-link>
@@ -348,4 +357,82 @@ a:hover {
   visibility: visible;
   animation: tooltips-horz 300ms ease-out forwards;
 }
+
+// Tooltip
+.side-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.side-wrapper .side-icon {
+  position: relative;
+  // background: #FFFFFF;
+  border-radius: 50%;
+  padding: 12px;
+  margin: 20px 12px 0px 10px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  // outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip {
+  display: block;
+  width: 250px;
+  height: auto;
+  position: absolute;
+  top: 0;
+  left: 30px;
+  font-size: 14px;
+  background: #FFFFFF;
+  color: #FFFFFF;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #FFFFFF;
+  bottom: 50%;
+  left: 0%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-icon:hover .side-tooltip {
+  top: -15px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.side-wrapper .side-icon:hover span,
+.side-wrapper .side-icon:hover .side-tooltip {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+.side-wrapper .side-workflow:hover,
+.side-wrapper .side-workflow:hover .side-tooltip,
+.side-wrapper .side-workflow:hover .side-tooltip::before {
+  // margin-top: 1rem;
+  background: $grape;
+  color: #FFFFFF;
+}
+.side-icon:hover {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  img {
+    filter: invert(90%);
+  }
+}
+// .side-img:hover {
+//   filter: invert(90%);
+// }
 </style>

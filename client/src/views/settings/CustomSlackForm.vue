@@ -150,7 +150,7 @@
           <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column;">
               <div class="row__" style="gap: 6px; margin: 1rem 0 0 0; justify-content: space-between; width: 54.5vw;">
-                <div class="row__">
+                <div class="row__" style="margin-left: 0;">
                   <div>View: </div>
                   <Multiselect
                     @input="changeObject(selectedObject, $event, false)"
