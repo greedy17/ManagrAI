@@ -87,7 +87,6 @@ export default {
       }
     },
     updateForm(event) {
-      console.log(event)
       this.selectedForm = event
 
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
@@ -141,7 +140,7 @@ export default {
 .update_opportunity {
   color: $base-gray;
   // overflow: auto;
-  padding-left: 60px;
+  padding-left: 44px;
 }
 h3 {
   font-size: 1.35rem;

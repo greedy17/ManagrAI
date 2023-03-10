@@ -37,20 +37,20 @@
         <p class="pad-right">New to Managr?</p>
         <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
       </div>
-      <div class="row" style="margin-bottom: 1rem;">
+      <div class="row" style="margin-bottom: 1rem">
         <p class="pad-right">Forgot password?</p>
         <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
       </div>
     </div>
     <div class="links">
-        <p>
-          <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
-          |
-          <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
-          |
-          <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
-        </p>
-      </div>
+      <p>
+        <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+        |
+        <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
+        |
+        <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -89,16 +89,12 @@ export default {
       return !!this.$store.state.user.slackRef
     },
   },
-  mounted() {
-    // let logScript = document.getElementById('logrocket-script')
-    // logScript.remove()
-    // let pkg = document.getElementById('logrocket-package')
-    // let installedPkg = document.querySelector(
-    //   'script[src="https://cdn.lr-in-prod.com/logger-1.min.js"]',
-    // )
-    // installedPkg.remove()
-    // pkg.remove()
-  },
+  // mounted() {
+  //   if (document.getElementById('fullstory')) {
+  //     let el = document.getElementById('fullstory')
+  //     el.remove()
+  //   }
+  // },
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()

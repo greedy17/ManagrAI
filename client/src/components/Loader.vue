@@ -49,7 +49,7 @@ p {
   margin: 8px;
   border: 8px solid $dark-green;
   border-radius: 50%;
-  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  animation: lds-ring 1.75s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   border-color: $dark-green transparent transparent transparent;
 }
 .lds-ring div:nth-child(1) {

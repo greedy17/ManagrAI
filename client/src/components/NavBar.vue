@@ -13,7 +13,7 @@
         </div>
       </router-link>
 
-      <div style="height: 100%" class="align-left">
+      <div v-if="!isOnboarding" style="height: 100%" class="align-left">
         <router-link v-if="userCRM" active-class="active" :to="{ name: 'ListTemplates' }">
           <div class="tooltip">
             <img src="@/assets/images/workflows.svg" height="16px" alt="" />
@@ -25,6 +25,17 @@
           <div class="tooltip">
             <img src="@/assets/images/pipeline.svg" height="16px" alt="" />
             <span class="tooltiptext">Pipeline</span>
+          </div>
+        </router-link>
+
+        <router-link
+          v-if="(isTeamLead || isAdmin) && userCRM"
+          exact-active-class="active"
+          :to="{ name: 'Forms' }"
+        >
+          <div class="tooltip">
+            <img src="@/assets/images/edit-note.svg" height="14px" alt="" />
+            <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
 
@@ -46,16 +57,6 @@
           </div>
         </router-link>
         <!-- <div style="width: 60px; height: 1px; border-bottom: 1px solid rgb(230 230 230);"></div> -->
-        <router-link
-          v-if="(isTeamLead || isAdmin) && userCRM"
-          exact-active-class="active"
-          :to="{ name: 'Forms' }"
-        >
-          <div class="tooltip">
-            <img src="@/assets/images/upload.svg" height="16px" alt="" />
-            <span class="tooltiptext">Forms</span>
-          </div>
-        </router-link>
 
         <router-link exact-active-class="active" :to="{ name: 'Integrations' }">
           <div class="tooltip">
@@ -97,6 +98,14 @@
         <router-link style="margin-top: auto" :to="{ name: 'Login' }">
           <div>
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
+          </div>
+        </router-link>
+      </div>
+      <div v-else style="height: 100%" class="align-left">
+        <router-link v-if="userCRM" active-class="active" :to="{ name: 'ListTemplates' }">
+          <div class="tooltip">
+            <img src="@/assets/images/handshake.svg" height="18px" alt="" />
+            <span class="tooltiptext">Onboarding</span>
           </div>
         </router-link>
       </div>
@@ -142,6 +151,9 @@ export default {
     },
   },
   computed: {
+    isOnboarding() {
+      return this.$store.state.user.onboarding
+    },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
