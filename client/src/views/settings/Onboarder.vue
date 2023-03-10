@@ -15,6 +15,28 @@
         </footer>
       </div>
     </Modal>
+    <Modal v-if="showFieldModal" dimmed>
+      <div style="height: 40vh; width: 30vw" class="modal">
+        <header>
+          <h3>Syncing with {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}</h3>
+        </header>
+
+        <div style="margin-top: 1rem" v-if="!toggleReady" class="center">
+          <PipelineLoader />
+          <p class="gray-blue">This takes a few minutes... Do not refresh your browser!</p>
+        </div>
+        <div style="margin-top: 1rem" v-else>
+          <div class="center">
+            <img src="@/assets/images/check.svg" class="green-filter" height="50px" alt="" />
+          </div>
+          <p class="gray-blue">Sync complete! Continue when ready</p>
+        </div>
+
+        <div style="width: 100%; height: 100%; margin: none" class="center">
+          <button :disabled="!toggleReady" @click="toggleFieldModal()">Continue</button>
+        </div>
+      </div>
+    </Modal>
     <div class="header row">
       <div>
         <h1>Welcome {{ user.firstName }}! 🎉</h1>
@@ -26,7 +48,7 @@
       <div style="margin-top: 3rem" class="wrapper">
         <label class="icon workflow">
           <span style="width: 200px" class="tooltip"
-            >Having trouble? Send us an email: cx@mymanagr.com</span
+            >Having trouble? Send us an email: onboarding@mymanagr.com</span
           >
           <span>?</span>
         </label>
@@ -455,6 +477,8 @@ export default {
   },
   data() {
     return {
+      toggleReady: false,
+      showFieldModal: false,
       pressedIndex: null,
       pressed: false,
       tested: false,
@@ -507,8 +531,7 @@ export default {
     setTimeout(() => {
       this.checkOnboardStatus()
     }, 5000)
-
-    // this.checkCrm()
+    this.checkCrm()
   },
   async created() {
     try {
@@ -570,6 +593,13 @@ export default {
     this.workflows.refresh()
   },
   methods: {
+    toggleFieldModal() {
+      this.showFieldModal = !this.showFieldModal
+      setTimeout(() => {
+        this.toggleReady = true
+        this.getAllForms()
+      }, 120000)
+    },
     refreshForms(event) {
       this.selectedForm = event
 
@@ -757,7 +787,7 @@ export default {
         console.log(e)
       } finally {
         this.$toast('Success! Channel created', {
-          timeout: 2000,
+          timeout: 1000,
           position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
@@ -767,8 +797,8 @@ export default {
           this.$refs.stepThree ? this.$refs.stepThree.scrollIntoView({ behavior: 'smooth' }) : ''
         }, 100)
         setTimeout(() => {
-          this.getAllForms()
-        }, 3000)
+          this.toggleFieldModal()
+        }, 1000)
       }
     },
     async handleRecapUpdate(recap_channel) {
@@ -1041,10 +1071,22 @@ export default {
   transform: scale(1);
   animation: pulse 1.25s infinite;
 }
+.green-filter {
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
 .limit-height {
   height: 50vh;
   overflow-y: auto;
   max-width: fit-content;
+}
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 }
 .modal {
   background-color: $white;
