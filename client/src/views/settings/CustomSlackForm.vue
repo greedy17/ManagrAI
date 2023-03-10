@@ -149,50 +149,53 @@
         >
           <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column;">
-              <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
-                <div @click="test(currentStagesWithForms)">View: </div>
-                <Multiselect
-                  @input="changeObject(selectedObject, $event, false)"
-                  :options="formattedTypes"
-                  openDirection="below"
-                  style="width: 41vw;"
-                  :showLabels="false"
-                  track-by="label"
-                  label="label"
-                  v-model="selectedType"
-                  class="multiselect-font"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-          
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
-                    </p>
-                  </template>
-
-                  <template slot="option" slot-scope="props">
-                    <div>
-                      <span class="option__title">{{removeAmp(props.option.label)}}</span
-                      ><span
-                        v-if="currentStagesWithForms.includes(props.option.label)"
-                        class="option__small"
+              <div class="row__" style="gap: 6px; margin: 1rem 0 0 0; justify-content: space-between; width: 54.5vw;">
+                <div class="row__">
+                  <div>View: </div>
+                  <Multiselect
+                    @input="changeObject(selectedObject, $event, false)"
+                    :options="formattedTypes"
+                    openDirection="below"
+                    style="width: 20vw;"
+                    :showLabels="false"
+                    track-by="label"
+                    label="label"
+                    v-model="selectedType"
+                    class="multiselect-font"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+            
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                      </p>
+                    </template>
+  
+                    <template slot="option" slot-scope="props">
+                      <div>
+                        <span class="option__title">{{removeAmp(props.option.label)}}</span
+                        ><span
+                          v-if="currentStagesWithForms.includes(props.option.label)"
+                          class="option__small"
+                        >
+                        <img class="green-check" style="" src="@/assets/images/configCheck.svg" alt="" />
+                        </span>
+                      </div>
+                    </template>
+                  </Multiselect>
+                  <div class="wrapper">
+                    <label class="icon workflow" style="margin-top: 0;">
+                      <span class="tooltip"
+                        >You can also add {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} to Stages. These {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} will appear as you move to the Stage.</span
                       >
-                      <img class="green-check" style="" src="@/assets/images/configCheck.svg" alt="" />
-                      </span>
-                    </div>
-                  </template>
-                </Multiselect>
-                <div class="wrapper">
-                  <label class="icon workflow" style="margin-top: 0;">
-                    <span class="tooltip"
-                      >You can also add {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} to Stages. These {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} will appear as you move to the Stage.</span
-                    >
-                    <span>?</span>
-                  </label>
+                      <span>?</span>
+                    </label>
+                  </div>
                 </div>
+                <button v-if="selectedType.value !== 'CREATE' && selectedType.value !== 'UPDATE' && addedFields.length && activeForm" @click="confirmDeleteModal = !confirmDeleteModal" class="red-button">Delete Form</button>
               </div>
               <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
@@ -1599,6 +1602,7 @@ export default {
       this.selectedStage = null
     },
     async deleteForm(form) {
+      console.log('form', form)
       if (form && form.id && form.id.length) {
         const id = form.id
 
@@ -1642,7 +1646,9 @@ export default {
       this.changeObject({value: this.storedModalVariables.resource, label: this.storedModalVariables.resource}, {value: this.storedModalVariables.formType, label: this.storedModalVariables.formType[0] + this.storedModalVariables.formType.slice(1, this.storedModalVariables.formType.length)})
     },
     closeDeleteModal() {
-      this.addedFields = [this.storedField]
+      if (this.storedField) {
+        this.addedFields = [this.storedField]
+      }
       this.storedField = null
       this.confirmDeleteModal = false
     },
@@ -2333,7 +2339,7 @@ input[type='search']:focus {
   }
 }
 .wrapper {
-  width: 100%;
+  // width: 100%;
   margin: 0 auto;
   font-size: 14px;
   letter-spacing: 0.75px;
@@ -2597,6 +2603,15 @@ img:hover {
   padding: 8px 20px;
   font-size: 13px;
   background-color: $dark-green;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+.red-button {
+  padding: 8px 20px;
+  font-size: 13px;
+  background-color: $coral;
   color: white;
   border: none;
   border-radius: 0.25rem;
