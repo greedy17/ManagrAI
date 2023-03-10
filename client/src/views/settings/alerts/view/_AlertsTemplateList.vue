@@ -148,6 +148,58 @@
       </div>
     </Modal>
 
+    <Modal v-if="commandModalOpen" dimmed>
+      <div class="command-modal">
+        <header>
+          <h2>
+            Managr meets you where you are
+            <img
+              src="@/assets/images/slackLogo.png"
+              style="margin-left: 8px"
+              height="16px"
+              alt=""
+            />
+          </h2>
+          <p>You can access Managr from anywhere in Slack using commands.</p>
+        </header>
+        <section>
+          <div>
+            <h5><span>Commands</span></h5>
+            <p>Use '/' to start commands in any conversation</p>
+          </div>
+          <div>
+            <h5><span>/managr-actions</span></h5>
+            <p>Launch an action through Managr</p>
+          </div>
+          <div>
+            <h5>
+              <span>/managr-update</span>
+              {{
+                userCRM === 'SALESFORCE'
+                  ? 'opportunity , account, contact, lead'
+                  : 'deal, account, contact'
+              }}
+            </h5>
+            <p>Updates a resource</p>
+          </div>
+          <div>
+            <h5>
+              <span>/managr-create</span>
+              {{
+                userCRM === 'SALESFORCE'
+                  ? 'opportunity , account, contact, lead'
+                  : 'deal, account, contact'
+              }}
+            </h5>
+            <p>Creates a new resource</p>
+          </div>
+        </section>
+        <footer>
+          <button @click="closeCommandModal()">Got it</button>
+        </footer>
+      </div>
+    </Modal>
+
     <template v-if="!templates.refreshing && !isOnboarding">
       <!-- <transition name="fade">
       </transition> -->
@@ -401,7 +453,7 @@
     </div>
 
     <div class="center-loader" v-else>
-      <Loader loaderText="Gathering your workflows" />
+      <Loader style="margin-top: 44vh" loaderText="Gathering your workflows" />
     </div>
   </div>
 </template>
@@ -447,6 +499,7 @@ export default {
       //   'Deal Review',
       //   'Close Date Approaching',
       // ],
+      commandModalOpen: false,
       meetingListOpen: false,
       activeWorkflow: null,
       allConfigs,
@@ -488,6 +541,12 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    closeCommandModal() {
+      this.templates.refresh()
+      setTimeout(() => {
+        this.commandModalOpen = false
+      }, 300)
+    },
     refreshWorkflows() {
       this.templates.refresh()
       setTimeout(() => {
@@ -498,7 +557,11 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-      }, 1500)
+      }, 500)
+
+      setTimeout(() => {
+        this.commandModalOpen = true
+      }, 2500)
     },
     editWorkflow(alert) {
       this.$emit('edit-workflow', alert)
@@ -1205,5 +1268,130 @@ a {
   font-size: 10px;
   color: $dark-green;
   margin-top: 4px;
+}
+.command-modal {
+  background-color: $white;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 32vw;
+  height: 70vh;
+  align-items: center;
+  border-radius: 4px;
+  padding: 24px;
+  position: relative;
+
+  header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    border-bottom: 1px solid $soft-gray;
+    h2 {
+      text-align: left;
+      font-weight: normal;
+      letter-spacing: 0.3px;
+      padding: 0;
+      margin: 0;
+    }
+    p {
+      letter-spacing: 0.3px;
+      font-size: 13px;
+      padding: 0;
+      color: $light-gray-blue;
+    }
+  }
+
+  section {
+    width: 100%;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    div {
+      margin: 0;
+      border-bottom: 1px solid $soft-gray;
+      width: 100%;
+      padding: 12px 0px 0px 4px;
+      h5 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: normal;
+        span {
+          font-weight: bold;
+          letter-spacing: 0.3px;
+          color: black;
+        }
+      }
+      p {
+        font-size: 14px;
+        padding: 0;
+        color: $light-gray-blue;
+      }
+    }
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    button {
+      background-color: $grape;
+      color: white;
+      height: 30px;
+      width: auto;
+      padding: 0 8px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      span {
+        color: $mid-gray !important;
+        padding: 0 2px;
+      }
+    }
+  }
+
+  footer {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    padding: 16px 32px;
+    background-color: white;
+
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-end;
+
+    button {
+      background-color: $dark-green;
+      padding: 11px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: none;
+      margin: 0px 16px;
+      color: $white;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    button:hover {
+      box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+      transform: scale(1.025);
+    }
+  }
+}
+
+.absolute-img {
+  position: absolute;
+  right: 76px;
+  bottom: 16px;
+  box-shadow: none !important;
 }
 </style>
