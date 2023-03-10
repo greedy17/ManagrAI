@@ -89,12 +89,12 @@ export default {
       return !!this.$store.state.user.slackRef
     },
   },
-  mounted() {
-    if (document.getElementById('fullstory')) {
-      let el = document.getElementById('fullstory')
-      el.remove()
-    }
-  },
+  // mounted() {
+  //   if (document.getElementById('fullstory')) {
+  //     let el = document.getElementById('fullstory')
+  //     el.remove()
+  //   }
+  // },
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()

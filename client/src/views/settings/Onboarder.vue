@@ -47,7 +47,7 @@
       </div>
       <div style="margin-top: 3rem" class="wrapper">
         <label class="icon workflow">
-          <span style="width: 200px" class="tooltip"
+          <span style="width: 240px" class="tooltip"
             >Having trouble? Send us an email: onboarding@mymanagr.com</span
           >
           <span>?</span>

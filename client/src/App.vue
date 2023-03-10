@@ -54,13 +54,7 @@ export default {
       }
     },
   },
-  mounted() {
-    if (this.$route.path.includes('login')) {
-      console.log('HERERERERERERERERERERERERERE')
-      let el = document.getElementById('fullstory')
-      el.remove()
-    }
-  },
+
   async created() {
     if (this.userIsLoggedIn) {
       this.refreshCurrentUser()
