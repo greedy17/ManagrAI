@@ -97,15 +97,19 @@
 
         <div class="side-wrapper" style="margin-top: auto">
           <label class="side-icon side-workflow" style="">
-            <span class="side-tooltip"
-              >Need help? Email us: cx@mymanagr.com</span
-            >
-            <img src="@/assets/images/help.png" class="side-img" style="margin-top: 0" height="16px" alt="" />
+            <span class="side-tooltip">Need help? Email: cx@mymanagr.com</span>
+            <img
+              src="@/assets/images/help.png"
+              class="side-img"
+              style="margin-top: 0"
+              height="16px"
+              alt=""
+            />
           </label>
         </div>
 
         <router-link :to="{ name: 'Login' }">
-          <div style="margin-left: 3px;">
+          <div style="margin-left: 3px">
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </div>
         </router-link>
@@ -388,8 +392,8 @@ a:hover {
   top: 0;
   left: 30px;
   font-size: 14px;
-  background: #FFFFFF;
-  color: #FFFFFF;
+  background: #ffffff;
+  color: #ffffff;
   padding: 6px 8px;
   border-radius: 5px;
   box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
@@ -403,14 +407,13 @@ a:hover {
   content: '';
   height: 8px;
   width: 8px;
-  background: #FFFFFF;
+  background: #ffffff;
   bottom: 50%;
   left: 0%;
   transform: translate(-50%) rotate(45deg);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .side-wrapper .side-icon:hover .side-tooltip {
-  top: -15px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -424,7 +427,7 @@ a:hover {
 .side-wrapper .side-workflow:hover .side-tooltip::before {
   // margin-top: 1rem;
   background: $grape;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 .side-icon:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
