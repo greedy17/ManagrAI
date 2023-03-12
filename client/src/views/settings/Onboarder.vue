@@ -21,18 +21,39 @@
           <h3>Syncing with {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}</h3>
         </header>
 
-        <div style="margin-top: 1rem" v-if="!toggleReady" class="center">
-          <PipelineLoader />
-          <p class="gray-blue">This takes a few minutes... Do not refresh your browser!</p>
+        <div style="margin-bottom: 1.5rem" class="center" v-if="!toggleReady">
+          <div style="width: 28vw; margin-top: 2.5rem" class="progress">
+            <div class="color"></div>
+          </div>
+
+          <div class="row-between">
+            <div class="slide-effect">
+              <div :key="statusText" class="slideUp">{{ statusText }}</div>
+            </div>
+
+            <small style="margin: 0; padding: 0">{{ currentTime }}%</small>
+          </div>
         </div>
         <div style="margin-top: 1rem" v-else>
-          <div class="center">
-            <img src="@/assets/images/check.svg" class="green-filter" height="50px" alt="" />
+          <div class="center slide-effect">
+            <img
+              src="@/assets/images/check.svg"
+              class="green-filter slideUp"
+              height="44px"
+              style="margin-left: -24px"
+              alt=""
+            />
           </div>
           <p class="gray-blue">Sync complete! Continue when ready</p>
         </div>
 
-        <div style="width: 100%; height: 100%; margin: none" class="center">
+        <div
+          style="width: 100%; height: 100%; margin-top: 1rem"
+          :class="{ center: toggleReady, 'row-between': !toggleReady }"
+        >
+          <p v-if="!toggleReady" class="gray-blue" style="margin-left: 2px">
+            Do not refresh your browser!
+          </p>
           <button :disabled="!toggleReady" @click="toggleFieldModal()">Continue</button>
         </div>
       </div>
@@ -477,6 +498,9 @@ export default {
   },
   data() {
     return {
+      statusText: 'Initiating sync...',
+      interval: null,
+      currentTime: 0,
       toggleReady: false,
       showFieldModal: false,
       pressedIndex: null,
@@ -525,6 +549,7 @@ export default {
   },
   watch: {
     updateForm: 'filterUpdateFields',
+    currentTime: 'watchTime',
     // selectedWorkflows: 'scrollToChannel',
   },
   mounted() {
@@ -593,8 +618,41 @@ export default {
     this.workflows.refresh()
   },
   methods: {
+    watchTime() {
+      if (this.currentTime > 100) {
+        clearInterval(this.interval)
+      }
+      this.alternateText()
+    },
+    alternateText() {
+      if (this.currentTime > 3 && this.currentTime <= 25) {
+        this.userCRM === 'SALESFORCE'
+          ? (this.statusText = 'Syncing fields and picklist values...')
+          : (this.statusText = 'Syncing properties and picklist values...')
+      }
+      if (this.currentTime > 25 && this.currentTime <= 50) {
+        this.userCRM === 'SALESFORCE'
+          ? (this.statusText = 'Syncing Opportunities, Accounts, Contacts, Leads...')
+          : (this.statusText = 'Syncing Deals, Accounts, Contacts...')
+      }
+      if (this.currentTime > 50 && this.currentTime <= 75) {
+        this.statusText = 'Configuring your account...'
+      }
+      if (this.currentTime > 75) {
+        this.statusText = 'Almost done...'
+      }
+    },
+    startTimer() {
+      this.alternateText()
+      this.interval = setInterval(() => {
+        if (this.currentTime < 100) {
+          this.currentTime += 1
+        }
+      }, 1200)
+    },
     toggleFieldModal() {
       this.showFieldModal = !this.showFieldModal
+      this.startTimer()
       setTimeout(() => {
         this.toggleReady = true
         this.getAllForms()
@@ -1616,6 +1674,7 @@ button {
   padding: 11px 6px;
   font-size: 13px;
   border-radius: 4px;
+  letter-spacing: 0.4px;
   border: none;
   // outline: 1px solid $dark-green;
   color: $white;
@@ -1677,4 +1736,123 @@ button:disabled {
   opacity: 0.6;
   cursor: text !important;
 }
+
+@keyframes progres {
+  0% {
+    width: 0%;
+  }
+  25% {
+    width: 25%;
+  }
+  50% {
+    width: 50%;
+  }
+  75% {
+    width: 75%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.progress {
+  position: relative;
+  height: 24px;
+  width: 100%;
+  border: 3px solid $soft-gray;
+  border-radius: 15px;
+}
+.progress .color {
+  position: absolute;
+  background-color: $dark-green;
+  width: 0px;
+  height: 16px;
+  top: 1px;
+  border-radius: 15px;
+  animation: progres 120s linear;
+}
+.row-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0px;
+  padding: 0px 4px 0px 0px;
+  p {
+    font-size: 13px;
+    padding: 0;
+  }
+  small {
+    color: $light-gray-blue;
+  }
+}
+
+.slide-effect {
+  position: relative;
+  overflow: hidden;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.text,
+.slideDown,
+.slideUp {
+  position: relative;
+  font-size: 13px;
+  margin-left: -4px;
+  opacity: 0;
+}
+
+.text {
+  top: 40px;
+  font-weight: bold;
+  animation: slideUp ease 0.4s forwards;
+}
+
+.slideDown {
+  top: -40px;
+  left: 5px;
+  animation: slideDown ease 0.4s forwards 0.6s;
+}
+
+.slideUp {
+  top: 40px;
+  left: 10px;
+  animation: slideUp ease 0.35s forwards 0.7s;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(40px);
+    opacity: 1;
+  }
+}
+
+// @media only screen and (max-width: 600px) {
+//   .slide-effect,
+//   .text,
+//   .slideDown,
+//   .slideUp {
+//     font-size: 13px;
+//   }
+// }
 </style>
