@@ -99,13 +99,15 @@
     </Modal>
 
     <div class="alerts-header">
-      <section class="row__" style="gap: 0px;">
+      <section class="row__" style="gap: 0px">
         <h3>Field Mapping</h3>
         <div class="side-wrapper">
-          <label class="side-icon side-workflow" style="margin-top: 0;">
-            <span class="side-tooltip"
-              >{{user.crm === 'SALESFORCE' ? `Select the Salesforce fields you'd like to update using Managr.` : `Select the HubSpot properties you'd like to update using Managr.`}}</span
-            >
+          <label class="side-icon side-workflow" style="margin-top: 0">
+            <span class="side-tooltip">{{
+              user.crm === 'SALESFORCE'
+                ? `Select the Salesforce fields you'd like to update using Managr.`
+                : `Select the HubSpot properties you'd like to update using Managr.`
+            }}</span>
             <span>?</span>
           </label>
         </div>
@@ -126,76 +128,100 @@
       </div>
     </div>
     <div class="fields-container">
-      <div 
-        class="row__ border-bottom-top" 
-        
-        style="margin: 1.5rem 2rem 0 2rem;"
-      >
-      <!-- :style="user.crm === 'SALESFORCE' ? 'justify-content: space-between;' : 'justify-content: space-around;'" -->
-        <div
-          v-for="object in resources" :key="object.value"
-        >
-          <h4 
-            :class="selectedObject.label === object.label ? 'green-highlight cursor' : 'cursor'" 
+      <div class="row__ border-bottom-top" style="margin: 1rem 2rem 0 2rem">
+        <!-- :style="user.crm === 'SALESFORCE' ? 'justify-content: space-between;' : 'justify-content: space-around;'" -->
+        <div v-for="object in resources" :key="object.value">
+          <h4
+            :class="selectedObject.label === object.label ? 'green-highlight cursor' : 'cursor'"
             @click="clickChangeObject(object.label, object.value)"
-            style="margin-bottom: 0; padding-bottom: 0.75rem;"
-          >{{ object.label }}</h4>
+            style="margin-bottom: 0; padding-bottom: 0.75rem"
+          >
+            {{ object.label }}
+          </h4>
         </div>
       </div>
-      <div class="row__" style="justify-content: space-between;">
-        <section 
-          v-if="!customObjectView && (newResource && (selectedType && selectedType.value === 'STAGE_GATING' ? currentlySelectedStage : true))"
-          style="margin-left: 1rem; width: 23.5vw;"
+      <div class="row__" style="justify-content: space-between">
+        <section
+          v-if="
+            !customObjectView &&
+            newResource &&
+            (selectedType && selectedType.value === 'STAGE_GATING' ? currentlySelectedStage : true)
+          "
+          style="margin-left: 1rem; width: 23.5vw"
         >
-          <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="row__" style="margin: 0">
-            <div style="display: flex; flex-direction: column;">
-              <div class="row__" style="gap: 6px; margin: 1rem 0 0 0; justify-content: space-between; width: 54.5vw;">
-                <div class="row__" style="margin-left: 0;">
-                  <div>View: </div>
-                  <Multiselect
-                    @input="changeObject(selectedObject, $event, false)"
-                    :options="formattedTypes"
-                    openDirection="below"
-                    style="width: 20vw;"
-                    :showLabels="false"
-                    track-by="label"
-                    label="label"
-                    v-model="selectedType"
-                    class="multiselect-font"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-            
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <img src="@/assets/images/search.svg" alt="" />
-                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
-                      </p>
-                    </template>
-  
-                    <template slot="option" slot-scope="props">
-                      <div>
-                        <span class="option__title">{{removeAmp(props.option.label)}}</span
-                        ><span
-                          v-if="currentStagesWithForms.includes(props.option.label)"
-                          class="option__small"
-                        >
-                        <img class="green-check" style="" src="@/assets/images/configCheck.svg" alt="" />
-                        </span>
-                      </div>
-                    </template>
-                  </Multiselect>
-                  <div class="wrapper">
-                    <label class="icon workflow" style="margin-top: 0;">
-                      <span class="tooltip"
-                        >You can also add {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} to Stages. These {{user.crm === 'SALESFORCE' ? 'fields' : 'properties'}} will appear as you move to the Stage.</span
+          <div
+            v-if="selectedObject && selectedObject.value !== 'CustomObject'"
+            class="row__"
+            style="margin: 0"
+          >
+            <div style="display: flex; flex-direction: column">
+              <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
+                <div @click="test(currentStagesWithForms)">View:</div>
+                <Multiselect
+                  @input="changeObject(selectedObject, $event, false)"
+                  :options="formattedTypes"
+                  openDirection="below"
+                  style="width: 41vw"
+                  :showLabels="false"
+                  track-by="label"
+                  label="label"
+                  v-model="selectedType"
+                  class="multiselect-font"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                    </p>
+                  </template>
+
+                  <template slot="option" slot-scope="props">
+                    <div>
+                      <span class="option__title">{{ removeAmp(props.option.label) }}</span
+                      ><span
+                        v-if="currentStagesWithForms.includes(props.option.label)"
+                        class="option__small"
                       >
-                      <span>?</span>
-                    </label>
-                  </div>
+                        <img
+                          class="green-check"
+                          style=""
+                          src="@/assets/images/configCheck.svg"
+                          alt=""
+                        />
+                      </span>
+                    </div>
+                  </template>
+                </Multiselect>
+                <div class="wrapper">
+                  <label
+                    v-if="newResource === 'Deal' || newResource === 'Opportunity'"
+                    class="icon workflow"
+                    style="margin-top: 0"
+                  >
+                    <span class="tooltip"
+                      >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                      Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                      appear as you move to the Stage.</span
+                    >
+                    <span>?</span>
+                  </label>
                 </div>
-                <button v-if="selectedType.value !== 'CREATE' && selectedType.value !== 'UPDATE' && addedFields.length && activeForm" @click="confirmDeleteModal = !confirmDeleteModal" class="red-button">Delete Form</button>
+                <button
+                  v-if="
+                    selectedType.value !== 'CREATE' &&
+                    selectedType.value !== 'UPDATE' &&
+                    addedFields.length &&
+                    activeForm
+                  "
+                  @click="confirmDeleteModal = !confirmDeleteModal"
+                  class="red-button"
+                >
+                  Delete Form
+                </button>
               </div>
               <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
@@ -216,7 +242,11 @@
               <p v-for="(field, i) in filteredFields" :key="field.id" :title="field.label">
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
-                {{ field.label == 'Price Book Entry ID' ? 'Products' : truncate(removeAmp(field.label), 38) }}
+                {{
+                  field.label == 'Price Book Entry ID'
+                    ? 'Products'
+                    : truncate(removeAmp(field.label), 38)
+                }}
               </p>
             </div>
           </div>
@@ -234,10 +264,14 @@
 
             <div class="field-section__fields">
               <div>
-                <p v-if="(!COfilteredFields.length && createdCustomFields)">
+                <p v-if="!COfilteredFields.length && createdCustomFields">
                   Fields still syncing...
                 </p>
-                <p v-else-if="COfilteredFields.length" v-for="(field, i) in COfilteredFields" :key="field.id">
+                <p
+                  v-else-if="COfilteredFields.length"
+                  v-for="(field, i) in COfilteredFields"
+                  :key="field.id"
+                >
                   <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                   <label :for="i"></label>
                   {{ removeAmp(field.label) }}
@@ -256,16 +290,14 @@
 
             <div class="field-section__fields">
               <div>
-                <p v-if="createdCustomFields">
-                  Fields still syncing...
-                </p>
+                <p v-if="createdCustomFields">Fields still syncing...</p>
                 <p v-else>Nothing here. Try selecting an object</p>
               </div>
             </div>
           </div>
         </section>
-        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 30vw;">
-          <div class="" style="margin-bottom: 2rem;">
+        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 30vw">
+          <div class="" style="margin-bottom: 2rem">
             <!-- <div class="row__">
               <div>Object: </div>
               <Multiselect
@@ -295,7 +327,7 @@
                 <Loader :loaderText="loaderText" />
               </div>
               <div v-else>
-                <div v-if="/*!customResource*/true">
+                <div v-if="/*!customResource*/ true">
                   <div
                     v-if="createdCustomObjects.length"
                     style="width: 100%; display: flex; justify-content: space-between"
@@ -313,14 +345,14 @@
                       <template slot="noResult">
                         <p class="multi-slot">No results.</p>
                       </template>
-    
+
                       <template slot="placeholder">
                         <p class="slot-icon">
                           <img src="@/assets/images/search.svg" alt="" />
                           Select Custom Object
                         </p>
                       </template>
-    
+
                       <template slot="option" slot-scope="props">
                         <div>
                           <span class="option__title">{{ props.option.name }}</span>
@@ -346,17 +378,17 @@
                       <template slot="noResult">
                         <p class="multi-slot">No results.</p>
                       </template>
-    
+
                       <template slot="placeholder">
                         <p class="slot-icon">
                           <img src="@/assets/images/search.svg" alt="" />
                           Select Custom Object
                         </p>
                       </template>
-    
+
                       <template slot="option" slot-scope="props">
                         <div>
-                          <span class="option__title">{{removeAmp(props.option.label)}}</span
+                          <span class="option__title">{{ removeAmp(props.option.label) }}</span
                           ><span
                             v-if="currentStagesWithForms.includes(props.option.label)"
                             class="option__small"
@@ -393,7 +425,7 @@
               </div>
             </div>
           </div>
-          <div style="margin-left: 1rem;">
+          <div style="margin-left: 1rem">
             <draggable
               v-model="addedFields"
               group="fields"
@@ -530,7 +562,7 @@
     </div> -->
 
     <!-- <section class="wrapper"> -->
-      <!-- <div v-if="newFormType !== 'STAGE_GATING' && !customObjectView" class="tab-content">
+    <!-- <div v-if="newFormType !== 'STAGE_GATING' && !customObjectView" class="tab-content">
         <section>
           <div v-if="newResource !== 'OpportunityLineItem'" class="tab-content__div">
             <div class="row">
@@ -582,7 +614,7 @@
         </section>
       </div> -->
 
-      <!-- <div v-else-if="!customObjectView" class="tab-content">
+    <!-- <div v-else-if="!customObjectView" class="tab-content">
         <section style="margin-top: -16px" class="space-between">
           <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
             <img
@@ -686,7 +718,7 @@
         </div>
       </div> -->
 
-      <!-- <div class="tab-content" v-else>
+    <!-- <div class="tab-content" v-else>
         <div v-if="modalLoading">
           <Loader :loaderText="loaderText" />
         </div>
@@ -1006,13 +1038,23 @@ export default {
       formStages: [],
       stages: [],
       timeout: null,
-      selectedObject: {label: 'Opportunity', value: 'Opportunity'},
-      selectedType: {value: 'UPDATE', label: 'Update'},
+      selectedObject: { label: 'Opportunity', value: 'Opportunity' },
+      selectedType: { value: 'UPDATE', label: 'Update' },
       resources: [],
-      types: [{value: 'UPDATE', label: 'Update'}, {value: 'CREATE', label: 'Create'}],
-      formattedTypes: [{value: 'UPDATE', label: 'Update'}, {value: 'CREATE', label: 'Create'}],
-      oppTypes: [{value: 'UPDATE', label: 'Update'}, {value: 'CREATE', label: 'Create'}, {value: 'STAGE_GATING', label: 'Stage Gating'}],
-      oppLineItemType: [{value: 'CREATE', label: 'Create'}],
+      types: [
+        { value: 'UPDATE', label: 'Update' },
+        { value: 'CREATE', label: 'Create' },
+      ],
+      formattedTypes: [
+        { value: 'UPDATE', label: 'Update' },
+        { value: 'CREATE', label: 'Create' },
+      ],
+      oppTypes: [
+        { value: 'UPDATE', label: 'Update' },
+        { value: 'CREATE', label: 'Create' },
+        { value: 'STAGE_GATING', label: 'Stage Gating' },
+      ],
+      oppLineItemType: [{ value: 'CREATE', label: 'Create' }],
       storedModalFunction: () => null,
       storedModalVariables: {},
       noteTitle: {
@@ -1385,12 +1427,22 @@ export default {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
       let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
       if (this.userCRM === 'SALESFORCE') {
-        this.resources = [{value: 'Opportunity', label: 'Opportunity'}, {value: 'Account', label: 'Account'}, {value: 'Contact', label: 'Contact'}, {value: 'Lead', label: 'Lead'}, {value: 'OpportunityLineItem', label: 'Products'}]
+        this.resources = [
+          { value: 'Opportunity', label: 'Opportunity' },
+          { value: 'Account', label: 'Account' },
+          { value: 'Contact', label: 'Contact' },
+          { value: 'Lead', label: 'Lead' },
+          { value: 'OpportunityLineItem', label: 'Products' },
+        ]
         // if (this.user.isPaid) {
         //   this.resources.push({value: 'CustomObject', label: 'Custom Object'})
         // }
       } else {
-        this.resources = [{value: 'Deal', label: 'Deal'}, {value: 'Company', label: 'Company'}, {value: 'Contact', label: 'Contact'}]
+        this.resources = [
+          { value: 'Deal', label: 'Deal' },
+          { value: 'Company', label: 'Company' },
+          { value: 'Contact', label: 'Contact' },
+        ]
       }
       this.selectedObject = this.resources[0]
       this.newCustomForm = this.customForm
@@ -1405,7 +1457,7 @@ export default {
       console.log(e)
     }
     this.getStageForms()
-    this.formattedTypes = [...this.types, {label: '--- Stages ---'}, ...this.stages]
+    this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
   },
   methods: {
     test(log) {
@@ -1423,16 +1475,16 @@ export default {
       // Global Term Line Item Recurring Billing
     },
     clickChangeObject(label, value) {
-      this.selectedObject = {label, value}
+      this.selectedObject = { label, value }
       this.changeObject(this.selectedObject, this.selectedType)
       if (this.selectedObject.value === 'Opportunity' || this.selectedObject.value === 'Deal') {
-        this.formattedTypes = [...this.types, {label: '--- Stages ---'}, ...this.stages]
+        this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
       } else if (this.selectedObject.label === 'Products') {
-        this.formattedTypes = [{value: 'CREATE', label: 'Create'}]
+        this.formattedTypes = [{ value: 'CREATE', label: 'Create' }]
       } else {
         this.formattedTypes = [
-          {value: 'UPDATE', label: 'Update'}, 
-          {value: 'CREATE', label: 'Create'}
+          { value: 'UPDATE', label: 'Update' },
+          { value: 'CREATE', label: 'Create' },
         ]
       }
       if (this.selectedType.label !== 'Create' && this.selectedType.label !== 'Update') {
@@ -1572,7 +1624,7 @@ export default {
         this.newResource = this.selectedCustomObjectName
       }
       // if (this.customObjectModalView) {
-        this.closeCustomModal()
+      this.closeCustomModal()
       // }
     },
     watcherCustomResource() {
@@ -1643,7 +1695,15 @@ export default {
     closeModal() {
       this.modalOpen = false
       this.formChange = false
-      this.changeObject({value: this.storedModalVariables.resource, label: this.storedModalVariables.resource}, {value: this.storedModalVariables.formType, label: this.storedModalVariables.formType[0] + this.storedModalVariables.formType.slice(1, this.storedModalVariables.formType.length)})
+      this.changeObject(
+        { value: this.storedModalVariables.resource, label: this.storedModalVariables.resource },
+        {
+          value: this.storedModalVariables.formType,
+          label:
+            this.storedModalVariables.formType[0] +
+            this.storedModalVariables.formType.slice(1, this.storedModalVariables.formType.length),
+        },
+      )
     },
     closeDeleteModal() {
       if (this.storedField) {
@@ -1780,31 +1840,32 @@ export default {
         this.selectedStage = null
       }
       if (!type.value) {
-        this.selectedType = {value: 'UPDATE', label: 'Update'}
+        this.selectedType = { value: 'UPDATE', label: 'Update' }
         this.changeResource(object.value, this.selectedType.value)
         return
       }
       if (object && object.value === 'OpportunityLineItem') {
-        this.selectedType = {value: 'CREATE', label: 'Create'}
+        this.selectedType = { value: 'CREATE', label: 'Create' }
         this.changeResource(object.value, this.selectedType.value)
         return
-      }
-      else if (switchedObject || !object || !type || !object.value || !type.value) {
+      } else if (switchedObject || !object || !type || !object.value || !type.value) {
         if (this.formChange) {
           this.modalOpen = !this.modalOpen
-          this.storedModalVariables = {resource, formType}
+          this.storedModalVariables = { resource, formType }
           return
         }
         this.selectedType = null
         this.clearForms()
-      }
-      else if (type.value === 'STAGE_GATING' && !switchedObject) {
-        this.selectedObject = (this.userCRM === 'SALESFORCE' ? {value: 'Opportunity', label: 'Opportunity'} : {value: 'Deal', label: 'Deal'})
+      } else if (type.value === 'STAGE_GATING' && !switchedObject) {
+        this.selectedObject =
+          this.userCRM === 'SALESFORCE'
+            ? { value: 'Opportunity', label: 'Opportunity' }
+            : { value: 'Deal', label: 'Deal' }
         this.changeResource(this.selectedObject.value, type.value)
       } else if (object.value === 'OpportunityLineItem') {
-        this.selectedType = {value: 'CREATE', label: 'Create'}
+        this.selectedType = { value: 'CREATE', label: 'Create' }
         this.changeResource(object.value, this.selectedType.value)
-      } else  {
+      } else {
         this.changeResource(object.value, type.value)
       }
     },
@@ -1821,7 +1882,7 @@ export default {
       this.customObjectView = false
       if (this.formChange) {
         this.modalOpen = !this.modalOpen
-        this.storedModalVariables = {resource, formType}
+        this.storedModalVariables = { resource, formType }
         return
       }
       this.customResource = null
@@ -1830,7 +1891,7 @@ export default {
       this.newFormType = formType
       setTimeout(() => {
         this.newCustomForm = this.allForms.find(
-          (f) => f.resource == resource && f.formType == this[formType]
+          (f) => f.resource == resource && f.formType == this[formType],
         )
       }, 0)
       this.storedField = null
@@ -1990,7 +2051,18 @@ export default {
       this.onSave()
       this.modalOpen = false
       setTimeout(() => {
-        this.changeObject({value: this.storedModalVariables.resource, label: this.storedModalVariables.resource}, {value: this.storedModalVariables.formType, label: this.storedModalVariables.formType[0] + this.storedModalVariables.formType.slice(1, this.storedModalVariables.formType.length)})
+        this.changeObject(
+          { value: this.storedModalVariables.resource, label: this.storedModalVariables.resource },
+          {
+            value: this.storedModalVariables.formType,
+            label:
+              this.storedModalVariables.formType[0] +
+              this.storedModalVariables.formType.slice(
+                1,
+                this.storedModalVariables.formType.length,
+              ),
+          },
+        )
         // this.$router.go()
       }, 400)
     },
@@ -2811,7 +2883,7 @@ img:hover {
 }
 .side-wrapper .side-icon {
   position: relative;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 50%;
   padding: 10px;
   margin: 20px 12px 0px 12px;
@@ -2834,8 +2906,8 @@ img:hover {
   top: 0;
   left: 30px;
   font-size: 14px;
-  background: #FFFFFF;
-  color: #FFFFFF;
+  background: #ffffff;
+  color: #ffffff;
   padding: 6px 8px;
   border-radius: 5px;
   box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
@@ -2849,7 +2921,7 @@ img:hover {
   content: '';
   height: 8px;
   width: 8px;
-  background: #FFFFFF;
+  background: #ffffff;
   bottom: 50%;
   left: 0%;
   transform: translate(-50%) rotate(45deg);
@@ -2869,7 +2941,7 @@ img:hover {
 .side-wrapper .side-workflow:hover .side-tooltip,
 .side-wrapper .side-workflow:hover .side-tooltip::before {
   background: $grape;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 .wrapper {
   display: flex;
@@ -2877,7 +2949,7 @@ img:hover {
 }
 .wrapper .icon {
   position: relative;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 50%;
   padding: 10px;
   margin: 20px 12px 0px 12px;
@@ -2899,8 +2971,8 @@ img:hover {
   position: absolute;
   top: 0;
   font-size: 14px;
-  background: #FFFFFF;
-  color: #FFFFFF;
+  background: #ffffff;
+  color: #ffffff;
   padding: 6px 8px;
   border-radius: 5px;
   box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
@@ -2908,13 +2980,13 @@ img:hover {
   pointer-events: none;
   line-height: 1.5;
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-} 
+}
 .wrapper .tooltip::before {
   position: absolute;
   content: '';
   height: 8px;
   width: 8px;
-  background: #FFFFFF;
+  background: #ffffff;
   bottom: -3px;
   left: 50%;
   transform: translate(-50%) rotate(45deg);
@@ -2934,7 +3006,7 @@ img:hover {
 .wrapper .workflow:hover .tooltip,
 .wrapper .workflow:hover .tooltip::before {
   background: $grape;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 .multiselect-font {
   font-size: 12px !important;

@@ -66,7 +66,7 @@ def get_hubspot_authentication(request):
         if serializer.instance.user.is_admin:
             form_check = user.team.team_forms.all()
             schedule = (
-                (timezone.now() + timezone.timedelta(minutes=5))
+                (timezone.now() + timezone.timedelta(minutes=2))
                 if len(form_check) > 0
                 else timezone.now()
             )
@@ -115,4 +115,3 @@ def redirect_from_hubspot(request):
         err = urlencode(err)
         return redirect(f"{hubspot_consts.HUBSPOT_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{hubspot_consts.HUBSPOT_FRONTEND_REDIRECT}?{q}")
-

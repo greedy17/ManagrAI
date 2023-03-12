@@ -15,6 +15,51 @@
         </footer>
       </div>
     </Modal>
+    <Modal v-if="showFieldModal" dimmed>
+      <div style="height: 40vh; width: 30vw" class="modal">
+        <header>
+          <h3 @click="startTimer()">
+            Syncing with {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}
+          </h3>
+        </header>
+
+        <div style="margin-bottom: 1.5rem" class="center" v-if="!toggleReady">
+          <div style="width: 28vw; margin-top: 2.5rem" class="progress">
+            <div class="color"></div>
+          </div>
+
+          <div class="row-between">
+            <div class="slide-effect">
+              <div :key="statusText" class="slideUp">{{ statusText }}</div>
+            </div>
+
+            <small style="margin: 0; padding: 0">{{ currentTime }}%</small>
+          </div>
+        </div>
+        <div style="margin-top: 1rem" v-else>
+          <div class="center slide-effect">
+            <img
+              src="@/assets/images/check.svg"
+              class="green-filter slideUp"
+              height="44px"
+              style="margin-left: -24px"
+              alt=""
+            />
+          </div>
+          <p class="gray-blue">Sync complete! Continue when ready</p>
+        </div>
+
+        <div
+          style="width: 100%; height: 100%; margin-top: 1rem"
+          :class="{ center: toggleReady, 'row-between': !toggleReady }"
+        >
+          <p v-if="!toggleReady" class="gray-blue" style="margin-left: 2px">
+            Do not refresh your browser!
+          </p>
+          <button :disabled="!toggleReady" @click="toggleFieldModal()">Continue</button>
+        </div>
+      </div>
+    </Modal>
     <div class="header row">
       <div>
         <h1>Welcome {{ user.firstName }}! 🎉</h1>
@@ -25,8 +70,8 @@
       </div>
       <div style="margin-top: 3rem" class="wrapper">
         <label class="icon workflow">
-          <span style="width: 200px" class="tooltip"
-            >Having trouble? Send us an email: cx@mymanagr.com</span
+          <span style="width: 240px" class="tooltip"
+            >Having trouble? Send us an email: onboarding@mymanagr.com</span
           >
           <span>?</span>
         </label>
@@ -455,6 +500,11 @@ export default {
   },
   data() {
     return {
+      statusText: 'Initiating sync...',
+      interval: null,
+      currentTime: 0,
+      toggleReady: false,
+      showFieldModal: false,
       pressedIndex: null,
       pressed: false,
       tested: false,
@@ -501,14 +551,14 @@ export default {
   },
   watch: {
     updateForm: 'filterUpdateFields',
+    currentTime: 'watchTime',
     // selectedWorkflows: 'scrollToChannel',
   },
   mounted() {
     setTimeout(() => {
       this.checkOnboardStatus()
     }, 5000)
-
-    // this.checkCrm()
+    this.checkCrm()
   },
   async created() {
     try {
@@ -570,6 +620,46 @@ export default {
     this.workflows.refresh()
   },
   methods: {
+    watchTime() {
+      if (this.currentTime > 100) {
+        clearInterval(this.interval)
+      }
+      this.alternateText()
+    },
+    alternateText() {
+      if (this.currentTime > 3 && this.currentTime <= 25) {
+        this.userCRM === 'SALESFORCE'
+          ? (this.statusText = 'Syncing fields and picklist values...')
+          : (this.statusText = 'Syncing properties and picklist values...')
+      }
+      if (this.currentTime > 25 && this.currentTime <= 50) {
+        this.userCRM === 'SALESFORCE'
+          ? (this.statusText = 'Syncing Opportunities, Accounts, Contacts, Leads...')
+          : (this.statusText = 'Syncing Deals, Accounts, Contacts...')
+      }
+      if (this.currentTime > 50 && this.currentTime <= 75) {
+        this.statusText = 'Configuring your account...'
+      }
+      if (this.currentTime > 75) {
+        this.statusText = 'Almost done...'
+      }
+    },
+    startTimer() {
+      this.alternateText()
+      this.interval = setInterval(() => {
+        if (this.currentTime < 100) {
+          this.currentTime += 1
+        }
+      }, 1200)
+    },
+    toggleFieldModal() {
+      this.showFieldModal = !this.showFieldModal
+      this.startTimer()
+      setTimeout(() => {
+        this.toggleReady = true
+        this.getAllForms()
+      }, 120000)
+    },
     refreshForms(event) {
       this.selectedForm = event
 
@@ -620,15 +710,6 @@ export default {
       User.api.update(this.user.id, this.userOnboardingForm.value)
       this.handleUpdate()
       this.$emit('refresh-workflows')
-      setTimeout(() => {
-        this.$toast("You're all set! Onboarding complete", {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      }, 300)
     },
     filterUpdateFields() {
       this.updateForm
@@ -766,7 +847,7 @@ export default {
         console.log(e)
       } finally {
         this.$toast('Success! Channel created', {
-          timeout: 2000,
+          timeout: 1000,
           position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
@@ -776,8 +857,8 @@ export default {
           this.$refs.stepThree ? this.$refs.stepThree.scrollIntoView({ behavior: 'smooth' }) : ''
         }, 100)
         setTimeout(() => {
-          this.getAllForms()
-        }, 3000)
+          this.toggleFieldModal()
+        }, 1000)
       }
     },
     async handleRecapUpdate(recap_channel) {
@@ -1050,10 +1131,22 @@ export default {
   transform: scale(1);
   animation: pulse 1.25s infinite;
 }
+.green-filter {
+  filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
+    brightness(93%) contrast(89%);
+}
 .limit-height {
   height: 50vh;
   overflow-y: auto;
   max-width: fit-content;
+}
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 }
 .modal {
   background-color: $white;
@@ -1583,6 +1676,7 @@ button {
   padding: 11px 6px;
   font-size: 13px;
   border-radius: 4px;
+  letter-spacing: 0.4px;
   border: none;
   // outline: 1px solid $dark-green;
   color: $white;
@@ -1644,4 +1738,123 @@ button:disabled {
   opacity: 0.6;
   cursor: text !important;
 }
+
+@keyframes progres {
+  0% {
+    width: 0%;
+  }
+  25% {
+    width: 25%;
+  }
+  50% {
+    width: 50%;
+  }
+  75% {
+    width: 75%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.progress {
+  position: relative;
+  height: 24px;
+  width: 100%;
+  border: 3px solid $soft-gray;
+  border-radius: 15px;
+}
+.progress .color {
+  position: absolute;
+  background-color: $dark-green;
+  width: 0px;
+  height: 16px;
+  top: 1px;
+  border-radius: 15px;
+  animation: progres 120s linear;
+}
+.row-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0px;
+  padding: 0px 4px 0px 0px;
+  p {
+    font-size: 13px;
+    padding: 0;
+  }
+  small {
+    color: $light-gray-blue;
+  }
+}
+
+.slide-effect {
+  position: relative;
+  overflow: hidden;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.text,
+.slideDown,
+.slideUp {
+  position: relative;
+  font-size: 13px;
+  margin-left: -4px;
+  opacity: 0;
+}
+
+.text {
+  top: 40px;
+  font-weight: bold;
+  animation: slideUp ease 0.4s forwards;
+}
+
+.slideDown {
+  top: -40px;
+  left: 5px;
+  animation: slideDown ease 0.4s forwards 0.6s;
+}
+
+.slideUp {
+  top: 40px;
+  left: 10px;
+  animation: slideUp ease 0.35s forwards 0.7s;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(40px);
+    opacity: 1;
+  }
+}
+
+// @media only screen and (max-width: 600px) {
+//   .slide-effect,
+//   .text,
+//   .slideDown,
+//   .slideUp {
+//     font-size: 13px;
+//   }
+// }
 </style>

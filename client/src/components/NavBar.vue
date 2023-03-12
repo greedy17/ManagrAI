@@ -34,7 +34,7 @@
           :to="{ name: 'Forms' }"
         >
           <div class="tooltip">
-            <img src="@/assets/images/edit-note.svg" height="16px" alt="" />
+            <img src="@/assets/images/edit-note.svg" height="14px" alt="" />
             <span class="tooltiptext">Forms</span>
           </div>
         </router-link>
