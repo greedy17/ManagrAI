@@ -77,7 +77,9 @@
             :title="field.referenceDisplayLabel"
           >
             <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
-            <span @click="fieldSort(field, i)">{{ field.referenceDisplayLabel }}</span>
+            <span class="field-name" @click="fieldSort(field, i)">{{
+              field.referenceDisplayLabel
+            }}</span>
             <span @click="fieldSort(field, i)">
               <img
                 v-if="sortingIndex === i"
@@ -110,21 +112,23 @@
             }"
           >
             <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
-            <span @click="viewOnlySort(field, i)">{{ field.referenceDisplayLabel }}</span>
+            <span class="field-name" @click="viewOnlySort(field, i)">{{
+              field.referenceDisplayLabel
+            }}</span>
             <span @click="viewOnlySort(field, i)" style="width: 0px">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
                 height="16px"
                 alt=""
-                style="margin-right: 1rem;"
+                style="margin-right: 1rem"
               />
               <img
                 v-else-if="reverseIndex === oppFields.length + i"
                 src="@/assets/images/arrowDropUp.svg"
                 height="16px"
                 alt=""
-                style="margin-right: 1rem;"
+                style="margin-right: 1rem"
               />
               <img
                 v-if="
@@ -134,7 +138,7 @@
                 src="@/assets/images/sort.svg"
                 height="16px"
                 alt=""
-                style="margin-right: 1rem;"
+                style="margin-right: 1rem"
               />
             </span>
             <span>
@@ -825,6 +829,10 @@ span.ui-column-resizer {
 
 span.ui-column-resizer:hover {
   border-right: 2px solid $dark-green;
+}
+
+.field-name {
+  margin-left: 0;
 }
 .red {
   filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%) !important;

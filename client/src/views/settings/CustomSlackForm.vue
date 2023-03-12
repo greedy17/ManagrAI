@@ -210,6 +210,18 @@
                     <span>?</span>
                   </label>
                 </div>
+                <button
+                  v-if="
+                    selectedType.value !== 'CREATE' &&
+                    selectedType.value !== 'UPDATE' &&
+                    addedFields.length &&
+                    activeForm
+                  "
+                  @click="confirmDeleteModal = !confirmDeleteModal"
+                  class="red-button"
+                >
+                  Delete Form
+                </button>
               </div>
               <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
@@ -1642,6 +1654,7 @@ export default {
       this.selectedStage = null
     },
     async deleteForm(form) {
+      console.log('form', form)
       if (form && form.id && form.id.length) {
         const id = form.id
 
@@ -1693,7 +1706,9 @@ export default {
       )
     },
     closeDeleteModal() {
-      this.addedFields = [this.storedField]
+      if (this.storedField) {
+        this.addedFields = [this.storedField]
+      }
       this.storedField = null
       this.confirmDeleteModal = false
     },
@@ -2396,7 +2411,7 @@ input[type='search']:focus {
   }
 }
 .wrapper {
-  width: 100%;
+  // width: 100%;
   margin: 0 auto;
   font-size: 14px;
   letter-spacing: 0.75px;
@@ -2660,6 +2675,15 @@ img:hover {
   padding: 8px 20px;
   font-size: 13px;
   background-color: $dark-green;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+.red-button {
+  padding: 8px 20px;
+  font-size: 13px;
+  background-color: $coral;
   color: white;
   border: none;
   border-radius: 0.25rem;
