@@ -18,9 +18,7 @@
     <Modal v-if="showFieldModal" dimmed>
       <div style="height: 40vh; width: 30vw" class="modal">
         <header>
-          <h3 @click="startTimer()">
-            Syncing with {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}
-          </h3>
+          <h3>Syncing with {{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'HubSpot' }}</h3>
         </header>
 
         <div style="margin-bottom: 1.5rem" class="center" v-if="!toggleReady">
