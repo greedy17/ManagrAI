@@ -462,7 +462,6 @@ class SlackViewSet(viewsets.GenericViewSet,):
         The body of that request will contain a JSON payload parameter.
         Will have a TYPE field that is used to handle request accordingly.
         """
-        print("interactive")
         payload = json.loads(request.data.get("payload"))
         process_output = slack_interactions.handle_interaction(payload)
         return Response(status=status.HTTP_200_OK, data=process_output)
@@ -1024,7 +1023,6 @@ def list_tasks(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def slack_events(request):
-    print(request.data)
     if request.data.get("type") == "url_verification":
         # respond to challenge (should only happen once)
         return Response(request.data.get("challenge"))

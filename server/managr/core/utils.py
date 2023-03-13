@@ -305,5 +305,4 @@ def get_summary_completion(user, data):
     with Client as client:
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
         r = r.json()
-        print(r)
     return r

@@ -2585,8 +2585,6 @@ def process_get_summary(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_submit_chat_prompt(payload, context):
-    print(payload)
-    print(context)
     user = User.objects.get(id=context.get("u"))
     resource_list = (
         ["Opportunity", "Account", "Contact"]
@@ -2598,11 +2596,9 @@ def process_submit_chat_prompt(payload, context):
     lowercase_prompt = prompt.lower()
     for resource in resource_list:
         lowered_resource = resource.lower()
-        print(lowered_resource)
         if lowered_resource in lowercase_prompt:
             resource_check = resource
             break
-    print(resource_check)
     if resource_check:
         emit_process_submit_chat_prompt(context.get("u"), prompt, resource_check)
     return

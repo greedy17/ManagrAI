@@ -2,6 +2,7 @@ import json
 import uuid
 import logging
 import pytz
+from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
@@ -18,7 +19,6 @@ from managr.slack.helpers.utils import (
     action_with_params,
     send_loading_screen,
     USER_APP_OPTIONS,
-    clean_data_for_summary,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
@@ -2899,7 +2899,10 @@ def process_send_recap_modal(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
-            "title": {"type": "plain_text", "text": "Send Recaps"},
+            "title": {
+                "type": "plain_text",
+                "text": f"{'Send Recaps' if settings.IN_PROD else 'Send Summary'}",
+            },
             "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),

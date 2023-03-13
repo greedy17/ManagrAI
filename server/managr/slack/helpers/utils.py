@@ -475,19 +475,3 @@ def USER_APP_OPTIONS(user, resource_type):
         options.append(block_builders.option("Call Recordings", "call_recordings"))
     return options
 
-
-def clean_data_for_summary(user_id, data):
-    user = User.objects.get(id=user_id)
-    owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "owner_id"
-    data.pop(owner_field)
-    fields = user.object_fields.filter(api_name__in=data.keys())
-    if user.crm == "HUBSPOT":
-        if "dealstage" in data.keys():
-            found_stage = False
-            field = fields.filter(api_name="dealstage").first()
-            for pipeline in field.options[0].keys():
-                current_pipeline = field.options[0][pipeline]["stages"]
-                for stage in current_pipeline:
-                    if stage["id"] == data["dealstage"]:
-                        data["dealstage"] = stage["label"]
-    return data

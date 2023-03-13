@@ -935,13 +935,10 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type):
     fields = list(
         user.object_fields.filter(crm_object=resource_type).values_list("label", flat=True)
     )
-    print(fields)
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(fields, prompt)
-    print(full_prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     with Client as client:
         r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
         r = r.json()
-        print(r)
     return
