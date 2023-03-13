@@ -33,7 +33,7 @@
             height="14px"
             alt=""
           />
-          <small class="right-tooltiptext">Upgrade to Startup Plan</small>
+          <small class="right-tooltiptext">Upgrade your plan</small>
         </p>
 
         <p style="margin-left: 18px" class="light-gray-text right-tooltip row">
@@ -45,7 +45,7 @@
             height="14px"
             alt=""
           />
-          <small class="right-tooltiptext">Upgrade to Startup Plan</small>
+          <small class="right-tooltiptext">Upgrade your plan</small>
         </p>
       </div>
 
