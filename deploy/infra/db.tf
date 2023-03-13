@@ -12,7 +12,7 @@ resource "aws_db_instance" "managrdb" {
   identifier                 = "${replace(each.value.rds_instance_name, "_", "-")}-${each.value.name}"
   allocated_storage          = 20
   engine                     = "postgres"
-  engine_version             = "12.8"
+  engine_version             = "12.11"
   instance_class             = "db.t2.medium"
   name                       = each.value.rds_db_name
   username                   = each.value.rds_username
@@ -23,7 +23,7 @@ resource "aws_db_instance" "managrdb" {
   db_subnet_group_name       = aws_db_subnet_group.managrdb.id
   vpc_security_group_ids     = [aws_security_group.managr_db.id]
   publicly_accessible        = false
-  auto_minor_version_upgrade = true
+  auto_minor_version_upgrade = false
   snapshot_identifier        = each.value.rds_db_snapshot_id
   storage_encrypted          = each.value.name == "prod" ? true : false
   kms_key_id                 = each.value.name == "prod" ? "arn:aws:kms:us-east-1:986523545926:key/36627a8d-ff13-4f18-a735-450f5ac59609" : ""

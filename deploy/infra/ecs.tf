@@ -320,5 +320,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     hubspotClientId      = each.value.hubspot_client_id
     hubspotSecret        = each.value.hubspot_secret
     hubspotRedirectUri   = each.value.hubspot_redirect_uri
+
+    openAiSecret         = each.value.open_ai_secret
   })
 }
