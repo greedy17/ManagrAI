@@ -111,7 +111,7 @@ def authenticate(request):
         if serializer.instance.user.is_admin:
             form_check = request.user.team.team_forms.all()
             schedule = (
-                (timezone.now() + timezone.timedelta(minutes=5))
+                (timezone.now() + timezone.timedelta(minutes=2))
                 if len(form_check) > 0
                 else timezone.now()
             )
@@ -1062,7 +1062,8 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type, slack_const.FORM_TYPE_UPDATE,
+            resource_type,
+            slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -1198,7 +1199,10 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return Response(data=data)
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin",
     )
     def admin_meetings(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""

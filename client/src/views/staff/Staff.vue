@@ -463,8 +463,8 @@
                     <div style="margin-left: 1rem">
                       <div>ID: {{ config.id }}</div>
                       <div>Recurrence Frequency: {{ config.recurrence_frequency }}</div>
-                      <div>Recurrence Day: {{ weekdays[config.recurrence_day] }}</div>
-                      <div>Recurrence Days: {{ getWeekdays(config.recurrence_days) }}</div>
+                      <div v-if="!config.recurrence_days.length">Recurrence Day: {{ weekdays[config.recurrence_day] }}</div>
+                      <div v-else>Recurrence Days: {{ getWeekdays(config.recurrence_days) }}</div>
                       <div>Recipients: {{ config.recipients }}</div>
                       <div>Recipient Type: {{ config.recipient_type }}</div>
                       <div>Template: {{ config.template }}</div>
@@ -2483,13 +2483,14 @@ export default {
       usageData: null,
       chartOptions: {
         series: [{
-          name: 'Total Users',
+          name: 'Users',
           data: []
         }, {
           name: 'Active Users',
           data: []
         }],
-        colors: ['#41b883', '#008FFB'],
+        // colors: ['#41b883', '#008FFB'], // original colors
+        colors: ['#c7c7cc', '#41b883'],
         dataLabels: {
           enabled: true,
           formatter: function(val, opt) {
@@ -3372,7 +3373,7 @@ export default {
         totalsCount = totalsCount - activeArr[i]
         totalsArr.push(totalsCount)
       }
-      this.chartOptions.series = [{name: 'Total Users', data: []}, {name: 'Active Users', data: []}]
+      this.chartOptions.series = [{name: 'Users', data: []}, {name: 'Active Users', data: []}]
       this.chartOptions.series[0].data = [...totalsArr]
       this.chartOptions.series[1].data = [...activeArr]
     },
