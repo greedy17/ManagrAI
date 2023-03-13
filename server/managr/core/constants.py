@@ -16,9 +16,12 @@ SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
 
-
-OPEN_AI_SECRET = settings.OPEN_AI_SECRET
-OPEN_AI_HEADERS = {"Content-type": "application/json", "Authorization": f"Bearer {OPEN_AI_SECRET}"}
+if settings.USE_OPEN_AI:
+    OPEN_AI_SECRET = settings.OPEN_AI_SECRET
+    OPEN_AI_HEADERS = {
+        "Content-type": "application/json",
+        "Authorization": f"Bearer {OPEN_AI_SECRET}",
+    }
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 
 OPEN_AI_SUMMARY_PROMPT = (
