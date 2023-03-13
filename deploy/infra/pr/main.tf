@@ -131,6 +131,7 @@ data "template_file" "managr_app" {
     use_gong       = title(var.app_config.use_gong)
     use_outreach   = title(var.app_config.use_outreach)
     use_hubspot    = title(var.app_config.use_hubspot)
+    use_open_ai    = title(var.app_config.use_open_ai)
   }
 }
 

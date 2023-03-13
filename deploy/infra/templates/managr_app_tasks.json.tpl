@@ -31,7 +31,8 @@
       { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
       { "name": "USE_GONG", "value": "${use_gong}" },
       { "name": "USE_OUTREACH", "value": "${use_outreach}" },
-      { "name": "USE_HUBSPOT", "value": "${use_hubspot}" }
+      { "name": "USE_HUBSPOT", "value": "${use_hubspot}" },
+      { "name": "USE_OPEN_AI", "value": "${use_open_ai}" }
     ],
     "secrets": [
       {
