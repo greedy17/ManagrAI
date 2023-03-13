@@ -151,6 +151,7 @@ variable "environments" {
     hubspot_secret         = string
     hubspot_redirect_uri   = string
 
+    use_open_ai            = bool
     open_ai_secret         = string
   }))
 }
