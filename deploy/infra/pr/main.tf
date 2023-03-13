@@ -305,12 +305,12 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     outreachSecret        = var.app_config.outreach_secret
     outreachRedirectUri   = var.app_config.outreach_redirect_uri
 
-    hubspotBaseUrl       = each.value.hubspot_base_url
-    hubspotClientId      = each.value.hubspot_client_id
-    hubspotSecret        = each.value.hubspot_secret
-    hubspotRedirectUri   = each.value.hubspot_redirect_uri
+    hubspotBaseUrl       = var.app_config.hubspot_base_url
+    hubspotClientId      = var.app_config.hubspot_client_id
+    hubspotSecret        = var.app_config.hubspot_secret
+    hubspotRedirectUri   = var.app_config.hubspot_redirect_uri
 
-    openAiSecret         = each.value.open_ai_secret
+    openAiSecret         = var.app_config.open_ai_secret
   })
 }
 
