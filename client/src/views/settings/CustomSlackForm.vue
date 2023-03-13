@@ -155,73 +155,77 @@
             style="margin: 0"
           >
             <div style="display: flex; flex-direction: column">
-              <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
-                <div @click="test(currentStagesWithForms)">View:</div>
-                <Multiselect
-                  @input="changeObject(selectedObject, $event, false)"
-                  :options="formattedTypes"
-                  openDirection="below"
-                  style="width: 41vw"
-                  :showLabels="false"
-                  track-by="label"
-                  label="label"
-                  v-model="selectedType"
-                  class="multiselect-font"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
-                    </p>
-                  </template>
-
-                  <template slot="option" slot-scope="props">
-                    <div>
-                      <span class="option__title">{{ removeAmp(props.option.label) }}</span
-                      ><span
-                        v-if="currentStagesWithForms.includes(props.option.label)"
-                        class="option__small"
-                      >
-                        <img
-                          class="green-check"
-                          style=""
-                          src="@/assets/images/configCheck.svg"
-                          alt=""
-                        />
-                      </span>
-                    </div>
-                  </template>
-                </Multiselect>
-                <div class="wrapper">
-                  <label
-                    v-if="newResource === 'Deal' || newResource === 'Opportunity'"
-                    class="icon workflow"
-                    style="margin-top: 0"
+              <div style="display: flex; justify-content: space-between; width: 55vw;">
+                <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
+                  <div>View:</div>
+                  <Multiselect
+                    @input="changeObject(selectedObject, $event, false)"
+                    :options="formattedTypes"
+                    openDirection="below"
+                    style="width: 20vw"
+                    :showLabels="false"
+                    track-by="label"
+                    label="label"
+                    v-model="selectedType"
+                    class="multiselect-font"
                   >
-                    <span class="tooltip"
-                      >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
-                      Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
-                      appear as you move to the Stage.</span
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+  
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                      </p>
+                    </template>
+  
+                    <template slot="option" slot-scope="props">
+                      <div>
+                        <span class="option__title">{{ removeAmp(props.option.label) }}</span
+                        ><span
+                          v-if="currentStagesWithForms.includes(props.option.label)"
+                          class="option__small"
+                        >
+                          <img
+                            class="green-check"
+                            style=""
+                            src="@/assets/images/configCheck.svg"
+                            alt=""
+                          />
+                        </span>
+                      </div>
+                    </template>
+                  </Multiselect>
+                  <div class="wrapper">
+                    <label
+                      v-if="newResource === 'Deal' || newResource === 'Opportunity'"
+                      class="icon workflow"
+                      style="margin-top: 0"
                     >
-                    <span>?</span>
-                  </label>
+                      <span class="tooltip"
+                        >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                        Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                        appear as you move to the Stage.</span
+                      >
+                      <span>?</span>
+                    </label>
+                  </div>
                 </div>
-                <button
-                  v-if="
-                    selectedType.value !== 'CREATE' &&
-                    selectedType.value !== 'UPDATE' &&
-                    addedFields.length &&
-                    activeForm
-                  "
-                  @click="confirmDeleteModal = !confirmDeleteModal"
-                  class="red-button"
-                >
-                  Delete Form
-                </button>
+                <div style="display: flex; align-items: center;">
+                  <button
+                    v-if="
+                      selectedType.value !== 'CREATE' &&
+                      selectedType.value !== 'UPDATE' &&
+                      addedFields.length &&
+                      activeForm
+                    "
+                    @click="confirmDeleteModal = !confirmDeleteModal"
+                    class="red-button"
+                  >
+                    Delete Form
+                  </button>
+                </div>
               </div>
               <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
@@ -2682,6 +2686,7 @@ img:hover {
 }
 .red-button {
   padding: 8px 20px;
+  margin-top: 1rem;
   font-size: 13px;
   background-color: $coral;
   color: white;
