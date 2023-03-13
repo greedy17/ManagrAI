@@ -1438,7 +1438,7 @@ export default {
           { value: 'Lead', label: 'Lead' },
           { value: 'OpportunityLineItem', label: 'Products' },
         ]
-        // if (this.user.isPaid) {
+        // if (this.user.organizationRef.isPaid) {
         //   this.resources.push({value: 'CustomObject', label: 'Custom Object'})
         // }
       } else {
