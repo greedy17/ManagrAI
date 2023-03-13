@@ -1,6 +1,8 @@
 import calendar
+import json
 from django.conf import settings
 from django.utils import timezone
+from managr.utils.client import Client
 from datetime import datetime
 from django.db.models import Q
 from managr.core.models import User
@@ -9,6 +11,7 @@ from managr.slack.models import OrgCustomSlackFormInstance
 from managr.organization.models import Organization
 from managr.salesforce.models import MeetingWorkflow
 from collections import OrderedDict
+from managr.core import constants as core_const
 
 
 def qsort(inlist, obj):
@@ -293,3 +296,13 @@ def pull_usage_data(month_only=False):
     totals = get_totals_for_year(month_only)
     orgs = get_organization_totals(month_only)
     return {"totals": totals, "org": orgs}
+
+
+def get_summary_completion(user, data):
+    summary_prompt = core_const.OPEN_AI_SUMMARY_PROMPT(data)
+    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt)
+    url = core_const.OPEN_AI_COMPLETIONS_URI
+    with Client as client:
+        r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
+        r = r.json()
+    return r

@@ -60,6 +60,10 @@ class BaseAccount(TimeStampModel, IntegrationModel):
             return "Company"
 
     @property
+    def display_value(self):
+        return self.name
+
+    @property
     def adapter_class(self):
         data = self.__dict__
         data["id"] = str(data["id"])
@@ -184,6 +188,10 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
             return "Deal"
 
     @property
+    def display_value(self):
+        return self.name
+
+    @property
     def last_stage_update(self):
         if self.owner.crm == "SALESFORCE":
             return OpportunityAdapter._format_stage_update(
@@ -293,6 +301,10 @@ class BaseContact(TimeStampModel, IntegrationModel):
     @property
     def object_type(self):
         return "Contact"
+
+    @property
+    def display_value(self):
+        return self.email
 
     @property
     def name(self):

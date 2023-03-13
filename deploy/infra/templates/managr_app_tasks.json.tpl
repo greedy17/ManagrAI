@@ -31,7 +31,8 @@
       { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
       { "name": "USE_GONG", "value": "${use_gong}" },
       { "name": "USE_OUTREACH", "value": "${use_outreach}" },
-      { "name": "USE_HUBSPOT", "value": "${use_hubspot}" }
+      { "name": "USE_HUBSPOT", "value": "${use_hubspot}" },
+      { "name": "USE_OPEN_AI", "value": "${use_open_ai}" }
     ],
     "secrets": [
       {
@@ -258,6 +259,10 @@
       {
         "name": "HUBSPOT_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:hubspotRedirectUri::"
+      },
+      {
+        "name": "OPEN_AI_SECRET",
+        "valueFrom": "${config_secret_arn}:openAiSecret::"
       }
     ],
     "logConfiguration": {
