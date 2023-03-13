@@ -26,6 +26,9 @@ data "aws_alb_listener" "front_end" {
   for_each          = local.listener_ports
   load_balancer_arn = data.aws_alb.main.arn
   port              = tonumber(each.value)
+  ssl_policy {
+      minimum_protocol_version = "TLSv1.2"
+    }
 }
 
 resource "aws_lb_listener_rule" "rule" {
@@ -219,7 +222,7 @@ resource "aws_db_instance" "managrdb" {
   db_subnet_group_name       = data.aws_db_subnet_group.managrdb.id
   vpc_security_group_ids     = [data.aws_security_group.managr_db.id]
   publicly_accessible        = false
-  auto_minor_version_upgrade = true
+  auto_minor_version_upgrade = false
 
   tags = {
     "app" = "managr"
@@ -305,6 +308,8 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     hubspotClientId      = each.value.hubspot_client_id
     hubspotSecret        = each.value.hubspot_secret
     hubspotRedirectUri   = each.value.hubspot_redirect_uri
+
+    openAiSecret         = each.value.open_ai_secret
   })
 }
 

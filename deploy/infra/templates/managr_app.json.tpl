@@ -263,6 +263,10 @@
       {
         "name": "HUBSPOT_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:hubspotRedirectUri::"
+      },
+      {
+        "name": "OPEN_AI_SECRET",
+        "valueFrom": "${config_secret_arn}:openAiSecret::"
       }
     ],
     "logConfiguration": {

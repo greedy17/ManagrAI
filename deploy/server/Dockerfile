@@ -107,11 +107,12 @@ ENV SECRET_KEY='secret123' \
   OUTREACH_CLIENT_ID='' \
   OUTREACH_SECRET='' \
   OUTREACH_REDIRECT_URI='' \
-  USE_HUBSPOT=False \
+  USE_HUBSPOT=True \
   HUBSPOT_BASE_URL='' \
   HUBSPOT_CLIENT_ID='' \
   HUBSPOT_SECRET='' \
-  HUBSPOT_REDIRECT_URI=''
+  HUBSPOT_REDIRECT_URI=''\
+  OPEN_AI_SECRET=''
 
 
 # Set the name of the working directory inside the docker container
