@@ -270,7 +270,6 @@ class SalesloftAccountAdapter:
         while True:
             try:
                 account_res = self.get_account_id_from_name(account_name)
-                print(account_res)
                 filter = urlencode({"name": account_name})
                 url = f"{salesloft_consts.SALESLOFT_BASE_URI}/{salesloft_consts.ACCOUNTS}?{filter}"
                 res = client.get(url, headers=headers)

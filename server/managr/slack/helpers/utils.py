@@ -474,3 +474,4 @@ def USER_APP_OPTIONS(user, resource_type):
     if user.has_gong_integration:
         options.append(block_builders.option("Call Recordings", "call_recordings"))
     return options
+

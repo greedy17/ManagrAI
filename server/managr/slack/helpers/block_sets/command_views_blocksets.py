@@ -1,4 +1,5 @@
 import json
+from django.conf import settings
 from urllib.parse import urlencode
 from managr.utils.sites import get_site_url
 from managr.salesforce.models import MeetingWorkflow
@@ -464,7 +465,15 @@ def actions_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
     update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
-    options = [block_builders.option(update_label, "UPDATE_RESOURCE")]
+    if settings.IN_DEV:
+        options = [
+            block_builders.option("Chat (Beta)", "OPEN_CHAT"),
+            block_builders.option(update_label, "UPDATE_RESOURCE"),
+        ]
+    else:
+        options = [
+            block_builders.option(update_label, "UPDATE_RESOURCE"),
+        ]
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
     if user.crm == "SALESFORCE":
