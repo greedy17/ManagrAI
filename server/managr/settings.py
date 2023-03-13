@@ -469,6 +469,6 @@ if USE_HUBSPOT:
 
 USE_OPEN_AI = os.environ.get("USE_OPEN_AI") == "True"
 if USE_OPEN_AI:
-    OPEN_AI_SECRET = os.environ.get("OPEN_AI_SECRET")
+    OPEN_AI_SECRET = _env_get_required("OPEN_AI_SECRET")
 
 MAX_ATTEMPTS = 5
