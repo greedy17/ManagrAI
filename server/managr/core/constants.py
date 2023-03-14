@@ -16,6 +16,31 @@ SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
 
+if settings.USE_OPEN_AI:
+    OPEN_AI_SECRET = settings.OPEN_AI_SECRET
+    OPEN_AI_HEADERS = {
+        "Content-type": "application/json",
+        "Authorization": f"Bearer {OPEN_AI_SECRET}",
+    }
+OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+
+OPEN_AI_SUMMARY_PROMPT = (
+    lambda object: f"Add to a summary for each of these key-value pairs {object} and if any of the values are unix convert to date time format"
+)
+OPEN_AI_UPDATE_PROMPT = (
+    lambda labels, prompt: f"If any of these values in this array {labels} are in this string {prompt} add to an object the key and value, account for capitalization"
+)
+
+
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt):
+    return {
+        "model": "text-davinci-003",
+        "prompt": prompt,
+        "max_tokens": 500,
+        "top_p": 0.1,
+        "user": user_name,
+    }
+
 
 # OAuth permission scopes to request from Nylas
 SCOPE_EMAIL_CALENDAR = "calendar"

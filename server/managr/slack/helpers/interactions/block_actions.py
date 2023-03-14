@@ -2,6 +2,7 @@ import json
 import uuid
 import logging
 import pytz
+from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
@@ -35,6 +36,7 @@ from managr.slack.background import (
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
 from managr.core.background import emit_process_calendar_meetings
+from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
     check_for_display_value,
     replace_tags,
@@ -1009,6 +1011,7 @@ def process_managr_action(payload, context):
         "selected_option"
     ]["value"]
     data.update(context)
+
     get_action(command_value, data)
     return
 
@@ -2896,7 +2899,10 @@ def process_send_recap_modal(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
-            "title": {"type": "plain_text", "text": "Send Recaps"},
+            "title": {
+                "type": "plain_text",
+                "text": f"{'Send Recaps' if settings.IN_PROD else 'Send Summary'}",
+            },
             "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
@@ -3051,92 +3057,94 @@ def process_view_recap(payload, context):
         else:
             form_fields = form.template.customformfield_set.filter(include_in_recap=True)
     blocks = []
-    message_string_for_recap = ""
-    for key, new_value in new_data.items():
-        field = form_fields.filter(field__api_name=key).first()
-        if not field:
-            continue
-        field_label = field.field.reference_display_label.capitalize()
-        if main_form.template.form_type == "UPDATE":
-            # Only sends values for fields that have been updated
-            # all fields on update form are included by default users cannot edit
-            if key in old_data:
-                if str(old_data.get(key)) != str(new_value):
-                    old_value = old_data.get(key)
-                    if field.field.is_public and field.field.data_type == "Reference":
-                        old_value = check_for_display_value(field.field, old_value)
-                        new_value = check_for_display_value(field.field, new_value)
-                    if len(str(new_value)) > 255:
-                        new_value = str(new_value)[:256] + "..."
-                    if len(str(old_value)) > 255:
-                        old_value = str(old_value)[:256] + "..."
-                    if user.crm == "HUBSPOT":
-                        if field.field.data_type in ["DateTime", "Date"]:
-                            new_value = str(new_value)[:10]
-                            old_value = str(old_value)[:10]
-                        if field.field.api_name == "dealstage":
-                            deal_stages = field.field.options[0][
-                                main_form.resource_object.secondary_data.get("pipeline")
-                            ]["stages"]
-                            new_value = [
-                                stage["label"] for stage in deal_stages if stage["id"] == new_value
-                            ][0]
-                            old_value = [
-                                stage["label"] for stage in deal_stages if stage["id"] == old_value
-                            ][0]
-                    message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
-                    )
-        elif main_form.template.form_type == "CREATE":
-            if new_value:
-                if field.field.is_public and field.field.data_type == "Reference":
-                    new_value = check_for_display_value(field.field, new_value)
-                if len(str(new_value)) > 255:
-                    new_value = str(new_value)[:256]
-                if user.crm == "HUBSPOT":
-                    if field.field.data_type in ["DateTime", "Date"]:
-                        new_value = str(new_value)[:10]
-                    if field.field.api_name == "dealstage":
-                        deal_stages = field.field.options[0][
-                            main_form.resource_object.secondary_data.get("pipeline")
-                        ]["stages"]
-                        new_value = [
-                            stage["label"] for stage in deal_stages if stage["id"] == new_value
-                        ][0]
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-    if not len(message_string_for_recap):
-        message_string_for_recap = "No Data to show from form"
+    cleaned_data = clean_data_for_summary(str(user.id), new_data)
+    completions_prompt = get_summary_completion(user, cleaned_data)
+    message_string_for_recap = completions_prompt["choices"][0]["text"]
+    # for key, new_value in new_data.items():
+    #     field = form_fields.filter(field__api_name=key).first()
+    #     if not field:
+    #         continue
+    #     field_label = field.field.reference_display_label.capitalize()
+    #     if main_form.template.form_type == "UPDATE":
+    #         # Only sends values for fields that have been updated
+    #         # all fields on update form are included by default users cannot edit
+    #         if key in old_data:
+    #             if str(old_data.get(key)) != str(new_value):
+    #                 old_value = old_data.get(key)
+    #                 if field.field.is_public and field.field.data_type == "Reference":
+    #                     old_value = check_for_display_value(field.field, old_value)
+    #                     new_value = check_for_display_value(field.field, new_value)
+    #                 if len(str(new_value)) > 255:
+    #                     new_value = str(new_value)[:256] + "..."
+    #                 if len(str(old_value)) > 255:
+    #                     old_value = str(old_value)[:256] + "..."
+    #                 if user.crm == "HUBSPOT":
+    #                     if field.field.data_type in ["DateTime", "Date"]:
+    #                         new_value = str(new_value)[:10]
+    #                         old_value = str(old_value)[:10]
+    #                     if field.field.api_name == "dealstage":
+    #                         deal_stages = field.field.options[0][
+    #                             main_form.resource_object.secondary_data.get("pipeline")
+    #                         ]["stages"]
+    #                         new_value = [
+    #                             stage["label"] for stage in deal_stages if stage["id"] == new_value
+    #                         ][0]
+    #                         old_value = [
+    #                             stage["label"] for stage in deal_stages if stage["id"] == old_value
+    #                         ][0]
+    #                 message_string_for_recap += (
+    #                     f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
+    #                 )
+    #     elif main_form.template.form_type == "CREATE":
+    #         if new_value:
+    #             if field.field.is_public and field.field.data_type == "Reference":
+    #                 new_value = check_for_display_value(field.field, new_value)
+    #             if len(str(new_value)) > 255:
+    #                 new_value = str(new_value)[:256]
+    #             if user.crm == "HUBSPOT":
+    #                 if field.field.data_type in ["DateTime", "Date"]:
+    #                     new_value = str(new_value)[:10]
+    #                 if field.field.api_name == "dealstage":
+    #                     deal_stages = field.field.options[0][
+    #                         main_form.resource_object.secondary_data.get("pipeline")
+    #                     ]["stages"]
+    #                     new_value = [
+    #                         stage["label"] for stage in deal_stages if stage["id"] == new_value
+    #                     ][0]
+    #             message_string_for_recap += f"\n*{field_label}:* {new_value}"
+    # if not len(message_string_for_recap):
+    #     message_string_for_recap = "No Data to show from form"
 
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
-    action_blocks = [
-        block_builders.simple_button_block(
-            "View Notes",
-            "get_notes",
-            action_id=action_with_params(
-                slack_const.GET_NOTES,
-                params=[
-                    f"u={str(user.id)}",
-                    f"resource_id={str(main_form.resource_id)}",
-                    "type=recap",
-                    f"resource_type={main_form.template.resource}",
-                ],
-            ),
-        ),
-    ]
-    if main_form.template.resource != "Lead":
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Call Details",
-                "call_details",
-                action_id=action_with_params(
-                    slack_const.GONG_CALL_RECORDING,
-                    params=[f"u={str(user.id)}", f"form_id={str(main_form.id)}", "type=recap",],
-                ),
-                style="primary",
-            ),
-        )
-    blocks.append(block_builders.actions_block(action_blocks))
-
+    # action_blocks = [
+    #     block_builders.simple_button_block(
+    #         "View Notes",
+    #         "get_notes",
+    #         action_id=action_with_params(
+    #             slack_const.GET_NOTES,
+    #             params=[
+    #                 f"u={str(user.id)}",
+    #                 f"resource_id={str(main_form.resource_id)}",
+    #                 "type=recap",
+    #                 f"resource_type={main_form.template.resource}",
+    #             ],
+    #         ),
+    #     ),
+    # ]
+    # if main_form.template.resource != "Lead":
+    #     action_blocks.append(
+    #         block_builders.simple_button_block(
+    #             "Call Details",
+    #             "call_details",
+    #             action_id=action_with_params(
+    #                 slack_const.GONG_CALL_RECORDING,
+    #                 params=[f"u={str(user.id)}", f"form_id={str(main_form.id)}", "type=recap",],
+    #             ),
+    #             style="primary",
+    #         ),
+    #     )
+    # blocks.append(block_builders.actions_block(action_blocks))
+    blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     data = {
         "view_id": loading_view_data["view"]["id"],
         "view": {

@@ -633,7 +633,7 @@ export default {
       if (this.currentTime > 25 && this.currentTime <= 50) {
         this.userCRM === 'SALESFORCE'
           ? (this.statusText = 'Syncing Opportunities, Accounts, Contacts, Leads...')
-          : (this.statusText = 'Syncing Deals, Accounts, Contacts...')
+          : (this.statusText = 'Syncing Deals, Companies, Contacts...')
       }
       if (this.currentTime > 50 && this.currentTime <= 75) {
         this.statusText = 'Configuring your account...'

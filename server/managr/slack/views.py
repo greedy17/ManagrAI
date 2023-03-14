@@ -212,17 +212,18 @@ class SlackViewSet(viewsets.GenericViewSet,):
         slack_id = data.get("authed_user").get("id")
         org = request.user.organization
         if hasattr(org, "slack_integration"):
-            user_slack = UserSlackIntegration.objects.create(
-                user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
-            )
-            # get the user's channel
-            res = slack_requests.request_user_dm_channel(
-                user_slack.slack_id, org.slack_integration.access_token
-            ).json()
-            # save Slack Channel ID
-            channel = res.get("channel", {}).get("id")
-            user_slack.channel = channel
-            user_slack.save()
+            if not request.user.has_slack_integration:
+                user_slack = UserSlackIntegration.objects.create(
+                    user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
+                )
+                # get the user's channel
+                res = slack_requests.request_user_dm_channel(
+                    user_slack.slack_id, org.slack_integration.access_token
+                ).json()
+                # save Slack Channel ID
+                channel = res.get("channel", {}).get("id")
+                user_slack.channel = channel
+                user_slack.save()
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
@@ -1028,6 +1029,8 @@ def slack_events(request):
     slack_data = request.data
     slack_event = request.data.get("event", None)
     if slack_event:
+        slack_id = slack_event.get("user")
+        user = User.objects.filter(slack_integration__slack_id=slack_id).first()
         if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "home":
             slack_id = slack_event.get("user")
             user = User.objects.filter(slack_integration__slack_id=slack_id).first()
@@ -1072,6 +1075,27 @@ def slack_events(request):
                 return Response()
             else:
                 return Response()
+        elif slack_event.get("type") == "app_mention":
+            text = slack_event["text"]
+            if "summary" in text:
+                resource_type = None
+                for object in ["opportunity", "account", "contact", "lead"]:
+                    if object in text:
+                        resource_type = object
+                        break
+                words = text.split(" ")
+                resource_index = words.index(resource_type)
+                resource_name = " ".join(words[resource_index + 1 :])
+                slack_requests.send_channel_message(
+                    slack_event["channel"],
+                    user.organization.slack_integration.access_token,
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Checking for the latest on {resource_type} {resource_name}"
+                        )
+                    ],
+                )
+            return Response()
         else:
             return Response()
     else:

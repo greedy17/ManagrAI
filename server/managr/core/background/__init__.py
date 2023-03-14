@@ -4,10 +4,10 @@ import random
 import pytz
 import uuid
 import requests
+import json
 from datetime import datetime
 from copy import copy
 import re
-from django.template.loader import render_to_string
 from managr.api.emails import send_html_email
 from background_task import background
 from django.conf import settings
@@ -31,7 +31,7 @@ from managr.zoom.background import _split_first_name, _split_last_name
 from managr.zoom.background import emit_kick_off_slack_interaction
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.utils.client import Client
 
 logger = logging.getLogger("managr")
 
@@ -102,6 +102,10 @@ def emit_morning_refresh_message(user_id, verbose_name):
 
 def emit_process_check_trial_status(user_id, verbose_name):
     return _process_check_trial_status(user_id, verbose_name=verbose_name)
+
+
+def emit_process_submit_chat_prompt(user_id, prompt, resource_type):
+    return _process_submit_chat_prompt(user_id, prompt, resource_type)
 
 
 #########################################################
@@ -924,3 +928,17 @@ def _process_change_team_lead(user_id):
         logger.exception(f"Failed to change team lead for {user.team.name} due to <{e}>")
     return
 
+
+@background()
+def _process_submit_chat_prompt(user_id, prompt, resource_type):
+    user = User.objects.get(id=user_id)
+    fields = list(
+        user.object_fields.filter(crm_object=resource_type).values_list("label", flat=True)
+    )
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(fields, prompt)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
+    url = core_consts.OPEN_AI_COMPLETIONS_URI
+    with Client as client:
+        r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+        r = r.json()
+    return

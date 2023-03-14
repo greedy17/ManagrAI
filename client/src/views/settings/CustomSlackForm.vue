@@ -155,73 +155,77 @@
             style="margin: 0"
           >
             <div style="display: flex; flex-direction: column">
-              <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
-                <div @click="test(currentStagesWithForms)">View:</div>
-                <Multiselect
-                  @input="changeObject(selectedObject, $event, false)"
-                  :options="formattedTypes"
-                  openDirection="below"
-                  style="width: 41vw"
-                  :showLabels="false"
-                  track-by="label"
-                  label="label"
-                  v-model="selectedType"
-                  class="multiselect-font"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
-                    </p>
-                  </template>
-
-                  <template slot="option" slot-scope="props">
-                    <div>
-                      <span class="option__title">{{ removeAmp(props.option.label) }}</span
-                      ><span
-                        v-if="currentStagesWithForms.includes(props.option.label)"
-                        class="option__small"
-                      >
-                        <img
-                          class="green-check"
-                          style=""
-                          src="@/assets/images/configCheck.svg"
-                          alt=""
-                        />
-                      </span>
-                    </div>
-                  </template>
-                </Multiselect>
-                <div class="wrapper">
-                  <label
-                    v-if="newResource === 'Deal' || newResource === 'Opportunity'"
-                    class="icon workflow"
-                    style="margin-top: 0"
+              <div style="display: flex; justify-content: space-between; width: 55vw;">
+                <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
+                  <div>View:</div>
+                  <Multiselect
+                    @input="changeObject(selectedObject, $event, false)"
+                    :options="formattedTypes"
+                    openDirection="below"
+                    style="width: 20vw"
+                    :showLabels="false"
+                    track-by="label"
+                    label="label"
+                    v-model="selectedType"
+                    class="multiselect-font"
                   >
-                    <span class="tooltip"
-                      >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
-                      Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
-                      appear as you move to the Stage.</span
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+  
+                    <template slot="placeholder">
+                      <p class="slot-icon">
+                        <img src="@/assets/images/search.svg" alt="" />
+                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                      </p>
+                    </template>
+  
+                    <template slot="option" slot-scope="props">
+                      <div>
+                        <span class="option__title">{{ removeAmp(props.option.label) }}</span
+                        ><span
+                          v-if="currentStagesWithForms.includes(props.option.label)"
+                          class="option__small"
+                        >
+                          <img
+                            class="green-check"
+                            style=""
+                            src="@/assets/images/configCheck.svg"
+                            alt=""
+                          />
+                        </span>
+                      </div>
+                    </template>
+                  </Multiselect>
+                  <div class="wrapper">
+                    <label
+                      v-if="newResource === 'Deal' || newResource === 'Opportunity'"
+                      class="icon workflow"
+                      style="margin-top: 0"
                     >
-                    <span>?</span>
-                  </label>
+                      <span class="tooltip"
+                        >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                        Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                        appear as you move to the Stage.</span
+                      >
+                      <span>?</span>
+                    </label>
+                  </div>
                 </div>
-                <button
-                  v-if="
-                    selectedType.value !== 'CREATE' &&
-                    selectedType.value !== 'UPDATE' &&
-                    addedFields.length &&
-                    activeForm
-                  "
-                  @click="confirmDeleteModal = !confirmDeleteModal"
-                  class="red-button"
-                >
-                  Delete Form
-                </button>
+                <div style="display: flex; align-items: center;">
+                  <button
+                    v-if="
+                      selectedType.value !== 'CREATE' &&
+                      selectedType.value !== 'UPDATE' &&
+                      addedFields.length &&
+                      activeForm
+                    "
+                    @click="confirmDeleteModal = !confirmDeleteModal"
+                    class="red-button"
+                  >
+                    Delete Form
+                  </button>
+                </div>
               </div>
               <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
@@ -930,6 +934,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
+import AlertsHeader from '@/components/AlertsHeader.vue'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
@@ -949,6 +954,7 @@ export default {
     Modal,
     draggable,
     ToggleCheckBox,
+    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -1016,6 +1022,7 @@ export default {
           crmObject: this.newResource,
         },
       }),
+      tabs: [],
       customFields: null,
       newFormType: this.formType,
       newResource: this.resource,
@@ -1408,6 +1415,39 @@ export default {
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
     },
+    opportunityClassLogic() {
+      return this.newResource == 'Opportunity' && this.newFormType !== 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+    },
+    dealClassLogic() {
+      return this.newResource == 'Deal' && this.newFormType !== 'STAGE_GATING' ? 'green' : ''
+    },
+    oppStageClassLogic() {
+      return this.newResource == 'Opportunity' && this.newFormType == 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+    },
+    dealStageClassLogic() {
+      return this.newResource == 'Deal' && this.newFormType == 'STAGE_GATING' ? 'green' : ''
+    },
+    accountClassLogic() {
+      return this.newResource == 'Account' && !this.customObjectView ? 'green' : ''
+    },
+    companyClassLogic() {
+      return this.newResource == 'Company' ? 'green' : ''
+    },
+    contactClassLogic() {
+      return this.newResource == 'Contact' && !this.customObjectView ? 'green' : ''
+    },
+    hsContactClassLogic() {
+      return this.newResource == 'Contact' ? 'green' : ''
+    },
+    leadClassLogic() {
+      return this.newResource == 'Lead' && !this.customObjectView ? 'green' : ''
+    },
+    productClassLogic() {
+      return this.newResource == 'OpportunityLineItem' && !this.customObjectView ? 'green' : ''
+    },
+    customObjectClassLogic() {
+      return this.customObjectView ? 'green' : ''
+    },
     user() {
       return this.$store.state.user
     },
@@ -1434,7 +1474,7 @@ export default {
           { value: 'Lead', label: 'Lead' },
           { value: 'OpportunityLineItem', label: 'Products' },
         ]
-        // if (this.user.isPaid) {
+        // if (this.user.organizationRef.isPaid) {
         //   this.resources.push({value: 'CustomObject', label: 'Custom Object'})
         // }
       } else {
@@ -1452,6 +1492,67 @@ export default {
       })
       if (this.userCRM == 'SALESFORCE') {
         this.getCustomObjects()
+        this.tabs = [
+          {
+            name: 'Opportunity',
+            classLogic: this.opportunityClassLogic,
+            function: this.changeToOpportunity,
+          },
+          {
+            name: 'Opp - Stage related',
+            classLogic: this.oppStageClassLogic,
+            function: this.changeToStage,
+          },
+          {
+            name: 'Account',
+            classLogic: this.accountClassLogic,
+            function: this.changeToAccount,
+          },
+          {
+            name: 'Contact',
+            classLogic: this.contactClassLogic,
+            function: this.changeToContact,
+          },
+          {
+            name: 'Lead',
+            classLogic: this.leadClassLogic,
+            function: this.changeToLead,
+          },
+          {
+            name: 'Products',
+            classLogic: this.productClassLogic,
+            function: this.changeToProducts,
+          },
+          {
+            name: 'Custom Object',
+            classLogic: this.customObjectClassLogic,
+            function: this.toggleCustomObjectView,
+          },
+        ]
+      }
+      if (this.userCRM === 'HUBSPOT') {
+        this.tabs = [
+          {
+            name: 'Deal',
+            classLogic: this.dealClassLogic,
+            function: this.changeToDeal,
+          },
+          {
+            name: 'Deal - Stage related',
+            classLogic: this.dealStageClassLogic,
+            function: this.changeToStage,
+          },
+          {
+            name: 'Account',
+            classLogic: this.companyClassLogic,
+            function: this.changeToCompany,
+          },
+          {
+            name: 'Contact',
+            classLogic: this.hsContactClassLogic,
+            function: this.changeToContact,
+          },
+        ]
       }
     } catch (e) {
       console.log(e)
@@ -2682,6 +2783,7 @@ img:hover {
 }
 .red-button {
   padding: 8px 20px;
+  margin-top: 1rem;
   font-size: 13px;
   background-color: $coral;
   color: white;

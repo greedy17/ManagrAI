@@ -97,7 +97,7 @@
 
         <div class="side-wrapper" style="margin-top: auto">
           <label class="side-icon side-workflow" style="">
-            <span class="side-tooltip">Need help? Email: cx@mymanagr.com</span>
+            <span class="side-tooltip"><div>Need help?</div><div>Email: cx@mymanagr.com</div></span>
             <img
               src="@/assets/images/help.png"
               class="side-img"
@@ -389,7 +389,8 @@ a:hover {
   width: 250px;
   height: auto;
   position: absolute;
-  top: 0;
+  top: -10px; // for double line
+  // top: 0; // for single line
   left: 30px;
   font-size: 14px;
   background: #ffffff;

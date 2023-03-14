@@ -26,6 +26,9 @@ data "aws_alb_listener" "front_end" {
   for_each          = local.listener_ports
   load_balancer_arn = data.aws_alb.main.arn
   port              = tonumber(each.value)
+  ssl_policy {
+      minimum_protocol_version = "TLSv1.2"
+    }
 }
 
 resource "aws_lb_listener_rule" "rule" {
@@ -128,6 +131,7 @@ data "template_file" "managr_app" {
     use_gong       = title(var.app_config.use_gong)
     use_outreach   = title(var.app_config.use_outreach)
     use_hubspot    = title(var.app_config.use_hubspot)
+    use_open_ai    = title(var.app_config.use_open_ai)
   }
 }
 
@@ -219,7 +223,7 @@ resource "aws_db_instance" "managrdb" {
   db_subnet_group_name       = data.aws_db_subnet_group.managrdb.id
   vpc_security_group_ids     = [data.aws_security_group.managr_db.id]
   publicly_accessible        = false
-  auto_minor_version_upgrade = true
+  auto_minor_version_upgrade = false
 
   tags = {
     "app" = "managr"
@@ -301,10 +305,12 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     outreachSecret        = var.app_config.outreach_secret
     outreachRedirectUri   = var.app_config.outreach_redirect_uri
 
-    hubspotBaseUrl       = each.value.hubspot_base_url
-    hubspotClientId      = each.value.hubspot_client_id
-    hubspotSecret        = each.value.hubspot_secret
-    hubspotRedirectUri   = each.value.hubspot_redirect_uri
+    hubspotBaseUrl       = var.app_config.hubspot_base_url
+    hubspotClientId      = var.app_config.hubspot_client_id
+    hubspotSecret        = var.app_config.hubspot_secret
+    hubspotRedirectUri   = var.app_config.hubspot_redirect_uri
+
+    openAiSecret         = var.app_config.open_ai_secret
   })
 }
 
