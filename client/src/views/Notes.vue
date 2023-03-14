@@ -1,6 +1,6 @@
 <template>
   <div class="notes">
-    <div class="alerts-header">
+    <!-- <div class="alerts-header">
       <p v-if="!creating && !editing">
         Templates: <span class="gray-blue">{{ noteTemplates ? noteTemplates.length : 0 }}</span>
       </p>
@@ -46,19 +46,27 @@
         <button @click="removeTemplate" class="delete">Delete</button>
         <button class="green_button" type="submit" @click="updateTemplate">Update</button>
       </div>
-    </div>
+    </div> -->
 
-    <!-- <AlertsHeader
-      page="workflows"
+    <AlertsHeader
+      page="notes"
       :pulseLoading="false"
-      :title="'Templates'"
+      title="Templates"
+      :titlesLength="noteTemplates.length"
+      :creating="creating"
+      :editing="editing"
+      :canSave="!!noteSubject && !!noteBody"
       :isPaid="isPaid"
       :templates="noteTemplates"
-      @on-save="onSave"
-      @update-workflow="updateWorkflow"
-      @delete-workflow="deleteWorkflow"
-      @switch-build-custom="switchBuildCustom"
-    /> -->
+      :deleteId="selectedTemplate ? selectedTemplate.id : ''"
+      :subtitle="selectedTemplate ? selectedTemplate.title : ''"
+      buttonText="Create Template"
+      @cancel="cancel"
+      @save-item="createTemplate"
+      @update-item="updateTemplate"
+      @delete-item="removeTemplate"
+      @button-action="createNote"
+    />
 
     <section v-if="!creating">
       <div v-if="noteTemplates.length" :class="editing ? 'update-container' : 'container'">
@@ -199,6 +207,9 @@ export default {
     },
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     async getUsers() {
       try {
         const res = await SObjects.api.getObjectsForWorkflows('User')
