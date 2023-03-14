@@ -17,7 +17,7 @@
         </div>
         <div style="margin-bottom: 4px" class="even-row">
           <h4 style="cursor: not-allowed" v-if="!addingNote">Total: {{ notes.length }}</h4>
-          <h4 class="lightgray" @click="addingNote = !addingNote" v-if="!addingNote">New Note</h4>
+          <h4 class="new-note" style="background-color: #41b883;" @click="addingNote = !addingNote" v-if="!addingNote">New Note</h4>
           <div class="row-section" v-else>
             <h4
               @click="addingNote = !addingNote"
@@ -7162,5 +7162,9 @@ a {
   overflow-x: scroll;
   white-space: nowrap;
   text-align: left;
+}
+.new-note {
+  background-color: $dark-green;
+  color: white;
 }
 </style>
