@@ -451,7 +451,4 @@ a:hover {
     filter: invert(90%);
   }
 }
-// .side-img:hover {
-//   filter: invert(90%);
-// }
 </style>

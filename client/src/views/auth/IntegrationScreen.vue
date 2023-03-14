@@ -292,17 +292,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade your plan</small>
-            </div> -->
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
@@ -346,17 +335,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade your plan</small>
-            </div> -->
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
@@ -409,17 +387,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade your plan</small>
-            </div> -->
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
@@ -481,17 +448,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade your plan</small>
-            </div> -->
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>

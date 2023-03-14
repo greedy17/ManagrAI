@@ -24,7 +24,7 @@
       </div>
 
       <div class="results-title" v-else>
-        <p class="light-gray-text row right-tooltip">
+        <!-- <p class="light-gray-text row right-tooltip">
           Performance Reports
           <img
             class="shimmer"
@@ -34,9 +34,22 @@
             alt=""
           />
           <small class="right-tooltiptext">Upgrade your plan</small>
+        </p> -->
+        <p class="light-gray-text row side-wrapper">
+          Performance Reports
+          <label class="side-icon side-workflow" style="">
+            <span class="side-tooltip" style="z-index: 5;">Upgrade your plan</span>
+            <img
+              class="shimmer"
+              src="@/assets/images/lock.svg"
+              height="18"
+              alt=""
+              style="margin-left: 4px;"
+            />
+          </label>
         </p>
 
-        <p style="margin-left: 18px" class="light-gray-text right-tooltip row">
+        <!-- <p style="margin-left: 18px" class="light-gray-text right-tooltip row">
           Story Reports
           <img
             class="shimmer"
@@ -46,6 +59,19 @@
             alt=""
           />
           <small class="right-tooltiptext">Upgrade your plan</small>
+        </p> -->
+        <p class="light-gray-text row side-wrapper">
+          Story Reports
+          <label class="side-icon side-workflow" style="">
+            <span class="side-tooltip" style="z-index: 5">Upgrade your plan</span>
+            <img
+              class="shimmer"
+              src="@/assets/images/lock.svg"
+              height="18"
+              alt=""
+              style="margin-left: 4px;"
+            />
+          </label>
         </p>
       </div>
 
@@ -1310,5 +1336,80 @@ p {
 
 .gold-filter {
   filter: invert(81%) sepia(35%) saturate(920%) hue-rotate(343deg) brightness(91%) contrast(90%);
+}
+// Tooltip
+.side-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.side-wrapper .side-icon {
+  position: relative;
+  // background: #FFFFFF;
+  border-radius: 50%;
+  padding: 12px;
+  // margin: 20px 12px 0px 10px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  // outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip {
+  display: block;
+  width: 145px;
+  height: auto;
+  position: absolute;
+  // top: -10px; // for double line
+  top: -5px; // for single line
+  left: 30px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #ffffff;
+  bottom: 40%;
+  left: 0%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper:hover .side-icon .side-tooltip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.side-wrapper:hover .side-icon span,
+.side-wrapper:hover .side-icon .side-tooltip {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+// .side-wrapper:hover .side-workflow,
+.side-wrapper:hover .side-workflow .side-tooltip,
+.side-wrapper:hover .side-workflow .side-tooltip::before {
+  // margin-top: 1rem;
+  background: $grape;
+  color: #ffffff;
+}
+.side-icon:hover {
+  transition: all .1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  // transition: all .3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  img {
+    // filter: invert(90%);
+  }
 }
 </style>
