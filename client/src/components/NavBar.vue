@@ -35,7 +35,7 @@
           :to="{ name: 'Forms' }"
         >
           <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 55px;">Forms</span>
+            <span class="side-tooltip-single" style="top: -5px; width: 170px;">{{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot' }} field mapping</span>
             <img src="@/assets/images/edit-note.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
           </label>
         </router-link>
@@ -72,14 +72,14 @@
           :to="{ name: 'InviteUsers' }"
         >
           <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 60px;">Profile</span>
+            <span class="side-tooltip-single" style="top: -5px; width: 190px;">Profile & Team Management</span>
             <img src="@/assets/images/profile.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
           </label>
         </router-link>
 
         <router-link class="side-wrapper" exact-active-class="active" v-else-if="userCRM" :to="{ name: 'InviteUsers' }">
           <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 60px;">Profile</span>
+            <span class="side-tooltip-single" style="top: -5px; width: 190px;">Profile & Team Management</span>
             <img src="@/assets/images/profile.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
           </label>
         </router-link>
