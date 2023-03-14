@@ -86,6 +86,7 @@ data "template_file" "managr_app" {
     use_gong       = title(each.value.use_gong)
     use_outreach   = title(each.value.use_outreach)
     use_hubspot    = title(each.value.use_hubspot)
+    use_open_ai    = title(each.value.use_open_ai)
   }
 }
 
@@ -135,6 +136,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_gong       = title(each.value.env.use_gong)
     use_outreach   = title(each.value.env.use_outreach)
     use_hubspot    = title(each.value.env.use_hubspot)
+    use_open_ai    = title(each.value.env.use_open_ai)
   }
 }
 
@@ -320,5 +322,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     hubspotClientId      = each.value.hubspot_client_id
     hubspotSecret        = each.value.hubspot_secret
     hubspotRedirectUri   = each.value.hubspot_redirect_uri
+
+    openAiSecret         = each.value.open_ai_secret
   })
 }

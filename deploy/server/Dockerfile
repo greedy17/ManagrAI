@@ -111,7 +111,9 @@ ENV SECRET_KEY='secret123' \
   HUBSPOT_BASE_URL='' \
   HUBSPOT_CLIENT_ID='' \
   HUBSPOT_SECRET='' \
-  HUBSPOT_REDIRECT_URI=''
+  HUBSPOT_REDIRECT_URI='' \
+  USE_OPEN_AI='' \
+  OPEN_AI_SECRET=''
 
 
 # Set the name of the working directory inside the docker container

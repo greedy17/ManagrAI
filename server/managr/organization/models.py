@@ -79,11 +79,10 @@ class Organization(TimeStampModel):
     def change_admin_user(self, user, preserve_fields=False):
         """Method to change the is_admin user for an organization"""
         templates = user.team.team_forms.all()
-
+        current_admin = self.users.filter(is_admin=True).first()
+        new_admin = user
         if preserve_fields:
             for form in templates:
-                new_admin = user
-                current_admin = self.users.filter(is_admin=True).first()
                 fields = form.fields.filter(is_public=False)
                 form_fields = fields.values_list("api_name", flat=True)
                 new_admin_fields = new_admin.imported_sobjectfield.filter(
@@ -99,10 +98,13 @@ class Organization(TimeStampModel):
             for form in templates:
                 form.fields.filter(is_public=False).delete()
         admin_team = current_admin.team
+        if new_admin.is_team_lead:
+            new_admin.team.delete()
         current_admin.is_admin = False
         current_admin.save()
         new_admin.is_admin = True
         new_admin.user_level = "MANAGER"
+        new_admin.team = admin_team
         new_admin.save()
         admin_team.team_lead = new_admin
         admin_team.save()
@@ -127,6 +129,13 @@ class Organization(TimeStampModel):
         user.team = admin.team
         user.save()
         return
+
+    def deactivate_org(self):
+        for user in self.users.all():
+            user.deactivate_user()
+        self.state = "INACTIVE"
+        self.save()
+        return True
 
 
 class AccountQuerySet(models.QuerySet):

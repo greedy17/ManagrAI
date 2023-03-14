@@ -73,6 +73,7 @@ resource "aws_alb_listener" "front_end_https" {
 
 resource "tls_private_key" "managr" {
   algorithm = "RSA"
+  rsa_bits = 4096
 }
 
 resource "tls_self_signed_cert" "managr" {

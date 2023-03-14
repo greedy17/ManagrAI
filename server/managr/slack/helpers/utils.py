@@ -459,3 +459,19 @@ def get_crm_value(slack_state):
     elif field_state["type"] == "plain_text_input":
         return field_state["value"]
     return value
+
+
+def USER_APP_OPTIONS(user, resource_type):
+    options = [
+        block_builders.option(f"{resource_type} Details", "update_crm"),
+        block_builders.option("View Notes", "view_notes"),
+    ]
+    if user.has_salesloft_integration or user.has_outreach_integration:
+        engagement_state = "Add to Cadence" if user.has_salesloft_integration else "Add to Sequence"
+        if user.crm == "SALESFORCE":
+            options.append(block_builders.option("Contact Details", "engagement_details"))
+        options.append(block_builders.option(engagement_state, "engagement_state"))
+    if user.has_gong_integration:
+        options.append(block_builders.option("Call Recordings", "call_recordings"))
+    return options
+

@@ -16,6 +16,31 @@ SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
 
+if settings.USE_OPEN_AI:
+    OPEN_AI_SECRET = settings.OPEN_AI_SECRET
+    OPEN_AI_HEADERS = {
+        "Content-type": "application/json",
+        "Authorization": f"Bearer {OPEN_AI_SECRET}",
+    }
+OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+
+OPEN_AI_SUMMARY_PROMPT = (
+    lambda object: f"Add to a summary for each of these key-value pairs {object} and if any of the values are unix convert to date time format"
+)
+OPEN_AI_UPDATE_PROMPT = (
+    lambda labels, prompt: f"If any of these values in this array {labels} are in this string {prompt} add to an object the key and value, account for capitalization"
+)
+
+
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt):
+    return {
+        "model": "text-davinci-003",
+        "prompt": prompt,
+        "max_tokens": 500,
+        "top_p": 0.1,
+        "user": user_name,
+    }
+
 
 # OAuth permission scopes to request from Nylas
 SCOPE_EMAIL_CALENDAR = "calendar"
@@ -177,6 +202,7 @@ CALENDAR_CHECK = "CALENDAR_CHECK"
 WORKFLOW_CONFIG_CHECK = "WORKFLOW_CONFIG_CHECK"
 MORNING_REFRESH = "MORNING_REFRESH"
 MEETING_REMINDER = "MEETING_REMINDER"
+TRIAL_STATUS = "TRIAL_STATUS"
 # These times should be a half hour before the intended time
 REMINDER_CONFIG = {
     WORKFLOW_REMINDER: {"HOUR": 7, "MINUTE": 00},
@@ -189,6 +215,7 @@ TIMEZONE_TASK_TIMES = {
     NON_ZOOM_MEETINGS: {"HOUR": 7, "MINUTE": 30},
     CALENDAR_CHECK: {"HOUR": 5, "MINUTE": 30},
     MEETING_REMINDER: {"HOUR": 17, "MINUTE": 30},
+    TRIAL_STATUS: {"HOUR": 5, "MINUTE": 30},
 }
 
 

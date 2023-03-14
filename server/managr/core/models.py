@@ -295,8 +295,6 @@ class User(AbstractUser, TimeStampModel):
         """
         Revoke the user's Slack, Zoom, Salesforce and Nylas authentication tokens, but doesn't delete user.
         """
-        from managr.slack.helpers import requests as slack_requests
-
         user = self
         if hasattr(user, "slack_integration"):
             user.slack_integration.delete()
@@ -318,19 +316,17 @@ class User(AbstractUser, TimeStampModel):
                 task = Task.objects.filter(id=zoom.refresh_token_task).first()
                 if task:
                     task.delete()
-        self.is_active = False
-        return self.save()
-
         if hasattr(user, "nylas"):
             nylas = user.nylas
             try:
                 nylas.revoke()
             except Exception as e:
                 logger.info(
-                    f"Error occured removing user token from nylas for user {self.email} {self.nylas.email_address} {err}"
+                    f"Error occured removing user token from nylas for user {self.email} {nylas.email_address} {e}"
                 )
                 pass
-        return
+        self.is_active = False
+        return self.save()
 
     @property
     def has_zoom_integration(self):
@@ -351,6 +347,15 @@ class User(AbstractUser, TimeStampModel):
             return self.salesforce_account
         else:
             return self.hubspot_account
+
+    @property
+    def engagement_account(self):
+        if not self.has_outreach_integration and not self.has_salesloft_integration:
+            return None
+        elif self.has_outreach_integration:
+            return self.outreach_account
+        else:
+            return self.salesloft_account
 
     @property
     def has_slack_integration(self):

@@ -66,6 +66,7 @@ from managr.api.decorators import slack_api_exceptions
 from .. import constants as sf_consts
 from ..routes import routes as model_routes
 from managr.slack.helpers.block_sets import get_block_set
+from managr.core.utils import get_summary_completion
 
 logger = logging.getLogger("managr")
 
@@ -1078,11 +1079,6 @@ def _process_update_resources_in_salesforce(form_data, user, instance_data, inte
             _send_instant_alert(form_ids)
         forms.update(is_submitted=True, submission_date=timezone.now())
         value_update = main_form.resource_object.update_database_values(all_form_data)
-        # from_workflow = data.get("from_workflow")
-        # title = data.get("workflow_title", None)
-        # if from_workflow:
-        #     user.activity.increment_untouched_count("workflows")
-        #     user.activity.add_workflow_activity(str(main_form.id), title)
     return
 
 
@@ -1688,6 +1684,46 @@ def check_for_display_value(field, value):
             return value
 
 
+def clean_data_for_summary(user_id, data, integration_id, resource_type):
+    from managr.hubspot.routes import routes as hs_routes
+    from managr.salesforce.routes import routes as sf_routes
+
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    user = User.objects.get(id=user_id)
+    owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "OwnerId"
+    data.pop(owner_field)
+    fields = user.object_fields.filter(api_name__in=data.keys())
+    ref_fields = fields.filter(data_type="Reference", crm_object=resource_type)
+    if user.crm == "HUBSPOT":
+        if "dealstage" in data.keys():
+            found_stage = False
+            field = fields.filter(api_name="dealstage").first()
+            for pipeline in field.options[0].keys():
+                if found_stage:
+                    break
+                current_pipeline = field.options[0][pipeline]["stages"]
+                for stage in current_pipeline:
+                    if stage["id"] == data["dealstage"]:
+                        data["dealstage"] = stage["label"]
+                        found_stage = True
+    if len(ref_fields):
+        for field in ref_fields:
+            relationship = field.reference_to_infos[0]["api_name"]
+            try:
+                reference_record = (
+                    CRM_SWITCHER[user.crm][relationship]["model"]
+                    .objects.filter(integration_id=data[field.api_name])
+                    .first()
+                ).display_value
+
+            except Exception as e:
+                logger.info(e)
+                reference_record = integration_id
+                pass
+            data[field.api_name] = reference_record
+    return data
+
+
 @background(schedule=0)
 @slack_api_exceptions(rethrow=True)
 def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
@@ -1715,19 +1751,44 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                 text += ", "
     else:
         text = f"_{main_form.template.resource}_ *{resource_name}*"
-    blocks = [
-        block_builders.simple_section(title, "mrkdwn"),
-        block_builders.section_with_button_block(
-            "View Recap",
-            "recap",
-            text,
-            action_id=action_with_params(
-                slack_consts.VIEW_RECAP,
-                params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
+    if settings.IN_PROD:
+        blocks = [
+            block_builders.simple_section(title, "mrkdwn"),
+            block_builders.section_with_button_block(
+                "View Recap",
+                "recap",
+                text,
+                action_id=action_with_params(
+                    slack_consts.VIEW_RECAP,
+                    params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
+                ),
             ),
-        ),
-        block_builders.context_block(f"{main_form.template.resource} owned by {user.full_name}"),
-    ]
+            block_builders.context_block(
+                f"{main_form.template.resource} owned by {user.full_name}"
+            ),
+        ]
+    else:
+        main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+        main_form.save()
+        user = main_form.user
+        old_data = dict()
+        if main_form.template.form_type == "UPDATE":
+            for additional_stage_form in submitted_forms:
+                old_data = {**old_data, **additional_stage_form.previous_data}
+        new_data = dict()
+        for form in submitted_forms:
+            new_data = {**new_data, **form.saved_data}
+        blocks = [block_builders.simple_section(title)]
+        cleaned_data = clean_data_for_summary(
+            str(user.id),
+            new_data,
+            main_form.resource_object.integration_id,
+            main_form.template.resource,
+        )
+        completions_prompt = get_summary_completion(user, cleaned_data)
+        message_string_for_recap = completions_prompt["choices"][0]["text"]
+        blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
+        blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     if manager_recap:
         user_channel_list = UserSlackIntegration.objects.filter(
             slack_id__in=user.slack_integration.recap_receivers
@@ -2333,7 +2394,7 @@ def _process_slack_inline_sf_update(payload, context):
     invocation = context.get("invocation")
     config_id = context.get("config_id")
     instances = AlertInstance.objects.filter(user=user, invocation=invocation, config__id=config_id)
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     success_resources = 0
     failed_resources = 0

@@ -1,6 +1,10 @@
+from datetime import datetime
+import pytz
+from django.utils import timezone
+
+
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
-
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 import managr.core.constants as core_consts
@@ -248,3 +252,47 @@ class NoteTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = NoteTemplate
         fields = ("subject", "body", "user", "is_shared", "id")
+
+
+class UserTrialSerializer(serializers.ModelSerializer):
+    days_active = serializers.SerializerMethodField("get_days_active")
+    updates_this_month = serializers.SerializerMethodField("get_updates_made_this_month")
+    total_updates = serializers.SerializerMethodField("get_total_updates_made")
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "datetime_created",
+            "days_active",
+            "total_updates",
+            "updates_this_month",
+            "crm",
+            "salesforce_account",
+            "outreach_account",
+            "hubspot_account",
+            "gong_account",
+            "salesloft_account",
+            "nylas",
+            "slack_integration",
+        )
+
+    def get_days_active(self, instance):
+        today = datetime.today().astimezone(pytz.UTC)
+        return (today - instance.datetime_created).days
+
+    def get_updates_made_this_month(self, instance):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
+        today = datetime.today().astimezone(pytz.UTC)
+        thirty_past = today - timezone.timedelta(30)
+        updates = OrgCustomSlackFormInstance.objects.for_user(instance).filter(
+            is_submitted=True, datetime_created__range=(thirty_past, today)
+        )
+        return len(updates)
+
+    def get_total_updates_made(self, instance):
+        from managr.slack.models import OrgCustomSlackFormInstance
+
+        updates = OrgCustomSlackFormInstance.objects.for_user(instance).filter(is_submitted=True)
+        return len(updates)

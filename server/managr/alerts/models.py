@@ -99,23 +99,27 @@ class AlertTemplate(TimeStampModel):
             ]
             return (
                 hs_consts.HUBSPOT_SEARCH_URI(self.resource_type),
-                {"filterGroups": operand_groups, "limit": 100},
+                {
+                    "filterGroups": operand_groups,
+                    "limit": 100,
+                    "sorts": [{"propertyName": "hs_lastmodifieddate", "direction": "DESCENDING"}],
+                },
             )
 
     def manager_url_str(self, user_list, config_id):
         """Generates Url Str for request when executing alert"""
-        user_crm = self.user.crm_account if hasattr(self.user, "crm_account") else None
-        if user_crm == "SALESFORCE":
+
+        if self.user.crm == "SALESFORCE":
             operand_groups = [group.sf_query_str(config_id) for group in self.groups.all()]
             operand_groups = f"AND ({' '.join(operand_groups)})"
             q = sf_consts.SALESFORCE_MULTIPLE_OWNER_RESOURCE_QUERY_URI(
-                user_crm.salesforce_id,
+                self.user.crm_account.salesforce_id,
                 self.resource_type,
                 ["Id"],
                 additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
                 user_list=user_list,
             )
-            return f"{user_crm.instance_url}{q[0]}"
+            return f"{self.user.crm_account.instance_url}{q[0]}"
         else:
             operand_groups = [
                 group.hs_query_str(config_id, user_list, True) for group in self.groups.all()
@@ -279,7 +283,10 @@ class AlertOperand(TimeStampModel):
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         operator = self.operand_operator
-        if self.data_type == "DATE":
+        if operator == "IS_BLANK":
+            operator = "="
+            value = "null"
+        elif self.data_type == "DATE":
             # try converting value to int
             value = (
                 self.group.template.config_run_against_date(config_id)
@@ -291,7 +298,6 @@ class AlertOperand(TimeStampModel):
                 + timezone.timedelta(days=int(self.operand_value))
             ).strftime("%Y-%m-%dT00:00:00Z")
         elif self.data_type in ["STRING", "EMAIL"] and self.operand_value != "null":
-
             # sf requires single quotes for strings only (aka not decimal or date)
 
             # zero conditional does not get added
@@ -326,7 +332,9 @@ class AlertOperand(TimeStampModel):
         # if type is date or date time we need to create a strftime/date
         value = self.operand_value
         operator = self.operand_operator
-        if self.data_type == "DATE" and operator == "BETWEEN":
+        if operator == "IS_BLANK":
+            return {"operator": "NOT_HAS_PROPERTY", "propertyName": self.operand_identifier}
+        elif self.data_type == "DATE" and operator == "BETWEEN":
             if value == "THIS_MONTH":
                 firstday = datetime.datetime.today().replace(day=1)
                 unix_first_day = time.mktime(firstday.timetuple())
@@ -695,6 +703,8 @@ class AlertInstance(TimeStampModel):
             else:
                 value = str(v)
             body = body.replace(str_rep, value)
+        crm = "Salesforce" if self.user.crm == "SALESFORCE" else "HubSpot"
+        body += f"\n<{self.resource.adapter_class.crm_link}|Open in {crm}>"
         return body
 
     @property

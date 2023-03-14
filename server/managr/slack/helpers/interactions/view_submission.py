@@ -14,7 +14,11 @@ from managr.crm.exceptions import (
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry
 from managr.crm.routes import adapter_routes as crm_routes
-from managr.core.background import emit_create_calendar_event, emit_process_calendar_meetings
+from managr.core.background import (
+    emit_create_calendar_event,
+    emit_process_calendar_meetings,
+    emit_process_submit_chat_prompt,
+)
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.opportunity.models import Opportunity, Lead
 from managr.salesforce.models import MeetingWorkflow
@@ -2321,6 +2325,7 @@ def process_submit_alert_resource_data(payload, context):
                 data,
                 access_token=user.organization.slack_integration.access_token,
             )
+            all_form_data.update(resource)
             break
         except FieldValidationError as e:
             has_error = True
@@ -2451,7 +2456,7 @@ def process_submit_alert_resource_data(payload, context):
     current_forms.update(is_submitted=True, update_source="alert", submission_date=timezone.now())
     if (
         all_form_data.get("meeting_comments") is not None
-        and all_form_data.get("meeting_type") is not None
+        or all_form_data.get("meeting_type") is not None
     ):
         if user.crm == "SALESFORCE":
             emit_add_update_to_sf(str(main_form.id))
@@ -2461,6 +2466,7 @@ def process_submit_alert_resource_data(payload, context):
         _send_instant_alert(current_form_ids)
     # user.activity.add_workflow_activity(str(main_form.id), alert.template.title)
     emit_update_slack_message(context, str(main_form.id))
+    main_form.resource_object.update_database_values(all_form_data)
     return {"response_action": "clear"}
 
 
@@ -2575,6 +2581,29 @@ def process_get_summary(payload, context):
     }
 
 
+@log_all_exceptions
+@slack_api_exceptions(rethrow=True)
+@processor(required_context=["u"])
+def process_submit_chat_prompt(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    resource_list = (
+        ["Opportunity", "Account", "Contact"]
+        if user.crm == "SALESFORCE"
+        else ["Company", "Deal", "Contact"]
+    )
+    prompt = payload["view"]["state"]["values"]["CHAT_PROMPT"]["plain_input"]["value"]
+    resource_check = None
+    lowercase_prompt = prompt.lower()
+    for resource in resource_list:
+        lowered_resource = resource.lower()
+        if lowered_resource in lowercase_prompt:
+            resource_check = resource
+            break
+    if resource_check:
+        emit_process_submit_chat_prompt(context.get("u"), prompt, resource_check)
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2605,6 +2634,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_SUBMIT_BULK_UPDATE: process_submit_bulk_update,
         slack_const.GET_SUMMARY: process_get_summary,
         slack_const.SUBMIT_CUSTOM_OBJECT_DATA: process_submit_custom_object,
+        slack_const.COMMAND_FORMS__SUBMIT_CHAT: process_submit_chat_prompt,
     }
 
     callback_id = payload["view"]["callback_id"]

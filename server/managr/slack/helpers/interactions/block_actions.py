@@ -2,6 +2,7 @@ import json
 import uuid
 import logging
 import pytz
+from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
@@ -17,6 +18,7 @@ from managr.slack.helpers.utils import (
     check_contact_last_name,
     action_with_params,
     send_loading_screen,
+    USER_APP_OPTIONS,
 )
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
@@ -26,10 +28,15 @@ from managr.slack.background import (
     emit_send_paginated_alerts,
     emit_send_paginated_inline_alerts,
     emit_send_next_page_paginated_inline_alerts,
+    emit_send_paginated_notes,
+    emit_process_paginated_engagement_state,
+    emit_process_paginated_call_recordings,
+    emit_process_paginated_engagement_details,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
 from managr.core.background import emit_process_calendar_meetings
+from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
     check_for_display_value,
     replace_tags,
@@ -49,6 +56,7 @@ from managr.gong import exceptions as gong_exceptions
 from managr.crm.models import ObjectField
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
+from managr.outreach.exceptions import TokenExpired as OutreachTokenExpired
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
@@ -1003,6 +1011,7 @@ def process_managr_action(payload, context):
         "selected_option"
     ]["value"]
     data.update(context)
+
     get_action(command_value, data)
     return
 
@@ -1332,7 +1341,7 @@ def process_show_update_resource_form(payload, context):
             resource_id = serializer.instance.id
         except Exception as e:
             logger.exception(
-                f"Failed to sync new resource with id {integration_id} for {user.email}"
+                f"Failed to sync new resource with id {integration_id} for {user.email} due to <{e}>"
             )
     show_submit_button_if_fields_added = False
     stage_form = None
@@ -1345,7 +1354,7 @@ def process_show_update_resource_form(payload, context):
             .first()
         )
         slack_form = OrgCustomSlackFormInstance.objects.create(
-            template=template, resource_id=resource_id, user=user, update_source="command"
+            template=template, resource_id=resource_id, user=user, update_source="command",
         )
         if slack_form:
             stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
@@ -2040,8 +2049,11 @@ def process_get_notes(payload, context):
             if current_stage and previous_stage:
                 if current_stage != previous_stage:
                     block_message += f"Stage: ~{previous_stage}~ :arrow_right: {current_stage} \n"
-            note_message = replace_tags(note[2])
-            if len(note_message) > 255:
+            try:
+                note_message = replace_tags(note[2])
+            except Exception:
+                note_message = note[2]
+            if note_message and len(note_message) > 255:
                 note_message = str(note_message)[:255] + "..."
             block_message += f"\nNotes:\n {note_message}"
             note_blocks.append(block_builders.simple_section(block_message, "mrkdwn"))
@@ -2221,18 +2233,18 @@ def process_meeting_details(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor()
 def process_paginate_alerts(payload, context):
-    emit_send_paginated_alerts(payload, context)
     channel_id = payload.get("channel", {}).get("id", None)
     ts = payload.get("message", {}).get("ts", None)
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
-    blocks = [
-        *get_block_set("loading", {"message": "Gathering workflow data..."}),
-    ]
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
     slack_requests.update_channel_message(
         channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
     )
-
+    emit_send_paginated_alerts(payload, context)
     return
 
 
@@ -2245,13 +2257,31 @@ def process_paginate_inline_alerts(payload, context):
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(
         channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
     )
 
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_notes(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_send_paginated_notes(payload, context)
     return
 
 
@@ -2268,39 +2298,54 @@ def process_switch_alert_message(payload, context):
         form_type="UPDATE", resource=config.template.resource_type
     ).first()
     switch_to = context.get("switch_to")
+    header_block = payload["message"]["blocks"][0]
+    blocks = [
+        header_block,
+        get_block_set(
+            "initial_inline_blockset",
+            context={
+                "u": str(user.id),
+                "invocation": invocation,
+                "config_id": str(config_id),
+                "channel": channel_id,
+                "switch_to": f"{'message' if switch_to == 'inline' else 'inline'}",
+            },
+        ),
+    ]
     if context.get("switch_to") == "inline":
         fields = form.to_slack_options()
-        blocks = [
-            get_block_set(
-                "initial_inline_blockset",
-                context={
-                    "u": str(user.id),
-                    "invocation": invocation,
-                    "config_id": str(config_id),
-                    "channel": channel_id,
-                    "switch_to": f"{'message' if switch_to == 'inline' else 'inline'}",
-                },
-            )
-        ]
         blocks.append(
             block_builders.static_select(
                 "Choose Field",
                 fields,
                 action_id=action_with_params(
                     slack_const.PROCESS_INLINE_FIELD_SELECTED,
+                    params=[f"invocation={invocation}", f"config_id={config_id}",],
+                ),
+            ),
+        )
+
+    else:
+        options = USER_APP_OPTIONS(user, config.template.resource_type)
+        blocks.append(
+            block_builders.static_select(
+                "Pick an action",
+                options,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SHOW_APP_SELECT,
                     params=[
                         f"invocation={invocation}",
                         f"config_id={config_id}",
                         f"u={str(user.id)}",
                     ],
                 ),
+                placeholder="Connected Apps",
             ),
         )
-        slack_requests.update_channel_message(
-            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
-        )
-    else:
-        process_paginate_alerts(payload, context)
+        # process_paginate_alerts(payload, context)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
     return
 
 
@@ -2313,12 +2358,85 @@ def process_inline_field_selected(payload, context):
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
     loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(
         channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
     )
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_engagement_state(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_process_paginated_engagement_state(payload, context)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_paginate_call_recordings(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_process_paginated_call_recordings(payload, context)
+    return
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_engagement_details(payload, context):
+    channel_id = payload.get("channel", {}).get("id", None)
+    ts = payload.get("message", {}).get("ts", None)
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    loading_block = get_block_set("loading", {"message": "Gathering workflow data..."})
+    blocks = payload.get("message").get("blocks")[:3]
+    blocks.append({"type": "divider"})
+    blocks.extend(loading_block)
+    slack_requests.update_channel_message(
+        channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+    )
+    emit_process_paginated_engagement_details(payload, context)
+    return
+
+
+CONNECTED_APPS_SWITCHER = {
+    "view_notes": process_paginate_notes,
+    "update_crm": process_paginate_alerts,
+    "engagement_state": process_paginate_engagement_state,
+    "engagement_details": process_engagement_details,
+    "call_recordings": process_paginate_call_recordings,
+}
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def process_connected_app_selected(payload, context):
+    context_app = context.get("app", None)
+    app = payload["actions"][0]["selected_option"]["value"] if context_app is None else context_app
+    app_func = CONNECTED_APPS_SWITCHER[app]
+    app_func(payload, context)
     return
 
 
@@ -2333,7 +2451,7 @@ def process_submit_inline_alert_data(payload, context):
     ts = payload.get("message", {}).get("ts", None)
 
     loading_block = get_block_set("loading", {"message": "Submitting data..."})
-    blocks = payload.get("message").get("blocks")[:2]
+    blocks = payload.get("message").get("blocks")[:3]
     blocks.append({"type": "divider"})
     blocks.extend(loading_block)
     slack_requests.update_channel_message(
@@ -2703,6 +2821,67 @@ def process_get_summary_fields(payload, context):
     return
 
 
+@processor()
+def process_get_engagement_details(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    loading_view_data = send_loading_screen(
+        user.organization.slack_integration.access_token,
+        f"Checking Outreach for contacts",
+        "open",
+        str(user.id),
+        payload["trigger_id"],
+    )
+    route = CRM_SWITCHER[user.crm][context.get("resource_type")]["model"]
+    resource = route.objects.filter(id=context.get("resource_id")).first()
+    account = resource.account.name if (hasattr(resource, "account") and resource.account) else None
+    contacts = []
+    while True:
+        try:
+            if context.get("resource_type") == "Lead":
+                contacts = user.engagement_account.helper_class.get_contacts_by_email(
+                    resource.email
+                ).get("data", [])
+            else:
+                if account:
+                    contacts = user.engagement_account.helper_class.get_contacts_for_account(
+                        account
+                    ).get("data", [])
+            break
+        except OutreachTokenExpired:
+            user.engagement_account.regenerate_token()
+        except Exception as e:
+            logger.exception(f"Contact detail error: <{e}>")
+            break
+    blocks = []
+    if len(contacts):
+        for contact in contacts:
+            contact_data = contact["attributes"]
+            contact_string = f"Name: {contact_data['name']}\nEmails: {','.join(contact_data['emails'])}\nStage: {contact_data['stageName']}\nOpens: {contact_data['openCount']}\nReplies: {contact_data['replyCount']}\nLast Touched: {contact_data['touchedAt']}\n<{user.engagement_account.instance_url}/prospects/{contact['id']}/overview|Open in Outreach>"
+            blocks.extend(
+                [block_builders.simple_section(contact_string, "mrkdwn"), {"type": "divider"}]
+            )
+    else:
+        blocks.append(
+            block_builders.simple_section(
+                f"Look like there's no contacts for this {context.get('resource_type')} :mag:"
+            )
+        )
+    data = {
+        "view_id": loading_view_data["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Contact Details"},
+            "blocks": blocks,
+        },
+    }
+    slack_requests.generic_request(
+        slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+        data,
+        access_token=user.organization.slack_integration.access_token,
+    )
+    return
+
+
 #########################################################
 # RECAP ACTIONS
 #########################################################
@@ -2720,7 +2899,10 @@ def process_send_recap_modal(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
-            "title": {"type": "plain_text", "text": "Send Recaps"},
+            "title": {
+                "type": "plain_text",
+                "text": f"{'Send Recaps' if settings.IN_PROD else 'Send Summary'}",
+            },
             "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
@@ -2875,92 +3057,94 @@ def process_view_recap(payload, context):
         else:
             form_fields = form.template.customformfield_set.filter(include_in_recap=True)
     blocks = []
-    message_string_for_recap = ""
-    for key, new_value in new_data.items():
-        field = form_fields.filter(field__api_name=key).first()
-        if not field:
-            continue
-        field_label = field.field.reference_display_label.capitalize()
-        if main_form.template.form_type == "UPDATE":
-            # Only sends values for fields that have been updated
-            # all fields on update form are included by default users cannot edit
-            if key in old_data:
-                if str(old_data.get(key)) != str(new_value):
-                    old_value = old_data.get(key)
-                    if field.field.is_public and field.field.data_type == "Reference":
-                        old_value = check_for_display_value(field.field, old_value)
-                        new_value = check_for_display_value(field.field, new_value)
-                    if len(str(new_value)) > 255:
-                        new_value = str(new_value)[:256] + "..."
-                    if len(str(old_value)) > 255:
-                        old_value = str(old_value)[:256] + "..."
-                    if user.crm == "HUBSPOT":
-                        if field.field.data_type in ["DateTime", "Date"]:
-                            new_value = str(new_value)[:10]
-                            old_value = str(old_value)[:10]
-                        if field.field.api_name == "dealstage":
-                            deal_stages = field.field.options[0][
-                                main_form.resource_object.secondary_data.get("pipeline")
-                            ]["stages"]
-                            new_value = [
-                                stage["label"] for stage in deal_stages if stage["id"] == new_value
-                            ][0]
-                            old_value = [
-                                stage["label"] for stage in deal_stages if stage["id"] == old_value
-                            ][0]
-                    message_string_for_recap += (
-                        f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
-                    )
-        elif main_form.template.form_type == "CREATE":
-            if new_value:
-                if field.field.is_public and field.field.data_type == "Reference":
-                    new_value = check_for_display_value(field.field, new_value)
-                if len(str(new_value)) > 255:
-                    new_value = str(new_value)[:256]
-                if user.crm == "HUBSPOT":
-                    if field.field.data_type in ["DateTime", "Date"]:
-                        new_value = str(new_value)[:10]
-                    if field.field.api_name == "dealstage":
-                        deal_stages = field.field.options[0][
-                            main_form.resource_object.secondary_data.get("pipeline")
-                        ]["stages"]
-                        new_value = [
-                            stage["label"] for stage in deal_stages if stage["id"] == new_value
-                        ][0]
-                message_string_for_recap += f"\n*{field_label}:* {new_value}"
-    if not len(message_string_for_recap):
-        message_string_for_recap = "No Data to show from form"
+    cleaned_data = clean_data_for_summary(str(user.id), new_data)
+    completions_prompt = get_summary_completion(user, cleaned_data)
+    message_string_for_recap = completions_prompt["choices"][0]["text"]
+    # for key, new_value in new_data.items():
+    #     field = form_fields.filter(field__api_name=key).first()
+    #     if not field:
+    #         continue
+    #     field_label = field.field.reference_display_label.capitalize()
+    #     if main_form.template.form_type == "UPDATE":
+    #         # Only sends values for fields that have been updated
+    #         # all fields on update form are included by default users cannot edit
+    #         if key in old_data:
+    #             if str(old_data.get(key)) != str(new_value):
+    #                 old_value = old_data.get(key)
+    #                 if field.field.is_public and field.field.data_type == "Reference":
+    #                     old_value = check_for_display_value(field.field, old_value)
+    #                     new_value = check_for_display_value(field.field, new_value)
+    #                 if len(str(new_value)) > 255:
+    #                     new_value = str(new_value)[:256] + "..."
+    #                 if len(str(old_value)) > 255:
+    #                     old_value = str(old_value)[:256] + "..."
+    #                 if user.crm == "HUBSPOT":
+    #                     if field.field.data_type in ["DateTime", "Date"]:
+    #                         new_value = str(new_value)[:10]
+    #                         old_value = str(old_value)[:10]
+    #                     if field.field.api_name == "dealstage":
+    #                         deal_stages = field.field.options[0][
+    #                             main_form.resource_object.secondary_data.get("pipeline")
+    #                         ]["stages"]
+    #                         new_value = [
+    #                             stage["label"] for stage in deal_stages if stage["id"] == new_value
+    #                         ][0]
+    #                         old_value = [
+    #                             stage["label"] for stage in deal_stages if stage["id"] == old_value
+    #                         ][0]
+    #                 message_string_for_recap += (
+    #                     f"\n*{field_label}:* ~{old_value}~ :arrow_right: {new_value}"
+    #                 )
+    #     elif main_form.template.form_type == "CREATE":
+    #         if new_value:
+    #             if field.field.is_public and field.field.data_type == "Reference":
+    #                 new_value = check_for_display_value(field.field, new_value)
+    #             if len(str(new_value)) > 255:
+    #                 new_value = str(new_value)[:256]
+    #             if user.crm == "HUBSPOT":
+    #                 if field.field.data_type in ["DateTime", "Date"]:
+    #                     new_value = str(new_value)[:10]
+    #                 if field.field.api_name == "dealstage":
+    #                     deal_stages = field.field.options[0][
+    #                         main_form.resource_object.secondary_data.get("pipeline")
+    #                     ]["stages"]
+    #                     new_value = [
+    #                         stage["label"] for stage in deal_stages if stage["id"] == new_value
+    #                     ][0]
+    #             message_string_for_recap += f"\n*{field_label}:* {new_value}"
+    # if not len(message_string_for_recap):
+    #     message_string_for_recap = "No Data to show from form"
 
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
-    action_blocks = [
-        block_builders.simple_button_block(
-            "View Notes",
-            "get_notes",
-            action_id=action_with_params(
-                slack_const.GET_NOTES,
-                params=[
-                    f"u={str(user.id)}",
-                    f"resource_id={str(main_form.resource_id)}",
-                    "type=recap",
-                    f"resource_type={main_form.template.resource}",
-                ],
-            ),
-        ),
-    ]
-    if main_form.template.resource != "Lead":
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Call Details",
-                "call_details",
-                action_id=action_with_params(
-                    slack_const.GONG_CALL_RECORDING,
-                    params=[f"u={str(user.id)}", f"form_id={str(main_form.id)}", "type=recap",],
-                ),
-                style="primary",
-            ),
-        )
-    blocks.append(block_builders.actions_block(action_blocks))
-
+    # action_blocks = [
+    #     block_builders.simple_button_block(
+    #         "View Notes",
+    #         "get_notes",
+    #         action_id=action_with_params(
+    #             slack_const.GET_NOTES,
+    #             params=[
+    #                 f"u={str(user.id)}",
+    #                 f"resource_id={str(main_form.resource_id)}",
+    #                 "type=recap",
+    #                 f"resource_type={main_form.template.resource}",
+    #             ],
+    #         ),
+    #     ),
+    # ]
+    # if main_form.template.resource != "Lead":
+    #     action_blocks.append(
+    #         block_builders.simple_button_block(
+    #             "Call Details",
+    #             "call_details",
+    #             action_id=action_with_params(
+    #                 slack_const.GONG_CALL_RECORDING,
+    #                 params=[f"u={str(user.id)}", f"form_id={str(main_form.id)}", "type=recap",],
+    #             ),
+    #             style="primary",
+    #         ),
+    #     )
+    # blocks.append(block_builders.actions_block(action_blocks))
+    blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     data = {
         "view_id": loading_view_data["view"]["id"],
         "view": {
@@ -3393,6 +3577,8 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SWITCH_ALERT_MESSAGE: process_switch_alert_message,
         slack_const.PROCESS_INLINE_FIELD_SELECTED: process_inline_field_selected,
         slack_const.ALERT_INLINE_STAGE_SELECTED: process_alert_inline_stage_selected,
+        slack_const.PROCESS_SHOW_APP_SELECT: process_connected_app_selected,
+        slack_const.PAGINATE_APP_ALERTS: process_connected_app_selected,
         slack_const.PROCESS_SUBMIT_INLINE_ALERT_DATA: process_submit_inline_alert_data,
         slack_const.PROCESS_SHOW_ENGAGEMENT_MODEL: process_show_engagement_modal,
         slack_const.GET_NOTES: process_get_notes,
@@ -3416,6 +3602,7 @@ def handle_block_actions(payload):
         slack_const.INSERT_NOTE_TEMPLATE: process_insert_note_template,
         slack_const.GET_SUMMARY: process_get_summary_fields,
         slack_const.RETURN_TO_FORM_BUTTON: process_return_to_form_button,
+        slack_const.PROCESS_SHOW_ENGAGEMENT_DETAILS: process_get_engagement_details,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

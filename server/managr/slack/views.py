@@ -212,17 +212,18 @@ class SlackViewSet(viewsets.GenericViewSet,):
         slack_id = data.get("authed_user").get("id")
         org = request.user.organization
         if hasattr(org, "slack_integration"):
-            user_slack = UserSlackIntegration.objects.create(
-                user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
-            )
-            # get the user's channel
-            res = slack_requests.request_user_dm_channel(
-                user_slack.slack_id, org.slack_integration.access_token
-            ).json()
-            # save Slack Channel ID
-            channel = res.get("channel", {}).get("id")
-            user_slack.channel = channel
-            user_slack.save()
+            if not request.user.has_slack_integration:
+                user_slack = UserSlackIntegration.objects.create(
+                    user=request.user, slack_id=slack_id, organization_slack=org.slack_integration,
+                )
+                # get the user's channel
+                res = slack_requests.request_user_dm_channel(
+                    user_slack.slack_id, org.slack_integration.access_token
+                ).json()
+                # save Slack Channel ID
+                channel = res.get("channel", {}).get("id")
+                user_slack.channel = channel
+                user_slack.save()
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
@@ -552,22 +553,32 @@ class SlackFormsViewSet(
     def create(self, request, *args, **kwargs):
         data = self.request.data
         fields = data.pop("fields", [])
-        data.pop("fields_ref", [])
+        fields_ref = data.pop("fields_ref", [])
         if not len(data.get("custom_object")):
             data["custom_object"] = None
         data.update(
             {"organization": self.request.user.organization_id, "team": self.request.user.team.id}
         )
-        serializer = self.get_serializer(data=data)
+        form = OrgCustomSlackForm.objects.filter(
+            Q(resource=data.get("resource"), stage=data.get("stage"))
+            | Q(
+                resource=data.get("resource"),
+                custom_object=data["custom_object"],
+                stage=data.get("stage"),
+            )
+        ).first()
+        if form:
+            serializer = self.get_serializer(instance=form, data=data)
+        else:
+            serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = serializer.instance
         instance.custom_fields.clear()
         fields_state = {}
-        for i, field in enumerate(fields):
-            instance.custom_fields.add(field, through_defaults={"order": i})
+        for i, field in enumerate(fields_ref):
+            instance.custom_fields.add(field["id"], through_defaults={"order": i})
             fields_state[i] = field["apiName"]
-
         instance.config = fields_state
         instance.save()
         return Response(serializer.data)
@@ -1018,6 +1029,8 @@ def slack_events(request):
     slack_data = request.data
     slack_event = request.data.get("event", None)
     if slack_event:
+        slack_id = slack_event.get("user")
+        user = User.objects.filter(slack_integration__slack_id=slack_id).first()
         if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "home":
             slack_id = slack_event.get("user")
             user = User.objects.filter(slack_integration__slack_id=slack_id).first()
@@ -1062,6 +1075,27 @@ def slack_events(request):
                 return Response()
             else:
                 return Response()
+        elif slack_event.get("type") == "app_mention":
+            text = slack_event["text"]
+            if "summary" in text:
+                resource_type = None
+                for object in ["opportunity", "account", "contact", "lead"]:
+                    if object in text:
+                        resource_type = object
+                        break
+                words = text.split(" ")
+                resource_index = words.index(resource_type)
+                resource_name = " ".join(words[resource_index + 1 :])
+                slack_requests.send_channel_message(
+                    slack_event["channel"],
+                    user.organization.slack_integration.access_token,
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Checking for the latest on {resource_type} {resource_name}"
+                        )
+                    ],
+                )
+            return Response()
         else:
             return Response()
     else:

@@ -1,5 +1,3 @@
-import { DateTime } from "luxon"
-
 const CLOSE_DATE_PASSED = {
     title: "Close Date Passed",
     subtitle: "Close date is in the past",
@@ -536,9 +534,9 @@ const LARGE_DEALS_HUBSPOT = {
     alertLevel: "ORGANIZATION",
 }
 
-const TEAM_PIPELINE = {
-    title: "Team Pipeline",
-    subtitle: "Rolling 30 day team pipeline",
+const EMPTY_FIELD = {
+    title: "Empty Field",
+    subtitle: "Field is empty",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -549,30 +547,18 @@ const TEAM_PIPELINE = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
-                    operandOperator: "<=",
-                    operandValue: 30,
+                    operandIdentifier: "",
+                    operandOperator: "IS_BLANK",
+                    operandValue: 'null',
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "CloseDate",
-                    operandOperator: ">",
-                    operandValue: -1,
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
+                    dataType: "ANY",
                     group: "",
                 },
             ],
-
             groupOrder: 0,
             template: "",
-        },
-
+        }
     ],
     messageTemplate: {
         bindings: [
@@ -582,11 +568,11 @@ const TEAM_PIPELINE = {
     },
     newConfigs: [
         {
-            recurrenceFrequency: "MONTHLY",
-            recurrenceDays: ["0"],
-            recurrenceDay: "1",
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
+            recurrenceDay: "0",
             recipients: ["default"],
-            alertTargets: ["TEAM"],
+            alertTargets: ["SELF"],
             recipientType: "SLACK_CHANNEL",
             alertTemplateId: "",
             template: "",
@@ -595,9 +581,9 @@ const TEAM_PIPELINE = {
     alertLevel: "ORGANIZATION",
 }
 
-const TEAM_PIPELINE_HUBSPOT = {
-    title: "Team Pipeline",
-    subtitle: "Rolling 30 day team pipeline",
+const EMPTY_FIELD_HUBSPOT = {
+    title: "Empty Field",
+    subtitle: "Property is empty",
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -608,28 +594,18 @@ const TEAM_PIPELINE_HUBSPOT = {
             newOperands: [
                 {
                     operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: "<=",
-                    operandValue: 30,
+                    operandIdentifier: "",
+                    operandOperator: "IS_BLANK",
+                    operandValue: 'null',
                     operandType: "FIELD",
                     operandOrder: 0,
-                    dataType: "DATE",
-                    group: "",
-                },
-                {
-                    operandCondition: "AND",
-                    operandIdentifier: "closedate",
-                    operandOperator: ">",
-                    operandValue: -1,
-                    operandType: "FIELD",
-                    operandOrder: 0,
-                    dataType: "DATE",
+                    dataType: "ANY",
                     group: "",
                 },
             ],
             groupOrder: 0,
             template: "",
-        },
+        }
     ],
     messageTemplate: {
         bindings: [
@@ -639,11 +615,11 @@ const TEAM_PIPELINE_HUBSPOT = {
     },
     newConfigs: [
         {
-            recurrenceFrequency: "MONTHLY",
-            recurrenceDays: ["0"],
-            recurrenceDay: "1",
+            recurrenceFrequency: "WEEKLY",
+            recurrenceDays: ["0", "1", "2", "3", "4", "5"],
+            recurrenceDay: "0",
             recipients: ["default"],
-            alertTargets: ["TEAM"],
+            alertTargets: ["SELF"],
             recipientType: "SLACK_CHANNEL",
             alertTemplateId: "",
             template: "",
@@ -957,8 +933,8 @@ const ALL_CONFIGS = {
     CLOSING_NEXT_MONTH,
     CLOSING_NEXT_MONTH_HUBSPOT,
     CLOSING_THIS_QUARTER,
-    TEAM_PIPELINE,
-    TEAM_PIPELINE_HUBSPOT,
+    EMPTY_FIELD,
+    EMPTY_FIELD_HUBSPOT,
 }
 
 export default ALL_CONFIGS;

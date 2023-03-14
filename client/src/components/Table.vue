@@ -1,5 +1,15 @@
 <template>
   <div class="table-section">
+    <Modal v-if="removingField" @close-modal="cancelRemoveField" style="margin-top: 15rem">
+      <div class="modal-container">
+        <div class="modal-container__header">Remove {{ savedField.referenceDisplayLabel }}?</div>
+        <!-- <div class="modal-container__body">Are you sure ?</div> -->
+        <div class="modal-container__footer">
+          <p style="color: #fa646a; cursor: pointer" @click="removeField(savedField.id)">Remove</p>
+          <p style="color: #9b9b9b; cursor: pointer" @click="cancelRemoveField">Cancel</p>
+        </div>
+      </div>
+    </Modal>
     <div v-if="addingField" class="add-field-section">
       <div class="add-field-section__title">
         <p>Add View Only Field</p>
@@ -38,15 +48,11 @@
     <table class="table">
       <thead>
         <tr>
-          <th
-            :class="{ highlight: nameSort === 1 || nameSort === 2 }"
-            class="sort-img-visible"
-            @click="sortByName(sortingForward)"
-          >
+          <th :class="{ highlight: nameSort === 1 || nameSort === 2 }" class="sort-img-visible">
             <span @mousedown.prevent="onMouseDown($event)" class="ui-column-resizer"></span>
             <span>#</span>
-            Name
-            <span>
+            <span @click="sortByName(sortingForward)">Name</span>
+            <span @click="sortByName(sortingForward)">
               <img v-if="nameSort === 2" src="@/assets/images/arrowDrop.svg" height="16px" alt="" />
               <img
                 v-else-if="nameSort === 1"
@@ -65,14 +71,16 @@
           </th>
           <th
             class="sort-img-visible"
-            @click="fieldSort(field, i)"
             v-for="(field, i) in oppFields"
             :key="i * 7777 + 1"
             :class="{ highlight: reverseIndex === i || sortingIndex === i }"
+            :title="field.referenceDisplayLabel"
           >
             <span @mousedown="onMouseDown($event)" class="ui-column-resizer"></span>
-            {{ field.referenceDisplayLabel }}
-            <span>
+            <span class="field-name" @click="fieldSort(field, i)">{{
+              field.referenceDisplayLabel
+            }}</span>
+            <span @click="fieldSort(field, i)">
               <img
                 v-if="sortingIndex === i"
                 src="@/assets/images/arrowDrop.svg"
@@ -96,28 +104,31 @@
           </th>
           <th
             class="sort-img-visible"
-            @click="viewOnlySort(field, i)"
             v-for="(field, i) in extraPipelineFields"
-            :key="i * 333333 + 2"
+            :key="field.id"
             :class="{
               highlight:
                 reverseIndex === oppFields.length + i || sortingIndex === oppFields.length + i,
             }"
           >
             <span class="ui-column-resizer" @mousedown="onMouseDown($event)"></span>
-            {{ field.referenceDisplayLabel }}
-            <span>
+            <span class="field-name" @click="viewOnlySort(field, i)">{{
+              field.referenceDisplayLabel
+            }}</span>
+            <span @click="viewOnlySort(field, i)" style="width: 0px">
               <img
                 v-if="sortingIndex === oppFields.length + i"
                 src="@/assets/images/arrowDrop.svg"
                 height="16px"
                 alt=""
+                style="margin-right: 1rem"
               />
               <img
                 v-else-if="reverseIndex === oppFields.length + i"
                 src="@/assets/images/arrowDropUp.svg"
                 height="16px"
                 alt=""
+                style="margin-right: 1rem"
               />
               <img
                 v-if="
@@ -127,11 +138,31 @@
                 src="@/assets/images/sort.svg"
                 height="16px"
                 alt=""
+                style="margin-right: 1rem"
               />
             </span>
+            <span>
+              <img
+                style="margin-left: 0.1rem; right: 8px"
+                id="delete-col"
+                class="red"
+                @click="removeExtraField(i, field)"
+                src="@/assets/images/close.svg"
+                alt=""
+              />
+            </span>
+
+            <!-- <div v-if="removingField && removingIndex === i" class="remove-field-section">
+              <div class="remove-field-section__title">Remove {{ field.referenceDisplayLabel }}</div>
+              <div class="remove-field-section__body">Are you sure ?</div>
+              <div class="remove-field-section__footer">
+                <p style="color: #fa646a" @click="removeField(field.id)">Remove</p>
+                <p style="color: #9b9b9b" @click="cancelRemoveField">Cancel</p>
+              </div>
+            </div> -->
           </th>
-          <th v-show="resourceName === 'Opportunity'">
-            <span @click="addField"> + </span>
+          <th v-show="userCRM === 'SALESFORCE' || userCRM === 'HUBSPOT'" @click="addField">
+            <span> + </span>
           </th>
         </tr>
       </thead>
@@ -162,6 +193,16 @@
             }"
             v-for="(field, i) in oppFields"
             :key="field.dataType + i * 4"
+            :title="
+              fieldData(
+                field.dataType,
+                userCRM,
+                field,
+                opp,
+                opp.owner_ref ? opp.owner_ref.full_name : '',
+                opp.account_ref ? opp.account_ref.name : '',
+              )
+            "
           >
             <span :class="{ shimmer: inlineLoader && editIndex === i && currentInlineRow === j }">
               {{
@@ -187,12 +228,13 @@
             :class="{
               gray: !fieldConditions(userCRM, field, opp),
             }"
-            v-for="(field, i) in extraPipelineFields"
-            :key="field.dataType + i * 3"
+            v-for="field in extraPipelineFields"
+            :key="field.id"
+            :title="fieldData(field.dataType, userCRM, field, opp)"
           >
             {{ fieldData(field.dataType, userCRM, field, opp) }}
           </td>
-          <td v-show="resourceName === 'Opportunity'" :class="{ hovered: currentRow === j }"></td>
+          <td v-show="userCRM === 'SALESFORCE'" :class="{ hovered: currentRow === j }"></td>
         </tr>
       </tbody>
     </table>
@@ -210,6 +252,9 @@ export default {
       addingField: false,
       extraFields: [],
       extraFieldObjs: [],
+      removingField: false,
+      removingIndex: null,
+      savedField: null,
       editing: false,
       editIndex: null,
       sortingForward: true,
@@ -226,6 +271,7 @@ export default {
   },
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   props: {
     allOpps: {},
@@ -235,6 +281,7 @@ export default {
     inlineLoader: {},
     closeEdit: {},
     resourceName: {},
+    baseResourceType: {},
   },
   watch: {
     closeEdit: 'closeInline',
@@ -244,6 +291,9 @@ export default {
     //   let newDate = new Date(date)
     //   return Math.floor((this.currentDay.getTime() - newDate.getTime()) / (24 * 3600 * 1000))
     // },
+    test(log) {
+      console.log('log', log)
+    },
     setIndex(n) {
       this.currentRow = n
     },
@@ -280,11 +330,13 @@ export default {
       } else if (field.apiName === 'AccountId') {
         return account || 'empty'
       } else if (field.apiName === 'dealstage') {
-        return (
-          field.options[0][opp['secondary_data'].pipeline].stages.filter(
-            (stage) => stage.id === opp['secondary_data'][field.apiName],
-          )[0].label || 'empty'
-        )
+        if (field.options[0][opp['secondary_data'].pipeline]) {
+          return (
+            field.options[0][opp['secondary_data'].pipeline].stages.filter(
+              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            )[0].label || 'empty'
+          )
+        } else return 'empty'
       } else if (type === 'Date') {
         return this.fieldConditions(crm, field, opp)
           ? this.formatDate(this.fieldConditions(crm, field, opp))
@@ -350,11 +402,12 @@ export default {
       }
       try {
         const res = await SObjects.api.addExtraFields({
+          resource_type: this.baseResourceType,
           field_ids: this.extraFields,
         })
         this.$toast('Field added successfully', {
           timeout: 2000,
-          position: 'bottom-right',
+          position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
@@ -368,6 +421,37 @@ export default {
     },
     emitSetOpps() {
       this.$emit('set-opps')
+    },
+    async removeField(id) {
+      try {
+        const res = await SObjects.api.removeExtraField({
+          field_ids: [id],
+          resource_type: this.baseResourceType,
+        })
+        this.$toast('Field removed successfully', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.cancelRemoveField()
+        this.emitSetOpps()
+      }
+    },
+    removeExtraField(i, field) {
+      this.removingField = true
+      this.removingIndex = i
+      this.savedField = field
+      this.$emit('close-inline-editor')
+    },
+    cancelRemoveField() {
+      this.removingField = false
+      this.removingIndex = null
+      this.savedField = null
     },
     editInline(index, j) {
       this.editing = true
@@ -699,6 +783,13 @@ img {
   display: block;
   margin-left: auto;
 }
+.sort-img-visible > span > #delete-col {
+  display: none;
+}
+.sort-img-visible:hover > span > #delete-col {
+  display: block;
+  margin-left: auto;
+}
 .sort-img-visible > span > img {
   position: absolute;
   top: 38%;
@@ -738,6 +829,101 @@ span.ui-column-resizer {
 
 span.ui-column-resizer:hover {
   border-right: 2px solid $dark-green;
+}
+
+.field-name {
+  margin-left: 0;
+}
+.red {
+  filter: invert(46%) sepia(37%) saturate(832%) hue-rotate(308deg) brightness(104%) contrast(104%) !important;
+  height: 0.75rem;
+}
+.remove-field-section {
+  z-index: 5;
+  position: absolute;
+  right: 0;
+  // top: 9vh;
+  border-radius: 0.33rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: white;
+  min-width: 16rem;
+  box-shadow: 1px 1px 7px 2px $very-light-gray;
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $light-gray-blue;
+    // background-color: white;
+    letter-spacing: 0.4px;
+    padding-left: 1rem;
+    font-weight: bolder;
+    font-size: 12px;
+    width: 100%;
+    height: 3rem;
+  }
+  &__body {
+    height: 3rem;
+    margin-left: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+    height: 3rem;
+    border-top: 1px solid $soft-gray;
+    p {
+      cursor: pointer;
+      font-weight: bolder;
+    }
+  }
+}
+.modal-container {
+  background-color: $white;
+  overflow: auto;
+  width: 20vw;
+  height: 15vh;
+  align-items: center;
+  border-radius: 0.3rem;
+  // border: 1px solid #e8e8e8;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e8e8e8;
+    margin-bottom: 1rem;
+    img {
+      filter: invert(80%);
+      height: 1.25rem;
+      margin-top: 0.75rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+  }
+  &__body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-top: 2vh;
+    padding: 0 1rem;
+    // min-height: 28vh;
+  }
+  &__footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    position: sticky;
+    height: 8vh;
+    padding: 0.5rem;
+  }
 }
 // .green-section {
 //   background-color: $white-green;

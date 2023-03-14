@@ -4,6 +4,7 @@ const ORGANIZATIONS_ENDPOINT = '/organizations/'
 const TEAM_ENDPOINT = '/organization/teams/'
 const CHANGE_ADMIN = '/organizations/change-admin/'
 const ORGANIZATIONS_UPDATE = '/organizations/update-org-info/'
+const ORGANIZATIONS_DEACTIVATE = '/organizations/deactivate/'
 const ADMIN_ORGS = '/organizations/admin/'
 
 export default class OrganizationAPI {
@@ -43,6 +44,17 @@ export default class OrganizationAPI {
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.orgUpdate' }))
   }
+  async orgDeactivate(data) {
+    try {
+      console.log('hit2')
+      const res = await this.client.get(ORGANIZATIONS_DEACTIVATE, { params: { org_id: data } })
+      console.log('res', res)
+      return res.data
+    } catch(e) {
+      console.log('error in orgDeactivate', e)
+      apiErrorHandler({ apiName: 'Organization.orgDeactivate' })
+    }
+  }
   async changeAdmin(data) {
     return this.client
       .post(CHANGE_ADMIN, data)
@@ -76,5 +88,11 @@ export default class OrganizationAPI {
       .post(TEAM_ENDPOINT + 'modify-membership/', data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'Organization.addTeamMember' }))
+  }
+  async changeTeamLead(data) {
+    return this.client
+      .patch(TEAM_ENDPOINT + data.id + '/', data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'Organization.changeTeamLead' }))
   }
 }

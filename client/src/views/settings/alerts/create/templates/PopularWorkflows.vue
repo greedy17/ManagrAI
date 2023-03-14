@@ -48,11 +48,7 @@
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <div
-              style="padding-left: 12px"
-              class="section"
-              v-if="largeOpps && teamPipeline !== 'Team Pipeline'"
-            >
+            <div style="padding-left: 12px" class="section" v-if="largeOpps">
               <h4 class="section__header">Select your "Amount" Field</h4>
 
               <div>
@@ -112,11 +108,7 @@
                 </div>
               </div>
             </div>
-            <div
-              style="padding-left: 12px"
-              class="section"
-              v-else-if="teamPipeline !== 'Team Pipeline'"
-            >
+            <div v-else style="padding-left: 12px" class="section">
               <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
@@ -146,7 +138,11 @@
             </div>
           </div>
         </div>
-        <div v-else class="section" :errors="form.field.recurrenceDay.errors">
+        <div
+          v-if="!selectField || isEmpty"
+          class="section"
+          :errors="form.field.recurrenceDay.errors"
+        >
           <h4 class="section__head">Select Delivery Day</h4>
 
           <section class="section__body">
@@ -231,7 +227,7 @@
             />
           </section>
         </div>
-        <div v-if="userLevel == 'MANAGER' && teamPipeline !== 'Team Pipeline'" class="section">
+        <div v-if="userLevel == 'MANAGER'" class="section">
           <h4 class="section__head">Select Pipelines</h4>
 
           <div class="section__body">
@@ -435,7 +431,7 @@
             </div>
           </div>
           <div style="margin-right: 8px; height: fit-content" class="start">
-            <section>
+            <section style="max-width: 19vw;">
               <div class="search-bar">
                 <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
                 <input
@@ -485,7 +481,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'PopularWorkflows',
-  props: ['selectField', 'largeOpps', 'config'],
+  props: ['selectField', 'largeOpps', 'config', 'isEmpty'],
   components: {
     ToggleCheckBox,
     FormField,
@@ -497,7 +493,7 @@ export default {
     return {
       objectFields: CollectionManager.create({
         ModelClass: ObjectField,
-        pagination: { size: 200 },
+        pagination: { size: 1000 },
         filters: { forAlerts: true, filterable: true, page: 1 },
       }),
       slackMessage: [],
@@ -526,7 +522,6 @@ export default {
       largeOppValue: '',
       setDaysBool: false,
       largeOppsBool: false,
-      teamPipeline: this.config.title,
       selectFieldBool: false,
       selectUsersBool: false,
       directToUsers: true,
@@ -563,7 +558,25 @@ export default {
       ...this.objectFields.filters,
       crmObject: this.selectedResourceType,
     }
+    if (this.isEmpty) {
+      this.objectFields.filters = {
+        crmObject: this.selectedResourceType,
+        search: '',
+        updatable: true,
+      }
+    }
     await this.objectFields.refresh()
+    this.fields.filters = {
+      ...this.fields.filters,
+    }
+    if (this.isEmpty) {
+      this.fields.filters = {
+        crmObject: this.selectedResourceType,
+        search: '',
+        updatable: true,
+      }
+    }
+    await this.fields.refresh()
     this.slackMessage = this.config.messageTemplate.body.split('\n\n')
     const slackFormat = []
     for (let i = 0; i < this.slackMessage.length; i++) {
@@ -586,6 +599,13 @@ export default {
         if (this.selectedResourceType) {
           this.fields.filters.crmObject = this.selectedResourceType
           this.fields.filters.page = 1
+          if (this.isEmpty) {
+            this.fields.filters = {
+              crmObject: this.selectedResourceType,
+              search: '',
+              updatable: true,
+            }
+          }
           await this.fields.refresh()
         }
       },
@@ -594,9 +614,15 @@ export default {
       async handler(val) {
         this.objectFields.filters = {
           ...this.objectFields.filters,
-          forAlerts: true,
           filterable: true,
           crmObject: val,
+        }
+        if (this.isEmpty) {
+          this.objectFields.filters = {
+            crmObject: val,
+            search: '',
+            updatable: true,
+          }
         }
         this.objectFields.refresh()
       },
@@ -711,8 +737,6 @@ export default {
           this.selectFieldBool &&
           this.largeOppsBool
         )
-      } else if (this.teamPipeline == 'Team Pipeline') {
-        return 'True'
       } else {
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
@@ -881,7 +905,7 @@ export default {
         const day = recurrenceDays[i]
         if (day === n) {
           index = i
-          break;
+          break
         }
       }
       if (index !== undefined) {
@@ -934,7 +958,6 @@ export default {
       const newConfigs = this.config.newConfigs[0]
       const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
       let largeOpsCheck = true
-
       if (this.largeOpps) {
         largeOpsCheck = false
         if (this.largeOppsBool) {
@@ -942,12 +965,11 @@ export default {
         }
       }
       if (
-        ((newConfigs.recurrenceDays.length || operandIden) &&
-          newConfigs.alertTargets.length &&
-          this.selectUsersBool &&
-          largeOpsCheck &&
-          (this.setDaysBool || this.selectFieldBool)) ||
-        this.teamPipeline == 'Team Pipeline'
+        (newConfigs.recurrenceDays.length || operandIden) &&
+        newConfigs.alertTargets.length &&
+        this.selectUsersBool &&
+        largeOpsCheck &&
+        (this.setDaysBool || this.selectFieldBool)
       ) {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({

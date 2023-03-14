@@ -90,17 +90,30 @@ def success_modal_block_set(context):
     message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
     form_ids = context.get("form_ids")
-    blocks = [
-        block_builders.section_with_button_block(
-            "Send Recap",
-            "SEND_RECAP",
-            message,
-            action_id=action_with_params(
-                slack_const.PROCESS_SEND_RECAP_MODAL,
-                params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
-            ),
-        )
-    ]
+    if settings.IN_PROD:
+        blocks = [
+            block_builders.section_with_button_block(
+                "Send Recap",
+                "SEND_RECAP",
+                message,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SEND_RECAP_MODAL,
+                    params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
+                ),
+            )
+        ]
+    else:
+        blocks = [
+            block_builders.section_with_button_block(
+                "Send Summary",
+                "SEND_RECAP",
+                message,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SEND_RECAP_MODAL,
+                    params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
+                ),
+            )
+        ]
     return blocks
 
 
@@ -561,19 +574,6 @@ def initial_alert_message(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "View Message",
-                    "update_in_slack",
-                    action_id=action_with_params(
-                        slack_const.PAGINATE_ALERTS,
-                        params=[
-                            f"invocation={invocation}",
-                            f"channel={channel}",
-                            f"config_id={config_id}",
-                        ],
-                    ),
-                    style="primary",
-                ),
-                block_builders.simple_button_block(
                     "In-Line Edit",
                     "switch_inline",
                     action_id=action_with_params(
@@ -583,6 +583,21 @@ def initial_alert_message(context):
                             f"config_id={config_id}",
                             f"u={user}",
                             f"switch_to={'inline'}",
+                        ],
+                    ),
+                    style="primary",
+                ),
+                block_builders.simple_button_block(
+                    "Additional Details",
+                    "access_apps",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
+                        params=[
+                            f"invocation={invocation}",
+                            f"channel={channel}",
+                            f"u={user}",
+                            f"config_id={config_id}",
+                            f"switch_to={'message'}",
                         ],
                     ),
                 ),

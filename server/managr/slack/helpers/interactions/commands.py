@@ -14,6 +14,53 @@ from managr.slack.helpers.utils import action_with_params
 logger = logging.getLogger("managr")
 
 
+def open_chat(context):
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=user.slack_integration.slack_id)
+            .select_related("user")
+            .first()
+        )
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+        blocks = [
+            block_builders.input_block(
+                "Send a message to your CRM",
+                placeholder="Update, create, or log a note",
+                block_id="CHAT_PROMPT",
+                multiline=True,
+                optional=False,
+            ),
+            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+        ]
+        access_token = user.organization.slack_integration.access_token
+        view_id = context.get("view_id", None)
+        url = (
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+            if view_id
+            else slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        )
+        data = {
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
+                "title": {"type": "plain_text", "text": "Chat",},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+            },
+        }
+        if view_id:
+            data["view_id"] = view_id
+        else:
+            data["trigger_id"] = context.get("trigger_id")
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def update_resource(context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
@@ -485,6 +532,7 @@ def call_recording(context):
 def get_action(action_name, context={}, *args, **kwargs):
 
     switcher = {
+        "OPEN_CHAT": open_chat,
         "UPDATE_RESOURCE": update_resource,
         "CREATE_RESOURCE": create_resource,
         "CONVERT_LEAD": convert_lead,

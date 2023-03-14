@@ -4,9 +4,11 @@ import random
 import pytz
 import uuid
 import requests
+import json
 from datetime import datetime
 from copy import copy
 import re
+from managr.api.emails import send_html_email
 from background_task import background
 from django.conf import settings
 
@@ -29,7 +31,7 @@ from managr.zoom.background import _split_first_name, _split_last_name
 from managr.zoom.background import emit_kick_off_slack_interaction
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from managr.slack.helpers.block_sets import get_block_set
-
+from managr.utils.client import Client
 
 logger = logging.getLogger("managr")
 
@@ -96,6 +98,14 @@ def emit_process_workflow_config_check(user_id, verbose_name):
 
 def emit_morning_refresh_message(user_id, verbose_name):
     return _morning_refresh_message(user_id, verbose_name=verbose_name)
+
+
+def emit_process_check_trial_status(user_id, verbose_name):
+    return _process_check_trial_status(user_id, verbose_name=verbose_name)
+
+
+def emit_process_submit_chat_prompt(user_id, prompt, resource_type):
+    return _process_submit_chat_prompt(user_id, prompt, resource_type)
 
 
 #########################################################
@@ -772,6 +782,26 @@ def _process_workflow_config_check(user_id):
         return
 
 
+@background()
+def _process_check_trial_status(user_id):
+    user = User.objects.get(id=user_id)
+    today = datetime.now().astimezone(pytz.UTC)
+    days_active = (today - user.organization.datetime_created).days
+    if days_active > 60 and not user.organization.is_paid:
+        logger.info(f"Organization {user.organization.name} has expired and is being deactivated")
+        user.organization.deactivate_org()
+        subject = f"Trial {user.organization.name} Expiration"
+        recipient = ["support@mymanagr.com"]
+        send_html_email(
+            subject,
+            "core/email-templates/deactivated-trial.html",
+            settings.SERVER_EMAIL,
+            recipient,
+            context={"name": user.organization.name},
+        )
+    return
+
+
 ####################################################
 # TIMEZONE TASK FUNCTIONS
 ####################################################
@@ -782,6 +812,7 @@ TIMEZONE_TASK_FUNCTION = {
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
     core_consts.MORNING_REFRESH: emit_morning_refresh_message,
     core_consts.MEETING_REMINDER: emit_process_send_meeting_reminder,
+    # core_consts.TRIAL_STATUS: emit_process_check_trial_status,
 }
 
 
@@ -897,3 +928,17 @@ def _process_change_team_lead(user_id):
         logger.exception(f"Failed to change team lead for {user.team.name} due to <{e}>")
     return
 
+
+@background()
+def _process_submit_chat_prompt(user_id, prompt, resource_type):
+    user = User.objects.get(id=user_id)
+    fields = list(
+        user.object_fields.filter(crm_object=resource_type).values_list("label", flat=True)
+    )
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(fields, prompt)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
+    url = core_consts.OPEN_AI_COMPLETIONS_URI
+    with Client as client:
+        r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+        r = r.json()
+    return

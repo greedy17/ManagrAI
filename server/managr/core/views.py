@@ -284,7 +284,7 @@ class UserViewSet(
                 user.timezone = timezone
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
-                if user.organization.is_paid == False:
+                if user.organization.is_paid is False:
                     user_team = Team.objects.create(
                         name=user.first_name, organization=user.organization, team_lead=user
                     )
@@ -485,6 +485,19 @@ class UserViewSet(
         user_id = request.query_params.get("user_id", None)
         data = get_user_totals(user_id)
         return Response(data=data)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-trial-users",
+    )
+    def get_trial_users(self, request, *args, **kwargs):
+        from managr.core.serializers import UserTrialSerializer
+
+        users = User.objects.filter(is_active=True)
+        serialized = UserTrialSerializer(users, many=True)
+        return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 
 class ActivationLinkView(APIView):

@@ -51,7 +51,7 @@ def get_hubspot_authentication(request):
         serializer.save()
 
     except Exception as e:
-        logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}")
+        logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}\n RES: {res}")
         return Response(data={"success": False})
     if serializer.instance:
         user.crm = "HUBSPOT"
@@ -66,13 +66,13 @@ def get_hubspot_authentication(request):
         if serializer.instance.user.is_admin:
             form_check = user.team.team_forms.all()
             schedule = (
-                (timezone.now() + timezone.timedelta(minutes=5))
+                (timezone.now() + timezone.timedelta(minutes=2))
                 if len(form_check) > 0
                 else timezone.now()
             )
             if settings.IN_DEV:
                 schedule = timezone.now() + timezone.timedelta(minutes=2)
-                emit_generate_hs_form_template(str(res.user), schedule=schedule)
+            emit_generate_hs_form_template(str(res.user), schedule=schedule)
         if (
             not serializer.instance.user.organization.is_paid
             and not serializer.instance.user.is_admin
@@ -115,4 +115,3 @@ def redirect_from_hubspot(request):
         err = urlencode(err)
         return redirect(f"{hubspot_consts.HUBSPOT_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{hubspot_consts.HUBSPOT_FRONTEND_REDIRECT}?{q}")
-

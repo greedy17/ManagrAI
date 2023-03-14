@@ -34,24 +34,26 @@ def process_text_field_format(user_id, resource, saved_data):
     return False
 
 
-def create_form_instance(user, resource_type, form_type, resource_id, stage_name):
+def create_form_instance(
+    user, resource_type, form_type, resource_id, stage_name, update_source="pipeline"
+):
     form_ids = []
     template_list = OrgCustomSlackForm.objects.for_user(user).filter(resource=resource_type)
     template = template_list.filter(form_type=form_type).first()
     slack_form = (
         OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, resource_id=resource_id, update_source="pipeline"
+            template=template, user=user, resource_id=resource_id, update_source=update_source
         )
         if form_type == "UPDATE"
         else OrgCustomSlackFormInstance.objects.create(
-            template=template, user=user, update_source="pipeline"
+            template=template, user=user, update_source=update_source
         )
     )
     if slack_form:
         if stage_name:
             stage_template = template_list.filter(stage=stage_name).first()
             stage_form = OrgCustomSlackFormInstance.objects.create(
-                template=stage_template, user=user, update_source="pipeline"
+                template=stage_template, user=user, update_source=update_source
             )
             if stage_form:
                 form_ids.append(str(stage_form.id))

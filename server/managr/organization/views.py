@@ -115,10 +115,7 @@ class OrganizationViewSet(
         return Response(data=status.HTTP_200_OK)
 
     @action(
-        methods=["POST"],
-        # permission_classes=(IsSalesPerson,),
-        detail=False,
-        url_path="change-admin",
+        methods=["POST"], detail=False, url_path="change-admin",
     )
     def change_admin(self, request, *args, **kwargs):
         """endpoint to update the State, Ignore Emails, and Has Products sections"""
@@ -143,6 +140,16 @@ class OrganizationViewSet(
             orgs = orgs.filter(id=param)
         serialized = self.get_serializer(orgs, many=True).data
         return Response(serialized)
+
+    @action(
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="deactivate",
+    )
+    def deactivate_org(self, request, *args, **kwargs):
+        """Endpoint to list orgs and tokens for integration accounts"""
+        param = request.query_params.get("org_id", None)
+        org = Organization.objects.get(id=param)
+        org.deactivate_org()
+        return Response(status=status.HTTP_200_OK)
 
 
 class AccountViewSet(
@@ -450,9 +457,13 @@ class TeamViewSet(
         instance = self.get_object()
         data = self.request.data
         serializer = self.serializer_class(instance=instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
