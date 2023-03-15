@@ -560,8 +560,7 @@ class SlackFormsViewSet(
             {"organization": self.request.user.organization_id, "team": self.request.user.team.id}
         )
         form = OrgCustomSlackForm.objects.filter(
-            Q(resource=data.get("resource"), stage=data.get("stage"))
-            | Q(
+            Q(
                 resource=data.get("resource"),
                 custom_object=data["custom_object"],
                 stage=data.get("stage"),
