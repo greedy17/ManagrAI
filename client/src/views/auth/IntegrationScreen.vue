@@ -292,16 +292,16 @@
                 </div>
               </div>
             </div>
-
-            <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+            <div v-else class="side-wrapper">
+              <label class="side-icon side-workflow" style="">
+                <span class="side-tooltip">Upgrade your plan</span>
+                <img
+                  class="shimmer"
+                  src="@/assets/images/lock.svg"
+                  height="18"
+                  alt=""
+                />
+              </label>
             </div>
           </div>
         </div>
@@ -335,16 +335,16 @@
                 </div>
               </div>
             </div>
-
-            <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+            <div v-else class="side-wrapper">
+              <label class="side-icon side-workflow" style="">
+                <span class="side-tooltip">Upgrade your plan</span>
+                <img
+                  class="shimmer"
+                  src="@/assets/images/lock.svg"
+                  height="18"
+                  alt=""
+                />
+              </label>
             </div>
           </div>
         </div>
@@ -387,16 +387,16 @@
                 </div>
               </div>
             </div>
-
-            <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+            <div v-else class="side-wrapper">
+              <label class="side-icon side-workflow" style="">
+                <span class="side-tooltip">Upgrade your plan</span>
+                <img
+                  class="shimmer"
+                  src="@/assets/images/lock.svg"
+                  height="18"
+                  alt=""
+                />
+              </label>
             </div>
           </div>
         </div>
@@ -448,16 +448,16 @@
                 </div>
               </div>
             </div>
-
-            <div v-else style="cursor: text" class="right-tooltip">
-              <img
-                class="shimmer"
-                style="filter: invert(40%)"
-                src="@/assets/images/lock.svg"
-                height="18"
-                alt=""
-              />
-              <small class="right-tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
+            <div v-else class="side-wrapper">
+              <label class="side-icon side-workflow" style="">
+                <span class="side-tooltip">Upgrade your plan</span>
+                <img
+                  class="shimmer"
+                  src="@/assets/images/lock.svg"
+                  height="18"
+                  alt=""
+                />
+              </label>
             </div>
           </div>
         </div>
@@ -801,6 +801,7 @@ export default {
   background-repeat: no-repeat;
   animation: shimmer 2.5s infinite;
   max-width: 200px;
+  filter: invert(40%)
 }
 
 @keyframes shimmer {
@@ -1181,5 +1182,81 @@ a {
   height: 2.5rem;
   width: 19rem;
   font-size: 14px;
+}
+
+// Tooltip
+.side-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.side-wrapper .side-icon {
+  position: relative;
+  // background: #FFFFFF;
+  border-radius: 50%;
+  padding: 12px;
+  // margin: 20px 12px 0px 10px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  // outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip {
+  display: block;
+  width: 180px;
+  height: auto;
+  position: absolute;
+  // top: -10px; // for double line
+  top: -5px; // for single line
+  left: 30px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #ffffff;
+  bottom: 40%;
+  left: 0%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-icon:hover .side-tooltip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.side-wrapper .side-icon:hover span,
+.side-wrapper .side-icon:hover .side-tooltip {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+.side-wrapper .side-workflow:hover,
+.side-wrapper .side-workflow:hover .side-tooltip,
+.side-wrapper .side-workflow:hover .side-tooltip::before {
+  // margin-top: 1rem;
+  background: $grape;
+  color: #ffffff;
+}
+.side-icon:hover {
+  transition: all .1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  // transition: all .3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  img {
+    filter: invert(90%);
+  }
 }
 </style>
