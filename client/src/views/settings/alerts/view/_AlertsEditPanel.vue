@@ -928,12 +928,9 @@ export default {
   margin-right: 8px;
 
   button {
-    background-color: white;
-    border: 1px solid $dark-green;
+    @include white-button();
     border-radius: 100%;
-    color: $dark-green;
     font-size: 18px;
-    cursor: pointer;
   }
 }
 h3 {
@@ -954,31 +951,13 @@ input:focus {
   outline: none;
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
+  @include primary-button();
   max-height: 2rem;
-  border-radius: 0.25rem;
   padding: 0.5rem 1.25rem;
   font-size: 12px;
-  border: none;
-  cursor: pointer;
-}
-.green_button:disabled {
-  color: $base-gray;
-  background-color: $soft-gray;
-  max-height: 2rem;
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  font-size: 12px;
-  border: none;
-  cursor: text;
 }
 .condition-button {
-  background-color: white;
-  color: $dark-green;
-  border-radius: 0.25rem;
-  border: 1px solid $dark-green;
-  cursor: pointer;
+  @include white-button();
   padding: 0.5rem 1rem;
   margin: 0.5rem;
   font-size: 13px;

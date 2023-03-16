@@ -387,55 +387,6 @@
               >
             </div>
           </div>
-
-          <!-- <div v-show="selectingOption" class="options">
-            <p v-if="!updateInfoSelected" @click="updateInfo">Edit Info</p>
-            <p v-if="!manageTeamSelected" @click="manageTeam">Manage Team</p>
-            <div class="options__section">
-              <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
-                Change Admin
-              </button>
-              <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
-                Create New Team
-              </button>
-
-              <div class="tooltip">
-                <button
-                  :disabled="team.list.length >= numberOfAllowedUsers"
-                  class="invite_button"
-                  type="submit"
-                  @click="handleInvite"
-                >
-                  Invite Member
-
-                  <div v-if="team.list.length >= numberOfAllowedUsers">
-                    <img
-                      v-if="hasSlack"
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/lock.svg"
-                      alt=""
-                    />
-                  </div>
-
-                  <div v-else>
-                    <img
-                      v-if="hasSlack"
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/slackLogo.png"
-                      alt=""
-                    />
-                    <img
-                      v-else
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/logo.png"
-                      alt=""
-                    />
-                  </div>
-                </button>
-                <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
-              </div>
-            </div>
-          </div> -->
         </div>
       </div>
     </section>
@@ -1008,16 +959,14 @@ export default {
   margin-top: 15vh;
 }
 .img-border {
+  @include gray-text-button();
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $soft-gray;
   border-radius: 100%;
   height: 26px;
   width: 26px;
   padding-right: 8px;
-  cursor: pointer;
-  background-color: white;
 }
 .template-input {
   border: 1px solid #ccc;
@@ -1096,39 +1045,11 @@ h2 {
 }
 
 .invite_button {
+  @include gray-text-button();
   display: flex;
   flex-direction: row;
-  color: $base-gray;
-  background-color: white;
-  border-radius: 6px;
-  transition: all 0.25s;
   padding: 8px 12px;
   margin-left: 8px;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-  border: 1px solid #e8e8e8;
-}
-.invite_button:disabled {
-  display: flex;
-  flex-direction: row;
-  color: $base-gray;
-  background-color: $soft-gray;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-weight: 400px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-}
-
-.invite_button:disabled:hover {
-  color: $base-gray;
-  cursor: text;
-}
-
-.invite_button:hover {
-  cursor: pointer;
-  color: $dark-green;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -1288,12 +1209,10 @@ input[type='checkbox'] + label::before {
 //   justify-content: space-evenly;
 // }
 .invite-button {
-  background-color: $dark-green;
-  color: white;
+  @include primary-button();
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
 // button {
 //   @include primary-button();

@@ -853,12 +853,10 @@ a {
   align-items: center;
 }
 .img-border {
+  @include gray-text-button();
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $soft-gray;
-  border-radius: 6px;
-  cursor: pointer;
   padding: 4px 6px;
   margin-right: 8px;
 }
@@ -1168,20 +1166,17 @@ a {
     brightness(93%) contrast(89%);
 }
 .invite-button {
-  background-color: $dark-green;
-  color: white;
+  @include primary-button();
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
 .modal-button {
   @include primary-button();
-  box-shadow: none;
+  // box-shadow: none;
   margin-top: 1.5rem;
-  height: 2.5rem;
-  width: 19rem;
-  font-size: 14px;
+  // height: 2.5rem;
+  // width: 19rem;
 }
 
 // Tooltip

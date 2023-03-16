@@ -48,20 +48,22 @@
         </div>
       </form>
     </Modal>
-    <Modal v-if="deleteOpen">
+    <Modal v-if="deleteOpen" style="margin-top: 10rem;">
       <div class="delete_modal">
         <div class="delete_modal__header">
-          <h4>Delete Org</h4>
-          <img
+          <img style="height: 28px" src="@/assets/images/logo.png" />
+          <h4>Deactivate Org</h4>
+          <div style="width: 28px;"></div>
+          <!-- <img
             @click="deleteOpen = !deleteOpen"
             src="@/assets/images/close.svg"
             height="22px"
             alt=""
-          />
+          /> -->
         </div>
 
         <div class="delete_modal__body">
-          <p>This can't be reversed. Are you sure?</p>
+          <p>Are you sure?</p>
         </div>
 
         <div class="delete_modal__footer">
@@ -3479,14 +3481,8 @@ ul {
   padding: 0;
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 0.25rem;
+  @include primary-button();
   padding: 0.5rem 1rem;
-  font-weight: bold;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
 }
 .sized {
   height: 3em;
@@ -4075,39 +4071,11 @@ input[type='search']:focus {
   margin-top: 10rem;
 }
 .invite_button {
+  @include gray-text-button();
   display: flex;
   flex-direction: row;
-  color: $base-gray;
-  background-color: white;
-  border-radius: 6px;
-  transition: all 0.25s;
   padding: 8px 12px;
   margin-left: 8px;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-  border: 1px solid #e8e8e8;
-}
-.invite_button:disabled {
-  display: flex;
-  flex-direction: row;
-  color: $base-gray;
-  background-color: $soft-gray;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-weight: 400px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-}
-
-.invite_button:disabled:hover {
-  color: $base-gray;
-  cursor: text;
-}
-
-.invite_button:hover {
-  cursor: pointer;
-  color: $dark-green;
 }
 .modal-button {
   @include primary-button();
@@ -4300,12 +4268,10 @@ input[type='search']:focus {
   }
 }
 .invite-button {
-  background-color: $dark-green;
-  color: white;
+  @include primary-button();
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
 .main-content {
   margin-top: 15vh;
@@ -4322,5 +4288,51 @@ input[type='search']:focus {
 }
 .apexcharts-legend {
   flex-direction: row-reverse
+}
+.delete_modal {
+  background-color: $white;
+  color: $base-gray;
+  border-radius: 0.3rem;
+  width: 30vw;
+  letter-spacing: 0.75px;
+  &__header {
+    height: 2rem;
+    padding: 0px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 400;
+    // img {
+    //   margin-top: -1rem;
+    //   cursor: pointer;
+    // }
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0px 8px 8px 0px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0px;
+    margin: 0 1rem;
+  }
+}
+.delete {
+  @include white-button-danger();
+  padding: 8px 16px;
+  margin-right: 8px;
+}
+.no__button {
+  @include gray-text-button();
+  padding: 8px 16px;
+  margin-right: 8px;
+}
+.no__button:hover {
+  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+  scale: 1.025;
 }
 </style>

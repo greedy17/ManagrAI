@@ -1814,14 +1814,10 @@ a {
   text-decoration: none;
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
+  @include primary-button();
   max-height: 2rem;
-  border-radius: 0.25rem;
   padding: 0.5rem 1.25rem;
   font-size: 12px;
-  border: none;
-  cursor: pointer;
 }
 .logo {
   height: 1.75rem;

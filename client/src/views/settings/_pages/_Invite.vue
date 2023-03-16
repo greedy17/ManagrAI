@@ -959,22 +959,11 @@ form {
   justify-content: space-evenly;
 }
 .invite-button {
-  background-color: $dark-green;
-  border-radius: 6px;
-  color: white;
-  border: none;
+  @include primary-button();
   margin-top: 1rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
-// button {
-//   @include primary-button();
-//   margin-top: 1.25rem;
-//   height: 2.5rem;
-//   width: 19rem;
-//   font-size: 14px;
-// }
 .invite-form {
   border: none;
   border-radius: 0.75rem;

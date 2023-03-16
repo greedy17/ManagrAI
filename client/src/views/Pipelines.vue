@@ -5622,6 +5622,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/buttons';
 
 @mixin epic-sides() {
   position: relative;
@@ -6177,39 +6178,33 @@ select {
   padding-left: 0.75rem;
   border-radius: 0;
 }
-.cancel {
-  border: 1px solid $soft-gray;
-  font-weight: 400 !important;
-  letter-spacing: 1px;
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  color: $coral !important;
-}
+// .cancel {
+//   border: 1px solid $soft-gray;
+//   font-weight: 400 !important;
+//   letter-spacing: 1px;
+//   padding: 8px 12px;
+//   font-size: 13px;
+//   border-radius: 6px;
+//   background-color: white;
+//   cursor: pointer;
+//   margin-right: 0.5rem;
+//   color: $coral !important;
+// }
 .select-btn1 {
-  // box-shadow: 1px 1px 1px $very-light-gray;
+  @include gray-text-button();
   border: 1px solid $soft-gray;
-  letter-spacing: 1px;
   padding: 8px 12px;
-  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
   margin-right: 0.5rem;
-  color: $base-gray;
-  span {
-    padding: 2px 6px;
-    background-color: $off-white;
-    color: $dark-green;
-    border-radius: 6px;
-    margin-left: 8px;
-  }
+  // span {
+  //   padding: 2px 6px;
+  //   background-color: $off-white;
+  //   color: $dark-green;
+  //   border-radius: 6px;
+  //   margin-left: 8px;
+  // }
   // img {
   //   filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   // }
@@ -6738,32 +6733,21 @@ section {
   }
 }
 .add-button {
+  @include primary-button();
   display: flex;
   align-items: center;
   border: none;
   margin: 0;
   padding: 9px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  letter-spacing: 0.75px;
   white-space: nowrap;
 }
 .add-button__ {
+  @include primary-button();
   display: flex;
   align-items: center;
   border: none;
   padding: 8px 12px;
   font-size: 14px;
-  border-radius: 6px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  letter-spacing: 0.75px;
   span {
     padding: 2px 6px;
     background-color: $off-white;
@@ -6771,12 +6755,6 @@ section {
     border-radius: 4px;
     margin-left: 8px;
   }
-}
-.add-button:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-}
-.add-button__:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
 }
 .search-bar {
   background-color: white;
@@ -7000,12 +6978,6 @@ main:hover > span {
 //   color: #41b883;
 //   margin-left: 0.2rem;
 // }
-.cancel {
-  color: $dark-green;
-  font-weight: bold;
-  margin-left: 1rem;
-  cursor: pointer;
-}
 .flex-end {
   display: flex;
   flex-direction: row;

@@ -1,28 +1,5 @@
 <template>
   <div class="alerts-template-list">
-    <Modal v-if="deleteOpen">
-      <div class="delete_modal">
-        <div class="delete_modal__header">
-          <h4>Delete Workflow</h4>
-          <img
-            @click="deleteOpen = !deleteOpen"
-            src="@/assets/images/close.svg"
-            height="22px"
-            alt=""
-          />
-        </div>
-
-        <div class="delete_modal__body">
-          <p>This can't be reversed. Are you sure ?</p>
-        </div>
-
-        <div class="delete_modal__footer">
-          <button class="no__button" @click="deleteClose">No</button>
-          <button class="delete" @click.stop="onDeleteTemplate(deleteId)">Yes</button>
-        </div>
-      </div>
-    </Modal>
-
     <Modal
       v-if="workflowListOpen"
       @close-modal="
@@ -508,7 +485,6 @@ export default {
         filters: { forPipeline: true },
       }),
       templateTitles: [],
-      deleteOpen: false,
       workflowListOpen: false,
       deleteId: '',
       deleteTitle: '',
@@ -661,39 +637,6 @@ export default {
     },
     goToRecap() {
       this.$router.push({ name: 'ZoomRecap' })
-    },
-    deleteClose() {
-      this.deleteOpen === false ? (this.deleteOpen = true) : (this.deleteOpen = false)
-    },
-    async onDeleteTemplate(id) {
-      this.deletedTitle(id)
-      this.deleteOpen = !this.deleteOpen
-      try {
-        await AlertTemplate.api.deleteAlertTemplate(id).then(() => {
-          User.api.getUser(this.user.id).then((response) => {
-            this.$store.commit('UPDATE_USER', response)
-          })
-        })
-        this.templates.refresh()
-        this.$toast('Workflow removed', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } catch {
-        this.$toast('Error removing workflow', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.editing = true
-        this.templates.refresh()
-      }
     },
     async onToggleAlert(id, value) {
       try {
@@ -865,15 +808,12 @@ export default {
   visibility: visible;
 }
 .img-border {
+  @include gray-text-button();
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $soft-gray;
-  border-radius: 6px;
-  cursor: pointer;
   padding: 8px;
   margin-right: 8px;
-  background-color: white;
 }
 .card {
   letter-spacing: 0.75px;
@@ -1095,6 +1035,7 @@ button:disabled {
   }
 }
 .delete {
+  // @include white-button-danger();
   background-color: white !important;
   border: 1px solid $coral !important;
   border-radius: 0.25rem;
@@ -1220,43 +1161,18 @@ a {
   color: $base-gray;
   font-weight: bold;
 }
-.green_button:disabled {
-  background-color: $soft-gray;
-  color: $gray;
-}
 .green_button {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 6px;
+  @include primary-button();
   padding: 8px 12px;
   font-size: 12px;
-  border: none;
-  cursor: pointer;
   text-align: center;
 }
 .white_button {
-  color: $dark-green;
-  background-color: $white;
+  @include white-button();
   border: 1px solid $soft-gray;
-  letter-spacing: 0.75px;
-  border-radius: 6px;
   padding: 8px 12px;
-  font-size: 12px;
-  cursor: pointer;
   text-align: center;
 }
-// .white_button {
-//   color: $base-gray;
-//   background-color: white;
-//   border-radius: 6px;
-//   border: 1px solid $soft-gray;
-//   box-shadow: 1px 1px 1px $very-light-gray;
-//   padding: 6px 8px;
-//   font-size: 12px;
-
-//   cursor: pointer;
-//   text-align: center;
-// }
 .center-loader {
   display: flex;
   justify-content: center;

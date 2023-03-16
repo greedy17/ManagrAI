@@ -300,20 +300,6 @@ a:hover span {
 //   color: $base-gray;
 //   transform: translateY(-10%);
 // }
-.green_button {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-}
-.green_button:disabled {
-  background-color: $soft-gray;
-  color: $gray;
-}
 .header {
   position: fixed;
   z-index: 100;

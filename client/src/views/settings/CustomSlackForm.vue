@@ -2753,23 +2753,13 @@ img:hover {
   cursor: pointer;
 }
 .save {
+  @include primary-button();
   padding: 8px 20px;
-  font-size: 13px;
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
 }
 .red-button {
+  @include button-danger();
   padding: 8px 20px;
   margin-top: 1rem;
-  font-size: 13px;
-  background-color: $coral;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
 }
 .custom-object-button {
   padding: 8px 20px;
@@ -2871,20 +2861,20 @@ img:hover {
       brightness(93%) contrast(89%);
   }
 }
-.cancel {
-  color: $dark-green;
-  font-weight: bold;
-  margin-left: 1rem;
-  cursor: pointer;
-  padding-top: 8px;
-  padding-bottom: 0;
-  letter-spacing: 0.75px;
-  color: $base-gray;
+// .cancel {
+//   color: $dark-green;
+//   font-weight: bold;
+//   margin-left: 1rem;
+//   cursor: pointer;
+//   padding-top: 8px;
+//   padding-bottom: 0;
+//   letter-spacing: 0.75px;
+//   color: $base-gray;
 
-  h4 {
-    font-weight: 400;
-  }
-}
+//   h4 {
+//     font-weight: 400;
+//   }
+// }
 .logo2 {
   height: 1.75rem;
   margin-left: 0.5rem;
@@ -2900,14 +2890,9 @@ img:hover {
   }
 }
 .cancel {
-  border: 1px solid $soft-gray;
-  font-weight: 400 !important;
-  letter-spacing: 1px;
+  @include gray-text-button();
   padding: 8px 12px;
   font-size: 13px;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
   margin-right: 0.5rem;
   color: $coral !important;
 }

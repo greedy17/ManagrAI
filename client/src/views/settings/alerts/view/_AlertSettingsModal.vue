@@ -491,24 +491,9 @@ export default {
   }
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 0.25rem;
+  @include primary-button();
   padding: 0.5rem 1.25rem;
   font-size: 13px;
-  letter-spacing: 0.75px;
-  border: none;
-  cursor: pointer;
-}
-.green_button:disabled {
-  color: $base-gray;
-  background-color: $soft-gray;
-  max-height: 2rem;
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
 }
 .multi-slot {
   display: flex;

@@ -215,12 +215,9 @@ export default {
   margin-right: 8px;
 
   button {
-    background-color: white;
-    border: 1px solid $dark-green;
+    @include white-button();
     border-radius: 100%;
-    color: $dark-green;
     font-size: 18px;
-    cursor: pointer;
   }
 }
 .centered {
