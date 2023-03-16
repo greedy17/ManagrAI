@@ -554,7 +554,34 @@ export default {
       user: this.getUser,
       timezones: moment.tz.names(),
       profileForm: new UserProfileForm({}),
-      inviteActions: [{label: 'Uninvite', action: () => console.log('uninvite')}],
+      inviteActions: [
+          {
+            label: 'Uninvite', 
+            action: (thisPassed, member) => {
+              if ((member.isAdmin || member.is_admin)) {
+                thisPassed.$toast('Cannot uninvite the current admin.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              if (!member.isActive && !member.is_active) {
+                thisPassed.$toast('User already deactivated.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              thisPassed.openUninviteModal(member.id)
+            },
+          },
+      ],
       loading: false,
     }
   },
