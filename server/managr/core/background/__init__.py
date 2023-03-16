@@ -5,6 +5,8 @@ import pytz
 import uuid
 import requests
 import json
+from django.utils import timezone
+import calendar
 from datetime import datetime
 from copy import copy
 import re
@@ -32,6 +34,8 @@ from managr.zoom.background import emit_kick_off_slack_interaction
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from managr.slack.helpers.block_sets import get_block_set
 from managr.utils.client import Client
+from managr.salesforce.routes import routes as sf_routes
+from managr.hubspot.routes import routes as hs_routes
 
 logger = logging.getLogger("managr")
 
@@ -41,6 +45,8 @@ elif settings.IN_STAGING:
     MANAGR_URL = "https://staging.managr.ai"
 else:
     MANAGR_URL = "https://app.managr.ai"
+
+CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
 
 def get_domain(email):
@@ -929,16 +935,139 @@ def _process_change_team_lead(user_id):
     return
 
 
+def swap_submitted_data_labels(data, fields):
+    api_key_data = {}
+    for label in data.keys():
+        try:
+            field = fields.get(label=label)
+            api_key_data[field.api_name] = data[label]
+        except Exception:
+            continue
+    return api_key_data
+
+
+WORD_TO_NUMBER = {
+    "a": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365}
+
+
+def convert_date_string(date_string, value):
+    split_date_string = date_string.split(" ")
+    print(split_date_string)
+    if any("push" in s for s in split_date_string):
+        time_key = None
+        number_key = 1
+        for key in split_date_string:
+            if key in TIME_TO_NUMBER.keys():
+                time_key = TIME_TO_NUMBER[key]
+            if key in WORD_TO_NUMBER:
+                number_key = WORD_TO_NUMBER[key]
+    if any("end" in s for s in split_date_string):
+        if any("week" in s for s in split_date_string):
+            current = datetime.strptime(value, "%Y-%m-%d")
+            start = current - timezone.timedelta(days=current.weekday())
+            return start + timezone.timedelta(days=4)
+        elif any("month" in s for s in split_date_string):
+            current = datetime.strptime(value, "%Y-%m-%d")
+            last_of_month = calendar.monthrange(current.year, current.month)[1]
+            return current.replace(day=last_of_month)
+    if "back" in date_string:
+        new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
+            days=(time_key * number_key)
+        )
+    else:
+        new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
+            days=(time_key * number_key)
+        )
+    return new_value
+
+
+def clean_prompt_return_data(data, fields, resource):
+    print(fields)
+    cleaned_data = dict(data)
+    for key in cleaned_data.keys():
+        print(cleaned_data)
+        field = fields.get(api_name=key)
+        print(field)
+        if field.data_type in ["Date", "DateTime"]:
+            data_value = data[key]
+            print(data_value)
+            current_value = resource.secondary_data[key]
+            print(current_value)
+            new_value = convert_date_string(data_value, current_value)
+            print(new_value)
+            cleaned_data[key] = new_value
+        else:
+            continue
+    return cleaned_data
+
+
 @background()
 def _process_submit_chat_prompt(user_id, prompt, resource_type):
+    from managr.crm import exceptions as crm_exceptions
+
     user = User.objects.get(id=user_id)
-    fields = list(
-        user.object_fields.filter(crm_object=resource_type).values_list("label", flat=True)
-    )
-    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(fields, prompt)
+    form_type = "UPDATE" if "update" in prompt.lower() else "CREATE"
+    form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
+    print(form_template)
+    fields = form_template.custom_fields.all()
+    print(fields)
+    label_list = list(fields.values_list("label", flat=True))
+    label_list.append(resource_type)
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(label_list, prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
+    print(body)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     with Client as client:
-        r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-        r = r.json()
+        try:
+            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = r.json()
+            print(r)
+            choice = r["choices"][0]["text"]
+            data = eval(choice.replace("'", '"'))
+            resource_name = data.pop(resource_type).split(" ")
+            resource = (
+                CRM_SWITCHER[user.crm][resource_type]["model"]
+                .objects.filter(name__in=resource_name)
+                .first()
+            )
+            form = OrgCustomSlackFormInstance.objects.create(
+                template=form_template,
+                user=user,
+                resource_id=str(resource.id),
+                update_source="chat",
+            )
+            print(form)
+            swapped_field_data = swap_submitted_data_labels(data, fields)
+            print(swapped_field_data)
+            cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
+            print(cleaned_data)
+            form.save_form(cleaned_data, False)
+        except Exception as e:
+            logger.exception(e)
+    attempts = 1
+    while True:
+        try:
+            resource.update(form.saved_data)
+        except crm_exceptions.TokenExpired:
+            if attempts >= 5:
+                logger.exception(
+                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
+                )
+                break
+            else:
+                user.crm_account.regenerate_token()
+                attempts += 1
     return
