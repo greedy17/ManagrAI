@@ -421,7 +421,7 @@
                   height="16px"
                   alt=""
                 />
-                <small class="tooltiptext-left">Upgrade to <strong>Startup Plan</strong></small>
+                <small class="tooltiptext-left">Upgrade your plan</small>
               </div>
             </div>
           </div>

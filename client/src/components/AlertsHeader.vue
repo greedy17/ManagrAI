@@ -73,19 +73,19 @@
     </div>
 
     <div v-else>
-      <div class="tooltip" v-if="!creating && !editing">
-        <button disabled class="green_button right-margin center-row">
-          {{ buttonText }}
+      <button disabled class="green_button right-margin center-row side-wrapper" v-if="!creating && !editing">
+        {{ buttonText }}
+        <label class="side-icon side-workflow">
+          <span class="side-tooltip-single" style="top: -5px; right: 135px; width: 200px;">Upgrade your plan</span>
           <img
             class="shimmer"
             style="filter: invert(40%)"
             src="@/assets/images/lock.svg"
-            height="16px"
+            height="14px"
             alt=""
           />
-        </button>
-        <small class="tooltiptext">Upgrade to <strong>Startup Plan</strong></small>
-      </div>
+        </label>
+      </button>
 
       <button
         @click="saveItem"
@@ -471,5 +471,91 @@ export default {
 .wrapper .workflow:hover .tooltip::before {
   background: $grape;
   color: #ffffff;
+}
+// Tooltip
+.side-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.side-wrapper .side-icon {
+  position: relative;
+  // background: #FFFFFF;
+  border-radius: 50%;
+  padding: 12px;
+  // margin: 20px 12px 0px 10px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  // outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip,
+.side-wrapper .side-tooltip-single {
+  display: block;
+  width: 250px;
+  height: auto;
+  position: absolute;
+  top: -10px; // for double line
+  // top: 0; // for single line
+  right: 30px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip-single {
+  width: 100px;
+}
+.side-wrapper .side-tooltip::before,
+.side-wrapper .side-tooltip-single::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #ffffff;
+  bottom: 50%;
+  right: -4%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip-single::before {
+  bottom: 40%;
+}
+.side-wrapper:hover .side-icon .side-tooltip,
+.side-wrapper:hover .side-icon .side-tooltip-single {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.side-wrapper:hover .side-icon span,
+.side-wrapper:hover .side-icon .side-tooltip,
+.side-wrapper:hover .side-icon .side-tooltip-single {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+// .side-wrapper .side-workflow:hover,
+.side-wrapper:hover .side-workflow .side-tooltip,
+.side-wrapper:hover .side-workflow .side-tooltip::before,
+.side-wrapper:hover .side-workflow .side-tooltip-single,
+.side-wrapper:hover .side-workflow .side-tooltip-single::before {
+  // margin-top: 1rem;
+  background: $grape;
+  color: #ffffff;
+}
+.side-icon:hover {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  img {
+    filter: invert(90%);
+  }
 }
 </style>

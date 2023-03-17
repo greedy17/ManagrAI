@@ -64,7 +64,6 @@ WORKSPACE_SCOPES = [
     "groups:write",
     "users:read",
     "users:read.email",
-    "app_mentions:read",
 ]
 
 USER_SCOPES = ["channels:read"]

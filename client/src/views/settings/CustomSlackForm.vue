@@ -97,6 +97,24 @@
         </section>
       </div>
     </Modal>
+    <Modal v-if="confirmCODeleteModal">
+      <div class="modal-container rel">
+        <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img src="@/assets/images/warning.svg" class="logo2" alt="" />
+            <p>Would you like to delete this form?</p>
+          </div>
+        </div>
+        <section class="modal-buttons">
+          <div class="">
+            <button @click="closeDeleteModal" class="cancel">Cancel</button>
+          </div>
+          <div class="">
+            <button @click="deleteForm(newCustomForm)" class="save">Delete</button>
+          </div>
+        </section>
+      </div>
+    </Modal>
 
     <div class="alerts-header">
       <section class="row__" style="gap: 0px">
@@ -143,19 +161,18 @@
       <div class="row__" style="justify-content: space-between">
         <section
           v-if="
-            !customObjectView &&
             newResource &&
             (selectedType && selectedType.value === 'STAGE_GATING' ? currentlySelectedStage : true)
           "
           style="margin-left: 1rem; width: 23.5vw"
         >
           <div
-            v-if="selectedObject && selectedObject.value !== 'CustomObject'"
+            v-if="selectedObject"
             class="row__"
             style="margin: 0"
           >
             <div style="display: flex; flex-direction: column">
-              <div style="display: flex; justify-content: space-between; width: 55vw;">
+              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
                 <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
                   <div>View:</div>
                   <Multiselect
@@ -225,6 +242,87 @@
                   >
                     Delete Form
                   </button>
+                </div>
+              </div>
+              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
+                <div v-if="modalLoading">
+                  <Loader :loaderText="loaderText" />
+                </div>
+                <div v-else>
+                  <div
+                    v-if="createdCustomObjects.length"
+                    style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;"
+                  >
+                    <Multiselect
+                      @input="getCreatedCO"
+                      :options="createdCustomObjects"
+                      openDirection="below"
+                      style="width: 23.5vw; margin-left: 0rem"
+                      selectLabel="Enter"
+                      :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+                      label="name"
+                      v-model="selectedCustomObject"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          Custom Object
+                        </p>
+                      </template>
+
+                      <template slot="option" slot-scope="props">
+                        <div>
+                          <span class="option__title">{{ props.option.name }}</span>
+                        </div>
+                      </template>
+                    </Multiselect>
+                    <button v-if="!selectedCustomObject" @click="toggleCustomObjectModalView" class="custom-object-button">
+                      Add Custom Object
+                    </button>
+                    <button v-else @click="confirmCODeleteModal = !confirmCODeleteModal" class="red-button" style="margin-top: 0">
+                      Delete
+                    </button>
+                  </div>
+                  <div v-else style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;">
+                    <Multiselect
+                      @input="getCustomObjectFields"
+                      :options="customObjects"
+                      openDirection="below"
+                      style="width: 23.5vw; margin-left: 0rem"
+                      :max-height="400"
+                      selectLabel="Enter"
+                      :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
+                      :customLabel="customLabel"
+                      v-model="selectedCustomObject"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <img src="@/assets/images/search.svg" alt="" />
+                          Custom Object
+                        </p>
+                      </template>
+
+                      <template slot="option" slot-scope="props">
+                        <div>
+                          <span class="option__title">{{ removeAmp(props.option.label) }}</span
+                          ><span
+                            v-if="currentStagesWithForms.includes(props.option.label)"
+                            class="option__small"
+                          >
+                            edit
+                          </span>
+                        </div>
+                      </template>
+                    </Multiselect>
+                  </div>
                 </div>
               </div>
               <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
@@ -301,134 +399,6 @@
           </div>
         </section>
         <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 30vw">
-          <div class="" style="margin-bottom: 2rem">
-            <!-- <div class="row__">
-              <div>Object: </div>
-              <Multiselect
-                @input="changeObject($event, selectedType, true)"
-                :options="resources"
-                openDirection="below"
-                style="width: 16vw;"
-                selectLabel="Enter"
-                track-by="label"
-                label="label"
-                v-model="selectedObject"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-      
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    {{ selectedObject && selectedObject.label ? selectedObject.label : 'Select Object' }}
-                  </p>
-                </template>
-              </Multiselect>
-            </div> -->
-            <div v-if="selectedObject && selectedObject.value === 'CustomObject'">
-              <div v-if="modalLoading">
-                <Loader :loaderText="loaderText" />
-              </div>
-              <div v-else>
-                <div v-if="/*!customResource*/ true">
-                  <div
-                    v-if="createdCustomObjects.length"
-                    style="width: 100%; display: flex; justify-content: space-between"
-                  >
-                    <Multiselect
-                      @input="getCreatedCO"
-                      :options="createdCustomObjects"
-                      openDirection="below"
-                      style="width: 40vw; margin-left: 1rem"
-                      selectLabel="Enter"
-                      :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
-                      label="name"
-                      v-model="selectedCustomObject"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          Select Custom Object
-                        </p>
-                      </template>
-
-                      <template slot="option" slot-scope="props">
-                        <div>
-                          <span class="option__title">{{ props.option.name }}</span>
-                        </div>
-                      </template>
-                    </Multiselect>
-                    <button @click="toggleCustomObjectModalView" class="custom-object-button">
-                      Add Custom Object
-                    </button>
-                  </div>
-                  <div v-else style="display: flex; justify-content: center">
-                    <Multiselect
-                      @input="getCustomObjectFields"
-                      :options="customObjects"
-                      openDirection="below"
-                      style="width: 94%; margin-left: 1rem"
-                      :max-height="400"
-                      selectLabel="Enter"
-                      :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
-                      :customLabel="customLabel"
-                      v-model="selectedCustomObject"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          <img src="@/assets/images/search.svg" alt="" />
-                          Select Custom Object
-                        </p>
-                      </template>
-
-                      <template slot="option" slot-scope="props">
-                        <div>
-                          <span class="option__title">{{ removeAmp(props.option.label) }}</span
-                          ><span
-                            v-if="currentStagesWithForms.includes(props.option.label)"
-                            class="option__small"
-                          >
-                            edit
-                          </span>
-                        </div>
-                      </template>
-                    </Multiselect>
-                  </div>
-                </div>
-                <!-- <section v-else>
-                  <div class="space-between">
-                    <h4 style="cursor: pointer" @click="customResource = null">
-                      <img
-                        style="margin-right: 8px; margin-top: -16px"
-                        src="@/assets/images/left.svg"
-                        height="13px"
-                        alt=""
-                      />
-                      Back
-                    </h4>
-
-                    <div class="row__">
-                      <h4 style="margin-right: 16px">
-                        {{ selectedCustomObjectName + ' Form' }}
-                      </h4>
-                      <div class="margin-right" @click.prevent="deleteForm(newCustomForm)">
-                        <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
-                      </div>
-                    </div>
-                  </div>
-                </section> -->
-              </div>
-            </div>
-          </div>
           <div style="margin-left: 1rem">
             <draggable
               v-model="addedFields"
@@ -934,6 +904,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
+import AlertsHeader from '@/components/AlertsHeader.vue'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
@@ -953,6 +924,7 @@ export default {
     Modal,
     draggable,
     ToggleCheckBox,
+    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -1020,6 +992,7 @@ export default {
           crmObject: this.newResource,
         },
       }),
+      tabs: [],
       customFields: null,
       newFormType: this.formType,
       newResource: this.resource,
@@ -1036,6 +1009,7 @@ export default {
       customObjectView: false,
       customObjectModalView: false,
       confirmDeleteModal: false,
+      confirmCODeleteModal: false,
       modalOpen: false,
       formChange: false,
       storedField: null,
@@ -1412,6 +1386,39 @@ export default {
         'fae88a10-53cc-470e-86ec-32376c041893',
       ]
     },
+    opportunityClassLogic() {
+      return this.newResource == 'Opportunity' && this.newFormType !== 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+    },
+    dealClassLogic() {
+      return this.newResource == 'Deal' && this.newFormType !== 'STAGE_GATING' ? 'green' : ''
+    },
+    oppStageClassLogic() {
+      return this.newResource == 'Opportunity' && this.newFormType == 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+    },
+    dealStageClassLogic() {
+      return this.newResource == 'Deal' && this.newFormType == 'STAGE_GATING' ? 'green' : ''
+    },
+    accountClassLogic() {
+      return this.newResource == 'Account' && !this.customObjectView ? 'green' : ''
+    },
+    companyClassLogic() {
+      return this.newResource == 'Company' ? 'green' : ''
+    },
+    contactClassLogic() {
+      return this.newResource == 'Contact' && !this.customObjectView ? 'green' : ''
+    },
+    hsContactClassLogic() {
+      return this.newResource == 'Contact' ? 'green' : ''
+    },
+    leadClassLogic() {
+      return this.newResource == 'Lead' && !this.customObjectView ? 'green' : ''
+    },
+    productClassLogic() {
+      return this.newResource == 'OpportunityLineItem' && !this.customObjectView ? 'green' : ''
+    },
+    customObjectClassLogic() {
+      return this.customObjectView ? 'green' : ''
+    },
     user() {
       return this.$store.state.user
     },
@@ -1438,9 +1445,9 @@ export default {
           { value: 'Lead', label: 'Lead' },
           { value: 'OpportunityLineItem', label: 'Products' },
         ]
-        // if (this.user.organizationRef.isPaid) {
-        //   this.resources.push({value: 'CustomObject', label: 'Custom Object'})
-        // }
+        if (this.user.organizationRef.isPaid) {
+          this.resources.push({value: 'CustomObject', label: 'Custom Object'})
+        }
       } else {
         this.resources = [
           { value: 'Deal', label: 'Deal' },
@@ -1456,6 +1463,67 @@ export default {
       })
       if (this.userCRM == 'SALESFORCE') {
         this.getCustomObjects()
+        this.tabs = [
+          {
+            name: 'Opportunity',
+            classLogic: this.opportunityClassLogic,
+            function: this.changeToOpportunity,
+          },
+          {
+            name: 'Opp - Stage related',
+            classLogic: this.oppStageClassLogic,
+            function: this.changeToStage,
+          },
+          {
+            name: 'Account',
+            classLogic: this.accountClassLogic,
+            function: this.changeToAccount,
+          },
+          {
+            name: 'Contact',
+            classLogic: this.contactClassLogic,
+            function: this.changeToContact,
+          },
+          {
+            name: 'Lead',
+            classLogic: this.leadClassLogic,
+            function: this.changeToLead,
+          },
+          {
+            name: 'Products',
+            classLogic: this.productClassLogic,
+            function: this.changeToProducts,
+          },
+          {
+            name: 'Custom Object',
+            classLogic: this.customObjectClassLogic,
+            function: this.toggleCustomObjectView,
+          },
+        ]
+      }
+      if (this.userCRM === 'HUBSPOT') {
+        this.tabs = [
+          {
+            name: 'Deal',
+            classLogic: this.dealClassLogic,
+            function: this.changeToDeal,
+          },
+          {
+            name: 'Deal - Stage related',
+            classLogic: this.dealStageClassLogic,
+            function: this.changeToStage,
+          },
+          {
+            name: 'Account',
+            classLogic: this.companyClassLogic,
+            function: this.changeToCompany,
+          },
+          {
+            name: 'Contact',
+            classLogic: this.hsContactClassLogic,
+            function: this.changeToContact,
+          },
+        ]
       }
     } catch (e) {
       console.log(e)
@@ -1494,6 +1562,7 @@ export default {
       if (this.selectedType.label !== 'Create' && this.selectedType.label !== 'Update') {
         this.selectedType = this.formattedTypes[0]
       }
+      this.selectedCustomObject = null
     },
     searchFields() {
       let fieldParam = {}
@@ -1503,6 +1572,8 @@ export default {
       } else if (this.newFormType == 'UPDATE') {
         fieldParam['updateable'] = true
       }
+
+      console.log('this')
 
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
@@ -1594,6 +1665,7 @@ export default {
           //     this.$router.go()
           //   }, 1000)
           // }, 2000)
+          this.searchFields()
         }, 400)
       } catch (e) {
         console.log(e)
@@ -1604,7 +1676,7 @@ export default {
         this.newCustomForm = null
         this.newFormType = null
         this.customResource = null
-        this.newResource = null
+        // this.newResource = null
         return
       }
       this.selectedCustomObjectName = this.selectedCustomObject.name
@@ -1618,6 +1690,7 @@ export default {
       )
       this.newFormType = 'CREATE'
       this.updateCustomFields()
+      this.searchFields()
     },
     stopChecker() {
       clearInterval(this.$store.state.customObject.checker)
@@ -1626,6 +1699,7 @@ export default {
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
         this.newResource = this.selectedCustomObjectName
+        console.log('updateCustomFields')
       }
       // if (this.customObjectModalView) {
       this.closeCustomModal()
@@ -1637,11 +1711,13 @@ export default {
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
       const names = []
+      console.log('customForms', this.customForms)
       for (let i = 0; i < this.customForms.length; i++) {
         const form = this.customForms[i]
         names.push(form.customObject)
       }
       const createdCustomObjects = []
+      console.log('res', res)
       const filteredCustomObjects = res.sobjects.filter((co) => {
         if (!names.includes(co.name)) {
           return co
@@ -1715,6 +1791,7 @@ export default {
       }
       this.storedField = null
       this.confirmDeleteModal = false
+      this.confirmCODeleteModal = false
     },
     setNewForm() {
       this.addForm(this.selectedStage)
