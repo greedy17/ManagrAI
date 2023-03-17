@@ -1687,11 +1687,15 @@ def check_for_display_value(field, value):
 def clean_data_for_summary(user_id, data, integration_id, resource_type):
     from managr.hubspot.routes import routes as hs_routes
     from managr.salesforce.routes import routes as sf_routes
+
     cleaned_data = dict(data)
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "OwnerId"
     cleaned_data.pop(owner_field)
+    if "meeting_comments" in data.keys():
+        cleaned_data.pop("meeting_comments")
+        cleaned_data.pop("meeting_type")
     fields = user.object_fields.filter(api_name__in=cleaned_data.keys())
     ref_fields = fields.filter(data_type="Reference", crm_object=resource_type)
     if user.crm == "HUBSPOT":

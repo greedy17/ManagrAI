@@ -110,8 +110,8 @@ def emit_process_check_trial_status(user_id, verbose_name):
     return _process_check_trial_status(user_id, verbose_name=verbose_name)
 
 
-def emit_process_submit_chat_prompt(user_id, prompt, resource_type):
-    return _process_submit_chat_prompt(user_id, prompt, resource_type)
+def emit_process_submit_chat_prompt(user_id, prompt, resource_type, context):
+    return _process_submit_chat_prompt(user_id, prompt, resource_type, context)
 
 
 #########################################################
@@ -961,113 +961,197 @@ WORD_TO_NUMBER = {
 }
 
 TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365}
+DAYS_TO_NUMBER = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
 
 
 def convert_date_string(date_string, value):
-    split_date_string = date_string.split(" ")
-    print(split_date_string)
-    if any("push" in s for s in split_date_string):
-        time_key = None
+    if value is None:
+        value = str(datetime.now().date())
+    split_date_string = date_string.lower().split(" ")
+    time_key = None
+    if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
         number_key = 1
         for key in split_date_string:
             if key in TIME_TO_NUMBER.keys():
                 time_key = TIME_TO_NUMBER[key]
             if key in WORD_TO_NUMBER:
                 number_key = WORD_TO_NUMBER[key]
+    if any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
+        for key in split_date_string:
+            if key in DAYS_TO_NUMBER.keys():
+                current = datetime.strptime(value, "%Y-%m-%d")
+                start = current - timezone.timedelta(days=current.weekday())
+                day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
+                if any("next" in s for s in split_date_string):
+                    day_value = day_value + timezone.timedelta(days=7)
+                logger.info(f"CONVERT DATE STRING DEBUGGER: DAY SPECIFIC {day_value}")
+                return day_value
     if any("end" in s for s in split_date_string):
         if any("week" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             start = current - timezone.timedelta(days=current.weekday())
+            logger.info(
+                f"CONVERT DATE STRING DEBUGGER: END WEEK {start + timezone.timedelta(days=4)}"
+            )
             return start + timezone.timedelta(days=4)
         elif any("month" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             last_of_month = calendar.monthrange(current.year, current.month)[1]
+            logger.info(
+                f"CONVERT DATE STRING DEBUGGER: END MONTH {current.replace(day=last_of_month)}"
+            )
             return current.replace(day=last_of_month)
     if "back" in date_string:
         new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
             days=(time_key * number_key)
         )
     else:
-        new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
-            days=(time_key * number_key)
-        )
+        if time_key:
+            new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
+                days=(time_key * number_key)
+            )
+        else:
+            new_value = datetime.strptime(value, "%Y-%m-%d")
+    logger.info(f"CONVERT DATE STRING DEBUGGER: BACK ELSE {new_value}")
     return new_value
 
 
-def clean_prompt_return_data(data, fields, resource):
-    print(fields)
+def background_create_resource(crm):
+    from managr.salesforce.background import _process_create_new_resource
+    from managr.hubspot.tasks import _process_create_new_hs_resource
+
+    if crm == "SALESFORCE":
+        return _process_create_new_resource
+    else:
+        return _process_create_new_hs_resource
+
+
+def clean_prompt_return_data(data, fields, resource=None):
     cleaned_data = dict(data)
+    print(cleaned_data)
     for key in cleaned_data.keys():
-        print(cleaned_data)
         field = fields.get(api_name=key)
-        print(field)
         if field.data_type in ["Date", "DateTime"]:
             data_value = data[key]
-            print(data_value)
-            current_value = resource.secondary_data[key]
-            print(current_value)
+            current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
-            print(new_value)
-            cleaned_data[key] = new_value
-        else:
-            continue
+            cleaned_data[key] = str(new_value.date())
+    logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
 
 @background()
-def _process_submit_chat_prompt(user_id, prompt, resource_type):
+def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
 
     user = User.objects.get(id=user_id)
     form_type = "UPDATE" if "update" in prompt.lower() else "CREATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
-    print(form_template)
     fields = form_template.custom_fields.all()
-    print(fields)
     label_list = list(fields.values_list("label", flat=True))
     label_list.append(resource_type)
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(label_list, prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
-    print(body)
+    logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
-    with Client as client:
-        try:
-            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            r = r.json()
-            print(r)
-            choice = r["choices"][0]["text"]
-            data = eval(choice.replace("'", '"'))
-            resource_name = data.pop(resource_type).split(" ")
-            resource = (
-                CRM_SWITCHER[user.crm][resource_type]["model"]
-                .objects.filter(name__in=resource_name)
-                .first()
-            )
-            form = OrgCustomSlackFormInstance.objects.create(
-                template=form_template,
-                user=user,
-                resource_id=str(resource.id),
-                update_source="chat",
-            )
-            print(form)
-            swapped_field_data = swap_submitted_data_labels(data, fields)
-            print(swapped_field_data)
-            cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
-            print(cleaned_data)
-            form.save_form(cleaned_data, False)
-        except Exception as e:
-            logger.exception(e)
     attempts = 1
+    message = ""
+    has_error = False
     while True:
         try:
-            resource.update(form.saved_data)
+            with Client as client:
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            if r.status_code == 200:
+                r = r.json()
+                logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
+                choice = r["choices"][0]["text"]
+                data = eval(choice.replace("'", '"'))
+                resource_check = data.pop(resource_type, None)
+                if form_type == "CREATE" or resource_check:
+                    if form_type == "UPDATE":
+                        resource_name = resource_check.split(" ")
+                        resource = (
+                            CRM_SWITCHER[user.crm][resource_type]["model"]
+                            .objects.filter(name__in=resource_name)
+                            .first()
+                        )
+                        form = OrgCustomSlackFormInstance.objects.create(
+                            template=form_template,
+                            user=user,
+                            resource_id=str(resource.id),
+                            update_source="chat",
+                        )
+                    else:
+                        form = OrgCustomSlackFormInstance.objects.create(
+                            template=form_template, user=user, update_source="chat",
+                        )
+                        resource = None
+                        owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
+                        data[owner_field] = user.crm_account.crm_id
+                        print(data)
+                    swapped_field_data = swap_submitted_data_labels(data, fields)
+                    cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
+                    form.save_form(cleaned_data, False)
+                else:
+                    has_error = True
+                break
+            else:
+                attempts += 1
+        except Exception as e:
+            logger.exception(e)
+            slack_res = slack_requests.update_channel_message(
+                context.get("channel"),
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=[
+                    block_builders.simple_section(f"Looks like we hit a snag: {e}", "mrkdwn")
+                ],
+            )
+            return
+    update_attempts = 1
+    while True and not has_error:
+        try:
+            if form_type == "UPDATE":
+                crm_res = resource.update(form.saved_data)
+            else:
+                create_route = CRM_SWITCHER[user.crm][resource_type]["model"]
+                resource_func = background_create_resource(user.crm)
+                resource_res = resource_func.now([str(form.id)])
+                resource = create_route.objects.get(integration_id=resource_res.integration_id)
+                form.resource_id = str(resource.id)
+                form.save()
+            message = f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}"
+            form.update(is_submitted=True, submission_date=datetime.now())
+            break
         except crm_exceptions.TokenExpired:
             if attempts >= 5:
                 logger.exception(
                     f"Failed to Update data for user {str(user.id)} after {attempts} tries"
                 )
+                has_error = True
                 break
             else:
                 user.crm_account.regenerate_token()
-                attempts += 1
+                update_attempts += 1
+        except crm_exceptions.FieldValidationError as e:
+            message = f":no_entry_sign: Uh-oh we hit a validation: {e}"
+            has_error = True
+            break
+    try:
+        slack_res = slack_requests.update_channel_message(
+            context.get("channel"),
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=[block_builders.simple_section(message, "mrkdwn")],
+        )
+    except Exception:
+        logger.exception("ERROR")
     return

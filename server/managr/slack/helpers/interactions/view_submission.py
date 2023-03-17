@@ -2599,9 +2599,31 @@ def process_submit_chat_prompt(payload, context):
         if lowered_resource in lowercase_prompt:
             resource_check = resource
             break
-    if resource_check:
-        emit_process_submit_chat_prompt(context.get("u"), prompt, resource_check)
-    return
+    block_set = [
+        *get_block_set(
+            "loading",
+            {
+                "message": f":rocket: We are saving your data to {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}..."
+            },
+        ),
+    ]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+        if resource_check:
+            emit_process_submit_chat_prompt(
+                context.get("u"),
+                prompt,
+                resource_check,
+                {"channel": res["channel"], "ts": res["ts"]},
+            )
+    except Exception as e:
+        logger.exception(f"Failed submit chat data {e}")
+        return {"response_action": "clear"}
+    return {"response_action": "clear"}
 
 
 def handle_view_submission(payload):
