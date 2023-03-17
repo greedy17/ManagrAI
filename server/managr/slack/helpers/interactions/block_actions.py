@@ -3543,6 +3543,51 @@ def process_insert_note_template(payload, context):
     return
 
 
+@processor()
+def reopen_chat_modal(payload, context):
+    prompt = context.get("prompt")
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    context = context.update(u=str(user.id))
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
+    if user.slack_integration:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=user.slack_integration.slack_id)
+            .select_related("user")
+            .first()
+        )
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+        blocks = [
+            block_builders.input_block(
+                f"Update {crm} by sending a message",
+                initial_value=prompt,
+                block_id="CHAT_PROMPT",
+                multiline=True,
+                optional=False,
+            ),
+            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+        ]
+        access_token = user.organization.slack_integration.access_token
+        trigger_id = payload["trigger_id"]
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
+                "title": {"type": "plain_text", "text": "Chat",},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+        return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -3603,6 +3648,7 @@ def handle_block_actions(payload):
         slack_const.GET_SUMMARY: process_get_summary_fields,
         slack_const.RETURN_TO_FORM_BUTTON: process_return_to_form_button,
         slack_const.PROCESS_SHOW_ENGAGEMENT_DETAILS: process_get_engagement_details,
+        slack_const.REOPEN_CHAT_MODAL: reopen_chat_modal,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

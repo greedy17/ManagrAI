@@ -13,6 +13,7 @@ import re
 from managr.api.emails import send_html_email
 from background_task import background
 from django.conf import settings
+from managr.slack.helpers.utils import action_with_params
 
 from django.db.models import Q
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
@@ -1116,43 +1117,66 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             )
             return
     update_attempts = 1
+    blocks = []
+    crm_res = None
     while True and not has_error:
         try:
             if form_type == "UPDATE":
                 crm_res = resource.update(form.saved_data)
             else:
-                create_route = CRM_SWITCHER[user.crm][resource_type]["model"]
-                resource_func = background_create_resource(user.crm)
-                resource_res = resource_func.now([str(form.id)])
-                resource = create_route.objects.get(integration_id=resource_res.integration_id)
+                if crm_res is None:
+                    create_route = CRM_SWITCHER[user.crm][resource_type]["model"]
+                    resource_func = background_create_resource(user.crm)
+                    crm_res = resource_func.now([str(form.id)])
+                resource = create_route.objects.get(integration_id=crm_res.integration_id)
                 form.resource_id = str(resource.id)
                 form.save()
-            message = f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}"
             form.is_submitted = True
             form.submission_date = datetime.now()
             form.save()
+            blocks = [
+                block_builders.simple_section(
+                    f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}",
+                    "mrkdwn",
+                )
+            ]
             break
         except crm_exceptions.TokenExpired:
             if attempts >= 5:
                 logger.exception(
                     f"Failed to Update data for user {str(user.id)} after {attempts} tries"
                 )
-                has_error = True
+                blocks = [
+                    block_builders.simple_section(
+                        f"Looks like we had an issue communicating with {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}"
+                    )
+                ]
                 break
             else:
                 user.crm_account.regenerate_token()
                 update_attempts += 1
         except crm_exceptions.FieldValidationError as e:
             message = f":no_entry_sign: Uh-oh we hit a validation: {e}"
-            has_error = True
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Open Chat",
+                    "OPEN_CHAT",
+                    message,
+                    action_id=action_with_params(
+                        slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]
+                    ),
+                )
+            ]
             break
     try:
         slack_res = slack_requests.update_channel_message(
             context.get("channel"),
             context.get("ts"),
             user.organization.slack_integration.access_token,
-            block_set=[block_builders.simple_section(message, "mrkdwn")],
+            block_set=blocks,
         )
-    except Exception:
-        logger.exception("ERROR")
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
     return
