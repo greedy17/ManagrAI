@@ -16,6 +16,7 @@ logger = logging.getLogger("managr")
 
 def open_chat(context):
     user = User.objects.get(id=context.get("u"))
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     if user.slack_integration:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=user.slack_integration.slack_id)
@@ -29,7 +30,7 @@ def open_chat(context):
             }
         blocks = [
             block_builders.input_block(
-                "Send a message to your CRM",
+                f"Update {crm} by sending a message",
                 placeholder="Update, create, or log a note",
                 block_id="CHAT_PROMPT",
                 multiline=True,

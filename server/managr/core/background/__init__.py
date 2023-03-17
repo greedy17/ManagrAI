@@ -1036,7 +1036,6 @@ def background_create_resource(crm):
 
 def clean_prompt_return_data(data, fields, resource=None):
     cleaned_data = dict(data)
-    print(cleaned_data)
     for key in cleaned_data.keys():
         field = fields.get(api_name=key)
         if field.data_type in ["Date", "DateTime"]:
@@ -1083,6 +1082,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             .objects.filter(name__in=resource_name)
                             .first()
                         )
+                        logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
                         form = OrgCustomSlackFormInstance.objects.create(
                             template=form_template,
                             user=user,
@@ -1096,7 +1096,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                         resource = None
                         owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
                         data[owner_field] = user.crm_account.crm_id
-                        print(data)
                     swapped_field_data = swap_submitted_data_labels(data, fields)
                     cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
                     form.save_form(cleaned_data, False)
@@ -1129,7 +1128,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 form.resource_id = str(resource.id)
                 form.save()
             message = f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}"
-            form.update(is_submitted=True, submission_date=datetime.now())
+            form.is_submitted = True
+            form.submission_date = datetime.now()
+            form.save()
             break
         except crm_exceptions.TokenExpired:
             if attempts >= 5:

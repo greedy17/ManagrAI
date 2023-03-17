@@ -1786,7 +1786,9 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
         new_data = dict()
         for form in submitted_forms:
             new_data = {**new_data, **form.saved_data}
-        blocks = [block_builders.simple_section(title)]
+        blocks = [
+            block_builders.simple_section(title, "mrkdwn"),
+        ]
         cleaned_data = clean_data_for_summary(
             str(user.id),
             new_data,
