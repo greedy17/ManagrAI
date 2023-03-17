@@ -1688,11 +1688,15 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     from managr.hubspot.routes import routes as hs_routes
     from managr.salesforce.routes import routes as sf_routes
 
+    cleaned_data = dict(data)
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "OwnerId"
-    data.pop(owner_field)
-    fields = user.object_fields.filter(api_name__in=data.keys())
+    cleaned_data.pop(owner_field)
+    if "meeting_comments" in data.keys():
+        cleaned_data.pop("meeting_comments")
+        cleaned_data.pop("meeting_type")
+    fields = user.object_fields.filter(api_name__in=cleaned_data.keys())
     ref_fields = fields.filter(data_type="Reference", crm_object=resource_type)
     if user.crm == "HUBSPOT":
         if "dealstage" in data.keys():
@@ -1703,8 +1707,8 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
                     break
                 current_pipeline = field.options[0][pipeline]["stages"]
                 for stage in current_pipeline:
-                    if stage["id"] == data["dealstage"]:
-                        data["dealstage"] = stage["label"]
+                    if stage["id"] == cleaned_data["dealstage"]:
+                        cleaned_data["dealstage"] = stage["label"]
                         found_stage = True
     if len(ref_fields):
         for field in ref_fields:
@@ -1712,7 +1716,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
             try:
                 reference_record = (
                     CRM_SWITCHER[user.crm][relationship]["model"]
-                    .objects.filter(integration_id=data[field.api_name])
+                    .objects.filter(integration_id=cleaned_data[field.api_name])
                     .first()
                 ).display_value
 
@@ -1720,8 +1724,12 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
                 logger.info(e)
                 reference_record = integration_id
                 pass
-            data[field.api_name] = reference_record
-    return data
+            cleaned_data[field.api_name] = reference_record
+    if "meeting_comments" in cleaned_data.keys() and "meeting_type" in cleaned_data.keys():
+        if cleaned_data["meeting_comments"]:
+            cleaned_data.pop("meeting_comments")
+            cleaned_data.pop("meeting_type")
+    return cleaned_data
 
 
 @background(schedule=0)
