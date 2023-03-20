@@ -1096,8 +1096,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             template=form_template, user=user, update_source="chat",
                         )
                         resource = None
-                        owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
-                        data[owner_field] = user.crm_account.crm_id
+                    owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
+                    data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
                     cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
                     form.save_form(cleaned_data, False)
