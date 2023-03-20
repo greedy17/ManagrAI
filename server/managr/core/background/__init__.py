@@ -1063,7 +1063,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     attempts = 1
-    message = ""
     has_error = False
     while True:
         try:
@@ -1156,12 +1155,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 user.crm_account.regenerate_token()
                 update_attempts += 1
         except crm_exceptions.FieldValidationError as e:
-            message = f":no_entry_sign: Uh-oh we hit a validation: {e}"
             blocks = [
                 block_builders.section_with_button_block(
                     "Open Chat",
                     "OPEN_CHAT",
-                    message,
+                    f":no_entry_sign: Uh-oh we hit a validation: {e}",
                     action_id=action_with_params(
                         slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]
                     ),
