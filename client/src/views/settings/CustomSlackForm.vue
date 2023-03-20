@@ -2900,17 +2900,16 @@ img:hover {
   display: flex;
 }
 .img-button {
-  background-color: transparent;
-  padding: 4px 6px;
-  margin-right: 0.5rem;
-  border: none;
-}
-.img-border {
-  border: 1px solid #eeeeee;
+  @include gray-text-button();
   padding: 4px 6px 3px 6px;
-  border-radius: 6px;
-  background-color: white;
+  margin-right: 0.5rem;
 }
+// .img-border {
+//   border: 1px solid #eeeeee;
+//   padding: 4px 6px 3px 6px;
+//   border-radius: 6px;
+//   background-color: white;
+// }
 .fields-container {
   border: 1px solid $soft-gray;
   background-color: white;

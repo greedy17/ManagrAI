@@ -931,7 +931,12 @@ export default {
     @include white-button();
     border-radius: 100%;
     font-size: 18px;
+    padding: 0rem .3rem;
+    
   }
+}
+.plus_button button:hover {
+  box-shadow: none;
 }
 h3 {
   font-weight: 400;

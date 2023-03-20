@@ -7136,7 +7136,10 @@ a {
   text-align: left;
 }
 .new-note {
-  background-color: $dark-green;
-  color: white;
+  @include primary-button();
+  padding: 8px 16px;
+  font-size: 16px;
+  // background-color: $dark-green;
+  // color: white;
 }
 </style>

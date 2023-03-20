@@ -1047,14 +1047,10 @@ a {
   }
 }
 .orange_button {
+  @include gray-text-button();
   color: $dark-green;
-  background-color: white;
-  border-radius: 6px;
   padding: 6px 12px;
-  font-weight: 600;
   font-size: 11px;
-  border: 1px solid $soft-gray;
-  cursor: pointer;
 }
 .slot-icon {
   display: flex;

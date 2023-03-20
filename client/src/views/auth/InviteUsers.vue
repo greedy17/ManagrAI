@@ -329,7 +329,7 @@
 
             <div class="img-border" @click="viewAdminPage" v-if="getUser.isStaff">
               <img
-                style="filter: invert(40%); margin-left: 8px"
+                style="filter: invert(40%); margin-left: -8px;"
                 src="@/assets/images/adminPanel.svg"
                 class="nav-img"
                 height="18px"
