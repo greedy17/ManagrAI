@@ -1725,10 +1725,6 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
                 reference_record = integration_id
                 pass
             cleaned_data[field.api_name] = reference_record
-    if "meeting_comments" in cleaned_data.keys() and "meeting_type" in cleaned_data.keys():
-        if cleaned_data["meeting_comments"]:
-            cleaned_data.pop("meeting_comments")
-            cleaned_data.pop("meeting_type")
     return cleaned_data
 
 
