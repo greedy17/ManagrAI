@@ -1037,6 +1037,8 @@ def background_create_resource(crm):
 
 def clean_prompt_return_data(data, fields, resource=None):
     cleaned_data = dict(data)
+    cleaned_data.pop("Notes", None)
+    cleaned_data.pop("Note Subject", None)
     for key in cleaned_data.keys():
         field = fields.get(api_name=key)
         if field.data_type in ["Date", "DateTime"]:
@@ -1053,7 +1055,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
 
     user = User.objects.get(id=user_id)
-    form_type = "UPDATE" if "update" in prompt.lower() else "CREATE"
+    form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
     fields = form_template.custom_fields.all()
     label_list = list(fields.values_list("label", flat=True))
@@ -1160,6 +1162,18 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     "Open Chat",
                     "OPEN_CHAT",
                     f":no_entry_sign: Uh-oh we hit a validation: {e}",
+                    action_id=action_with_params(
+                        slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]
+                    ),
+                )
+            ]
+            break
+        except Exception as e:
+            blocks = [
+                block_builders.section_with_button_block(
+                    "Open Chat",
+                    "OPEN_CHAT",
+                    f":no_entry_sign: Uh-oh we hit a error: {e}",
                     action_id=action_with_params(
                         slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]
                     ),
