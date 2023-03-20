@@ -1693,7 +1693,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     user = User.objects.get(id=user_id)
     owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "OwnerId"
     cleaned_data.pop(owner_field)
-    if "meeting_comments" in data.keys():
+    if "meeting_comments" in data.keys() and data["meeting_comments"] is None:
         cleaned_data.pop("meeting_comments")
         cleaned_data.pop("meeting_type")
     fields = user.object_fields.filter(api_name__in=cleaned_data.keys())
