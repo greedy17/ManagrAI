@@ -2608,11 +2608,18 @@ def process_submit_chat_prompt(payload, context):
         ),
     ]
     try:
-        res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=block_set,
-        )
+        ts = context.get("ts", None)
+        channel = context.get("channel", None)
+        if ts and channel:
+            res = slack_requests.update_channel_message(
+                channel, ts, user.organization.slack_integration.access_token, block_set=block_set
+            )
+        else:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=block_set,
+            )
         if resource_check:
             emit_process_submit_chat_prompt(
                 context.get("u"),

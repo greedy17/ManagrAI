@@ -3545,9 +3545,11 @@ def process_insert_note_template(payload, context):
 
 @processor()
 def reopen_chat_modal(payload, context):
+    channel_id = payload["channel"]["id"]
+    message_ts = payload["message"]["ts"]
     prompt = context.get("prompt")
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
-    context = context.update(u=str(user.id))
+    context.update(u=str(user.id), ts=message_ts, channel=channel_id)
     crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     if user.slack_integration:
         slack = (
