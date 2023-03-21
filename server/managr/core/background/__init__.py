@@ -6,6 +6,7 @@ import uuid
 import requests
 import json
 from django.utils import timezone
+from dateutil.parser import parse
 import calendar
 from datetime import datetime
 from copy import copy
@@ -974,12 +975,14 @@ DAYS_TO_NUMBER = {
 
 
 def convert_date_string(date_string, value):
+    date_parsed = parse(date_string)
     if value is None:
         value = str(datetime.now().date())
     split_date_string = date_string.lower().split(" ")
     time_key = None
+    number_key = 1
     if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
-        number_key = 1
+        print("here")
         for key in split_date_string:
             if key in TIME_TO_NUMBER.keys():
                 time_key = TIME_TO_NUMBER[key]
@@ -1020,7 +1023,7 @@ def convert_date_string(date_string, value):
                 days=(time_key * number_key)
             )
         else:
-            new_value = datetime.strptime(value, "%Y-%m-%d")
+            new_value = date_parsed
     logger.info(f"CONVERT DATE STRING DEBUGGER: BACK ELSE {new_value}")
     return new_value
 
