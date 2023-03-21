@@ -991,7 +991,7 @@ def convert_date_string(date_string, value):
     if any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
         for key in split_date_string:
             if key in DAYS_TO_NUMBER.keys():
-                current = datetime.strptime(value, "%Y-%m-%d")
+                current = datetime.now()
                 start = current - timezone.timedelta(days=current.weekday())
                 day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
                 if any("next" in s for s in split_date_string):
@@ -1042,17 +1042,31 @@ def background_create_resource(crm):
         return _process_create_new_hs_resource
 
 
-def clean_prompt_return_data(data, fields, resource=None):
+def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data = dict(data)
     cleaned_data.pop("Notes", None)
     cleaned_data.pop("Note Subject", None)
     for key in cleaned_data.keys():
+        if data[key] is None:
+            if resource:
+                cleaned_data[key] = resource.secondary_data[key]
+            continue
         field = fields.get(api_name=key)
+        if field.data_type == "TextArea":
+            if data[key] is not None:
+                current_value = (
+                    resource.secondary_data[key]
+                    if resource.secondary_data[key] is not None
+                    else " "
+                )
+                cleaned_data[key] = f"{data[key]}\n{current_value}"
         if field.data_type in ["Date", "DateTime"]:
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
-            cleaned_data[key] = str(new_value.date())
+            cleaned_data[key] = (
+                str(new_value.date()) if crm == "SALESFORCE" else str(new_value.replace(hour=18))
+            )
         if field.api_name == "dealstage":
             if resource:
                 pipeline = field.options[0][resource.secondary_data["pipeline"]]
@@ -1104,10 +1118,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 resource_check = data.pop(resource_type, None)
                 if form_type == "CREATE" or resource_check:
                     if form_type == "UPDATE":
-                        resource_name = resource_check.replace(",", " ").split(" ")
                         resource = (
                             CRM_SWITCHER[user.crm][resource_type]["model"]
-                            .objects.filter(name__in=resource_name)
+                            .objects.filter(name__icontains=resource_check)
                             .first()
                         )
                         logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
@@ -1125,7 +1138,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
-                    cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
+                    cleaned_data = clean_prompt_return_data(
+                        swapped_field_data, fields, user.crm, resource
+                    )
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
