@@ -1076,10 +1076,13 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     user = User.objects.get(id=user_id)
     form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
-    fields = form_template.custom_fields.all()
+    fields = form_template.custom_fields.all().exclude(
+        api_name__in=["meeting_comments", "meeting_type"]
+    )
+    field_list = [resource_type]
     label_list = list(fields.values_list("label", flat=True))
-    label_list.append(resource_type)
-    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(label_list, prompt)
+    field_list.extend(label_list)
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
@@ -1093,7 +1096,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
-                data = eval(choice.replace("null", "'None'").replace("'", '"'))
+                data = eval(
+                    choice[choice.index("{") : choice.index("}") + 1]
+                    .replace("null", "'None'")
+                    .replace("'", '"')
+                )
                 resource_check = data.pop(resource_type, None)
                 if form_type == "CREATE" or resource_check:
                     if form_type == "UPDATE":
