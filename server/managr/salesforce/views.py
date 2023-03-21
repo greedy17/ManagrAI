@@ -384,7 +384,6 @@ class SObjectPicklistViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
     def get_record_type_picklist(self, request, *args, **kwargs):
         user = self.request.user
-        picklist = user.crm_account.get_record_type_picklist()
         attempts = 1
         while True:
             try:
@@ -1062,8 +1061,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         workflow.resource_type = resource_type
         workflow.save()
         workflow.add_form(
-            resource_type,
-            slack_const.FORM_TYPE_UPDATE,
+            resource_type, slack_const.FORM_TYPE_UPDATE,
         )
         data = MeetingWorkflowSerializer(instance=workflow).data
         return Response(data=data)
@@ -1199,10 +1197,7 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return Response(data=data)
 
     @action(
-        methods=["GET"],
-        permission_classes=(IsStaff,),
-        detail=False,
-        url_path="admin",
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin",
     )
     def admin_meetings(self, request, *args, **kwargs):
         """Endpoint to list orgs and tokens for integration accounts"""

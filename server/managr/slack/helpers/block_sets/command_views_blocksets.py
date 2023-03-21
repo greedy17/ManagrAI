@@ -465,13 +465,13 @@ def actions_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
     update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
-    if settings.IN_DEV:
+    if settings.IN_PROD:
         options = [
-            block_builders.option("Chat (Beta)", "OPEN_CHAT"),
             block_builders.option(update_label, "UPDATE_RESOURCE"),
         ]
     else:
         options = [
+            block_builders.option("Chat (Beta)", "OPEN_CHAT"),
             block_builders.option(update_label, "UPDATE_RESOURCE"),
         ]
     for action in slack_const.MANAGR_ACTIONS:
