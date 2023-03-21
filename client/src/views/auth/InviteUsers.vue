@@ -830,6 +830,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/modals';
 
 ::v-deep .ql-toolbar.ql-snow {
   display: flex;
@@ -868,7 +869,7 @@ export default {
 }
 .modal-header {
   width: 100%;
-  margin-top: -1.5rem;
+  // margin-top: -1.5rem;
   display: flex;
   justify-content: space-between;
 }
@@ -1222,13 +1223,12 @@ input[type='checkbox'] + label::before {
 //   font-size: 14px;
 // }
 .invite-form {
-  border: none;
-  border-radius: 0.75rem;
+  @include small-modal();
   min-width: 37vw;
   // min-height: 64vh;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
   flex-direction: column;
   background-color: white;
   color: $base-gray;
@@ -1254,6 +1254,7 @@ input[type='checkbox'] + label::before {
     justify-content: flex-end;
     align-items: center;
     border-top: 1px solid $soft-gray;
+    margin-bottom: 1rem;
   }
   &__actions-noslack {
     display: flex;
@@ -1275,12 +1276,12 @@ input[type='checkbox'] + label::before {
   // color: #35495e;
   color: $very-light-gray;
 }
-.modal-form {
-  width: 100%;
-  background-color: $white;
-  height: 40vh;
-  // justify-content: space-evenly;
-}
+// .modal-form {
+//   width: 100%;
+//   background-color: $white;
+//   height: 40vh;
+//   // justify-content: space-evenly;
+// }
 .modal-button {
   @include primary-button();
   box-shadow: none;

@@ -574,6 +574,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/modals';
 
 @keyframes shimmer {
   100% {
@@ -885,6 +886,7 @@ span.ui-column-resizer:hover {
   }
 }
 .modal-container {
+  // @include small-modal();
   background-color: $white;
   overflow: auto;
   width: 20vw;

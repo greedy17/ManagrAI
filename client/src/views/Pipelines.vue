@@ -5623,6 +5623,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 @mixin epic-sides() {
   position: relative;
@@ -6422,13 +6423,8 @@ h3 {
   align-items: flex-start;
 }
 .modal-container {
-  background-color: $white;
-  overflow-y: scroll;
+  @include large-modal();
   overflow-x: hidden;
-  width: 42vw;
-  height: 90vh;
-  align-items: center;
-  border-radius: 0.5rem;
   padding: 32px 22px 16px 22px;
 
   &__footer {
@@ -6459,13 +6455,7 @@ h3 {
   }
 }
 .opp-modal-container {
-  display: flex;
-  flex-direction: column;
-  overflow-y: scroll;
-  background-color: white;
-  width: 44vw;
-  height: 90vh;
-  border-radius: 0.5rem;
+  @include large-modal();
   padding: 24px 24px 8px 24px;
   // border: 1px solid #e8e8e8;
 }

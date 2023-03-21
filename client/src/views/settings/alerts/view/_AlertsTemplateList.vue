@@ -750,6 +750,7 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 .shimmer {
   display: inline-block;
@@ -938,13 +939,11 @@ button:disabled {
   animation: tooltips-horz 300ms ease-out forwards;
 }
 .workflow__modal {
-  background-color: $white;
+  @include base-modal();
   color: $base-gray;
-  border-radius: 6px;
   min-height: 25vh;
   max-height: 70vh;
   padding: 0 1rem;
-  overflow: scroll;
   &__header {
     display: flex;
     align-items: center;
@@ -1186,13 +1185,10 @@ a {
   margin-top: 4px;
 }
 .command-modal {
-  background-color: $white;
-  overflow-y: scroll;
+  @include medium-modal();
   overflow-x: hidden;
   width: 32vw;
-  height: 70vh;
   align-items: center;
-  border-radius: 4px;
   padding: 24px;
   position: relative;
 

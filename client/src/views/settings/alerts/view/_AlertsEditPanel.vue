@@ -817,6 +817,7 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 ::v-deep .input-content {
   width: 13vw;
@@ -1043,14 +1044,11 @@ input[type='search']:focus {
   }
 }
 .modal-container {
-  background-color: $white;
-  overflow-y: scroll;
+  @include base-modal();
   overflow-x: hidden;
   width: 58vw;
-  // min-height: 50vh;
   height: 54vh;
   align-items: center;
-  border-radius: 0.5rem;
   padding: 0px 4px;
 
   &__footer {
@@ -1076,14 +1074,12 @@ input[type='search']:focus {
   }
 }
 .modal-container-large {
-  background-color: $white;
-  overflow-y: scroll;
+  @include base-modal();
   overflow-x: hidden;
   width: 58vw;
   // min-height: 50vh;
   height: 62vh;
   align-items: center;
-  border-radius: 0.5rem;
   padding: 0px 4px;
 
   &__footer {

@@ -1,0 +1,11 @@
+@import 'mixins/modals';
+
+.small-modal {
+  @include small-modal;
+}
+.medium-modal {
+  @include medium-modal;
+}
+.large-modal {
+  @include large-modal;
+}

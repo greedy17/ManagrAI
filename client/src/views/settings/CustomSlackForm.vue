@@ -2332,6 +2332,7 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 @keyframes bounce {
   0% {
@@ -2799,17 +2800,11 @@ img:hover {
   align-items: center;
 }
 .opp-modal-container {
-  display: flex;
-  flex-direction: column;
-  overflow-y: scroll;
-  background-color: white;
-  width: 35vw;
-  height: 70vh;
-  border-radius: 0.5rem;
+  @include medium-modal();
   padding: 1rem;
 }
 .modal-container {
-  background-color: $white;
+  // @include large-modal();
   overflow: auto;
   min-width: 36vw;
   max-width: 36vw;

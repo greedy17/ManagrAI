@@ -47,7 +47,7 @@
         }
       "
     >
-      <form v-if="hasSlack" class="invite-form" @submit.prevent="handleInvite" style="margin-top: 7.5rem;">
+      <form v-if="hasSlack" class="invite-form form-height-small" @submit.prevent="handleInvite" style="margin-top: 7.5rem; height: 50vh">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -828,6 +828,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/modals';
 
 ::placeholder {
   // color: #35495e;
@@ -925,17 +926,17 @@ input:focus {
 //   align-items: center;
 // }
 .header {
-  margin-top: -1.5rem;
+  // margin-top: -1.5rem;
   width: 100%;
   display: flex;
   justify-content: space-between;
 }
-.header-confirm {
-  margin-top: -1.5rem;
-  width: 100%;
-  // display: flex;
-  // justify-content: space-around;
-}
+// .header-confirm {
+//   margin-top: -1.5rem;
+//   width: 100%;
+//   // display: flex;
+//   // justify-content: space-around;
+// }
 // .back-logo {
 //   position: absolute;
 //   z-index: -1;
@@ -960,25 +961,22 @@ form {
 }
 .invite-button {
   @include primary-button();
-  margin-top: 1rem;
+  margin: 1rem 0;
   width: 15vw;
   font-size: 16px;
 }
 .invite-form {
-  border: none;
-  border-radius: 0.75rem;
+  @include small-modal();
   min-width: 37vw;
   // min-height: 64vh;
-  display: flex;
   align-items: center;
-  justify-content: space-around;
-  flex-direction: column;
-  background-color: white;
+  justify-content: space-between;
   color: $base-gray;
   &__title {
     font-weight: bold;
     text-align: left;
     font-size: 22px;
+    margin-top: 1rem;
   }
   &__actions {
     display: flex;
@@ -1001,7 +999,7 @@ form {
   }
 }
 .form-height-small {
-  height: 30vh;
+  height: 20vh;
   margin-top: 10rem;
 }
 .invite-list {

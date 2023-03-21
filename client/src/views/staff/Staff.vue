@@ -10,25 +10,25 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
+      <form v-if="true /*hasSlack*/" class="invite-form confirm-modal form-margin-small">
         <div class="header">
           <div class="flex-row" style="justify-content: space-between;">
-            <div class="flex-row">
-              <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <div class="flex-row" style="margin-top: -0rem;">
+              <img src="@/assets/images/logo.png" class="logo" alt="" style="margin-right: 0.5rem;" />
               <h3 class="invite-form__title">Are you sure?</h3>
             </div>
             <img
               src="@/assets/images/close.svg"
-              style="height: 1.25rem; margin-top: -6rem; cursor: pointer; margin-right: 1rem;"
+              style="height: 1.25rem; margin-top: -0rem; cursor: pointer; margin-right: 1rem;"
               @click="handleConfirmCancel"
               alt=""
             />
           </div>
           <div class="flex-row">
-            <h4 class="invite-form__subtitle">
+            <div class="invite-form__subtitle" style="margin-top: 1.5rem;">
               By clicking Confirm, you will be transferring the Admin role to
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
-            </h4>
+            </div>
           </div>
         </div>
         <div class="invite-form__actions">
@@ -38,7 +38,7 @@
               <PulseLoadingSpinnerButton
                 @click="changeAdminSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 5%; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem;"
                 text="Confirm"
                 :loading="pulseLoading"
                 >Confirm</PulseLoadingSpinnerButton
@@ -1047,7 +1047,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
           <div class="flex-row" style="justify-content: space-between; width: 100%">
             <div class="flex-row">
@@ -1152,7 +1152,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
           <div class="flex-row" style="justify-content: space-between; width: 100%;">
             <div class="flex-row">
@@ -1251,7 +1251,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -3448,6 +3448,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 .staff {
   margin-top: 3rem;
@@ -3515,12 +3516,8 @@ input[type='search']:focus {
   cursor: pointer;
 }
 .modal-container {
-  background-color: $white;
-  overflow: auto;
-  width: 60vw;
-  height: 88vh;
+  @include large-modal();
   align-items: center;
-  border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -4017,15 +4014,10 @@ input[type='search']:focus {
   }
 }
 .invite-form {
+  @include small-modal();
   border: none;
-  border-radius: 0.75rem;
-  min-width: 37vw;
-  // min-height: 64vh;
-  display: flex;
   align-items: center;
-  justify-content: space-around;
-  flex-direction: column;
-  background-color: white;
+  justify-content: space-between;
   color: $base-gray;
   &__title {
     font-weight: bold;
@@ -4057,15 +4049,8 @@ input[type='search']:focus {
     margin-top: 1rem;
   }
 }
-.modal-form {
-  width: 100%;
-  background-color: $white;
-  height: 40vh;
-  // justify-content: space-evenly;
-}
-.confirm-form {
-  width: 37vw;
-  height: 38vh;
+.confirm-modal {
+  height: 25vh;
 }
 .form-margin-small {
   margin-top: 10rem;
@@ -4269,7 +4254,8 @@ input[type='search']:focus {
 }
 .invite-button {
   @include primary-button();
-  margin-top: 2.5rem;
+  // margin-top: 2.5rem;
+  margin-bottom: 1rem;
   width: 15vw;
   font-size: 16px;
 }
