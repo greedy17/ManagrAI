@@ -1065,7 +1065,9 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
             cleaned_data[key] = (
-                str(new_value.date()) if crm == "SALESFORCE" else str(new_value.replace(hour=18))
+                str(new_value.date())
+                if crm == "SALESFORCE"
+                else (str(new_value.date()) + "T18:00:00.000Z")
             )
         if field.api_name == "dealstage":
             if resource:
@@ -1079,6 +1081,10 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                     ]
                     if len(stage):
                         cleaned_data[key] = stage[0]["id"]
+                    else:
+                        cleaned_data[key] = resource.secondary_data["dealstage"]
+        if field.api_name in ["Amount", "amount"]:
+            cleaned_data[key] = data[key].replace("$", "")
     logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
