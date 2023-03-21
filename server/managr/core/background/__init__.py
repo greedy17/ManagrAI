@@ -975,14 +975,14 @@ DAYS_TO_NUMBER = {
 
 
 def convert_date_string(date_string, value):
-    date_parsed = parse(date_string)
     if value is None:
         value = str(datetime.now().date())
+    else:
+        value = value.split("T")[0]
     split_date_string = date_string.lower().split(" ")
     time_key = None
     number_key = 1
     if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
-        print("here")
         for key in split_date_string:
             if key in TIME_TO_NUMBER.keys():
                 time_key = TIME_TO_NUMBER[key]
@@ -1023,8 +1023,12 @@ def convert_date_string(date_string, value):
                 days=(time_key * number_key)
             )
         else:
-            new_value = date_parsed
-    logger.info(f"CONVERT DATE STRING DEBUGGER: BACK ELSE {new_value}")
+            try:
+                date_parsed = parse(date_string)
+                new_value = date_parsed
+            except Exception:
+                new_value = value
+        logger.info(f"CONVERT DATE STRING DEBUGGER: BACK ELSE {new_value}")
     return new_value
 
 
@@ -1049,6 +1053,18 @@ def clean_prompt_return_data(data, fields, resource=None):
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
             cleaned_data[key] = str(new_value.date())
+        if field.api_name == "dealstage":
+            if resource:
+                pipeline = field.options[0][resource.secondary_data["pipeline"]]
+                if pipeline:
+                    stage_value = data[key].lower()
+                    stage = [
+                        stage
+                        for stage in pipeline["stages"]
+                        if stage["label"].lower() == stage_value
+                    ]
+                    if len(stage):
+                        cleaned_data[key] = stage[0]["id"]
     logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
@@ -1077,11 +1093,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
-                data = eval(choice.replace("'", '"'))
+                data = eval(choice.replace("null", "'None'").replace("'", '"'))
                 resource_check = data.pop(resource_type, None)
                 if form_type == "CREATE" or resource_check:
                     if form_type == "UPDATE":
-                        resource_name = resource_check.split(" ")
+                        resource_name = resource_check.replace(",", " ").split(" ")
                         resource = (
                             CRM_SWITCHER[user.crm][resource_type]["model"]
                             .objects.filter(name__in=resource_name)

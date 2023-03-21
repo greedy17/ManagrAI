@@ -28,7 +28,7 @@ OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"Add to a summary for each of these key-value pairs {object} and if any of the values are unix convert to date time format"
 )
 OPEN_AI_UPDATE_PROMPT = (
-    lambda labels, prompt: f"If any of these values: {labels} are in this sentence: {prompt} add to an object the key and value, account for capitalization"
+    lambda labels, prompt: f"For each of the values in this array: {labels}, use this string '{prompt}' to add to an object the key and value, account for capitalization"
 )
 
 
