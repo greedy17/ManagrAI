@@ -90,30 +90,17 @@ def success_modal_block_set(context):
     message = context.get("message", ":white_check_mark: Success!")
     user = context.get("u")
     form_ids = context.get("form_ids")
-    if settings.IN_PROD:
-        blocks = [
-            block_builders.section_with_button_block(
-                "Send Recap",
-                "SEND_RECAP",
-                message,
-                action_id=action_with_params(
-                    slack_const.PROCESS_SEND_RECAP_MODAL,
-                    params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
-                ),
-            )
-        ]
-    else:
-        blocks = [
-            block_builders.section_with_button_block(
-                "Send Summary",
-                "SEND_RECAP",
-                message,
-                action_id=action_with_params(
-                    slack_const.PROCESS_SEND_RECAP_MODAL,
-                    params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
-                ),
-            )
-        ]
+    blocks = [
+        block_builders.section_with_button_block(
+            "Send Summary",
+            "SEND_RECAP",
+            message,
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_RECAP_MODAL,
+                params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
+            ),
+        )
+    ]
     return blocks
 
 
