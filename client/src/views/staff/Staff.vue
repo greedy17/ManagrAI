@@ -4276,10 +4276,12 @@ input[type='search']:focus {
   flex-direction: row-reverse
 }
 .delete_modal {
-  background-color: $white;
+  @include popup-modal();
+  // background-color: $white;
   color: $base-gray;
-  border-radius: 0.3rem;
-  width: 30vw;
+  // border-radius: 0.3rem;
+  // width: 30vw;
+  height: 16.5vh;
   letter-spacing: 0.75px;
   &__header {
     height: 2rem;

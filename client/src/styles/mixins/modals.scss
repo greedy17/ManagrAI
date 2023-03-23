@@ -10,6 +10,13 @@
     border: 1px solid #e8e8e8;
 }
 
+@mixin popup-modal() {
+    @include base-modal();
+    width: 20vw;
+    height: 15vh;
+    border: none;
+}
+
 @mixin small-modal() {
     @include base-modal();
     width: 37vw;

@@ -1,5 +1,8 @@
 @import 'mixins/modals';
 
+.popup-modal {
+    @include popup-modal;
+}
 .small-modal {
   @include small-modal;
 }
