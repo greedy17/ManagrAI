@@ -1245,4 +1245,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
         )
+    if not has_error and form_type == "UPDATE":
+        value_update = form.resource_object.update_database_values(cleaned_data)
     return
