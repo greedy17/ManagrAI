@@ -465,15 +465,10 @@ def actions_block_set(context):
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
     update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
-    if settings.IN_PROD:
-        options = [
-            block_builders.option(update_label, "UPDATE_RESOURCE"),
-        ]
-    else:
-        options = [
-            block_builders.option("Chat (Beta)", "OPEN_CHAT"),
-            block_builders.option(update_label, "UPDATE_RESOURCE"),
-        ]
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
+    options = [
+        block_builders.option(update_label, "UPDATE_RESOURCE"),
+    ]
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
     if user.crm == "SALESFORCE":
@@ -486,13 +481,21 @@ def actions_block_set(context):
     if hasattr(user, "gong_account"):
         options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
     blocks = [
+        block_builders.input_block(
+            f"Update {crm} by sending a message",
+            placeholder="Ex: push close date to next Friday for opportunity Nike",
+            block_id="CHAT_PROMPT",
+            multiline=True,
+            optional=False,
+        ),
+        block_builders.context_block("Powered by ChatGPT © :robot_face:"),
         block_builders.static_select(
-            ":male_genie: Need to get stuff done?  Select an action:",
+            "Or select a different action",
             options,
             f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
             block_id="select_action",
             placeholder="Type to search",
-        )
+        ),
     ]
     return blocks
 

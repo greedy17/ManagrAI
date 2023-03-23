@@ -991,7 +991,7 @@ def convert_date_string(date_string, value):
     if any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
         for key in split_date_string:
             if key in DAYS_TO_NUMBER.keys():
-                current = datetime.strptime(value, "%Y-%m-%d")
+                current = datetime.now()
                 start = current - timezone.timedelta(days=current.weekday())
                 day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
                 if any("next" in s for s in split_date_string):
@@ -1042,17 +1042,35 @@ def background_create_resource(crm):
         return _process_create_new_hs_resource
 
 
-def clean_prompt_return_data(data, fields, resource=None):
+def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data = dict(data)
     cleaned_data.pop("Notes", None)
     cleaned_data.pop("Note Subject", None)
     for key in cleaned_data.keys():
+        if data[key] is None:
+            if resource:
+                cleaned_data[key] = resource.secondary_data[key]
+            continue
         field = fields.get(api_name=key)
+        if field.api_name in ["Name", "dealname"]:
+            cleaned_data[key] = data[key]
+        if field.data_type == "TextArea":
+            if data[key] is not None:
+                current_value = (
+                    resource.secondary_data[key]
+                    if resource.secondary_data[key] is not None
+                    else " "
+                )
+                cleaned_data[key] = f"{data[key]}\n{current_value}"
         if field.data_type in ["Date", "DateTime"]:
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
-            cleaned_data[key] = str(new_value.date())
+            cleaned_data[key] = (
+                str(new_value.date())
+                if crm == "SALESFORCE"
+                else (str(new_value.date()) + "T00:00:00.000Z")
+            )
         if field.api_name == "dealstage":
             if resource:
                 pipeline = field.options[0][resource.secondary_data["pipeline"]]
@@ -1065,6 +1083,15 @@ def clean_prompt_return_data(data, fields, resource=None):
                     ]
                     if len(stage):
                         cleaned_data[key] = stage[0]["id"]
+                    else:
+                        cleaned_data[key] = resource.secondary_data["dealstage"]
+        if field.api_name in ["Amount", "amount"]:
+            amount = cleaned_data[key]
+            if "k" in amount:
+                amount = amount.replace("k", "000")
+            if "$" in amount:
+                amount = amount.replace("$", "")
+            cleaned_data[key] = amount
     logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
@@ -1076,10 +1103,13 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     user = User.objects.get(id=user_id)
     form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
-    fields = form_template.custom_fields.all()
+    fields = form_template.custom_fields.all().exclude(
+        api_name__in=["meeting_comments", "meeting_type"]
+    )
+    field_list = [resource_type]
     label_list = list(fields.values_list("label", flat=True))
-    label_list.append(resource_type)
-    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(label_list, prompt)
+    field_list.extend(label_list)
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
@@ -1093,14 +1123,17 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
-                data = eval(choice.replace("null", "'None'").replace("'", '"'))
+                data = eval(
+                    choice[choice.index("{") : choice.index("}") + 1]
+                    .replace("null", "'None'")
+                    .replace("'", '"')
+                )
                 resource_check = data.pop(resource_type, None)
                 if form_type == "CREATE" or resource_check:
                     if form_type == "UPDATE":
-                        resource_name = resource_check.replace(",", " ").split(" ")
                         resource = (
                             CRM_SWITCHER[user.crm][resource_type]["model"]
-                            .objects.filter(name__in=resource_name)
+                            .objects.filter(name__icontains=resource_check)
                             .first()
                         )
                         logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
@@ -1118,7 +1151,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
-                    cleaned_data = clean_prompt_return_data(swapped_field_data, fields, resource)
+                    cleaned_data = clean_prompt_return_data(
+                        swapped_field_data, fields, user.crm, resource
+                    )
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
@@ -1210,4 +1245,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
         )
+    if not has_error and form_type == "UPDATE":
+        value_update = form.resource_object.update_database_values(cleaned_data)
     return

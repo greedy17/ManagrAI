@@ -1095,7 +1095,7 @@ def paginated_meeting_blockset(context):
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             block = block_builders.section_with_button_block(
-                f"{'Send Recap' if settings.IN_PROD else 'Send Summary'}",
+                f"{'Send Summary'}",
                 "SEND_RECAP",
                 section_text=section_text,
                 block_id=str(workflow.id),

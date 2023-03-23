@@ -2899,10 +2899,7 @@ def process_send_recap_modal(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
-            "title": {
-                "type": "plain_text",
-                "text": f"{'Send Recaps' if settings.IN_PROD else 'Send Summary'}",
-            },
+            "title": {"type": "plain_text", "text": f"{'Send Summary'}",},
             "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
