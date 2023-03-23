@@ -980,6 +980,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/buttons';
 
 @mixin epic-sides() {
   position: relative;
@@ -1260,44 +1261,23 @@ export default {
   justify-content: space-between;
 }
 .select-btn1 {
-  border: 0.7px solid $soft-gray;
+  @include gray-text-button();
   padding: 0.45rem 1.25rem;
-  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: $base-gray;
-  letter-spacing: 0.75px;
   margin-right: 0.5rem;
-  transition: all 0.25s;
 
   img {
     filter: invert(50%) sepia(20%) saturate(1581%) hue-rotate(94deg) brightness(93%) contrast(90%);
   }
 }
 .add-button__ {
+  @include primary-button();
   display: flex;
   align-items: center;
-  border: none;
   padding: 0.4rem 0.75rem;
   font-size: 14px;
-  border-radius: 6px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-}
-.add-button__:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-}
-.cancel {
-  color: $dark-green;
-  font-weight: bold;
-  margin-left: 1rem;
-  cursor: pointer;
 }
 input {
   padding: 7px;
@@ -1403,14 +1383,9 @@ input {
   }
 }
 .cancel {
-  border: 1px solid $soft-gray;
-  font-weight: 400 !important;
-  letter-spacing: 1px;
+  @include gray-text-button();
   padding: 8px 12px;
   font-size: 13px;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
   margin-right: 0.5rem;
   color: $coral !important;
 }
@@ -1441,13 +1416,9 @@ input {
     }
 
     button {
-      border: 1px solid $dark-green;
-      color: $dark-green;
-      background-color: white;
-      border-radius: 4px;
+      @include white-button();
       padding: 5px 6px;
       font-size: 11px;
-      cursor: pointer;
       margin-top: 4px;
       margin-right: 4px;
     }

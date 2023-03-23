@@ -1,0 +1,14 @@
+@import 'mixins/modals';
+
+.popup-modal {
+    @include popup-modal;
+}
+.small-modal {
+  @include small-modal;
+}
+.medium-modal {
+  @include medium-modal;
+}
+.large-modal {
+  @include large-modal;
+}

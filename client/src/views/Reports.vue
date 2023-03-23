@@ -1053,15 +1053,9 @@ export default {
   margin-right: 6%;
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
+  @include primary-button();
   max-height: 2rem;
-  border-radius: 0.25rem;
   padding: 0.5rem 1.25rem;
-  font-size: 13px;
-  letter-spacing: 0.75px;
-  border: none;
-  cursor: pointer;
 }
 .pink_button {
   color: white;

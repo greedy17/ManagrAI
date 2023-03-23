@@ -155,14 +155,9 @@ export default {
   }
 }
 .green-button {
-  border: none;
+  @include primary-button();
   padding: 6px 12px;
   margin-right: 1rem;
-  border-radius: 8px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
   font-size: 12px;
 }
 .button-section {

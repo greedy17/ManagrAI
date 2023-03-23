@@ -10,25 +10,25 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form confirm-form form-margin-small">
+      <form v-if="true /*hasSlack*/" class="invite-form confirm-modal form-margin-small">
         <div class="header">
           <div class="flex-row" style="justify-content: space-between;">
-            <div class="flex-row">
-              <img src="@/assets/images/logo.png" class="logo" alt="" />
+            <div class="flex-row" style="margin-top: -0rem;">
+              <img src="@/assets/images/logo.png" class="logo" alt="" style="margin-right: 0.5rem;" />
               <h3 class="invite-form__title">Are you sure?</h3>
             </div>
             <img
               src="@/assets/images/close.svg"
-              style="height: 1.25rem; margin-top: -6rem; cursor: pointer; margin-right: 1rem;"
+              style="height: 1.25rem; margin-top: -0rem; cursor: pointer; margin-right: 1rem;"
               @click="handleConfirmCancel"
               alt=""
             />
           </div>
           <div class="flex-row">
-            <h4 class="invite-form__subtitle">
+            <div class="invite-form__subtitle" style="margin-top: 1.5rem;">
               By clicking Confirm, you will be transferring the Admin role to
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
-            </h4>
+            </div>
           </div>
         </div>
         <div class="invite-form__actions">
@@ -38,7 +38,7 @@
               <PulseLoadingSpinnerButton
                 @click="changeAdminSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 5%; height: 2rem"
+                style="width: 5rem; margin-right: 5%; height: 2rem;"
                 text="Confirm"
                 :loading="pulseLoading"
                 >Confirm</PulseLoadingSpinnerButton
@@ -48,20 +48,22 @@
         </div>
       </form>
     </Modal>
-    <Modal v-if="deleteOpen">
+    <Modal v-if="deleteOpen" style="margin-top: 10rem;">
       <div class="delete_modal">
         <div class="delete_modal__header">
-          <h4>Delete Org</h4>
-          <img
+          <img style="height: 28px" src="@/assets/images/logo.png" />
+          <h4>Deactivate Org</h4>
+          <div style="width: 28px;"></div>
+          <!-- <img
             @click="deleteOpen = !deleteOpen"
             src="@/assets/images/close.svg"
             height="22px"
             alt=""
-          />
+          /> -->
         </div>
 
         <div class="delete_modal__body">
-          <p>This can't be reversed. Are you sure?</p>
+          <p>Are you sure?</p>
         </div>
 
         <div class="delete_modal__footer">
@@ -1045,7 +1047,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
           <div class="flex-row" style="justify-content: space-between; width: 100%">
             <div class="flex-row">
@@ -1150,7 +1152,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
           <div class="flex-row" style="justify-content: space-between; width: 100%;">
             <div class="flex-row">
@@ -1249,7 +1251,7 @@
         }
       "
     >
-      <form v-if="true /*hasSlack*/" class="invite-form modal-form" style="margin-top: 7.5rem">
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -3446,6 +3448,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 .staff {
   margin-top: 3rem;
@@ -3479,14 +3482,8 @@ ul {
   padding: 0;
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 0.25rem;
+  @include primary-button();
   padding: 0.5rem 1rem;
-  font-weight: bold;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
 }
 .sized {
   height: 3em;
@@ -3519,12 +3516,8 @@ input[type='search']:focus {
   cursor: pointer;
 }
 .modal-container {
-  background-color: $white;
-  overflow: auto;
-  width: 60vw;
-  height: 88vh;
+  @include large-modal();
   align-items: center;
-  border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
 
   &__header {
@@ -4021,15 +4014,10 @@ input[type='search']:focus {
   }
 }
 .invite-form {
+  @include small-modal();
   border: none;
-  border-radius: 0.75rem;
-  min-width: 37vw;
-  // min-height: 64vh;
-  display: flex;
   align-items: center;
-  justify-content: space-around;
-  flex-direction: column;
-  background-color: white;
+  justify-content: space-between;
   color: $base-gray;
   &__title {
     font-weight: bold;
@@ -4061,53 +4049,18 @@ input[type='search']:focus {
     margin-top: 1rem;
   }
 }
-.modal-form {
-  width: 100%;
-  background-color: $white;
-  height: 40vh;
-  // justify-content: space-evenly;
-}
-.confirm-form {
-  width: 37vw;
-  height: 38vh;
+.confirm-modal {
+  height: 25vh;
 }
 .form-margin-small {
   margin-top: 10rem;
 }
 .invite_button {
+  @include gray-text-button();
   display: flex;
   flex-direction: row;
-  color: $base-gray;
-  background-color: white;
-  border-radius: 6px;
-  transition: all 0.25s;
   padding: 8px 12px;
   margin-left: 8px;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-  border: 1px solid #e8e8e8;
-}
-.invite_button:disabled {
-  display: flex;
-  flex-direction: row;
-  color: $base-gray;
-  background-color: $soft-gray;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-weight: 400px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-}
-
-.invite_button:disabled:hover {
-  color: $base-gray;
-  cursor: text;
-}
-
-.invite_button:hover {
-  cursor: pointer;
-  color: $dark-green;
 }
 .modal-button {
   @include primary-button();
@@ -4300,12 +4253,11 @@ input[type='search']:focus {
   }
 }
 .invite-button {
-  background-color: $dark-green;
-  color: white;
-  margin-top: 2.5rem;
+  @include primary-button();
+  // margin-top: 2.5rem;
+  margin-bottom: 1rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
 .main-content {
   margin-top: 15vh;
@@ -4322,5 +4274,53 @@ input[type='search']:focus {
 }
 .apexcharts-legend {
   flex-direction: row-reverse
+}
+.delete_modal {
+  @include popup-modal();
+  // background-color: $white;
+  color: $base-gray;
+  // border-radius: 0.3rem;
+  // width: 30vw;
+  height: 16.5vh;
+  letter-spacing: 0.75px;
+  &__header {
+    height: 2rem;
+    padding: 0px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 400;
+    // img {
+    //   margin-top: -1rem;
+    //   cursor: pointer;
+    // }
+  }
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0px 8px 8px 0px;
+  }
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0px;
+    margin: 0 1rem;
+  }
+}
+.delete {
+  @include white-button-danger();
+  padding: 8px 16px;
+  margin-right: 8px;
+}
+.no__button {
+  @include gray-text-button();
+  padding: 8px 16px;
+  margin-right: 8px;
+}
+.no__button:hover {
+  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+  scale: 1.025;
 }
 </style>

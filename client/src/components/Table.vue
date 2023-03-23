@@ -574,6 +574,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/modals';
 
 @keyframes shimmer {
   100% {
@@ -885,12 +886,13 @@ span.ui-column-resizer:hover {
   }
 }
 .modal-container {
-  background-color: $white;
-  overflow: auto;
-  width: 20vw;
-  height: 15vh;
-  align-items: center;
-  border-radius: 0.3rem;
+  @include popup-modal();
+  // background-color: $white;
+  // overflow: auto;
+  // width: 20vw;
+  // height: 15vh;
+  // align-items: center;
+  // border-radius: 0.3rem;
   // border: 1px solid #e8e8e8;
 
   &__header {

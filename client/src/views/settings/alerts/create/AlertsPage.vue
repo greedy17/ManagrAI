@@ -4,7 +4,7 @@
       <h3>Popular Workflow Automations</h3>
       <p style="margin-top: -0.5rem" class="sub__">Step 2/2: Activate at least 2 workflows</p>
       <button
-        class="orange_button bouncy"
+        class="green_button bouncy"
         v-if="isOnboarding && user.activatedTemplateRef.includes('Close Date Passed')"
         @click="onboardComplete"
       >
@@ -65,8 +65,8 @@
               @click="goToLogZoom"
               :class="
                 !isAdmin && userlevel !== 'MANAGER' && isOnboarding
-                  ? 'orange_button bouncy'
-                  : 'orange_button'
+                  ? 'green_button bouncy'
+                  : 'green_button'
               "
             >
               Activate
@@ -115,8 +115,8 @@
               @click="goToCloseDatePassed"
               :class="
                 userLevel !== 'MANAGER' && isOnboarding && hasZoomChannel
-                  ? 'orange_button bouncy'
-                  : 'orange_button'
+                  ? 'green_button bouncy'
+                  : 'green_button'
               "
             >
               Activate
@@ -185,8 +185,8 @@
               @click="goToLogZoom"
               :class="
                 !isAdmin && userlevel !== 'MANAGER' && isOnboarding
-                  ? 'orange_button bouncy'
-                  : 'orange_button'
+                  ? 'green_button bouncy'
+                  : 'green_button'
               "
             >
               Activate
@@ -235,8 +235,8 @@
               @click="goToCloseDatePassed"
               :class="
                 userLevel !== 'MANAGER' && isOnboarding && hasZoomChannel
-                  ? 'orange_button bouncy'
-                  : 'orange_button'
+                  ? 'green_button bouncy'
+                  : 'green_button'
               "
             >
               Activate
@@ -290,7 +290,7 @@
                 hasSalesforceIntegration && !user.activatedTemplateRef.includes('90 Day Pipeline')
               "
               @click="goToUpdateForecast"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -340,7 +340,7 @@
             <button
               v-if="hasSalesforceIntegration && !user.activatedTemplateRef.includes('Deal Review')"
               @click="goToDealRotting"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -394,7 +394,7 @@
                 !user.activatedTemplateRef.includes('Close Date Approaching')
               "
               @click="goToCloseDateApproaching"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -450,7 +450,7 @@
                 !user.activatedTemplateRef.includes('Upcoming Next Step')
               "
               @click="goToNextStep"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -504,7 +504,7 @@
                 !user.activatedTemplateRef.includes('Required Field Empty')
               "
               @click="goToEmptyField"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -558,7 +558,7 @@
                 !user.activatedTemplateRef.includes('Large Opportunities')
               "
               @click="goToLargeOpps"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -602,7 +602,7 @@
                 hasSalesforceIntegration && !user.activatedTemplateRef.includes('Team Pipeline')
               "
               @click="goToTeamPipeline"
-              class="orange_button"
+              class="green_button"
             >
               Activate
             </button>
@@ -849,14 +849,9 @@ export default {
   align-items: center;
   width: 82vw;
 }
-.orange_button {
-  background-color: $dark-green;
-  color: white;
-  font-size: 14px;
-  border-radius: 0.3rem;
-  border: 2px solid $dark-green;
+.green_button {
+  @include primary-button();
   padding: 0.25rem 1.25rem;
-  cursor: pointer;
 }
 .active-workflow {
   display: flex;

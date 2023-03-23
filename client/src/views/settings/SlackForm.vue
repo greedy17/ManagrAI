@@ -893,15 +893,6 @@ export default {
 .invert2 {
   filter: invert(80%);
 }
-.img-border {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e8e8e8;
-  border-radius: 0.2rem;
-  cursor: pointer;
-  padding: 0.15rem 0.3rem;
-}
 .label {
   font-size: 0.85rem;
 }
@@ -910,13 +901,9 @@ export default {
   font-size: 0.85rem;
 }
 .default_button {
+  @include white-button();
   padding: 0.5rem 1rem;
   margin-top: 0.5rem;
-  border-radius: 0.2rem;
-  border: none;
-  cursor: pointer;
-  color: $dark-green;
-  background: white;
 
   img {
     height: 0.75rem;
@@ -1042,13 +1029,9 @@ img:hover {
   opacity: 0.8;
 }
 .save {
+  @include primary-button();
   padding: 0.6rem 1.5rem;
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
   margin-left: 0.5rem;
-  cursor: pointer;
 }
 .disabled {
   padding: 0.5rem 1rem;

@@ -6,3 +6,19 @@
 .secondary-button {
   @include secondary-button;
 }
+
+.gray-text-button {
+  @include gray-text-button;
+}
+
+.button-danger {
+  @include button-danger;
+}
+
+.white-button {
+  @include white-button;
+}
+
+.white-button-danger {
+  @include white-button-danger;
+}

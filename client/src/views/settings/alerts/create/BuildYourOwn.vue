@@ -1274,19 +1274,11 @@ button img {
   filter: invert(99%);
 }
 .white_button {
+  @include white-button();
   font-size: 13px;
   margin-right: 12px;
   padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid $dark-green;
-  background-color: white;
-  color: $dark-green;
   margin-top: 24px;
-}
-.white_button:disabled {
-  background-color: $soft-gray;
-  color: $gray;
-  border: none;
 }
 textarea {
   @extend .textarea;
@@ -1358,16 +1350,11 @@ textarea {
   }
 }
 .gold__button {
+  @include primary-button();
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 6px 10px;
-  border-radius: 4px;
-  letter-spacing: 0.75px;
-  border: none;
-  color: white;
-  background-color: $dark-green;
-  cursor: pointer;
   font-size: 14px;
   margin-top: 8px;
   // margin-bottom: -8px;

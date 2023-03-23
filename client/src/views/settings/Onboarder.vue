@@ -1107,6 +1107,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/modals';
 
 @keyframes pulse {
   0% {
@@ -1147,13 +1148,14 @@ export default {
   padding: 0;
 }
 .modal {
-  background-color: $white;
-  overflow-y: scroll;
+  @include medium-modal();
+  // background-color: $white;
+  // overflow-y: scroll;
   overflow-x: hidden;
-  width: 42vw;
-  height: 70vh;
+  // width: 42vw;
+  // height: 70vh;
   align-items: center;
-  border-radius: 4px;
+  // border-radius: 4px;
   padding: 16px;
   position: relative;
 

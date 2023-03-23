@@ -329,7 +329,7 @@
 
             <div class="img-border" @click="viewAdminPage" v-if="getUser.isStaff">
               <img
-                style="filter: invert(40%); margin-left: 8px"
+                style="filter: invert(40%); margin-left: -8px;"
                 src="@/assets/images/adminPanel.svg"
                 class="nav-img"
                 height="18px"
@@ -387,55 +387,6 @@
               >
             </div>
           </div>
-
-          <!-- <div v-show="selectingOption" class="options">
-            <p v-if="!updateInfoSelected" @click="updateInfo">Edit Info</p>
-            <p v-if="!manageTeamSelected" @click="manageTeam">Manage Team</p>
-            <div class="options__section">
-              <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
-                Change Admin
-              </button>
-              <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
-                Create New Team
-              </button>
-
-              <div class="tooltip">
-                <button
-                  :disabled="team.list.length >= numberOfAllowedUsers"
-                  class="invite_button"
-                  type="submit"
-                  @click="handleInvite"
-                >
-                  Invite Member
-
-                  <div v-if="team.list.length >= numberOfAllowedUsers">
-                    <img
-                      v-if="hasSlack"
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/lock.svg"
-                      alt=""
-                    />
-                  </div>
-
-                  <div v-else>
-                    <img
-                      v-if="hasSlack"
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/slackLogo.png"
-                      alt=""
-                    />
-                    <img
-                      v-else
-                      style="height: 0.8rem; margin-left: 0.25rem"
-                      src="@/assets/images/logo.png"
-                      alt=""
-                    />
-                  </div>
-                </button>
-                <small class="tooltiptext">User limit exceeded: {{ numberOfAllowedUsers }}</small>
-              </div>
-            </div>
-          </div> -->
         </div>
       </div>
     </section>
@@ -554,7 +505,34 @@ export default {
       user: this.getUser,
       timezones: moment.tz.names(),
       profileForm: new UserProfileForm({}),
-      inviteActions: [{label: 'Uninvite', action: () => console.log('uninvite')}],
+      inviteActions: [
+          {
+            label: 'Uninvite', 
+            action: (thisPassed, member) => {
+              if ((member.isAdmin || member.is_admin)) {
+                thisPassed.$toast('Cannot uninvite the current admin.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              if (!member.isActive && !member.is_active) {
+                thisPassed.$toast('User already deactivated.', {
+                  timeout: 2000,
+                  position: 'top-left',
+                  type: 'error',
+                  toastClassName: 'custom',
+                  bodyClassName: ['custom'],
+                })
+                return
+              }
+              thisPassed.openUninviteModal(member.id)
+            },
+          },
+      ],
       loading: false,
     }
   },
@@ -852,6 +830,7 @@ export default {
 @import '@/styles/mixins/inputs';
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
+@import '@/styles/mixins/modals';
 
 ::v-deep .ql-toolbar.ql-snow {
   display: flex;
@@ -890,7 +869,7 @@ export default {
 }
 .modal-header {
   width: 100%;
-  margin-top: -1.5rem;
+  // margin-top: -1.5rem;
   display: flex;
   justify-content: space-between;
 }
@@ -981,16 +960,14 @@ export default {
   margin-top: 15vh;
 }
 .img-border {
+  @include gray-text-button();
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $soft-gray;
   border-radius: 100%;
   height: 26px;
   width: 26px;
   padding-right: 8px;
-  cursor: pointer;
-  background-color: white;
 }
 .template-input {
   border: 1px solid #ccc;
@@ -1069,39 +1046,11 @@ h2 {
 }
 
 .invite_button {
+  @include gray-text-button();
   display: flex;
   flex-direction: row;
-  color: $base-gray;
-  background-color: white;
-  border-radius: 6px;
-  transition: all 0.25s;
   padding: 8px 12px;
   margin-left: 8px;
-  font-size: 14px;
-  letter-spacing: 0.75px;
-  border: 1px solid #e8e8e8;
-}
-.invite_button:disabled {
-  display: flex;
-  flex-direction: row;
-  color: $base-gray;
-  background-color: $soft-gray;
-  border-radius: 0.25rem;
-  transition: all 0.25s;
-  padding: 8px 12px;
-  font-weight: 400px;
-  font-size: 14px;
-  border: 1px solid #e8e8e8;
-}
-
-.invite_button:disabled:hover {
-  color: $base-gray;
-  cursor: text;
-}
-
-.invite_button:hover {
-  cursor: pointer;
-  color: $dark-green;
 }
 input[type='checkbox']:checked + label::after {
   content: '';
@@ -1261,12 +1210,10 @@ input[type='checkbox'] + label::before {
 //   justify-content: space-evenly;
 // }
 .invite-button {
-  background-color: $dark-green;
-  color: white;
+  @include primary-button();
   margin-top: 2.5rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
 // button {
 //   @include primary-button();
@@ -1276,13 +1223,12 @@ input[type='checkbox'] + label::before {
 //   font-size: 14px;
 // }
 .invite-form {
-  border: none;
-  border-radius: 0.75rem;
+  @include small-modal();
   min-width: 37vw;
   // min-height: 64vh;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
   flex-direction: column;
   background-color: white;
   color: $base-gray;
@@ -1308,6 +1254,7 @@ input[type='checkbox'] + label::before {
     justify-content: flex-end;
     align-items: center;
     border-top: 1px solid $soft-gray;
+    margin-bottom: 1rem;
   }
   &__actions-noslack {
     display: flex;
@@ -1329,12 +1276,12 @@ input[type='checkbox'] + label::before {
   // color: #35495e;
   color: $very-light-gray;
 }
-.modal-form {
-  width: 100%;
-  background-color: $white;
-  height: 40vh;
-  // justify-content: space-evenly;
-}
+// .modal-form {
+//   width: 100%;
+//   background-color: $white;
+//   height: 40vh;
+//   // justify-content: space-evenly;
+// }
 .modal-button {
   @include primary-button();
   box-shadow: none;
