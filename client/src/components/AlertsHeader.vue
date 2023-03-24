@@ -64,7 +64,7 @@
         {{ buttonText }}
       </button>
 
-      <div v-else>
+      <div v-else style="display: flex;">
         <button @click="deleteItem(deleteId)" class="delete">Delete</button>
         <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
           Update
@@ -97,7 +97,7 @@
         {{ buttonText }}
       </button>
 
-      <div v-else>
+      <div v-else style="display: flex;">
         <button @click="deleteItem(deleteId)" class="delete">Delete</button>
         <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
           Update
@@ -302,42 +302,24 @@ export default {
   background-color: white;
 }
 .save {
+  @include primary-button();
   padding: 8px 20px;
-  font-size: 13px;
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
 }
 .gray-text {
   color: $light-gray-blue;
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
-  border-radius: 6px;
+  @include primary-button();
   padding: 8px 12px;
   font-size: 12px;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-}
-.green_button:disabled {
-  background-color: $soft-gray;
-  color: $gray;
 }
 .right-margin {
   margin-right: 40px;
 }
 .delete {
-  background-color: $coral;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
+  @include button-danger();
+  font-size: 12px;
   padding: 8px 16px;
-  margin-left: 8px;
 }
 .center-row {
   display: flex;

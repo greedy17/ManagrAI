@@ -2332,6 +2332,7 @@ export default {
 @import '@/styles/sidebars';
 @import '@/styles/mixins/buttons';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 @keyframes bounce {
   0% {
@@ -2753,23 +2754,13 @@ img:hover {
   cursor: pointer;
 }
 .save {
+  @include primary-button();
   padding: 8px 20px;
-  font-size: 13px;
-  background-color: $dark-green;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
 }
 .red-button {
+  @include button-danger();
   padding: 8px 20px;
   margin-top: 1rem;
-  font-size: 13px;
-  background-color: $coral;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
 }
 .custom-object-button {
   padding: 8px 20px;
@@ -2809,17 +2800,11 @@ img:hover {
   align-items: center;
 }
 .opp-modal-container {
-  display: flex;
-  flex-direction: column;
-  overflow-y: scroll;
-  background-color: white;
-  width: 35vw;
-  height: 70vh;
-  border-radius: 0.5rem;
+  @include medium-modal();
   padding: 1rem;
 }
 .modal-container {
-  background-color: $white;
+  // @include large-modal();
   overflow: auto;
   min-width: 36vw;
   max-width: 36vw;
@@ -2871,20 +2856,20 @@ img:hover {
       brightness(93%) contrast(89%);
   }
 }
-.cancel {
-  color: $dark-green;
-  font-weight: bold;
-  margin-left: 1rem;
-  cursor: pointer;
-  padding-top: 8px;
-  padding-bottom: 0;
-  letter-spacing: 0.75px;
-  color: $base-gray;
+// .cancel {
+//   color: $dark-green;
+//   font-weight: bold;
+//   margin-left: 1rem;
+//   cursor: pointer;
+//   padding-top: 8px;
+//   padding-bottom: 0;
+//   letter-spacing: 0.75px;
+//   color: $base-gray;
 
-  h4 {
-    font-weight: 400;
-  }
-}
+//   h4 {
+//     font-weight: 400;
+//   }
+// }
 .logo2 {
   height: 1.75rem;
   margin-left: 0.5rem;
@@ -2900,14 +2885,9 @@ img:hover {
   }
 }
 .cancel {
-  border: 1px solid $soft-gray;
-  font-weight: 400 !important;
-  letter-spacing: 1px;
+  @include gray-text-button();
   padding: 8px 12px;
   font-size: 13px;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
   margin-right: 0.5rem;
   color: $coral !important;
 }
@@ -2915,17 +2895,16 @@ img:hover {
   display: flex;
 }
 .img-button {
-  background-color: transparent;
-  padding: 4px 6px;
-  margin-right: 0.5rem;
-  border: none;
-}
-.img-border {
-  border: 1px solid #eeeeee;
+  @include gray-text-button();
   padding: 4px 6px 3px 6px;
-  border-radius: 6px;
-  background-color: white;
+  margin-right: 0.5rem;
 }
+// .img-border {
+//   border: 1px solid #eeeeee;
+//   padding: 4px 6px 3px 6px;
+//   border-radius: 6px;
+//   background-color: white;
+// }
 .fields-container {
   border: 1px solid $soft-gray;
   background-color: white;

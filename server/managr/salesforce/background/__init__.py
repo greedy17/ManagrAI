@@ -1755,46 +1755,46 @@ def _send_recap(form_ids, send_to_data=None, manager_recap=False, bulk=False):
                 text += ", "
     else:
         text = f"_{main_form.template.resource}_ *{resource_name}*"
-    if settings.IN_PROD:
-        blocks = [
-            block_builders.simple_section(title, "mrkdwn"),
-            block_builders.section_with_button_block(
-                "View Recap",
-                "recap",
-                text,
-                action_id=action_with_params(
-                    slack_consts.VIEW_RECAP,
-                    params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
-                ),
-            ),
-            block_builders.context_block(
-                f"{main_form.template.resource} owned by {user.full_name}"
-            ),
-        ]
-    else:
-        main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
-        main_form.save()
-        user = main_form.user
-        old_data = dict()
-        if main_form.template.form_type == "UPDATE":
-            for additional_stage_form in submitted_forms:
-                old_data = {**old_data, **additional_stage_form.previous_data}
-        new_data = dict()
-        for form in submitted_forms:
-            new_data = {**new_data, **form.saved_data}
-        blocks = [
-            block_builders.simple_section(title, "mrkdwn"),
-        ]
-        cleaned_data = clean_data_for_summary(
-            str(user.id),
-            new_data,
-            main_form.resource_object.integration_id,
-            main_form.template.resource,
-        )
-        completions_prompt = get_summary_completion(user, cleaned_data)
-        message_string_for_recap = completions_prompt["choices"][0]["text"]
-        blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
-        blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
+    # if settings.IN_PROD:
+    #     blocks = [
+    #         block_builders.simple_section(title, "mrkdwn"),
+    #         block_builders.section_with_button_block(
+    #             "View Recap",
+    #             "recap",
+    #             text,
+    #             action_id=action_with_params(
+    #                 slack_consts.VIEW_RECAP,
+    #                 params=[f"u={str(user.id)}", f"form_ids={','.join(form_ids)}"],
+    #             ),
+    #         ),
+    #         block_builders.context_block(
+    #             f"{main_form.template.resource} owned by {user.full_name}"
+    #         ),
+    #     ]
+    # else:
+    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
+    main_form.save()
+    user = main_form.user
+    old_data = dict()
+    if main_form.template.form_type == "UPDATE":
+        for additional_stage_form in submitted_forms:
+            old_data = {**old_data, **additional_stage_form.previous_data}
+    new_data = dict()
+    for form in submitted_forms:
+        new_data = {**new_data, **form.saved_data}
+    blocks = [
+        block_builders.simple_section(title, "mrkdwn"),
+    ]
+    cleaned_data = clean_data_for_summary(
+        str(user.id),
+        new_data,
+        main_form.resource_object.integration_id,
+        main_form.template.resource,
+    )
+    completions_prompt = get_summary_completion(user, cleaned_data)
+    message_string_for_recap = completions_prompt["choices"][0]["text"]
+    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
+    blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     if manager_recap:
         user_channel_list = UserSlackIntegration.objects.filter(
             slack_id__in=user.slack_integration.recap_receivers

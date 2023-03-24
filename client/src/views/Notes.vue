@@ -336,6 +336,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/buttons';
 .shimmer {
   display: inline-block;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
@@ -407,24 +408,10 @@ export default {
   }
 }
 .green_button {
-  color: white;
-  background-color: $dark-green;
+  @include primary-button();
   max-height: 2rem;
-  border-radius: 0.25rem;
   padding: 0.5rem 1.25rem;
   font-size: 12px;
-  border: none;
-  cursor: pointer;
-}
-.green_button:disabled {
-  color: $base-gray;
-  background-color: $soft-gray;
-  max-height: 2rem;
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
 }
 
 .row {
@@ -622,14 +609,11 @@ input[type='checkbox'] + label::before {
   margin-right: 8px;
 }
 .img-border {
+  @include gray-text-button();
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $soft-gray;
-  border-radius: 6px;
-  cursor: pointer;
   padding: 8px;
-  background-color: white;
   img {
     filter: invert(40%);
   }

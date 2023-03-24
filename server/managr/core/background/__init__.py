@@ -1047,13 +1047,13 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data.pop("Notes", None)
     cleaned_data.pop("Note Subject", None)
     for key in cleaned_data.keys():
-        if data[key] is None:
+        field = fields.get(api_name=key)
+        if field.api_name in ["Name", "dealname"]:
+            cleaned_data[key] = resource.secondary_data[key]
+        if cleaned_data[key] is None:
             if resource:
                 cleaned_data[key] = resource.secondary_data[key]
             continue
-        field = fields.get(api_name=key)
-        if field.api_name in ["Name", "dealname"]:
-            cleaned_data[key] = data[key]
         if field.data_type == "TextArea":
             if data[key] is not None:
                 current_value = (

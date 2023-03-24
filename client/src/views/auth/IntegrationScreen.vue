@@ -794,6 +794,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 .shimmer {
   display: inline-block;
@@ -853,12 +854,10 @@ a {
   align-items: center;
 }
 .img-border {
+  @include gray-text-button();
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $soft-gray;
-  border-radius: 6px;
-  cursor: pointer;
   padding: 4px 6px;
   margin-right: 8px;
 }
@@ -1049,14 +1048,10 @@ a {
   }
 }
 .orange_button {
+  @include gray-text-button();
   color: $dark-green;
-  background-color: white;
-  border-radius: 6px;
   padding: 6px 12px;
-  font-weight: 600;
   font-size: 11px;
-  border: 1px solid $soft-gray;
-  cursor: pointer;
 }
 .slot-icon {
   display: flex;
@@ -1071,15 +1066,11 @@ a {
   }
 }
 .invite-form {
-  border: none;
-  border-radius: 0.75rem;
+  @include small-modal();
   min-width: 37vw;
   // min-height: 64vh;
-  display: flex;
   align-items: center;
-  justify-content: space-around;
-  flex-direction: column;
-  background-color: white;
+  justify-content: space-between;
   color: $base-gray;
   &__title {
     font-weight: bold;
@@ -1111,15 +1102,15 @@ a {
     margin-top: 1rem;
   }
 }
-.modal-form {
-  width: 100%;
-  background-color: $white;
-  height: 40vh;
-  // justify-content: space-evenly;
-}
+// .modal-form {
+//   width: 100%;
+//   background-color: $white;
+//   height: 40vh;
+//   // justify-content: space-evenly;
+// }
 .confirm-form {
-  width: 37vw;
-  height: 30vh;
+  // width: 37vw;
+  height: 24vh;
 }
 .form-margin-small {
   margin-top: 10rem;
@@ -1168,20 +1159,18 @@ a {
     brightness(93%) contrast(89%);
 }
 .invite-button {
-  background-color: $dark-green;
-  color: white;
-  margin-top: 2.5rem;
+  @include primary-button();
+  // margin-top: 2.5rem;
+  margin-bottom: 1rem;
   width: 15vw;
   font-size: 16px;
-  box-shadow: none;
 }
 .modal-button {
   @include primary-button();
-  box-shadow: none;
-  margin-top: 1.5rem;
-  height: 2.5rem;
-  width: 19rem;
-  font-size: 14px;
+  // box-shadow: none;
+  margin-top: 1rem;
+  // height: 2.5rem;
+  // width: 19rem;
 }
 
 // Tooltip

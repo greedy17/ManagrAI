@@ -940,38 +940,13 @@ a {
   cursor: pointer;
 }
 .white-button {
-  border: 1px solid $soft-gray;
+  @include white-button();
   padding: 8px 12px;
-  margin-right: 1rem;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  color: $dark-green;
-  transition: all 0.3s;
-  font-size: 12px;
-  letter-spacing: 0.75px;
 }
 .add-button {
-  border: none;
+  @include primary-button();
   padding: 8px 12px;
   margin-right: 1rem;
-  border-radius: 8px;
-  background-color: $dark-green;
-  cursor: pointer;
-  color: white;
-  transition: all 0.3s;
-  font-size: 12px;
-}
-.add-button:disabled {
-  border: none;
-  padding: 8px 12px;
-  margin-right: 1rem;
-  border-radius: 8px;
-  background-color: $soft-gray;
-  cursor: text;
-  color: $gray;
-  transition: all 0.3s;
-  font-size: 12px;
 }
 .no-update {
   border: none;
