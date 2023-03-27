@@ -1692,7 +1692,10 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "OwnerId"
-    cleaned_data.pop(owner_field)
+    try:
+        cleaned_data.pop(owner_field)
+    except KeyError:
+        owner_field = None
     if "meeting_comments" in data.keys() and data["meeting_comments"] is None:
         cleaned_data.pop("meeting_comments")
         cleaned_data.pop("meeting_type")

@@ -1048,7 +1048,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data.pop("Note Subject", None)
     for key in cleaned_data.keys():
         field = fields.get(api_name=key)
-        if field.api_name in ["Name", "dealname"]:
+        if resource and field.api_name in ["Name", "dealname"]:
             cleaned_data[key] = resource.secondary_data[key]
         if cleaned_data[key] is None:
             if resource:
@@ -1134,6 +1134,10 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                         resource = (
                             CRM_SWITCHER[user.crm][resource_type]["model"]
                             .objects.filter(name__icontains=resource_check)
+                            .first()
+                            if resource_type not in ["Contact", "Lead"]
+                            else CRM_SWITCHER[user.crm][resource_type]["model"]
+                            .objects.filter(email__icontains=resource_check)
                             .first()
                         )
                         logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
