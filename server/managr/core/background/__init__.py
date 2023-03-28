@@ -1061,7 +1061,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                     if resource.secondary_data[key] is not None
                     else " "
                 )
-                cleaned_data[key] = f"{data[key]}\n{current_value}"
+                cleaned_data[key] = f"{data[key]}\n\n{current_value}"
         if field.data_type in ["Date", "DateTime"]:
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
@@ -1194,9 +1194,14 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             form.submission_date = datetime.now()
             form.save()
             blocks = [
-                block_builders.simple_section(
+                block_builders.section_with_button_block(
+                    "Send Summary",
+                    "SEND_RECAP",
                     f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}",
-                    "mrkdwn",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_SEND_RECAP_MODAL,
+                        params=[f"u={user_id}", f"form_ids={str(form.id)}", "type=command"],
+                    ),
                 )
             ]
             break
