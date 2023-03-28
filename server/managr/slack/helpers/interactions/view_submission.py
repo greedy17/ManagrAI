@@ -2587,7 +2587,7 @@ def process_get_summary(payload, context):
 def process_submit_chat_prompt(payload, context):
     user = User.objects.get(id=context.get("u"))
     resource_list = (
-        ["Opportunity", "Account", "Contact"]
+        ["Opportunity", "Account", "Contact", "Lead"]
         if user.crm == "SALESFORCE"
         else ["Company", "Deal", "Contact"]
     )

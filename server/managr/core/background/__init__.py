@@ -1048,7 +1048,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data.pop("Note Subject", None)
     for key in cleaned_data.keys():
         field = fields.get(api_name=key)
-        if field.api_name in ["Name", "dealname"]:
+        if resource and field.api_name in ["Name", "dealname"]:
             cleaned_data[key] = resource.secondary_data[key]
         if cleaned_data[key] is None:
             if resource:
@@ -1061,7 +1061,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                     if resource.secondary_data[key] is not None
                     else " "
                 )
-                cleaned_data[key] = f"{data[key]}\n{current_value}"
+                cleaned_data[key] = f"{data[key]}\n\n{current_value}"
         if field.data_type in ["Date", "DateTime"]:
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
@@ -1135,6 +1135,10 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             CRM_SWITCHER[user.crm][resource_type]["model"]
                             .objects.filter(name__icontains=resource_check)
                             .first()
+                            if resource_type not in ["Contact", "Lead"]
+                            else CRM_SWITCHER[user.crm][resource_type]["model"]
+                            .objects.filter(email__icontains=resource_check)
+                            .first()
                         )
                         logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
                         form = OrgCustomSlackFormInstance.objects.create(
@@ -1190,9 +1194,14 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             form.submission_date = datetime.now()
             form.save()
             blocks = [
-                block_builders.simple_section(
+                block_builders.section_with_button_block(
+                    "Send Summary",
+                    "SEND_RECAP",
                     f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}",
-                    "mrkdwn",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_SEND_RECAP_MODAL,
+                        params=[f"u={user_id}", f"form_ids={str(form.id)}", "type=command"],
+                    ),
                 )
             ]
             break
