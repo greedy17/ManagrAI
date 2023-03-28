@@ -1055,7 +1055,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                 cleaned_data[key] = resource.secondary_data[key]
             continue
         if field.data_type == "TextArea":
-            if data[key] is not None:
+            if resource and data[key] is not None:
                 current_value = (
                     resource.secondary_data[key]
                     if resource.secondary_data[key] is not None
@@ -1151,6 +1151,12 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                         form = OrgCustomSlackFormInstance.objects.create(
                             template=form_template, user=user, update_source="chat",
                         )
+                        if user.crm == "SALESFORCE":
+                            if resource_type in ["Opportunity", "Account"]:
+                                data["Name"] = resource_check
+                        else:
+                            if resource_type == "Deal":
+                                data["Deal Name"] = resource_check
                         resource = None
                     owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
                     data[owner_field] = user.crm_account.crm_id
