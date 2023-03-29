@@ -1096,6 +1096,16 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     return cleaned_data
 
 
+def set_owner_field(resource, crm):
+    if resource in ["Opportunity", "Account", "Contact"] and crm == "HUBSPOT":
+        return "Owner ID"
+    elif resource == "Company":
+        return "Company owner"
+    elif resource == "Contact" and crm == "HUBSPOT":
+        return "Contact owner"
+    return None
+
+
 @background()
 def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
@@ -1158,7 +1168,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             if resource_type == "Deal":
                                 data["Deal Name"] = resource_check
                         resource = None
-                    owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
+                    owner_field = set_owner_field(resource_type, user.crm)
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
                     cleaned_data = clean_prompt_return_data(
