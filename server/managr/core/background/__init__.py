@@ -1116,6 +1116,8 @@ def set_owner_field(resource, crm):
         return "Company owner"
     elif resource == "Contact" and crm == "HUBSPOT":
         return "Contact owner"
+    elif resource == "Deal":
+        return "Deal owner"
     return None
 
 
@@ -1187,7 +1189,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                 data["Deal Name"] = resource_check
                         resource = None
                     owner_field = set_owner_field(resource_type, user.crm)
-                    fields = ObjectField.objects.filter(is_public=True)
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
                     cleaned_data = clean_prompt_return_data(
@@ -1237,6 +1238,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     form.save()
                 form.is_submitted = True
                 form.submission_date = datetime.now()
+                form.chat_submission = prompt
                 form.save()
             lowered_prompt = prompt.lower()
             if "log" in lowered_prompt and "note" in lowered_prompt:
