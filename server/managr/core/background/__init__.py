@@ -1138,6 +1138,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     attempts = 1
     has_error = False
+    blocks = []
     while True:
         try:
             with Client as client:
@@ -1163,13 +1164,17 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             .objects.filter(email__icontains=resource_check)
                             .first()
                         )
-                        logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
-                        form = OrgCustomSlackFormInstance.objects.create(
-                            template=form_template,
-                            user=user,
-                            resource_id=str(resource.id),
-                            update_source="chat",
-                        )
+                        if resource:
+                            logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
+                            form = OrgCustomSlackFormInstance.objects.create(
+                                template=form_template,
+                                user=user,
+                                resource_id=str(resource.id),
+                                update_source="chat",
+                            )
+                        else:
+                            has_error = True
+                            break
                     else:
                         form = OrgCustomSlackFormInstance.objects.create(
                             template=form_template, user=user, update_source="chat",
@@ -1206,8 +1211,16 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 ],
             )
             return
+    if has_error:
+        blocks = [
+            block_builders.section_with_button_block(
+                "Open Chat",
+                "OPEN_CHAT",
+                f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                action_id=action_with_params(slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]),
+            )
+        ]
     update_attempts = 1
-    blocks = []
     crm_res = None
     while True and not has_error:
         try:
