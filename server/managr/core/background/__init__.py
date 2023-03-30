@@ -1116,6 +1116,8 @@ def set_owner_field(resource, crm):
         return "Company owner"
     elif resource == "Contact" and crm == "HUBSPOT":
         return "Contact owner"
+    elif resource == "Deal":
+        return "Deal owner"
     return None
 
 
@@ -1138,6 +1140,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     attempts = 1
     has_error = False
+    blocks = []
     while True:
         try:
             with Client as client:
@@ -1163,13 +1166,17 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             .objects.filter(email__icontains=resource_check)
                             .first()
                         )
-                        logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
-                        form = OrgCustomSlackFormInstance.objects.create(
-                            template=form_template,
-                            user=user,
-                            resource_id=str(resource.id),
-                            update_source="chat",
-                        )
+                        if resource:
+                            logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
+                            form = OrgCustomSlackFormInstance.objects.create(
+                                template=form_template,
+                                user=user,
+                                resource_id=str(resource.id),
+                                update_source="chat",
+                            )
+                        else:
+                            has_error = True
+                            break
                     else:
                         form = OrgCustomSlackFormInstance.objects.create(
                             template=form_template, user=user, update_source="chat",
@@ -1182,7 +1189,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                 data["Deal Name"] = resource_check
                         resource = None
                     owner_field = set_owner_field(resource_type, user.crm)
-                    fields = ObjectField.objects.filter(is_public=True)
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
                     cleaned_data = clean_prompt_return_data(
@@ -1206,8 +1212,16 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 ],
             )
             return
+    if has_error:
+        blocks = [
+            block_builders.section_with_button_block(
+                "Open Chat",
+                "OPEN_CHAT",
+                f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                action_id=action_with_params(slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]),
+            )
+        ]
     update_attempts = 1
-    blocks = []
     crm_res = None
     while True and not has_error:
         try:
@@ -1224,6 +1238,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     form.save()
                 form.is_submitted = True
                 form.submission_date = datetime.now()
+                form.chat_submission = prompt
                 form.save()
             lowered_prompt = prompt.lower()
             if "log" in lowered_prompt and "note" in lowered_prompt:
