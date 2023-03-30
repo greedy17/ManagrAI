@@ -975,7 +975,7 @@ WORD_TO_NUMBER = {
     "ten": 10,
 }
 
-TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365}
+TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365, "tomorrow": 1}
 DAYS_TO_NUMBER = {
     "monday": 0,
     "tuesday": 1,
