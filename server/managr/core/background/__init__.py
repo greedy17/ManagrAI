@@ -23,7 +23,7 @@ from managr.core.models import User
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.hubspot.adapter.models import HubspotContactAdapter
-from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
+from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact, ObjectField
 from managr.meetings.models import Meeting
 from managr.meetings.serializers import MeetingSerializer
 from managr.slack.helpers import requests as slack_requests
@@ -38,6 +38,8 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.utils.client import Client
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
+from managr.salesforce.background import emit_add_update_to_sf
+from managr.hubspot.tasks import emit_add_update_to_hs
 
 logger = logging.getLogger("managr")
 
@@ -54,6 +56,13 @@ CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 def get_domain(email):
     """Parse domain out of an email"""
     return email[email.index("@") + 1 :]
+
+
+def ADD_UPDATE_TO_CRM_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_add_update_to_sf
+    else:
+        return emit_add_update_to_hs
 
 
 #########################################################
@@ -114,6 +123,10 @@ def emit_process_check_trial_status(user_id, verbose_name):
 
 def emit_process_submit_chat_prompt(user_id, prompt, resource_type, context):
     return _process_submit_chat_prompt(user_id, prompt, resource_type, context)
+
+
+def emit_process_submit_chat_note(user_id, prompt, resource_type, context):
+    return _process_submit_chat_note(user_id, prompt, resource_type, context)
 
 
 #########################################################
@@ -962,7 +975,7 @@ WORD_TO_NUMBER = {
     "ten": 10,
 }
 
-TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365}
+TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365, "tomorrow": 1}
 DAYS_TO_NUMBER = {
     "monday": 0,
     "tuesday": 1,
@@ -1096,6 +1109,16 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     return cleaned_data
 
 
+def set_owner_field(resource, crm):
+    if resource in ["Opportunity", "Account", "Contact"] and crm == "HUBSPOT":
+        return "Owner ID"
+    elif resource == "Company":
+        return "Company owner"
+    elif resource == "Contact" and crm == "HUBSPOT":
+        return "Contact owner"
+    return None
+
+
 @background()
 def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
@@ -1158,12 +1181,14 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             if resource_type == "Deal":
                                 data["Deal Name"] = resource_check
                         resource = None
-                    owner_field = "Owner ID" if user.crm == "SALESFORCE" else "Deal owner"
+                    owner_field = set_owner_field(resource_type, user.crm)
+                    fields = ObjectField.objects.filter(is_public=True)
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
                     cleaned_data = clean_prompt_return_data(
                         swapped_field_data, fields, user.crm, resource
                     )
+
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
@@ -1186,19 +1211,25 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     crm_res = None
     while True and not has_error:
         try:
-            if form_type == "UPDATE":
-                crm_res = resource.update(form.saved_data)
-            else:
-                if crm_res is None:
-                    create_route = CRM_SWITCHER[user.crm][resource_type]["model"]
-                    resource_func = background_create_resource(user.crm)
-                    crm_res = resource_func.now([str(form.id)])
-                resource = create_route.objects.get(integration_id=crm_res.integration_id)
-                form.resource_id = str(resource.id)
+            if len(cleaned_data):
+                if form_type == "UPDATE":
+                    crm_res = resource.update(form.saved_data)
+                else:
+                    if crm_res is None:
+                        create_route = CRM_SWITCHER[user.crm][resource_type]["model"]
+                        resource_func = background_create_resource(user.crm)
+                        crm_res = resource_func.now([str(form.id)])
+                    resource = create_route.objects.get(integration_id=crm_res.integration_id)
+                    form.resource_id = str(resource.id)
+                    form.save()
+                form.is_submitted = True
+                form.submission_date = datetime.now()
                 form.save()
-            form.is_submitted = True
-            form.submission_date = datetime.now()
-            form.save()
+            lowered_prompt = prompt.lower()
+            if "log" in lowered_prompt and "note" in lowered_prompt:
+                emit_process_submit_chat_note(
+                    str(user.id), prompt, resource_check, {"form_id": str(form.id)},
+                )
             blocks = [
                 block_builders.section_with_button_block(
                     "Send Summary",
@@ -1263,3 +1294,57 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if not has_error and form_type == "UPDATE":
         value_update = form.resource_object.update_database_values(cleaned_data)
     return
+
+
+def _process_submit_chat_note(user_id, prompt, resource_type, context):
+    user = User.objects.get(id=user_id)
+    field_list = [resource_type, "Note", "Note Subject"]
+    form_id = context.get("form_id")
+    form = OrgCustomSlackFormInstance.objects.get(id=form_id)
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
+    url = core_consts.OPEN_AI_COMPLETIONS_URI
+    has_error = False
+    attempts = 1
+    while True:
+        try:
+            with Client as client:
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            if r.status_code == 200:
+                r = r.json()
+                logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
+                choice = r["choices"][0]["text"]
+                data = eval(
+                    choice[choice.index("{") : choice.index("}") + 1]
+                    .replace("null", "'None'")
+                    .replace("'", '"')
+                )
+                resource_check = data.pop(resource_type, None)
+                if resource_check:
+                    resource = form.resource_object
+                    note = data.pop("Note")
+                    data["Notes"] = note
+                    fields = ObjectField.objects.filter(
+                        id__in=[
+                            "6407b7a1-a877-44e2-979d-1effafec5034",
+                            "0bb152b5-aac1-4ee0-9c25-51ae98d55af2",
+                        ]
+                    )
+
+                    swapped_field_data = swap_submitted_data_labels(data, fields)
+                    swapped_field_data.update(form.saved_data)
+                    form.save_form(swapped_field_data, False)
+                    form.is_submitted = True
+                    form.submission_date = datetime.now()
+                    form.save()
+                    ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(form.id))
+                else:
+                    has_error = True
+                break
+            else:
+                attempts += 1
+        except Exception as e:
+            logger.exception(e)
+            return
+    return
+
