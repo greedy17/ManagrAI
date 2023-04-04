@@ -295,12 +295,7 @@
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
-                <img
-                  class="shimmer"
-                  src="@/assets/images/lock.svg"
-                  height="18"
-                  alt=""
-                />
+                <img class="shimmer" src="@/assets/images/lock.svg" height="18" alt="" />
               </label>
             </div>
           </div>
@@ -338,12 +333,7 @@
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
-                <img
-                  class="shimmer"
-                  src="@/assets/images/lock.svg"
-                  height="18"
-                  alt=""
-                />
+                <img class="shimmer" src="@/assets/images/lock.svg" height="18" alt="" />
               </label>
             </div>
           </div>
@@ -390,12 +380,7 @@
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
-                <img
-                  class="shimmer"
-                  src="@/assets/images/lock.svg"
-                  height="18"
-                  alt=""
-                />
+                <img class="shimmer" src="@/assets/images/lock.svg" height="18" alt="" />
               </label>
             </div>
           </div>
@@ -451,12 +436,7 @@
             <div v-else class="side-wrapper">
               <label class="side-icon side-workflow" style="">
                 <span class="side-tooltip">Upgrade your plan</span>
-                <img
-                  class="shimmer"
-                  src="@/assets/images/lock.svg"
-                  height="18"
-                  alt=""
-                />
+                <img class="shimmer" src="@/assets/images/lock.svg" height="18" alt="" />
               </label>
             </div>
           </div>
@@ -802,7 +782,7 @@ export default {
   background-repeat: no-repeat;
   animation: shimmer 2.5s infinite;
   max-width: 200px;
-  filter: invert(40%)
+  filter: invert(40%);
 }
 
 @keyframes shimmer {
@@ -1120,7 +1100,6 @@ a {
   width: 100%;
   // border-bottom: 1px solid $soft-gray;
   position: relative;
-  height: 22vh;
   border-top-right-radius: 4px;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
@@ -1242,7 +1221,7 @@ a {
   color: #ffffff;
 }
 .side-icon:hover {
-  transition: all .1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   // transition: all .3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   img {
     filter: invert(90%);

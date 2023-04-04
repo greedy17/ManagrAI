@@ -51,7 +51,7 @@
           style="width: 100%; height: 100%; margin-top: 1rem"
           :class="{ center: toggleReady, 'row-between': !toggleReady }"
         >
-          <p v-if="!toggleReady" class="gray-blue" style="margin-left: 2px">
+          <p v-if="!toggleReady" class="warning-text" style="margin-left: 2px">
             Do not refresh your browser!
           </p>
           <button :disabled="!toggleReady" @click="toggleFieldModal()">Continue</button>
@@ -69,7 +69,7 @@
       <div style="margin-top: 3rem" class="wrapper">
         <label class="icon workflow">
           <span style="width: 240px" class="tooltip"
-            >Having trouble? Send us an email: onboarding@mymanagr.com</span
+            >Having trouble? Send us an email: cx@mymanagr.com</span
           >
           <span>?</span>
         </label>
@@ -177,16 +177,31 @@
 
     <article
       ref="stepThree"
-      :class="{ 'green-border': hasZoomChannel && hasSlackIntegration && hasNylasIntegration }"
+      :class="{
+        'green-border':
+          hasZoomChannel && (orgHasSlackIntegration || hasSlackIntegration) && hasNylasIntegration,
+        disabled: !userCRM,
+      }"
     >
       <div
-        :class="{ 'green-bg': hasZoomChannel && hasSlackIntegration && hasNylasIntegration }"
+        :class="{
+          'green-bg':
+            hasZoomChannel &&
+            (orgHasSlackIntegration || hasSlackIntegration) &&
+            hasNylasIntegration,
+        }"
         class="red-bg"
       >
         2
       </div>
       <small>3 SIMPLE STEPS</small>
-      <h3 v-if="!hasZoomChannel || !hasSlackIntegration || !hasNylasIntegration">
+      <h3
+        v-if="
+          !hasZoomChannel ||
+          !(orgHasSlackIntegration || hasSlackIntegration) ||
+          !hasNylasIntegration
+        "
+      >
         Step 2: Connect Slack & Calendar
       </h3>
       <h3 v-else>Step 2: Complete</h3>
@@ -199,7 +214,7 @@
             </div>
 
             <div class="card__body">
-              <div class="wrapper top-row">
+              <div v-if="userCanIntegrateSlack" class="wrapper top-row">
                 <h3>Slack</h3>
                 <label style="margin-top: 0" class="icon workflow">
                   <span class="tooltip-large">
@@ -209,12 +224,23 @@
                   <span>?</span>
                 </label>
               </div>
+
+              <div v-else class="wrapper top-row">
+                <h3>Slack</h3>
+                <label style="margin-top: 0" class="icon workflow">
+                  <span class="tooltip">Please ask the Managr Admin to connect Slack</span>
+                  <span>?</span>
+                </label>
+              </div>
+
               <p class="card-text">Interact with Managr through Slack</p>
               <div>
                 <PulseLoadingSpinnerButton
-                  v-if="!hasSlackIntegration"
+                  v-if="!hasSlackIntegration && !orgHasSlackIntegration"
                   :disabled="
-                    (!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration
+                    (!orgHasSlackIntegration && !userCanIntegrateSlack) ||
+                    hasSlackIntegration ||
+                    !userCRM
                   "
                   @click="onIntegrateSlack"
                   class="orange_button"
@@ -252,6 +278,7 @@
                   @click="onGetAuthLink('NYLAS')"
                   class="orange_button"
                   text="Connect"
+                  :disabled="!userCRM"
                   :loading="generatingToken && selectedIntegration == 'NYLAS'"
                 ></PulseLoadingSpinnerButton>
                 <div v-else>
@@ -286,6 +313,7 @@
                   type="text"
                   name="channel"
                   id="channel"
+                  :disabled="!userCRM || !(orgHasSlackIntegration || hasSlackIntegration)"
                   :placeholder="`log-meeting-${userInitials}`"
                   @input="logNewName(meetingChannelName, 'zoom')"
                 />
@@ -308,7 +336,12 @@
       </section>
     </article>
 
-    <article :class="{ 'green-border': updateFields.length }">
+    <article
+      :class="{
+        'green-border': updateFields.length,
+        disabled: !hasZoomChannel || !hasSlackIntegration || !hasNylasIntegration || !userCRM,
+      }"
+    >
       <div :class="{ 'green-bg': updateFields.length }" class="red-bg">3</div>
       <small>ONLY 2 STEPS LEFT</small>
 
@@ -325,14 +358,24 @@
 
       <div v-else-if="userCRM" class="wrapper">
         <h3>
-          Step 3: Add the {{ camelize(userCRM) }}
-          {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }} you regularly update
+          Step 3: Add {{ camelize(userCRM) }}
+          {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }}
         </h3>
-        <label class="icon workflow">
-          <span style="top: -110px" class="tooltip">
-            We recommend at least 3 of the following: Name , Stage , Close Date , Next Step , Notes.
-            Try searching for them below.</span
-          >
+        <label class="icon workflow row">
+          <span class="tooltip">
+            <span class="tooltip-row">
+              <img
+                style="margin-left: 4px"
+                src="@/assets/images/edit-note.svg"
+                height="12px"
+                class="invert"
+                alt=""
+              />
+              <span style="margin-left: 8px; border-left: 1px solid white; padding-left: 8px">
+                We recommend between 3-10 fields - suggestions below .
+              </span>
+            </span>
+          </span>
           <span>?</span>
         </label>
       </div>
@@ -355,7 +398,12 @@
       </section>
     </article>
 
-    <article :class="{ 'green-border': workflows.list.length && hasRecapChannel }">
+    <article
+      :class="{
+        'green-border': workflows.list.length && hasRecapChannel,
+        disabled: !updateFields.length,
+      }"
+    >
       <div :class="{ 'green-bg': workflows.list.length && hasRecapChannel }" class="red-bg">4</div>
       <small>FINAL STEP!</small>
 
@@ -436,7 +484,7 @@
               name="channel"
               id="channel"
               :placeholder="`my-pipeline-${userInitials}`"
-              :disabled="submitting"
+              :disabled="submitting || !updateFields.length"
               @input="logNewName(channelName, 'recap')"
             />
           </section>
@@ -1030,6 +1078,9 @@ export default {
         }
       }
       this.submitting = false
+      setTimeout(() => {
+        this.checkOnboardStatus()
+      }, 1000)
     },
   },
   computed: {
@@ -1849,6 +1900,26 @@ button:disabled {
   }
 }
 
+.warning-text {
+  background-color: $light-coral;
+  font-weight: bold;
+  letter-spacing: 0.75px;
+  color: $coral;
+  border-radius: 4px;
+  padding: 4px 6px !important;
+  margin-bottom: 8px;
+}
+
+.invert {
+  filter: invert(90%);
+}
+
+.tooltip-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
 // @media only screen and (max-width: 600px) {
 //   .slide-effect,
 //   .text,
