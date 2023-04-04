@@ -1094,20 +1094,23 @@ def paginated_meeting_blockset(context):
             )
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
+            form_ids = [str(id) for id in list(workflow.forms.all().values_list("id", flat=True))]
             block = block_builders.section_with_button_block(
-                f"{'Send Summary'}",
-                "SEND_RECAP",
+                "Use Generative AI",
+                "GENERATIVE ACTION",
                 section_text=section_text,
                 block_id=str(workflow.id),
                 action_id=action_with_params(
-                    slack_const.PROCESS_SEND_RECAP_MODAL,
+                    slack_const.OPEN_GENERATIVE_ACTION_MODAL,
                     params=[
                         f"u={str(workflow.user.id)}",
-                        f"workflow_id={str(workflow.id)}",
+                        f"form_ids={'.'.join(form_ids)}",
                         "type=meeting",
+                        f"workflow_id={str(workflow.id)}",
                     ],
                 ),
             )
+
         else:
             action_id = (
                 f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={str(workflow.id)}&u={str(u.id)}"

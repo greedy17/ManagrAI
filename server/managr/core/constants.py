@@ -31,6 +31,10 @@ OPEN_AI_UPDATE_PROMPT = (
     lambda labels, prompt: f"Extract values in the text below. Using the Fields as keys, if they key is not found do not include it.\n Fields:{labels}\n text: {prompt}\nDesired output is a dictionary of key-value pairs"
 )
 
+OPEN_AI_MEETING_EMAIL_DRAFT = (
+    lambda data: f"Use the data from the meeting notes below to generate a very concise follow up email. The tone of the email is friendly and collaborative, while also straightforward and confident. Use clear language and no unnecessary fluff. The intent of the email is to summarize the conversation and provide clear next steps or a call to action\n Meeting Notes:{data}"
+)
+
 
 def OPEN_AI_COMPLETIONS_BODY(user_name, prompt):
     return {
