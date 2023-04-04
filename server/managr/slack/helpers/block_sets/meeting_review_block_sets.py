@@ -1096,7 +1096,7 @@ def paginated_meeting_blockset(context):
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             form_ids = [str(id) for id in list(workflow.forms.all().values_list("id", flat=True))]
             block = block_builders.section_with_button_block(
-                "Use Generative AI",
+                "Generate Content",
                 "GENERATIVE ACTION",
                 section_text=section_text,
                 block_id=str(workflow.id),
