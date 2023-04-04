@@ -42,14 +42,18 @@
             </div>
           </template>
         </Multiselect>
-        <button v-if="!savingForm" @click="onSave()" :disabled="!(addedFields.length > 2)">
+        <button
+          v-if="!savingForm"
+          @click="onSave()"
+          :disabled="!(addedFields.length > 2)"
+          :class="{ pulse: saveNeeded && addedFields.length > 2 }"
+        >
           Save
         </button>
         <PipelineLoader v-else />
       </div>
-      <label v-show="isInvalid" :class="{ invalid: isInvalid }" for=""
-        >You must select at least three
-        {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }}</label
+      <label v-if="addedFields.length < 3" class="small-text" for=""
+        >Suggestions: "Name" , "Stage" , "Close Date" , "Next Step" , "Amount"</label
       >
     </section>
     <draggable
@@ -104,6 +108,7 @@ export default {
     return {
       formType: 'UPDATE',
       savingForm: false,
+      saveNeeded: false,
       addedFields: [],
       refreshing: false,
       removedFields: [],
@@ -379,6 +384,7 @@ export default {
       }
     },
     onAddField(field) {
+      this.saveNeeded = true
       if (this.addedFieldIds.includes(field.id)) {
         this.canRemoveField(field) && this.onRemoveField(field)
         return
@@ -386,6 +392,7 @@ export default {
       this.addedFields.push({ ...field, order: this.addedFields.length, includeInRecap: true })
     },
     onRemoveField(field) {
+      this.saveNeeded = true
       // remove from the array if  it exists
 
       this.addedFields = [...this.addedFields.filter((f) => f.id != field.id)]
@@ -446,7 +453,7 @@ export default {
 
           // this.customForm = res
 
-          this.$toast('Form saved!', {
+          this.$toast('Fields saved!', {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
@@ -458,6 +465,7 @@ export default {
         })
         .finally(() => {
           this.savingForm = false
+          this.saveNeeded = false
           this.formChange = false
           this.$emit('refresh-forms', this.customForm)
           this.formFields.refresh()
@@ -469,6 +477,28 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.pulse {
+  box-shadow: 0 0 0 0 $dark-green;
+  transform: scale(1);
+  animation: pulse 1.25s infinite;
+}
 
 @keyframes bounce {
   0% {
@@ -601,6 +631,11 @@ p {
     margin-right: 0.25rem;
     filter: invert(70%);
   }
+}
+.small-text {
+  color: $light-gray-blue;
+  font-size: 12px;
+  margin: 8px 4px;
 }
 .invalid {
   color: $coral;
