@@ -32,7 +32,7 @@ OPEN_AI_UPDATE_PROMPT = (
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
-    lambda data: f"Use the data from the meeting notes below to generate a very concise follow up email. The tone of the email is friendly and collaborative, while also straightforward and confident. Use clear language and no unnecessary fluff. The intent of the email is to summarize the conversation and provide clear next steps or a call to action\n Meeting Notes:{data}"
+    lambda data: f"Use the data from the meeting notes below to generate a very concise, friendly, casual (yet professional) follow up email to the people or person you spoke to in the meeting. Keep in mind the person is likely an executive that we are trying to sell a product to.\nThe intent of the email is to summarize the conversation back to the person in the meeting, persuade them to move forward and provide clear next steps. If possible, end the email with a question - one that will move the deal forward.\nStart the email with Hi or Hey and do not use Best Regards in the sign off.\n The Meeting Notes:{data}"
 )
 OPEN_AI_NEXT_STEPS = (
     lambda data: f"Provide up to 3 listed out suggested next steps to take in order to close the prospect or move the deal forward based on meeting notes below, ranging from aggressive (close this month) to passive (close in the coming months)\n Meeting Notes: {data}"
@@ -44,7 +44,6 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, temperature=None):
         "model": "text-davinci-003",
         "prompt": prompt,
         "max_tokens": 500,
-        "top_p": 0.1,
         "user": user_name,
     }
     if temperature:

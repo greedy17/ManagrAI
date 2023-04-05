@@ -3646,10 +3646,12 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
+    print(payload)
+    # slack_requests.generic_request()
     pm = payload.get("view").get("private_metadata")
     action = payload["actions"][0]["selected_option"]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
-    action_func(payload, json.loads(pm))
+    action_res = action_func(payload, json.loads(pm))
     return {"response_action": "clear"}
 
 
