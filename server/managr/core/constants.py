@@ -28,7 +28,7 @@ OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"Summarize the meetings notes below in the most concise way as if you are reporting back to an executive that has very little time. Open with how the meeting went.\n Meeting notes:{object}"
 )
 OPEN_AI_UPDATE_PROMPT = (
-    lambda labels, prompt: f"Extract values in the text below. Using the Fields as keys, if they key is not found do not include it.\n Fields:{labels}\n text: {prompt}\nDesired output is a dictionary of key-value pairs"
+    lambda labels, prompt: f"Take the note below and break it into the following CRM fields\n Fields:{labels}\n text: {prompt}\nDesired output is a python dictionary"
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (

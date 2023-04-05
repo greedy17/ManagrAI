@@ -31,7 +31,7 @@ def open_chat(context):
         blocks = [
             block_builders.input_block(
                 f"Update {crm} by sending a message",
-                placeholder="Ex: push close date to next Friday for opportunity Nike",
+                placeholder="Paste your note here, and we will update your CRM",
                 block_id="CHAT_PROMPT",
                 multiline=True,
                 optional=False,

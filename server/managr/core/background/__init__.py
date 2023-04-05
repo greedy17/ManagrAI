@@ -962,9 +962,9 @@ def swap_submitted_data_labels(data, fields):
     api_key_data = {}
     for label in data.keys():
         try:
-            field = fields.get(label=label)
+            field = fields.get(label__icontains=label)
             api_key_data[field.api_name] = data[label]
-        except Exception:
+        except Exception as e:
             continue
     return api_key_data
 
@@ -1075,7 +1075,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             if resource:
                 cleaned_data[key] = resource.secondary_data[key]
             continue
-        if field.data_type == "TextArea":
+        elif field.data_type == "TextArea":
             if resource and data[key] is not None:
                 current_value = (
                     resource.secondary_data[key]
@@ -1083,7 +1083,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                     else " "
                 )
                 cleaned_data[key] = f"{data[key]}\n\n{current_value}"
-        if field.data_type in ["Date", "DateTime"]:
+        elif field.data_type in ["Date", "DateTime"]:
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
@@ -1092,7 +1092,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                 if crm == "SALESFORCE"
                 else (str(new_value.date()) + "T00:00:00.000Z")
             )
-        if field.api_name == "dealstage":
+        elif field.api_name == "dealstage":
             if resource:
                 pipeline = field.options[0][resource.secondary_data["pipeline"]]
                 if pipeline:
@@ -1106,13 +1106,22 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                         cleaned_data[key] = stage[0]["id"]
                     else:
                         cleaned_data[key] = resource.secondary_data["dealstage"]
-        if field.api_name in ["Amount", "amount"]:
+        elif field.api_name in ["Amount", "amount"]:
             amount = cleaned_data[key]
             if "k" in amount:
                 amount = amount.replace("k", "000")
             if "$" in amount:
                 amount = amount.replace("$", "")
             cleaned_data[key] = amount
+        elif field.data_type == "Picklist":
+            if crm == "HUBSPOT":
+                options = field.options
+            else:
+                options = field.crm_picklist_options.values
+            for value in options:
+                lowered_value = cleaned_data[key].lower()
+                if lowered_value in value["label"].lower():
+                    cleaned_data[key] = value["value"]
     logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
@@ -1129,6 +1138,16 @@ def set_owner_field(resource, crm):
     return None
 
 
+def set_name_field(resource, crm):
+    if resource in ["Opportunity", "Account", "Contact"] and crm == "HUBSPOT":
+        return "Name"
+    elif resource == "Company":
+        return "Company Name"
+    elif resource == "Deal":
+        return "Deal Name"
+    return None
+
+
 @background()
 def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
@@ -1139,9 +1158,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     fields = form_template.custom_fields.all().exclude(
         api_name__in=["meeting_comments", "meeting_type"]
     )
-    field_list = [resource_type]
-    label_list = list(fields.values_list("label", flat=True))
-    field_list.extend(label_list)
+    field_list = list(fields.values_list("label", flat=True))
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
@@ -1162,7 +1179,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     .replace("null", "'None'")
                     .replace("'", '"')
                 )
-                resource_check = data.pop(resource_type, None)
+                name_field = set_name_field(resource_type, user.crm)
+                resource_check = data[name_field]
+
                 if form_type == "CREATE" or resource_check:
                     if form_type == "UPDATE":
                         resource = (
@@ -1216,7 +1235,14 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 context.get("ts"),
                 user.organization.slack_integration.access_token,
                 block_set=[
-                    block_builders.simple_section(f"Looks like we hit a snag: {e}", "mrkdwn")
+                    block_builders.section_with_button_block(
+                        "Open Chat",
+                        "OPEN_CHAT",
+                        f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                        action_id=action_with_params(
+                            slack_consts.REOPEN_CHAT_MODAL, [f"prompt={prompt}"]
+                        ),
+                    )
                 ],
             )
             return
