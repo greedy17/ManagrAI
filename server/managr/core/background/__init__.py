@@ -1255,12 +1255,12 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 )
             blocks = [
                 block_builders.section_with_button_block(
-                    "Send Summary",
-                    "SEND_RECAP",
-                    f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}",
+                    "Generate Content",
+                    "GENERATIVE ACTION",
+                    section_text=f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}",
                     action_id=action_with_params(
-                        slack_consts.PROCESS_SEND_RECAP_MODAL,
-                        params=[f"u={user_id}", f"form_ids={str(form.id)}", "type=command"],
+                        slack_consts.OPEN_GENERATIVE_ACTION_MODAL,
+                        params=[f"u={str(user.id)}", f"form_ids={str(form.id)}", "type=command",],
                     ),
                 )
             ]

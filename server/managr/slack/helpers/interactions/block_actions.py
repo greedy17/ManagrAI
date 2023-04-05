@@ -3650,8 +3650,7 @@ def process_selected_generative_action(payload, context):
     action = payload["actions"][0]["selected_option"]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
     action_func(payload, json.loads(pm))
-    # return {"response_action": "clear"}
-    return
+    return {"response_action": "clear"}
 
 
 def process_regenerate_action(payload, context):
