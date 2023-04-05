@@ -2,7 +2,6 @@ import json
 import uuid
 import logging
 import pytz
-from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date
@@ -35,10 +34,13 @@ from managr.slack.background import (
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
-from managr.core.background import emit_process_calendar_meetings
+from managr.core.background import (
+    emit_process_calendar_meetings,
+    emit_process_send_email_draft,
+    emit_process_send_next_steps,
+)
 from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
-    check_for_display_value,
     replace_tags,
     emit_process_slack_inline_sf_update,
 )
@@ -2890,9 +2892,11 @@ def process_send_recap_modal(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     user = User.objects.get(id=context.get("u"))
     access_token = user.organization.slack_integration.access_token
-    trigger_id = payload["trigger_id"]
+    trigger_id = payload.get("trigger_id", None)
+    view_id = payload.get("view", []).get("id", None)
+    action_type = "update" if view_id else "open"
     loading_data = send_loading_screen(
-        access_token, "Loading users and channels", "open", str(user.id), trigger_id
+        access_token, "Loading users and channels", action_type, str(user.id), trigger_id, view_id
     )
     data = {
         "view_id": loading_data["view"]["id"],
@@ -3587,6 +3591,91 @@ def reopen_chat_modal(payload, context):
         return
 
 
+@processor()
+def process_open_generative_action_modal(payload, context):
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    if user.slack_integration:
+        slack = (
+            UserSlackIntegration.objects.filter(slack_id=user.slack_integration.slack_id)
+            .select_related("user")
+            .first()
+        )
+        if not slack:
+            data = {
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your managr account",
+            }
+        options = [
+            block_builders.option("Draft Follow-up Email", "DRAFT_EMAIL"),
+            block_builders.option("Suggest Next Steps", "NEXT_STEPS"),
+            block_builders.option("Share Summary", "SEND_SUMMARY"),
+        ]
+        blocks = [
+            block_builders.static_select(
+                "Select the type of content to generate",
+                options=options,
+                action_id=action_with_params(
+                    slack_const.PROCESS_SELECTED_GENERATIVE_ACTION, params=[f"u={str(user.id)}"]
+                ),
+                block_id="GENERATIVE_ACTION",
+            ),
+            block_builders.context_block("Powered by ManagrGPT © :robot_face:"),
+        ]
+        access_token = user.organization.slack_integration.access_token
+        trigger_id = payload["trigger_id"]
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.PROCESS_SELECTED_GENERATIVE_ACTION,
+                "title": {"type": "plain_text", "text": "Create Content",},
+                "blocks": blocks,
+                "private_metadata": json.dumps(context),
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
+GENERATIVE_ACTION_SWITCHER = {
+    "DRAFT_EMAIL": emit_process_send_email_draft,
+    "SEND_SUMMARY": process_send_recap_modal,
+    "NEXT_STEPS": emit_process_send_next_steps,
+}
+
+
+def process_selected_generative_action(payload, context):
+    print(payload)
+    # slack_requests.generic_request()
+    pm = payload.get("view").get("private_metadata")
+    action = payload["actions"][0]["selected_option"]["value"]
+    action_func = GENERATIVE_ACTION_SWITCHER[action]
+    action_res = action_func(payload, json.loads(pm))
+    return {"response_action": "clear"}
+
+
+def process_regenerate_action(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    action = payload.get("actions")[0].get("value")
+    channel_id = payload["channel"]["id"]
+    ts = payload["message"]["ts"]
+    context.update(channel_id=channel_id, ts=ts)
+    blocks = payload["message"]["blocks"][:2]
+    loading_block = get_block_set("loading", {"message": "Regenerating content"})
+    blocks.extend(loading_block)
+    try:
+        res = slack_requests.update_channel_message(
+            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+        )
+        action_func = GENERATIVE_ACTION_SWITCHER[action]
+        action_func(payload, context)
+    except Exception as e:
+        logger.exception(e)
+
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -3648,6 +3737,9 @@ def handle_block_actions(payload):
         slack_const.RETURN_TO_FORM_BUTTON: process_return_to_form_button,
         slack_const.PROCESS_SHOW_ENGAGEMENT_DETAILS: process_get_engagement_details,
         slack_const.REOPEN_CHAT_MODAL: reopen_chat_modal,
+        slack_const.OPEN_GENERATIVE_ACTION_MODAL: process_open_generative_action_modal,
+        slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
+        slack_const.PROCESS_REGENERATE_ACTION: process_regenerate_action,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

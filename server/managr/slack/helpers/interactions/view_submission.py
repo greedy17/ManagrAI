@@ -50,7 +50,7 @@ from managr.salesforce.background import (
     emit_process_slack_bulk_update,
     emit_process_convert_lead,
 )
-from managr.salesforce.utils import process_text_field_format
+
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.background import emit_process_submit_resource_data
 from managr.salesloft.models import People

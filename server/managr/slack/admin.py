@@ -79,6 +79,7 @@ class CustomOrgSlackFormsInstance(admin.ModelAdmin):
         "previous_data",
         "alert_instance_id",
         "recap_data",
+        "chat_submission",
     ]
 
 

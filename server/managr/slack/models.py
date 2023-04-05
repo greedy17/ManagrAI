@@ -296,6 +296,8 @@ class OrgCustomSlackFormInstance(TimeStampModel):
         "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
     )
     recap_data = JSONField(default=DEFAULT_RECAP_DICT, null=True, blank=True,)
+    chat_submission = models.CharField(max_length=510, null=True, blank=True)
+
     objects = OrgCustomSlackFormInstanceQuerySet.as_manager()
 
     def __str__(self):

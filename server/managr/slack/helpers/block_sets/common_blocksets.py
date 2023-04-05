@@ -92,12 +92,12 @@ def success_modal_block_set(context):
     form_ids = context.get("form_ids")
     blocks = [
         block_builders.section_with_button_block(
-            "Send Summary",
-            "SEND_RECAP",
-            message,
+            "Generate Content",
+            "GENERATIVE ACTION",
+            section_text=message,
             action_id=action_with_params(
-                slack_const.PROCESS_SEND_RECAP_MODAL,
-                params=[f"u={user}", f"form_ids={form_ids}", "type=command"],
+                slack_const.OPEN_GENERATIVE_ACTION_MODAL,
+                params=[f"u={user}", f"form_ids={form_ids}", "type=command",],
             ),
         )
     ]
