@@ -25,10 +25,10 @@ if settings.USE_OPEN_AI:
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 
 OPEN_AI_SUMMARY_PROMPT = (
-    lambda object: f"Summarize the meetings notes below in the most concise way as if you are reporting back to an executive that has very little time. Open with how the meeting went.\n Meeting notes:{object}"
+    lambda object: f"Summarize the meetings notes below in the most concise way as if you are reporting back to an executive that has very little time. Open with how the meeting went. Determine if it was a demo meeting or just a follow up conversation being logged. Do this by reading the meeting_comments notes and meeting_type. If its a follow up conversation apply that into the summary.\n Meeting notes:{object}"
 )
 OPEN_AI_UPDATE_PROMPT = (
-    lambda labels, prompt: f"Extract values in the text below. Using the Fields as keys, if they key is not found do not include it.\n Fields:{labels}\n text: {prompt}\nDesired output is a dictionary of key-value pairs"
+    lambda labels, prompt: f"Take the note below and break it into the following CRM fields\n Fields:{labels}\n text: {prompt}\nDesired output is a python dictionary."
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (

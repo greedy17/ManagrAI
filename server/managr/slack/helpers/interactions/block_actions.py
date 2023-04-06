@@ -3548,7 +3548,8 @@ def process_insert_note_template(payload, context):
 def reopen_chat_modal(payload, context):
     channel_id = payload["channel"]["id"]
     message_ts = payload["message"]["ts"]
-    prompt = context.get("prompt")
+    form_id = context.get("form_id")
+    form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     context.update(u=str(user.id), ts=message_ts, channel=channel_id)
     crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
@@ -3566,7 +3567,7 @@ def reopen_chat_modal(payload, context):
         blocks = [
             block_builders.input_block(
                 f"Update {crm} by sending a message",
-                initial_value=prompt,
+                initial_value=form.chat_submission,
                 block_id="CHAT_PROMPT",
                 multiline=True,
                 optional=False,
@@ -3614,9 +3615,6 @@ def process_open_generative_action_modal(payload, context):
             block_builders.static_select(
                 "Select the type of content to generate",
                 options=options,
-                action_id=action_with_params(
-                    slack_const.PROCESS_SELECTED_GENERATIVE_ACTION, params=[f"u={str(user.id)}"]
-                ),
                 block_id="GENERATIVE_ACTION",
             ),
             block_builders.context_block("Powered by ManagrGPT © :robot_face:"),
@@ -3631,6 +3629,7 @@ def process_open_generative_action_modal(payload, context):
                 "callback_id": slack_const.PROCESS_SELECTED_GENERATIVE_ACTION,
                 "title": {"type": "plain_text", "text": "Create Content",},
                 "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit"},
                 "private_metadata": json.dumps(context),
             },
         }
@@ -3646,8 +3645,6 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
-    print(payload)
-    # slack_requests.generic_request()
     pm = payload.get("view").get("private_metadata")
     action = payload["actions"][0]["selected_option"]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
@@ -3738,7 +3735,6 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SHOW_ENGAGEMENT_DETAILS: process_get_engagement_details,
         slack_const.REOPEN_CHAT_MODAL: reopen_chat_modal,
         slack_const.OPEN_GENERATIVE_ACTION_MODAL: process_open_generative_action_modal,
-        slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.PROCESS_REGENERATE_ACTION: process_regenerate_action,
     }
 
