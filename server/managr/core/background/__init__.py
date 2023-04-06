@@ -1119,7 +1119,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
         elif field.api_name in ["Amount", "amount"]:
             amount = cleaned_data[key]
             if "k" in amount:
-                amount = amount.replace("k", "000")
+                amount = amount.replace("k", "000.0")
             if "$" in amount:
                 amount = amount.replace("$", "")
             cleaned_data[key] = amount
