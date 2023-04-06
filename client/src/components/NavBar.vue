@@ -96,6 +96,12 @@
             <img src="@/assets/images/reports.svg" class="" height="16px" alt="" style="margin-top: 0;" />
           </label>
         </router-link>
+        <router-link class="side-wrapper" exact-active-class="active" :to="{ name: 'DemoCenter' }">
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
+            <span class="side-tooltip-single" style="top: -5px; width: 100px;">Demo Center</span>
+            <img src="@/assets/images/play-alt.svg" class="" height="16px" alt="" style="margin-top: 0;" />
+          </label>
+        </router-link>
 
         <div class="side-wrapper" style="margin-top: auto">
           <label class="side-icon side-workflow" style="">
