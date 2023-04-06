@@ -948,7 +948,10 @@ def _process_add_update_to_sf(form_id, *args):
     start_time = form.submission_date
     subject = (
         "No subject"
-        if form.saved_data.get("meeting_type") is None
+        if (
+            form.saved_data.get("meeting_type") is None
+            or len(form.saved_data.get("meeting_type")) == 0
+        )
         else form.saved_data.get("meeting_type")
     )
     description = form.saved_data.get("meeting_comments")

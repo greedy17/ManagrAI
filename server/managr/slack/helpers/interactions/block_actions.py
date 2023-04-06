@@ -3548,7 +3548,8 @@ def process_insert_note_template(payload, context):
 def reopen_chat_modal(payload, context):
     channel_id = payload["channel"]["id"]
     message_ts = payload["message"]["ts"]
-    prompt = context.get("prompt")
+    form_id = context.get("form_id")
+    form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     context.update(u=str(user.id), ts=message_ts, channel=channel_id)
     crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
@@ -3566,7 +3567,7 @@ def reopen_chat_modal(payload, context):
         blocks = [
             block_builders.input_block(
                 f"Update {crm} by sending a message",
-                initial_value=prompt,
+                initial_value=form.chat_submission,
                 block_id="CHAT_PROMPT",
                 multiline=True,
                 optional=False,

@@ -623,7 +623,10 @@ def _process_add_update_to_hs(form_id, *args):
     formatted_time = datetime.strftime(form.submission_date, "%Y-%m-%dT%H:%M:%S.%fz")
     subject = (
         "No subject"
-        if form.saved_data.get("meeting_type") is None
+        if (
+            form.saved_data.get("meeting_type") is None
+            or len(form.saved_data.get("meeting_type")) == 0
+        )
         else form.saved_data.get("meeting_type")
     )
     description = form.saved_data.get("meeting_comments")

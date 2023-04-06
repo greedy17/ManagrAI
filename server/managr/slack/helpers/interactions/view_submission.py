@@ -2599,6 +2599,7 @@ def process_submit_chat_prompt(payload, context):
         if lowered_resource in lowercase_prompt:
             resource_check = resource
             break
+    print(resource_check)
     block_set = [
         *get_block_set(
             "loading",
