@@ -18,6 +18,9 @@ from managr.core.background import (
     emit_create_calendar_event,
     emit_process_calendar_meetings,
     emit_process_submit_chat_prompt,
+    emit_process_send_email_draft,
+    emit_process_send_next_steps,
+    emit_process_send_summary_to_dm,
 )
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.opportunity.models import Opportunity, Lead
@@ -116,9 +119,10 @@ def process_stage_next_page(payload, context):
     # save current data to its form we will close all views at the end
 
     state = swap_public_fields(view["state"]["values"])
-    task_selection = [
+    managr_task_values = [
         value.get("selected_option") for value in state.get("managr_task_type", {}).values()
-    ][0]
+    ]
+    task_selection = managr_task_values[0] if len(managr_task_values) else None
     task_type = task_selection.get("value") if task_selection is not None else "None"
     private_metadata = json.loads(view["private_metadata"])
     private_metadata["task_type"] = task_type
@@ -2599,7 +2603,6 @@ def process_submit_chat_prompt(payload, context):
         if lowered_resource in lowercase_prompt:
             resource_check = resource
             break
-    print(resource_check)
     block_set = [
         *get_block_set(
             "loading",
@@ -2634,6 +2637,64 @@ def process_submit_chat_prompt(payload, context):
     return {"response_action": "clear"}
 
 
+@processor()
+def process_send_recap_modal(payload, context):
+    print(payload)
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    view_id = context.get("view_id")
+    data = {
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_SEND_RECAPS,
+            "title": {"type": "plain_text", "text": f"{'Send Summary'}",},
+            "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
+            "submit": {"type": "plain_text", "text": "Send"},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+        return
+    except InvalidBlocksException as e:
+        logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
+    except InvalidBlocksFormatException as e:
+        logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
+    except UnHandeledBlocksException as e:
+        logger.exception(f"Failed To Send Recap for user {user.email} because of: {e}")
+    except InvalidAccessToken as e:
+        logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(user.id)} email {user.email} {e}"
+        )
+    except Exception as e:
+        logger.exception(f"Failed to open recap modal due to {e}")
+        data["view"]["blocks"] = block_builders.simple_section(
+            f"An Error occured gathering your users and channels:\n{e}", "mrkdwn"
+        )
+    res = slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
+GENERATIVE_ACTION_SWITCHER = {
+    "DRAFT_EMAIL": emit_process_send_email_draft,
+    "SEND_SUMMARY": emit_process_send_summary_to_dm,
+    "NEXT_STEPS": emit_process_send_next_steps,
+}
+
+
+def process_selected_generative_action(payload, context):
+    pm = payload.get("view").get("private_metadata")
+    generative_action_values = payload["view"]["state"]["values"]["GENERATIVE_ACTION"]
+    action = generative_action_values.get(list(generative_action_values.keys())[0])[
+        "selected_option"
+    ]["value"]
+    action_func = GENERATIVE_ACTION_SWITCHER[action]
+    action_res = action_func(payload, json.loads(pm))
+    return {"response_action": "clear"}
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2665,6 +2726,7 @@ def handle_view_submission(payload):
         slack_const.GET_SUMMARY: process_get_summary,
         slack_const.SUBMIT_CUSTOM_OBJECT_DATA: process_submit_custom_object,
         slack_const.COMMAND_FORMS__SUBMIT_CHAT: process_submit_chat_prompt,
+        slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
     }
 
     callback_id = payload["view"]["callback_id"]
