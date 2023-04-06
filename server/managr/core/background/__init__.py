@@ -1014,7 +1014,7 @@ def convert_date_string(date_string, value):
                 time_key = TIME_TO_NUMBER[key]
             if key in WORD_TO_NUMBER:
                 number_key = WORD_TO_NUMBER[key]
-    if any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
+    elif any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
         for key in split_date_string:
             if key in DAYS_TO_NUMBER.keys():
                 current = datetime.now()
@@ -1024,7 +1024,7 @@ def convert_date_string(date_string, value):
                     day_value = day_value + timezone.timedelta(days=7)
                 logger.info(f"CONVERT DATE STRING DEBUGGER: DAY SPECIFIC {day_value}")
                 return day_value
-    if any("end" in s for s in split_date_string):
+    elif any("end" in s for s in split_date_string):
         if any("week" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             start = current - timezone.timedelta(days=current.weekday())
@@ -1039,6 +1039,10 @@ def convert_date_string(date_string, value):
                 f"CONVERT DATE STRING DEBUGGER: END MONTH {current.replace(day=last_of_month)}"
             )
             return current.replace(day=last_of_month)
+    elif any("week" in s for s in split_date_string):
+        current = datetime.strptime(value, "%Y-%m-%d")
+        logger.info(f"CONVERT DATE STRING DEBUGGER: WEEK {current + timezone.timedelta(days=7)}")
+        return current + timezone.timedelta(days=7)
     if "back" in date_string:
         new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
             days=(time_key * number_key)
@@ -1176,7 +1180,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         template=form_template, user=user, update_source="chat", chat_submission=prompt
     )
     fields = form_template.custom_fields.all()
-    field_list = list(fields.values_list("label", flat=True))
+    field_list = [resource_type]
+    field_list.extend(list(fields.values_list("label", flat=True)))
+
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
@@ -1195,6 +1201,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 choice = r["choices"][0]["text"]
                 cleaned_choice = (
                     choice[choice.index("{") : choice.index("}") + 1]
+                    .replace("\n\n", "")
+                    .replace("\n ", "")
                     .replace("\n", "")
                     .replace("{ '", '{"')
                     .replace("'}", '"}')
@@ -1203,7 +1211,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 )
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
+                resource_res = data.pop(resource_type, None)
                 resource_check = data[name_field].lower().split(" ")
+                resource_check.append(resource_res)
                 lowered_type = resource_type.lower()
                 if lowered_type in resource_check:
                     resource_check.remove(lowered_type)
