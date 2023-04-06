@@ -70,6 +70,11 @@ export default new Router({
       name: 'Reports',
     },
     {
+      path: '/demo-center',
+      component: () => import('../views/DemoCenter'),
+      name: 'DemoCenter',
+    },
+    {
       path: '/forms',
       name: 'Forms',
       beforeEnter: Auth.requireAuth,
