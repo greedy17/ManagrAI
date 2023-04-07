@@ -967,7 +967,7 @@ def swap_submitted_data_labels(data, fields):
     api_key_data = {}
     for label in data.keys():
         try:
-            field = fields.get(label__icontains=label)
+            field = fields.get(label=label)
             api_key_data[field.api_name] = data[label]
         except Exception as e:
             continue
@@ -1097,11 +1097,14 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
-            cleaned_data[key] = (
-                str(new_value.date())
-                if crm == "SALESFORCE"
-                else (str(new_value.date()) + "T00:00:00.000Z")
-            )
+            if isinstance(new_value, str):
+                cleaned_data.pop(key)
+            else:
+                cleaned_data[key] = (
+                    str(new_value.date())
+                    if crm == "SALESFORCE"
+                    else (str(new_value.date()) + "T00:00:00.000Z")
+                )
         elif field.api_name == "dealstage":
             if resource:
                 pipeline = field.options[0][resource.secondary_data["pipeline"]]
