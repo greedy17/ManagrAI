@@ -1098,7 +1098,10 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
             if isinstance(new_value, str):
-                cleaned_data.pop(key)
+                if resource:
+                    cleaned_data[key] = resource.secondary_data[key]
+                else:
+                    cleaned_data[key] = None
             else:
                 cleaned_data[key] = (
                     str(new_value.date())
@@ -1142,7 +1145,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                 if resource:
                     cleaned_data[key] = resource.secondary_data[key]
                 else:
-                    cleaned_data.pop(key)
+                    cleaned_data[key] = None
 
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
@@ -1286,7 +1289,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     block_builders.section_with_button_block(
                         "Open Chat",
                         "OPEN_CHAT",
-                        f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                        f":no_entry_sign: We could not find a {resource_type} named {resource_check} because of {e}",
                         action_id=action_with_params(
                             slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                         ),
