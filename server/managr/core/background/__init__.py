@@ -1224,7 +1224,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             if resource not in ["Contact", "Lead"]:
                                 query = (
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.filter(name__icontains=word)
+                                    .objects.for_user(user)
+                                    .filter(name__icontains=word)
                                     .first()
                                 )
                                 if query:
@@ -1233,7 +1234,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             else:
                                 query = (
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.filter(email__icontains=word)
+                                    .objects.for_user(user)
+                                    .filter(email__icontains=word)
                                     .first()
                                 )
                                 if query:
