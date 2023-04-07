@@ -1215,12 +1215,12 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
                 cleaned_choice = clean_prompt_string(choice)
-                print(f"CLEANED PROMPT: {clean_prompt_string}")
+                print(f"CLEANED PROMPT: {cleaned_choice}")
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
-                resource_res = data.pop(resource_type, None)
+                resource_res = data.pop(resource_type, None).split(" ")
                 resource_check = data[name_field].lower().split(" ")
-                resource_check.append(resource_res)
+                resource_check.extend(resource_res)
                 lowered_type = resource_type.lower()
                 if lowered_type in resource_check:
                     resource_check.remove(lowered_type)
