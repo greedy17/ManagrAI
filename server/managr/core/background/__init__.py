@@ -1169,6 +1169,18 @@ def set_name_field(resource, crm):
     return None
 
 
+def clean_prompt_string(prompt_string):
+    prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1].replace(
+        "\n\n", ""
+    ).replace("\n ", "").replace("\n", "")
+    while "{ " in prompt_string:
+        prompt_string.replace("{ ", "{")
+    prompt_string.replace("{'", '{"').replace("'}", '"}').replace("', '", '", "').replace(
+        "': '", '": "'
+    )
+    return prompt_string
+
+
 @background()
 def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
@@ -1199,16 +1211,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
-                cleaned_choice = (
-                    choice[choice.index("{") : choice.index("}") + 1]
-                    .replace("\n\n", "")
-                    .replace("\n ", "")
-                    .replace("\n", "")
-                    .replace("{ '", '{"')
-                    .replace("'}", '"}')
-                    .replace("', '", '", "')
-                    .replace("': '", '": "')
-                )
+                cleaned_choice = clean_prompt_string(choice)
+                print(f"CLEANED PROMPT: {clean_prompt_string}")
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
                 resource_res = data.pop(resource_type, None)
