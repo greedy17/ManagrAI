@@ -967,7 +967,12 @@ def swap_submitted_data_labels(data, fields):
     api_key_data = {}
     for label in data.keys():
         try:
-            field = fields.get(label=label)
+            field_list = fields.filter(label__icontains=label)
+            field = None
+            for field_value in field_list:
+                if len(field_value.label) == len(label):
+                    field = field_value
+                    break
             api_key_data[field.api_name] = data[label]
         except Exception as e:
             continue
@@ -1047,6 +1052,7 @@ def convert_date_string(date_string, value):
         new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
             days=(time_key * number_key)
         )
+        logger.info(f"CONVERT DATE STRING DEBUGGER: END IF {new_value}")
     else:
         if time_key:
             new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
@@ -1081,7 +1087,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
         field = fields.get(api_name=key)
         if resource and field.api_name in ["Name", "dealname"]:
             cleaned_data[key] = resource.secondary_data[key]
-        if cleaned_data[key] is None or len(cleaned_data[key]) == 0:
+        if cleaned_data[key] is None or cleaned_data[key] == "":
             if resource:
                 cleaned_data[key] = resource.secondary_data[key]
             continue
@@ -1176,15 +1182,19 @@ def set_name_field(resource, crm):
 
 
 def clean_prompt_string(prompt_string):
-    prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1].replace(
-        "\n\n", ""
-    ).replace("\n ", "").replace("\n", "")
-    while "{ " in prompt_string:
-        prompt_string.replace("{ ", "{")
-    prompt_string.replace("{'", '{"').replace("'}", '"}').replace("', '", '", "').replace(
-        "': '", '": "'
+    cleaned_string = (
+        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
+        .replace("\n\n", "")
+        .replace("\n ", "")
+        .replace("\n", "")
+        .replace("  ", "")
+        .replace("', '", '", "')
+        .replace("': '", '": "')
     )
-    return prompt_string
+    while "{  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("{  ", "{ ")
+    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
+    return cleaned_string
 
 
 @background()
@@ -1198,10 +1208,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         template=form_template, user=user, update_source="chat", chat_submission=prompt
     )
     fields = form_template.custom_fields.all()
-    field_list = [resource_type]
-    field_list.extend(list(fields.values_list("label", flat=True)))
-
-    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
+    field_list = list(fields.values_list("label", flat=True))
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
@@ -1218,12 +1226,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
                 cleaned_choice = clean_prompt_string(choice)
-                print(f"CLEANED PROMPT: {cleaned_choice}")
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
-                resource_res = data.pop(resource_type, None).split(" ")
                 resource_check = data[name_field].lower().split(" ")
-                resource_check.extend(resource_res)
                 lowered_type = resource_type.lower()
                 if lowered_type in resource_check:
                     resource_check.remove(lowered_type)
@@ -1272,7 +1277,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     cleaned_data = clean_prompt_return_data(
                         swapped_field_data, fields, user.crm, resource
                     )
-
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
@@ -1402,7 +1406,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
     field_list = [resource_type, "Note", "Note Subject"]
     form_id = context.get("form_id")
     form = OrgCustomSlackFormInstance.objects.get(id=form_id)
-    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt)
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     has_error = False

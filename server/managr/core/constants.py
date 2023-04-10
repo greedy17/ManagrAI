@@ -28,7 +28,7 @@ OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"Summarize the meetings notes below in the most concise way as if you are reporting back to an executive that has very little time. Open with how the meeting went. Determine if it was a demo meeting or just a follow up conversation being logged. Do this by reading the meeting_comments notes and meeting_type. If its a follow up conversation apply that into the summary.\n Meeting notes:{object}"
 )
 OPEN_AI_UPDATE_PROMPT = (
-    lambda labels, prompt: f"Take the note below and break it into the following CRM fields\n Fields:{labels}\n text: {prompt}\nDesired output is a python dictionary."
+    lambda labels, prompt, date: f"Take the meeting note below and use it to update either Salesforce or HubSpot CRM fields below - Some of CRM fields are labeled with the API name, so take that into account. Desired output is a python dictionary, JSON.\nAssume CRM field labeled 'name' is always referring to either 'Company Name, 'Deal Name' or 'Opportunity Name' - Do NOT include 'company' 'deal' or 'Opportunity' into the field data\nThe entire meeting note should be pasted into 'meeting_comments', then update all the relevant fields from the meeting note. Lastly, date format needs to be: year-month-day and use the date below as reference.\n Fields:{labels}\n text: {prompt}\n date: {date}"
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
