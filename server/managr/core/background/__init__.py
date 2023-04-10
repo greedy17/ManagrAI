@@ -967,7 +967,7 @@ def swap_submitted_data_labels(data, fields):
     api_key_data = {}
     for label in data.keys():
         try:
-            field = fields.get(label__icontains=label)
+            field = fields.get(label=label)
             api_key_data[field.api_name] = data[label]
         except Exception as e:
             continue
@@ -1097,11 +1097,17 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             data_value = data[key]
             current_value = resource.secondary_data[key] if resource else None
             new_value = convert_date_string(data_value, current_value)
-            cleaned_data[key] = (
-                str(new_value.date())
-                if crm == "SALESFORCE"
-                else (str(new_value.date()) + "T00:00:00.000Z")
-            )
+            if isinstance(new_value, str):
+                if resource:
+                    cleaned_data[key] = resource.secondary_data[key]
+                else:
+                    cleaned_data[key] = None
+            else:
+                cleaned_data[key] = (
+                    str(new_value.date())
+                    if crm == "SALESFORCE"
+                    else (str(new_value.date()) + "T00:00:00.000Z")
+                )
         elif field.api_name == "dealstage":
             if resource:
                 pipeline = field.options[0][resource.secondary_data["pipeline"]]
@@ -1139,7 +1145,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                 if resource:
                     cleaned_data[key] = resource.secondary_data[key]
                 else:
-                    cleaned_data.pop(key)
+                    cleaned_data[key] = None
 
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
@@ -1167,6 +1173,18 @@ def set_name_field(resource, crm):
     elif resource == "Deal":
         return "Deal Name"
     return None
+
+
+def clean_prompt_string(prompt_string):
+    prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1].replace(
+        "\n\n", ""
+    ).replace("\n ", "").replace("\n", "")
+    while "{ " in prompt_string:
+        prompt_string.replace("{ ", "{")
+    prompt_string.replace("{'", '{"').replace("'}", '"}').replace("', '", '", "').replace(
+        "': '", '": "'
+    )
+    return prompt_string
 
 
 @background()
@@ -1199,21 +1217,13 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
-                cleaned_choice = (
-                    choice[choice.index("{") : choice.index("}") + 1]
-                    .replace("\n\n", "")
-                    .replace("\n ", "")
-                    .replace("\n", "")
-                    .replace("{ '", '{"')
-                    .replace("'}", '"}')
-                    .replace("', '", '", "')
-                    .replace("': '", '": "')
-                )
+                cleaned_choice = clean_prompt_string(choice)
+                print(f"CLEANED PROMPT: {cleaned_choice}")
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
-                resource_res = data.pop(resource_type, None)
+                resource_res = data.pop(resource_type, None).split(" ")
                 resource_check = data[name_field].lower().split(" ")
-                resource_check.append(resource_res)
+                resource_check.extend(resource_res)
                 lowered_type = resource_type.lower()
                 if lowered_type in resource_check:
                     resource_check.remove(lowered_type)
@@ -1224,7 +1234,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             if resource not in ["Contact", "Lead"]:
                                 query = (
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.filter(name__icontains=word)
+                                    .objects.for_user(user)
+                                    .filter(name__icontains=word)
                                     .first()
                                 )
                                 if query:
@@ -1233,7 +1244,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             else:
                                 query = (
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.filter(email__icontains=word)
+                                    .objects.for_user(user)
+                                    .filter(email__icontains=word)
                                     .first()
                                 )
                                 if query:
@@ -1277,7 +1289,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     block_builders.section_with_button_block(
                         "Open Chat",
                         "OPEN_CHAT",
-                        f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                        f":no_entry_sign: We could not find a {resource_type} named {resource_check} because of {e}",
                         action_id=action_with_params(
                             slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                         ),
