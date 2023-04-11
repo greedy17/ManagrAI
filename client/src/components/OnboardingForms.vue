@@ -16,7 +16,12 @@
           :hideSelected="true"
           :loading="refreshing"
           @close="onTouch"
-          :disabled="!userCRM"
+          :disabled="
+            !hasZoomChannel ||
+            !(orgHasSlackIntegration || hasSlackIntegration) ||
+            !hasNylasIntegration ||
+            !userCRM
+          "
           @input="onAddField($event[0])"
           :class="{ invalidOutline: isInvalid }"
           style="width: 27vw"
@@ -312,6 +317,23 @@ export default {
     },
     userCRM() {
       return this.$store.state.user.crm
+    },
+    orgHasSlackIntegration() {
+      return !!this.$store.state.user.organizationRef.slackIntegration
+    },
+    hasSlackIntegration() {
+      return !!this.$store.state.user.slackRef
+    },
+    hasNylasIntegration() {
+      return !!this.$store.state.user.nylas
+    },
+    userCanIntegrateSlack() {
+      return this.$store.state.user.isAdmin
+    },
+    hasZoomChannel() {
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.zoomChannel
+        : null
     },
   },
   props: {
