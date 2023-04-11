@@ -16,7 +16,7 @@
 export default {
   name: 'LeadershipCode',
   data() {
-    const LEADERSHIP_CODE = 'M@n@gr!100'
+    const LEADERSHIP_CODE = 'M@n@gr!200'
     return {
       code: '',
       leadershipCode: LEADERSHIP_CODE,
