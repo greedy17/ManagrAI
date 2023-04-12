@@ -1178,6 +1178,8 @@ def set_name_field(resource, crm):
         return "Company name"
     elif resource == "Deal":
         return "Deal Name"
+    elif resource == "Contact" and crm == "HUBSPOT":
+        return "Email"
     return None
 
 
@@ -1195,6 +1197,13 @@ def clean_prompt_string(prompt_string):
         cleaned_string = cleaned_string.replace("{  ", "{ ")
     cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
     return cleaned_string
+
+
+def correct_data_keys(data):
+    if "Company Name" in data.keys():
+        data["Company name"] = data["Company Name"]
+        del data["Company Name"]
+    return data
 
 
 @background()
@@ -1228,6 +1237,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 cleaned_choice = clean_prompt_string(choice)
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
+                data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = resource_type.lower()
                 if lowered_type in resource_check:
@@ -1236,7 +1246,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     if form_type == "UPDATE":
                         resource = None
                         for word in resource_check:
-                            if resource not in ["Contact", "Lead"]:
+                            if resource_type not in ["Contact", "Lead"]:
                                 query = (
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
                                     .objects.for_user(user)

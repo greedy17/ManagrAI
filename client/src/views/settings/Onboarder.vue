@@ -339,7 +339,11 @@
     <article
       :class="{
         'green-border': updateFields.length,
-        disabled: !hasZoomChannel || !hasSlackIntegration || !hasNylasIntegration || !userCRM,
+        disabled:
+          !hasZoomChannel ||
+          !(orgHasSlackIntegration || hasSlackIntegration) ||
+          !hasNylasIntegration ||
+          !userCRM,
       }"
     >
       <div :class="{ 'green-bg': updateFields.length }" class="red-bg">3</div>
@@ -401,7 +405,7 @@
     <article
       :class="{
         'green-border': workflows.list.length && hasRecapChannel,
-        disabled: !updateFields.length,
+        disabled: !updateFields.length || !userCRM || !hasZoomChannel,
       }"
     >
       <div :class="{ 'green-bg': workflows.list.length && hasRecapChannel }" class="red-bg">4</div>
@@ -484,7 +488,7 @@
               name="channel"
               id="channel"
               :placeholder="`my-pipeline-${userInitials}`"
-              :disabled="submitting || !updateFields.length"
+              :disabled="submitting || !updateFields.length || !userCRM || !hasZoomChannel"
               @input="logNewName(channelName, 'recap')"
             />
           </section>
@@ -500,7 +504,7 @@
         </div>
         <div ref="channel" v-else>
           <button
-            :disabled="selectedWorkflows.length < 2"
+            :disabled="selectedWorkflows.length < 2 || !userCRM || !hasZoomChannel"
             @click="onSaveAllWorkflows()"
             v-if="!submitting"
           >
@@ -666,6 +670,9 @@ export default {
     this.workflows.refresh()
   },
   methods: {
+    test() {
+      console.log(this.user)
+    },
     watchTime() {
       if (this.currentTime > 100) {
         clearInterval(this.interval)
@@ -1078,9 +1085,7 @@ export default {
         }
       }
       this.submitting = false
-      setTimeout(() => {
-        this.checkOnboardStatus()
-      }, 1000)
+      this.checkOnboardStatus()
     },
   },
   computed: {
