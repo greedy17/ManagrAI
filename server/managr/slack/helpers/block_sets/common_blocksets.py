@@ -549,7 +549,8 @@ def initial_alert_message(context):
     invocation = context.get("invocation")
     channel = context.get("channel")
     config_id = context.get("config_id")
-    user = context.get("user")
+    u = context.get("user")
+    user = User.objects.get(id=u)
     if settings.IN_DEV:
         url = "http://localhost:8080/pipelines"
     elif settings.IN_STAGING:
@@ -561,28 +562,41 @@ def initial_alert_message(context):
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "In-Line Edit",
+                    f"Update {'Fields' if user.crm == 'SALESFORCE' else 'Properties'}",
                     "switch_inline",
                     action_id=action_with_params(
                         slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
                         params=[
                             f"invocation={invocation}",
                             f"config_id={config_id}",
-                            f"u={user}",
+                            f"u={u}",
                             f"switch_to={'inline'}",
                         ],
                     ),
                     style="primary",
                 ),
                 block_builders.simple_button_block(
-                    "Additional Details",
+                    "Run Deal Review",
+                    "deal_review",
+                    action_id=action_with_params(
+                        slack_const.PROCESS_SWITCH_TO_DEAL_REVIEW,
+                        params=[
+                            f"invocation={invocation}",
+                            f"channel={channel}",
+                            f"u={u}",
+                            f"config_id={config_id}",
+                        ],
+                    ),
+                ),
+                block_builders.simple_button_block(
+                    "See Details",
                     "access_apps",
                     action_id=action_with_params(
                         slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
                         params=[
                             f"invocation={invocation}",
                             f"channel={channel}",
-                            f"u={user}",
+                            f"u={u}",
                             f"config_id={config_id}",
                             f"switch_to={'message'}",
                         ],

@@ -94,7 +94,9 @@ def command_meeting_summary(context):
     ]
 
 
-def custom_paginator_block(pagination_object, invocation, channel, config_id):
+def custom_paginator_block(
+    pagination_object, invocation, channel, config_id, action_id=slack_const.PAGINATE_ALERTS
+):
     next_page = pagination_object.get("next_page", None)
     prev_page = pagination_object.get("previous_page", None)
     blocks = []
@@ -106,14 +108,14 @@ def custom_paginator_block(pagination_object, invocation, channel, config_id):
             "Previous",
             str(prev_page),
             style="danger",
-            action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+            action_id=f"{action_id}?{urlencode({**page_context,'new_page':int(prev_page)})}",
         )
         button_blocks.append(prev_page_button)
     if next_page:
         next_page_button = block_builders.simple_button_block(
             "Next",
             str(next_page),
-            action_id=f"{slack_const.PAGINATE_ALERTS}?{urlencode({**page_context,'new_page':int(next_page)})}",
+            action_id=f"{action_id}?{urlencode({**page_context,'new_page':int(next_page)})}",
         )
         button_blocks.append(next_page_button)
     if len(button_blocks):
@@ -556,9 +558,10 @@ def initial_inline_blockset(context, *args, **kwargs):
     user = User.objects.get(id=context.get("u"))
     invocation = context.get("invocation")
     config_id = context.get("config_id")
+    field_name = "Properties" if user.crm == "HUBSPOT" else "Fields"
     action_blocks = [
         block_builders.simple_button_block(
-            f"Switch to {'Additional Details' if switch_to == 'message' else 'In-Line'}",
+            f"Switch to {'See Details' if switch_to == 'message' else f'Update {field_name}'}",
             "switch_inline",
             action_id=action_with_params(
                 slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
@@ -572,6 +575,19 @@ def initial_inline_blockset(context, *args, **kwargs):
             ),
         ),
         block_builders.simple_button_block(
+            "Run Deal Review",
+            "deal_review",
+            action_id=action_with_params(
+                slack_const.PROCESS_SWITCH_TO_DEAL_REVIEW,
+                params=[
+                    f"invocation={invocation}",
+                    f"channel={context.get('channel')}",
+                    f"u={str(user.id)}",
+                    f"config_id={config_id}",
+                ],
+            ),
+        ),
+        block_builders.simple_button_block(
             "Update in Bulk",
             "bulk_update",
             action_id=action_with_params(
@@ -580,14 +596,4 @@ def initial_inline_blockset(context, *args, **kwargs):
             ),
         ),
     ]
-    action_blocks.append(
-        block_builders.simple_button_block(
-            "Get Summary",
-            "get_summary",
-            action_id=action_with_params(
-                slack_const.GET_SUMMARY,
-                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
-            ),
-        )
-    )
     return block_builders.actions_block(action_blocks)

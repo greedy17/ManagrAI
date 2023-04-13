@@ -1,5 +1,6 @@
 import logging
 import time
+import json
 from django.utils import timezone
 from background_task import background
 
@@ -10,7 +11,7 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers.utils import action_with_params, block_finder
 from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.utils.misc import custom_paginator
 from managr.crm.models import ObjectField
@@ -79,6 +80,14 @@ def emit_process_paginated_call_recordings(payload, context):
     return _process_paginated_call_recordings(payload, context)
 
 
+def emit_process_paginate_deal_reviews(payload, context):
+    return _process_paginate_deal_reviews(payload, context)
+
+
+def emit_process_send_deal_review(payload, context):
+    return _process_send_deal_review(payload, context)
+
+
 @background(schedule=0)
 @log_all_exceptions
 def _process_send_paginated_alerts(payload, context):
@@ -110,9 +119,10 @@ def _process_send_paginated_alerts(payload, context):
             )
         return
     alert_template = alert_instance.template
+    field_name = "Properties" if user.crm == "HUBSPOT" else "Fields"
     action_blocks = [
         block_builders.simple_button_block(
-            "Switch to In-Line",
+            f"Switch to Update {field_name}",
             "switch_inline",
             action_id=action_with_params(
                 slack_const.PROCESS_SWITCH_ALERT_MESSAGE,
@@ -125,6 +135,19 @@ def _process_send_paginated_alerts(payload, context):
             ),
         ),
         block_builders.simple_button_block(
+            "Run Deal Review",
+            "deal_review",
+            action_id=action_with_params(
+                slack_const.PROCESS_SWITCH_TO_DEAL_REVIEW,
+                params=[
+                    f"invocation={invocation}",
+                    f"channel={context.get('channel')}",
+                    f"u={str(user.id)}",
+                    f"config_id={config_id}",
+                ],
+            ),
+        ),
+        block_builders.simple_button_block(
             "Update in Bulk",
             "bulk_update",
             action_id=action_with_params(
@@ -133,16 +156,6 @@ def _process_send_paginated_alerts(payload, context):
             ),
         ),
     ]
-    action_blocks.append(
-        block_builders.simple_button_block(
-            "Get Summary",
-            "get_summary",
-            action_id=action_with_params(
-                slack_const.GET_SUMMARY,
-                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
-            ),
-        )
-    )
     blocks = payload.get("message").get("blocks")[:3]
     alert_instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
     for alert_instance in alert_instances.get("results", []):
@@ -179,7 +192,7 @@ def _process_send_paginated_alerts(payload, context):
                     "user": str(user.id),
                     "config_id": config_id,
                     "invocation": invocation,
-                    "title": f"*New Task:* {len(alert_instances)} {alert_template.title}",
+                    "title": f"{len(alert_instances)} *{alert_template.title}*",
                 },
             ),
             block_builders.context_block(f"Owned by {user.full_name}"),
@@ -759,3 +772,156 @@ def _process_submit_resource_data(payload, context):
             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
         )
     return
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_paginate_deal_reviews(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    config = AlertConfig.objects.get(id=context.get("config_id"))
+    invocation = context.get("invocation")
+    alert_instances = AlertInstance.objects.filter(
+        config__id=config.id, invocation=context.get("invocation")
+    )
+    instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
+    blocks = payload.get("message").get("blocks")[:2]
+    for alert_instance in instances.get("results", []):
+        block = block_builders.section_with_button_block(
+            "Generate",
+            "GENERATE_REVIEW",
+            alert_instance.resource.display_value,
+            block_id=str(alert_instance.id),
+            action_id=action_with_params(
+                slack_const.PROCESS_SEND_DEAL_REVIEW, params=[f"alert_id={str(alert_instance.id)}"]
+            ),
+        )
+        blocks.append(block)
+
+    if len(blocks) > 2:
+        blocks.append({"type": "divider"})
+        blocks = [
+            *blocks,
+            *custom_paginator_block(
+                instances,
+                invocation,
+                context.get("channel"),
+                str(config.id),
+                action_id=slack_const.PROCESS_PAGINATE_DEAL_REVIEW,
+            ),
+        ]
+    try:
+        slack_requests.update_channel_message(
+            context.get("channel"),
+            context.get("ts"),
+            block_set=blocks,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        logger.exception(
+            f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+        )
+    return
+
+
+def deal_review_data_builder(resource_data, api_name_list, crm, form_data, fields):
+    value_dict = {}
+    api_name_list.remove("meeting_type")
+    api_name_list.remove("meeting_comments")
+    for api_name in api_name_list:
+        field = fields.filter(api_name=api_name).first()
+        label = field.label
+        value_dict[label] = resource_data[api_name]
+    modified_field = "hs_lastmodifieddate" if crm == "HUBSPOT" else "LastModifiedDate"
+    try:
+        modified_date = resource_data[modified_field]
+    except Exception:
+        modified_date = None
+    if modified_date:
+        value_dict["Last Activity"] = modified_date
+    if "meeting_comments" in form_data.keys():
+        value_dict["Meeting Comments"] = form_data["meeting_comments"]
+    return value_dict
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_send_deal_review(payload, context):
+    from managr.core import constants as core_consts
+    from managr.utils.client import Client
+
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    alert_id = context.get("alert_id")
+    alert = AlertInstance.objects.get(id=alert_id)
+    form_template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(resource=alert.template.resource_type, form_type="UPDATE")
+        .first()
+    )
+    fields = form_template.custom_fields.all()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user, resource_id=str(alert.resource_id)
+    ).first()
+    form_data = form_check.saved_data if form_check else {}
+    api_names = list(fields.values_list("api_name", flat=True))
+    deal_review_data = deal_review_data_builder(
+        alert.resource.secondary_data, api_names, user.crm, form_data, fields
+    )
+    prompt = core_consts.OPEN_AI_DEAL_REVIEW(deal_review_data, alert.template.resource_type)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt)
+    blocks = payload["message"]["blocks"]
+    has_error = False
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            if r.status_code == 200:
+                r = r.json()
+                response_text = r.get("choices")[0].get("text")
+                break
+        except Exception as e:
+            has_error = True
+            text = "There was an error generating your review"
+            break
+    try:
+        index, block = block_finder(alert_id, blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if block:
+        if has_error:
+            new_block = block_builders.simple_section(text)
+        else:
+            new_block = block_builders.simple_section(
+                f":white_check_mark: Deal review generated for *{alert.resource.display_value}*",
+                "mrkdwn",
+            )
+        blocks[index] = new_block
+    try:
+        slack_requests.update_channel_message(
+            context.get("channel"),
+            context.get("ts"),
+            block_set=blocks,
+            access_token=user.organization.slack_integration.access_token,
+        )
+        if not has_error:
+            chat_blocks = [
+                block_builders.header_block("AI Generated Deal Review"),
+                block_builders.context_block("ManagrGPT was used to generate this deal review"),
+                {"type": "divider"},
+                block_builders.simple_section(response_text, "mrkdwn"),
+            ]
+            slack_requests.send_channel_message(
+                channel=user.slack_integration.channel,
+                block_set=chat_blocks,
+                access_token=user.organization.slack_integration.access_token,
+            )
+    except Exception as e:
+        logger.exception(
+            f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+        )
+
+    return
+
