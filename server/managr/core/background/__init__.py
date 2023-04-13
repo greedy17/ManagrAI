@@ -1172,13 +1172,13 @@ def set_owner_field(resource, crm):
 
 
 def set_name_field(resource, crm):
-    if resource in ["Opportunity", "Account", "Contact"] and crm == "SALESFORCE":
+    if resource in ["Opportunity", "Account"]:
         return "Name"
     elif resource == "Company":
         return "Company name"
     elif resource == "Deal":
         return "Deal Name"
-    elif resource == "Contact" and crm == "HUBSPOT":
+    elif resource == "Contact":
         return "Email"
     return None
 
