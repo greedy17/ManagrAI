@@ -1,47 +1,25 @@
 import logging
-import json
-import pytz
 import uuid
-import random
 from datetime import datetime
 from functools import reduce
-from urllib.parse import urlencode, quote_plus, urlparse
-from managr.alerts.constants import ALERT_PIPELINE_URL
-
-from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
 from background_task import background
 
-
-from rest_framework.exceptions import ValidationError
-
-
 from managr.api.decorators import sf_api_exceptions, slack_api_exceptions
 from managr.slack import constants as slack_const
 from managr.utils.misc import custom_paginator
 
-from managr.slack.helpers.block_sets.command_views_blocksets import custom_paginator_block
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.utils import process_action_id, NO_OP, processor, block_finder
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-from managr.slack.helpers.exceptions import (
-    UnHandeledBlocksException,
-    InvalidBlocksFormatException,
-    InvalidBlocksException,
-    InvalidAccessToken,
-    CannotSendToChannel,
-)
+from managr.slack.helpers.exceptions import CannotSendToChannel
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.crm.exceptions import (
     TokenExpired,
-    FieldValidationError,
-    RequiredFieldError,
     SFQueryOffsetError,
-    SFNotFoundError,
 )
 
 from ..models import AlertTemplate, AlertInstance, AlertConfig
@@ -258,7 +236,7 @@ def _process_send_alert(invocation, channel, config_id):
                 "user": str(template.user.id),
                 "config_id": config_id,
                 "invocation": invocation,
-                "title": f"*New Task:* {len(alert_instances)} results for {template.title}",
+                "title": f"{len(alert_instances)} results for *{template.title}*",
             },
         ),
         block_builders.context_block(f"Owned by {instance_user.full_name}"),
