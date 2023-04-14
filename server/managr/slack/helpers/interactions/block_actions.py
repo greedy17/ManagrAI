@@ -31,6 +31,8 @@ from managr.slack.background import (
     emit_process_paginated_engagement_state,
     emit_process_paginated_call_recordings,
     emit_process_paginated_engagement_details,
+    emit_process_paginate_deal_reviews,
+    emit_process_send_deal_review,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
@@ -3117,34 +3119,6 @@ def process_view_recap(payload, context):
     #     message_string_for_recap = "No Data to show from form"
 
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
-    # action_blocks = [
-    #     block_builders.simple_button_block(
-    #         "View Notes",
-    #         "get_notes",
-    #         action_id=action_with_params(
-    #             slack_const.GET_NOTES,
-    #             params=[
-    #                 f"u={str(user.id)}",
-    #                 f"resource_id={str(main_form.resource_id)}",
-    #                 "type=recap",
-    #                 f"resource_type={main_form.template.resource}",
-    #             ],
-    #         ),
-    #     ),
-    # ]
-    # if main_form.template.resource != "Lead":
-    #     action_blocks.append(
-    #         block_builders.simple_button_block(
-    #             "Call Details",
-    #             "call_details",
-    #             action_id=action_with_params(
-    #                 slack_const.GONG_CALL_RECORDING,
-    #                 params=[f"u={str(user.id)}", f"form_id={str(main_form.id)}", "type=recap",],
-    #             ),
-    #             style="primary",
-    #         ),
-    #     )
-    # blocks.append(block_builders.actions_block(action_blocks))
     blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     data = {
         "view_id": loading_view_data["view"]["id"],
@@ -3609,7 +3583,7 @@ def process_open_generative_action_modal(payload, context):
         options = [
             block_builders.option("Draft Follow-up Email", "DRAFT_EMAIL"),
             block_builders.option("Suggest Next Steps", "NEXT_STEPS"),
-            block_builders.option("Share Summary", "SEND_SUMMARY"),
+            block_builders.option("Get Summary", "SEND_SUMMARY"),
         ]
         blocks = [
             block_builders.static_select(
@@ -3670,6 +3644,65 @@ def process_regenerate_action(payload, context):
     except Exception as e:
         logger.exception(e)
 
+    return
+
+
+@processor(required_context=["u", "invocation", "config_id"])
+def process_switch_to_deal_reviews(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    channel_id = payload["channel"]["id"]
+    ts = payload["message"]["ts"]
+    context.update(channel=channel_id, ts=ts)
+    loading_block = get_block_set("loading", {"message": "Processing workflows..."})
+    blocks = payload["message"]["blocks"][:2]
+    blocks.extend(loading_block)
+    try:
+        res = slack_requests.update_channel_message(
+            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+        )
+        emit_process_paginate_deal_reviews(payload, context)
+    except Exception as e:
+        logger.exception(e)
+    return
+
+
+@processor(required_context=["alert_id"])
+def process_send_deal_review(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    channel_id = payload["channel"]["id"]
+    ts = payload["message"]["ts"]
+    context.update(channel=channel_id, ts=ts)
+    loading_block = get_block_set("loading", {"message": "Processing workflows..."})
+    blocks = payload["message"]["blocks"][:2]
+    blocks.extend(loading_block)
+    try:
+        res = slack_requests.update_channel_message(
+            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+        )
+        emit_process_send_deal_review(payload, context)
+    except Exception as e:
+        logger.exception(e)
+    return
+
+
+@processor(required_context=["invocation", "config_id"])
+def process_paginate_deal_reviews(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    channel_id = payload["channel"]["id"]
+    ts = payload["message"]["ts"]
+    context.update(channel=channel_id, ts=ts, new_page=context.get("new_page"), u=str(user.id))
+    loading_block = get_block_set("loading", {"message": "Processing workflows..."})
+    blocks = payload["message"]["blocks"][:2]
+    blocks.extend(loading_block)
+    try:
+        res = slack_requests.update_channel_message(
+            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+        )
+        emit_process_paginate_deal_reviews(payload, context)
+    except Exception as e:
+        logger.exception(e)
     return
 
 
@@ -3736,6 +3769,9 @@ def handle_block_actions(payload):
         slack_const.REOPEN_CHAT_MODAL: reopen_chat_modal,
         slack_const.OPEN_GENERATIVE_ACTION_MODAL: process_open_generative_action_modal,
         slack_const.PROCESS_REGENERATE_ACTION: process_regenerate_action,
+        slack_const.PROCESS_SWITCH_TO_DEAL_REVIEW: process_switch_to_deal_reviews,
+        slack_const.PROCESS_PAGINATE_DEAL_REVIEW: process_paginate_deal_reviews,
+        slack_const.PROCESS_SEND_DEAL_REVIEW: process_send_deal_review,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

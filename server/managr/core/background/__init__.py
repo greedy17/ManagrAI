@@ -1219,7 +1219,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     fields = form_template.custom_fields.all()
     field_list = list(fields.values_list("label", flat=True))
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, top_p=0.1)
     logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     attempts = 1
@@ -1417,7 +1417,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
     form_id = context.get("form_id")
     form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, top_p=0.1)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     has_error = False
     attempts = 1
@@ -1467,7 +1467,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
 @background()
 def _process_send_email_draft(payload, context):
     user = User.objects.get(id=context.get("u"))
-    form_ids = context.get("form_ids").split(".")
+    form_ids = context.get("form_ids").split(",")
     forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     data_collector = {}
     for form in forms:
@@ -1539,7 +1539,7 @@ def _process_send_email_draft(payload, context):
 @background()
 def _process_send_next_steps(payload, context):
     user = User.objects.get(id=context.get("u"))
-    form_ids = context.get("form_ids").split(".")
+    form_ids = context.get("form_ids").split(",")
     forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     data_collector = {}
     for form in forms:
@@ -1656,7 +1656,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
 
 
 def _process_send_summary_to_dm(payload, context):
-    form_ids = context.get("form_ids").split(".")
+    form_ids = context.get("form_ids").split(",")
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
         template__resource="OpportunityLineItem"
     )
