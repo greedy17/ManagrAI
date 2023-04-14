@@ -39,25 +39,23 @@ OPEN_AI_NEXT_STEPS = (
 )
 
 OPEN_AI_DEAL_REVIEW = (
-    lambda data, resource: f"""You are my sales manager, super critical of my deals.
-    You are also very direct. I am a sales rep. Imagine we are having a deal review (a weekly event) and your job is to go through my deal and answer the questions below.
-    \nDefault to using the BANT sales framework as you assess each deal unless the MEDDIC or MEDDPICC sales framework is being used (you can tell based on the fields being used below):
-    \n1) Grade 1-10 on how likely this deal is to close this month, and a very short (100 character limit) description as to why. Flag any fields are out of date like, close date, next step date, etc. The deal is less likely to come if the close date is in the past.
+    lambda data, resource, date, crm: f"""You are my sales manager, super critical of my deals.
+    You are also very direct. I am a sales rep. Imagine we are having a deal review (a weekly event) and your job is to go through my deal and answer the questions below. Today's date is {date}
+    \nDefault to using the BANT sales framework as you assess each deal unless the MEDDIC or MEDDPICC sales framework is being used (you can tell based on the CRM fields).
+    \n1) Grade 1-10 on how likely this deal is to close this month, and a very short (100 character limit) description as to why. The deal is less likely to come if the close date and/or next step date is in the past.
     \n2) Highlight what information is missing from this deal that can help move this deal forward
     \n3) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. Keep in mind the person is likely an executive that we are trying to sell a product to. If possible, end the email with a question - one that will move the deal forward. Start the email with Hi or Hey and do not use Best Regards in the sign off. Keep each email very short.
-    \n4) Add a note or suggestion based on your review that could be helpful to the sales rep. Keep under 150 characters.
     \nHere is the format I want:
     \n{resource}:
     \n1) Grade: result of grade
     \n2) Missing information: list out missing information in sentence format
     \n3) Email: write out the email
-    \nSort by most likely to close at the top to least likely at the bottom
-    \nUse the deal data below to make your assessment, data is coming from either HubSpot or Salesforce CRM. Account for labels being the API name.
+    \nUse the deal data below to make your assessment, data is coming from either SalesForce or HubSpot CRM.. Account for labels being the API name.
     \n Deal Data: {data}"""
 )
 
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, temperature=None):
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, temperature=None, top_p=None):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,
@@ -66,8 +64,8 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, temperature=None):
     }
     if temperature:
         body["temperature"] = temperature
-    else:
-        body["top_p"] = 0.1
+    if top_p:
+        body["top_p"] = top_p
     return body
 
 

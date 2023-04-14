@@ -3583,7 +3583,7 @@ def process_open_generative_action_modal(payload, context):
         options = [
             block_builders.option("Draft Follow-up Email", "DRAFT_EMAIL"),
             block_builders.option("Suggest Next Steps", "NEXT_STEPS"),
-            block_builders.option("Share Summary", "SEND_SUMMARY"),
+            block_builders.option("Get Summary", "SEND_SUMMARY"),
         ]
         blocks = [
             block_builders.static_select(

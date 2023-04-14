@@ -3,6 +3,7 @@ import time
 import json
 from django.utils import timezone
 from background_task import background
+from datetime import datetime
 
 from managr.api.decorators import slack_api_exceptions, log_all_exceptions
 from managr.alerts.models import AlertInstance, AlertConfig
@@ -785,6 +786,7 @@ def _process_paginate_deal_reviews(payload, context):
     )
     instances = custom_paginator(alert_instances, page=int(context.get("new_page", 1)))
     blocks = payload.get("message").get("blocks")[:2]
+    blocks.append({"type": "divider"})
     for alert_instance in instances.get("results", []):
         block = block_builders.section_with_button_block(
             "Generate",
@@ -827,13 +829,19 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
     value_dict = {}
     api_name_list.remove("meeting_type")
     api_name_list.remove("meeting_comments")
+    owner_field = "hubspot_owner_id" if crm == "HUBSPOT" else "OwnerId"
+    api_name_list.remove(owner_field)
     for api_name in api_name_list:
         field = fields.filter(api_name=api_name).first()
         label = field.label
-        value_dict[label] = resource_data[api_name]
+        if field.data_type in ["Date", "DateTime"] and crm == "HUBSPOT":
+            converted_string = resource_data[api_name].split("T")
+            value_dict[label] = converted_string[0]
+        else:
+            value_dict[label] = resource_data[api_name]
     modified_field = "hs_lastmodifieddate" if crm == "HUBSPOT" else "LastModifiedDate"
     try:
-        modified_date = resource_data[modified_field]
+        modified_date = resource_data[modified_field].split("T")[0]
     except Exception:
         modified_date = None
     if modified_date:
@@ -841,6 +849,18 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
     if "meeting_comments" in form_data.keys():
         value_dict["Meeting Comments"] = form_data["meeting_comments"]
     return value_dict
+
+
+def set_name_field(resource):
+    if resource in ["Opportunity", "Account"]:
+        return f"{resource} Name"
+    elif resource == "Company":
+        return "Company name"
+    elif resource == "Deal":
+        return "Deal Name"
+    elif resource == "Contact":
+        return "Email"
+    return None
 
 
 @background(schedule=0)
@@ -867,8 +887,12 @@ def _process_send_deal_review(payload, context):
     deal_review_data = deal_review_data_builder(
         alert.resource.secondary_data, api_names, user.crm, form_data, fields
     )
-    prompt = core_consts.OPEN_AI_DEAL_REVIEW(deal_review_data, alert.template.resource_type)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt)
+    field_name = set_name_field(alert.template.resource_type)
+    prompt = core_consts.OPEN_AI_DEAL_REVIEW(
+        deal_review_data, field_name, datetime.now().date(), user.crm
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, top_p=0.9, temperature=0.7)
+    print(f"DEAL REVIEW BODY: {body}")
     blocks = payload["message"]["blocks"]
     has_error = False
     while True:

@@ -300,7 +300,7 @@ def pull_usage_data(month_only=False):
 
 def get_summary_completion(user, data):
     summary_prompt = core_const.OPEN_AI_SUMMARY_PROMPT(data)
-    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt)
+    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, top_p=0.1)
     url = core_const.OPEN_AI_COMPLETIONS_URI
     with Client as client:
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
