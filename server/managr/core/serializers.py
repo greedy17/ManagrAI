@@ -251,7 +251,7 @@ class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
 class NoteTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = NoteTemplate
-        fields = ("subject", "body", "user", "is_shared", "id")
+        fields = ("subject", "body", "user", "is_shared", "id", "type")
 
 
 class UserTrialSerializer(serializers.ModelSerializer):

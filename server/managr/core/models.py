@@ -793,6 +793,12 @@ class NoteTemplate(TimeStampModel):
     body = models.TextField()
     user = models.ForeignKey("core.User", on_delete=models.CASCADE)
     is_shared = models.BooleanField(default=False)
+    type = models.CharField(
+        max_length=255,
+        choices=core_consts.NOTE_TYPES,
+        blank=True,
+        default=core_consts.NOTE_TYPE_STANDARD,
+    )
 
     objects = NoteTemplateQuerySet.as_manager()
 
