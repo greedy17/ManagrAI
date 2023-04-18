@@ -467,7 +467,7 @@ export default {
       //   'Deal Review',
       //   'Close Date Approaching',
       // ],
-      commandModalOpen: true,
+      commandModalOpen: false,
       meetingListOpen: false,
       activeWorkflow: null,
       allConfigs,

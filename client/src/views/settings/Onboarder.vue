@@ -609,10 +609,10 @@ export default {
     // selectedWorkflows: 'scrollToChannel',
   },
   mounted() {
-    // setTimeout(() => {
-    //   this.checkOnboardStatus()
-    // }, 5000)
-    // this.checkCrm()
+    setTimeout(() => {
+      this.checkOnboardStatus()
+    }, 5000)
+    this.checkCrm()
   },
   async created() {
     try {
