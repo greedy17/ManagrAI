@@ -31,11 +31,12 @@
           </template>
           <template v-slot:placeholder>
             <p class="slot-icon">
+              <img src="@/assets/images/search.svg" alt="" />
               {{
                 userCRM === 'SALESFORCE'
-                  ? 'Opportunity Fields'
+                  ? 'Search Opportunity Fields'
                   : userCRM === 'HUBSPOT'
-                  ? 'Deal properties'
+                  ? 'Search Deal properties'
                   : 'Connect CRM'
               }}
             </p>
