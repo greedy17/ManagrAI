@@ -1301,7 +1301,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 user.organization.slack_integration.access_token,
                 block_set=[
                     block_builders.section_with_button_block(
-                        "Open Chat",
+                        "Reopen Chat",
                         "OPEN_CHAT",
                         f":no_entry_sign: We could not find a {resource_type} named {resource_check} because of {e}",
                         action_id=action_with_params(
@@ -1314,7 +1314,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if has_error:
         blocks = [
             block_builders.section_with_button_block(
-                "Open Chat",
+                "Reopen Chat",
                 "OPEN_CHAT",
                 f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
                 action_id=action_with_params(
@@ -1373,7 +1373,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             has_error = True
             blocks = [
                 block_builders.section_with_button_block(
-                    "Open Chat",
+                    "Reopen Chat",
                     "OPEN_CHAT",
                     f":no_entry_sign: Uh-oh we hit a validation: {e}",
                     action_id=action_with_params(
@@ -1386,7 +1386,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             has_error = True
             blocks = [
                 block_builders.section_with_button_block(
-                    "Open Chat",
+                    "Reopen Chat",
                     "OPEN_CHAT",
                     f":no_entry_sign: Uh-oh we hit a error: {e}",
                     action_id=action_with_params(

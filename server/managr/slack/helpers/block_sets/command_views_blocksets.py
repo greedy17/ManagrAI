@@ -464,13 +464,23 @@ def choose_opportunity_block_set(context):
 
 @block_set(required_context=["u"])
 def actions_block_set(context):
+    from managr.core.models import NoteTemplate
+
     user = User.objects.get(id=context.get("u"))
     user_id = context.get("u")
-    update_label = "Update Salesforce" if user.crm == "SALESFORCE" else "Update HubSpot"
+    update_label = (
+        "Update Salesforce (Form)" if user.crm == "SALESFORCE" else "Update HubSpot (Form)"
+    )
     crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     options = [
         block_builders.option(update_label, "UPDATE_RESOURCE"),
     ]
+    templates_query = NoteTemplate.objects.for_user(user)
+    template_options = (
+        [template.as_slack_option for template in templates_query]
+        if len(templates_query)
+        else [block_builders.option("You have no templates", "NONE")]
+    )
     for action in slack_const.MANAGR_ACTIONS:
         options.append(block_builders.option(action[1], action[0]))
     if user.crm == "SALESFORCE":
@@ -484,15 +494,22 @@ def actions_block_set(context):
         options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
     blocks = [
         block_builders.input_block(
-            f"Update {crm} by sending a message",
-            placeholder="Paste your note here, and we will update your CRM",
+            f"Update {crm} using conversational AI",
+            placeholder=f"Ex: Push close date for {'Opportunity' if crm == 'SALESFORCE' else 'Deal'} Pied Piper to the end of the month",
             block_id="CHAT_PROMPT",
             multiline=True,
             optional=False,
         ),
         block_builders.context_block("Powered by ChatGPT © :robot_face:"),
         block_builders.static_select(
-            "Or select a different action",
+            "Select Template",
+            template_options,
+            f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={user_id}",
+            block_id="SELECT_TEMPLATE",
+        ),
+        {"type": "divider"},
+        block_builders.static_select(
+            "Other options",
             options,
             f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
             block_id="select_action",
