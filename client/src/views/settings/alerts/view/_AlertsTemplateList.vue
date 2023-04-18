@@ -129,49 +129,40 @@
       <div class="command-modal">
         <header>
           <h2>
-            Managr meets you where you are
+            Using chatbot feature 💬
             <img
               src="@/assets/images/slackLogo.png"
-              style="margin-left: 8px"
-              height="16px"
+              style="margin-left: 6px"
+              height="18px"
               alt=""
             />
           </h2>
-          <p>You can access Managr from anywhere in Slack using commands.</p>
+          <p>Update CRM & auto-fill field data using conversational AI.</p>
         </header>
         <section>
           <div>
-            <h5><span>Commands</span></h5>
-            <p>Use '/' to start commands in any conversation</p>
+            <h5><span>1. Run a command in Slack</span></h5>
+            <p>Type '/' into any Slack message box to initiate a command</p>
           </div>
           <div>
-            <h5><span>/managr-actions</span></h5>
-            <p>Launch an action through Managr</p>
+            <h5><span>2. Select "managr-actions"</span></h5>
+            <p>Search for "Managr-actions" or just "actions" should work</p>
           </div>
           <div>
-            <h5>
-              <span>/managr-update</span>
-              {{
-                userCRM === 'SALESFORCE'
-                  ? 'opportunity , account, contact, lead'
-                  : 'deal, account, contact'
-              }}
-            </h5>
-            <p>Updates a resource</p>
+            <h5><span>3. Write in your update using natural language!</span></h5>
+            <p>
+              Paste in your notes or make one-off updates. Follow the example below & dont worry, it
+              let's you try again :)
+            </p>
           </div>
-          <div>
-            <h5>
-              <span>/managr-create</span>
-              {{
-                userCRM === 'SALESFORCE'
-                  ? 'opportunity , account, contact, lead'
-                  : 'deal, account, contact'
-              }}
-            </h5>
-            <p>Creates a new resource</p>
+          <div class="center">
+            <img src="@/assets/images/chatbot.png" height="300px" alt="" />
           </div>
         </section>
         <footer>
+          <small class="gray-blue"
+            >For best results, avoid using symbols, colons, quotes and dollar signs.</small
+          >
           <button @click="closeCommandModal()">Got it</button>
         </footer>
       </div>
@@ -760,6 +751,10 @@ export default {
   max-width: 200px;
 }
 
+.gray-blue {
+  color: $light-gray-blue;
+}
+
 @keyframes shimmer {
   100% {
     -webkit-mask-position: left;
@@ -1179,20 +1174,37 @@ a {
   height: 70vh;
   width: 100%;
 }
+.center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 0px !important;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  outline: 1px solid $soft-gray;
+  border-radius: 6px;
+}
 .small-text {
   font-size: 10px;
   color: $dark-green;
   margin-top: 4px;
 }
 .command-modal {
-  @include medium-modal();
+  @include large-modal();
   overflow-x: hidden;
-  width: 32vw;
+  width: 36vw;
+  height: 100%;
   align-items: center;
-  padding: 24px;
+  padding: 0px 24px 0px 24px;
   position: relative;
 
   header {
+    position: sticky;
+    top: 0;
+    padding-top: 24px;
+    background-color: white;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1249,7 +1261,7 @@ a {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+
     button {
       background-color: $grape;
       color: white;
@@ -1271,15 +1283,15 @@ a {
 
   footer {
     width: 100%;
-    position: absolute;
+    position: sticky;
     bottom: 0;
-    padding: 16px 32px;
+    margin-top: 16px;
     background-color: white;
-
+    padding-bottom: 16px;
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
 
     button {
       background-color: $dark-green;
@@ -1287,7 +1299,7 @@ a {
       font-size: 13px;
       border-radius: 4px;
       border: none;
-      margin: 0px 16px;
+
       color: $white;
       cursor: pointer;
       transition: all 0.25s;
