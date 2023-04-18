@@ -313,7 +313,11 @@
                   type="text"
                   name="channel"
                   id="channel"
-                  :disabled="!userCRM || !(orgHasSlackIntegration || hasSlackIntegration)"
+                  :disabled="
+                    !userCRM ||
+                    !(orgHasSlackIntegration || hasSlackIntegration) ||
+                    !hasNylasIntegration
+                  "
                   :placeholder="`log-meeting-${userInitials}`"
                   @input="logNewName(meetingChannelName, 'zoom')"
                 />
@@ -363,7 +367,7 @@
       <div v-else-if="userCRM" class="wrapper">
         <h3>
           Step 3: Add {{ camelize(userCRM) }}
-          {{ userCRM === 'SALESFORCE' ? 'fields' : 'properties' }}
+          {{ userCRM === 'SALESFORCE' ? 'Opportunity fields' : 'Deal properties' }}
         </h3>
         <label class="icon workflow row">
           <span class="tooltip">
