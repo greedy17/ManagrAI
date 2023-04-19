@@ -1240,6 +1240,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = resource_type.lower()
+                resource = None
                 if lowered_type in resource_check:
                     resource_check.remove(lowered_type)
                 if form_type == "CREATE" or len(resource_check):
@@ -1295,6 +1296,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 attempts += 1
         except Exception as e:
             logger.exception(e)
+            message = (
+                f":no_entry_sign: Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
+                if resource_check is None
+                else f":no_entry_sign: We could not find a {resource_type} named {resource_check} because of {e}"
+            )
             slack_res = slack_requests.update_channel_message(
                 context.get("channel"),
                 context.get("ts"),
@@ -1303,7 +1309,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     block_builders.section_with_button_block(
                         "Reopen Chat",
                         "OPEN_CHAT",
-                        f":no_entry_sign: We could not find a {resource_type} named {resource_check} because of {e}",
+                        message,
                         action_id=action_with_params(
                             slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                         ),

@@ -827,10 +827,13 @@ def _process_paginate_deal_reviews(payload, context):
 
 def deal_review_data_builder(resource_data, api_name_list, crm, form_data, fields):
     value_dict = {}
-    api_name_list.remove("meeting_type")
-    api_name_list.remove("meeting_comments")
-    owner_field = "hubspot_owner_id" if crm == "HUBSPOT" else "OwnerId"
-    api_name_list.remove(owner_field)
+    try:
+        api_name_list.remove("meeting_type")
+        api_name_list.remove("meeting_comments")
+        owner_field = "hubspot_owner_id" if crm == "HUBSPOT" else "OwnerId"
+        api_name_list.remove(owner_field)
+    except ValueError:
+        owner_field = None
     for api_name in api_name_list:
         field = fields.filter(api_name=api_name).first()
         label = field.label

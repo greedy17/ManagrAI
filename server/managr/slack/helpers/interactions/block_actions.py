@@ -1036,17 +1036,18 @@ def process_insert_chat_template(payload, context):
         # did not find the block
         block = None
     if block:
-        blocks[index]["element"]["initial_value"] = template.body
+        blocks[index]["element"]["initial_value"] = replace_tags(template.body)
         access_token = user.organization.slack_integration.access_token
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         data = {
             "view_id": payload["view"]["id"],
             "view": {
                 "type": "modal",
-                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
                 "title": {"type": "plain_text", "text": f"Chat"},
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
             },
         }
         try:
