@@ -719,13 +719,12 @@ export default {
     },
     refreshForms(event) {
       this.selectedForm = event
-
       let index = this.allForms.findIndex((f) => f.id == this.selectedForm.id)
-
       if (~index) {
         this.allForms[index] = this.selectedForm
         this.allForms = [...this.allForms]
       }
+      this.getAllForms()
     },
     checkCrm() {
       if (this.userCRM) {

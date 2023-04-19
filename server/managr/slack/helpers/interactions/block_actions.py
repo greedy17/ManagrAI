@@ -1020,6 +1020,43 @@ def process_managr_action(payload, context):
     return
 
 
+def process_insert_chat_template(payload, context):
+    from managr.core.models import NoteTemplate
+
+    user = User.objects.get(id=context.get("u"))
+    blocks = payload["view"]["blocks"]
+    template_value = payload["actions"][0]["selected_option"]["text"]["text"]
+    if template_value == "NONE":
+        return
+    template = NoteTemplate.objects.filter(subject=template_value).first()
+
+    try:
+        index, block = block_finder("CHAT_PROMPT", blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+    if block:
+        blocks[index]["element"]["initial_value"] = replace_tags(template.body)
+        access_token = user.organization.slack_integration.access_token
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
+                "title": {"type": "plain_text", "text": f"Chat"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+            },
+        }
+        try:
+            slack_requests.generic_request(url, data, access_token=access_token)
+        except Exception as e:
+            logger.exception(e)
+    return
+
+
 @processor(required_context="u")
 def process_add_create_form(payload, context):
     user = User.objects.get(id=context.get("u"))
@@ -3772,6 +3809,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SWITCH_TO_DEAL_REVIEW: process_switch_to_deal_reviews,
         slack_const.PROCESS_PAGINATE_DEAL_REVIEW: process_paginate_deal_reviews,
         slack_const.PROCESS_SEND_DEAL_REVIEW: process_send_deal_review,
+        slack_const.PROCESS_INSERT_CHAT_TEMPLATE: process_insert_chat_template,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
