@@ -1036,7 +1036,7 @@ def process_insert_chat_template(payload, context):
         # did not find the block
         block = None
     if block:
-        blocks[index]["element"]["initial_value"] = template.body
+        blocks[index]["element"]["initial_value"] = replace_tags(template.body)
         access_token = user.organization.slack_integration.access_token
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
         data = {
