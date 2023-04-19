@@ -3,7 +3,7 @@
     <section class="set-height">
       <div class="top-row">
         <Multiselect
-          :options="formFields.list"
+          :options="formFields.list.filter((f) => !addedFieldIds.includes(f.id))"
           :multiple="true"
           :placeholder="
             userCRM === 'SALESFORCE' ? 'Search for your fields' : 'Search for your properties'
@@ -15,7 +15,6 @@
           :maxHeight="350"
           :hideSelected="true"
           :loading="refreshing"
-          @close="onTouch"
           :disabled="
             !hasZoomChannel ||
             !(orgHasSlackIntegration || hasSlackIntegration) ||
@@ -23,7 +22,6 @@
             !userCRM
           "
           @input="onAddField($event[0])"
-          :class="{ invalidOutline: isInvalid }"
           style="width: 27vw"
         >
           <template v-slot:noResult>
@@ -48,10 +46,10 @@
             </div>
           </template>
         </Multiselect>
+
         <button
           v-if="!savingForm"
           @click="onSave()"
-          :disabled="!(addedFields.length > 2)"
           :class="{ pulse: saveNeeded && addedFields.length > 2 }"
         >
           Save
@@ -59,7 +57,7 @@
         <PipelineLoader v-else />
       </div>
       <label v-if="addedFields.length < 3" class="small-text" for=""
-        >Suggestions: "Name" , "Stage" , "Close Date" , "Next Step" , "Amount"</label
+        >Suggestions: "Name" , "Stage" , "OwnerId", "Close Date" , "Next Step" , "Amount"</label
       >
     </section>
     <draggable
