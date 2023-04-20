@@ -57,11 +57,11 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, temperature=None, top_p=None):
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=None, top_p=None):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,
-        "max_tokens": 500,
+        "max_tokens": token_amount,
         "user": user_name,
     }
     if temperature:

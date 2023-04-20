@@ -1,14 +1,7 @@
 <template>
   <!-- This file should not be used anywhere in the future. 
   When that happens, delete this file. -->
-  <div
-    class="tn-input"
-    :class="{
-      'tn-input--small': isSmall,
-      'tn-input--medium': isMedium || (!isSmall && !isLarge && !isAutoSize),
-      'tn-input--large': isLarge,
-    }"
-  >
+  <div>
     <label :for="labelRelation" class="tn-input__label"
       >{{ label }} {{ required ? '*' : '' }}</label
     >
@@ -16,7 +9,7 @@
     <!-- v-on="$listeners" loads listeners from parent -->
     <slot name="input">
       <InputField
-        class="tn-input__input"
+        style="width: 23vw !important"
         :id="$attrs.id"
         v-bind="$attrs"
         v-on="$listeners"
@@ -80,10 +73,10 @@ export default {
 @import '@/styles/mixins/inputs';
 
 .tn-input {
-  margin-bottom: 1.3rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  width: 100% !important;
 
   &__label {
     font-size: 14px;
@@ -107,5 +100,9 @@ export default {
 
 ::v-deep .input-content {
   background-color: white;
+  width: 100% !important;
+}
+::v-deep .input-content__large {
+  width: 100% !important;
 }
 </style>

@@ -1113,7 +1113,7 @@ def paginated_meeting_blockset(context):
 
         else:
             action_id = (
-                f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={str(workflow.id)}&u={str(u.id)}"
+                f"{slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL}?w={str(workflow.id)}&u={str(u.id)}"
             )
             block = block_builders.section_with_button_block(
                 "Log Meeting",
