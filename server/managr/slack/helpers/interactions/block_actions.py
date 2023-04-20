@@ -447,10 +447,12 @@ def process_show_meeting_resource(payload, context):
     user = User.objects.get(id=context.get("u"))
     blocks = get_block_set("update_meeting_block_set", context,)
     access_token = user.organization.slack_integration.access_token
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
+
+    view_id = payload["view"]["id"]
     data = {
-        "trigger_id": trigger_id,
+        "view_id": view_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
@@ -494,22 +496,51 @@ def process_show_meeting_chat_modal(payload, context):
         if len(templates_query)
         else [block_builders.option("You have no templates", "NONE")]
     )
-    blocks = [
-        block_builders.input_block(
-            f"Log your meeting using converstional AI",
-            placeholder="Paste your note here, and we will update your CRM",
-            block_id="CHAT_PROMPT",
-            multiline=True,
-            optional=False,
-        ),
-        block_builders.context_block("Powered by ChatGPT © :robot_face:"),
-        block_builders.static_select(
-            "Select Template",
-            template_options,
-            f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={user_id}&w={context.get('w')}",
-            block_id="SELECT_TEMPLATE",
-        ),
-    ]
+    blocks = []
+    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
+    field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+    try:
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
+        blocks.append(
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
+        )
+    except Exception as e:
+        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
+    blocks.extend(
+        [
+            block_builders.input_block(
+                f"Log your meeting using converstional AI",
+                placeholder="Paste your note here, and we will update your CRM",
+                block_id="CHAT_PROMPT",
+                multiline=True,
+                optional=False,
+            ),
+            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+            block_builders.static_select(
+                "Select Template",
+                template_options,
+                f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={user_id}&w={context.get('w')}",
+                block_id="SELECT_TEMPLATE",
+            ),
+            {"type": "divider"},
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Switch to form view",
+                        "SWITCH_TO_FORM",
+                        action_id=f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={str(workflow.id)}&u={user_id}",
+                    )
+                ]
+            ),
+        ]
+    )
 
     access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -518,7 +549,7 @@ def process_show_meeting_chat_modal(payload, context):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
+            "callback_id": slack_const.MEETING___SUBMIT_CHAT_PROMPT,
             "title": {"type": "plain_text", "text": f"Log Meeting"},
             "submit": {"type": "plain_text", "text": "Submit"},
             "blocks": blocks,
