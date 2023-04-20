@@ -2,12 +2,14 @@
   <div class="leadership-code">
     <div class="leadership-card">
       <img class="leadership-code__logo" src="@/assets/images/logo.png" />
-      <!-- <h2>Welcome</h2> -->
-      <div class="leadership-code__text">Please enter your Leadership code.</div>
+      <!-- <div class="seperator">
+        <span>Welcome</span>
+      </div> -->
+      <h2 class="leadership-code__text">Please enter your Leadership code</h2>
       <div class="input__container">
         <input placeholder="Enter Code" v-model="code" type="text" class="leadership-code__input" />
       </div>
-      <button type="submit" @click="handleApplyCode">Apply Code</button>
+      <button :disabled="!code" type="submit" @click="handleApplyCode">Apply Code</button>
     </div>
   </div>
 </template>
@@ -57,7 +59,7 @@ export default {
 }
 
 .leadership-code {
-  margin-top: 4rem;
+  height: 86vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -68,7 +70,7 @@ export default {
   &__logo {
     height: 4rem;
     filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
+      brightness(87%) contrast(89%);
   }
 
   &__text {
@@ -76,16 +78,19 @@ export default {
     font-family: #{$base-font-family};
     width: 100%;
     margin: 2rem 0rem;
+    letter-spacing: 0.8px;
   }
 
   &__input {
     @include input-field-white();
     outline: none;
+    width: 22vw;
   }
 
   &__input:focus,
   &__input:active {
     outline: none !important;
+    box-shadow: none;
   }
 }
 
@@ -95,10 +100,9 @@ input:focus {
 
 h2 {
   @include base-font-styles();
-  font-weight: bold;
   text-align: center;
-  font-size: 20px;
-  margin-bottom: 2rem;
+  font-size: 18px;
+  margin-bottom: 1rem;
 }
 
 form {
@@ -139,10 +143,28 @@ input {
 
 button {
   @include primary-button();
-  margin-top: 1.25rem;
-  height: 2.25rem;
+  margin-top: 1rem;
   border-radius: 6px;
-  width: 19rem;
+  width: 22vw;
+  padding: 12px;
+  font-size: 15px;
   box-shadow: none;
+}
+
+.seperator {
+  border-bottom: 1px solid $soft-gray;
+  width: 100%;
+  position: relative;
+  margin: 16px 0px;
+
+  span {
+    position: absolute;
+    left: 46%;
+    top: -8px;
+    background-color: white;
+    padding: 0 8px;
+    color: $light-gray-blue;
+    font-size: 13px;
+  }
 }
 </style>

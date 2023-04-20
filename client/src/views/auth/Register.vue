@@ -1,6 +1,6 @@
 <template>
   <div class="registration">
-    <div>
+    <div class="center">
       <template v-if="!isLoading">
         <template v-if="errorValidatingEmail">
           <div class="box" style="display: flex; flex-direction: column; align-items: center">
@@ -17,7 +17,11 @@
         <template v-else>
           <div class="registration__form">
             <div class="form-card">
-              <h2>Register</h2>
+              <div class="center-title">
+                <img src="@/assets/images/logo.png" height="80px" alt="" />
+                <h2 class="logo-title">Welcome to Managr</h2>
+                <small class="gray-blue">Fill out the form below to get started</small>
+              </div>
 
               <span>
                 <label for="fullname">Full Name</label>
@@ -67,39 +71,31 @@
                 />
               </span>
 
-              <!-- <div style="width: 100%; text-align: center">
-                <p>
-                  Your timezone:
-                  <span style="color: #41b883; font-weight: bold">{{ userTime }}</span>
-                </p>
-                <p v-if="!changeZone" @click="selectZone" class="time">Change timezone ?</p>
-                <p v-else @click="selectZone" class="time">Select your timezone:</p>
-              </div> -->
-
-              <Multiselect
+              <!-- <Multiselect
                 :placeholder="userTime"
                 @input="test($event)"
                 v-model="selectedZone"
                 :options="timezones"
                 openDirection="above"
-                style="width: 45vw"
+                style="width: 26vw"
                 selectLabel="Enter"
                 label="key"
               >
                 <template slot="noResult">
                   <p>No results.</p>
                 </template>
-              </Multiselect>
+              </Multiselect> -->
 
               <div class="form-card__footer">
                 <div>
-                  By clicking Sign Up, I agree to the
-                  <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
-                  and
-                  <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+                  By signing up, I agree to the
+                  <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a> and
+                  <a href="https://managr.ai/privacy-policy" target="_blank">Policies</a>.
                 </div>
 
                 <Button
+                  :disabled="!validatedForm"
+                  :class="{ disabled: !validatedForm }"
                   class="registration__button"
                   type="submit"
                   @click="onSubmit"
@@ -147,6 +143,7 @@ export default {
       userTime: moment.tz.guess(),
       changeZone: false,
       selectedZone: null,
+      validatedForm: false,
     }
   },
   async created() {
@@ -156,6 +153,24 @@ export default {
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
+  },
+  watch: {
+    registrationForm: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (
+          val.field.fullName.value &&
+          val.field.email.value &&
+          val.field.password.value &&
+          val.field.confirmPassword.value
+        ) {
+          this.validatedForm = true
+        } else {
+          this.validatedForm = false
+        }
+      },
+    },
   },
   methods: {
     showVals(val) {
@@ -190,7 +205,6 @@ export default {
     },
     async onSubmit() {
       this.registrationForm.validate()
-
       // Do not continue if the form has errors
       if (!this.registrationForm.isValid) {
         this.$toast('Please complete all fields', {
@@ -202,10 +216,8 @@ export default {
         })
         return
       }
-
       // Continue with user registration...
       this.submitting = true
-
       let user
       try {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
@@ -243,38 +255,60 @@ input:focus {
   outline: none;
 }
 a {
-  text-decoration: none;
+  color: $light-gray-blue;
+  font-weight: bold;
+}
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 90vh;
+}
+.center-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 16px;
 }
 .registration {
-  display: flex;
   padding: 2rem 0rem 0rem 0rem;
-  flex-flow: column;
-  justify-content: center;
+
   // max-width: 24rem;
   // margin: 1.5rem auto;
 
   &__text {
     color: $base-gray;
     font-family: #{$base-font-family};
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     text-align: center;
     font-size: 14px;
   }
   &__privacy {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
+    margin-top: 0.5rem;
+    letter-spacing: 0.75px;
   }
 
   &__button {
     @include primary-button();
-    width: 10rem;
+    width: 27vw;
+    font-size: 15px;
+    padding: 20px !important;
     border-radius: 6px;
-    margin-top: 1rem;
+    margin: 1rem 0;
     box-shadow: none;
   }
 }
 input:focus {
   outline: none;
+}
+
+.disabled {
+  background-color: $soft-gray !important;
 }
 // .time {
 //   color: $base-gray;
@@ -297,17 +331,20 @@ h1 {
   align-items: center;
 }
 input {
-  width: 45vw;
+  width: 27vw;
   border-radius: 4px;
   padding: 10px;
   border: 1px solid $soft-gray;
+  color: $base-gray;
+  letter-spacing: 0.5px;
+  font-family: #{$base-font-family};
 }
 input:focus {
   outline: none;
 }
 label {
   font-size: 13px;
-  color: $light-gray-blue;
+  color: $base-gray;
 }
 .form-card {
   display: flex;
@@ -319,18 +356,16 @@ label {
   background-color: white;
   // border: 1px solid #e8e8e8;
   box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  padding: 1rem 2rem;
-  width: 50vw;
+  padding: 2rem 3rem;
+  width: 34vw;
   color: $base-gray;
   letter-spacing: 0.75px;
 
   &__footer {
+    width: 100%;
     font-size: 12px;
+    margin-top: 8px;
   }
-}
-a {
-  color: $dark-green;
-  font-weight: bold;
 }
 .error {
   color: red;
@@ -343,6 +378,15 @@ a {
   align-items: flex-start;
   justify-content: flex-start;
 }
+.logo-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.gray-blue {
+  color: $light-gray-blue;
+}
+
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;
   border-radius: 4px;
