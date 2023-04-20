@@ -1,11 +1,12 @@
 <template>
   <div class="login-page">
-    <div class="login-page__form">
-      <div class="column">
-        <img src="@/assets/images/logo.png" class="logo" alt="logo" />
-        <h2>Log in to Managr</h2>
-        <!-- <p class="enter-email">Please enter your email and password</p> -->
+    <div :class="{ disabled: loggingIn }" class="login-page__form">
+      <div class="center">
+        <img src="@/assets/images/logo.png" height="66px" alt="" />
+        <h1>Welcome Back</h1>
+        <small class="gray-blue">Enter your email & password to login to Managr</small>
       </div>
+
       <FormField
         type="email"
         @input="execCheckEmail"
@@ -30,6 +31,7 @@
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
+        style="font-size: 14px"
         text="Log in"
         :loading="loggingIn"
       />
@@ -37,13 +39,13 @@
         <p class="pad-right">New to Managr?</p>
         <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
       </div>
-      <div class="row" style="margin-bottom: 1rem">
+      <!-- <div class="row">
         <p class="pad-right">Forgot password?</p>
         <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
-      </div>
+      </div> -->
     </div>
     <div class="links">
-      <p>
+      <p style="color: #4d4e4c">
         <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
         |
         <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
@@ -62,6 +64,8 @@ import User from '@/services/users'
 import { UserLoginForm } from '@/services/users/forms'
 import debounce from 'lodash.debounce'
 import FormField from '@/components/forms/FormField'
+import Salesforce from '@/services/salesforce'
+import Hubspot from '@/services/hubspot'
 /**
  * External Components
  */
@@ -76,12 +80,23 @@ export default {
   data() {
     return {
       loggingIn: false,
+      selectedCrm: null,
       showPassword: false,
       loginForm: new UserLoginForm(),
       execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
   },
   computed: {
+    selectedCrmSwitcher() {
+      switch (this.selectedCrm) {
+        case 'SALESFORCE':
+          return Salesforce
+        case 'HUBSPOT':
+          return Hubspot
+        default:
+          return null
+      }
+    },
     hasSalesforceIntegration() {
       return !!this.$store.state.user.salesforceAccount
     },
@@ -89,12 +104,35 @@ export default {
       return !!this.$store.state.user.slackRef
     },
   },
-  // mounted() {
-  //   if (document.getElementById('fullstory')) {
-  //     let el = document.getElementById('fullstory')
-  //     el.remove()
-  //   }
-  // },
+  async created() {
+    if (this.$route.query.code) {
+      this.selectedCrm = this.$route.query.state
+      let modelClass = this.selectedCrmSwitcher
+      this.loggingIn = true
+      let key
+      let user
+      try {
+        let res = await modelClass.api.sso(this.$route.query.code)
+        key = res.key
+        user = res.user
+        this.$store.dispatch('updateUserToken', key)
+        this.$store.dispatch('updateUser', User.fromAPI(user))
+      } catch (error) {
+        const e = error
+        this.$toast(`This method's for user's who signed up via ${this.selectedCrm}. Try again.`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loggingIn = false
+        localStorage.dateTime = Date.now()
+        this.$router.push({ name: 'ListTemplates' })
+      }
+    }
+  },
   methods: {
     async checkAccountStatus() {
       this.loginForm.field.email.validate()
@@ -112,6 +150,48 @@ export default {
         } finally {
           this.loggingIn = false
         }
+      }
+    },
+    async onGetAuthLink(integration) {
+      this.generatingToken = true
+      this.selectedCrm = integration
+
+      let modelClass = this.selectedCrmSwitcher
+      try {
+        let res = await modelClass.api.getAuthLinkSSO()
+        if (res.link) {
+          window.location.href = res.link
+        }
+      } finally {
+        this.generatingToken = false
+      }
+    },
+    async handleSSOLogin() {
+      this.loggingIn = true
+      let key
+      let user
+      try {
+        let res = await Salesforce.api.connect(this.$route.query.code)
+        console.log('RESPONSE IS HERE: ', res)
+        // key = res.key
+        // user = res.user
+        // delete user.token
+      } catch (error) {
+        const e = error
+        this.$toast('Trouble logging in with Salesforce, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.$store.dispatch('updateUserToken', key)
+        this.$store.dispatch('updateUser', User.fromAPI(user))
+        localStorage.dateTime = Date.now()
+        this.$router.push({ name: 'ListTemplates' })
+        this.loggingIn = false
+        localStorage.isLoggedOut = false
       }
     },
     async handleLoginAttempt() {
@@ -170,6 +250,13 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+}
 h2 {
   font-weight: bold;
   text-align: center;
@@ -205,34 +292,34 @@ input:focus {
 }
 .login-page__form {
   background-color: $white;
-  border-radius: 6px;
-  width: 20rem;
   margin-top: 5rem;
   display: flex;
   flex-flow: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   color: $base-gray;
-  // border: 1px solid #e8e8e8;
+  gap: 12px;
+  border-radius: 6px;
+  background-color: white;
   box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  padding: 2rem 3rem;
+  width: 29vw;
 
-  @media only screen and (max-width: 768px) {
-    /* For mobile phones: */
-    width: 100%;
-    height: 100%;
-    padding: 0rem;
-    left: 0;
-    display: block;
-    border: 0;
-  }
+  // @media only screen and (max-width: 768px) {
+
+  //   width: 100%;
+  //   height: 100%;
+  //   padding: 0rem;
+  //   left: 0;
+  //   display: block;
+  //   border: 0;
+  // }
 }
 button {
   @include primary-button();
   margin-bottom: 6px;
-  width: 256px;
-  height: 6vh;
-  background-color: #41b883 !important;
-  color: white !important;
+  width: 23vw;
+  padding: 14px;
   box-shadow: none;
 }
 a {
@@ -241,6 +328,13 @@ a {
 }
 label {
   font-size: 15px;
+}
+.button-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 .row {
   display: flex;
@@ -260,17 +354,12 @@ label {
 //   margin-top: -0.5rem;
 //   color: $light-gray-blue;
 // }
-img {
-  height: 80px;
-  margin-top: 4rem;
-  padding-top: 0.5rem;
-}
 .pad-right {
   padding-right: 0.3em;
 }
 .links {
   font-size: 13px;
-  margin: 2rem;
+  margin: 3rem;
 }
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;
@@ -278,5 +367,69 @@ img {
 }
 ::v-deep .input-form__active {
   border: none;
+}
+.logo-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.seperator {
+  border-bottom: 1px solid $soft-gray;
+  width: 100%;
+  position: relative;
+  margin: 16px 0px;
+
+  span {
+    position: absolute;
+    left: 46%;
+    top: -8px;
+    background-color: white;
+    padding: 0 8px;
+    color: $light-gray-blue;
+    font-size: 13px;
+  }
+}
+
+.gray-blue {
+  color: $light-gray-blue;
+}
+
+.register-button {
+  @include primary-button();
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  color: $base-gray;
+  background-color: white;
+  border: 1px solid $soft-gray;
+  width: 23vw;
+  padding: 12px 2px;
+
+  img {
+    margin-right: 16px;
+  }
+}
+
+.register-button-hs {
+  @include primary-button();
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  color: $base-gray;
+  background-color: white;
+  border: 1px solid $soft-gray;
+  width: 23vw;
+  padding: 10px 2px;
+
+  img {
+    margin-right: 16px;
+  }
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: text !important;
 }
 </style>
