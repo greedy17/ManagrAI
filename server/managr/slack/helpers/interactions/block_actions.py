@@ -447,16 +447,112 @@ def process_show_meeting_resource(payload, context):
     user = User.objects.get(id=context.get("u"))
     blocks = get_block_set("update_meeting_block_set", context,)
     access_token = user.organization.slack_integration.access_token
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     trigger_id = payload["trigger_id"]
+
+    view_id = payload["view"]["id"]
     data = {
-        "trigger_id": trigger_id,
+        "view_id": view_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.ZOOM_MEETING__SELECTED_RESOURCE,
             "title": {"type": "plain_text", "text": f"Choose CRM Record"},
             "blocks": blocks,
             "external_id": f"update_meeting_block_set.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    return
+
+
+@processor(required_context=["w"])
+def process_show_meeting_chat_modal(payload, context):
+    from managr.core.models import NoteTemplate
+
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user_id = context.get("u")
+    user = User.objects.get(id=user_id)
+    templates_query = NoteTemplate.objects.for_user(user)
+    template_options = (
+        [template.as_slack_option for template in templates_query]
+        if len(templates_query)
+        else [block_builders.option("You have no templates", "NONE")]
+    )
+    blocks = []
+    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
+    field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+    try:
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
+        blocks.append(
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
+        )
+    except Exception as e:
+        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
+    blocks.extend(
+        [
+            block_builders.input_block(
+                f"Log your meeting using converstional AI",
+                placeholder="Paste your note here, and we will update your CRM",
+                block_id="CHAT_PROMPT",
+                multiline=True,
+                optional=False,
+            ),
+            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+            block_builders.static_select(
+                "Select Template",
+                template_options,
+                f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={user_id}&w={context.get('w')}",
+                block_id="SELECT_TEMPLATE",
+            ),
+            {"type": "divider"},
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Switch to form view",
+                        "SWITCH_TO_FORM",
+                        action_id=f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={str(workflow.id)}&u={user_id}",
+                    )
+                ]
+            ),
+        ]
+    )
+
+    access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.MEETING___SUBMIT_CHAT_PROMPT,
+            "title": {"type": "plain_text", "text": f"Log Meeting"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": blocks,
             "private_metadata": json.dumps(context),
         },
     }
@@ -1023,6 +1119,7 @@ def process_managr_action(payload, context):
 def process_insert_chat_template(payload, context):
     from managr.core.models import NoteTemplate
 
+    from_workflow = True if "w" in context.keys() else False
     user = User.objects.get(id=context.get("u"))
     blocks = payload["view"]["blocks"]
     template_value = payload["actions"][0]["selected_option"]["text"]["text"]
@@ -1035,6 +1132,12 @@ def process_insert_chat_template(payload, context):
     except ValueError:
         # did not find the block
         block = None
+    title = "Log Meeting" if from_workflow else "Chat"
+    callback_id = (
+        slack_const.MEETING___SUBMIT_CHAT_PROMPT
+        if from_workflow
+        else slack_const.COMMAND_FORMS__SUBMIT_CHAT
+    )
     if block:
         blocks[index]["element"]["initial_value"] = replace_tags(template.body)
         access_token = user.organization.slack_integration.access_token
@@ -1043,8 +1146,8 @@ def process_insert_chat_template(payload, context):
             "view_id": payload["view"]["id"],
             "view": {
                 "type": "modal",
-                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
-                "title": {"type": "plain_text", "text": f"Chat"},
+                "callback_id": callback_id,
+                "title": {"type": "plain_text", "text": title},
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),
@@ -3762,6 +3865,7 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.MEETING_REVIEW_SYNC_CALENDAR: process_sync_calendar,
         slack_const.MEETING_ATTACH_RESOURCE_MODAL: process_show_meeting_resource,
+        slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL: process_show_meeting_chat_modal,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.GET_CRM_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM: process_show_alert_update_resource_form,

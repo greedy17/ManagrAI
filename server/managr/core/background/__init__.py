@@ -39,8 +39,8 @@ from managr.slack.helpers.block_sets import get_block_set
 from managr.utils.client import Client
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
-from managr.salesforce.background import emit_add_update_to_sf
-from managr.hubspot.tasks import emit_add_update_to_hs
+from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
+from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
 
 logger = logging.getLogger("managr")
 
@@ -64,6 +64,13 @@ def ADD_UPDATE_TO_CRM_FUNCTION(crm):
         return emit_add_update_to_sf
     else:
         return emit_add_update_to_hs
+
+
+def ADD_CALL_TO_CRM_FUNCTION(crm):
+    if crm == "SALESFORCE":
+        return emit_add_call_to_sf
+    else:
+        return emit_add_call_to_hs
 
 
 #########################################################
@@ -604,6 +611,8 @@ def _process_calendar_meetings(user_id, slack_int, date):
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id), "date": date})
         else:
             todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")
+            user_timezone = pytz.timezone(user.timezone)
+            todays_date = pytz.utc.localize(todays_date).astimezone(user_timezone)
             date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
             blocks = [
                 block_builders.section_with_button_block(
@@ -1211,6 +1220,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
 
     user = User.objects.get(id=user_id)
+    workflow_id = context.get("w", None)
+    if workflow_id:
+        workflow = MeetingWorkflow.objects.get(id=workflow_id)
     form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
     form = OrgCustomSlackFormInstance.objects.create(
@@ -1219,22 +1231,48 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     fields = form_template.custom_fields.all()
     field_list = list(fields.values_list("label", flat=True))
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, top_p=0.1)
-    logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     attempts = 1
     has_error = False
     resource_check = None
     blocks = []
+    token_amount = 500
     while True:
         try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                user.email, full_prompt, token_amount=token_amount, top_p=0.1
+            )
+            logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
-                choice = r["choices"][0]["text"]
-                cleaned_choice = clean_prompt_string(choice)
+                choice = r["choices"][0]
+                stop_reason = choice["finish_reason"]
+                if stop_reason == "length":
+                    if token_amount <= 1500:
+                        slack_res = slack_requests.update_channel_message(
+                            context.get("channel"),
+                            context.get("ts"),
+                            user.organization.slack_integration.access_token,
+                            block_set=[
+                                block_builders.section_with_button_block(
+                                    "Reopen Chat",
+                                    "OPEN_CHAT",
+                                    "Look like your prompt message is too long to process. Try removing white spaces!",
+                                    action_id=action_with_params(
+                                        slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
+                                    ),
+                                )
+                            ],
+                        )
+                        return
+                    else:
+                        token_amount += 300
+                        continue
+                text = choice["text"]
+                cleaned_choice = clean_prompt_string(text)
                 data = eval(cleaned_choice)
                 name_field = set_name_field(resource_type, user.crm)
                 data = correct_data_keys(data)
@@ -1347,7 +1385,12 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 form.submission_date = datetime.now()
                 form.save()
             if cleaned_data["meeting_comments"] is not None:
-                ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(form.id))
+                if workflow_id:
+                    task_type = context.get("task_type")
+                    task = ADD_CALL_TO_CRM_FUNCTION(user.crm)(str(workflow_id), [task_type])
+                    workflow.operations.append(task.task_hash)
+                else:
+                    ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(form.id))
             blocks = [
                 block_builders.section_with_button_block(
                     "Generate Content",
@@ -1401,6 +1444,15 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 )
             ]
             break
+    if workflow_id:
+        form.workflow = workflow
+        form.update_source = "meeting (chat)"
+        form.save()
+        workflow.completed_operations.append(slack_consts.MEETING___SUBMIT_CHAT_PROMPT)
+        workflow.resource_type = resource_type
+        workflow.resource_id = str(resource.id)
+        workflow.save()
+        return
     try:
         slack_res = slack_requests.update_channel_message(
             context.get("channel"),

@@ -202,8 +202,10 @@ def process_zoom_meeting_data(payload, context):
         task_name = "managr_task_type"
         task_selection = [
             value.get("selected_option") for value in state.get(task_name, {}).values()
-        ][0]
-        task_type = task_selection.get("value") if task_selection is not None else None
+        ]
+        task_type = (
+            task_selection[0].get("value") if (len(task_selection) and task_selection[0]) else None
+        )
     # if we had a next page the form data for the review was already saved
     forms = workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_STAGE_GATING)
     current_form_ids = []
@@ -2595,7 +2597,16 @@ def process_submit_chat_prompt(payload, context):
         if user.crm == "SALESFORCE"
         else ["Company", "Deal", "Contact"]
     )
-    prompt = payload["view"]["state"]["values"]["CHAT_PROMPT"]["plain_input"]["value"]
+    state = payload["view"]["state"]
+    task_selection = [
+        value.get("selected_option")
+        for value in state["values"].get("managr_task_type", {}).values()
+    ]
+    task_type = (
+        task_selection[0].get("value") if (len(task_selection) and task_selection[0]) else None
+    )
+    context.update(task_type=task_type)
+    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
     resource_check = None
     lowercase_prompt = prompt.lower()
     for resource in resource_list:
@@ -2612,24 +2623,38 @@ def process_submit_chat_prompt(payload, context):
         ),
     ]
     try:
-        ts = context.get("ts", None)
-        channel = context.get("channel", None)
-        if ts and channel:
-            res = slack_requests.update_channel_message(
-                channel, ts, user.organization.slack_integration.access_token, block_set=block_set
+        if "w" in context.keys():
+            workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.save()
+            emit_process_calendar_meetings(
+                str(user.id),
+                f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+                workflow.slack_interaction,
+                date=str(workflow.datetime_created.date()),
             )
+            emit_meeting_workflow_tracker(str(workflow.id))
         else:
-            res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=block_set,
-            )
+            ts = context.get("ts", None)
+            channel = context.get("channel", None)
+            if ts and channel:
+                res = slack_requests.update_channel_message(
+                    channel,
+                    ts,
+                    user.organization.slack_integration.access_token,
+                    block_set=block_set,
+                )
+            else:
+                res = slack_requests.send_channel_message(
+                    user.slack_integration.channel,
+                    user.organization.slack_integration.access_token,
+                    block_set=block_set,
+                )
+            context.update(channel=res["channel"], ts=res["ts"])
         if resource_check:
+
             emit_process_submit_chat_prompt(
-                context.get("u"),
-                prompt,
-                resource_check,
-                {"channel": res["channel"], "ts": res["ts"]},
+                context.get("u"), prompt, resource_check, context,
             )
     except Exception as e:
         logger.exception(f"Failed submit chat data {e}")
@@ -2725,6 +2750,7 @@ def handle_view_submission(payload):
         slack_const.GET_SUMMARY: process_get_summary,
         slack_const.SUBMIT_CUSTOM_OBJECT_DATA: process_submit_custom_object,
         slack_const.COMMAND_FORMS__SUBMIT_CHAT: process_submit_chat_prompt,
+        slack_const.MEETING___SUBMIT_CHAT_PROMPT: process_submit_chat_prompt,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
     }
 
