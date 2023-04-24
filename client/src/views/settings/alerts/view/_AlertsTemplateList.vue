@@ -129,7 +129,7 @@
       <div class="command-modal">
         <header>
           <h2>
-            Using chatbot feature 💬
+            How to use chatbot 💬
             <img
               src="@/assets/images/slackLogo.png"
               style="margin-left: 6px"
@@ -137,7 +137,7 @@
               alt=""
             />
           </h2>
-          <p>Update CRM & auto-fill field data using conversational AI.</p>
+          <p>Use conversational AI to update CRM and take actions.</p>
         </header>
         <section>
           <div>
@@ -145,24 +145,52 @@
             <p>Type '/' into any Slack message box to initiate a command</p>
           </div>
           <div>
-            <h5><span>2. Select "managr-actions"</span></h5>
-            <p>Search for "Managr-actions" or just "actions" should work</p>
-          </div>
-          <div>
-            <h5><span>3. Write in your update using natural language!</span></h5>
+            <h5><span>2. Select 1 of 2 chatbot commands</span></h5>
             <p>
-              Paste in your notes or make one-off updates. Follow the example below & dont worry, it
-              let's you try again :)
+              Search for "Managr-update" to update the CRM. Use "Managr-actions" to get real-time
+              insights
             </p>
           </div>
-          <div class="center">
-            <img src="@/assets/images/chatbot.png" height="300px" alt="" />
+          <div style="border-bottom: none; padding-top: 1rem">
+            <h5>
+              🤖 ☁️
+              <span
+                >Using Managr-update: make sure to include "Opportunity" + Opportunity Name.</span
+              >
+            </h5>
+            <p style="padding-left: 2.4rem">
+              Ex: Push close date for Opportunity Pied Piper 2 weeks.
+            </p>
           </div>
+          <div style="padding-top: 1rem">
+            <h5>
+              🤖 🦾
+              <span>Using Managr-actions: select from the dropdown.</span>
+            </h5>
+            <p style="padding-left: 2.4rem">
+              Get a deal summary, run a deal review, or schedule a meeting (coming soon!)
+            </p>
+          </div>
+          <!-- <div>
+            <img
+              style="border: 1px solid #eeeeee; border-radius: 8px"
+              src="@/assets/images/chatbot.png"
+              height="300px"
+              alt=""
+            />
+          </div> -->
         </section>
-        <footer>
-          <small class="gray-blue"
+        <footer
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: flex-end;
+          "
+        >
+          <!-- <small class="gray-blue"
             >For best results, avoid using symbols, colons, quotes and dollar signs.</small
-          >
+          > -->
           <button @click="closeCommandModal()">Got it</button>
         </footer>
       </div>
@@ -1175,16 +1203,16 @@ a {
   width: 100%;
 }
 .center {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 8px 0px !important;
-  margin-bottom: 16px;
-  background: rgba(0, 0, 0, 0.7);
-  outline: 1px solid $soft-gray;
-  border-radius: 6px;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: center;
+  // width: 100%;
+  // padding: 8px 0px !important;
+  // margin-bottom: 16px;
+  // background: rgba(0, 0, 0, 0.7);
+  // outline: 1px solid $soft-gray;
+  // border-radius: 6px;
 }
 .small-text {
   font-size: 10px;
@@ -1192,13 +1220,13 @@ a {
   margin-top: 4px;
 }
 .command-modal {
-  @include large-modal();
+  @include wide-modal();
   overflow-x: hidden;
-  width: 36vw;
   height: 100%;
   align-items: center;
   padding: 0px 24px 0px 24px;
   position: relative;
+  color: $base-gray;
 
   header {
     position: sticky;

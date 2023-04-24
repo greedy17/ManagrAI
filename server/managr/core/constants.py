@@ -39,21 +39,22 @@ OPEN_AI_NEXT_STEPS = (
 )
 
 OPEN_AI_DEAL_REVIEW = (
-    lambda data, resource, date, crm: f"""You are my sales manager. I am a sales rep. Imagine we are having a deal review (a weekly event) and your job is to go through my deal (or opportunity) and answer the questions below. 
-    \nToday's date is {date}. 
+    lambda data, resource, date, crm: f"""You are my sales manager. I am a sales rep. Imagine we are having a deal review (a weekly event) and your job is to go through my deal (or opportunity) and answer the questions below.
+    \nToday's date is {date}.
     \nBase your answers around Todays date. Your response should be casual, yet professional.
-    \nDefault to using the BANT sales framework as you assess each deal unless the MEDDIC or MEDDPICC sales framework is being used (you can tell based on the CRM fields).
-    \n1) Highlight what information is missing from this deal based on one of the above frameworks.
-    \n2) Check for data being up to date, do the following: Make sure the Close Date is not in the past, if so call it out.
-    \n3) Last Activity should not exceed 30 days from Todays date. If it does, flag it as that is not a good sign.
-    \n4) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. End the email with a question - one that will move the deal forward. Start the email with Hi or Hey and do not use Best Regards in the sign off.
+    \nAssess each deal using one of the following sales frameworks: BANT, MEDDIC or MEDDPICC. Pick a sales framework based on the deal data and CRM fields below.
+    \n1) Highlight what information is missing from this deal based on one of the above sales frameworks.
+    \n2) Check for data being up to date, do the following: Make sure the Close Date is not in the past, if so call it out. Do not include Last Activity Date here
+    \n3) Show the Last Activity Date. If it exceeds 30 days from Todays date, then flag it. If its within the past 5 days, then it's a good sign.
+    \n4) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. End the email with a question - one that will move the deal forward. 
+    \nStart the email with Hi or Hey and do not use Best Regards in the sign off.
     \nHere is the format I want:
-    \nOpportunity Name:
-    \n1) Missing information: list out missing information in sentence format
-    \n2) CRM Data: show data out of date
-    \n3) Activity: show last activity date, flag if in the past
+    \n{resource} Name:
+    \n1) Missing Information: list out missing information in sentence format.
+    \n2) Needs Updating: show data out of date in sentence format.
+    \n3) Last Activity: show last activity date, comment as needed per the above.
     \n4) Email: write out the email
-    \nUse the deal data below to make your assessment, data is coming from either SalesForce or Hubspot CRM. Account for labels being the API name. CRM Data: {data}"""
+    \nUse the deal data below to make your assessment, data is coming from either Salesforce or HubSpot CRM. Account for labels being the API name. CRM Data: {data}"""
 )
 
 

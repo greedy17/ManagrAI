@@ -65,6 +65,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "send_recap_block_set": meeting_review_block_sets.send_recap_block_set,
         "calendar_reminders_blockset": common_blocksets.calendar_reminders_blockset,
         "actions_block_set": command_views_blocksets.actions_block_set,
+        "update_command_block_set": command_views_blocksets.update_command_block_set,
         "current_product_blockset": common_blocksets.current_product_block_set,
         "edit_product_block_set": common_blocksets.edit_product_block_set,
         "pick_resource_modal_block_set": command_views_blocksets.pick_resource_modal_block_set,

@@ -32,7 +32,7 @@ from managr.slack.background import (
     emit_process_paginated_call_recordings,
     emit_process_paginated_engagement_details,
     emit_process_paginate_deal_reviews,
-    emit_process_send_deal_review,
+    emit_process_alert_send_deal_review,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
@@ -1148,6 +1148,47 @@ def process_insert_chat_template(payload, context):
                 "type": "modal",
                 "callback_id": callback_id,
                 "title": {"type": "plain_text", "text": title},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+                "private_metadata": json.dumps(context),
+            },
+        }
+        try:
+            slack_requests.generic_request(url, data, access_token=access_token)
+        except Exception as e:
+            logger.exception(e)
+    return
+
+
+def GET_ACTION_TEMPLATE(user, template_value):
+    object_type = "Deal" if user.crm == "HUBSPOT" else "Opportunity"
+    action_switcher = {
+        "GET_SUMMARY": f"Get summary for {object_type} Pied Piper",
+        "DEAL_REVIEW": f"Run a review for {object_type} Pied Piper",
+    }
+    return action_switcher[template_value]
+
+
+def process_insert_action_template(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    blocks = payload["view"]["blocks"]
+    template_value = payload["actions"][0]["selected_option"]["value"]
+    template = GET_ACTION_TEMPLATE(user, template_value)
+    try:
+        index, block = block_finder("CHAT_PROMPT", blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+    if block:
+        blocks[index]["element"]["initial_value"] = template
+        access_token = user.organization.slack_integration.access_token
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.PROCESS_CHAT_ACTION,
+                "title": {"type": "plain_text", "text": "Take Action"},
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),
@@ -3820,7 +3861,7 @@ def process_send_deal_review(payload, context):
         res = slack_requests.update_channel_message(
             channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
         )
-        emit_process_send_deal_review(payload, context)
+        emit_process_alert_send_deal_review(payload, context)
     except Exception as e:
         logger.exception(e)
     return
@@ -3914,6 +3955,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_PAGINATE_DEAL_REVIEW: process_paginate_deal_reviews,
         slack_const.PROCESS_SEND_DEAL_REVIEW: process_send_deal_review,
         slack_const.PROCESS_INSERT_CHAT_TEMPLATE: process_insert_chat_template,
+        slack_const.PROCESS_INSERT_ACTION_TEMPLATE: process_insert_action_template,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
