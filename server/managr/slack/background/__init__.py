@@ -8,6 +8,7 @@ from datetime import datetime
 from managr.api.decorators import slack_api_exceptions, log_all_exceptions
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.core.models import User
+from managr.core.background import emit_process_send_summary_to_dm
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
@@ -91,6 +92,10 @@ def emit_process_alert_send_deal_review(payload, context):
 
 def emit_process_send_deal_review(payload, context):
     return _process_send_deal_review(payload, context)
+
+
+def emit_process_chat_action(payload, context):
+    return _process_chat_action(payload, context)
 
 
 @background(schedule=0)
@@ -1017,3 +1022,81 @@ def _process_send_deal_review(payload, context):
         )
     return
 
+
+ACTION_TEMPLATE_FUNCTIONS = {
+    "review": emit_process_send_deal_review,
+    "summary": emit_process_send_summary_to_dm,
+}
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_chat_action(payload, context):
+    from managr.crm.utils import CRM_SWITCHER
+
+    user = User.objects.get(id=context.get("u"))
+    resource_list = (
+        ["Opportunity", "Account", "Contact", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Company", "Deal", "Contact"]
+    )
+    state = payload["view"]["state"]
+    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
+    resource_check = None
+    blocks = []
+    lowercase_prompt = prompt.lower()
+    lowered_split_prompt = lowercase_prompt.split(" ")
+    for resource in resource_list:
+        lowered_resource = resource.lower()
+        if lowered_resource in lowercase_prompt:
+            resource_check = resource
+            break
+    if not resource_check:
+        blocks.append(
+            block_builders.simple_section(
+                f":no_entry_sign: Looks like we could not find an object type in your chat submission",
+                "mrkdwn",
+            )
+        )
+    resource_index = lowered_split_prompt.index(resource_check.lower())
+    resource_name = " ".join(lowered_split_prompt[(resource_index + 1) :])
+    try:
+        resource = CRM_SWITCHER[user.crm][resource_check]["model"].objects.get(
+            name__icontains=resource_name
+        )
+        form = OrgCustomSlackFormInstance.objects.filter(resource_id=str(resource.id)).first()
+        form_id = str(form.id) if form else None
+        context.update(resource_id=str(resource.id), resource_type=resource_check, form_ids=form_id)
+    except CRM_SWITCHER[user.crm][resource_check]["model"].DoesNotExist:
+        blocks.append(
+            block_builders.simple_section(
+                f":no_entry_sign: We could not find a {resource_check} called {resource_name}",
+                "mrkdwn",
+            )
+        )
+    action_func = None
+    for word in ACTION_TEMPLATE_FUNCTIONS.keys():
+        if word in lowercase_prompt:
+            action_func = ACTION_TEMPLATE_FUNCTIONS[word]
+            break
+    if action_func is None:
+        blocks.append(
+            block_builders.simple_section(
+                ":no_entry_sign: Invalid submission: This action was not found"
+            )
+        )
+    if not len(blocks):
+        blocks = [block_builders.simple_section(f":white_check_mark: Done!")]
+        action_func(payload, context)
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submission because of <{e}>"
+        )
+    return

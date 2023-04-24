@@ -44,14 +44,14 @@ OPEN_AI_DEAL_REVIEW = (
     \nBase your answers around Todays date. Your response should be casual, yet professional.
     \nAssess each deal using one of the following sales frameworks: BANT, MEDDIC or MEDDPICC. Pick a sales framework based on the deal data and CRM fields below.
     \n1) Highlight what information is missing from this deal based on one of the above sales frameworks.
-    \n2) Check for data being up to date, do the following: Make sure the Close Date is not in the past, if so call it out. Do not include Last Activity Date here
+    \n2) Check for data being up to date, do the following: Make sure the Close Date is not in the past, if so call it out. Do not include Last Activity here
     \n3) Show the Last Activity Date. If it exceeds 30 days from Todays date, then flag it. If its within the past 5 days, then it's a good sign.
     \n4) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. End the email with a question - one that will move the deal forward. 
     \nStart the email with Hi or Hey and do not use Best Regards in the sign off.
     \nHere is the format I want:
     \n{resource} Name:
     \n1) Missing Information: list out missing information in sentence format.
-    \n2) Needs Updating: show data out of date in sentence format.
+    \n2) Needs Updating: show data out of date in sentence format. If nothing is out of date, then say, "everything looks up to date".
     \n3) Last Activity: show last activity date, comment as needed per the above.
     \n4) Email: write out the email
     \nUse the deal data below to make your assessment, data is coming from either Salesforce or HubSpot CRM. Account for labels being the API name. CRM Data: {data}"""
