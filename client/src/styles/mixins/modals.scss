@@ -35,3 +35,9 @@
     width: 44vw;
     height: 90vh;
 }
+
+@mixin wide-modal() {
+    @include base-modal();
+    width: 50vw;
+    height: 80vh;
+}
