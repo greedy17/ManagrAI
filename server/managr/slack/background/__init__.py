@@ -1079,7 +1079,7 @@ def _process_chat_action(payload, context):
         if word in lowercase_prompt:
             action_func = ACTION_TEMPLATE_FUNCTIONS[word]
             break
-    if action_func is None:
+    if action_func is None and not len(blocks):
         blocks.append(
             block_builders.simple_section(
                 ":no_entry_sign: Invalid submission: This action was not found"

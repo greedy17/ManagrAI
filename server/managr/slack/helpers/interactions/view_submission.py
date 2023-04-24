@@ -2656,6 +2656,18 @@ def process_submit_chat_prompt(payload, context):
             emit_process_submit_chat_prompt(
                 context.get("u"), prompt, resource_check, context,
             )
+        else:
+            res = slack_requests.update_channel_message(
+                res["channel"],
+                res["ts"],
+                user.organization.slack_integration.access_token,
+                block_set=[
+                    block_builders.simple_section(
+                        f":no_entry_sign: Invalid submission: Please include an object type like {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} and try again.\n '{prompt}'",
+                        "mrkdwn",
+                    )
+                ],
+            )
     except Exception as e:
         logger.exception(f"Failed submit chat data {e}")
         return {"response_action": "clear"}

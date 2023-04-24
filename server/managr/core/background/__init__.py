@@ -1215,6 +1215,19 @@ def correct_data_keys(data):
     return data
 
 
+def name_list_processor(resource_list, chat_response_name):
+    most_count = 0
+    most_matching = None
+    chat_set = set(chat_response_name)
+    for resource in resource_list:
+        cleaned_string = resource.display_value.lower().replace("(", "").replace(")", "").split(" ")
+        same_set = set(cleaned_string).intersection(chat_set)
+        if len(same_set) > most_count:
+            most_count = len(same_set)
+            most_matching = resource.display_value
+    return most_matching
+
+
 @background()
 def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     from managr.crm import exceptions as crm_exceptions
@@ -1290,10 +1303,14 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
                                     .objects.for_user(user)
                                     .filter(name__icontains=word)
-                                    .first()
                                 )
+                                print(query)
                                 if query:
-                                    resource = query
+                                    if len(query) > 1:
+                                        most_matching = name_list_processor(query, resource_check)
+                                        resource = query.filter(name=most_matching).first()
+                                    else:
+                                        resource = query.first()
                                     break
                             else:
                                 query = (

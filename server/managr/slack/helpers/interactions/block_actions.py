@@ -1132,7 +1132,7 @@ def process_insert_chat_template(payload, context):
     except ValueError:
         # did not find the block
         block = None
-    title = "Log Meeting" if from_workflow else "Chat"
+    title = "Log Meeting" if from_workflow else "Update CRM"
     callback_id = (
         slack_const.MEETING___SUBMIT_CHAT_PROMPT
         if from_workflow
@@ -3703,7 +3703,7 @@ def process_insert_note_template(payload, context):
 def reopen_chat_modal(payload, context):
     channel_id = payload["channel"]["id"]
     message_ts = payload["message"]["ts"]
-    form_id = context.get("form_id")
+    form_id = context.get("form_id", None)
     form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
     context.update(u=str(user.id), ts=message_ts, channel=channel_id)
@@ -3737,7 +3737,7 @@ def reopen_chat_modal(payload, context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
-                "title": {"type": "plain_text", "text": "Chat",},
+                "title": {"type": "plain_text", "text": "Update CRM",},
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),

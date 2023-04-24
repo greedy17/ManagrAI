@@ -759,7 +759,7 @@ def update_resource(request):
         "view": {
             "type": "modal",
             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
-            "title": {"type": "plain_text", "text": "Chat"},
+            "title": {"type": "plain_text", "text": "Update CRM"},
             "blocks": get_block_set("update_command_block_set", context=context),
             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
             "private_metadata": json.dumps(context),
