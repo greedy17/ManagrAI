@@ -463,7 +463,7 @@ def choose_opportunity_block_set(context):
 
 
 @block_set(required_context=["u"])
-def actions_block_set(context):
+def update_command_block_set(context):
     from managr.core.models import NoteTemplate
 
     user = User.objects.get(id=context.get("u"))
@@ -514,6 +514,32 @@ def actions_block_set(context):
             f"{slack_const.COMMAND_MANAGR_ACTION}?u={user_id}",
             block_id="select_action",
             placeholder="Type to search",
+        ),
+    ]
+    return blocks
+
+
+@block_set(required_context=["u"])
+def actions_block_set(context):
+    user_id = context.get("u")
+    action_options = [
+        block_builders.option("Get Summary", "GET_SUMMARY"),
+        block_builders.option("Deal Review", "DEAL_REVIEW"),
+    ]
+    blocks = [
+        block_builders.input_block(
+            f"Take action using conversational AI",
+            placeholder=f"Type or select an action template",
+            block_id="CHAT_PROMPT",
+            multiline=True,
+            optional=False,
+        ),
+        block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+        block_builders.static_select(
+            "Action Templates",
+            action_options,
+            f"{slack_const.PROCESS_INSERT_ACTION_TEMPLATE}?u={user_id}",
+            block_id="SELECT_TEMPLATE",
         ),
     ]
     return blocks
