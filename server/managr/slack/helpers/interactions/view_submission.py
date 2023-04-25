@@ -55,7 +55,7 @@ from managr.salesforce.background import (
 )
 
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.background import emit_process_submit_resource_data
+from managr.slack.background import emit_process_submit_resource_data, emit_process_chat_action
 from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -2719,6 +2719,21 @@ def process_selected_generative_action(payload, context):
     return {"response_action": "clear"}
 
 
+def process_chat_action_submit(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set("loading", {"message": "Processing your action submission..."}),
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+    context.update(ts=res["ts"])
+    emit_process_chat_action(payload, context)
+    return {"response_action": "clear"}
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2752,6 +2767,7 @@ def handle_view_submission(payload):
         slack_const.COMMAND_FORMS__SUBMIT_CHAT: process_submit_chat_prompt,
         slack_const.MEETING___SUBMIT_CHAT_PROMPT: process_submit_chat_prompt,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
+        slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
     }
 
     callback_id = payload["view"]["callback_id"]

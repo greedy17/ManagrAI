@@ -14,17 +14,39 @@
       </router-link>
 
       <div v-if="!isOnboarding" style="height: 100%" class="align-left">
-        <router-link v-if="userCRM" class="side-wrapper" active-class="active" :to="{ name: 'ListTemplates' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 80px;">Workflows</span>
-            <img src="@/assets/images/workflows.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+        <router-link
+          v-if="userCRM"
+          class="side-wrapper"
+          active-class="active"
+          :to="{ name: 'ListTemplates' }"
+        >
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 80px">Workflows</span>
+            <img
+              src="@/assets/images/workflows.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
-        <router-link v-if="userCRM" class="side-wrapper" exact-active-class="active" :to="{ name: 'Pipelines' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 65px;">Pipeline</span>
-            <img src="@/assets/images/pipeline.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+        <router-link
+          v-if="userCRM"
+          class="side-wrapper"
+          exact-active-class="active"
+          :to="{ name: 'Pipelines' }"
+        >
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 65px">Pipeline</span>
+            <img
+              src="@/assets/images/pipeline.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
@@ -34,9 +56,17 @@
           exact-active-class="active"
           :to="{ name: 'Forms' }"
         >
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 170px;">{{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot' }} field mapping</span>
-            <img src="@/assets/images/edit-note.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 170px"
+              >{{ userCRM === 'SALESFORCE' ? 'Salesforce' : 'Hubspot' }} field mapping</span
+            >
+            <img
+              src="@/assets/images/edit-note.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
@@ -46,23 +76,50 @@
           exact-active-class="active"
           :to="{ name: 'Meetings' }"
         >
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 75px;">Meetings</span>
-            <img src="@/assets/images/calendar.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 75px">Meetings</span>
+            <img
+              src="@/assets/images/calendar.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
-        <router-link v-if="userCRM" class="side-wrapper" exact-active-class="active" :to="{ name: 'Notes' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 120px;">Note Templates</span>
-            <img src="@/assets/images/notebook.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+        <router-link
+          v-if="userCRM"
+          class="side-wrapper"
+          exact-active-class="active"
+          :to="{ name: 'Notes' }"
+        >
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 120px">Note Templates</span>
+            <img
+              src="@/assets/images/notebook.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
-        <router-link class="side-wrapper" exact-active-class="active" :to="{ name: 'Integrations' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px;">Integrations</span>
-            <img src="@/assets/images/connect.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+        <router-link
+          class="side-wrapper"
+          exact-active-class="active"
+          :to="{ name: 'Integrations' }"
+        >
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px">Integrations</span>
+            <img
+              src="@/assets/images/connect.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
         <router-link
@@ -71,20 +128,41 @@
           v-if="routeName === 'InviteUsers' && userCRM"
           :to="{ name: 'InviteUsers' }"
         >
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 190px;">Profile & Team Management</span>
-            <img src="@/assets/images/profile.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 190px"
+              >Profile & Team Management</span
+            >
+            <img
+              src="@/assets/images/profile.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
-        <router-link class="side-wrapper" exact-active-class="active" v-else-if="userCRM" :to="{ name: 'InviteUsers' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 190px;">Profile & Team Management</span>
-            <img src="@/assets/images/profile.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
+        <router-link
+          class="side-wrapper"
+          exact-active-class="active"
+          v-else-if="userCRM"
+          :to="{ name: 'InviteUsers' }"
+        >
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 190px"
+              >Profile & Team Management</span
+            >
+            <img
+              src="@/assets/images/profile.svg"
+              class="nav-img"
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
 
-        <router-link v-if="!isPaid" class="side-wrapper" exact-active-class="active" :to="{ name: 'Reports' }">
+        <!-- <router-link v-if="!isPaid" class="side-wrapper" exact-active-class="active" :to="{ name: 'Reports' }">
           <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
             <span class="side-tooltip-single" style="top: -5px; width: 190px;">Reports: Upgrade your plan</span>
             <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
@@ -95,17 +173,31 @@
             <span class="side-tooltip-single" style="top: -5px; width: 60px;">Reports</span>
             <img src="@/assets/images/reports.svg" class="" height="16px" alt="" style="margin-top: 0;" />
           </label>
-        </router-link>
-        
-        <router-link class="side-wrapper" exact-active-class="active" :to="{ name: 'DemoCenter' }" style="margin-top: auto; padding-left: 9px;">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 100px;">Demo Center</span>
-            <img src="@/assets/images/play-alt.svg" class="" height="16px" alt="" style="margin-top: 0;" />
+        </router-link> -->
+
+        <router-link
+          class="side-wrapper"
+          exact-active-class="active"
+          :to="{ name: 'DemoCenter' }"
+          style="margin-top: auto; padding-left: 9px"
+        >
+          <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
+            <span class="side-tooltip-single" style="top: -5px; width: 100px">Demo Center</span>
+            <img
+              src="@/assets/images/play-alt.svg"
+              class=""
+              height="16px"
+              alt=""
+              style="margin-top: 0"
+            />
           </label>
         </router-link>
         <div class="side-wrapper">
           <label class="side-icon side-workflow" style="">
-            <span class="side-tooltip"><div>Need help?</div><div>Email: cx@mymanagr.com</div></span>
+            <span class="side-tooltip"
+              ><div>Need help?</div>
+              <div>Email: cx@mymanagr.com</div></span
+            >
             <img
               src="@/assets/images/help.png"
               class="side-img"

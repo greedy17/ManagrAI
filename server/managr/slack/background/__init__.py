@@ -8,6 +8,7 @@ from datetime import datetime
 from managr.api.decorators import slack_api_exceptions, log_all_exceptions
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.core.models import User
+from managr.core.background import emit_process_send_summary_to_dm
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
@@ -85,8 +86,16 @@ def emit_process_paginate_deal_reviews(payload, context):
     return _process_paginate_deal_reviews(payload, context)
 
 
+def emit_process_alert_send_deal_review(payload, context):
+    return _process_alert_send_deal_review(payload, context)
+
+
 def emit_process_send_deal_review(payload, context):
     return _process_send_deal_review(payload, context)
+
+
+def emit_process_chat_action(payload, context):
+    return _process_chat_action(payload, context)
 
 
 @background(schedule=0)
@@ -868,7 +877,7 @@ def set_name_field(resource):
 
 @background(schedule=0)
 @slack_api_exceptions(rethrow=0)
-def _process_send_deal_review(payload, context):
+def _process_alert_send_deal_review(payload, context):
     from managr.core import constants as core_consts
     from managr.utils.client import Client
 
@@ -892,7 +901,7 @@ def _process_send_deal_review(payload, context):
     )
     field_name = set_name_field(alert.template.resource_type)
     prompt = core_consts.OPEN_AI_DEAL_REVIEW(
-        deal_review_data, field_name, datetime.now().date(), user.crm
+        deal_review_data, alert.template.resource_type, datetime.now().date(), user.crm
     )
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, top_p=0.9, temperature=0.7)
     print(f"DEAL REVIEW BODY: {body}")
@@ -949,6 +958,145 @@ def _process_send_deal_review(payload, context):
         logger.exception(
             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
         )
-
     return
 
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_send_deal_review(payload, context):
+    from managr.core import constants as core_consts
+    from managr.utils.client import Client
+    from managr.crm.utils import CRM_SWITCHER
+
+    user = User.objects.get(id=context.get("u"))
+    resource_type = context.get("resource_type")
+    resource_id = context.get("resource_id")
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    form_template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(resource=resource_type, form_type="UPDATE")
+        .first()
+    )
+    fields = form_template.custom_fields.all()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user, resource_id=resource_id
+    ).first()
+    form_data = form_check.saved_data if form_check else {}
+    api_names = list(fields.values_list("api_name", flat=True))
+    deal_review_data = deal_review_data_builder(
+        resource.secondary_data, api_names, user.crm, form_data, fields
+    )
+    prompt = core_consts.OPEN_AI_DEAL_REVIEW(
+        deal_review_data, resource_type, datetime.now().date(), user.crm
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, top_p=0.9, temperature=0.7)
+    has_error = False
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            if r.status_code == 200:
+                r = r.json()
+                response_text = r.get("choices")[0].get("text")
+                break
+        except Exception as e:
+            has_error = True
+            text = "There was an error generating your review"
+            break
+    try:
+        chat_blocks = [
+            block_builders.header_block("AI Generated Deal Review"),
+            block_builders.context_block("ManagrGPT was used to generate this deal review"),
+            {"type": "divider"},
+            block_builders.simple_section(response_text, "mrkdwn"),
+        ]
+        slack_requests.send_channel_message(
+            channel=user.slack_integration.channel,
+            block_set=chat_blocks,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        logger.exception(
+            f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
+        )
+    return
+
+
+ACTION_TEMPLATE_FUNCTIONS = {
+    "review": emit_process_send_deal_review,
+    "summary": emit_process_send_summary_to_dm,
+}
+
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_chat_action(payload, context):
+    from managr.crm.utils import CRM_SWITCHER
+
+    user = User.objects.get(id=context.get("u"))
+    resource_list = (
+        ["Opportunity", "Account", "Contact", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Company", "Deal", "Contact"]
+    )
+    state = payload["view"]["state"]
+    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
+    resource_check = None
+    blocks = []
+    lowercase_prompt = prompt.lower()
+    lowered_split_prompt = lowercase_prompt.split(" ")
+    for resource in resource_list:
+        lowered_resource = resource.lower()
+        if lowered_resource in lowercase_prompt:
+            resource_check = resource
+            break
+    if not resource_check:
+        blocks.append(
+            block_builders.simple_section(
+                f":no_entry_sign: Looks like we could not find an object type in your chat submission",
+                "mrkdwn",
+            )
+        )
+    resource_index = lowered_split_prompt.index(resource_check.lower())
+    resource_name = " ".join(lowered_split_prompt[(resource_index + 1) :])
+    try:
+        resource = CRM_SWITCHER[user.crm][resource_check]["model"].objects.get(
+            name__icontains=resource_name
+        )
+        form = OrgCustomSlackFormInstance.objects.filter(resource_id=str(resource.id)).first()
+        form_id = str(form.id) if form else None
+        context.update(resource_id=str(resource.id), resource_type=resource_check, form_ids=form_id)
+    except CRM_SWITCHER[user.crm][resource_check]["model"].DoesNotExist:
+        blocks.append(
+            block_builders.simple_section(
+                f":no_entry_sign: We could not find a {resource_check} called {resource_name}",
+                "mrkdwn",
+            )
+        )
+    action_func = None
+    for word in ACTION_TEMPLATE_FUNCTIONS.keys():
+        if word in lowercase_prompt:
+            action_func = ACTION_TEMPLATE_FUNCTIONS[word]
+            break
+    if action_func is None:
+        blocks.append(
+            block_builders.simple_section(
+                ":no_entry_sign: Invalid submission: This action was not found"
+            )
+        )
+    if not len(blocks):
+        blocks = [block_builders.simple_section(f":white_check_mark: Done!")]
+        action_func(payload, context)
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submission because of <{e}>"
+        )
+    return
