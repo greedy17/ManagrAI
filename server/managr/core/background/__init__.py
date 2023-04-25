@@ -5,6 +5,7 @@ import pytz
 import uuid
 import requests
 import json
+import httpx
 from django.utils import timezone
 from dateutil.parser import parse
 import calendar
@@ -1093,12 +1094,13 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     notes = cleaned_data.pop("meeting_comments", None)
     subject = cleaned_data.pop("meeting_type", None)
     for key in cleaned_data.keys():
+        use_secondary_data = False
         field = fields.get(api_name=key)
         if resource and field.api_name in ["Name", "dealname"]:
-            cleaned_data[key] = resource.secondary_data[key]
+            use_secondary_data = True
         if cleaned_data[key] is None or cleaned_data[key] == "":
             if resource:
-                cleaned_data[key] = resource.secondary_data[key]
+                use_secondary_data = True
             continue
         elif field.data_type == "TextArea":
             if resource and data[key] is not None:
@@ -1114,7 +1116,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             new_value = convert_date_string(data_value, current_value)
             if isinstance(new_value, str):
                 if resource:
-                    cleaned_data[key] = resource.secondary_data[key]
+                    use_secondary_data = True
                 else:
                     cleaned_data[key] = None
             else:
@@ -1158,10 +1160,14 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                     cleaned_data[key] = value["value"]
             if not value_found:
                 if resource:
-                    cleaned_data[key] = resource.secondary_data[key]
+                    use_secondary_data = True
                 else:
                     cleaned_data[key] = None
-
+        if use_secondary_data:
+            try:
+                cleaned_data[key] = resource.secondary_data[key]
+            except ValueError:
+                continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
@@ -1317,10 +1323,13 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
                                     .objects.for_user(user)
                                     .filter(email__icontains=word)
-                                    .first()
                                 )
                                 if query:
-                                    resource = query
+                                    if len(query) > 1:
+                                        most_matching = name_list_processor(query, resource_check)
+                                        resource = query.filter(email=most_matching).first()
+                                    else:
+                                        resource = query.first()
                                     break
                         if resource:
                             logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
@@ -1347,6 +1356,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 else:
                     has_error = True
                 break
+            else:
+                attempts += 1
+        except httpx.ReadTimeout:
+            if attempts >= 5:
+                message = "There was an error communicating with Open AI"
             else:
                 attempts += 1
         except Exception as e:
@@ -1765,11 +1779,19 @@ def _process_send_summary_to_dm(payload, context):
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     try:
-        slack_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+        if context.get("ts", None):
+            slack_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        else:
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"

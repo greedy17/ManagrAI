@@ -1011,11 +1011,19 @@ def _process_send_deal_review(payload, context):
             {"type": "divider"},
             block_builders.simple_section(response_text, "mrkdwn"),
         ]
-        slack_requests.send_channel_message(
-            channel=user.slack_integration.channel,
-            block_set=chat_blocks,
-            access_token=user.organization.slack_integration.access_token,
-        )
+        if context.get("ts", None):
+            slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                block_set=chat_blocks,
+                access_token=user.organization.slack_integration.access_token,
+            )
+        else:
+            slack_requests.send_channel_message(
+                channel=user.slack_integration.channel,
+                block_set=chat_blocks,
+                access_token=user.organization.slack_integration.access_token,
+            )
     except Exception as e:
         logger.exception(
             f"Failed to send ephemeral message to user informing them of successful update {user.email} {e}"
@@ -1085,18 +1093,17 @@ def _process_chat_action(payload, context):
                 ":no_entry_sign: Invalid submission: This action was not found"
             )
         )
-    if not len(blocks):
-        blocks = [block_builders.simple_section(f":white_check_mark: Done!")]
-        action_func(payload, context)
-    try:
-        slack_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            context.get("ts"),
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
-    except Exception as e:
-        logger.exception(
-            f"ERROR sending update channel message for chat submission because of <{e}>"
-        )
+    action_func(payload, context)
+    if len(blocks):
+        try:
+            slack_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(
+                f"ERROR sending update channel message for chat submission because of <{e}>"
+            )
     return
