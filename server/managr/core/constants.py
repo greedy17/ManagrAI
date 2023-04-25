@@ -25,10 +25,21 @@ if settings.USE_OPEN_AI:
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 
 OPEN_AI_SUMMARY_PROMPT = (
-    lambda object: f"Summarize the meetings notes below in the most concise way as if you are reporting back to an executive that has very little time. Open with how the meeting went. Determine if it was a demo meeting or just a follow up conversation being logged. Do this by reading the meeting_comments notes and meeting_type. If its a follow up conversation apply that into the summary.\n Meeting notes:{object}"
+    lambda object: f"""Summarize the meetings notes below in the most concise way (300 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
+    Highlight the most important information first like, the deal stage, next step and close date. 
+    Also mention what kind of interaction it was - a call, meeting, or just an update. 
+    Deliver message in sentence format
+    \n Meeting notes:{object}
+    """
 )
 OPEN_AI_UPDATE_PROMPT = (
-    lambda labels, prompt, date: f"Take the meeting note below and use it to update either Salesforce or HubSpot CRM fields below - Some of CRM fields are labeled with the API name, so take that into account. Desired output is a python dictionary, JSON.\nAssume CRM field labeled 'name' is always referring to either 'Company Name, 'Deal Name' or 'Opportunity Name' - Do NOT include 'company' 'deal' or 'Opportunity' into the field data\nThe entire meeting note should be pasted into 'meeting_comments', then update all the relevant fields from the meeting note. Lastly, date format needs to be: year-month-day and use the date below as reference.\n Fields:{labels}\n text: {prompt}\n date: {date}"
+    lambda labels, prompt, date: f"""Take the meeting note below and use it to update either Salesforce or HubSpot CRM fields below - 
+    Some of CRM fields are labeled with the API name, so take that into account. 
+    Desired output is a python dictionary, JSON.
+    \nAssume CRM field labeled 'name' is always referring to either 'Company Name, 'Deal Name' or 'Opportunity Name' - 
+    Do NOT include 'company' 'deal' or 'Opportunity' into the field data\nThe entire meeting note should be pasted into 'meeting_comments', 
+    then update all the relevant fields from the meeting note. Lastly, date format needs to be: year-month-day and use the date below as reference.
+    \n Fields:{labels}\n text: {prompt}\n date: {date}"""
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
@@ -39,21 +50,24 @@ OPEN_AI_NEXT_STEPS = (
 )
 
 OPEN_AI_DEAL_REVIEW = (
-    lambda data, resource, date, crm: f"""You are my sales manager. I am a sales rep. Imagine we are having a deal review (a weekly event) and your job is to go through my deal (or opportunity) and answer the questions below.
-    \nToday's date is {date}.
-    \nBase your answers around Todays date. Your response should be casual, yet professional.
-    \nAssess each deal using one of the following sales frameworks: BANT, MEDDIC or MEDDPICC. Pick a sales framework based on the deal data and CRM fields below.
+    lambda data, resource, date, crm: f"""You are my sales manager. I am a sales rep. 
+    Imagine we are having a deal review (a weekly event) and your job is to go through my deal (or opportunity) and answer the questions below.
+    Today's date is {date}.
+    Base your answers around Todays date. Your response should be casual, yet professional.
+    Assess each deal using one of the following sales frameworks: BANT, MEDDIC or MEDDPICC. Use a sales framework that aligns with CRM fields below.
     \n1) Highlight what information is missing from this deal based on one of the above sales frameworks.
     \n2) Check for data being up to date, do the following: Make sure the Close Date is not in the past, if so call it out. Do not include Last Activity here
     \n3) Show the Last Activity Date. If it exceeds 30 days from Todays date, then flag it. If its within the past 5 days, then it's a good sign.
-    \n4) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. End the email with a question - one that will move the deal forward. 
+    \n4) If they use a next step field then summarize the next step with a maximum character limit of 150 characters. 
+    \n5) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. End the email with a question - one that will move the deal forward. 
     \nStart the email with Hi or Hey and do not use Best Regards in the sign off.
     \nHere is the format I want:
     \n{resource} Name:
     \n1) Missing Information: list out missing information in sentence format.
-    \n2) Needs Updating: show data out of date in sentence format. If nothing is out of date, then say, "everything looks up to date".
+    \n2) Needs Updating: show data out of date in sentence format. If nothing is out of date, then say, 'Everything looks up to date'.
     \n3) Last Activity: show last activity date, comment as needed per the above.
-    \n4) Email: write out the email
+    \n4) Next Step: summarize the next step with a maximum character limit of 150 characters. If blank, then say 'There is no next step'. If there is no next step field, then skip this.
+    \n5) Suggested Email: write out the email
     \nUse the deal data below to make your assessment, data is coming from either Salesforce or HubSpot CRM. Account for labels being the API name. CRM Data: {data}"""
 )
 
