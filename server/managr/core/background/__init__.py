@@ -1223,8 +1223,14 @@ def name_list_processor(resource_list, chat_response_name):
     most_matching = None
     chat_set = set(chat_response_name)
     for resource in resource_list:
-        cleaned_string = resource.display_value.lower().replace("(", "").replace(")", "").split(" ")
-        same_set = set(cleaned_string).intersection(chat_set)
+        cleaned_string = (
+            resource.display_value.lower()
+            .replace("(", "")
+            .replace(")", "")
+            .replace(",", "")
+            .split(" ")
+        )
+        same_set = set(chat_set).intersection(cleaned_string)
         if len(same_set) > most_count:
             most_count = len(same_set)
             most_matching = resource.display_value
