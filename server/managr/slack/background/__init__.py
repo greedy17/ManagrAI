@@ -846,7 +846,11 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
     for api_name in api_name_list:
         field = fields.filter(api_name=api_name).first()
         label = field.label
-        if field.data_type in ["Date", "DateTime"] and crm == "HUBSPOT":
+        if (
+            field.data_type in ["Date", "DateTime"]
+            and crm == "HUBSPOT"
+            and resource_data[api_name] is not None
+        ):
             converted_string = resource_data[api_name].split("T")
             value_dict[label] = converted_string[0]
         else:
@@ -1069,8 +1073,10 @@ def _process_chat_action(payload, context):
     resource_index = lowered_split_prompt.index(resource_check.lower())
     resource_name = " ".join(lowered_split_prompt[(resource_index + 1) :])
     try:
-        resource = CRM_SWITCHER[user.crm][resource_check]["model"].objects.get(
-            name__icontains=resource_name
+        resource = (
+            CRM_SWITCHER[user.crm][resource_check]["model"]
+            .objects.for_user(user)
+            .get(name__icontains=resource_name, integration_source=user.crm)
         )
         form = OrgCustomSlackFormInstance.objects.filter(resource_id=str(resource.id)).first()
         form_id = str(form.id) if form else None
@@ -1107,3 +1113,4 @@ def _process_chat_action(payload, context):
                 f"ERROR sending update channel message for chat submission because of <{e}>"
             )
     return
+
