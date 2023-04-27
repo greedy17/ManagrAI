@@ -1273,7 +1273,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 choice = r["choices"][0]
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
-                    if token_amount <= 1500:
+                    if token_amount <= 2000:
                         slack_res = slack_requests.update_channel_message(
                             context.get("channel"),
                             context.get("ts"),
