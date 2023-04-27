@@ -2595,7 +2595,7 @@ def process_submit_chat_prompt(payload, context):
     resource_list = (
         ["Opportunity", "Account", "Contact", "Lead"]
         if user.crm == "SALESFORCE"
-        else ["Company", "Deal", "Contact"]
+        else ["Deal", "Company", "Contact"]
     )
     state = payload["view"]["state"]
     task_selection = [
