@@ -499,6 +499,7 @@ def update_command_block_set(context):
             block_id="CHAT_PROMPT",
             multiline=True,
             optional=False,
+            initial_value=f"Update {'Opportunity' if crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
         ),
         block_builders.context_block("Powered by ChatGPT © :robot_face:"),
         block_builders.static_select(
