@@ -554,7 +554,7 @@ def _process_add_call_to_hs(workflow_id, *args):
     review_form = workflow.forms.filter(
         template__form_type__in=[slack_consts.FORM_TYPE_UPDATE, slack_consts.FORM_TYPE_CREATE]
     ).first()
-    subject = review_form.saved_data.get("meeting_type")
+    subject = f"Meeting - {review_form.saved_data.get('meeting_type')})"
     description = review_form.saved_data.get("meeting_comments")
     if description is not None:
         description = replace_tags(description)

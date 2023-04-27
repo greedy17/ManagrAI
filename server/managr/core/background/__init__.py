@@ -5,6 +5,7 @@ import pytz
 import uuid
 import requests
 import json
+import httpx
 from django.utils import timezone
 from dateutil.parser import parse
 import calendar
@@ -1093,75 +1094,77 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     notes = cleaned_data.pop("meeting_comments", None)
     subject = cleaned_data.pop("meeting_type", None)
     for key in cleaned_data.keys():
-        field = fields.get(api_name=key)
-        if resource and field.api_name in ["Name", "dealname"]:
-            cleaned_data[key] = resource.secondary_data[key]
-        if cleaned_data[key] is None or cleaned_data[key] == "":
-            if resource:
+        try:
+            field = fields.get(api_name=key)
+            if resource and field.api_name in ["Name", "dealname"]:
                 cleaned_data[key] = resource.secondary_data[key]
-            continue
-        elif field.data_type == "TextArea":
-            if resource and data[key] is not None:
-                current_value = (
-                    resource.secondary_data[key]
-                    if resource.secondary_data[key] is not None
-                    else " "
-                )
-                cleaned_data[key] = f"{data[key]}\n\n{current_value}"
-        elif field.data_type in ["Date", "DateTime"]:
-            data_value = data[key]
-            current_value = resource.secondary_data[key] if resource else None
-            new_value = convert_date_string(data_value, current_value)
-            if isinstance(new_value, str):
+            if cleaned_data[key] is None or cleaned_data[key] == "":
                 if resource:
                     cleaned_data[key] = resource.secondary_data[key]
-                else:
-                    cleaned_data[key] = None
-            else:
-                cleaned_data[key] = (
-                    str(new_value.date())
-                    if crm == "SALESFORCE"
-                    else (str(new_value.date()) + "T00:00:00.000Z")
-                )
-        elif field.api_name == "dealstage":
-            if resource:
-                pipeline = field.options[0][resource.secondary_data["pipeline"]]
-                if pipeline:
-                    stage_value = data[key].lower()
-                    stage = [
-                        stage
-                        for stage in pipeline["stages"]
-                        if stage["label"].lower() == stage_value
-                    ]
-                    if len(stage):
-                        cleaned_data[key] = stage[0]["id"]
+                continue
+            elif field.data_type == "TextArea":
+                if resource and data[key] is not None:
+                    current_value = (
+                        resource.secondary_data[key]
+                        if resource.secondary_data[key] is not None
+                        else " "
+                    )
+                    cleaned_data[key] = f"{data[key]}\n\n{current_value}"
+            elif field.data_type in ["Date", "DateTime"]:
+                data_value = data[key]
+                current_value = resource.secondary_data[key] if resource else None
+                new_value = convert_date_string(data_value, current_value)
+                if isinstance(new_value, str):
+                    if resource:
+                        cleaned_data[key] = resource.secondary_data[key]
                     else:
-                        cleaned_data[key] = resource.secondary_data["dealstage"]
-        elif field.api_name in ["Amount", "amount"]:
-            amount = cleaned_data[key]
-            if "k" in amount:
-                amount = amount.replace("k", "000.0")
-            if "$" in amount:
-                amount = amount.replace("$", "")
-            cleaned_data[key] = amount
-        elif field.data_type == "Picklist":
-            if crm == "HUBSPOT":
-                options = field.options
-            else:
-                options = field.crm_picklist_options.values
-            value_found = False
-            for value in options:
-                lowered_value = cleaned_data[key].lower()
-                current_value_label = value["label"].lower()
-                if lowered_value in current_value_label:
-                    value_found = True
-                    cleaned_data[key] = value["value"]
-            if not value_found:
-                if resource:
-                    cleaned_data[key] = resource.secondary_data[key]
+                        cleaned_data[key] = None
                 else:
-                    cleaned_data[key] = None
-
+                    cleaned_data[key] = (
+                        str(new_value.date())
+                        if crm == "SALESFORCE"
+                        else (str(new_value.date()) + "T00:00:00.000Z")
+                    )
+            elif field.api_name == "dealstage":
+                if resource:
+                    pipeline = field.options[0][resource.secondary_data["pipeline"]]
+                    if pipeline:
+                        stage_value = data[key].lower()
+                        stage = [
+                            stage
+                            for stage in pipeline["stages"]
+                            if stage["label"].lower() == stage_value
+                        ]
+                        if len(stage):
+                            cleaned_data[key] = stage[0]["id"]
+                        else:
+                            cleaned_data[key] = resource.secondary_data["dealstage"]
+            elif field.api_name in ["Amount", "amount"]:
+                amount = cleaned_data[key]
+                if "k" in amount:
+                    amount = amount.replace("k", "000.0")
+                if "$" in amount:
+                    amount = amount.replace("$", "")
+                cleaned_data[key] = amount
+            elif field.data_type == "Picklist":
+                if crm == "HUBSPOT":
+                    options = field.options
+                else:
+                    options = field.crm_picklist_options.values
+                value_found = False
+                for value in options:
+                    lowered_value = cleaned_data[key].lower()
+                    current_value_label = value["label"].lower()
+                    if lowered_value in current_value_label:
+                        value_found = True
+                        cleaned_data[key] = value["value"]
+                if not value_found:
+                    if resource:
+                        cleaned_data[key] = resource.secondary_data[key]
+                    else:
+                        cleaned_data[key] = None
+        except ValueError:
+            continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
@@ -1213,6 +1216,25 @@ def correct_data_keys(data):
         data["Company name"] = data["Company Name"]
         del data["Company Name"]
     return data
+
+
+def name_list_processor(resource_list, chat_response_name):
+    most_count = 0
+    most_matching = None
+    chat_set = set(chat_response_name)
+    for resource in resource_list:
+        cleaned_string = (
+            resource.display_value.lower()
+            .replace("(", "")
+            .replace(")", "")
+            .replace(",", "")
+            .split(" ")
+        )
+        same_set = set(chat_set).intersection(cleaned_string)
+        if len(same_set) > most_count:
+            most_count = len(same_set)
+            most_matching = resource.display_value
+    return most_matching
 
 
 @background()
@@ -1290,20 +1312,27 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
                                     .objects.for_user(user)
                                     .filter(name__icontains=word)
-                                    .first()
                                 )
+                                print(query)
                                 if query:
-                                    resource = query
+                                    if len(query) > 1:
+                                        most_matching = name_list_processor(query, resource_check)
+                                        resource = query.filter(name=most_matching).first()
+                                    else:
+                                        resource = query.first()
                                     break
                             else:
                                 query = (
                                     CRM_SWITCHER[user.crm][resource_type]["model"]
                                     .objects.for_user(user)
                                     .filter(email__icontains=word)
-                                    .first()
                                 )
                                 if query:
-                                    resource = query
+                                    if len(query) > 1:
+                                        most_matching = name_list_processor(query, resource_check)
+                                        resource = query.filter(email=most_matching).first()
+                                    else:
+                                        resource = query.first()
                                     break
                         if resource:
                             logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
@@ -1330,6 +1359,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 else:
                     has_error = True
                 break
+            else:
+                attempts += 1
+        except httpx.ReadTimeout:
+            if attempts >= 5:
+                message = "There was an error communicating with Open AI"
             else:
                 attempts += 1
         except Exception as e:
@@ -1748,11 +1782,19 @@ def _process_send_summary_to_dm(payload, context):
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     try:
-        slack_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+        if context.get("ts", None):
+            slack_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        else:
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"

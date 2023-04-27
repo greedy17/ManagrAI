@@ -49,7 +49,7 @@ def open_chat(context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
-                "title": {"type": "plain_text", "text": "Chat",},
+                "title": {"type": "plain_text", "text": "Update CRM",},
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),
