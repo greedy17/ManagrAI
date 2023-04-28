@@ -1,5 +1,78 @@
 <template>
   <div>
+    <Modal v-if="modalOpen" @close-modal="closeModal()" dimmed>
+      <div class="command-modal">
+        <header>
+          <h2>
+            How to use chatbot 💬
+            <img
+              src="@/assets/images/slackLogo.png"
+              style="margin-left: 6px"
+              height="18px"
+              alt=""
+            />
+          </h2>
+          <p>Use conversational AI to update CRM and take actions.</p>
+        </header>
+        <section>
+          <div>
+            <h5><span>1. Run a command in Slack</span></h5>
+            <p>Type '/' into any Slack message box to initiate a command</p>
+          </div>
+          <div>
+            <h5><span>2. Select 1 of 2 chatbot commands</span></h5>
+            <p>
+              Search for "Managr-update" to update the CRM. Use "Managr-actions" to get real-time
+              insights
+            </p>
+          </div>
+          <div style="border-bottom: none; padding-top: 1rem">
+            <h5>
+              🤖 ☁️
+              <span>{{
+                `Using Managr-update: make sure to include ${
+                  userCRM === 'SALESFORCE' ? 'Opportunity + Opportunity Name.' : 'Deal + Deal Name.'
+                }`
+              }}</span>
+            </h5>
+            <p style="padding-left: 2.4rem">
+              Ex: Push close date for Opportunity Pied Piper 2 weeks.
+            </p>
+          </div>
+          <div style="padding-top: 1rem">
+            <h5>
+              🤖 🦾
+              <span>Using Managr-actions: select from the dropdown.</span>
+            </h5>
+            <p style="padding-left: 2.4rem">
+              Get a deal summary, run a deal review, or schedule a meeting (coming soon!)
+            </p>
+          </div>
+          <!-- <div>
+            <img
+              style="border: 1px solid #eeeeee; border-radius: 8px"
+              src="@/assets/images/chatbot.png"
+              height="300px"
+              alt=""
+            />
+          </div> -->
+        </section>
+        <footer
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: flex-end;
+          "
+        >
+          <!-- <small class="gray-blue"
+            >For best results, avoid using symbols, colons, quotes and dollar signs.</small
+          > -->
+          <button @click="closeCommandModal()">Got it</button>
+        </footer>
+      </div>
+    </Modal>
+
     <nav id="nav" v-if="userIsLoggedIn">
       <router-link v-if="userCRM" :to="{ name: 'ListTemplates' }">
         <div class="logo">
@@ -175,11 +248,26 @@
           </label>
         </router-link> -->
 
+        <div @mouseenter="openModal()" style="margin-left: 2px" class="side-wrapper">
+          <label class="side-icon side-workflow" style="">
+            <!-- <span style="margin-top: 8px" class="side-tooltip">
+              <div>Chatbot 💬</div>
+            </span> -->
+            <img
+              src="@/assets/images/chat.svg"
+              class="side-img"
+              style="margin-top: 0"
+              height="16px"
+              alt=""
+            />
+          </label>
+        </div>
+
         <router-link
           class="side-wrapper"
           exact-active-class="active"
           :to="{ name: 'DemoCenter' }"
-          style="margin-top: auto; padding-left: 9px"
+          style="margin-top: auto; margin-bottom: -4px; padding-left: 9px; margin-left: 4px"
         >
           <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
             <span class="side-tooltip-single" style="top: -5px; width: 100px">Demo Center</span>
@@ -188,11 +276,11 @@
               class=""
               height="16px"
               alt=""
-              style="margin-top: 0"
+              style="margin-top: 0; filter: invert(40%)"
             />
           </label>
         </router-link>
-        <div class="side-wrapper">
+        <div style="margin-left: 2px" class="side-wrapper">
           <label class="side-icon side-workflow" style="">
             <span class="side-tooltip"
               ><div>Need help?</div>
@@ -209,7 +297,7 @@
         </div>
 
         <router-link :to="{ name: 'Login' }">
-          <div style="margin-left: 3px">
+          <div style="margin-left: 5px">
             <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
           </div>
         </router-link>
@@ -235,10 +323,12 @@ export default {
   name: 'NavBar',
   components: {
     CollectionManager,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   data() {
     return {
       items: [],
+      modalOpen: false,
     }
   },
 
@@ -261,6 +351,14 @@ export default {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
       localStorage.isLoggedOut = true
+    },
+    openModal() {
+      this.modalOpen = true
+      console.log('here')
+    },
+    closeModal() {
+      this.modalOpen = false
+      console.log('over there')
     },
   },
   computed: {
@@ -291,6 +389,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/modals';
 
 @media only screen and (max-width: 600px) {
 }
@@ -317,7 +416,7 @@ export default {
 .nav-img {
   height: 16px;
 }
-span {
+div > span {
   font-size: 11px;
   color: $dark-green;
   background-color: #f3f0f0;
@@ -547,6 +646,127 @@ a:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   img {
     filter: invert(90%);
+  }
+}
+
+.command-modal {
+  @include wide-modal();
+  overflow-x: hidden;
+  height: 100%;
+  align-items: center;
+  padding: 0px 24px 0px 24px;
+  position: relative;
+  color: $base-gray;
+
+  header {
+    position: sticky;
+    top: 0;
+    padding-top: 24px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    border-bottom: 1px solid $soft-gray;
+    h2 {
+      text-align: left;
+      font-weight: normal;
+      letter-spacing: 0.3px;
+      padding: 0;
+      margin: 0;
+    }
+    p {
+      letter-spacing: 0.3px;
+      font-size: 13px;
+      padding: 0;
+      color: $light-gray-blue;
+    }
+  }
+
+  section {
+    width: 100%;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    div {
+      margin: 0;
+      border-bottom: 1px solid $soft-gray;
+      width: 100%;
+      padding: 12px 0px 0px 4px;
+      h5 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: normal;
+        span {
+          font-weight: bold;
+          letter-spacing: 0.3px;
+          color: black;
+        }
+      }
+      p {
+        font-size: 14px;
+        padding: 0;
+        color: $light-gray-blue;
+      }
+    }
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    button {
+      background-color: $grape;
+      color: white;
+      height: 30px;
+      width: auto;
+      padding: 0 8px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      span {
+        color: $mid-gray !important;
+        padding: 0 2px;
+      }
+    }
+  }
+
+  footer {
+    width: 100%;
+    position: sticky;
+    bottom: 0;
+    margin-top: 16px;
+    background-color: white;
+    padding-bottom: 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    button {
+      background-color: $dark-green;
+      padding: 11px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: none;
+
+      color: $white;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    button:hover {
+      box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+      transform: scale(1.025);
+    }
   }
 }
 </style>
