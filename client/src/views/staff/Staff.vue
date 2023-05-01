@@ -2272,22 +2272,9 @@
                   @click="openModal('slackFormInstance', instance)"
                   style="display: flex;"
                 >
-                <!-- @click="openModal('task', task)" -->
-                  <!-- <div class="click click_width" > -->
-                    <!-- style="width: 30vw; margin-left: 1rem; -->
-                    <!-- <div style="margin-right: auto; display: flex; justify-content: center;"> -->
-                      <h4 style="position: relative; left: 0;">{{ getUserName(instance.user) }}</h4>
-                    <!-- </div> -->
-                    <!-- <div style="margin-left: auto; margin-right: auto; display: flex; justify-content: center;"> -->
-                      <h4 style="position: relative; min-width: 165px; left: 34.75%;">{{ instance.submission_date ? `${formatDateTime(instance.submission_date)}, ${getTime(instance.submission_date)}` : '--' }}</h4>
-                    <!-- </div> -->
-                    <!-- <div style="margin-left: auto; display: flex; justify-content: center;"> -->
-                      <h4 style="position: relative; left: 63.5%;">{{ instance.update_source ? instance.update_source : '--' }}</h4>
-                    <!-- </div> -->
-                    <!-- <span :style="instance.fields.last_error ? 'color: red;' : 'color: green;'">{{
-                      instance.fields.last_error ? '[ERROR]' : '[SUCCESS]'
-                    }}</span> -->
-                  <!-- </div> -->
+                  <h4 style="position: relative; left: 0;">{{ getUserName(instance.user) }}</h4>
+                  <h4 style="position: relative; min-width: 165px; left: 34.75%;">{{ instance.submission_date ? `${formatDateTime(instance.submission_date)}, ${getTime(instance.submission_date)}` : '--' }}</h4>
+                  <h4 style="position: relative; left: 63.5%;">{{ instance.update_source ? instance.update_source : '--' }}</h4>
                 </div>
               </div>
             </div>
@@ -2668,7 +2655,6 @@ export default {
       console.log('log', log)
     },
     getUserName(id) {
-      console.log('everyUser', this.everyUser)
       const user = this.everyUser.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
     },
@@ -3243,17 +3229,14 @@ export default {
       })
     },
     async getAllCustomSlackForms() {
-      console.log('organizations', this.organizations)
       let allSlackForms = []
       for (let i = 0; i < this.organizations.length; i++) {
-        console.log('id', this.organizations[i].id)
         let res = await SlackOAuth.api.getStaffFormInstances(
           this.organizations[i].id,
         )
         allSlackForms = [...allSlackForms, ...res]
       }
       this.allSlackFormInstances = allSlackForms
-      console.log('this.allSlackFormInstances', this.allSlackFormInstances)
     },
     handleConfirm() {
       this.changeAdminConfirmModal = !this.changeAdminConfirmModal
@@ -3409,7 +3392,6 @@ export default {
       try {
         const res = await User.api.getTrialUsers()
         this.trialUsers = res
-        // console.log('this.trialUsers', this.trialUsers)
         await this.getUsageData()
         this.setChartOptions()
       } catch(e) {
@@ -3419,7 +3401,6 @@ export default {
     async getUsageData() {
       const res = await User.api.callCommand('PULL_USAGE_DATA')
       this.usageData = res.data
-      // console.log('this.usageData', this.usageData)
     },
     setChartOptions() {
       const today = new Date(Date.now())
@@ -3492,7 +3473,6 @@ export default {
         this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
           this.selected_org.id,
         )
-        console.log('this.orgSlackFormInstace', this.orgSlackFormInstances)
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
         this.teamList = [{
           id: 'all',
