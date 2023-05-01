@@ -2254,6 +2254,44 @@
               </div>
             </div>
           </div>
+          <h2>Slack Form Instances <span v-if="!showInstances" @click="showInstances = !showInstances" style="cursor: pointer;">></span><span v-else @click="showInstances = !showInstances" style="cursor: pointer;">v</span></h2>
+          <div v-if="showInstances">
+            <div v-if="allOrgsLoading">
+              Loading...
+            </div>
+            <div v-else>
+              <div class="pure-white padding" style="display: flex;">
+                <h4 style="position: relative; left: 0;">USER</h4>
+                <h4 style="position: relative; left: 40%;">DATE</h4>
+                <h4 style="position: relative; left: 80%;">UPDATE SOURCE</h4>
+              </div>
+              <div v-for="(instance, i) in allSlackFormInstances" :key="instance.pk">
+                <div
+                  :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
+                  class="click"
+                  @click="openModal('slackFormInstance', instance)"
+                  style="display: flex;"
+                >
+                <!-- @click="openModal('task', task)" -->
+                  <!-- <div class="click click_width" > -->
+                    <!-- style="width: 30vw; margin-left: 1rem; -->
+                    <!-- <div style="margin-right: auto; display: flex; justify-content: center;"> -->
+                      <h4 style="position: relative; left: 0;">{{ getUserName(instance.user) }}</h4>
+                    <!-- </div> -->
+                    <!-- <div style="margin-left: auto; margin-right: auto; display: flex; justify-content: center;"> -->
+                      <h4 style="position: relative; min-width: 165px; left: 34.75%;">{{ instance.submission_date ? `${formatDateTime(instance.submission_date)}, ${getTime(instance.submission_date)}` : '--' }}</h4>
+                    <!-- </div> -->
+                    <!-- <div style="margin-left: auto; display: flex; justify-content: center;"> -->
+                      <h4 style="position: relative; left: 63.5%;">{{ instance.update_source ? instance.update_source : '--' }}</h4>
+                    <!-- </div> -->
+                    <!-- <span :style="instance.fields.last_error ? 'color: red;' : 'color: green;'">{{
+                      instance.fields.last_error ? '[ERROR]' : '[SUCCESS]'
+                    }}</span> -->
+                  <!-- </div> -->
+                </div>
+              </div>
+            </div>
+          </div>
           <h2>Completed Tasks <span v-if="!showAdminTasks" @click="showAdminTasks = !showAdminTasks" style="cursor: pointer;">></span><span v-else @click="showAdminTasks = !showAdminTasks" style="cursor: pointer;">v</span></h2>
           <div v-if="showAdminTasks">
             <div v-for="(task, i) in adminTasks" :key="task.pk">
@@ -2398,9 +2436,12 @@ export default {
       activeUsers: null,
       filterText: '',
       showAdminTasks: false,
+      showInstances: false,
       newAdmin: null,
       admin: null,
       selectedAction: null,
+      allSlackFormInstances: [],
+      everyUser: [],
       actionOptions: [
         // {label: 'Users Overview', action: () => this.openModal('usersOverview', this.filteredOrgUsers)},
         {label: 'Submissions', action: () => this.goToSlackFormInstace()},
@@ -2483,6 +2524,7 @@ export default {
       teamName: '',
       selectedTeamLead: null,
       usageData: null,
+      allOrgsLoading: false,
       chartOptions: {
         series: [{
           name: 'Users',
@@ -2626,7 +2668,8 @@ export default {
       console.log('log', log)
     },
     getUserName(id) {
-      const user = this.orgUsers.filter((user) => user.id == id)[0]
+      console.log('everyUser', this.everyUser)
+      const user = this.everyUser.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
     },
     filtersLabel(prop) {
@@ -2899,6 +2942,17 @@ export default {
         this.filteredOrgAlerts = this.orgAlerts.filter((item) => item.user === value.id)
       }
     },
+    async getEveryOrgUser() {
+      let allUsers = []
+      for (let i = 0; i < this.organizations.length; i++) {
+        let res = await this.getAllOrgUsers(
+          this.organizations[i].id,
+        )
+        allUsers = [...allUsers, ...res]
+      }
+      this.everyUser = allUsers
+      this.allOrgsLoading = false
+    },
     async getAllOrgUsers(orgId) {
       const res = await User.api.getAllOrgUsers(orgId)
       return res
@@ -2932,6 +2986,10 @@ export default {
             organization: this.selected_org,
             team_lead: null,
           }, ...orgForTeam.teams_ref]
+        } else {
+          this.allOrgsLoading = true
+          this.getAllCustomSlackForms()
+          this.getEveryOrgUser()
         }
       } catch (e) {
         console.log(e)
@@ -3184,6 +3242,19 @@ export default {
         bodyClassName: ['custom'],
       })
     },
+    async getAllCustomSlackForms() {
+      console.log('organizations', this.organizations)
+      let allSlackForms = []
+      for (let i = 0; i < this.organizations.length; i++) {
+        console.log('id', this.organizations[i].id)
+        let res = await SlackOAuth.api.getStaffFormInstances(
+          this.organizations[i].id,
+        )
+        allSlackForms = [...allSlackForms, ...res]
+      }
+      this.allSlackFormInstances = allSlackForms
+      console.log('this.allSlackFormInstances', this.allSlackFormInstances)
+    },
     handleConfirm() {
       this.changeAdminConfirmModal = !this.changeAdminConfirmModal
     },
@@ -3421,6 +3492,7 @@ export default {
         this.orgSlackFormInstances = await SlackOAuth.api.getStaffFormInstances(
           this.selected_org.id,
         )
+        console.log('this.orgSlackFormInstace', this.orgSlackFormInstances)
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
         this.teamList = [{
           id: 'all',
