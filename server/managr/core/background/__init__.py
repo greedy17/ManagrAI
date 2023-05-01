@@ -1274,21 +1274,23 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
                     if token_amount <= 2000:
-                        slack_res = slack_requests.update_channel_message(
-                            context.get("channel"),
-                            context.get("ts"),
-                            user.organization.slack_integration.access_token,
-                            block_set=[
-                                block_builders.section_with_button_block(
-                                    "Reopen Chat",
-                                    "OPEN_CHAT",
-                                    "Look like your prompt message is too long to process. Try removing white spaces!",
-                                    action_id=action_with_params(
-                                        slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
-                                    ),
-                                )
-                            ],
-                        )
+                        if workflow_id is None:
+                            slack_res = slack_requests.update_channel_message(
+                                context.get("channel"),
+                                context.get("ts"),
+                                user.organization.slack_integration.access_token,
+                                block_set=[
+                                    block_builders.section_with_button_block(
+                                        "Reopen Chat",
+                                        "OPEN_CHAT",
+                                        "Look like your prompt message is too long to process. Try removing white spaces!",
+                                        action_id=action_with_params(
+                                            slack_consts.REOPEN_CHAT_MODAL,
+                                            [f"form_id={str(form.id)}"],
+                                        ),
+                                    )
+                                ],
+                            )
                         return
                     else:
                         token_amount += 300
