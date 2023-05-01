@@ -1223,8 +1223,14 @@ def name_list_processor(resource_list, chat_response_name):
     most_matching = None
     chat_set = set(chat_response_name)
     for resource in resource_list:
-        cleaned_string = resource.display_value.lower().replace("(", "").replace(")", "").split(" ")
-        same_set = set(cleaned_string).intersection(chat_set)
+        cleaned_string = (
+            resource.display_value.lower()
+            .replace("(", "")
+            .replace(")", "")
+            .replace(",", "")
+            .split(" ")
+        )
+        same_set = set(chat_set).intersection(cleaned_string)
         if len(same_set) > most_count:
             most_count = len(same_set)
             most_matching = resource.display_value
@@ -1267,7 +1273,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 choice = r["choices"][0]
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
-                    if token_amount <= 1500:
+                    if token_amount <= 2000:
                         slack_res = slack_requests.update_channel_message(
                             context.get("channel"),
                             context.get("ts"),
@@ -1307,7 +1313,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                     .objects.for_user(user)
                                     .filter(name__icontains=word)
                                 )
-                                print(query)
                                 if query:
                                     if len(query) > 1:
                                         most_matching = name_list_processor(query, resource_check)
@@ -1472,7 +1477,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 )
             ]
             break
-    if workflow_id:
+    if workflow_id and not has_error:
         form.workflow = workflow
         form.update_source = "meeting (chat)"
         form.save()
