@@ -2634,6 +2634,7 @@ def process_submit_chat_prompt(payload, context):
                 date=str(workflow.datetime_created.date()),
             )
             emit_meeting_workflow_tracker(str(workflow.id))
+            return {"response_action": "clear"}
         else:
             ts = context.get("ts", None)
             channel = context.get("channel", None)
