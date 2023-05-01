@@ -517,7 +517,7 @@ def process_show_meeting_chat_modal(payload, context):
         [
             block_builders.input_block(
                 f"Log your meeting using converstional AI",
-                placeholder="Paste your note here, and we will update your CRM",
+                placeholder=f"Update {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
                 block_id="CHAT_PROMPT",
                 multiline=True,
                 optional=False,

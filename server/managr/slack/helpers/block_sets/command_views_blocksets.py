@@ -495,7 +495,7 @@ def update_command_block_set(context):
     blocks = [
         block_builders.input_block(
             f"Update {crm} using conversational AI",
-            placeholder=f"Ex: Push close date for {'Opportunity' if crm == 'SALESFORCE' else 'Deal'} Pied Piper to the end of the month",
+            placeholder=f"Update {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
             block_id="CHAT_PROMPT",
             multiline=True,
             optional=False,
