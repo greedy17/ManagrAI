@@ -1313,7 +1313,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                     .objects.for_user(user)
                                     .filter(name__icontains=word)
                                 )
-                                print(query)
                                 if query:
                                     if len(query) > 1:
                                         most_matching = name_list_processor(query, resource_check)
@@ -1478,7 +1477,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 )
             ]
             break
-    if workflow_id:
+    if workflow_id and not has_error:
         form.workflow = workflow
         form.update_source = "meeting (chat)"
         form.save()
