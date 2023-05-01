@@ -1140,6 +1140,8 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                         else:
                             cleaned_data[key] = resource.secondary_data["dealstage"]
             elif field.api_name in ["Amount", "amount"]:
+                if isinstance(cleaned_data[key], int):
+                    continue
                 amount = cleaned_data[key]
                 if "k" in amount:
                     amount = amount.replace("k", "000.0")
@@ -1245,6 +1247,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     workflow_id = context.get("w", None)
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
+        workflow.operations = [slack_consts.MEETING___SUBMIT_CHAT_PROMPT]
+        workflow.save()
     form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
     form = OrgCustomSlackFormInstance.objects.create(
@@ -1273,6 +1277,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 choice = r["choices"][0]
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
+                    print(f"Current token amount: {token_amount}")
                     if token_amount <= 2000:
                         if workflow_id is None:
                             slack_res = slack_requests.update_channel_message(
@@ -1291,9 +1296,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                     )
                                 ],
                             )
+
                         return
+
                     else:
-                        token_amount += 300
+                        token_amount += 500
                         continue
                 text = choice["text"]
                 cleaned_choice = clean_prompt_string(text)
