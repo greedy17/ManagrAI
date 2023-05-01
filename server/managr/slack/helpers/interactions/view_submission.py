@@ -2591,6 +2591,7 @@ def process_get_summary(payload, context):
 @slack_api_exceptions(rethrow=True)
 @processor(required_context=["u"])
 def process_submit_chat_prompt(payload, context):
+    print(context)
     user = User.objects.get(id=context.get("u"))
     resource_list = (
         ["Opportunity", "Account", "Contact", "Lead"]
@@ -2614,6 +2615,7 @@ def process_submit_chat_prompt(payload, context):
         if lowered_resource in lowercase_prompt:
             resource_check = resource
             break
+    print(resource_check)
     block_set = [
         *get_block_set(
             "loading",
@@ -2634,7 +2636,6 @@ def process_submit_chat_prompt(payload, context):
                 date=str(workflow.datetime_created.date()),
             )
             emit_meeting_workflow_tracker(str(workflow.id))
-            return {"response_action": "clear"}
         else:
             ts = context.get("ts", None)
             channel = context.get("channel", None)
@@ -2653,7 +2654,6 @@ def process_submit_chat_prompt(payload, context):
                 )
             context.update(channel=res["channel"], ts=res["ts"])
         if resource_check:
-
             emit_process_submit_chat_prompt(
                 context.get("u"), prompt, resource_check, context,
             )
