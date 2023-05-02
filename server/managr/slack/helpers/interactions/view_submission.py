@@ -2625,7 +2625,7 @@ def process_submit_chat_prompt(payload, context):
     try:
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.operations_list = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),
@@ -2652,7 +2652,6 @@ def process_submit_chat_prompt(payload, context):
                 )
             context.update(channel=res["channel"], ts=res["ts"])
         if resource_check:
-
             emit_process_submit_chat_prompt(
                 context.get("u"), prompt, resource_check, context,
             )
