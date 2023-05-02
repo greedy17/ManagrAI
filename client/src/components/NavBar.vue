@@ -3,16 +3,26 @@
     <Modal v-if="modalOpen" @close-modal="closeModal()" dimmed>
       <div class="command-modal">
         <header>
-          <h2>
-            How to use chatbot 💬
-            <img
-              src="@/assets/images/slackLogo.png"
-              style="margin-left: 6px"
-              height="18px"
-              alt=""
-            />
-          </h2>
-          <p>Use conversational AI to update CRM and take actions.</p>
+          <div>
+            <h2>
+              How to use chatbot 💬
+              <img
+                src="@/assets/images/slackLogo.png"
+                style="margin-left: 6px"
+                height="18px"
+                alt=""
+              />
+            </h2>
+            <p>Use conversational AI to update CRM and take actions.</p>
+          </div>
+
+          <img
+            @click="closeModal()"
+            src="@/assets/images/close.svg"
+            style="filter: invert(40%)"
+            height="24px"
+            alt=""
+          />
         </header>
         <section>
           <div>
@@ -39,7 +49,7 @@
               Ex: Push close date for Opportunity Pied Piper 2 weeks.
             </p>
           </div>
-          <div style="padding-top: 1rem">
+          <div style="border-bottom: none; padding-top: 1rem">
             <h5>
               🤖 🦾
               <span>Using Managr-actions: select from the dropdown.</span>
@@ -57,19 +67,6 @@
             />
           </div> -->
         </section>
-        <footer
-          style="
-            display: flex;
-            flex-direction: row;
-            align-items: flex-end;
-            justify-content: flex-end;
-          "
-        >
-          <!-- <small class="gray-blue"
-            >For best results, avoid using symbols, colons, quotes and dollar signs.</small
-          > -->
-          <button @click="closeCommandModal()">Got it</button>
-        </footer>
       </div>
     </Modal>
 
@@ -654,7 +651,7 @@ a:hover {
   overflow-x: hidden;
   height: 100%;
   align-items: center;
-  padding: 0px 24px 0px 24px;
+  padding: 0px 24px 24px 24px;
   position: relative;
   color: $base-gray;
 
@@ -664,9 +661,9 @@ a:hover {
     padding-top: 24px;
     background-color: white;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: space-between;
     width: 100%;
     border-bottom: 1px solid $soft-gray;
     h2 {
