@@ -154,9 +154,11 @@
           <div style="border-bottom: none; padding-top: 1rem">
             <h5>
               🤖 ☁️
-              <span
-                >Using Managr-update: make sure to include "Opportunity" + Opportunity Name.</span
-              >
+              <span>{{
+                `Using Managr-update: make sure to include ${
+                  userCRM === 'SALESFORCE' ? 'Opportunity + Opportunity Name.' : 'Deal + Deal Name.'
+                }`
+              }}</span>
             </h5>
             <p style="padding-left: 2.4rem">
               Ex: Push close date for Opportunity Pied Piper 2 weeks.
