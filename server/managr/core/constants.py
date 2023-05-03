@@ -43,7 +43,17 @@ OPEN_AI_UPDATE_PROMPT = (
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
-    lambda data: f"Use the data from the meeting notes below to generate a very concise, friendly, casual (yet professional) follow up email to the people or person you spoke to in the meeting. Keep in mind the person is likely an executive that we are trying to sell a product to.\nThe intent of the email is to summarize the conversation back to the person in the meeting, persuade them to move forward and provide clear next steps. If possible, end the email with a question - one that will move the deal forward.\nStart the email with Hi or Hey and do not use Best Regards in the sign off.\n The Meeting Notes:{data}"
+    lambda data: f"""You are a salesperson who just had a meeting with the prospect. 
+    Your job is to now follow up with the prospect via email to summarize the conversation and attempt to move the deal forward. The meeting notes are below.
+    Use this writing style when crafting the email:
+    A casual and friendly tone, using informal salutations and contractions. 
+    Concise and to-the-point sentences that focus on the value proposition. 
+    Use of a question and personal anecdotes to engage the recipient. 
+    Limit to one question, asked at the end of the email
+    Frequent paragraph breaks to enhance readability.
+    Clear call-to-action, suggesting specific dates or offering assistance.
+    Cap email at 1000 characters.
+    Meeting Notes: {data}"""
 )
 OPEN_AI_NEXT_STEPS = (
     lambda data: f"Provide up to 3 listed out suggested next steps to take in order to close the prospect or move the deal forward based on meeting notes below, ranging from aggressive (close this month) to passive (close in the coming months)\n Meeting Notes: {data}"
