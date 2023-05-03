@@ -37,7 +37,8 @@ OPEN_AI_UPDATE_PROMPT = (
     Some of CRM fields are labeled with the API name, so take that into account. 
     Desired output is a python dictionary, JSON.
     \nAssume CRM field labeled 'name' is always referring to either 'Company Name, 'Deal Name' or 'Opportunity Name' - 
-    Do NOT include 'company' 'deal' or 'Opportunity' into the field data\nThe entire meeting note should be pasted into 'meeting_comments', 
+    Do NOT include 'company' 'deal' or 'Opportunity' into the field data\n
+    The entire meeting note should be pasted into 'meeting_comments', 
     then update all the relevant fields from the meeting note. Lastly, date format needs to be: year-month-day and use the date below as reference.
     \n Fields:{labels}\n text: {prompt}\n date: {date}"""
 )
@@ -69,7 +70,13 @@ OPEN_AI_DEAL_REVIEW = (
     \n2) Check for data being up to date, do the following: Make sure the Close Date is not in the past, if so call it out. Do not include Last Activity here
     \n3) Show the Last Activity Date. If it exceeds 30 days from Todays date, then flag it. If its within the past 5 days, then it's a good sign.
     \n4) If they use a next step field then summarize the next step with a maximum character limit of 150 characters. 
-    \n5) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. The email should be very concise, friendly, casual (yet professional) to the person you are trying to close. End the email with a question - one that will move the deal forward. 
+    \n5) Write a very short email (300 character limit) for the prospect with the intent to move the deal forward. 
+        Use the writing style below when crafting the email: A casual and friendly tone, using informal salutations and contractions. 
+        Concise and to-the-point sentences that focus on the value proposition. 
+        Use of a question and personal anecdotes to engage the recipient. 
+        Limit to one question, asked at the end of the email. 
+        Frequent paragraph breaks to enhance readability. 
+        Clear call-to-action, suggesting specific dates or offering assistance.
     \nStart the email with Hi or Hey and do not use Best Regards in the sign off.
     \nHere is the format I want:
     \n{resource} Name:
