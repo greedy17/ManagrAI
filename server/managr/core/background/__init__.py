@@ -1461,6 +1461,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 user.crm_account.regenerate_token()
                 update_attempts += 1
         except crm_exceptions.FieldValidationError as e:
+            logger.exception(f"There was and validation error submitting chat prompt data: {e}")
             has_error = True
             blocks = [
                 block_builders.section_with_button_block(
@@ -1474,6 +1475,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             ]
             break
         except Exception as e:
+            logger.exception(f"There was and error submitting chat prompt data: {e}")
             has_error = True
             blocks = [
                 block_builders.section_with_button_block(
