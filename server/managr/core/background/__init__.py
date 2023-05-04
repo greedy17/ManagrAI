@@ -1398,6 +1398,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             )
             return
     if has_error:
+        if workflow_id:
+            logger.exception(
+                f"There was an error processing chat submission for workflow {workflow} because of {e}"
+            )
+            return
         blocks = [
             block_builders.section_with_button_block(
                 "Reopen Chat",
@@ -1408,6 +1413,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 ),
             )
         ]
+    print(blocks)
+    print(message)
     update_attempts = 1
     crm_res = None
     while True and not has_error:
@@ -1463,11 +1470,12 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         except crm_exceptions.FieldValidationError as e:
             logger.exception(f"There was and validation error submitting chat prompt data: {e}")
             has_error = True
+            message = f":no_entry_sign: Uh-oh we hit a validation: {e}"
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
                     "OPEN_CHAT",
-                    f":no_entry_sign: Uh-oh we hit a validation: {e}",
+                    message,
                     action_id=action_with_params(
                         slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                     ),
@@ -1476,26 +1484,28 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             break
         except Exception as e:
             logger.exception(f"There was and error submitting chat prompt data: {e}")
+            message = f":no_entry_sign: Uh-oh we hit a error: {e}"
             has_error = True
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
                     "OPEN_CHAT",
-                    f":no_entry_sign: Uh-oh we hit a error: {e}",
+                    message,
                     action_id=action_with_params(
                         slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                     ),
                 )
             ]
             break
-    if workflow_id and not has_error:
-        form.workflow = workflow
-        form.update_source = "meeting (chat)"
-        form.save()
-        workflow.completed_operations.append(slack_consts.MEETING___SUBMIT_CHAT_PROMPT)
-        workflow.resource_type = resource_type
-        workflow.resource_id = str(resource.id)
-        workflow.save()
+    if workflow_id:
+        if not has_error:
+            form.workflow = workflow
+            form.update_source = "meeting (chat)"
+            form.save()
+            workflow.completed_operations.append(slack_consts.MEETING___SUBMIT_CHAT_PROMPT)
+            workflow.resource_type = resource_type
+            workflow.resource_id = str(resource.id)
+            workflow.save()
         return
     else:
         try:
