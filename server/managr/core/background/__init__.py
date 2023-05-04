@@ -1368,6 +1368,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     has_error = True
                 break
             else:
+                logger.info(f"Open AI non 200 response: {r.json()}")
                 attempts += 1
         except httpx.ReadTimeout:
             if attempts >= 5:
@@ -1400,7 +1401,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if has_error:
         if workflow_id:
             logger.exception(
-                f"There was an error processing chat submission for workflow {workflow} because of {e}"
+                f"There was an error processing chat submission for workflow {workflow} {message}"
             )
             return
         blocks = [
