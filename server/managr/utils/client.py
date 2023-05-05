@@ -75,4 +75,4 @@ class HttpClient:
         return client
 
 
-Client = httpx.Client(timeout=20)
+Client = httpx.Client(timeout=30.0)

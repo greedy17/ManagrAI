@@ -1379,6 +1379,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         except httpx.ReadTimeout as e:
             logger.exception(f"Read timeout from Open AI {e}")
             if attempts >= 2:
+                has_error = True
                 message = "There was an error communicating with Open AI"
                 break
             else:
@@ -1386,6 +1387,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 continue
         except Exception as e:
             logger.exception(f"Exception from Open AI response {e}")
+            has_error = True
             message = (
                 f":no_entry_sign: Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
                 if resource_check is None
@@ -1427,8 +1429,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 ),
             )
         ]
-    print("blocks", blocks)
-    print("message", message)
     update_attempts = 1
     crm_res = None
     while True and not has_error:
