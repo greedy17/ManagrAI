@@ -1378,10 +1378,12 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     continue
         except httpx.ReadTimeout as e:
             logger.exception(f"Read timeout from Open AI {e}")
-            if attempts >= 5:
+            if attempts >= 2:
                 message = "There was an error communicating with Open AI"
+                break
             else:
                 attempts += 1
+                continue
         except Exception as e:
             logger.exception(f"Exception from Open AI response {e}")
             message = (
@@ -1404,12 +1406,16 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     )
                 ],
             )
-            return
+            break
     if has_error:
         if workflow_id:
             logger.exception(
                 f"There was an error processing chat submission for workflow {workflow} {message}"
             )
+            workflow.failed_task_description.append(
+                f"There was an error processing chat submission {message}"
+            )
+            workflow.save()
             return
         blocks = [
             block_builders.section_with_button_block(
