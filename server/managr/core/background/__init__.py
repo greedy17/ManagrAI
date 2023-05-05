@@ -1272,14 +1272,13 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-                print("DIRECT RESPONSE", r, r.json())
             if r.status_code == 200:
                 r = r.json()
+
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
-                    print(f"Current token amount: {token_amount}")
                     if token_amount <= 2000:
                         if workflow_id is None:
                             slack_res = slack_requests.update_channel_message(
@@ -1370,17 +1369,16 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     has_error = True
                 break
             else:
-                logger.info(f"Open AI non 200 response: {r.json()}")
                 if attempts >= 5:
                     break
                 else:
                     attempts += 1
                     continue
         except httpx.ReadTimeout as e:
-            logger.exception(f"Read timeout from Open AI {e}")
             if attempts >= 2:
                 has_error = True
                 message = "There was an error communicating with Open AI"
+                logger.exception(f"Read timeout from Open AI {e}")
                 break
             else:
                 attempts += 1
