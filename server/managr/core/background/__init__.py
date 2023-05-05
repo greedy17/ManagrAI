@@ -1264,6 +1264,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     blocks = []
     token_amount = 500
     while True:
+        message = None
         try:
             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
@@ -1414,8 +1415,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 ),
             )
         ]
-    print(blocks)
-    print(message)
+    print("blocks", blocks)
+    print("message", message)
     update_attempts = 1
     crm_res = None
     while True and not has_error:
