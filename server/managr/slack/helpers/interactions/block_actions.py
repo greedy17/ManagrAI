@@ -1125,7 +1125,7 @@ def process_insert_chat_template(payload, context):
     template_value = payload["actions"][0]["selected_option"]["text"]["text"]
     if template_value == "NONE":
         return
-    template = NoteTemplate.objects.filter(subject=template_value).first()
+    template = NoteTemplate.objects.for_user(user).filter(subject=template_value).first()
 
     try:
         index, block = block_finder("CHAT_PROMPT", blocks)

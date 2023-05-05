@@ -1272,6 +1272,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                print("DIRECT RESPONSE", r, r.json())
             if r.status_code == 200:
                 r = r.json()
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
@@ -1370,14 +1371,19 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 break
             else:
                 logger.info(f"Open AI non 200 response: {r.json()}")
-                attempts += 1
-        except httpx.ReadTimeout:
+                if attempts >= 5:
+                    break
+                else:
+                    attempts += 1
+                    continue
+        except httpx.ReadTimeout as e:
+            logger.exception(f"Read timeout from Open AI {e}")
             if attempts >= 5:
                 message = "There was an error communicating with Open AI"
             else:
                 attempts += 1
         except Exception as e:
-            logger.exception(e)
+            logger.exception(f"Exception from Open AI response {e}")
             message = (
                 f":no_entry_sign: Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
                 if resource_check is None
