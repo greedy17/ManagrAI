@@ -1,17 +1,22 @@
 <template>
-  <div id="chat">
+  <div id="chat" class="chat-display">
     <h1>Hello world, chat here.</h1>
-    <ChatBox />
+    <div style="height: 90vh;">
+      <ChatBox />
+    </div>
+    <RightBar />
   </div>
 </template>
 
 <script>
 import ChatBox from '../components/Chat/ChatBox.vue';
+import RightBar from '../components/Chat/RightBar.vue';
 
 export default {
   name: 'Home',
   components: {
-    ChatBox
+    ChatBox,
+    RightBar,
   },
   data() {
     return {}
@@ -45,5 +50,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background-color: $off-white;
+}
+
+.chat-display {
+  display: flex;
 }
 </style>
