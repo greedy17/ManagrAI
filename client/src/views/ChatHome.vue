@@ -41,4 +41,8 @@ body {
   min-height: 100vh;
   background-color: $off-white;
 }
+
+#chat {
+  font-family: $chat-font-family;
+}
 </style>
