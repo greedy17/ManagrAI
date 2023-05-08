@@ -1,13 +1,18 @@
 <template>
   <div id="chat">
     <h1>Hello world, chat here.</h1>
+    <ChatBox />
   </div>
 </template>
 
 <script>
+import ChatBox from '../components/Chat/ChatBox.vue';
+
 export default {
   name: 'Home',
-  components: {},
+  components: {
+    ChatBox
+  },
   data() {
     return {}
   },
