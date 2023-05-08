@@ -37,6 +37,10 @@ import "vue-toastification/dist/index.css";
 import VueSanitize from "vue-sanitize";
 import VueApexCharts from 'vue-apexcharts'
 
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faBars } from '@fortawesome/free-solid-svg-icons'
+
 
 let defaults = VueSanitize.defaults;
 // defaults.allowedTags = defaults.allowedTags.filter(t => t === 'br' || t === 'li');
@@ -62,12 +66,15 @@ Vue.use(VueGoogleMaps, {
 })
 Vue.use(VueApexCharts)
 
+library.add(faBars,)
+
 Vue.component('apexchart', VueApexCharts)
 Vue.component('drag', Drag);
 Vue.component('drop', Drop);
 Vue.component('Modal', Modal)
 Vue.component('datetime', Datetime)
 Vue.component('vue-multiselect')
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(vmodal)
 
 

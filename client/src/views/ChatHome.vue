@@ -1,16 +1,15 @@
 <template>
   <div id="chat">
-    <div class="hamburger"></div>
+    <div class="hamburger">
+      <font-awesome-icon icon="fa-solid fa-bars" />
+    </div>
     <aside id="left-sidebar">
       <!-- LeftSideBar ref="sidebarRef" @click="toggleSidebar" :type='sideBarType'  /> -->
-      <p>left</p>
     </aside>
     <main id="main">
-      <h3>*Chat box component will go here*</h3>
+      <h3>*CHAT COMPONENT HERE*</h3>
     </main>
-    <aside id="right-sidebar">
-      <p>right</p>
-    </aside>
+    <aside id="right-sidebar"></aside>
   </div>
 </template>
 
@@ -57,7 +56,6 @@ body {
 }
 
 .hamburger {
-  background-color: purple;
   display: none;
   height: 50px;
   width: 50px;
@@ -69,6 +67,7 @@ body {
 #left-sidebar {
   width: 18vw;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
 }
 #main {
   flex-grow: 1;
@@ -77,6 +76,7 @@ body {
 #right-sidebar {
   width: 30vw;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
 }
 
 @media (max-width: 768px) {
@@ -102,7 +102,6 @@ body {
     width: 100%;
     height: 20%;
     order: 1;
-    background-color: red;
     /* styles for mobile sidebar "top bar" */
   }
 }
