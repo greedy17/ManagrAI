@@ -14,9 +14,13 @@
 </template>
 
 <script>
+import ChatBox from '../components/Chat/ChatBox.vue'
+
 export default {
   name: 'Home',
-  components: {},
+  components: {
+    ChatBox,
+  },
   data() {
     return {
       sideBarType: 'normal',
