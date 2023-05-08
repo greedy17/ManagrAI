@@ -17,6 +17,11 @@ export default new Router({
       component: () => import('@/views/settings/Settings')
     },
     {
+      path: '/ChatHomek4HXI23PAruGCD2',
+      name: 'Home',
+      component: () => import('@/views/ChatHome')
+    },
+    {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/auth/Login')
