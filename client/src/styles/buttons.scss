@@ -22,3 +22,7 @@
 .white-button-danger {
   @include white-button-danger;
 }
+
+.chat-button {
+  @include chat-button;
+}

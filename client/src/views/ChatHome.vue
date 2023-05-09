@@ -1,13 +1,13 @@
 <template>
   <div id="chat">
-    <div class="hamburger">
-      <font-awesome-icon icon="fa-solid fa-bars" />
+    <div @click="toggleSidebar" class="hamburger">
+      <font-awesome-icon style="height: 22px; width: 22px" icon="fa-solid fa-bars" />
     </div>
     <aside id="left-sidebar">
-      <!-- LeftSideBar ref="sidebarRef" @click="toggleSidebar" :type='sideBarType'  /> -->
+      <LeftSideBar ref="sidebarRef" :type="sideBarType" />
     </aside>
     <main id="main">
-      <h3>*CHAT COMPONENT HERE*</h3>
+      <ChatBox />
     </main>
     <aside id="right-sidebar"></aside>
   </div>
@@ -15,22 +15,24 @@
 
 <script>
 import ChatBox from '../components/Chat/ChatBox.vue'
+import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 
 export default {
   name: 'Home',
   components: {
     ChatBox,
+    LeftSideBar,
   },
   data() {
     return {
-      sideBarType: 'normal',
+      sideBarType: null,
     }
   },
   created() {},
   methods: {
-    // toggleSidebar() {
-    //   this.$refs.sidebarRef.toggleSidebar();
-    // }
+    toggleSidebar() {
+      this.$refs.sidebarRef.toggleSidebar()
+    },
   },
   computed: {},
 }
@@ -64,8 +66,8 @@ body {
   height: 50px;
   width: 50px;
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 1rem;
+  left: 1.75rem;
 }
 
 #left-sidebar {
@@ -75,6 +77,7 @@ body {
 }
 #main {
   flex-grow: 1;
+  width: 52vw;
 }
 
 #right-sidebar {
@@ -100,11 +103,13 @@ body {
 
   #main {
     order: 2;
+    width: 100%;
+    height: 75%;
   }
 
   #right-sidebar {
     width: 100%;
-    height: 20%;
+    height: 25%;
     order: 1;
     /* styles for mobile sidebar "top bar" */
   }
