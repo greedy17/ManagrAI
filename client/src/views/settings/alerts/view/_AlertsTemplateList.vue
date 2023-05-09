@@ -198,7 +198,7 @@
       </div>
     </Modal>
 
-    <template v-if="!templates.refreshing && !isOnboarding">
+    <template v-if="!templates.refreshing && (!isOnboarding || !user.isAdmin)">
       <!-- <transition name="fade">
       </transition> -->
 
@@ -446,7 +446,7 @@
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <div v-else-if="isOnboarding">
+    <div v-else-if="isOnboarding && user.isAdmin">
       <Onboarder @refresh-workflows="refreshWorkflows" />
     </div>
 
