@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Modal v-if="modalOpen" @close-modal="closeModal()" dimmed>
+    <Modal v-if="modalOpen" @close-modal="closeModal" dimmed>
       <div class="command-modal">
         <header>
           <div>
@@ -314,8 +314,6 @@
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate from '@/services/alerts/'
-
 export default {
   name: 'NavBar',
   components: {
@@ -351,11 +349,9 @@ export default {
     },
     openModal() {
       this.modalOpen = true
-      console.log('here')
     },
     closeModal() {
       this.modalOpen = false
-      console.log('over there')
     },
   },
   computed: {
