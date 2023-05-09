@@ -272,7 +272,11 @@ class HubspotAuthAccountAdapter:
                     res = self._handle_response(res)
                     break
                 except ApiRateLimitExceeded:
-                    time.sleep(10)
+                    if attempts >= 3:
+                        break
+                    else:
+                        attempts += 1
+                        time.sleep(10)
             saved_response = res
             page = 1
             while True:
