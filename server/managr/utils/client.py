@@ -76,3 +76,7 @@ class HttpClient:
 
 
 Client = httpx.Client(timeout=30.0)
+
+
+def Variable_Client(timeout=30.0):
+    return httpx.Client(timeout=timeout)

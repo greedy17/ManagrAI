@@ -1,10 +1,17 @@
 <template>
-  <div id="chat" class="chat-display">
-    <h1>Hello world, chat here.</h1>
-    <div style="height: 90vh;">
-      <ChatBox />
+  <div id="chat">
+    <div class="hamburger">
+      <font-awesome-icon icon="fa-solid fa-bars" />
     </div>
-    <RightBar />
+    <aside id="left-sidebar">
+      <!-- LeftSideBar ref="sidebarRef" @click="toggleSidebar" :type='sideBarType'  /> -->
+    </aside>
+    <main id="main">
+      <ChatBox />
+    </main>
+    <aside id="right-sidebar">
+      <RightBar />
+    </aside>
   </div>
 </template>
 
@@ -19,12 +26,16 @@ export default {
     RightBar,
   },
   data() {
-    return {}
+    return {
+      sideBarType: 'normal',
+    }
   },
-
   created() {},
-
-  methods: {},
+  methods: {
+    // toggleSidebar() {
+    //   this.$refs.sidebarRef.toggleSidebar();
+    // }
+  },
   computed: {},
 }
 </script>
@@ -35,24 +46,75 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
-.Vue-Toastification__toast--success.custom {
-  background-color: $dark-green;
-}
-.Vue-Toastification__toast--default.custom {
-  background-color: $base-gray;
-}
-* {
-  box-sizing: border-box;
-}
 
 body {
   overflow: auto;
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
   background-color: $off-white;
 }
 
 .chat-display {
   display: flex;
+}
+
+#chat {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  font-family: $chat-font-family;
+  color: $chat-font-color;
+}
+
+.hamburger {
+  display: none;
+  height: 50px;
+  width: 50px;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#left-sidebar {
+  width: 18vw;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+}
+#main {
+  flex-grow: 1;
+}
+
+#right-sidebar {
+  width: 30vw;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  #chat {
+    flex-direction: column;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  #left-sidebar {
+    width: 100%;
+    position: absolute;
+    /* styles for mobile sidebar */
+  }
+
+  #main {
+    order: 2;
+  }
+
+  #right-sidebar {
+    width: 100%;
+    height: 20%;
+    order: 1;
+    /* styles for mobile sidebar "top bar" */
+  }
 }
 </style>
