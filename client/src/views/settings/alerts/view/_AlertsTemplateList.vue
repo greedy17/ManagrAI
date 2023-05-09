@@ -528,6 +528,13 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.getHSStages()
     }
+
+    if (!this.userCRM) {
+      this.$router.replace({
+        name: 'Integrations',
+        params: {},
+      })
+    }
   },
   beforeUpdate() {
     if (this.templates.list.length) {
