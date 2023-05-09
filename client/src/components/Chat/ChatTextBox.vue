@@ -50,5 +50,6 @@ export default {
   width: 95%;
   outline: none;
   border: none;
+  padding: 1rem;
 }
 </style>

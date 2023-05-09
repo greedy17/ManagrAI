@@ -120,4 +120,10 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
+@media (max-width: 768px) {
+  .chat-container {
+    font-size: 14px;
+  }
+}
 </style>

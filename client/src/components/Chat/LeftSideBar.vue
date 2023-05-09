@@ -25,6 +25,13 @@
         </button>
       </footer>
     </section>
+
+    <div @click="toggleSidebar" v-if="isOpen" class="close">
+      <font-awesome-icon
+        style="height: 30px; width: 30px; color: white"
+        icon="fa-solid fa-square-xmark"
+      />
+    </div>
   </div>
 </template>
 
@@ -37,15 +44,15 @@ export default {
       isOpen: false,
     }
   },
-  props: {
-    type: {
-      type: String,
-      default: 'full',
-    },
-  },
   methods: {
     toggleSidebar() {
       this.isOpen = !this.isOpen
+
+      if (this.isOpen) {
+        this.$emit('show-background')
+      } else {
+        this.$emit('hide-background')
+      }
     },
   },
   computed: {},
@@ -65,7 +72,7 @@ export default {
   top: 0;
   left: 0;
   height: 100%;
-  width: 18vw;
+  width: 260px;
   overflow-x: hidden;
   transition: all 0.3s ease;
 
@@ -79,17 +86,20 @@ export default {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 820px) {
   .sidebar {
     left: -250px;
 
     &.open {
       left: 0;
+      z-index: 999;
+      background-color: $off-white;
     }
   }
-}
 
-header {
+  .close {
+    display: block !important;
+  }
 }
 
 .body {
@@ -116,7 +126,6 @@ footer {
   font-family: $chat-font-family;
   color: white;
   background-color: $dark-blue;
-  transition: all 0.2s ease;
 
   span {
     white-space: nowrap;
@@ -132,7 +141,6 @@ footer {
   font-size: 14px;
   font-family: $chat-font-family;
   color: $chat-font-color;
-  transition: all 0.2s ease;
 
   span {
     white-space: nowrap;
@@ -143,5 +151,14 @@ footer {
 
 svg {
   margin-right: 1rem;
+}
+
+.close {
+  position: inherit;
+  top: 0;
+  left: 280px;
+  top: 1.5rem;
+  display: none;
+  cursor: pointer;
 }
 </style>
