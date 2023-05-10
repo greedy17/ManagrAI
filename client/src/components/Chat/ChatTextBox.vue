@@ -2,8 +2,8 @@
   <section class="input-section">
     <div class="input-container">
       <font-awesome-icon style="height: 20px; width: 20px" icon="fa-regular fa-square-plus" />
-      <input class="input" placeholder="Start typing here..." />
-      <font-awesome-icon icon="fa-regular fa-paper-plane" />
+      <input v-on:keyup.enter="sendMessage" class="input" placeholder="Start typing here..." v-model="message" />
+      <font-awesome-icon icon="fa-regular fa-paper-plane" @click="sendMessage" />
     </div>
   </section>
 </template>
@@ -12,10 +12,28 @@
 export default {
   name: 'ChatTextBox',
   components: {},
-  data() {
-    return {}
+  props: {
+    messages: {
+      type: Array
+    }
   },
-  methods: {},
+  data() {
+    return {
+      message: '',
+    }
+  },
+  methods: {
+    sendMessage() {
+      const newId = Math.ceil(Math.random() * 10000)
+      const newMessage = {
+        id: newId,
+        value: this.message,
+        user: 1,
+      }
+      this.messages.push(newMessage)
+      this.message = ''
+    },
+  },
   computed: {},
   created() {},
 }

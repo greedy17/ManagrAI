@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <ChatTextBox class="bottom" />
+    <ChatTextBox class="bottom" :messages="messages" />
   </section>
 </template>
   
