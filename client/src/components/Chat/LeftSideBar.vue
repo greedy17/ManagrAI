@@ -73,7 +73,7 @@ export default {
   left: 0;
   height: 100%;
   width: 260px;
-  overflow-x: hidden;
+  overflow: auto;
   transition: all 0.3s ease;
 
   &.open {
@@ -110,20 +110,27 @@ export default {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-@media (min-height: 1025px) {
-  .body {
-    height: 78vh;
-  }
-}
 @media (max-height: 600px) {
   .body {
     height: 56vh;
   }
 }
 
-@media (min-height: 850px), (max-height: 1200px) {
+@media (max-height: 750px) {
+  .body {
+    height: 62vh;
+  }
+}
+
+@media (min-height: 875px) {
   .body {
     height: 70vh;
+  }
+}
+
+@media (min-height: 1025px) {
+  .body {
+    height: 75vh;
   }
 }
 
