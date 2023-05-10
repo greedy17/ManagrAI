@@ -24,14 +24,36 @@ export default {
   },
   methods: {
     sendMessage() {
-      const newId = Math.ceil(Math.random() * 10000)
-      const newMessage = {
-        id: newId,
-        value: this.message,
-        user: 1,
+      try {
+        const newId = Math.ceil(Math.random() * 10000)
+        const newMessage = {
+          id: newId,
+          value: this.message,
+          user: 1,
+        }
+        const originalMessage = this.message
+        this.messages.push(newMessage)
+        this.message = ''
+        setTimeout(() => {
+          const botMessage = {
+            id: newId+1,
+            value: '...',
+            user: 'bot',
+          }
+          this.messages.push(botMessage)
+          setTimeout(() => {
+            const newBotMessage = this.messages.pop()
+            if (originalMessage === 'I always feel like...') {
+              newBotMessage.value = `Somebody's watching me!`
+            } else {
+              newBotMessage.value = `Bot message!`
+            }
+            this.messages.push(newBotMessage)
+          }, 2000)
+        }, 500)
+      } catch (e) {
+        console.log('Error in sendMessage: ', e)
       }
-      this.messages.push(newMessage)
-      this.message = ''
     },
   },
   computed: {},
