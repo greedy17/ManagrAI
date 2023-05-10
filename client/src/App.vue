@@ -17,7 +17,7 @@ import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
 
-const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail']
+const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail', 'Home']
 
 export default {
   name: 'app',

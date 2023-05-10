@@ -55,11 +55,16 @@ $panther: #3c3940;
 $panther-gold: #ddad3c;
 $panther-blue: #5f8cff;
 
-// --------- FONTS ---------
+// --------- FONTS 1 remove when font 2 is fully integrated ---------
 $base-font-color: $main-font-gray;
 $base-font-family: Lato-Regular;
 $backup-base-font-family: sans-serif;
 $logo-font-family: Quicksand-Regular;
 $base-font-size: 16px;
+
+// ------- Font 2 ---------
+$chat-font-family: LexendDeca-Regular;
+$chat-font-size-normal: 16px;
+$chat-font-color: $base-gray;
 
 // --------- SIZES ---------
