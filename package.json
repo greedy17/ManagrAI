@@ -12,11 +12,6 @@
     ".cache/Cypress"
   ],
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.4.0",
-    "@fortawesome/free-brands-svg-icons": "^6.4.0",
-    "@fortawesome/free-regular-svg-icons": "^6.4.0",
-    "@fortawesome/free-solid-svg-icons": "^6.4.0",
-    "@fortawesome/vue-fontawesome": "^2.0.10",
     "chart.js": "^3.9.1",
     "luxon": "^2.4.0",
     "v-mask": "^2.3.0",

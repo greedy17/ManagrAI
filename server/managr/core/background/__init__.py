@@ -37,7 +37,7 @@ from managr.zoom.background import _split_first_name, _split_last_name
 from managr.zoom.background import emit_kick_off_slack_interaction
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from managr.slack.helpers.block_sets import get_block_set
-from managr.utils.client import Client
+from managr.utils.client import Client, Variable_Client
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
@@ -1263,6 +1263,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     resource_check = None
     blocks = []
     token_amount = 500
+    timeout = 30.0
     while True:
         message = None
         try:
@@ -1270,6 +1271,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
             )
             logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
+            Client = Variable_Client(timeout)
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
@@ -1375,6 +1377,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     attempts += 1
                     continue
         except httpx.ReadTimeout as e:
+            timeout += 30.0
             if attempts >= 2:
                 has_error = True
                 message = "There was an error communicating with Open AI"
