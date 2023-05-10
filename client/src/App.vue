@@ -31,7 +31,7 @@ export default {
     // When route changes,
     '$route.path': function watchRoutePath() {
       if (this.userIsLoggedIn) {
-        if (this.isOnboarding && this.$route.path !== '/alerts/list-templates') {
+        if (this.isOnboarding && user.isAdmin && this.$route.path !== '/alerts/list-templates') {
           this.$router.push({ name: 'ListTemplates' })
         }
         const newDateTime = Date.now()
@@ -88,6 +88,9 @@ export default {
     },
     isOnboarding() {
       return this.$store.state.user.onboarding
+    },
+    user() {
+      return this.$store.state.user
     },
   },
 }
