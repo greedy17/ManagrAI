@@ -1,50 +1,55 @@
 <template>
-  <section class="input-container">
-    <p>Note</p>
-    <input class="input-text" placeholder="Start typing here..." />
-    <p>Send</p>
+  <section class="input-section">
+    <div class="input-container">
+      <font-awesome-icon style="height: 20px; width: 20px" icon="fa-regular fa-square-plus" />
+      <input class="input" placeholder="Start typing here..." />
+      <font-awesome-icon icon="fa-regular fa-paper-plane" />
+    </div>
   </section>
 </template>
 
 <script>
-  export default {
-    name: 'ChatTextBox',
-    components: {
-
-    },
-    data() {
-      return {
-        
-      }
-    },
-    methods: {
-
-    },
-    computed: {
-
-    },
-    created() {
-
-    },
-  }
+export default {
+  name: 'ChatTextBox',
+  components: {},
+  data() {
+    return {}
+  },
+  methods: {},
+  computed: {},
+  created() {},
+}
 </script>
 
 <style lang="scss" scoped>
-  @import '@/styles/variables';
-  @import '@/styles/buttons';
-  @import '@/styles/cards';
-  @import '@/styles/mixins/utils';
-  @import '@/styles/mixins/inputs';
-  .input-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 0 1rem;
-  }
-  .input-text {
-    width: 50vw;
-    outline: none;
-    border: 1px solid $very-light-gray;
-    border-radius: 4px;
-    box-shadow: 2px 2px 5px $very-light-gray;
-  }
+@import '@/styles/variables';
+@import '@/styles/buttons';
+@import '@/styles/cards';
+@import '@/styles/mixins/utils';
+@import '@/styles/mixins/inputs';
+.input-section {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  background-color: $off-white;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0 1rem;
+  border-radius: 6px;
+  width: 100%;
+  background-color: white;
+}
+
+.input {
+  width: 95%;
+  outline: none;
+  border: none;
+  padding: 1rem;
+}
 </style>
