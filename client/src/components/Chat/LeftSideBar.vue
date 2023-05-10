@@ -110,6 +110,29 @@ export default {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+@media (min-height: 1025px) {
+  .body {
+    height: 78vh;
+  }
+}
+@media (max-height: 600px) {
+  .body {
+    height: 56vh;
+  }
+}
+
+@media (min-height: 850px), (max-height: 1200px) {
+  .body {
+    height: 70vh;
+  }
+}
+
+@media (min-height: 1200px) {
+  .body {
+    height: 78vh;
+  }
+}
+
 footer {
   height: 20vh;
   display: flex;
