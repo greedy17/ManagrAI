@@ -15,7 +15,10 @@ export default {
   props: {
     messages: {
       type: Array
-    }
+    },
+    scrollToBottom: {
+      type: Function
+    },
   },
   data() {
     return {
@@ -35,12 +38,18 @@ export default {
         this.messages.push(newMessage)
         this.message = ''
         setTimeout(() => {
+          this.scrollToBottom()
+        }, 0)
+        setTimeout(() => {
           const botMessage = {
             id: newId+1,
             value: '...',
             user: 'bot',
           }
           this.messages.push(botMessage)
+          setTimeout(() => {
+            this.scrollToBottom()
+          }, 0)
           setTimeout(() => {
             const newBotMessage = this.messages.pop()
             if (originalMessage === 'I always feel like...') {
@@ -49,6 +58,9 @@ export default {
               newBotMessage.value = `Bot message!`
             }
             this.messages.push(newBotMessage)
+            setTimeout(() => {
+            this.scrollToBottom()
+          }, 0)
           }, 2000)
         }, 500)
       } catch (e) {

@@ -1,6 +1,6 @@
 <template>
   <section class="chat-container">
-    <div class="messages-container">
+    <div class="messages-container" ref="chatWindow">
       <div v-for="message in messages" :key="message.id">
         <div class="message-container">
           <div class="images">
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <ChatTextBox class="bottom" :messages="messages" />
+    <ChatTextBox class="bottom" :messages="messages" :scrollToBottom="scrollToBottom" />
   </section>
 </template>
   
@@ -48,13 +48,20 @@ export default {
       ],
     }
   },
-  methods: {},
+  methods: {
+    scrollToBottom() {
+      const chatWindow = this.$refs.chatWindow;
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+  },
   computed: {
     userName() {
       return this.$store.state.user.firstName
     },
   },
-  created() {},
+  created() {
+    this.scrollToBottom()
+  },
 }
 </script>
   
