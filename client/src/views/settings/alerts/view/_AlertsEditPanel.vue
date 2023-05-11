@@ -486,14 +486,10 @@ export default {
       this.groupIndex = null
     },
     async onSaveOperand() {
-      console.log(1)
       this.currentForm.validate()
-      console.log(2, this.currentForm)
       if (this.currentForm.isValid) {
         try {
-          console.log(3)
           const res = await AlertGroupOperand.api.createOperand(this.currentForm.toAPI)
-          console.log(4, res)
           this.$toast('Successfully added operand', {
             timeout: 2000,
             position: 'top-left',
@@ -501,24 +497,19 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          console.log(5)
           this.alert.groupsRef[this.groupIndex].operandsRef = [
             ...this.alert.groupsRef[this.groupIndex].operandsRef,
             res,
           ]
-          console.log(6, this.alert.groupsRef)
           this.alert.groupsRef[this.groupIndex].operands = [
             ...this.alert.groupsRef[this.groupIndex].operandsRef.map((op) => op.id),
           ]
-          console.log(7, this.alert.groupsRef)
         } catch(e) {
           console.log('Error in onSaveOperand: ', e)
         } finally {
-          console.log('finally...')
           this.modalOpen = false
           this.groupIndex = null
           this.currentForm = null
-          console.log('end finally')
         }
       }
     },
@@ -532,14 +523,10 @@ export default {
       this.modalOpen = true
     },
     async onSaveGroup() {
-      console.log('onSaveGroup')
       this.groupForm.validate()
-      console.log(1)
       if (this.groupForm.isValid) {
         try {
-          console.log(2)
           const res = await AlertGroupModel.api.createGroup(this.groupForm.toAPI)
-          console.log(3, res)
           this.$toast('Successfully added group', {
             timeout: 2000,
             position: 'top-left',
@@ -547,20 +534,14 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          console.log(4)
           this.alert.groupsRef = [...this.alert.groupsRef, res]
-          console.log(5, this.alert.groupsRef)
           this.alert.groups = [...this.alert.groupsRef.map((op) => op.id)]
-          console.log(6, this.alert.groups)
         } catch(e) {
           console.log('Error in onSaveGroup', e)
         } finally {
           this.groupModalOpen = false
-          console.log('final 1')
           this.groupForm = null
-          console.log('final 2')
           this.groupIndex = null
-          console.log('final 3')
         }
       }
     },
@@ -602,10 +583,8 @@ export default {
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
-      console.log('here')
       let valuePromise = ''
       if (rowData && rowData.operandIdentifier === 'RecordTypeId') {
-        console.log('here 2')
         valuePromise = this.getRecordNames(value)
       }
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
@@ -624,7 +603,6 @@ export default {
       const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
         valuePromise ? valuePromise : valueLabel
       } `
-      // console.log('operandString', operandString)
       // this.valuePromise = null
       return operandString
     },
@@ -754,7 +732,6 @@ export default {
       this.drag = false
     },
     async onRemoveAlertGroup(id, index) {
-      console.log(id, index)
       let confirmation = confirm('Delete this Group and all its rows ?')
 
       if (confirmation) {
