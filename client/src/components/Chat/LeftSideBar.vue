@@ -3,7 +3,8 @@
     <section>
       <header>
         <button class="primary-button">
-          <font-awesome-icon style="color: #183153" icon="fa-solid fa-rocket" />
+          <!-- <font-awesome-icon style="color: #183153" icon="fa-solid fa-rocket" /> -->
+          <span style="font-size: 18px; margin-right: 1rem">🚀</span>
           <span> Start New Thread</span>
         </button>
       </header>
@@ -76,6 +77,7 @@ export default {
   overflow: auto;
   transition: all 0.3s ease;
   letter-spacing: 0.4px;
+  font-size: 14px;
 
   &.open {
     left: 0;
@@ -119,7 +121,7 @@ export default {
 
 @media (max-height: 750px) {
   .body {
-    height: 62vh;
+    height: 66vh;
   }
 }
 
@@ -143,6 +145,9 @@ export default {
 
 footer {
   height: 20vh;
+  position: absolute;
+  bottom: 1.5rem;
+  width: 230px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -152,26 +157,24 @@ footer {
 .primary-button {
   @include chat-button();
   width: 100%;
-  margin: 0.5rem 0;
+  margin-bottom: 0.5rem;
   font-size: 14px;
-  font-family: $chat-title-family;
   color: white;
-  background-color: $dark-green;
+  background-color: $base-gray;
 
   span {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    font-family: $base-font-family;
   }
 }
 
 .secondary-button {
   @include chat-button();
   width: 100%;
-  margin: 0.5rem 0;
+  margin-bottom: 0.5rem;
   font-size: 14px;
-  font-family: $chat-font-family;
-  color: $chat-font-color;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 
   span {

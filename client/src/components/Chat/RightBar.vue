@@ -26,7 +26,7 @@
 
       <section v-else>
         <div class="flexed-row-spread">
-          <h4>All Open Opportunities ({{ opportunities.length }})</h4>
+          <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ opportunities.length }})</p>
 
           <div>
             <font-awesome-icon icon="fa-solid fa-shuffle" />
@@ -202,13 +202,14 @@ export default {
   width: 100%;
   height: 100%;
   padding: 1rem 1rem 0.25rem 1rem;
-  font-family: $chat-font-family;
+  font-family: $base-font-family;
+  font-size: 14px;
 }
 .opp-container {
   background-color: white;
   width: 100%;
   padding: 0.75rem 1rem;
-  margin: 0.5rem 0 1rem 0;
+  margin: 0.5rem 0;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
@@ -220,7 +221,7 @@ export default {
 }
 
 header {
-  margin: 0%;
+  margin: 0;
   padding: 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   height: 100px;
@@ -249,8 +250,8 @@ header {
   margin-bottom: 1rem;
 
   h4 {
-    font-family: $chat-title-family;
-    color: rgba(0, 0, 0, 0.6);
+    font-family: $base-font-family;
+    font-size: 14px;
   }
 }
 
@@ -294,8 +295,9 @@ input {
   outline: none;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  font-family: $chat-font-family;
+  font-family: $base-font-family;
   padding: 0.75rem;
+  font-size: 14px;
 }
 
 .gray-text {
@@ -311,7 +313,7 @@ input {
     @include chat-button();
     width: 100px;
     font-size: 14px;
-    font-family: $chat-font-family;
+    font-family: $base-font-family;
     color: $chat-font-color;
     background-color: white;
   }

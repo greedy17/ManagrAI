@@ -76,7 +76,7 @@ body {
   height: 100vh;
   width: 100vw;
   display: flex;
-  font-family: $chat-font-family;
+  font-family: $base-font-family;
   color: $chat-font-color;
   letter-spacing: 0.4px;
 }

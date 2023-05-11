@@ -1,7 +1,7 @@
 <template>
   <section class="input-section">
     <div class="input-container">
-      <font-awesome-icon style="height: 20px; width: 20px" icon="fa-regular fa-square-plus" />
+      <font-awesome-icon style="height: 16px; width: 16px" icon="fa-solid fa-bolt" />
       <input class="input" placeholder="Start typing here..." />
       <font-awesome-icon icon="fa-regular fa-paper-plane" />
     </div>
@@ -53,5 +53,7 @@ export default {
   outline: none;
   border: none;
   padding: 1rem;
+  font-size: 14px;
+  font-family: $base-font-family;
 }
 </style>

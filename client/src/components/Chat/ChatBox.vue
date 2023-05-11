@@ -1,6 +1,6 @@
 <template>
   <section class="chat-container">
-    <header class="title-header"><h4>Thread Title</h4></header>
+    <header class="title-header"><p>All Open Opportunities</p></header>
     <div class="margin-top">
       <div v-for="message in messages" :key="message.id" class="message-container">
         <div class="images">
@@ -76,7 +76,7 @@ export default {
   width: 100%;
   height: 100%;
   padding: 1rem 1.5rem;
-  font-size: 16px;
+  font-size: 14px;
   position: relative;
   position: relative;
 }
@@ -92,7 +92,7 @@ export default {
   }
 }
 .margin-top {
-  margin: 3rem 0 1rem 0;
+  margin: 4rem 0 1rem 0;
 }
 .container-padding {
   border-radius: 6px;
@@ -136,24 +136,26 @@ export default {
 
 .title-header {
   position: absolute;
-  top: 1rem;
+  top: 0;
   left: 0;
   width: 100%;
-  padding-bottom: 1rem;
+  padding: 1rem 0rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: $chat-title-family;
-  color: rgba(0, 0, 0, 0.6);
+  font-family: $base-font-family;
+  background-color: $off-white;
 
-  h4 {
+  h4,
+  p {
     margin: 0;
     padding: 0.5rem;
     width: fit-content;
     // outline: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 6px;
     // background-color: white;
-    font-size: 18px;
+    font-size: 14px;
     letter-spacing: 0.4px;
   }
 }
