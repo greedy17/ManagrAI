@@ -1,9 +1,16 @@
 <template>
   <section class="chat-container">
-    <div v-for="message in messages" :key="message.id">
-      <div class="message-container">
+    <header class="title-header"><h4>Thread Title</h4></header>
+    <div class="margin-top">
+      <div v-for="message in messages" :key="message.id" class="message-container">
         <div class="images">
-          <img v-if="message.user === 'bot'" src="@/assets/images/logo.png" height="30px" />
+          <img
+            class="green-filter"
+            v-if="message.user === 'bot'"
+            src="@/assets/images/logo.png"
+            height="30px"
+          />
+
           <div class="avatar" v-else>{{ userName[0] }}</div>
         </div>
 
@@ -71,17 +78,21 @@ export default {
   padding: 1rem 1.5rem;
   font-size: 16px;
   position: relative;
+  position: relative;
 }
 .message-container {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  margin: 1rem 0rem;
+  margin-bottom: 1.5rem;
 
   p {
     padding: 0;
     margin: 0;
   }
+}
+.margin-top {
+  margin: 3rem 0 1rem 0;
 }
 .container-padding {
   border-radius: 6px;
@@ -91,12 +102,14 @@ export default {
 .ai-text-container {
   background-color: $soft-gray;
   border-radius: 6px;
-  padding: 1.25rem 0.75rem;
+  padding: 1rem 0.75rem;
+  line-height: 1.5;
 }
 
 .text-container {
   padding: 0 0.5rem;
   margin: 0;
+  line-height: 1.5;
 }
 
 .images {
@@ -121,9 +134,38 @@ export default {
   justify-content: center;
 }
 
+.title-header {
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  width: 100%;
+  padding-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $chat-title-family;
+  color: rgba(0, 0, 0, 0.6);
+
+  h4 {
+    margin: 0;
+    padding: 0.5rem;
+    width: fit-content;
+    // outline: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    // background-color: white;
+    font-size: 18px;
+    letter-spacing: 0.4px;
+  }
+}
+
 @media (max-width: 768px) {
   .chat-container {
     font-size: 14px;
   }
+}
+
+.green-filter {
+  filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+    contrast(82%);
 }
 </style>

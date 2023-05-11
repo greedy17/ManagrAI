@@ -3,7 +3,7 @@
     <section>
       <header>
         <button class="primary-button">
-          <font-awesome-icon icon="fa-solid fa-rocket" />
+          <font-awesome-icon style="color: #183153" icon="fa-solid fa-rocket" />
           <span> Start New Thread</span>
         </button>
       </header>
@@ -75,6 +75,7 @@ export default {
   width: 260px;
   overflow: auto;
   transition: all 0.3s ease;
+  letter-spacing: 0.4px;
 
   &.open {
     left: 0;
@@ -86,7 +87,7 @@ export default {
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 1000px) {
   .sidebar {
     left: -250px;
 
@@ -153,9 +154,9 @@ footer {
   width: 100%;
   margin: 0.5rem 0;
   font-size: 14px;
-  font-family: $chat-font-family;
+  font-family: $chat-title-family;
   color: white;
-  background-color: $dark-blue;
+  background-color: $dark-green;
 
   span {
     white-space: nowrap;
@@ -171,6 +172,7 @@ footer {
   font-size: 14px;
   font-family: $chat-font-family;
   color: $chat-font-color;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 
   span {
     white-space: nowrap;

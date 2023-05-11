@@ -78,6 +78,7 @@ body {
   display: flex;
   font-family: $chat-font-family;
   color: $chat-font-color;
+  letter-spacing: 0.4px;
 }
 
 .hamburger {
@@ -86,7 +87,7 @@ body {
   width: 50px;
   position: fixed;
   top: 1rem;
-  left: 1.75rem;
+  left: 1.5rem;
   cursor: pointer;
 }
 
@@ -98,17 +99,20 @@ body {
 #main {
   flex: 1;
   width: 54vw;
+  background-color: $off-white;
+  z-index: 5;
 }
 
 #right-sidebar {
-  width: 28vw;
+  width: 400px;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.5rem;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 1000px) {
   #chat {
     flex-direction: column;
+    padding-top: 2rem;
   }
 
   .hamburger {
@@ -128,13 +132,14 @@ body {
 
   #right-sidebar {
     width: 100%;
-    height: 25%;
+    height: 40%;
     order: 1;
-    /* styles for mobile sidebar "top bar" */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    /* styles for mobile "right / top bar" */
   }
 }
 
-@media (min-width: 820px) {
+@media (min-width: 1000px) {
   .background {
     background-color: transparent !important;
   }

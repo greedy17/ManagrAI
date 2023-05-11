@@ -27,6 +27,7 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
 .input-section {
   display: flex;
   align-items: center;
@@ -44,6 +45,7 @@ export default {
   border-radius: 6px;
   width: 100%;
   background-color: white;
+  color: $base-gray;
 }
 
 .input {
