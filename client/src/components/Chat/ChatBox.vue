@@ -1,14 +1,16 @@
 <template>
   <section class="chat-container">
-    <div v-for="message in messages" :key="message.id">
-      <div class="message-container">
-        <div class="images">
-          <img v-if="message.user === 'bot'" src="@/assets/images/logo.png" height="30px" />
-          <div class="avatar" v-else>{{ userName[0] }}</div>
-        </div>
-
-        <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
-          <p>{{ message.value }}</p>
+    <div class="messages-container">
+      <div v-for="message in messages" :key="message.id">
+        <div class="message-container">
+          <div class="images">
+            <img v-if="message.user === 'bot'" src="@/assets/images/logo.png" height="30px" />
+            <div class="avatar" v-else>{{ userName[0] }}</div>
+          </div>
+  
+          <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
+            <p>{{ message.value }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -68,9 +70,14 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  // height: 100vh;
   padding: 1rem 1.5rem;
   font-size: 16px;
   position: relative;
+}
+.messages-container {
+  height: 90%;
+  overflow-y: scroll;
 }
 .message-container {
   display: flex;
