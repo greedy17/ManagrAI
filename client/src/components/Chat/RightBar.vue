@@ -12,7 +12,7 @@
             <p>Opportunity</p>
           </div>
           <div class="flexed-row">
-            <font-awesome-icon style="height: 18px; width: 18px" icon="fa-solid fa-rotate" />
+            <img src="@/assets/images/refresh.svg" height="18px" alt="" />
             <font-awesome-icon
               style="height: 26px; width: 26px; color: #0d9dda"
               icon="fa-brands fa-salesforce"
@@ -28,15 +28,17 @@
         <div class="flexed-row-spread">
           <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ opportunities.length }})</p>
 
-          <div>
-            <font-awesome-icon icon="fa-solid fa-shuffle" />
-            <font-awesome-icon icon="fa-solid fa-rotate" />
+          <div class="flexed-row">
+            <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
+            <img src="@/assets/images/refresh.svg" height="18px" alt="" />
           </div>
         </div>
 
         <div class="flexed-row-spread">
           <input v-model="searchText" placeholder="Seach Opportunities by name" />
-          <font-awesome-icon icon="fa-solid fa-filter" />
+          <span class="icon-button">
+            <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
+          </span>
         </div>
       </section>
     </header>
@@ -58,7 +60,7 @@
         <h4 class="gray-text">Notes & History</h4>
         <div v-for="note in notes" :key="note.id">
           <div>
-            <p>{{ note.value }}</p>
+            <p style="margin: 0.25rem 0">{{ note.value }}</p>
           </div>
           <small class="gray-text">{{
             `${getMonth(note.date)} ${getDate(note.date)}, ${getYear(note.date)}`
@@ -75,6 +77,13 @@
         :key="opp.id"
       >
         <p style="margin: 0">{{ opp.name }}</p>
+
+        <!-- <img
+          class="expand-absolute"
+          src="@/assets/images/expand-content.svg"
+          height="14px"
+          alt=""
+        /> -->
       </div>
     </div>
   </section>
@@ -207,17 +216,47 @@ export default {
 }
 .opp-container {
   background-color: white;
+  position: relative;
   width: 100%;
   padding: 0.75rem 1rem;
   margin: 0.5rem 0;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
+
+  p {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+.expand-absolute {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.75rem;
+  background-color: white;
 }
 .opp-scroll-container {
   height: 100%;
-  overflow: scroll;
+  overflow: hidden;
   padding: 0.5rem 0;
+}
+
+.opp-scroll-container:hover {
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.opp-scroll-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+  margin-left: 0.25rem;
+}
+.opp-scroll-container::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
 }
 
 header {
@@ -249,9 +288,11 @@ header {
   justify-content: space-between;
   margin-bottom: 1rem;
 
-  h4 {
+  h4,
+  p {
     font-family: $base-font-family;
-    font-size: 14px;
+    font-size: 12px;
+    letter-spacing: 0.4px;
   }
 }
 
@@ -319,8 +360,17 @@ input {
   }
 }
 
-svg {
+svg,
+img {
   margin: 0 0.5rem;
   cursor: pointer;
+}
+
+.icon-button {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0.25rem;
+  background-color: white;
+  border-radius: 6px;
+  margin-left: 0.5rem;
 }
 </style>

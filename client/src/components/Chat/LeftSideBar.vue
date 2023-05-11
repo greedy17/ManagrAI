@@ -4,7 +4,7 @@
       <header>
         <button class="primary-button">
           <!-- <font-awesome-icon style="color: #183153" icon="fa-solid fa-rocket" /> -->
-          <span style="font-size: 18px; margin-right: 1rem">🚀</span>
+          <span style="font-size: 14px; margin-right: 1rem">🚀</span>
           <span> Start New Thread</span>
         </button>
       </header>
@@ -13,15 +13,16 @@
 
       <footer>
         <button class="secondary-button">
-          <font-awesome-icon icon="fa-solid fa-cog" />
+          <!-- <font-awesome-icon icon="fa-solid fa-cog" /> -->
+          <img style="margin-left: -2px" src="@/assets/images/settings.svg" height="18px" alt="" />
           <span>Configure</span>
         </button>
         <button class="secondary-button">
-          <font-awesome-icon icon="fa-solid fa-headphones" />
+          <img src="@/assets/images/help.png" height="14px" alt="" />
           <span> Contact Support</span>
         </button>
         <button class="secondary-button">
-          <font-awesome-icon icon="fa-solid fa-user" />
+          <img src="@/assets/images/profile.svg" height="14px" alt="" />
           <span> Profile & Team </span>
         </button>
       </footer>
@@ -158,7 +159,7 @@ footer {
   @include chat-button();
   width: 100%;
   margin-bottom: 0.5rem;
-  font-size: 14px;
+  font-size: 12px;
   color: white;
   background-color: $base-gray;
 
@@ -184,7 +185,8 @@ footer {
   }
 }
 
-svg {
+svg,
+img {
   margin-right: 1rem;
 }
 

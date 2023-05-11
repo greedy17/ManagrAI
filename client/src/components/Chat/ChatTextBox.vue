@@ -3,7 +3,12 @@
     <div class="input-container">
       <!-- <font-awesome-icon style="height: 16px; width: 16px" icon="fa-solid fa-bolt" /> -->
       ⚡️
-      <input class="input" placeholder="Start typing here..." v-model="message" />
+      <input
+        @keyup.enter="sendMessage"
+        class="input"
+        placeholder="Start typing here..."
+        v-model="message"
+      />
       <font-awesome-icon icon="fa-regular fa-paper-plane" @click="sendMessage" />
     </div>
   </section>
@@ -108,5 +113,6 @@ export default {
   padding: 1rem;
   font-size: 14px;
   font-family: $base-font-family;
+  border: none !important;
 }
 </style>

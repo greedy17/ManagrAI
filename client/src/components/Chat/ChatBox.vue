@@ -167,7 +167,7 @@ export default {
     // outline: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 6px;
     // background-color: white;
-    font-size: 14px;
+    font-size: 12px;
     letter-spacing: 0.4px;
   }
 }
