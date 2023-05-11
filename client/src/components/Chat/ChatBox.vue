@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <ChatTextBox class="bottom" />
+    <ChatTextBox class="bottom" :messages="messages" :scrollToBottom="scrollToBottom" />
   </section>
 </template>
   
@@ -53,13 +53,20 @@ export default {
       ],
     }
   },
-  methods: {},
+  methods: {
+    scrollToBottom() {
+      const chatWindow = this.$refs.chatWindow
+      chatWindow.scrollTop = chatWindow.scrollHeight
+    },
+  },
   computed: {
     userName() {
       return this.$store.state.user.firstName
     },
   },
-  created() {},
+  created() {
+    this.scrollToBottom()
+  },
 }
 </script>
   
@@ -75,10 +82,15 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  // height: 100vh;
   padding: 1rem 1.5rem;
   font-size: 14px;
   position: relative;
   position: relative;
+}
+.messages-container {
+  height: 90%;
+  overflow-y: scroll;
 }
 .message-container {
   display: flex;
