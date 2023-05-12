@@ -55,8 +55,10 @@ export default {
   },
   methods: {
     scrollToBottom() {
-      const chatWindow = this.$refs.chatWindow
-      chatWindow.scrollTop = chatWindow.scrollHeight
+      setTimeout(() => {
+        const chatWindow = this.$refs.chatWindow
+        chatWindow.scrollTop = chatWindow.scrollHeight
+      }, 0)
     },
   },
   computed: {

@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import Conversation from '@/services/conversations/models';
+
 export default {
   name: 'ChatTextBox',
   components: {},
@@ -32,7 +34,7 @@ export default {
     }
   },
   methods: {
-    sendMessage() {
+    async sendMessage() {
       try {
         const newId = Math.ceil(Math.random() * 10000)
         const newMessage = {
@@ -43,10 +45,10 @@ export default {
         const originalMessage = this.message
         this.messages.push(newMessage)
         // call post to send message here
+        const id = 1
+        const res = await Conversation.api.sendMessage(id, this.messages)
         this.message = ''
-        setTimeout(() => {
-          this.scrollToBottom()
-        }, 0)
+        this.scrollToBottom()
         setTimeout(() => {
           const botMessage = {
             id: newId + 1,
@@ -54,9 +56,7 @@ export default {
             user: 'bot',
           }
           this.messages.push(botMessage)
-          setTimeout(() => {
-            this.scrollToBottom()
-          }, 0)
+          this.scrollToBottom()
           setTimeout(() => {
             const newBotMessage = this.messages.pop()
             if (originalMessage === 'I always feel like...') {
@@ -65,9 +65,7 @@ export default {
               newBotMessage.value = `Bot message!`
             }
             this.messages.push(newBotMessage)
-            setTimeout(() => {
-              this.scrollToBottom()
-            }, 0)
+            this.scrollToBottom()
           }, 2000)
         }, 500)
       } catch (e) {
