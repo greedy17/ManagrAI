@@ -88,8 +88,31 @@ OPEN_AI_DEAL_REVIEW = (
     \nUse the deal data below to make your assessment, data is coming from either Salesforce or HubSpot CRM. Account for labels being the API name. CRM Data: {data}"""
 )
 
+OPEN_AI_TRANSCRIPT_PROMPT = (
+    lambda transcript, fields: f"""
+    You are an experienced VP of Sales. Please review this part of the call transcript (below) Keep in mind, this is just one part of the transcript. 
+    Prepare the response in a way to account for transcript parts being put back together. Create a thorough summary of at least 1,200 characters, but no longer than 1500 characters.
+    Outline how the call went using casual, slightly witty conversation tone. The CRM fields below are what I will be updating based on your summary. 
+    Output should only be a summary, written in paragraph form.\n
+    Fields: {fields}\n Transcript: {transcript}\nResponse should be in paragraph form, just the summary
+    """
+)
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=None, top_p=None):
+OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
+    lambda fields, summaries: f"""
+    You are an experienced VP of Sales. Review the summaries of the call transcript. 
+    The summaries parts are in chronological order. Based on the summary parts, create one cogent summary (max 2000 characters) articulating how the call went. 
+    Tone should be casual, slightly witty, conversational. Update all the applicable CRM fields below based on the summary. 
+    The field 'meeting_comments' should be a (500-1000) characters shorter version summary. 
+    The field 'meeting_type' should indicate what type of meeting it was (discovery call, follow up call, technical call, etc). 
+    Return the fields as a dictionary and add the summary as to the dictionary with the label 'summary'.
+    \nCRM fields: {fields}
+    \nSummaries: {summaries}
+"""
+)
+
+
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,

@@ -70,6 +70,10 @@ def emit_process_schedule_zoom_meeting(user, zoom_data):
     return _process_schedule_zoom_meeting(user, zoom_data)
 
 
+def emit_process_get_transcript_and_update_crm(payload, context, schedule):
+    return _process_get_transcript_and_update_crm(payload, context, schedule=schedule)
+
+
 def _send_zoom_error_message(user, meeting_uuid):
     if hasattr(user, "slack_integration"):
         user_slack_channel = user.slack_integration.channel
@@ -551,3 +555,184 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         return res
     except Exception as e:
         logger.warning(f"Zoom schedule error: {e}")
+
+
+def clean_prompt_string(prompt_string):
+    cleaned_string = (
+        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
+        .replace("\n\n", "")
+        .replace("\n ", "")
+        .replace("\n", "")
+        .replace("  ", "")
+        .replace("', '", '", "')
+        .replace("': '", '": "')
+    )
+    while "{  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("{  ", "{ ")
+    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
+    return cleaned_string
+
+
+@background()
+def _process_get_transcript_and_update_crm(payload, context):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.crm.utils import CRM_SWITCHER
+    from managr.utils.client import Client
+    from managr.core import constants as core_consts
+
+    pm = json.loads(payload["view"]["private_metadata"])
+    user = User.objects.get(id=pm.get("u"))
+    state = payload["view"]["state"]["values"]
+    # try:
+    #     loading_res = slack_requests.send_channel_message(
+    #         user.slack_integration.channel,
+    #         user.organization.slack_integration.access_token,
+    #         block_set=get_block_set("loading",{"message": "Accessing your transcript..."}),
+    #     )
+    # except Exception as e:
+    #     logger.exception(
+    #         f"ERROR sending update channel message for chat submittion because of <{e}>"
+    #     )
+    selected_options = state["selected_object"]
+    resource_type = context.get("resource_type")
+    resource_list = [
+        key for key in selected_options.keys() if "MEETING__PROCESS_TRANSCRIPT_TASK" in key
+    ]
+    value_key = "None"
+    if len(resource_list):
+        value_key = resource_list[0]
+    selected_option = selected_options[value_key]["selected_option"]["value"]
+    workflow = MeetingWorkflow.objects.get(id=pm.get("w"))
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
+        integration_id=selected_option
+    )
+    form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
+    fields = list(form_template.custom_fields.all().values_list("api_name", flat=True))
+    workflow.resource_id = str(resource.id)
+    workflow.resource_type = resource_type
+    workflow.save()
+    meeting = workflow.meeting
+    try:
+        logger.info("Retreiving meeting data...")
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        logger.info("Done!")
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        logger.info("Filtering recordings...")
+        if len(filtered_recordings):
+            logger.info("Recording Found!")
+            recording_obj = filtered_recordings[0]
+            download_url = recording_obj["download_url"]
+            logger.info("Calling for transcript download...")
+            transcript = meeting.meeting_account.helper_class.get_transcript(
+                download_url, meeting.meeting_account.access_token
+            )
+            logger.info("Done!")
+            transcript = transcript.decode("utf-8")
+            current_minute = 10
+            start_index = 0
+            split_transcript = []
+            logger.info("Spltting transcript")
+            while True:
+                logger.info(f"Currently on minute: {current_minute}")
+                check_time = f"00:{str(current_minute)}"
+                end_index = transcript.find(check_time)
+                if end_index == -1:
+                    split_transcript.append(transcript[start_index:])
+                    break
+                else:
+                    split_transcript.append(transcript[start_index:end_index])
+                    start_index = end_index
+                    current_minute += 10
+            logger.info(f"Transcript split into {len(split_transcript)} parts!")
+            summary_parts = []
+            logger.info("Gathering summaries...")
+            for transcript_part in split_transcript:
+                transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part, fields)
+                transcript_body = (
+                    transcript_body.replace("\r\n", "")
+                    .replace("\n", "")
+                    .replace("    ", "")
+                    .replace(" --> ", "-")
+                )
+                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                    user.email, transcript_body, 1000, top_p=0.9, temperature=0.7
+                )
+                with Client as client:
+                    url = core_consts.OPEN_AI_COMPLETIONS_URI
+                    logger.info("Calling for transcript part summary...")
+                    r = client.post(
+                        url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                if r.status_code == 200:
+                    logger.info("Done!")
+                    r = r.json()
+                    summary = r.get("choices")[0].get("text")
+                    summary = summary.replace(":\n\n", "")
+                    summary_parts.append(summary)
+                else:
+                    logger.exception("Failed to return a summary from open ai")
+            if len(summary_parts):
+                logger.info("Combining Summaries...")
+                summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(fields, summary_parts)
+                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                    user.email, summary_body, 2000, top_p=0.9, temperature=0.7
+                )
+                with Client as client:
+                    url = core_consts.OPEN_AI_COMPLETIONS_URI
+                    r = client.post(
+                        url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                    logger.info("Done!")
+                    r = r.json()
+                    choice = r["choices"][0]["text"]
+                    summary = clean_prompt_string(choice)
+                    data = eval(
+                        choice[choice.index("{") : choice.index("}") + 1]
+                        .replace("null", "'None'")
+                        .replace("'", '"')
+                    )
+    except Exception as e:
+        logger.exception(e)
+
+    combined_summary = data.pop("summary")
+    new_form = OrgCustomSlackFormInstance.objects.create(
+        user=user, template=form_template, resource_id=str(resource.id), update_source="transcript",
+    )
+    blocks = [
+        block_builders.header_block("AI Generated Summary"),
+        block_builders.context_block(f"Meeting: {meeting.topic}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(f"{resource_type}: {resource.display_value}"),
+        block_builders.simple_section(combined_summary, "mrkdwn"),
+        block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    f"Review & Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",
+                    "LAUNCH_REVIEW",
+                )
+            ]
+        ),
+        block_builders.context_block(
+            f"Your {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been updated, please review."
+        ),
+    ]
+    try:
+        slack_res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return

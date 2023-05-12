@@ -1113,7 +1113,9 @@ def paginated_meeting_blockset(context):
 
         else:
             action_id = (
-                f"{slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL}?w={str(workflow.id)}&u={str(u.id)}"
+                f"{slack_const.MEETING__SHOW_TRANSCRIPT_MESSAGE}?w={str(workflow.id)}&u={str(u.id)}"
+                if u.has_zoom_integration
+                else f"{slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL}?w={str(workflow.id)}&u={str(u.id)}"
             )
             block = block_builders.section_with_button_block(
                 "Log Meeting",
@@ -1124,4 +1126,63 @@ def paginated_meeting_blockset(context):
                 action_id=action_id,
             )
         blocks.append(block)
+    return blocks
+
+
+@block_set(required_context=["u"])
+def chat_meeting_blockset(context):
+    from managr.core.models import NoteTemplate
+
+    user = User.objects.get(id=context.get("u"))
+    templates_query = NoteTemplate.objects.for_user(user)
+    template_options = (
+        [template.as_slack_option for template in templates_query]
+        if len(templates_query)
+        else [block_builders.option("You have no templates", "NONE")]
+    )
+    blocks = []
+    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
+    field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+    try:
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
+        blocks.append(
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
+        )
+    except Exception as e:
+        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
+    blocks.extend(
+        [
+            block_builders.input_block(
+                f"Log your meeting using converstional AI",
+                placeholder=f"Update {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
+                block_id="CHAT_PROMPT",
+                multiline=True,
+                optional=False,
+            ),
+            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+            block_builders.static_select(
+                "Select Template",
+                template_options,
+                f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={str(user.id)}&w={context.get('w')}",
+                block_id="SELECT_TEMPLATE",
+            ),
+            {"type": "divider"},
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Switch to form view",
+                        "SWITCH_TO_FORM",
+                        action_id=f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={context.get('w')}&u={str(user.id)}",
+                    )
+                ]
+            ),
+        ]
+    )
     return blocks

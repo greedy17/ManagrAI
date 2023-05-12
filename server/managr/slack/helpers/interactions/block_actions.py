@@ -61,6 +61,7 @@ from managr.crm.models import ObjectField
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.outreach.exceptions import TokenExpired as OutreachTokenExpired
+from managr.zoom.background import emit_process_get_transcript_and_update_crm
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
@@ -490,58 +491,6 @@ def process_show_meeting_chat_modal(payload, context):
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user_id = context.get("u")
     user = User.objects.get(id=user_id)
-    templates_query = NoteTemplate.objects.for_user(user)
-    template_options = (
-        [template.as_slack_option for template in templates_query]
-        if len(templates_query)
-        else [block_builders.option("You have no templates", "NONE")]
-    )
-    blocks = []
-    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
-    field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
-    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
-    try:
-        note_options = user.crm_account.get_individual_picklist_values(resource, field)
-        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
-        note_options_list = [
-            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
-        ]
-        blocks.append(
-            block_builders.static_select(
-                type_text, options=note_options_list, block_id="managr_task_type"
-            )
-        )
-    except Exception as e:
-        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
-    blocks.extend(
-        [
-            block_builders.input_block(
-                f"Log your meeting using converstional AI",
-                placeholder=f"Update {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
-                block_id="CHAT_PROMPT",
-                multiline=True,
-                optional=False,
-            ),
-            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
-            block_builders.static_select(
-                "Select Template",
-                template_options,
-                f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={user_id}&w={context.get('w')}",
-                block_id="SELECT_TEMPLATE",
-            ),
-            {"type": "divider"},
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Switch to form view",
-                        "SWITCH_TO_FORM",
-                        action_id=f"{slack_const.MEETING_ATTACH_RESOURCE_MODAL}?w={str(workflow.id)}&u={user_id}",
-                    )
-                ]
-            ),
-        ]
-    )
-
     access_token = user.organization.slack_integration.access_token
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     trigger_id = payload["trigger_id"]
@@ -552,7 +501,7 @@ def process_show_meeting_chat_modal(payload, context):
             "callback_id": slack_const.MEETING___SUBMIT_CHAT_PROMPT,
             "title": {"type": "plain_text", "text": f"Log Meeting"},
             "submit": {"type": "plain_text", "text": "Submit"},
-            "blocks": blocks,
+            "blocks": get_block_set("chat_meeting_blockset", context=context),
             "private_metadata": json.dumps(context),
         },
     }
@@ -3887,6 +3836,95 @@ def process_paginate_deal_reviews(payload, context):
     return
 
 
+@processor(required_context=["w", "u"])
+def process_show_transcript_message(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    trigger_id = payload["trigger_id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    blocks = [
+        block_builders.static_select(
+            ":robot_face: Use AI to summarize the transcipt & update Salesforce?",
+            [block_builders.option("Yes", "YES"), block_builders.option("No", "NO")],
+            action_id=action_with_params(
+                slack_const.MEETING__UPDATE_TRANSCRIPT_MESSAGE,
+                [f"u={context.get('u')}", f"w={context.get('w')}"],
+            ),
+        )
+    ]
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Log Meeting",},
+            "blocks": blocks,
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
+@processor(required_context=["w", "u"])
+def process_update_transcript_message(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    select_option = payload["actions"][0].get("selected_option").get("value")
+    options = (
+        ["Contact", "Opportunity", "Account", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Contact", "Deal", "Company"]
+    )
+    action_id = (
+        slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL
+        if select_option == "NO"
+        else slack_const.MEETING__PROCESS_TRANSCRIPT_TASK
+    )
+    context.update(options="%".join(options), action_id=action_id)
+    blockset = "chat_meeting_blockset" if select_option == "NO" else "pick_resource_modal_block_set"
+    blocks = [*get_block_set(blockset, context=context)]
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Log Meeting",},
+            "blocks": blocks,
+            "private_metadata": json.dumps(context),
+            "external_id": f"{blockset}.{str(uuid.uuid4())}",
+        },
+    }
+    if select_option == "NO":
+        data["view"]["submit"] = {"type": "plain_text", "text": "Submit"}
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
+def process_meeting_transcript_task(payload, context):
+    emit_process_get_transcript_and_update_crm(payload, context, schedule=datetime.now())
+    user = User.objects.get(id=context.get("u"))
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
+    blocks = [
+        block_builders.simple_section(
+            f"Processing AI-call summary. We will DM you when its ready! :rocket:"
+        )
+    ]
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Log Meeting",},
+            "blocks": blocks,
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(
+        url, data, access_token=user.organization.slack_integration.access_token
+    )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -3956,6 +3994,9 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SEND_DEAL_REVIEW: process_send_deal_review,
         slack_const.PROCESS_INSERT_CHAT_TEMPLATE: process_insert_chat_template,
         slack_const.PROCESS_INSERT_ACTION_TEMPLATE: process_insert_action_template,
+        slack_const.MEETING__SHOW_TRANSCRIPT_MESSAGE: process_show_transcript_message,
+        slack_const.MEETING__UPDATE_TRANSCRIPT_MESSAGE: process_update_transcript_message,
+        slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_meeting_transcript_task,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
