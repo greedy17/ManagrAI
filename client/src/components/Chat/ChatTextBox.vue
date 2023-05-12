@@ -42,6 +42,7 @@ export default {
         }
         const originalMessage = this.message
         this.messages.push(newMessage)
+        // call post to send message here
         this.message = ''
         setTimeout(() => {
           this.scrollToBottom()

@@ -1,7 +1,7 @@
 <template>
   <section class="chat-container">
     <header class="title-header"><p>All Open Opportunities</p></header>
-    <div class="margin-top">
+    <div class="margin-top" ref="chatWindow">
       <div v-for="message in messages" :key="message.id" class="message-container">
         <div class="images">
           <img
@@ -105,6 +105,8 @@ export default {
 }
 .margin-top {
   margin: 4rem 0 1rem 0;
+  height: 80vh;
+  overflow-y: auto;
 }
 .container-padding {
   border-radius: 6px;
