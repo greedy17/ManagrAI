@@ -369,7 +369,7 @@ export default {
       messageTemplateForm: new AlertMessageTemplateForm(),
       savedChanges: false,
       savingInTab: false,
-      valuePromise: null,
+      // valuePromise: null,
       slackMessage: [],
       formattedSlackMessage: [],
       fields: CollectionManager.create({
@@ -497,7 +497,6 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-
           this.alert.groupsRef[this.groupIndex].operandsRef = [
             ...this.alert.groupsRef[this.groupIndex].operandsRef,
             res,
@@ -505,6 +504,8 @@ export default {
           this.alert.groupsRef[this.groupIndex].operands = [
             ...this.alert.groupsRef[this.groupIndex].operandsRef.map((op) => op.id),
           ]
+        } catch(e) {
+          console.log('Error in onSaveOperand: ', e)
         } finally {
           this.modalOpen = false
           this.groupIndex = null
@@ -535,6 +536,8 @@ export default {
           })
           this.alert.groupsRef = [...this.alert.groupsRef, res]
           this.alert.groups = [...this.alert.groupsRef.map((op) => op.id)]
+        } catch(e) {
+          console.log('Error in onSaveGroup', e)
         } finally {
           this.groupModalOpen = false
           this.groupForm = null
@@ -580,8 +583,9 @@ export default {
     getReadableOperandRow(rowData) {
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
+      let valuePromise = ''
       if (rowData && rowData.operandIdentifier === 'RecordTypeId') {
-        this.valuePromise = this.getRecordNames(value)
+        valuePromise = this.getRecordNames(value)
       }
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
       let valueLabel = value
@@ -597,9 +601,9 @@ export default {
         }
       }
       const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
-        this.valuePromise ? this.valuePromise : valueLabel
+        valuePromise ? valuePromise : valueLabel
       } `
-      this.valuePromise = null
+      // this.valuePromise = null
       return operandString
     },
     addSuffix(num) {
@@ -728,7 +732,6 @@ export default {
       this.drag = false
     },
     async onRemoveAlertGroup(id, index) {
-      console.log(id, index)
       let confirmation = confirm('Delete this Group and all its rows ?')
 
       if (confirmation) {

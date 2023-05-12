@@ -39,10 +39,10 @@
         <p class="pad-right">New to Managr?</p>
         <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
       </div>
-      <!-- <div class="row">
+      <div class="row">
         <p class="pad-right">Forgot password?</p>
         <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
-      </div> -->
+      </div>
     </div>
     <div class="links">
       <p style="color: #4d4e4c">

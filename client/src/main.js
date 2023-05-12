@@ -39,8 +39,9 @@ import VueApexCharts from 'vue-apexcharts'
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faBars, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faBolt } from '@fortawesome/free-solid-svg-icons'
 import { faPaperPlane, faSquarePlus } from '@fortawesome/free-regular-svg-icons'
+import { faSalesforce } from '@fortawesome/free-brands-svg-icons'
 
 
 let defaults = VueSanitize.defaults;
@@ -67,7 +68,7 @@ Vue.use(VueGoogleMaps, {
 })
 Vue.use(VueApexCharts)
 
-library.add(faBars, faSquarePlus, faPaperPlane, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark)
+library.add(faBars, faSquarePlus, faPaperPlane, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faSalesforce, faBolt)
 
 Vue.component('apexchart', VueApexCharts)
 Vue.component('drag', Drag);
