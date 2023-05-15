@@ -26,7 +26,7 @@
 
       <section v-else>
         <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ opportunities.length }})</p>
+          <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ displayedOpps.count }})</p>
 
           <div class="flexed-row">
             <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
@@ -85,12 +85,16 @@
           alt=""
         /> -->
       </div>
+      <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
     </div>
   </section>
 </template>
   
 <script>
 import SlackOAuth from '@/services/slack'
+import { CRMObjects, ObjectField } from '@/services/crm'
+// import Opportunity from '@/services/opportunity'
+import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'RightBar',
@@ -101,6 +105,16 @@ export default {
       selectedOpp: null,
       updateOppForm: [],
       oppFields: [],
+      resourceName: 'Opportunity',
+      objects: CollectionManager.create({
+        ModelClass: CRMObjects,
+        pagination: { size: 20 },
+        // filters: {
+        //   crmObject: 'Opportunity',
+        // },
+      }),
+      displayedOpps: [],
+      page: 1,
       notes: [{ id: 0, value: 'Moved close date back to end of June', date: Date.now() }],
       months: {
         0: 'January',
@@ -127,12 +141,10 @@ export default {
     },
     async setOppForms() {
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
-      console.log('formsRes', formsRes)
       this.updateOppForm = formsRes.filter(
         (obj) =>
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
       )
-      console.log('this.updateOppForm', this.updateOppForm)
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -147,7 +159,6 @@ export default {
             ? field.apiName !== 'Email'
             : true),
       )
-      console.log('oppFields', this.oppFields)
     },
     getDate(input) {
       let newer = new Date(input)
@@ -184,15 +195,30 @@ export default {
         return `${hours}:${minutes} AM`
       }
     },
+    async loadMoreOpps() {
+      this.page += 1
+      const oldResults = this.displayedOpps.results
+      const res = await CRMObjects.api.getObjects(this.resourceName, this.page)
+      this.displayedOpps = res
+      const newResults = [...oldResults, ...res.results]
+      this.displayedOpps.results = newResults
+    },
   },
   computed: {
     opportunities() {
-      return this.$store.state.allOpps.filter((opp) =>
+      return this.displayedOpps.results.filter((opp) =>
         opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
       )
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
-  created() {
+  async created() {
+    if (this.userCRM === 'HUBSPOT') {
+      this.resourceName = 'Deal'
+    }
+    this.displayedOpps = await CRMObjects.api.getObjects(this.resourceName)
     this.setOppForms()
   },
 }
