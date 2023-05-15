@@ -1,5 +1,46 @@
 <template>
   <div :class="{ background: showBackground }" id="chat">
+    <Modal
+      v-if="profileModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleCancel()
+        }
+      "
+    >
+      <div class="modal-container flex-col" style="justify-content: space-between;">
+        <div class="modal-header">
+          <div></div>
+          <div style="display: flex; justify-content: space-between; width: 50%;">
+            <h4 class="pointer" @click="profileOrTeam = 'profile'">Profile</h4>
+            <h4 class="pointer" @click="profileOrTeam = 'team'">Team</h4>
+          </div>
+          <div class="pointer" @click="handleCancel"></div>
+        </div>
+        <div v-if="profileOrTeam === 'profile'" class="modal-body flex-col" style="height: 60vh;">
+          <div class="profile-img">
+            <img src="@/assets/images/profile.svg" style="filter: invert(80%)" height="40px" alt="" />
+          </div>
+          <h3 style="margin-bottom: 2rem;">{{ user.fullName }}</h3>
+          <h3>Organization:</h3>
+          <h4 style="margin-bottom: 0.5rem;">{{ user.organizationRef.name }}</h4>
+          <h3>Timezone:</h3>
+          <h4 style="margin-bottom: 0.5rem;">{{ user.timezone }}</h4>
+        </div>
+        <div v-else-if="profileOrTeam === 'team'" class="modal-body flex-col">
+          <div>Team</div>
+        </div>
+        <div style="display: flex; justify-content: space-around; align-items: flex-end; width: 40vw;">
+          <div class="pointer" @click="logOut">
+            <h4 style="margin: 0;">Log Out <img src="@/assets/images/logout.svg" alt="" height="13px" style="margin-left: 0.5rem;" /></h4>
+          </div>
+          <div class="pointer" @click="handleCancel">
+            <h4 style="margin: 0;">Close</h4>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <div @click="toggleSidebar" class="hamburger">
       <font-awesome-icon style="height: 22px; width: 22px" icon="fa-solid fa-bars" />
     </div>
@@ -8,6 +49,7 @@
         ref="sidebarRef"
         @show-background="toggleBackgroundOn"
         @hide-background="toggleBackgroundOff"
+        :handleProfileOpen="handleProfileOpen"
       />
     </aside>
     <main id="main">
@@ -23,6 +65,7 @@
 import ChatBox from '../components/Chat/ChatBox.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
+import Modal from '@/components/InviteModal'
 
 export default {
   name: 'Home',
@@ -30,10 +73,13 @@ export default {
     ChatBox,
     RightBar,
     LeftSideBar,
+    Modal,
   },
   data() {
     return {
       showBackground: false,
+      profileModalOpen: false,
+      profileOrTeam: 'profile',
     }
   },
   created() {},
@@ -48,8 +94,23 @@ export default {
     toggleBackgroundOff() {
       this.showBackground = false
     },
+    handleProfileOpen() {
+      this.profileModalOpen = true
+    },
+    handleCancel() {
+      this.profileModalOpen = false
+    },
+    logOut() {
+      this.$store.dispatch('logoutUser')
+      this.$router.push({ name: 'Login' })
+      localStorage.isLoggedOut = true
+    },
   },
-  computed: {},
+  computed: {
+    user() {
+      return this.$store.state.user
+    },
+  },
 }
 </script>
 
@@ -59,6 +120,7 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+@import '@/styles/modals';
 
 body {
   overflow: auto;
@@ -164,5 +226,51 @@ body {
   background-color: rgba(0, 0, 0, 0.5); /* Adjust the opacity by modifying the last value */
   pointer-events: none; /* Allow click events to pass through to the children */
   z-index: 100; /* Ensure the overlay appears above the children */
+}
+
+.modal-container {
+  @include medium-modal();
+  width: 30vw;
+  padding: 24px 24px 8px 24px;
+  margin-top: 5rem;
+  // border: 1px solid #e8e8e8;
+  h3 {
+    margin: 0.5rem 0;
+  }
+  h4 {
+    margin: 0;
+  }
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.modal-header {
+  display: flex; 
+  justify-content: space-between; 
+  width: 100%; 
+  align-items: flex-start;
+}
+.pointer {
+  cursor: pointer;
+}
+.profile-img {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: $off-white;
+  border: 1px solid $soft-gray;
+  border-radius: 100%;
+  height: 19vh;
+  width: 19vh;
+}
+.bottom {
+  position: relative;
+  bottom: 0;
+  margin-bottom: 1rem;
 }
 </style>
