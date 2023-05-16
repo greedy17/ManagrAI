@@ -20,7 +20,8 @@
       </div>
     </div>
 
-    <ChatTextBox class="bottom" :messages="messages" :scrollToBottom="scrollToBottom" />
+    <ChatTextBox class="bottom" :messages="messages" />
+    <!-- :scrollToBottom="scrollToBottom"  -->
   </section>
 </template>
   
@@ -54,10 +55,10 @@ export default {
     }
   },
   methods: {
-    scrollToBottom() {
-      const chatWindow = this.$refs.chatWindow
-      chatWindow.scrollTop = chatWindow.scrollHeight
-    },
+    // scrollToBottom() {
+    //   const chatWindow = this.$refs.chatWindow
+    //   chatWindow.scrollTop = chatWindow.scrollHeight
+    // },
   },
   computed: {
     userName() {
@@ -65,7 +66,7 @@ export default {
     },
   },
   created() {
-    this.scrollToBottom()
+    // this.scrollToBottom()
   },
 }
 </script>
@@ -86,12 +87,8 @@ export default {
   padding: 1rem 1.5rem;
   font-size: 14px;
   position: relative;
-  position: relative;
 }
-.messages-container {
-  height: 90%;
-  overflow-y: scroll;
-}
+
 .message-container {
   display: flex;
   align-items: flex-start;
@@ -104,7 +101,9 @@ export default {
   }
 }
 .margin-top {
-  margin: 4rem 0 1rem 0;
+  margin-top: 4rem;
+  height: 96%;
+  overflow-y: scroll;
 }
 .container-padding {
   border-radius: 6px;
@@ -115,7 +114,7 @@ export default {
   background-color: $soft-gray;
   border-radius: 6px;
   padding: 1rem 0.75rem;
-  line-height: 1.5;
+  line-height: 1.75;
 }
 
 .text-container {
@@ -130,7 +129,7 @@ export default {
 }
 
 .bottom {
-  position: absolute;
+  position: sticky;
   bottom: 0;
   left: 0;
 }

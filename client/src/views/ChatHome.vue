@@ -79,6 +79,7 @@ body {
   font-family: $base-font-family;
   color: $chat-font-color;
   letter-spacing: 0.4px;
+  line-height: 1.5;
 }
 
 .hamburger {

@@ -13,8 +13,9 @@
           </div>
           <div class="flexed-row">
             <img src="@/assets/images/refresh.svg" height="18px" alt="" />
+
             <font-awesome-icon
-              style="height: 26px; width: 26px; color: #0d9dda"
+              style="height: 24px; width: 24px; color: #0d9dda"
               icon="fa-brands fa-salesforce"
             />
           </div>
@@ -30,12 +31,25 @@
 
           <div class="flexed-row">
             <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
+
             <img src="@/assets/images/refresh.svg" height="18px" alt="" />
           </div>
         </div>
 
         <div class="flexed-row-spread">
-          <input v-model="searchText" placeholder="Seach Opportunities by name" />
+          <div class="input">
+            <img src="@/assets/images/search.svg" height="16px" alt="" />
+            <input v-model="searchText" placeholder="Search Opportunity by name" />
+            <img
+              v-show="searchText"
+              @click="clearText"
+              src="@/assets/images/close.svg"
+              class="invert"
+              height="12px"
+              alt=""
+            />
+          </div>
+
           <span class="icon-button">
             <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
           </span>
@@ -75,15 +89,18 @@
         class="opp-container"
         @click="changeSelectedOpp(opp)"
         :key="opp.id"
+        @mouseenter="hoveredOpp = opp.id"
+        @mouseleave="hoveredOpp = null"
       >
         <p style="margin: 0">{{ opp.name }}</p>
 
-        <!-- <img
-          class="expand-absolute"
-          src="@/assets/images/expand-content.svg"
+        <img
+          v-show="hoveredOpp === opp.id"
+          class="expand-absolute shadow"
+          src="@/assets/images/expand.svg"
           height="14px"
           alt=""
-        /> -->
+        />
       </div>
     </div>
   </section>
@@ -91,12 +108,16 @@
   
 <script>
 import SlackOAuth from '@/services/slack'
+import Tooltip from './Tooltip.vue'
 
 export default {
   name: 'RightBar',
-  components: {},
+  components: {
+    Tooltip,
+  },
   data() {
     return {
+      hoveredOpp: null,
       searchText: '',
       selectedOpp: null,
       updateOppForm: [],
@@ -122,17 +143,20 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    clearText() {
+      this.searchText = ''
+    },
     changeSelectedOpp(opp) {
       this.selectedOpp = opp
     },
     async setOppForms() {
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
-      console.log('formsRes', formsRes)
+
       this.updateOppForm = formsRes.filter(
         (obj) =>
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
       )
-      console.log('this.updateOppForm', this.updateOppForm)
+
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -147,7 +171,6 @@ export default {
             ? field.apiName !== 'Email'
             : true),
       )
-      console.log('oppFields', this.oppFields)
     },
     getDate(input) {
       let newer = new Date(input)
@@ -223,12 +246,23 @@ export default {
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
+  transition: all 0.3s;
 
   p {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
   }
+
+  &:hover {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+    background-color: $off-white;
+  }
+}
+
+.rotate {
+  transform: rotate(45deg);
 }
 
 .expand-absolute {
@@ -331,14 +365,27 @@ header {
   height: 100%;
 }
 
-input {
-  width: 87.5%;
-  outline: none;
+.input {
+  width: 100%;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: $base-font-family;
-  padding: 0.75rem;
-  font-size: 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.25rem 0.25rem;
+}
+
+input {
+  width: 80%;
+  padding: 0.5rem 0rem;
+  border: none;
+  outline: none;
+}
+
+::placeholder {
+  color: #afafaf;
 }
 
 .gray-text {
@@ -372,5 +419,57 @@ img {
   background-color: white;
   border-radius: 6px;
   margin-left: 0.5rem;
+}
+
+.invert {
+  filter: invert(40%);
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: $dark-green;
+  color: white;
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 4px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 50%;
+  margin-left: -90px; /* Use half of the width to center the tooltip */
+  margin-top: 4px;
+
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip:hover {
+  img {
+    filter: invert(54%) sepia(76%) saturate(330%) hue-rotate(101deg) brightness(98%) contrast(89%);
+  }
+}
+
+.tooltip .tooltiptext::after {
+  content: ' ';
+  position: absolute;
+  bottom: 100%; /* At the top of the tooltip */
+  left: 75%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent $dark-green transparent;
 }
 </style>
