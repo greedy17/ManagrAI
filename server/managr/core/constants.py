@@ -90,25 +90,20 @@ OPEN_AI_DEAL_REVIEW = (
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
     lambda transcript, fields: f"""
-    You are an experienced VP of Sales. Please review this part of the call transcript (below) Keep in mind, this is just one part of the transcript. 
-    Prepare the response in a way to account for transcript parts being put back together. Create a thorough summary of at least 1,200 characters, but no longer than 1500 characters.
-    Outline how the call went using casual, slightly witty conversation tone. The CRM fields below are what I will be updating based on your summary. 
-    Output should only be a summary, written in paragraph form.\n
-    Fields: {fields}\n Transcript: {transcript}\nResponse should be in paragraph form, just the summary
+    You are a VP of Sales reviewing a sales rep's call. Below is a 5min snippet from a call transcript. Follow these instructions carefully:
+    1) Create one summary, in paragraph form. The summary needs to be 500 to 800 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+    2) Output format: must return in a dictionary. The summary should be in the dictionary with the key "summary".
+    Transcript: {transcript}\nResponse should be in paragraph form, just the summary
     """
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
     lambda fields, summaries: f"""
-    You are an experienced VP of Sales. Review the summaries of the call transcript. 
-    The summaries parts are in chronological order. Based on the summary parts, create one cogent summary (max 2000 characters) articulating how the call went. 
-    Tone should be casual, slightly witty, conversational. Update all the applicable CRM fields below based on the summary. 
-    The field 'meeting_comments' should be a (500-1000) characters shorter version summary. 
-    The field 'meeting_type' should indicate what type of meeting it was (discovery call, follow up call, technical call, etc). 
-    Return the fields as a dictionary and add the summary as to the dictionary with the label 'summary'.
-    \nCRM fields: {fields}
-    \nSummaries: {summaries}
-"""
+    You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
+    1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+    2) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary
+    3) Output format must return in a python dictionary. The summary should be in the dictionary with the key 'summary'.
+    CRM fields:{fields}\nSummaries: {summaries}"""
 )
 
 

@@ -646,7 +646,7 @@ def create_or_search_modal_block_set(context):
     action_id = f"{slack_const.GET_CRM_RESOURCE_OPTIONS}?u={str(user.id)}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}&__block_action={slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}"
     return [
         block_builders.external_select(
-            f"*Search for an {resource_type}*",
+            f"*Search for a {resource_type}*",
             action_id,
             block_id="select_existing",
             placeholder="Type to search",

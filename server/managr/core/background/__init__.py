@@ -574,7 +574,6 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 meetings = user.zoom_account.helper_class.get_meetings_by_date(
                     user.zoom_account.access_token, user.zoom_account.zoom_id, date
                 )["meetings"]
-                print(meetings)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
@@ -604,7 +603,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         ]
                         if len(meetings_by_topic):
                             meeting = meetings_by_topic[0]
-                            meeting_data["meeting_id"] = meeting["uuid"]
+                            meeting_data["meeting_id"] = meeting["id"]
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()

@@ -3844,7 +3844,7 @@ def process_show_transcript_message(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     blocks = [
         block_builders.static_select(
-            ":robot_face: Use AI to summarize the transcipt & update Salesforce?",
+            "Use AI to summarize the call & autofill CRM fields?",
             [block_builders.option("Yes", "YES"), block_builders.option("No", "NO")],
             action_id=action_with_params(
                 slack_const.MEETING__UPDATE_TRANSCRIPT_MESSAGE,
@@ -3925,6 +3925,32 @@ def process_meeting_transcript_task(payload, context):
     return
 
 
+def process_launch_call_summary_review(payload, context):
+    form = OrgCustomSlackFormInstance.objects.get(id=context.get("form_id"))
+    user = form.user
+    blocks = form.generate_form(form.saved_data)
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Call Summary Review"},
+            "blocks": blocks,
+            "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "private_metadata": json.dumps(context),
+            "submit": {"type": "plain_text", "text": "Submit"},
+        },
+    }
+    try:
+        res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(f"Failed to send message for {e}")
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -3997,6 +4023,7 @@ def handle_block_actions(payload):
         slack_const.MEETING__SHOW_TRANSCRIPT_MESSAGE: process_show_transcript_message,
         slack_const.MEETING__UPDATE_TRANSCRIPT_MESSAGE: process_update_transcript_message,
         slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_meeting_transcript_task,
+        slack_const.CALL_LAUNCH_SUMMARY_REVIEW: process_launch_call_summary_review,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
