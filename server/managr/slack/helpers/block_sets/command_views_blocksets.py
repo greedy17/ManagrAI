@@ -347,7 +347,7 @@ def update_meeting_block_set(context, *args, **kwargs):
 
         blocks.append(
             block_builders.external_select(
-                f"*Search for an {context.get('resource_type')}*",
+                f"*Search for a {context.get('resource_type')}*",
                 f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}?u={user_id}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}",
                 block_id="select_existing",
                 placeholder="Type to search",

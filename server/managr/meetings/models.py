@@ -44,7 +44,7 @@ class Meeting(TimeStampModel):
 
     @property
     def meeting_account(self):
-        if self.provider == "Zoom" and self.is_owner:
+        if self.provider == "Zoom Meeting" and self.is_owner:
             return self.user.zoom_account
         else:
             return self.user.nylas

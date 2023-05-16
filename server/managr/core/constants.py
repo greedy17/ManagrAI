@@ -88,8 +88,26 @@ OPEN_AI_DEAL_REVIEW = (
     \nUse the deal data below to make your assessment, data is coming from either Salesforce or HubSpot CRM. Account for labels being the API name. CRM Data: {data}"""
 )
 
+OPEN_AI_TRANSCRIPT_PROMPT = (
+    lambda transcript, fields: f"""
+    You are a VP of Sales reviewing a sales rep's call. Below is a 5min snippet from a call transcript. Follow these instructions carefully:
+    1) Create one summary, in paragraph form. The summary needs to be 500 to 800 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+    2) Output format: must return in a dictionary. The summary should be in the dictionary with the key "summary".
+    Transcript: {transcript}\nResponse should be in paragraph form, just the summary
+    """
+)
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=None, top_p=None):
+OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
+    lambda fields, summaries: f"""
+    You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
+    1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+    2) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary
+    3) Output format must return in a python dictionary. The summary should be in the dictionary with the key 'summary'.
+    CRM fields:{fields}\nSummaries: {summaries}"""
+)
+
+
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,

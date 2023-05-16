@@ -570,6 +570,10 @@ def _process_calendar_meetings(user_id, slack_int, date):
     if user.has_nylas_integration:
         try:
             processed_data = _process_calendar_details(user_id, date)
+            if user.has_zoom_integration:
+                meetings = user.zoom_account.helper_class.get_meetings_by_date(
+                    user.zoom_account.access_token, user.zoom_account.zoom_id, date
+                )["meetings"]
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
@@ -593,6 +597,13 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     "user": user,
                 }
                 if workflow_check is None and register_check:
+                    if user.has_zoom_integration:
+                        meetings_by_topic = [
+                            meeting for meeting in meetings if event["title"] == meeting["topic"]
+                        ]
+                        if len(meetings_by_topic):
+                            meeting = meetings_by_topic[0]
+                            meeting_data["meeting_id"] = meeting["id"]
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -1485,7 +1496,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         except crm_exceptions.FieldValidationError as e:
             logger.exception(f"There was and validation error submitting chat prompt data: {e}")
             has_error = True
-            message = f":no_entry_sign: Uh-oh we hit a validation: {e}"
+            logger.exception(
+                "There was and field validation error submitting chat prompt data: {e}"
+            )
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
@@ -1501,6 +1514,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             logger.exception(f"There was and error submitting chat prompt data: {e}")
             message = f":no_entry_sign: Uh-oh we hit a error: {e}"
             has_error = True
+            logger.exception("There was and error submitting chat prompt data: {e}")
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
