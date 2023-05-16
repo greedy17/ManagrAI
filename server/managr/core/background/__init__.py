@@ -37,7 +37,7 @@ from managr.zoom.background import _split_first_name, _split_last_name
 from managr.zoom.background import emit_kick_off_slack_interaction
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from managr.slack.helpers.block_sets import get_block_set
-from managr.utils.client import Client
+from managr.utils.client import Client, Variable_Client
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
@@ -1274,21 +1274,24 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     resource_check = None
     blocks = []
     token_amount = 500
+    timeout = 30.0
     while True:
+        message = None
         try:
             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
             )
             logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
+            Client = Variable_Client(timeout)
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
+
                 logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
-                    print(f"Current token amount: {token_amount}")
                     if token_amount <= 2000:
                         if workflow_id is None:
                             slack_res = slack_requests.update_channel_message(
@@ -1379,14 +1382,24 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     has_error = True
                 break
             else:
-                attempts += 1
-        except httpx.ReadTimeout:
-            if attempts >= 5:
+                if attempts >= 5:
+                    break
+                else:
+                    attempts += 1
+                    continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if attempts >= 2:
+                has_error = True
                 message = "There was an error communicating with Open AI"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
             else:
                 attempts += 1
+                continue
         except Exception as e:
-            logger.exception(e)
+            logger.exception(f"Exception from Open AI response {e}")
+            has_error = True
             message = (
                 f":no_entry_sign: Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
                 if resource_check is None
@@ -1407,8 +1420,17 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     )
                 ],
             )
-            return
+            break
     if has_error:
+        if workflow_id:
+            logger.exception(
+                f"There was an error processing chat submission for workflow {workflow} {message}"
+            )
+            workflow.failed_task_description.append(
+                f"There was an error processing chat submission {message}"
+            )
+            workflow.save()
+            return
         blocks = [
             block_builders.section_with_button_block(
                 "Reopen Chat",
@@ -1472,6 +1494,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 user.crm_account.regenerate_token()
                 update_attempts += 1
         except crm_exceptions.FieldValidationError as e:
+            logger.exception(f"There was and validation error submitting chat prompt data: {e}")
             has_error = True
             logger.exception(
                 "There was and field validation error submitting chat prompt data: {e}"
@@ -1480,7 +1503,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 block_builders.section_with_button_block(
                     "Reopen Chat",
                     "OPEN_CHAT",
-                    f":no_entry_sign: Uh-oh we hit a validation: {e}",
+                    message,
                     action_id=action_with_params(
                         slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                     ),
@@ -1488,27 +1511,30 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             ]
             break
         except Exception as e:
+            logger.exception(f"There was and error submitting chat prompt data: {e}")
+            message = f":no_entry_sign: Uh-oh we hit a error: {e}"
             has_error = True
             logger.exception("There was and error submitting chat prompt data: {e}")
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
                     "OPEN_CHAT",
-                    f":no_entry_sign: Uh-oh we hit a error: {e}",
+                    message,
                     action_id=action_with_params(
                         slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                     ),
                 )
             ]
             break
-    if workflow_id and not has_error:
-        form.workflow = workflow
-        form.update_source = "meeting (chat)"
-        form.save()
-        workflow.completed_operations.append(slack_consts.MEETING___SUBMIT_CHAT_PROMPT)
-        workflow.resource_type = resource_type
-        workflow.resource_id = str(resource.id)
-        workflow.save()
+    if workflow_id:
+        if not has_error:
+            form.workflow = workflow
+            form.update_source = "meeting (chat)"
+            form.save()
+            workflow.completed_operations.append(slack_consts.MEETING___SUBMIT_CHAT_PROMPT)
+            workflow.resource_type = resource_type
+            workflow.resource_id = str(resource.id)
+            workflow.save()
         return
     else:
         try:

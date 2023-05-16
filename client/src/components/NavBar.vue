@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Modal v-if="modalOpen" @close-modal="closeModal()" dimmed>
+    <Modal v-if="modalOpen" @close-modal="closeModal" dimmed>
       <div class="command-modal">
         <header>
           <div>
@@ -83,7 +83,7 @@
         </div>
       </router-link>
 
-      <div v-if="!isOnboarding" style="height: 100%" class="align-left">
+      <div v-if="!isOnboarding || !isAdmin" style="height: 100%" class="align-left">
         <router-link
           v-if="userCRM"
           class="side-wrapper"
@@ -232,19 +232,6 @@
           </label>
         </router-link>
 
-        <!-- <router-link v-if="!isPaid" class="side-wrapper" exact-active-class="active" :to="{ name: 'Reports' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 190px;">Reports: Upgrade your plan</span>
-            <img src="@/assets/images/reports.svg" class="nav-img" height="16px" alt="" style="margin-top: 0;" />
-          </label>
-        </router-link>
-        <router-link v-else class="side-wrapper" exact-active-class="active" :to="{ name: 'Reports' }">
-          <label class="side-icon side-workflow" style="margin: 8px 0 0 0;">
-            <span class="side-tooltip-single" style="top: -5px; width: 60px;">Reports</span>
-            <img src="@/assets/images/reports.svg" class="" height="16px" alt="" style="margin-top: 0;" />
-          </label>
-        </router-link> -->
-
         <div @mouseenter="openModal()" style="margin-left: 2px" class="side-wrapper">
           <label class="side-icon side-workflow" style="">
             <!-- <span style="margin-top: 8px" class="side-tooltip">
@@ -314,8 +301,6 @@
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
 
-import AlertTemplate from '@/services/alerts/'
-
 export default {
   name: 'NavBar',
   components: {
@@ -351,11 +336,9 @@ export default {
     },
     openModal() {
       this.modalOpen = true
-      console.log('here')
     },
     closeModal() {
       this.modalOpen = false
-      console.log('over there')
     },
   },
   computed: {
