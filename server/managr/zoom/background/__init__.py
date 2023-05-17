@@ -799,7 +799,7 @@ def _process_get_transcript_and_update_crm(payload, context):
         loading_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set("loading", {"message": "Accessing your transcript..."}),
+            block_set=get_block_set("loading", {"message": "Accessing your call..."}),
         )
     except Exception as e:
         logger.exception(
@@ -853,9 +853,9 @@ def _process_get_transcript_and_update_crm(payload, context):
                 split_transcript = []
                 while True:
                     check_time = (
-                        f"00:0{str(current_minute)}"
+                        f"00:0{str(current_minute)}:"
                         if current_minute == 5
-                        else f"00:{str(current_minute)}"
+                        else f"00:{str(current_minute)}:"
                     )
                     end_index = transcript.find(check_time)
                     if end_index == -1:
@@ -877,14 +877,14 @@ def _process_get_transcript_and_update_crm(payload, context):
                             .replace(" --> ", "-")
                         )
                         body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                            user.email, transcript_body, 1000, top_p=0.9, temperature=0.7
+                            user.email, transcript_body, 2000, top_p=0.9, temperature=0.7
                         )
                         with Variable_Client() as client:
                             url = core_consts.OPEN_AI_COMPLETIONS_URI
                             r = client.post(
                                 url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                             )
-                            print(r.json())
+                            # print(r.json())
                             r = _handle_response(r)
                             summary = r.get("choices")[0].get("text")
 
@@ -901,7 +901,6 @@ def _process_get_transcript_and_update_crm(payload, context):
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, summary_body, 2000, top_p=0.9, temperature=0.7
                     )
-                    logger.info(f"Summary body: {body}")
                     viable_data = False
                     while True:
                         if not viable_data:

@@ -89,20 +89,18 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript, fields: f"""
-    You are a VP of Sales reviewing a sales rep's call. Below is a 5min snippet from a call transcript. Follow these instructions carefully:
+    lambda transcript, fields: f"""You are a VP of Sales reviewing a sales rep's call. Below is a 5min snippet from a call transcript. Follow these instructions carefully:
     1) Create one summary, in paragraph form. The summary needs to be 500 to 800 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
-    2) Output format: must return in a dictionary. The summary should be in the dictionary with the key "summary".
+    2) Output format: must return in a dictionary.
     Transcript: {transcript}\nResponse should be in paragraph form, just the summary
     """
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda fields, summaries: f"""
-    You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
+    lambda fields, summaries: f"""You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
     1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
     2) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary
-    3) Output format must return in a python dictionary. The summary should be in the dictionary with the key 'summary'.
+    3) Output format must return in a python dictionary. The summary must be added to the dictionary using a key called 'summary'.
     CRM fields:{fields}\nSummaries: {summaries}"""
 )
 
