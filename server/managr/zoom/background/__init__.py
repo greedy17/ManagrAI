@@ -880,6 +880,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                     r = client.post(
                         url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                     )
+                    print(r.json())
                     r = _handle_response(r)
                     summary = r.get("choices")[0].get("text")
 
