@@ -569,6 +569,7 @@ def clean_prompt_string(prompt_string):
         .replace("{'", '{"')
         .replace("','", '","')
         .replace("':", '":')
+        .replace(", '", ', "')
     )
     while "{  " in cleaned_string:
         cleaned_string = cleaned_string.replace("{  ", "{ ")
