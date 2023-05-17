@@ -21,7 +21,7 @@
           <img src="@/assets/images/help.png" height="14px" alt="" />
           <span> Contact Support</span>
         </button>
-        <button class="secondary-button">
+        <button class="secondary-button" @click="handleProfileOpen">
           <img src="@/assets/images/profile.svg" height="14px" alt="" />
           <span> Profile & Team </span>
         </button>
@@ -40,7 +40,9 @@
 <script>
 export default {
   name: 'LeftSideBar',
-  components: {},
+  props: {
+    handleProfileOpen: { type: Function },
+  },
   data() {
     return {
       isOpen: false,

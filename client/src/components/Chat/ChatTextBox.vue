@@ -45,6 +45,7 @@
           placeholder="Send a message."
           v-model="message"
           v-autoresize
+          ref="chatTextArea"
         />
         <font-awesome-icon
           :class="{ invert: !message }"
@@ -59,6 +60,8 @@
 </template>
 
 <script>
+import Conversation from '@/services/conversations/models'
+
 export default {
   name: 'ChatTextBox',
   components: {},
@@ -66,9 +69,9 @@ export default {
     messages: {
       type: Array,
     },
-    // scrollToBottom: {
-    //   type: Function,
-    // },
+    scrollToBottom: {
+      type: Function,
+    },
   },
   data() {
     return {
@@ -76,8 +79,11 @@ export default {
       templatesOpen: false,
     }
   },
+
   methods: {
-    sendMessage() {
+    async sendMessage() {
+      this.$refs.chatTextArea.style.height = 'auto'
+      this.$emit('message-loading', true)
       try {
         const newId = Math.ceil(Math.random() * 10000)
         const newMessage = {
@@ -85,37 +91,25 @@ export default {
           value: this.message,
           user: 1,
         }
-        const originalMessage = this.message
         this.messages.push(newMessage)
+        // call post to send message here
+        const id = 1
+        const res = await Conversation.api.sendMessage(id, this.messages)
         this.message = ''
-        // setTimeout(() => {
-        //   this.scrollToBottom()
-        // }, 0)
+        this.scrollToBottom()
         setTimeout(() => {
-          const botMessage = {
+          const newBotMessage = {
             id: newId + 1,
-            value: '...',
+            value: 'Bot message!',
             user: 'bot',
           }
-          this.messages.push(botMessage)
-          // setTimeout(() => {
-          //   this.scrollToBottom()
-          // }, 0)
-          setTimeout(() => {
-            const newBotMessage = this.messages.pop()
-            if (originalMessage === 'I always feel like...') {
-              newBotMessage.value = `Somebody's watching me!`
-            } else {
-              newBotMessage.value = `Bot message!`
-            }
-            this.messages.push(newBotMessage)
-            // setTimeout(() => {
-            //   this.scrollToBottom()
-            // }, 0)
-          }, 2000)
-        }, 500)
+          this.messages.push(newBotMessage)
+          this.scrollToBottom()
+          this.$emit('message-loading', false)
+        }, 2000)
       } catch (e) {
         console.log('Error in sendMessage: ', e)
+      } finally {
       }
     },
 
