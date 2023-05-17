@@ -799,7 +799,9 @@ def _process_get_transcript_and_update_crm(payload, context):
         loading_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set("loading", {"message": "Accessing your call..."}),
+            block_set=get_block_set(
+                "loading", {"message": "Summarizing your call. This may take a few minutes..."}
+            ),
         )
     except Exception as e:
         logger.exception(
@@ -826,95 +828,100 @@ def _process_get_transcript_and_update_crm(payload, context):
     workflow.save()
     meeting = workflow.meeting
     has_error = False
-    timeout = 30.0
     summary_parts = []
-    while True:
-        try:
-            logger.info("Retreiving meeting data...")
-            meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
-                meeting.meeting_id, meeting.meeting_account.access_token
+    try:
+        logger.info("Retreiving meeting data...")
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        logger.info("Done!")
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        if len(filtered_recordings):
+            recording_obj = filtered_recordings[0]
+            download_url = recording_obj["download_url"]
+            transcript = meeting.meeting_account.helper_class.get_transcript(
+                download_url, meeting.meeting_account.access_token
             )
-            logger.info("Done!")
-            recordings = meeting_data["recording_files"]
-            filtered_recordings = [
-                recording
-                for recording in recordings
-                if recording["recording_type"] == "audio_transcript"
-            ]
-            if len(filtered_recordings):
-                recording_obj = filtered_recordings[0]
-                download_url = recording_obj["download_url"]
-                transcript = meeting.meeting_account.helper_class.get_transcript(
-                    download_url, meeting.meeting_account.access_token
+            transcript = transcript.decode("utf-8")
+            current_minute = 5
+            start_index = 0
+            split_transcript = []
+            while True:
+                check_time = (
+                    f"00:0{str(current_minute)}:"
+                    if current_minute == 5
+                    else f"00:{str(current_minute)}:"
                 )
-                transcript = transcript.decode("utf-8")
-                current_minute = 5
-                start_index = 0
-                split_transcript = []
-                while True:
-                    check_time = (
-                        f"00:0{str(current_minute)}:"
-                        if current_minute == 5
-                        else f"00:{str(current_minute)}:"
+                end_index = transcript.find(check_time)
+                if end_index == -1:
+                    split_transcript.append(transcript[start_index:])
+                    break
+                else:
+                    split_transcript.append(transcript[start_index:end_index])
+                    start_index = end_index
+                    current_minute += 5
+            if not len(summary_parts):
+                transcript_part_logger_message = "Summarizing part: "
+                for index, transcript_part in enumerate(split_transcript):
+                    transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
+                        transcript_part, fields_list
                     )
-                    end_index = transcript.find(check_time)
-                    if end_index == -1:
-                        split_transcript.append(transcript[start_index:])
-                        break
-                    else:
-                        split_transcript.append(transcript[start_index:end_index])
-                        start_index = end_index
-                        current_minute += 5
-                if not len(summary_parts):
-                    for transcript_part in split_transcript:
-                        transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
-                            transcript_part, fields_list
-                        )
-                        transcript_body = (
-                            transcript_body.replace("\r\n", "")
-                            .replace("\n", "")
-                            .replace("    ", "")
-                            .replace(" --> ", "-")
-                        )
-                        body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                            user.email, transcript_body, 2000, top_p=0.9, temperature=0.7
-                        )
-                        with Variable_Client() as client:
-                            url = core_consts.OPEN_AI_COMPLETIONS_URI
-                            r = client.post(
-                                url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
-                            )
-                            # print(r.json())
-                            r = _handle_response(r)
-                            summary = r.get("choices")[0].get("text")
-
-                            summary = (
-                                summary.replace(":\n\n", "")
-                                .replace(".\n\n", "")
-                                .replace("\n\n", "")
-                            )
-                            summary_parts.append(summary)
-                if len(summary_parts):
-                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
-                        fields_list, summary_parts
+                    transcript_body = (
+                        transcript_body.replace("\r\n", "")
+                        .replace("\n", "")
+                        .replace("    ", "")
+                        .replace(" --> ", "-")
                     )
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, summary_body, 2000, top_p=0.9, temperature=0.7
+                        user.email, transcript_body, 2000, top_p=0.9, temperature=0.7
                     )
-                    viable_data = False
-                    while True:
+                    with Variable_Client() as client:
+                        logger.info(
+                            f"{transcript_part_logger_message}{index + 1}/{len(split_transcript)}"
+                        )
+                        url = core_consts.OPEN_AI_COMPLETIONS_URI
+                        r = client.post(
+                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                        )
+
+                        r = _handle_response(r)
+                        summary = r.get("choices")[0].get("text")
+
+                        summary = (
+                            summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
+                        )
+                        summary_parts.append(summary)
+            if len(summary_parts):
+                summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
+                    fields_list, summary_parts
+                )
+                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                    user.email, summary_body, 2000, top_p=0.9, temperature=0.7
+                )
+                viable_data = False
+                timeout = 30.0
+                while True:
+                    try:
+                        logger.info("Combining Summary parts")
                         if not viable_data:
                             with Variable_Client(timeout) as client:
                                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
-                        r = r.json()
-                        logger.info(f"Summary response: {r}")
-                        choice = r["choices"][0]["text"]
-                        summary = clean_prompt_string(choice)
-                        data = eval(summary)
-                        viable_data = data
+                            r = r.json()
+                            logger.info(f"Summary response: {r}")
+                            choice = r["choices"][0]["text"]
+                            summary = clean_prompt_string(choice)
+                            data = eval(summary)
+                            viable_data = data
+                        else:
+                            data = viable_data
                         combined_summary = data.pop("summary")
                         owner_field = set_owner_field(resource_type, user.crm)
                         data[owner_field] = user.crm_account.crm_id
@@ -923,30 +930,35 @@ def _process_get_transcript_and_update_crm(payload, context):
                             swapped_field_data, fields, user.crm, resource
                         )
                         break
-            break
-        except httpx.ReadTimeout:
-            if timeout >= 90.0:
-                blocks = [
-                    block_builders.header_block("AI Generated Call Summary"),
-                    block_builders.context_block(f"Meeting: {meeting.topic}"),
-                    block_builders.simple_section(
-                        "Looks like we had an issue communicating with Open AI"
-                    ),
-                ]
-                break
-            else:
-                timeout += 30.0
-        except Exception as e:
-            logger.exception(e)
-            has_error = True
-            blocks = [
-                block_builders.header_block("AI Generated Call Summary"),
-                block_builders.context_block(f"Meeting: {meeting.topic}"),
-                block_builders.simple_section(
-                    f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
-                ),
-            ]
-            break
+                    except ValueError as e:
+                        if str(e) == "substring not found":
+                            continue
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 90.0:
+                            blocks = [
+                                block_builders.header_block("AI Generated Call Summary"),
+                                block_builders.context_block(f"Meeting: {meeting.topic}"),
+                                block_builders.simple_section(
+                                    "Looks like we had an issue communicating with Open AI"
+                                ),
+                            ]
+                            has_error = True
+                            break
+                        else:
+                            timeout += 30.0
+    except Exception as e:
+        logger.exception(e)
+        has_error = True
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.simple_section(
+                f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
+            ),
+        ]
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
