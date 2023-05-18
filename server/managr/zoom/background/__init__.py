@@ -878,6 +878,8 @@ def _process_get_transcript_and_update_crm(payload, context):
                         .replace("    ", "")
                         .replace(" --> ", "-")
                     )
+                    print(len(transcript_body))
+                    print(transcript_body)
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, transcript_body, 2000, top_p=0.9, temperature=0.7
                     )
