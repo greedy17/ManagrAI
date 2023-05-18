@@ -168,6 +168,7 @@ const actions = {
         res = await CRMObjects.api.getObjectsForWorkflows('Deal', true, filters)
       }
       commit('SAVE_ALL_OPPS', res.results)
+      return res.results
     } catch (e) {
       console.log(e)
     }
