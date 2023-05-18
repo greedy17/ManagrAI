@@ -17,7 +17,7 @@ const state = {
   user: null,
   token: null,
   stages: null,
-  fitlers: [],
+  filters: [],
   meetings: [],
   showToolbarNav: false,
   pollingData: {
@@ -126,7 +126,7 @@ const actions = {
       console.log(e)
     }
   },
-  async loadChatOpps({ state, commit }, page = 1, filters = []) {
+  async loadChatOpps({ state, commit }, page = 1) {
     let resourceName = ''
     if (state.user.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
@@ -143,7 +143,7 @@ const actions = {
     if (!filters.length) {
       res = await CRMObjects.api.getObjects(resourceName, page)
     } else {
-      res = await CRMObjects.api.getObjects(resourceName, page, true, filters)
+      res = await CRMObjects.api.getObjects(resourceName, page, true, state.filters)
     }
     res.results = [...oldResults, ...res.results]
     commit('SAVE_CHAT_OPPS', res)
