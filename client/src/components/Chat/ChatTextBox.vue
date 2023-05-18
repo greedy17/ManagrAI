@@ -3,18 +3,19 @@
     <Transition name="slide-fade">
       <div v-if="templatesOpen" class="templates">
         <section class="section">
-          <header class="template-header">
+          <header style="border-top: none" class="template-header">
             <span class="gray-bg"> 🦾 </span>
-            <p class="gray-title">Action templates</p>
+            <p class="gray-title">Actions</p>
+            <small @click="toggleTemplates" class="automarginleft">x</small>
           </header>
           <div class="template-body">
-            <p>1st template</p>
-            <p>2nd template</p>
-            <p>3rd template</p>
+            <p @click="addTemplate(action.value)" v-for="(action, i) in actions" :key="i">
+              {{ action.name }}
+            </p>
           </div>
         </section>
 
-        <section class="section">
+        <!-- <section class="section">
           <header class="template-header">
             <span class="blue-bg">
               <img src="@/assets/images/article.svg" class="blue-filter" height="14px" alt="" />
@@ -25,14 +26,14 @@
             <p>1st template</p>
             <p>2nd template</p>
           </div>
-        </section>
+        </section> -->
       </div>
     </Transition>
 
     <div class="input-container">
       <div class="main-text">
         <span
-          :class="{ active: templatesOpen }"
+          :class="{ activeicon: templatesOpen }"
           @click="toggleTemplates"
           style="cursor: pointer; font-size: 14px; margin-bottom: 2px"
         >
@@ -77,6 +78,11 @@ export default {
     return {
       message: '',
       templatesOpen: false,
+      actions: [
+        { name: 'Update', value: 'Update Opportunity Pied Piper' },
+        { name: 'Run review', value: 'Run Review for Opportunity Pied Piper' },
+        { name: 'Get summary', value: 'Get Summary for Opportunity Pied Piper' },
+      ],
     }
   },
 
@@ -113,6 +119,10 @@ export default {
       }
     },
 
+    addTemplate(val) {
+      this.message = val
+    },
+
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
     },
@@ -142,6 +152,12 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
 
 .input-section {
   display: flex;
@@ -203,14 +219,15 @@ export default {
 .activemargin {
   padding-left: 1rem;
 }
-.active {
+.activeicon {
   display: block;
   font-size: 10px;
   padding: 1px 4px;
-  background-color: #f8f2e4;
+  background-color: white;
   margin-left: -4px;
   border-radius: 100%;
-  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1);
+  animation: shimmer 1s infinite;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 .gray {
   color: rgb(82, 80, 80);
@@ -236,8 +253,14 @@ export default {
 .template-header {
   display: flex;
   align-items: center;
-  background-color: $soft-gray;
+  // background-color: $soft-gray;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0 1rem;
+
+  p {
+    margin: 0.75rem 0;
+  }
 
   span {
     margin-right: 1rem;
@@ -251,12 +274,18 @@ export default {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  margin-left: 3rem;
 
   p {
     border-radius: 100%;
+    padding-left: 3rem;
     margin: 0.5rem 0.25rem;
-    color: #8e8e8e;
+    color: $base-gray;
+    cursor: pointer;
+    width: 100%;
+
+    &:hover {
+      color: $light-gray-blue;
+    }
   }
 }
 
@@ -305,5 +334,13 @@ export default {
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   transform: translateY(100px);
+}
+
+.automarginleft {
+  margin-left: auto;
+  font-size: 18px;
+  color: $light-gray-blue;
+  margin-top: -0.25rem;
+  cursor: pointer;
 }
 </style>

@@ -26,7 +26,7 @@
           </div>
 
           <div class="modal-row">
-            <p>{{ user.organizationRef.name }}</p>
+            <p>{{ user.organizationRef.name }} -</p>
             <p>{{ user.timezone }}</p>
           </div>
 
@@ -77,6 +77,11 @@
           <div class="profile-row">
             <font-awesome-icon @click="selectedOpp = null" icon="fa-solid fa-user-group" />
             <p class="full-width">{{ user.organizationRef.teamsRef[0].name }}</p>
+          </div>
+
+          <div class="profile-row">
+            <font-awesome-icon @click="selectedOpp = null" icon="fa-solid fa-layer-group" />
+            <p class="full-width">{{ user.userLevel.toLowerCase() }}</p>
           </div>
         </div>
 
@@ -208,7 +213,6 @@ export default {
 @import '@/styles/modals';
 
 body {
-  overflow: auto;
   margin: 0;
   height: 100vh;
   width: 100vw;
@@ -431,7 +435,8 @@ body {
 
   p:first-of-type {
     margin-right: 0.5rem;
-    color: $dark-green;
+    // color: $grape;
+    font-weight: bold;
   }
   p:last-of-type {
     margin-right: 0.5rem;
@@ -496,9 +501,9 @@ body {
   @include chat-button();
   padding: 0.5rem;
   svg {
-    margin-right: 0.75rem;
-    height: 14px;
-    width: 14px;
+    margin-right: 1rem;
+    height: 12px;
+    width: 12px;
     color: $base-gray;
   }
   font-size: 14px;

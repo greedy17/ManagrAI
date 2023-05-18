@@ -6,9 +6,10 @@
           <div class="flexed-row">
             <font-awesome-icon
               @click="selectedOpp = null"
-              style="height: 20px; width: 20px; margin-left: 0"
+              style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
               icon="fa-solid fa-square-caret-left"
             />
+            <!-- <img src="@/assets/images/back.svg" height="14px;width:14px" alt=""> -->
             <p>Opportunity</p>
           </div>
           <div class="flexed-row">
@@ -17,6 +18,7 @@
             <font-awesome-icon
               style="height: 24px; width: 24px; color: #0d9dda"
               icon="fa-brands fa-salesforce"
+              @click="openInCrm(selectedOpp.integration_id)"
             />
           </div>
         </div>
@@ -39,7 +41,11 @@
         <div class="flexed-row-spread">
           <div class="input">
             <img src="@/assets/images/search.svg" height="16px" alt="" />
-            <input v-model="searchText" placeholder="Search Opportunity by name" />
+            <input
+              class="search-input"
+              v-model="searchText"
+              placeholder="Search Opportunity by name"
+            />
             <img
               v-show="searchText"
               @click="clearText"
@@ -50,9 +56,86 @@
             />
           </div>
 
-          <span class="icon-button">
+          <span @click="toggleShowFilters" class="icon-button">
             <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
+            <small class="filter-count">3</small>
           </span>
+
+          <div v-show="filtersOpen" class="filter-container">
+            <header>
+              <p v-if="!selectedFilter">Select Filters</p>
+
+              <div v-else @click="selectedFilter = null" class="flexed-row pointer">
+                <font-awesome-icon
+                  style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
+                  icon="fa-solid fa-square-caret-left"
+                />
+
+                {{ selectedFilter.name }}
+              </div>
+
+              <p @click="toggleShowFilters">x</p>
+            </header>
+
+            <section v-if="!selectedFilter">
+              <div
+                @click="selectFilter(filter)"
+                v-for="filter in filters"
+                :key="filter.name"
+                class="icon-row"
+              >
+                <font-awesome-icon :icon="`fa-solid  ${filter.icon}`" />
+                <p>{{ filter.name }}</p>
+              </div>
+            </section>
+
+            <section v-else>
+              <div>
+                <Multiselect
+                  :placeholder="`${selectedFilter.name} is`"
+                  style="width: 100%; font-size: 14px"
+                  v-model="selectedOperator"
+                  :options="operators"
+                  @select="selectOperator($event.value, $event.label)"
+                  openDirection="below"
+                  selectLabel=""
+                  track-by="value"
+                  label="label"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                </Multiselect>
+
+                <div v-if="selectedFilter.operator">
+                  <input
+                    class="filter-input"
+                    :placeholder="`${selectedFilter.name} is ${selectedFilter.operatorLabel}`"
+                    :type="`${selectedFilter.dataType}`"
+                    v-model="selectedFilter.value"
+                    autofocus="true"
+                  />
+                </div>
+
+                <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
+                  <p>
+                    <span style="color: #9596b4">Filter : </span>
+                    "{{ selectedFilter.name }} is {{ selectedFilter.operatorLabel }}
+                    {{ selectedFilter.value }}"
+                  </p>
+                </div>
+
+                <button
+                  @click="addFilter()"
+                  v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
+                  class="chat-button shimmer"
+                  style="padding: 0.5rem 1rem"
+                >
+                  Add filter
+                </button>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
     </header>
@@ -89,18 +172,8 @@
         class="opp-container"
         @click="changeSelectedOpp(opp)"
         :key="opp.id"
-        @mouseenter="hoveredOpp = opp.id"
-        @mouseleave="hoveredOpp = null"
       >
         <p style="margin: 0">{{ opp.name }}</p>
-
-        <img
-          v-show="hoveredOpp === opp.id"
-          class="expand-absolute shadow"
-          src="@/assets/images/expand.svg"
-          height="14px"
-          alt=""
-        />
       </div>
     </div>
   </section>
@@ -114,15 +187,18 @@ export default {
   name: 'RightBar',
   components: {
     Tooltip,
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
     return {
+      filtersOpen: false,
       hoveredOpp: null,
       searchText: '',
       selectedOpp: null,
       updateOppForm: [],
       oppFields: [],
       notes: [{ id: 0, value: 'Moved close date back to end of June', date: Date.now() }],
+      selectedOperator: null,
       months: {
         0: 'January',
         1: 'February',
@@ -137,11 +213,112 @@ export default {
         10: 'November',
         11: 'December',
       },
+      operators: [
+        { label: 'eqaul to', value: 'EQUALS' },
+        { label: 'greater than', value: 'GREATER_THAN' },
+        { label: 'greater than or equal to', value: 'GREATER_THAN_EQUALS' },
+        { label: 'less than', value: 'LESS_THAN' },
+        { label: 'less than or equal to', value: 'LESS_THAN_EQUALS' },
+        { label: 'contains', value: 'CONTAINS' },
+        { label: 'does not equal', value: 'NOT_EQUALS' },
+      ],
+      selectedFilter: null,
+      filters: [
+        {
+          name: 'Owner',
+          dataType: 'text',
+          icon: 'fa-user',
+          apiName: 'Owner',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Name',
+          dataType: 'text',
+          icon: 'fa-signature',
+          apiname: 'Name',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Stage',
+          dataType: 'text',
+          icon: 'fa-stairs',
+          apiName: 'StageName',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Close date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'CloseDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Amount',
+          dataType: 'number',
+          icon: 'fa-sack-dollar',
+          apiName: 'Amount',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Last activity date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'LastActivityDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+      ],
     }
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    addFilter() {
+      let filter = []
+      // set new filter to array
+      filter = [
+        this.selectedFilter.apiName,
+        this.selectedFilter.operator,
+        this.selectedFilter.value,
+      ]
+      console.log('this is added to the active filters', filter)
+      // add new filter to the filter array in the store, i'll let you add that logic
+      setTimeout(() => {
+        this.toggleShowFilters()
+      }, 200)
+    },
+    selectOperator(val, label) {
+      this.selectedFilter.operator = val
+      this.selectedFilter.operatorLabel = label
+    },
+    selectFilter(filter) {
+      console.log(filter)
+      this.selectedFilter = filter
+    },
+    toggleShowFilters() {
+      this.filtersOpen = !this.filtersOpen
+      this.selectedOperator = null
+      this.selectedFilter = null
+    },
+    openInCrm(id) {
+      let url
+      url =
+        this.user.crm === 'SALESFORCE'
+          ? `${this.user.salesforceAccountRef.instanceUrl}/lighning/r/Opportunity/${id}/view`
+          : ''
+      window.open(url, '_blank')
     },
     clearText() {
       this.searchText = ''
@@ -214,6 +391,9 @@ export default {
         opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
       )
     },
+    user() {
+      return this.$store.state.user
+    },
   },
   created() {
     this.setOppForms()
@@ -227,6 +407,21 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+}
+
+::v-deep .multiselect__single {
+  font-size: 14px;
+}
 
 .right-container {
   display: flex;
@@ -315,12 +510,17 @@ header {
   }
 }
 
+.pointer {
+  cursor: pointer;
+}
+
 .flexed-row-spread {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
+  position: relative;
 
   h4,
   p {
@@ -377,11 +577,22 @@ header {
   padding: 0.25rem 0.25rem;
 }
 
-input {
+.search-input {
   width: 80%;
   padding: 0.5rem 0rem;
   border: none;
   outline: none;
+}
+
+.filter-input {
+  width: 100%;
+  outline: none;
+  border-radius: 6px;
+  border: 1px solid $soft-gray;
+  font-family: $base-font-family;
+  padding: 0.75rem 0.75rem;
+  font-size: 13px;
+  margin-top: 1rem;
 }
 
 ::placeholder {
@@ -407,6 +618,15 @@ input {
   }
 }
 
+.chat-button {
+  @include chat-button();
+  width: 100px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  color: $chat-font-color;
+  background-color: white;
+}
+
 svg,
 img {
   margin: 0 0.5rem;
@@ -415,10 +635,12 @@ img {
 
 .icon-button {
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 0.25rem;
+  padding: 0.45rem 0.25rem;
   background-color: white;
   border-radius: 6px;
   margin-left: 0.5rem;
+  position: relative;
+  cursor: pointer;
 }
 
 .invert {
@@ -472,4 +694,118 @@ img {
   border-style: solid;
   border-color: transparent transparent $dark-green transparent;
 }
+
+//  ALL THE FILTER STYLES BELOW , WILL BE MOING THESE TO THE COMPONENT WHEN IT'S READY
+.filter-count {
+  color: $dark-green;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: $white-green;
+  padding: 0 4px;
+  border-radius: 100%;
+  box-shadow: 0 1px 3px 0 $dark-green;
+}
+
+.filter-container {
+  position: absolute;
+  height: 310px;
+  width: 350px;
+  background-color: white;
+  z-index: 1000;
+  top: 3.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 11px #b8bdc2;
+  right: 0;
+
+  header {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0rem 1rem 1rem;
+
+    p {
+      font-size: 14px;
+      margin: 0;
+      padding: 0;
+    }
+
+    p:last-of-type {
+      margin-top: -8px;
+      margin-right: 8px;
+      padding: 0.25rem;
+      color: $light-gray-blue;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  }
+
+  section {
+    padding: 1rem 0.45rem;
+  }
+}
+
+.icon-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+  margin-left: 0.5rem;
+  height: 30px;
+  cursor: pointer;
+
+  p {
+    margin-right: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+  }
+
+  svg {
+    color: $light-gray-blue;
+    margin-right: 1rem;
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    height: 10px;
+    width: 10px;
+    padding: 0.25rem;
+    border-radius: 6px;
+    margin-left: 1px;
+  }
+
+  &:hover {
+    color: $light-gray-blue;
+  }
+}
+
+.active-filer {
+  svg {
+    color: $white-green;
+    margin-right: 1rem;
+    background-color: $dark-green;
+    height: 12px;
+    width: 12px;
+    padding: 0.3rem;
+    border-radius: 6px;
+    margin-left: 1px;
+  }
+}
+
+.slide-fade-enter-active {
+  transition: all 0.2s ease-in;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.1s ease-out;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(100px);
+}
+//  ALL THE FILTER STYLES ABOVE , WILL BE MOING THESE TO THE COMPONENT WHEN IT'S READY
 </style>

@@ -25,6 +25,10 @@
           <img src="@/assets/images/profile.svg" height="14px" alt="" />
           <span> Profile & Team </span>
         </button>
+
+        <!-- <div class="tooltip">
+
+        </div> -->
       </footer>
     </section>
 

@@ -33,6 +33,8 @@
           <div class="dot"></div>
         </div>
       </div>
+
+      <!-- <div>{{ user.salesforceAccountRef }}</div> -->
     </div>
 
     <ChatTextBox
@@ -86,6 +88,9 @@ export default {
     },
   },
   computed: {
+    user() {
+      return this.$store.state.user
+    },
     userName() {
       return this.$store.state.user.firstName
     },
@@ -234,7 +239,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: $soft-gray;
+  // background-color: $soft-gray;
   border-radius: 6px;
   padding: 0.75rem 0.75rem;
 }
@@ -269,32 +274,32 @@ export default {
   }
 }
 
-@keyframes typing {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
+// @keyframes typing {
+//   from {
+//     width: 0;
+//   }
+//   to {
+//     width: 100%;
+//   }
+// }
 
-@keyframes blinking {
-  0% {
-    border-right-color: transparent;
-  }
-  50% {
-    border-right-color: rgb(66, 65, 65);
-  }
-  100% {
-    border-right-color: transparent;
-  }
-}
+// @keyframes blinking {
+//   0% {
+//     border-right-color: transparent;
+//   }
+//   50% {
+//     border-right-color: rgb(66, 65, 65);
+//   }
+//   100% {
+//     border-right-color: transparent;
+//   }
+// }
 
-.typed {
-  overflow: hidden;
-  white-space: nowrap;
-  width: 0;
-  animation: typing 1.5s steps(30, end) forwards, blinking 1s infinite;
-  border-right: 1px solid;
-}
+// .typed {
+//   overflow: hidden;
+//   white-space: nowrap;
+//   width: 0;
+//   animation: typing 1.5s steps(30, end) forwards, blinking 1s infinite;
+//   border-right: 1px solid;
+// }
 </style>
