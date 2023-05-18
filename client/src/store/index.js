@@ -140,7 +140,7 @@ const actions = {
       oldResults = state.chatOpps.results
     }
     let res
-    if (!filters.length) {
+    if (!state.filters.length) {
       res = await CRMObjects.api.getObjects(resourceName, page)
     } else {
       res = await CRMObjects.api.getObjects(resourceName, page, true, state.filters)
