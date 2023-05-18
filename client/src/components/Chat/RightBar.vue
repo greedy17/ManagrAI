@@ -58,7 +58,7 @@
 
           <span @click="toggleShowFilters" class="icon-button">
             <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
-            <small class="filter-count">3</small>
+            <small v-if="this.$store.state.filters.length" class="filter-count">{{ this.$store.state.filters.length }}</small>
           </span>
 
           <div v-show="filtersOpen" class="filter-container">
@@ -227,7 +227,7 @@ export default {
         11: 'December',
       },
       operators: [
-        { label: 'eqaul to', value: 'EQUALS' },
+        { label: 'equal to', value: 'EQUALS' },
         { label: 'greater than', value: 'GREATER_THAN' },
         { label: 'greater than or equal to', value: 'GREATER_THAN_EQUALS' },
         { label: 'less than', value: 'LESS_THAN' },
@@ -250,7 +250,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiname: 'Name',
+          apiName: 'Name',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -298,26 +298,34 @@ export default {
     test(log) {
       console.log('log', log)
     },
-    addFilter() {
+    async addFilter() {
       let filter = []
       // set new filter to array
+      console.log('this.selectedFilter', this.selectedFilter)
       filter = [
-        this.selectedFilter.apiName,
         this.selectedFilter.operator,
+        this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
       console.log('this is added to the active filters', filter)
       // add new filter to the filter array in the store, i'll let you add that logic
-      setTimeout(() => {
-        this.toggleShowFilters()
-      }, 200)
+      try {
+        this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
+        await this.$store.dispatch('loadChatOpps', 1)
+      } catch(e) {
+        console.log('Error in addFilter', e)
+      } finally {
+        setTimeout(() => {
+          this.toggleShowFilters()
+        }, 200)
+      }
     },
     selectOperator(val, label) {
       this.selectedFilter.operator = val
       this.selectedFilter.operatorLabel = label
     },
     selectFilter(filter) {
-      console.log(filter)
+      console.log('filter', filter)
       this.selectedFilter = filter
     },
     toggleShowFilters() {
@@ -343,13 +351,6 @@ export default {
       // this.$store.dispatch('changeFilters', [['EQUALS', 'Name', 'Marriot']])
       // await this.$store.dispatch('loadChatOpps', this.page)
       this.filtering = !this.filtering
-    },
-    selectFilter(name, type, label) {
-      this.filtering = !this.filtering
-      this.filterApiName = name
-      this.filterType = type
-      this.currentFilter = label
-      this.filterSelected = true
     },
     async setOppForms() {
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
