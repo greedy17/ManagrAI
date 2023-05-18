@@ -629,32 +629,23 @@ def convert_date_string(date_string, value):
                 day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
                 if any("next" in s for s in split_date_string):
                     day_value = day_value + timezone.timedelta(days=7)
-                logger.info(f"CONVERT DATE STRING DEBUGGER: DAY SPECIFIC {day_value}")
                 return day_value
     elif any("end" in s for s in split_date_string):
         if any("week" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             start = current - timezone.timedelta(days=current.weekday())
-            logger.info(
-                f"CONVERT DATE STRING DEBUGGER: END WEEK {start + timezone.timedelta(days=4)}"
-            )
             return start + timezone.timedelta(days=4)
         elif any("month" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             last_of_month = calendar.monthrange(current.year, current.month)[1]
-            logger.info(
-                f"CONVERT DATE STRING DEBUGGER: END MONTH {current.replace(day=last_of_month)}"
-            )
             return current.replace(day=last_of_month)
     elif any("week" in s for s in split_date_string):
         current = datetime.strptime(value, "%Y-%m-%d")
-        logger.info(f"CONVERT DATE STRING DEBUGGER: WEEK {current + timezone.timedelta(days=7)}")
         return current + timezone.timedelta(days=7)
     if "back" in date_string:
         new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
             days=(time_key * number_key)
         )
-        logger.info(f"CONVERT DATE STRING DEBUGGER: END IF {new_value}")
     else:
         if time_key:
             new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
@@ -667,7 +658,6 @@ def convert_date_string(date_string, value):
             except Exception as e:
                 print(e)
                 new_value = value
-        logger.info(f"CONVERT DATE STRING DEBUGGER: BACK ELSE {new_value}")
     return new_value
 
 
@@ -751,7 +741,6 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
-    logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
 
@@ -791,6 +780,7 @@ def _process_get_transcript_and_update_crm(payload, context):
     from managr.utils.client import Variable_Client
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
+    from managr.core.utils import max_token_calculator
     import httpx
 
     pm = json.loads(payload["view"]["private_metadata"])
@@ -867,11 +857,8 @@ def _process_get_transcript_and_update_crm(payload, context):
                     start_index = end_index
                     current_minute += 5
             if not len(summary_parts):
-                transcript_part_logger_message = "Summarizing part: "
                 for index, transcript_part in enumerate(split_transcript):
-                    transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
-                        transcript_part, fields_list
-                    )
+                    transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
                     transcript_body = (
                         transcript_body.replace("\r\n", "")
                         .replace("\n", "")
@@ -882,9 +869,6 @@ def _process_get_transcript_and_update_crm(payload, context):
                         user.email, transcript_body, 200, top_p=0.9, temperature=0.7
                     )
                     with Variable_Client() as client:
-                        logger.info(
-                            f"{transcript_part_logger_message}{index + 1}/{len(split_transcript)}"
-                        )
                         url = core_consts.OPEN_AI_COMPLETIONS_URI
                         r = client.post(
                             url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
@@ -895,16 +879,17 @@ def _process_get_transcript_and_update_crm(payload, context):
                         summary = (
                             summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
                         )
-                        summary_parts.append(summary)
+                        summary_split = summary.split("Summary:")
+                        summary_parts.append(summary_split[1])
             if len(summary_parts):
                 summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
                     fields_list, summary_parts
                 )
                 body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                    user.email, summary_body, 2000, top_p=0.9, temperature=0.7
+                    user.email, summary_body, 500, top_p=0.9, temperature=0.7
                 )
                 viable_data = False
-                timeout = 30.0
+                timeout = 60.0
                 while True:
                     try:
                         logger.info("Combining Summary parts")
@@ -922,7 +907,11 @@ def _process_get_transcript_and_update_crm(payload, context):
                             viable_data = data
                         else:
                             data = viable_data
-                        combined_summary = data.pop("summary")
+                        combined_summary = (
+                            data.pop("summary", None)
+                            if data.get("summary", None)
+                            else data.pop("Summary", None)
+                        )
                         owner_field = set_owner_field(resource_type, user.crm)
                         data[owner_field] = user.crm_account.crm_id
                         swapped_field_data = swap_submitted_data_labels(data, fields)
@@ -933,6 +922,8 @@ def _process_get_transcript_and_update_crm(payload, context):
                     except ValueError as e:
                         if str(e) == "substring not found":
                             continue
+                    except SyntaxError as e:
+                        continue
                     except httpx.ReadTimeout:
                         logger.exception(
                             f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
@@ -1007,3 +998,4 @@ def _process_get_transcript_and_update_crm(payload, context):
             f"ERROR sending update channel message for chat submittion because of <{e}>"
         )
     return
+

@@ -89,16 +89,17 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript, fields: f"""You are a VP of Sales reviewing a sales rep's call. Below is a 5min snippet from a call transcript. Follow these instructions carefully:
-    1) Create one summary, in paragraph form. The summary needs to be 500 to 800 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
-    2) Output format: must return in a dictionary.
-    Transcript: {transcript}\nResponse should be in paragraph form, just the summary
+    lambda transcript: f"""You are a VP of Sales reviewing a sales rep's call via transcript. These transcripts are typically between 20-60 minutes long. Below is just a 5 minute section of the call transcript. Follow these instructions carefully:
+1) Summarize this section in paragraph form. The summary needs to be 500 to 800 characters.
+2) The summary must include the following (if discussed): customer pain, observations, objections, objection handling, competitors mentioned, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+3) Desired format:\n Summary: <summary>\n
+    Transcript: {transcript}
     """
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
     lambda fields, summaries: f"""You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
-    1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+    1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, objections, objection handling, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, engaging, conversational, and slightly witty.
     2) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary
     3) The output must return in a python dictionary. The summary must be added to the dictionary using a key called 'summary'.
     CRM fields:{fields}\nSummaries: {summaries}"""
