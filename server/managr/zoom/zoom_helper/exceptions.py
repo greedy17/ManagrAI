@@ -24,7 +24,7 @@ class InvalidRequest(Exception):
 
 
 class RecordingNotFound(Exception):
-    def __init__(self, message="We could not find a recording for this meeting!"):
+    def __init__(self, message=":no_entry_sign: We could not find a recording for this meeting!"):
         self.message = message
         super().__init__(self.message)
 
