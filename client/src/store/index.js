@@ -126,6 +126,9 @@ const actions = {
       console.log(e)
     }
   },
+  changeFilters({ commit }, filters) {
+    commit('UPDATE_FILTERS', filters)
+  },
   async loadChatOpps({ state, commit }, page = 1) {
     let resourceName = ''
     if (state.user.crm === 'SALESFORCE') {
@@ -140,6 +143,7 @@ const actions = {
       oldResults = state.chatOpps.results
     }
     let res
+    console.log('state.filters', state.filters)
     if (!state.filters.length) {
       res = await CRMObjects.api.getObjects(resourceName, page)
     } else {

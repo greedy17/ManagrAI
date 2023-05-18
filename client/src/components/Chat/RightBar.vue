@@ -140,7 +140,9 @@ export default {
     changeSelectedOpp(opp) {
       this.selectedOpp = opp
     },
-    switchFiltering() {
+    async switchFiltering() {
+      // this.$store.dispatch('changeFilters', [['EQUALS', 'Name', 'Marriot']])
+      // await this.$store.dispatch('loadChatOpps', this.page)
       this.filtering = !this.filtering
     },
     selectFilter(name, type, label) {
@@ -230,7 +232,8 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.$store.dispatch('loadChatOpps')
+    this.$store.dispatch('changeFilters', [])
+    await this.$store.dispatch('loadChatOpps')
     console.log('created displayedOpps', this.displayedOpps)
     this.setOppForms()
   },
