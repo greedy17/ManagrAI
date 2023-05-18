@@ -10,18 +10,20 @@ from django.utils import timezone
 from background_task import background
 from managr.api.decorators import log_all_exceptions, slack_api_exceptions
 from managr.core.models import User
-from managr.hubspot.models import HSObjectFieldsOperation, HSResourceSync
+from .models import HSObjectFieldsOperation, HSResourceSync
+from .adapter.models import HubspotContactAdapter
+from .routes import routes as routes
+from . import constants as hs_consts
+from .decorators import hs_api_exceptions_wf
+
 from managr.crm.models import ObjectField
 from managr.salesforce.background import _send_recap
 from managr.crm.routes import adapter_routes as adapter_routes
 from managr.crm.serializers import BaseContactSerializer, ObjectFieldSerializer
-from managr.hubspot.routes import routes as routes
-from managr.hubspot import constants as hs_consts
 from managr.crm.exceptions import TokenExpired, CannotRetreiveObjectType, UnhandledCRMError
 from managr.slack import constants as slack_consts
 from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
 from managr.salesforce.models import MeetingWorkflow
-from managr.hubspot.adapter.models import HubspotContactAdapter
 from managr.crm.utils import create_form_instance, process_text_field_format
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
@@ -354,6 +356,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
 @background(
     schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
+@hs_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
     # get workflow
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -543,6 +546,7 @@ RESOURCE_ASSOCIATIONS = {"deal": {"contact": 4}}
 
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE)
+@hs_api_exceptions_wf("add_call_log")
 def _process_add_call_to_hs(workflow_id, *args):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     user = workflow.user
