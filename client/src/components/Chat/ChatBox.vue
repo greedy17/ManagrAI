@@ -1,7 +1,7 @@
 <template>
   <section class="chat-container">
     <header class="title-header"><p>All Open Opportunities</p></header>
-    <div class="margin-top">
+    <div class="margin-top" ref="chatWindow">
       <div v-for="message in messages" :key="message.id" class="message-container">
         <div class="images">
           <img
@@ -18,9 +18,31 @@
           <p>{{ message.value }}</p>
         </div>
       </div>
+
+      <div v-show="messageLoading" class="loader-container">
+        <img
+          class="green-filter"
+          style="margin-right: 1rem"
+          src="@/assets/images/logo.png"
+          height="30px"
+        />
+
+        <div class="loading">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <!-- <div>{{ user.salesforceAccountRef }}</div> -->
     </div>
 
-    <ChatTextBox class="bottom" :messages="messages" :scrollToBottom="scrollToBottom" />
+    <ChatTextBox
+      class="bottom"
+      @message-loading="setLoader"
+      :messages="messages"
+      :scrollToBottom="scrollToBottom"
+    />
   </section>
 </template>
   
@@ -35,6 +57,7 @@ export default {
   data() {
     return {
       // user: { },
+      messageLoading: false,
       messages: [
         // { id: 0, value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", user: '1' },
         {
@@ -55,17 +78,24 @@ export default {
   },
   methods: {
     scrollToBottom() {
-      const chatWindow = this.$refs.chatWindow
-      if (chatWindow && chatWindow.scrollHeight) {
+      setTimeout(() => {
+        const chatWindow = this.$refs.chatWindow
         chatWindow.scrollTop = chatWindow.scrollHeight
-      }
+      }, 0)
+    },
+    setLoader(val) {
+      this.messageLoading = val
     },
   },
   computed: {
+    user() {
+      return this.$store.state.user
+    },
     userName() {
       return this.$store.state.user.firstName
     },
   },
+
   created() {
     this.scrollToBottom()
   },
@@ -88,12 +118,8 @@ export default {
   padding: 1rem 1.5rem;
   font-size: 14px;
   position: relative;
-  position: relative;
 }
-.messages-container {
-  height: 90%;
-  overflow-y: scroll;
-}
+
 .message-container {
   display: flex;
   align-items: flex-start;
@@ -106,8 +132,25 @@ export default {
   }
 }
 .margin-top {
-  margin: 4rem 0 1rem 0;
+  margin-top: 4rem;
+  height: 96%;
+  overflow-y: scroll;
 }
+// .margin-top:hover {
+//   overflow-y: auto;
+//   scroll-behavior: smooth;
+// }
+
+// .margin-top::-webkit-scrollbar {
+//   width: 6px;
+//   height: 0px;
+//   margin-left: 0.25rem;
+// }
+// .margin-top::-webkit-scrollbar-thumb {
+//   background-color: $base-gray;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 6px;
+// }
 .container-padding {
   border-radius: 6px;
   padding: 0.5rem;
@@ -116,14 +159,14 @@ export default {
 .ai-text-container {
   background-color: $soft-gray;
   border-radius: 6px;
-  padding: 1rem 0.75rem;
-  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  line-height: 1.75;
 }
 
 .text-container {
   padding: 0 0.5rem;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.75;
 }
 
 .images {
@@ -132,7 +175,7 @@ export default {
 }
 
 .bottom {
-  position: absolute;
+  position: sticky;
   bottom: 0;
   left: 0;
 }
@@ -184,4 +227,79 @@ export default {
   filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
     contrast(82%);
 }
+
+.loader-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // background-color: $soft-gray;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// @keyframes typing {
+//   from {
+//     width: 0;
+//   }
+//   to {
+//     width: 100%;
+//   }
+// }
+
+// @keyframes blinking {
+//   0% {
+//     border-right-color: transparent;
+//   }
+//   50% {
+//     border-right-color: rgb(66, 65, 65);
+//   }
+//   100% {
+//     border-right-color: transparent;
+//   }
+// }
+
+// .typed {
+//   overflow: hidden;
+//   white-space: nowrap;
+//   width: 0;
+//   animation: typing 1.5s steps(30, end) forwards, blinking 1s infinite;
+//   border-right: 1px solid;
+// }
 </style>
