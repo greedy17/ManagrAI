@@ -36,7 +36,7 @@
 
         <div class="flexed-row-spread">
           <input v-model="searchText" placeholder="Seach Opportunities by name" />
-          <span class="icon-button">
+          <span class="icon-button" @click="switchFiltering">
             <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
           </span>
         </div>
@@ -98,7 +98,9 @@ import CollectionManager from '@/services/collectionManager'
 
 export default {
   name: 'RightBar',
-  components: {},
+  components: {
+    
+  },
   data() {
     return {
       searchText: '',
@@ -113,7 +115,6 @@ export default {
         //   crmObject: 'Opportunity',
         // },
       }),
-      displayedOpps: [],
       page: 1,
       notes: [{ id: 0, value: 'Moved close date back to end of June', date: Date.now() }],
       months: {
@@ -138,6 +139,16 @@ export default {
     },
     changeSelectedOpp(opp) {
       this.selectedOpp = opp
+    },
+    switchFiltering() {
+      this.filtering = !this.filtering
+    },
+    selectFilter(name, type, label) {
+      this.filtering = !this.filtering
+      this.filterApiName = name
+      this.filterType = type
+      this.currentFilter = label
+      this.filterSelected = true
     },
     async setOppForms() {
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
@@ -197,18 +208,19 @@ export default {
     },
     async loadMoreOpps() {
       this.page += 1
-      const oldResults = this.displayedOpps.results
-      const res = await CRMObjects.api.getObjects(this.resourceName, this.page)
-      this.displayedOpps = res
-      const newResults = [...oldResults, ...res.results]
-      this.displayedOpps.results = newResults
+      await this.$store.dispatch('loadChatOpps', this.page)
     },
   },
   computed: {
     opportunities() {
-      return this.displayedOpps.results.filter((opp) =>
-        opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
-      )
+      if (this.displayedOpps.results) {
+        return this.displayedOpps.results.filter((opp) =>
+          opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        )
+      } else return []
+    },
+    displayedOpps() {
+      return this.$store.state.chatOpps
     },
     userCRM() {
       return this.$store.state.user.crm
@@ -218,7 +230,8 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.displayedOpps = await CRMObjects.api.getObjects(this.resourceName)
+    this.$store.dispatch('loadChatOpps')
+    console.log('created displayedOpps', this.displayedOpps)
     this.setOppForms()
   },
 }

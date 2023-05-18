@@ -17,6 +17,7 @@ const state = {
   user: null,
   token: null,
   stages: null,
+  fitlers: [],
   meetings: [],
   showToolbarNav: false,
   pollingData: {
@@ -27,6 +28,7 @@ const state = {
   pollingItems: [],
   pricebooks: null,
   allOpps: [],
+  chatOpps: [],
   allContacts: [],
   allAccounts: [],
   allLeads: [],
@@ -49,6 +51,9 @@ const mutations = {
   UPDATE_USER: (state, payload) => {
     state.user = payload
   },
+  UPDATE_FILTERS: (state, payload) => {
+    state.filters = payload
+  },
   UPDATE_USERTOKEN: (state, payload) => {
     state.token = payload
   },
@@ -63,6 +68,9 @@ const mutations = {
   },
   SAVE_ALL_OPPS(state, allOpps) {
     state.allOpps = allOpps
+  },
+  SAVE_CHAT_OPPS(state, chatOpps) {
+    state.chatOpps = chatOpps
   },
   SAVE_ALL_CONTACTS(state, allContacts) {
     state.allContacts = allContacts
@@ -117,6 +125,29 @@ const actions = {
     } catch (e) {
       console.log(e)
     }
+  },
+  async loadChatOpps({ state, commit }, page = 1, filters = []) {
+    let resourceName = ''
+    if (state.user.crm === 'SALESFORCE') {
+      resourceName = 'Opportunity'
+    } else if (state.user.crm === 'HUBSPOT') {
+      resourceName = 'Deal'
+    } else {
+      resourceName = 'Opportunity'
+    }
+    let oldResults = []
+    if (page > 1) {
+      oldResults = state.chatOpps.results
+    }
+    let res
+    if (!filters.length) {
+      res = await CRMObjects.api.getObjects(resourceName, page)
+    } else {
+      res = await CRMObjects.api.getObjects(resourceName, page, true, filters)
+    }
+    res.results = [...oldResults, ...res.results]
+    commit('SAVE_CHAT_OPPS', res)
+    return res
   },
   async loadAllOpps({ state, commit }, filters = []) {
     try {
