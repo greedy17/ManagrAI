@@ -238,3 +238,26 @@ class ZoomAcct:
         logger.info(f"Compiance API: {r.json()}")
 
         return ZoomAcct._handle_response(r)
+
+    @staticmethod
+    def get_meeting_data(meeting_id, token):
+        r = client.get(
+            f"{zoom_model_consts.ZOOM_API_ENDPOINT}/meetings/{meeting_id}/recordings",
+            headers=dict(Authorization=(f"Bearer {token}")),
+        )
+        return ZoomAcct._handle_response(r)
+
+    @staticmethod
+    def get_transcript(url, token):
+        r = client.get(url, headers=dict(Authorization=(f"Bearer {token}")), allow_redirects=True)
+        return r.content
+
+    @staticmethod
+    def get_meetings_by_date(token, zoom_id, date):
+        query = urlencode({"from": date, "to": date})
+        r = client.get(
+            f"{zoom_model_consts.ZOOM_API_ENDPOINT}/users/{zoom_id}/meetings?{query}",
+            headers=dict(Authorization=(f"Bearer {token}")),
+        )
+        return ZoomAcct._handle_response(r)
+

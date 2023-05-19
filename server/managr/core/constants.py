@@ -88,14 +88,34 @@ OPEN_AI_DEAL_REVIEW = (
     \nUse the deal data below to make your assessment, data is coming from either Salesforce or HubSpot CRM. Account for labels being the API name. CRM Data: {data}"""
 )
 
+OPEN_AI_TRANSCRIPT_PROMPT = (
+    lambda transcript: f"""You are a VP of Sales reviewing a sales rep's call via transcript. These transcripts are typically between 20-60 minutes long. Below is just a 5 minute section of the call transcript. Follow these instructions carefully:
+1) Summarize this section in paragraph form. The summary needs to be 500 to 800 characters.
+2) The summary must include the following (if discussed): customer pain, observations, objections, objection handling, competitors mentioned, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
+3) Desired format:\n Summary: <summary>\n
+    Transcript: {transcript}
+    """
+)
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=None, top_p=None):
+OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
+    lambda fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
+1) You are VP of Sales. Create one summary, in paragraph of how this call went. Include relevant data regarding: customer pain, customer objections, objection handling by salesperson, competitors mentioned, timeline to close, decision process, the next steps and overall tone of the meeting.
+2) The summary must be no less than 1,500 characters and no greater than 2,000 characters.
+3) Write the summary using casual, engaging, conversational, and slightly witty tone.
+4) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary.\n
+5) The output must be a python dictionary. The summary must be added to the dictionary using a key called 'summary'.\n
+    CRM fields:{fields}\nSummaries: {summaries}"""
+)
+
+
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=False, temperature=False, top_p=False):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,
-        "max_tokens": token_amount,
         "user": user_name,
     }
+    if token_amount:
+        body["max_tokens"] = token_amount
     if temperature:
         body["temperature"] = temperature
     if top_p:

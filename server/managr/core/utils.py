@@ -14,6 +14,12 @@ from collections import OrderedDict
 from managr.core import constants as core_const
 
 
+def max_token_calculator(character_count, add_tokens):
+    base_count = character_count / 4
+    token_count = base_count + add_tokens
+    return int(token_count)
+
+
 def qsort(inlist, obj):
     if inlist == []:
         return []

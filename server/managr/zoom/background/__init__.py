@@ -32,6 +32,7 @@ from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
+from managr.core.exceptions import StopReasonLength
 
 logger = logging.getLogger("managr")
 
@@ -68,6 +69,10 @@ def emit_kick_off_slack_interaction(user_id, managr_meeting_id, schedule=0):
 
 def emit_process_schedule_zoom_meeting(user, zoom_data):
     return _process_schedule_zoom_meeting(user, zoom_data)
+
+
+def emit_process_get_transcript_and_update_crm(payload, context, schedule):
+    return _process_get_transcript_and_update_crm(payload, context, schedule=schedule)
 
 
 def _send_zoom_error_message(user, meeting_uuid):
@@ -551,3 +556,454 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         return res
     except Exception as e:
         logger.warning(f"Zoom schedule error: {e}")
+
+
+def clean_prompt_string(prompt_string):
+    cleaned_string = (
+        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
+        .replace("\n\n", "")
+        .replace("\n ", "")
+        .replace("\n", "")
+        .replace("  ", "")
+        .replace("', '", '", "')
+        .replace("': '", '": "')
+        .replace("{'", '{"')
+        .replace("','", '","')
+        .replace("':", '":')
+        .replace(", '", ', "')
+    )
+    while "{  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("{  ", "{ ")
+    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
+    return cleaned_string
+
+
+WORD_TO_NUMBER = {
+    "a": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365, "tomorrow": 1}
+DAYS_TO_NUMBER = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
+
+
+def convert_date_string(date_string, value):
+    from django.utils import timezone
+    import calendar
+    from dateutil.parser import parse
+
+    if value is None:
+        value = datetime.now()
+    else:
+        value = value.split("T")[0]
+    split_date_string = date_string.lower().split(" ")
+    time_key = None
+    number_key = 1
+    if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
+        for key in split_date_string:
+            if key in TIME_TO_NUMBER.keys():
+                time_key = TIME_TO_NUMBER[key]
+            if key in WORD_TO_NUMBER:
+                number_key = WORD_TO_NUMBER[key]
+    elif any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
+        for key in split_date_string:
+            if key in DAYS_TO_NUMBER.keys():
+                current = datetime.now()
+                start = current - timezone.timedelta(days=current.weekday())
+                day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
+                if any("next" in s for s in split_date_string):
+                    day_value = day_value + timezone.timedelta(days=7)
+                return day_value
+    elif any("end" in s for s in split_date_string):
+        if any("week" in s for s in split_date_string):
+            current = datetime.strptime(value, "%Y-%m-%d")
+            start = current - timezone.timedelta(days=current.weekday())
+            return start + timezone.timedelta(days=4)
+        elif any("month" in s for s in split_date_string):
+            current = datetime.strptime(value, "%Y-%m-%d")
+            last_of_month = calendar.monthrange(current.year, current.month)[1]
+            return current.replace(day=last_of_month)
+    elif any("week" in s for s in split_date_string):
+        current = datetime.strptime(value, "%Y-%m-%d")
+        return current + timezone.timedelta(days=7)
+    if "back" in date_string:
+        new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
+            days=(time_key * number_key)
+        )
+    else:
+        if time_key:
+            new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
+                days=(time_key * number_key)
+            )
+        else:
+            try:
+                date_parsed = parse(date_string)
+                new_value = date_parsed
+            except Exception as e:
+                print(e)
+                new_value = value
+    return new_value
+
+
+def clean_prompt_return_data(data, fields, crm, resource=None):
+    cleaned_data = dict(data)
+    notes = cleaned_data.pop("meeting_comments", None)
+    subject = cleaned_data.pop("meeting_type", None)
+    for key in cleaned_data.keys():
+        try:
+            field = fields.get(api_name=key)
+            if resource and field.api_name in ["Name", "dealname"]:
+                cleaned_data[key] = resource.secondary_data[key]
+            if cleaned_data[key] is None or cleaned_data[key] == "":
+                if resource:
+                    cleaned_data[key] = resource.secondary_data[key]
+                continue
+            elif field.data_type == "TextArea":
+                if resource and data[key] is not None:
+                    current_value = (
+                        resource.secondary_data[key]
+                        if resource.secondary_data[key] is not None
+                        else " "
+                    )
+                    cleaned_data[key] = f"{data[key]}\n\n{current_value}"
+            elif field.data_type in ["Date", "DateTime"]:
+                data_value = data[key]
+                current_value = resource.secondary_data[key] if resource else None
+                new_value = convert_date_string(data_value, current_value)
+                if isinstance(new_value, str):
+                    if resource:
+                        cleaned_data[key] = resource.secondary_data[key]
+                    else:
+                        cleaned_data[key] = None
+                else:
+                    cleaned_data[key] = (
+                        str(new_value.date())
+                        if crm == "SALESFORCE"
+                        else (str(new_value.date()) + "T00:00:00.000Z")
+                    )
+            elif field.api_name == "dealstage":
+                if resource:
+                    pipeline = field.options[0][resource.secondary_data["pipeline"]]
+                    if pipeline:
+                        stage_value = data[key].lower()
+                        stage = [
+                            stage
+                            for stage in pipeline["stages"]
+                            if stage["label"].lower() == stage_value
+                        ]
+                        if len(stage):
+                            cleaned_data[key] = stage[0]["id"]
+                        else:
+                            cleaned_data[key] = resource.secondary_data["dealstage"]
+            elif field.api_name in ["Amount", "amount"]:
+                if isinstance(cleaned_data[key], int):
+                    continue
+                amount = cleaned_data[key]
+                if "k" in amount:
+                    amount = amount.replace("k", "000.0")
+                if "$" in amount:
+                    amount = amount.replace("$", "")
+                cleaned_data[key] = amount
+            elif field.data_type == "Picklist":
+                if crm == "HUBSPOT":
+                    options = field.options
+                else:
+                    options = field.crm_picklist_options.values
+                value_found = False
+                for value in options:
+                    lowered_value = cleaned_data[key].lower()
+                    current_value_label = value["label"].lower()
+                    if lowered_value in current_value_label:
+                        value_found = True
+                        cleaned_data[key] = value["value"]
+                if not value_found:
+                    if resource:
+                        cleaned_data[key] = resource.secondary_data[key]
+                    else:
+                        cleaned_data[key] = None
+        except ValueError:
+            continue
+    cleaned_data["meeting_comments"] = notes
+    cleaned_data["meeting_type"] = subject
+    return cleaned_data
+
+
+def swap_submitted_data_labels(data, fields):
+    api_key_data = {}
+    for label in data.keys():
+        try:
+            field_list = fields.filter(label__icontains=label)
+            field = None
+            for field_value in field_list:
+                if len(field_value.label) == len(label):
+                    field = field_value
+                    break
+            api_key_data[field.api_name] = data[label]
+        except Exception as e:
+            continue
+    return api_key_data
+
+
+def set_owner_field(resource, crm):
+    if resource in ["Opportunity", "Account", "Contact"] and crm == "SALESFORCE":
+        return "Owner ID"
+    elif resource == "Company":
+        return "Company owner"
+    elif resource == "Contact" and crm == "HUBSPOT":
+        return "Contact owner"
+    elif resource == "Deal":
+        return "Deal owner"
+    return None
+
+
+@background()
+def _process_get_transcript_and_update_crm(payload, context):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.crm.utils import CRM_SWITCHER
+    from managr.utils.client import Variable_Client
+    from managr.core import constants as core_consts
+    from managr.core.exceptions import _handle_response
+    from managr.core.utils import max_token_calculator
+    import httpx
+
+    pm = json.loads(payload["view"]["private_metadata"])
+    user = User.objects.get(id=pm.get("u"))
+    state = payload["view"]["state"]["values"]
+    try:
+        loading_res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set(
+                "loading", {"message": "Summarizing your call. This may take a few minutes..."}
+            ),
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    selected_options = state["selected_object"]
+    resource_type = context.get("resource_type")
+    resource_list = [
+        key for key in selected_options.keys() if "MEETING__PROCESS_TRANSCRIPT_TASK" in key
+    ]
+    value_key = "None"
+    if len(resource_list):
+        value_key = resource_list[0]
+    selected_option = selected_options[value_key]["selected_option"]["value"]
+    workflow = MeetingWorkflow.objects.get(id=pm.get("w"))
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
+        integration_id=selected_option
+    )
+    form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
+    fields = form_template.custom_fields.all()
+    fields_list = list(fields.values_list("label", flat=True))
+    workflow.resource_id = str(resource.id)
+    workflow.resource_type = resource_type
+    workflow.save()
+    meeting = workflow.meeting
+    has_error = False
+    summary_parts = []
+    try:
+        logger.info("Retreiving meeting data...")
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        logger.info("Done!")
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        if len(filtered_recordings):
+            recording_obj = filtered_recordings[0]
+            download_url = recording_obj["download_url"]
+            transcript = meeting.meeting_account.helper_class.get_transcript(
+                download_url, meeting.meeting_account.access_token
+            )
+            transcript = transcript.decode("utf-8")
+            current_minute = 5
+            start_index = 0
+            split_transcript = []
+            while True:
+                check_time = (
+                    f"00:0{str(current_minute)}:"
+                    if current_minute == 5
+                    else f"00:{str(current_minute)}:"
+                )
+                end_index = transcript.find(check_time)
+                if end_index == -1:
+                    split_transcript.append(transcript[start_index:])
+                    break
+                else:
+                    split_transcript.append(transcript[start_index:end_index])
+                    start_index = end_index
+                    current_minute += 5
+            if not len(summary_parts):
+                for index, transcript_part in enumerate(split_transcript):
+                    transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
+                    transcript_body = (
+                        transcript_body.replace("\r\n", "")
+                        .replace("\n", "")
+                        .replace("    ", "")
+                        .replace(" --> ", "-")
+                    )
+                    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                        user.email, transcript_body, 500, top_p=0.9, temperature=0.7
+                    )
+                    with Variable_Client() as client:
+                        url = core_consts.OPEN_AI_COMPLETIONS_URI
+                        r = client.post(
+                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                        r = _handle_response(r)
+                        summary = r.get("choices")[0].get("text")
+
+                        summary = (
+                            summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
+                        )
+                        summary_split = summary.split("Summary:")
+                        summary_parts.append(summary_split[1])
+            if len(summary_parts):
+
+                viable_data = False
+                timeout = 60.0
+                tokens = 500
+                while True:
+                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
+                        fields_list, summary_parts
+                    )
+                    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                        user.email, summary_body, tokens, top_p=0.9, temperature=0.7
+                    )
+                    try:
+                        logger.info("Combining Summary parts")
+                        if not viable_data:
+                            with Variable_Client(timeout) as client:
+                                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                                r = client.post(
+                                    url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                                )
+                            r = _handle_response(r)
+                            logger.info(f"Summary response: {r}")
+                            choice = r["choices"][0]["text"]
+                            summary = clean_prompt_string(choice)
+                            data = eval(summary)
+                            viable_data = data
+                        else:
+                            data = viable_data
+                        combined_summary = (
+                            data.pop("summary", None)
+                            if data.get("summary", None)
+                            else data.pop("Summary", None)
+                        )
+                        owner_field = set_owner_field(resource_type, user.crm)
+                        data[owner_field] = user.crm_account.crm_id
+                        swapped_field_data = swap_submitted_data_labels(data, fields)
+                        cleaned_data = clean_prompt_return_data(
+                            swapped_field_data, fields, user.crm, resource
+                        )
+                        break
+                    except StopReasonLength:
+                        tokens += 500
+                        continue
+                    except ValueError as e:
+                        print(e)
+                        if str(e) == "substring not found":
+                            continue
+                    except SyntaxError as e:
+                        print(e)
+                        continue
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 90.0:
+                            blocks = [
+                                block_builders.header_block("AI Generated Call Summary"),
+                                block_builders.context_block(f"Meeting: {meeting.topic}"),
+                                block_builders.simple_section(
+                                    "Looks like we had an issue communicating with Open AI"
+                                ),
+                            ]
+                            has_error = True
+                            break
+                        else:
+                            timeout += 30.0
+    except Exception as e:
+        logger.exception(e)
+        has_error = True
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.simple_section(
+                f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
+            ),
+        ]
+    if not has_error:
+        form_check = workflow.forms.all().filter(template=form_template).first()
+        if form_check:
+            new_form = form_check
+        else:
+            new_form = OrgCustomSlackFormInstance.objects.create(
+                user=user,
+                template=form_template,
+                resource_id=str(resource.id),
+                update_source="transcript",
+                workflow=workflow,
+            )
+            new_form.save_form(cleaned_data, False)
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.divider_block(),
+            block_builders.simple_section(f"{resource_type}: {resource.display_value}"),
+            block_builders.simple_section(combined_summary, "mrkdwn"),
+            block_builders.divider_block(),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        f"Review & Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",
+                        "LAUNCH_REVIEW",
+                        action_id=action_with_params(
+                            slack_consts.CALL_LAUNCH_SUMMARY_REVIEW,
+                            [f"form_id={str(new_form.id)}&u={str(user.id)}&w={str(workflow.id)}"],
+                        ),
+                    )
+                ]
+            ),
+            block_builders.context_block(
+                f"Your {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been updated, please review."
+            ),
+        ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            loading_res["message"]["ts"],
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+

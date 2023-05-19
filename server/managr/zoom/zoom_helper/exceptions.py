@@ -6,19 +6,25 @@ logger = logging.getLogger("managr")
 
 
 class TokenExpired(Exception):
-    def __init(self, message="Token Expired"):
+    def __init__(self, message="Token Expired"):
         self.message = message
         super().__init__(self.message)
 
 
 class AccountSubscriptionLevel(Exception):
-    def __init(self, message="Account Level Basic Not Allowed"):
+    def __init__(self, message="Account Level Basic Not Allowed"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidRequest(Exception):
-    def __init(self, message="Invalid Request Sent"):
+    def __init__(self, message="Invalid Request Sent"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class RecordingNotFound(Exception):
+    def __init__(self, message=":no_entry_sign: We could not find a recording for this meeting!"):
         self.message = message
         super().__init__(self.message)
 
@@ -53,6 +59,8 @@ class ZoomAPIException:
             raise AccountSubscriptionLevel(self.message)
         elif self.status_code == 400 and not self.code:
             raise InvalidRequest(f"The request was invalid {self.param}")
+        elif self.status_code == 404 and self.code == 3301:
+            raise RecordingNotFound()
         else:
             raise ValidationError(
                 {"detail": {"key": self.code, "message": self.message, "field": self.param,}}
