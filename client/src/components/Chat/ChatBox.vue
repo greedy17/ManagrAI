@@ -2,20 +2,51 @@
   <section class="chat-container">
     <header class="title-header"><p>All Open Opportunities</p></header>
     <div class="margin-top" ref="chatWindow">
-      <div v-for="message in messages" :key="message.id" class="message-container">
-        <div class="images">
-          <img
-            class="green-filter"
-            v-if="message.user === 'bot'"
-            src="@/assets/images/logo.png"
-            height="30px"
-          />
+      <div v-for="(message, i) in messages" :key="i" class="col-start">
+        <div class="message-container">
+          <div class="images">
+            <img
+              class="green-filter"
+              v-if="message.user === 'bot'"
+              src="@/assets/images/logo.png"
+              height="30px"
+            />
 
-          <div class="avatar" v-else>{{ userName[0] }}</div>
+            <div class="avatar" v-else>{{ userName[0] }}</div>
+          </div>
+
+          <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
+            <p>{{ message.value }}</p>
+          </div>
         </div>
 
-        <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
-          <p>{{ message.value }}</p>
+        <div v-if="message.user === 'bot' && i !== 0" class="generate-container">
+          <button
+            @click="toggleSelectContentOption"
+            v-if="!selectingContent"
+            class="generate-button"
+          >
+            <img src="@/assets/images/sparkle.svg" height="16px" alt="" /> Generate content
+          </button>
+
+          <div class="row" v-else>
+            <button class="content-button">
+              <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-envelope" />Draft
+              follow-up email
+            </button>
+            <button class="content-button">
+              <font-awesome-icon
+                style="height: 10px"
+                @click="selectedOpp = null"
+                icon="fa-solid fa-angles-right"
+              />
+              Suggest next steps
+            </button>
+            <button class="content-button">
+              <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-file-lines" />Get
+              summary
+            </button>
+          </div>
         </div>
       </div>
 
@@ -57,6 +88,7 @@ export default {
   data() {
     return {
       // user: { },
+      selectingContent: false,
       messageLoading: false,
       messages: [
         // { id: 0, value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", user: '1' },
@@ -67,16 +99,19 @@ export default {
             this.userName ? this.userName : 'there'
           }! Welcome to Managr, your AI sales assistant.\n\nYou are currently in our Playground environment. Whenever you're ready, please go and connect your CRM along with the rest of your apps.\n\n- To get started, type in an easy command like, "update Opportunity Pied Piper, move close date to the end of the month" below.`,
         },
-        {
-          id: 1,
-          value: 'Update Opportunity Pied Piper, move close date to the end of June.',
-          user: 1,
-        },
-        { id: 2, value: 'Successfully updated Pied Piper', user: 'bot' },
+        // {
+        //   id: 1,
+        //   value: 'Update Opportunity Pied Piper, move close date to the end of June.',
+        //   user: 1,
+        // },
+        // { id: 2, value: 'Successfully updated Pied Piper', user: 'bot' },
       ],
     }
   },
   methods: {
+    toggleSelectContentOption() {
+      this.selectingContent = !this.selectingContent
+    },
     scrollToBottom() {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
@@ -108,6 +143,19 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.row {
+  display: flex;
+  justify-content: row;
+  align-items: center;
+  justify-content: flex-start;
+}
 
 .chat-container {
   display: flex;
@@ -161,6 +209,7 @@ export default {
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   line-height: 1.75;
+  position: relative;
 }
 
 .text-container {
@@ -259,6 +308,45 @@ export default {
 
 .dot:nth-child(3) {
   animation-delay: -0.2s;
+}
+
+.col-start {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.generate-container {
+  padding: 0.5rem 2.75rem;
+  margin-top: -1.25rem;
+}
+
+.generate-button {
+  @include chat-button();
+  padding: 0.7rem 0.8rem;
+  background-color: $dark-green;
+  color: white;
+  border: none;
+
+  img {
+    margin-right: 0.5rem;
+    filter: invert(87%) sepia(25%) saturate(6867%) hue-rotate(2deg) brightness(107%) contrast(103%);
+    animation: shimmer 2s infinite;
+    -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+  }
+}
+
+.content-button {
+  @include chat-button();
+  margin-right: 0.5rem;
+  svg {
+    margin-right: 0.5rem;
+  }
+  // img {
+  //   margin-right: 0.5rem;
+  //   animation: shimmer 2s infinite;
+  //   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+  // }
 }
 
 @keyframes bounce {

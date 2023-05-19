@@ -40,7 +40,8 @@
           ⚡️
         </span>
         <textarea
-          @keyup.enter="sendMessage"
+          @keydown.enter.exact.prevent="sendMessage"
+          @keydown.shift.enter.exact.prevent="addNewLine"
           class="area-input"
           rows="1"
           placeholder="Send a message."
@@ -106,7 +107,7 @@ export default {
         setTimeout(() => {
           const newBotMessage = {
             id: newId + 1,
-            value: 'Bot message!',
+            value: 'Successfully updated Opportunity Pied Piper! ✅',
             user: 'bot',
           }
           this.messages.push(newBotMessage)
@@ -118,7 +119,10 @@ export default {
       } finally {
       }
     },
-
+    addNewLine() {
+      console.log('here')
+      this.message += '\n'
+    },
     addTemplate(val) {
       this.message = val
     },

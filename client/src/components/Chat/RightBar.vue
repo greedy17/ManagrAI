@@ -58,7 +58,12 @@
 
           <span @click="toggleShowFilters" class="icon-button">
             <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
-            <small v-if="this.$store.state.filters.length" class="filter-count">{{ this.$store.state.filters.length }}</small>
+            <small
+              v-if="activeFilters.length"
+              :class="{ 'pop-transition': isPopping }"
+              class="filter-count"
+              >{{ activeFilters.length }}</small
+            >
           </span>
 
           <div v-show="filtersOpen" class="filter-container">
@@ -85,14 +90,26 @@
                 class="icon-row"
               >
                 <font-awesome-icon :icon="`fa-solid  ${filter.icon}`" />
-                <p>{{ filter.name }}</p>
+                <p>{{ filter.name }} <span></span></p>
+              </div>
+
+              <div v-if="activeFilters.length" class="active-filters">
+                <div
+                  :title="af[1] + ' ' + af[0].toLowerCase() + ' ' + af[2]"
+                  v-for="(af, i) in activeFilters"
+                  :key="i"
+                >
+                  <p>{{ af[1] + ' ' + af[0].toLowerCase() + ' ' + af[2] }}</p>
+
+                  <span @click="removeFilter(af)" class="remove">x</span>
+                </div>
               </div>
             </section>
 
             <section v-else>
               <div>
                 <Multiselect
-                  :placeholder="`${selectedFilter.name} is`"
+                  :placeholder="`${selectedFilter.name}`"
                   style="width: 100%; font-size: 14px"
                   v-model="selectedOperator"
                   :options="operators"
@@ -110,7 +127,7 @@
                 <div v-if="selectedFilter.operator">
                   <input
                     class="filter-input"
-                    :placeholder="`${selectedFilter.name} is ${selectedFilter.operatorLabel}`"
+                    :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
                     :type="`${selectedFilter.dataType}`"
                     v-model="selectedFilter.value"
                     autofocus="true"
@@ -175,7 +192,13 @@
       >
         <p style="margin: 0">{{ opp.name }}</p>
       </div>
-      <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
+      <div class="space-between">
+        <p v-if="searchText">End of list</p>
+        <span v-else></span>
+        <button class="chat-button" v-if="displayedOpps.next" @click="loadMoreOpps">
+          Load More
+        </button>
+      </div>
     </div>
   </section>
 </template>
@@ -195,6 +218,7 @@ export default {
   },
   data() {
     return {
+      isPopping: false,
       filtersOpen: false,
       hoveredOpp: null,
       searchText: '',
@@ -227,11 +251,11 @@ export default {
         11: 'December',
       },
       operators: [
-        { label: 'equal to', value: 'EQUALS' },
-        { label: 'greater than', value: 'GREATER_THAN' },
-        { label: 'greater than or equal to', value: 'GREATER_THAN_EQUALS' },
-        { label: 'less than', value: 'LESS_THAN' },
-        { label: 'less than or equal to', value: 'LESS_THAN_EQUALS' },
+        { label: 'is', value: 'EQUALS' },
+        { label: 'is greater than', value: 'GREATER_THAN' },
+        { label: 'is greater than or equal to', value: 'GREATER_THAN_EQUALS' },
+        { label: 'is less than', value: 'LESS_THAN' },
+        { label: 'is less than or equal to', value: 'LESS_THAN_EQUALS' },
         { label: 'contains', value: 'CONTAINS' },
         { label: 'does not equal', value: 'NOT_EQUALS' },
       ],
@@ -294,30 +318,52 @@ export default {
       ],
     }
   },
+  watch: {
+    activeFilters(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.isPopping = true
+
+        setTimeout(() => {
+          this.isPopping = false
+        }, 1000)
+      }
+    },
+  },
   methods: {
     test(log) {
       console.log('log', log)
     },
     async addFilter() {
       let filter = []
-      // set new filter to array
-      console.log('this.selectedFilter', this.selectedFilter)
+
       filter = [
         this.selectedFilter.operator,
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
-      console.log('this is added to the active filters', filter)
-      // add new filter to the filter array in the store, i'll let you add that logic
+
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
-      } catch(e) {
+      } catch (e) {
         console.log('Error in addFilter', e)
       } finally {
         setTimeout(() => {
           this.toggleShowFilters()
-        }, 200)
+        }, 100)
+      }
+    },
+    async removeFilter(targetList) {
+      let lists = []
+      lists = this.$store.state.filters.filter(
+        (list) => JSON.stringify(list) !== JSON.stringify(targetList),
+      )
+      try {
+        this.$store.dispatch('changeFilters', lists)
+        await this.$store.dispatch('loadChatOpps', 1)
+      } catch (e) {
+        console.log('Error removing filter', e)
+      } finally {
       }
     },
     selectOperator(val, label) {
@@ -423,6 +469,9 @@ export default {
         )
       } else return []
     },
+    activeFilters() {
+      return this.$store.state.filters
+    },
     displayedOpps() {
       return this.$store.state.chatOpps
     },
@@ -460,6 +509,13 @@ export default {
 
 .shimmer {
   animation: shimmer 2s infinite;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+}
+
+.pop-transition {
+  transition: transform 0.3s ease; /* Adjust the transition duration and easing as per your preference */
+  transform: scale(1.25); /* Adjust the transform properties to create the desired effect */
+  animation: shimmer 1s infinite;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
@@ -571,6 +627,18 @@ header {
     font-family: $base-font-family;
     font-size: 12px;
     letter-spacing: 0.4px;
+  }
+}
+
+.space-between {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  p {
+    font-size: 14px;
+    margin: 0 0 0.25rem 0.5rem;
+    color: $light-gray-blue;
   }
 }
 
@@ -749,11 +817,62 @@ img {
   padding: 0 4px;
   border-radius: 100%;
   box-shadow: 0 1px 3px 0 $dark-green;
+  font-size: 8px;
+}
+
+.active-filters {
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  div {
+    width: fit-content;
+    max-width: 50%;
+    position: relative;
+
+    p {
+      background-color: $soft-gray;
+      padding: 0.25rem;
+      border-radius: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    span {
+      opacity: 0;
+    }
+
+    &:hover {
+      span {
+        opacity: 1;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.remove {
+  background-color: rgba(10, 0, 0, 0.6);
+  color: white;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 16px;
+  font-size: 16px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filter-container {
   position: absolute;
-  height: 310px;
+  height: auto;
+  min-height: 300px;
+  max-height: 500px;
   width: 350px;
   background-color: white;
   z-index: 1000;
