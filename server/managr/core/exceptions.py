@@ -12,6 +12,12 @@ class MaximumTokenLength(Exception):
         super().__init__(self.message)
 
 
+class StopReasonLength(Exception):
+    def __init__(self, error="There were not enough tokens assigned"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class OpenAIException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -45,10 +51,16 @@ def _handle_response(response, fn_name=None):
     elif response.status_code == 200:
         try:
             data = response.json()
-        except Exception as e:
-            OpenAIException(e, fn_name)
+            choice = data["choices"][0]
+            stop_reason = choice["finish_reason"]
+            if stop_reason == "length":
+                raise StopReasonLength()
+        except StopReasonLength:
+            raise StopReasonLength()
         except json.decoder.JSONDecodeError as e:
             return logger.error(f"An error occured with a zoom integration, {e}")
+        except Exception as e:
+            OpenAIException(e, fn_name)
     else:
         status_code = response.status_code
         error_data = response.json()

@@ -98,10 +98,12 @@ OPEN_AI_TRANSCRIPT_PROMPT = (
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda fields, summaries: f"""You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
-    1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, objections, objection handling, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, engaging, conversational, and slightly witty.
-    2) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary
-    3) The output must return in a python dictionary. The summary must be added to the dictionary using a key called 'summary'.
+    lambda fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
+1) You are VP of Sales. Create one summary, in paragraph of how this call went. Include relevant data regarding: customer pain, customer objections, objection handling by salesperson, competitors mentioned, timeline to close, decision process, the next steps and overall tone of the meeting.
+2) The summary must be no less than 1,500 characters and no greater than 2,000 characters.
+3) Write the summary using casual, engaging, conversational, and slightly witty tone.
+4) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary.\n
+5) The output must be a python dictionary. The summary must be added to the dictionary using a key called 'summary'.\n
     CRM fields:{fields}\nSummaries: {summaries}"""
 )
 
