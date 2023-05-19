@@ -200,6 +200,17 @@
         </button>
       </div>
     </div>
+    <!-- <div class="opp-scroll-container" v-else>
+      <div
+        v-for="opp in searchOpportunities"
+        class="opp-container"
+        @click="changeSelectedOpp(opp)"
+        :key="opp.id"
+      >
+        <p style="margin: 0">{{ opp.name }}</p>
+      </div>
+      <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
+    </div> -->
   </section>
 </template>
   
@@ -226,6 +237,7 @@ export default {
       updateOppForm: [],
       oppFields: [],
       resourceName: 'Opportunity',
+      searchOpportunities: [],
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
         pagination: { size: 20 },
@@ -335,13 +347,11 @@ export default {
     },
     async addFilter() {
       let filter = []
-
       filter = [
         this.selectedFilter.operator,
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
-
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
@@ -366,6 +376,11 @@ export default {
       } finally {
       }
     },
+    // async searchOpps() {
+    //   if (this.searchText) {
+    //     this.searchOpportunities = await this.$store.dispatch('loadAllOpps', [['CONTAINS', 'Name', this.searchText]])
+    //   }
+    // },
     selectOperator(val, label) {
       this.selectedFilter.operator = val
       this.selectedFilter.operatorLabel = label
