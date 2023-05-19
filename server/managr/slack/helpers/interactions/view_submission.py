@@ -2720,13 +2720,24 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
-    pm = payload.get("view").get("private_metadata")
+    user = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload.get("view").get("private_metadata"))
     generative_action_values = payload["view"]["state"]["values"]["GENERATIVE_ACTION"]
     action = generative_action_values.get(list(generative_action_values.keys())[0])[
         "selected_option"
     ]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
-    action_res = action_func(payload, json.loads(pm))
+    loading_block = [*get_block_set("loading", {"message": "Regenerating content..."})]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=loading_block,
+        )
+        pm.update(ts=res["ts"])
+        action_res = action_func(payload, pm)
+    except Exception as e:
+        logger.exception(e)
     return {"response_action": "clear"}
 
 

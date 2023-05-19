@@ -32,6 +32,7 @@ from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
+from managr.core.exceptions import StopReasonLength
 
 logger = logging.getLogger("managr")
 
@@ -866,7 +867,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                         .replace(" --> ", "-")
                     )
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, transcript_body, 200, top_p=0.9, temperature=0.7
+                        user.email, transcript_body, 500, top_p=0.9, temperature=0.7
                     )
                     with Variable_Client() as client:
                         url = core_consts.OPEN_AI_COMPLETIONS_URI
@@ -882,15 +883,17 @@ def _process_get_transcript_and_update_crm(payload, context):
                         summary_split = summary.split("Summary:")
                         summary_parts.append(summary_split[1])
             if len(summary_parts):
-                summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
-                    fields_list, summary_parts
-                )
-                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                    user.email, summary_body, 500, top_p=0.9, temperature=0.7
-                )
+
                 viable_data = False
                 timeout = 60.0
+                tokens = 500
                 while True:
+                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
+                        fields_list, summary_parts
+                    )
+                    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                        user.email, summary_body, tokens, top_p=0.9, temperature=0.7
+                    )
                     try:
                         logger.info("Combining Summary parts")
                         if not viable_data:
@@ -899,7 +902,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
-                            r = r.json()
+                            r = _handle_response(r)
                             logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
                             summary = clean_prompt_string(choice)
@@ -919,10 +922,15 @@ def _process_get_transcript_and_update_crm(payload, context):
                             swapped_field_data, fields, user.crm, resource
                         )
                         break
+                    except StopReasonLength:
+                        tokens += 500
+                        continue
                     except ValueError as e:
+                        print(e)
                         if str(e) == "substring not found":
                             continue
                     except SyntaxError as e:
+                        print(e)
                         continue
                     except httpx.ReadTimeout:
                         logger.exception(

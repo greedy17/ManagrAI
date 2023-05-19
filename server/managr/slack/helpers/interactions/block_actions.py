@@ -3731,7 +3731,7 @@ def process_open_generative_action_modal(payload, context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.PROCESS_SELECTED_GENERATIVE_ACTION,
-                "title": {"type": "plain_text", "text": "Create Content",},
+                "title": {"type": "plain_text", "text": "Generate Content",},
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit"},
                 "private_metadata": json.dumps(context),
@@ -3763,7 +3763,7 @@ def process_regenerate_action(payload, context):
     ts = payload["message"]["ts"]
     context.update(channel_id=channel_id, ts=ts)
     blocks = payload["message"]["blocks"][:2]
-    loading_block = get_block_set("loading", {"message": "Regenerating content"})
+    loading_block = get_block_set("loading", {"message": "Regenerating content..."})
     blocks.extend(loading_block)
     try:
         res = slack_requests.update_channel_message(
@@ -3773,7 +3773,6 @@ def process_regenerate_action(payload, context):
         action_func(payload, context)
     except Exception as e:
         logger.exception(e)
-
     return
 
 
