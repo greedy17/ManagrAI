@@ -44,7 +44,6 @@
             <input
               class="search-input"
               v-model="searchText"
-              @input="searchOpps"
               placeholder="Search Opportunity by name"
             />
             <img
@@ -167,7 +166,7 @@
       </div>
     </div>
 
-    <div class="opp-scroll-container" v-else-if="!searchText">
+    <div class="opp-scroll-container" v-else>
       <div
         v-for="opp in opportunities"
         class="opp-container"
@@ -178,7 +177,7 @@
       </div>
       <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
     </div>
-    <div class="opp-scroll-container" v-else>
+    <!-- <div class="opp-scroll-container" v-else>
       <div
         v-for="opp in searchOpportunities"
         class="opp-container"
@@ -188,7 +187,7 @@
         <p style="margin: 0">{{ opp.name }}</p>
       </div>
       <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
-    </div>
+    </div> -->
   </section>
 </template>
   
@@ -330,11 +329,11 @@ export default {
         }, 200)
       }
     },
-    async searchOpps() {
-      if (this.searchText) {
-        this.searchOpportunities = await this.$store.dispatch('loadAllOpps', [['CONTAINS', 'Name', this.searchText]])
-      }
-    },
+    // async searchOpps() {
+    //   if (this.searchText) {
+    //     this.searchOpportunities = await this.$store.dispatch('loadAllOpps', [['CONTAINS', 'Name', this.searchText]])
+    //   }
+    // },
     selectOperator(val, label) {
       this.selectedFilter.operator = val
       this.selectedFilter.operatorLabel = label
