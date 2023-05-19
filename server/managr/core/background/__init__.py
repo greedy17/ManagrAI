@@ -1258,7 +1258,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     workflow_id = context.get("w", None)
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
-        workflow.operations = [slack_consts.MEETING___SUBMIT_CHAT_PROMPT]
         workflow.save()
     form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
@@ -1559,7 +1558,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
     form_id = context.get("form_id")
     form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, 1000, top_p=0.1)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, top_p=0.1)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     has_error = False
     attempts = 1
@@ -1615,7 +1614,7 @@ def _process_send_email_draft(payload, context):
     for form in forms:
         data_collector = {**data_collector, **form.saved_data}
     prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 300, temperature=0.2)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, temperature=0.2)
     attempts = 1
     while True:
         try:
@@ -1658,12 +1657,19 @@ def _process_send_email_draft(payload, context):
         block_builders.context_block("This version will not be saved."),
     ]
     try:
-        slack_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            context.get("ts"),
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+        if context.get("channel_id", None):
+            slack_res = slack_requests.update_channel_message(
+                context.get("channel_id"),
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        else:
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -1680,7 +1686,7 @@ def _process_send_next_steps(payload, context):
     for form in forms:
         data_collector = {**data_collector, **form.saved_data}
     prompt = core_consts.OPEN_AI_NEXT_STEPS(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000, temperature=0.2)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, temperature=0.2)
     attempts = 1
     while True:
         try:
@@ -1723,12 +1729,19 @@ def _process_send_next_steps(payload, context):
         block_builders.context_block("This version will not be saved."),
     ]
     try:
-        slack_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            context.get("ts"),
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+        if context.get("channel_id", None):
+            slack_res = slack_requests.update_channel_message(
+                context.get("channel_id"),
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        else:
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -1818,12 +1831,19 @@ def _process_send_summary_to_dm(payload, context):
     blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
     blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     try:
-        slack_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            context.get("ts"),
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+        if context.get("ts", None):
+            slack_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        else:
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"

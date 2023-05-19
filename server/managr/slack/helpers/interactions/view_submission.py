@@ -2626,6 +2626,7 @@ def process_submit_chat_prompt(payload, context):
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
             workflow.operations_list = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),
