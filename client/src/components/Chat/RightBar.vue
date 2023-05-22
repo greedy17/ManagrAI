@@ -42,7 +42,13 @@
           <div class="flexed-row">
             <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
 
-            <img src="@/assets/images/refresh.svg" height="18px" alt="" />
+            <img
+              :class="{ 'rotate opaque': oppsLoading }"
+              @click="reloadOpps"
+              src="@/assets/images/refresh.svg"
+              height="18px"
+              alt=""
+            />
           </div>
         </div>
 
@@ -239,6 +245,7 @@ export default {
   },
   data() {
     return {
+      oppsLoading: false,
       isPopping: false,
       filtersOpen: false,
       hoveredOpp: null,
@@ -355,6 +362,19 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    async reloadOpps() {
+      this.oppsLoading = true
+      console.log('here i am')
+      try {
+        await this.$store.dispatch('loadChatOpps', 1)
+      } catch (e) {
+        console.log('error loading opps')
+      } finally {
+        setTimeout(() => {
+          this.oppsLoading = false
+        }, 1000)
+      }
+    },
     async addFilter() {
       let filter = []
       filter = [
@@ -405,12 +425,13 @@ export default {
       this.selectedFilter = null
     },
     openInCrm(id) {
-      let url
-      url =
-        this.user.crm === 'SALESFORCE'
-          ? `${this.user.salesforceAccountRef.instanceUrl}/lighning/r/Opportunity/${id}/view`
-          : ''
-      window.open(url, '_blank')
+      console.log('open in crm')
+      // let url
+      // url =
+      //   this.user.crm === 'SALESFORCE'
+      //     ? `${this.user.salesforceAccountRef.instanceUrl}/lighning/r/Opportunity/${id}/view`
+      //     : ''
+      // window.open(url, '_blank')
     },
     clearText() {
       this.searchText = ''
@@ -1001,5 +1022,24 @@ img {
   display: flex;
   align-items: center;
   margin-left: -0.5rem;
+}
+
+.opaque {
+  opacity: 0.3;
+}
+
+.rotate {
+  animation: rotation 3s infinite linear;
+  // width: 100px;
+  // height: 100px;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }
 </style>
