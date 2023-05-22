@@ -192,7 +192,18 @@
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <h5 class="gray-text">{{ field.label }}</h5>
-            <div>{{ selectedOpp['secondary_data'][field.apiName] }}</div>
+            <div
+              @click="toggleEdit(field.id)"
+              v-if="!editing || activeField !== field.id"
+              class="field"
+            >
+              {{ selectedOpp['secondary_data'][field.apiName] }}
+            </div>
+            <div v-else>
+              <!-- {{ field.dataType + ' ' + field.apiName }} -->
+              <InlineFieldEditor :dataType="field.dataType" :apiName="field.apiName" />
+            </div>
+            <!-- updateFormData(key,val) -->
           </div>
         </div>
 
@@ -230,17 +241,6 @@
         </button>
       </div>
     </div>
-    <!-- <div class="opp-scroll-container" v-else>
-      <div
-        v-for="opp in searchOpportunities"
-        class="opp-container"
-        @click="changeSelectedOpp(opp)"
-        :key="opp.id"
-      >
-        <p style="margin: 0">{{ opp.name }}</p>
-      </div>
-      <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
-    </div> -->
   </section>
 </template>
   
@@ -249,6 +249,7 @@ import SlackOAuth from '@/services/slack'
 import { CRMObjects, ObjectField } from '@/services/crm'
 // import Opportunity from '@/services/opportunity'
 import CollectionManager from '@/services/collectionManager'
+import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
 import Tooltip from './Tooltip.vue'
 
 export default {
@@ -256,9 +257,13 @@ export default {
   components: {
     Tooltip,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    InlineFieldEditor,
   },
   data() {
     return {
+      updateFormData: {},
+      editing: false,
+      activeField: null,
       oppsLoading: false,
       isPopping: false,
       filtersOpen: false,
@@ -268,7 +273,6 @@ export default {
       updateOppForm: [],
       oppFields: [],
       resourceName: 'Opportunity',
-      searchOpportunities: [],
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
         pagination: { size: 20 },
@@ -376,6 +380,15 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    setUpdateFormData(key, val) {
+      if (val) {
+        this.updateFormData[key] = val
+      }
+    },
+    toggleEdit(id) {
+      this.editing = !this.editing
+      this.activeField = id
+    },
     async reloadOpps() {
       this.oppsLoading = true
       console.log('here i am')
@@ -435,11 +448,6 @@ export default {
       } finally {
       }
     },
-    // async searchOpps() {
-    //   if (this.searchText) {
-    //     this.searchOpportunities = await this.$store.dispatch('loadAllOpps', [['CONTAINS', 'Name', this.searchText]])
-    //   }
-    // },
     selectOperator(val, label) {
       this.selectedFilter.operator = val
       this.selectedFilter.operatorLabel = label
@@ -1081,5 +1089,8 @@ img {
   to {
     transform: rotate(359deg);
   }
+}
+.field {
+  cursor: pointer;
 }
 </style>
