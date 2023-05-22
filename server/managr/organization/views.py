@@ -148,7 +148,7 @@ class OrganizationViewSet(
         """Endpoint to list orgs and tokens for integration accounts"""
         param = request.query_params.get("org_id", None)
         org = Organization.objects.get(id=param)
-        org.deactivate_org()
+        org.delete()
         return Response(status=status.HTTP_200_OK)
 
 
