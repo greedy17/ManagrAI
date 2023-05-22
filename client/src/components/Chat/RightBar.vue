@@ -60,9 +60,17 @@
 
         <div class="flexed-row-spread">
           <div class="input">
-            <img src="@/assets/images/search.svg" height="16px" alt="" />
+            <img v-if="!searchText" src="@/assets/images/search.svg" height="16px" alt="" />
+            <img
+              v-else
+              @click="searchFilter"
+              src="@/assets/images/return.svg"
+              height="16px"
+              alt=""
+            />
             <input
               class="search-input"
+              @keydown.enter.exact.prevent="searchFilter"
               v-model="searchText"
               placeholder="Search Opportunity by name"
             />
@@ -381,6 +389,21 @@ export default {
         }, 1000)
       }
     },
+    async searchFilter() {
+      if (this.searchText) {
+        try {
+          this.$store.dispatch('changeFilters', [
+            ...this.$store.state.filters,
+            ['CONTAINS', 'Name', this.searchText],
+          ])
+          await this.$store.dispatch('loadChatOpps', 1)
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        return
+      }
+    },
     async addFilter() {
       let filter = []
       filter = [
@@ -516,9 +539,10 @@ export default {
   computed: {
     opportunities() {
       if (this.displayedOpps.results) {
-        return this.displayedOpps.results.filter((opp) =>
-          opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
-        )
+        return this.displayedOpps.results
+        // .filter((opp) =>
+        //   opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        // )
       } else return []
     },
     activeFilters() {
