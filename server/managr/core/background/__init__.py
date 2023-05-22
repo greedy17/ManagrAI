@@ -1657,19 +1657,12 @@ def _process_send_email_draft(payload, context):
         block_builders.context_block("This version will not be saved."),
     ]
     try:
-        if context.get("channel_id", None):
-            slack_res = slack_requests.update_channel_message(
-                context.get("channel_id"),
-                context.get("ts"),
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
-        else:
-            slack_res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -1729,19 +1722,12 @@ def _process_send_next_steps(payload, context):
         block_builders.context_block("This version will not be saved."),
     ]
     try:
-        if context.get("channel_id", None):
-            slack_res = slack_requests.update_channel_message(
-                context.get("channel_id"),
-                context.get("ts"),
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
-        else:
-            slack_res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -1796,6 +1782,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     return cleaned_data
 
 
+@background()
 def _process_send_summary_to_dm(payload, context):
     form_ids = context.get("form_ids").split(",")
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(

@@ -3928,6 +3928,7 @@ def process_launch_call_summary_review(payload, context):
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("form_id"))
     user = form.user
     blocks = form.generate_form(form.saved_data)
+    context.update(ts=payload["container"]["message_ts"])
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
