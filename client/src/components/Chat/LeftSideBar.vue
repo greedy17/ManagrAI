@@ -17,7 +17,7 @@
           <img style="margin-left: -2px" src="@/assets/images/settings.svg" height="18px" alt="" />
           <span>Configure</span>
         </button>
-        <button class="secondary-button">
+        <button @click="toggleTooltip" class="secondary-button">
           <img src="@/assets/images/help.png" height="14px" alt="" />
           <span> Contact Support</span>
         </button>
@@ -26,9 +26,14 @@
           <span> Profile & Team </span>
         </button>
 
-        <!-- <div class="tooltip">
+        <div :class="{ 'showing-tooltip': showTooltip }" class="tooltip">
+          <header>
+            <p>Need help ?</p>
 
-        </div> -->
+            <p @click="toggleTooltip">x</p>
+          </header>
+          <p>Email: cx@mymanagr.com</p>
+        </div>
       </footer>
     </section>
 
@@ -49,6 +54,7 @@ export default {
   },
   data() {
     return {
+      showTooltip: false,
       isOpen: false,
       threadButtonText: 'Start New Thread',
     }
@@ -62,6 +68,9 @@ export default {
       } else {
         this.$emit('hide-background')
       }
+    },
+    toggleTooltip() {
+      this.showTooltip = !this.showTooltip
     },
     soonThreadText() {
       this.threadButtonText = 'Coming Soon!'
@@ -159,13 +168,13 @@ export default {
 
 footer {
   height: 20vh;
-  position: absolute;
-  bottom: 1.5rem;
+  position: relative;
+  margin-top: auto;
   width: 230px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0.5rem 0rem;
+  padding: 0.75rem 0 0.5rem 0;
 }
 
 .primary-button {
@@ -216,5 +225,61 @@ img {
   top: 1.5rem;
   display: none;
   cursor: pointer;
+}
+
+.tooltip {
+  display: block;
+  width: 228px;
+  height: auto;
+  position: absolute;
+  top: 0;
+  font-size: 14px;
+  background: $base-gray;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    p {
+      margin: 0;
+      padding: 0;
+      margin-top: 0.25rem;
+    }
+
+    p:last-of-type {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+}
+
+.tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $base-gray;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.showing-tooltip {
+  top: -30px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
 }
 </style>
