@@ -4,12 +4,17 @@
       <section v-if="selectedOpp">
         <div class="flexed-row-spread">
           <div class="flexed-row">
-            <font-awesome-icon
+            <!-- <font-awesome-icon
               @click="selectedOpp = null"
               style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
               icon="fa-solid fa-square-caret-left"
+            /> -->
+            <img
+              @click="selectedOpp = null"
+              src="@/assets/images/back.svg"
+              height="16px;width:16px"
+              alt=""
             />
-            <!-- <img src="@/assets/images/back.svg" height="14px;width:14px" alt=""> -->
             <p>Opportunity</p>
           </div>
           <div class="flexed-row">
@@ -70,11 +75,13 @@
             <header>
               <p v-if="!selectedFilter">Select Filters</p>
 
-              <div v-else @click="selectedFilter = null" class="flexed-row pointer">
-                <font-awesome-icon
-                  style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
-                  icon="fa-solid fa-square-caret-left"
-                />
+              <div
+                style="margin-left: -0.75rem"
+                v-else
+                @click="selectedFilter = null"
+                class="flexed-row pointer"
+              >
+                <img src="@/assets/images/back.svg" height="16px;width:16px" alt="" />
 
                 {{ selectedFilter.name }}
               </div>
