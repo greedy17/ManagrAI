@@ -46,7 +46,7 @@
           <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ displayedOpps.count }})</p>
 
           <div class="flexed-row">
-            <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
+            <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
 
             <img
               :class="{ 'rotate opaque not-allowed': oppsLoading }"
@@ -1066,6 +1066,13 @@ img {
   animation: rotation 3s infinite linear;
   // width: 100px;
   // height: 100px;
+}
+
+.coming-soon {
+  &:hover {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
 }
 
 @keyframes rotation {
