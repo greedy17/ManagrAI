@@ -2,10 +2,10 @@
   <div class="sidebar" :class="{ open: isOpen }">
     <section>
       <header>
-        <button class="primary-button">
+        <button @mouseenter="soonThreadText" @mouseleave="newThreadText" class="primary-button">
           <!-- <font-awesome-icon style="color: #183153" icon="fa-solid fa-rocket" /> -->
           <span style="font-size: 14px; margin-right: 1rem">🚀</span>
-          <span> Start New Thread</span>
+          <span> {{ threadButtonText }}</span>
         </button>
       </header>
 
@@ -50,6 +50,7 @@ export default {
   data() {
     return {
       isOpen: false,
+      threadButtonText: 'Start New Thread',
     }
   },
   methods: {
@@ -61,6 +62,12 @@ export default {
       } else {
         this.$emit('hide-background')
       }
+    },
+    soonThreadText() {
+      this.threadButtonText = 'Coming Soon!'
+    },
+    newThreadText() {
+      this.threadButtonText = 'Start New Thread'
     },
   },
   computed: {},
@@ -174,6 +181,10 @@ footer {
     text-overflow: ellipsis;
     overflow: hidden;
     font-family: $base-font-family;
+  }
+
+  &:hover {
+    cursor: not-allowed;
   }
 }
 

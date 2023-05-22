@@ -9,12 +9,15 @@
               style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
               icon="fa-solid fa-square-caret-left"
             /> -->
-            <img
-              @click="selectedOpp = null"
-              src="@/assets/images/back.svg"
-              height="16px;width:16px"
-              alt=""
-            />
+            <span class="icon-bg">
+              <img
+                @click="selectedOpp = null"
+                src="@/assets/images/back.svg"
+                height="16px;width:16px"
+                alt=""
+              />
+            </span>
+
             <p>Opportunity</p>
           </div>
           <div class="flexed-row">
@@ -993,4 +996,10 @@ img {
   transform: translateY(100px);
 }
 //  ALL THE FILTER STYLES ABOVE , WILL BE MOING THESE TO THE COMPONENT WHEN IT'S READY
+
+.icon-bg {
+  display: flex;
+  align-items: center;
+  margin-left: -0.5rem;
+}
 </style>
