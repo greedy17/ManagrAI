@@ -167,6 +167,7 @@ def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     private_metadata = json.loads(payload["view"]["private_metadata"])
+    ts = context.get("ts", None)
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
@@ -253,6 +254,16 @@ def process_zoom_meeting_data(payload, context):
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
+    if ts is not None:
+        blocks = [block_builders.simple_section(f":white_check_mark: Meeting logged")]
+        try:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+            )
     return {"response_action": "clear"}
 
 
@@ -2728,7 +2739,7 @@ def process_selected_generative_action(payload, context):
         "selected_option"
     ]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
-    loading_block = [*get_block_set("loading", {"message": "Regenerating content..."})]
+    loading_block = [*get_block_set("loading", {"message": "Generating content..."})]
     try:
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,

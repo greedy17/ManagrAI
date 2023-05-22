@@ -4,16 +4,30 @@
       <section v-if="selectedOpp">
         <div class="flexed-row-spread">
           <div class="flexed-row">
-            <font-awesome-icon
+            <!-- <font-awesome-icon
               @click="selectedOpp = null"
               style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
               icon="fa-solid fa-square-caret-left"
-            />
-            <!-- <img src="@/assets/images/back.svg" height="14px;width:14px" alt=""> -->
+            /> -->
+            <span class="icon-bg">
+              <img
+                @click="selectedOpp = null"
+                src="@/assets/images/back.svg"
+                height="16px;width:16px"
+                alt=""
+              />
+            </span>
+
             <p>Opportunity</p>
           </div>
           <div class="flexed-row">
-            <img src="@/assets/images/refresh.svg" height="18px" alt="" />
+            <img
+              :class="{ 'rotate opaque not-allowed': oppsLoading }"
+              @click="reloadOpps"
+              src="@/assets/images/refresh.svg"
+              height="18px"
+              alt=""
+            />
 
             <font-awesome-icon
               style="height: 24px; width: 24px; color: #0d9dda"
@@ -32,17 +46,31 @@
           <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ displayedOpps.count }})</p>
 
           <div class="flexed-row">
-            <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
+            <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
 
-            <img src="@/assets/images/refresh.svg" height="18px" alt="" />
+            <img
+              :class="{ 'rotate opaque not-allowed': oppsLoading }"
+              @click="reloadOpps"
+              src="@/assets/images/refresh.svg"
+              height="18px"
+              alt=""
+            />
           </div>
         </div>
 
         <div class="flexed-row-spread">
           <div class="input">
-            <img src="@/assets/images/search.svg" height="16px" alt="" />
+            <img v-if="!searchText" src="@/assets/images/search.svg" height="16px" alt="" />
+            <img
+              v-else
+              @click="searchFilter"
+              src="@/assets/images/return.svg"
+              height="16px"
+              alt=""
+            />
             <input
               class="search-input"
+              @keydown.enter.exact.prevent="searchFilter"
               v-model="searchText"
               placeholder="Search Opportunity by name"
             />
@@ -70,11 +98,13 @@
             <header>
               <p v-if="!selectedFilter">Select Filters</p>
 
-              <div v-else @click="selectedFilter = null" class="flexed-row pointer">
-                <font-awesome-icon
-                  style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
-                  icon="fa-solid fa-square-caret-left"
-                />
+              <div
+                style="margin-left: -0.75rem"
+                v-else
+                @click="selectedFilter = null"
+                class="flexed-row pointer"
+              >
+                <img src="@/assets/images/back.svg" height="16px;width:16px" alt="" />
 
                 {{ selectedFilter.name }}
               </div>
@@ -137,7 +167,7 @@
                 <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
                   <p>
                     <span style="color: #9596b4">Filter : </span>
-                    "{{ selectedFilter.name }} is {{ selectedFilter.operatorLabel }}
+                    "{{ selectedFilter.name }} {{ selectedFilter.operatorLabel }}
                     {{ selectedFilter.value }}"
                   </p>
                 </div>
@@ -162,7 +192,18 @@
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <h5 class="gray-text">{{ field.label }}</h5>
-            <div>{{ selectedOpp['secondary_data'][field.apiName] }}</div>
+            <div
+              @click="toggleEdit(field.id)"
+              v-if="!editing || activeField !== field.id"
+              class="field"
+            >
+              {{ selectedOpp['secondary_data'][field.apiName] }}
+            </div>
+            <div v-else>
+              <!-- {{ field.dataType + ' ' + field.apiName }} -->
+              <InlineFieldEditor :dataType="field.dataType" :apiName="field.apiName" />
+            </div>
+            <!-- updateFormData(key,val) -->
           </div>
         </div>
 
@@ -200,17 +241,6 @@
         </button>
       </div>
     </div>
-    <!-- <div class="opp-scroll-container" v-else>
-      <div
-        v-for="opp in searchOpportunities"
-        class="opp-container"
-        @click="changeSelectedOpp(opp)"
-        :key="opp.id"
-      >
-        <p style="margin: 0">{{ opp.name }}</p>
-      </div>
-      <div v-if="displayedOpps.next" @click="loadMoreOpps">Load More</div>
-    </div> -->
   </section>
 </template>
   
@@ -219,6 +249,7 @@ import SlackOAuth from '@/services/slack'
 import { CRMObjects, ObjectField } from '@/services/crm'
 // import Opportunity from '@/services/opportunity'
 import CollectionManager from '@/services/collectionManager'
+import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
 import Tooltip from './Tooltip.vue'
 
 export default {
@@ -226,9 +257,14 @@ export default {
   components: {
     Tooltip,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    InlineFieldEditor,
   },
   data() {
     return {
+      updateFormData: {},
+      editing: false,
+      activeField: null,
+      oppsLoading: false,
       isPopping: false,
       filtersOpen: false,
       hoveredOpp: null,
@@ -237,7 +273,6 @@ export default {
       updateOppForm: [],
       oppFields: [],
       resourceName: 'Opportunity',
-      searchOpportunities: [],
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
         pagination: { size: 20 },
@@ -345,6 +380,43 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    setUpdateFormData(key, val) {
+      if (val) {
+        this.updateFormData[key] = val
+      }
+    },
+    toggleEdit(id) {
+      this.editing = !this.editing
+      this.activeField = id
+    },
+    async reloadOpps() {
+      this.oppsLoading = true
+      console.log('here i am')
+      try {
+        await this.$store.dispatch('loadChatOpps', 1)
+      } catch (e) {
+        console.log('error loading opps')
+      } finally {
+        setTimeout(() => {
+          this.oppsLoading = false
+        }, 1000)
+      }
+    },
+    async searchFilter() {
+      if (this.searchText) {
+        try {
+          this.$store.dispatch('changeFilters', [
+            ...this.$store.state.filters,
+            ['CONTAINS', 'Name', this.searchText],
+          ])
+          await this.$store.dispatch('loadChatOpps', 1)
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        return
+      }
+    },
     async addFilter() {
       let filter = []
       filter = [
@@ -376,11 +448,6 @@ export default {
       } finally {
       }
     },
-    // async searchOpps() {
-    //   if (this.searchText) {
-    //     this.searchOpportunities = await this.$store.dispatch('loadAllOpps', [['CONTAINS', 'Name', this.searchText]])
-    //   }
-    // },
     selectOperator(val, label) {
       this.selectedFilter.operator = val
       this.selectedFilter.operatorLabel = label
@@ -398,7 +465,7 @@ export default {
       let url
       url =
         this.user.crm === 'SALESFORCE'
-          ? `${this.user.salesforceAccountRef.instanceUrl}/lighning/r/Opportunity/${id}/view`
+          ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
           : ''
       window.open(url, '_blank')
     },
@@ -479,9 +546,10 @@ export default {
   computed: {
     opportunities() {
       if (this.displayedOpps.results) {
-        return this.displayedOpps.results.filter((opp) =>
-          opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
-        )
+        return this.displayedOpps.results
+        // .filter((opp) =>
+        //   opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        // )
       } else return []
     },
     activeFilters() {
@@ -986,4 +1054,43 @@ img {
   transform: translateY(100px);
 }
 //  ALL THE FILTER STYLES ABOVE , WILL BE MOING THESE TO THE COMPONENT WHEN IT'S READY
+
+.icon-bg {
+  display: flex;
+  align-items: center;
+  margin-left: -0.5rem;
+}
+
+.opaque {
+  opacity: 0.3;
+}
+
+.not-allowed {
+  cursor: not-allowed;
+}
+
+.rotate {
+  animation: rotation 3s infinite linear;
+  // width: 100px;
+  // height: 100px;
+}
+
+.coming-soon {
+  &:hover {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+.field {
+  cursor: pointer;
+}
 </style>

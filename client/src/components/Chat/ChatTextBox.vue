@@ -41,7 +41,6 @@
         </span>
         <textarea
           @keydown.enter.exact.prevent="sendMessage"
-          @keydown.shift.enter.exact.prevent="addNewLine"
           class="area-input"
           rows="1"
           placeholder="Send a message."
@@ -125,6 +124,7 @@ export default {
     },
     addTemplate(val) {
       this.message = val
+      this.toggleTemplates()
     },
 
     toggleTemplates() {
