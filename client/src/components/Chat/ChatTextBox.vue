@@ -124,6 +124,7 @@ export default {
     },
     addTemplate(val) {
       this.message = val
+      this.toggleTemplates()
     },
 
     toggleTemplates() {
