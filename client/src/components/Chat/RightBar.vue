@@ -167,7 +167,7 @@
                 <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
                   <p>
                     <span style="color: #9596b4">Filter : </span>
-                    "{{ selectedFilter.name }} is {{ selectedFilter.operatorLabel }}
+                    "{{ selectedFilter.name }} {{ selectedFilter.operatorLabel }}
                     {{ selectedFilter.value }}"
                   </p>
                 </div>
@@ -454,13 +454,12 @@ export default {
       this.selectedFilter = null
     },
     openInCrm(id) {
-      console.log('open in crm')
-      // let url
-      // url =
-      //   this.user.crm === 'SALESFORCE'
-      //     ? `${this.user.salesforceAccountRef.instanceUrl}/lighning/r/Opportunity/${id}/view`
-      //     : ''
-      // window.open(url, '_blank')
+      let url
+      url =
+        this.user.crm === 'SALESFORCE'
+          ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
+          : ''
+      window.open(url, '_blank')
     },
     clearText() {
       this.searchText = ''
