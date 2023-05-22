@@ -1558,7 +1558,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
     form_id = context.get("form_id")
     form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, top_p=0.1)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, 500, top_p=0.1)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     has_error = False
     attempts = 1
@@ -1614,7 +1614,7 @@ def _process_send_email_draft(payload, context):
     for form in forms:
         data_collector = {**data_collector, **form.saved_data}
     prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, temperature=0.2)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     attempts = 1
     while True:
         try:
@@ -1686,7 +1686,7 @@ def _process_send_next_steps(payload, context):
     for form in forms:
         data_collector = {**data_collector, **form.saved_data}
     prompt = core_consts.OPEN_AI_NEXT_STEPS(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, temperature=0.2)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     attempts = 1
     while True:
         try:
