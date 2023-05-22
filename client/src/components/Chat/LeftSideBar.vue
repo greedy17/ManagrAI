@@ -185,6 +185,8 @@ footer {
 
   &:hover {
     cursor: not-allowed;
+    opacity: 0.8;
+    scale: none;
   }
 }
 

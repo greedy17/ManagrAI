@@ -21,7 +21,13 @@
             <p>Opportunity</p>
           </div>
           <div class="flexed-row">
-            <img src="@/assets/images/refresh.svg" height="18px" alt="" />
+            <img
+              :class="{ 'rotate opaque not-allowed': oppsLoading }"
+              @click="reloadOpps"
+              src="@/assets/images/refresh.svg"
+              height="18px"
+              alt=""
+            />
 
             <font-awesome-icon
               style="height: 24px; width: 24px; color: #0d9dda"
@@ -43,7 +49,7 @@
             <img src="@/assets/images/shuffle.svg" height="14px" alt="" />
 
             <img
-              :class="{ 'rotate opaque': oppsLoading }"
+              :class="{ 'rotate opaque not-allowed': oppsLoading }"
               @click="reloadOpps"
               src="@/assets/images/refresh.svg"
               height="18px"
@@ -1026,6 +1032,10 @@ img {
 
 .opaque {
   opacity: 0.3;
+}
+
+.not-allowed {
+  cursor: not-allowed;
 }
 
 .rotate {
