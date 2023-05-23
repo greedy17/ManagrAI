@@ -37,6 +37,11 @@ export default new Router({
       component: () => import('@/views/auth/LeadershipCode')
     },
     {
+      path: '/register-selection',
+      name: 'RegisterSelection',
+      component: () => import('@/views/auth/RegisterSelection')
+    },
+    {
       path: '/google-register',
       name: 'GoogleRegister',
       component: () => import('@/views/auth/GoogleRegister')

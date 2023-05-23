@@ -44,8 +44,19 @@
             />
           </span> -->
 
+          <span class="col">
+            <label for="company">Company Name</label>
+            <input
+              @blur="registrationForm.field.organizationName.validate()"
+              :errors="registrationForm.field.organizationName.errors"
+              v-model="registrationForm.field.organizationName.value"
+              placeholder=""
+              id="company"
+            />
+          </span>
+
           <span>
-            <label for="password">Set a Backup Password</label>
+            <label for="password">Create Password</label>
             <input
               id="password"
               @blur="showVals(registrationForm.field.password)"
@@ -68,17 +79,6 @@
               :errors="registrationForm.field.confirmPassword.errors"
               v-model="registrationForm.field.confirmPassword.value"
               type="password"
-            />
-          </span>
-
-          <span class="col">
-            <label for="company">Company Name</label>
-            <input
-              @blur="registrationForm.field.organizationName.validate()"
-              :errors="registrationForm.field.organizationName.errors"
-              v-model="registrationForm.field.organizationName.value"
-              placeholder=""
-              id="company"
             />
           </span>
 
@@ -183,6 +183,10 @@ export default {
       return { key: tz, value: tz }
     })
 
+    this.registrationForm.field.fullName.value = this.$store.state.googleSignIn.name
+    this.registrationForm.field.email.value = this.$store.state.googleSignIn.email
+    this.registrationForm.field.role.value = 'Management'
+
     if (this.$route.query.code) {
       this.generatingToken = true
       this.selectedCrm = this.$route.query.state
@@ -236,6 +240,8 @@ export default {
     async onSubmit() {
       this.registrationForm.validate()
 
+      console.log('this.registrationForm', this.registrationForm)
+
       if (!this.registrationForm.isValid) {
         this.$toast('Please complete all fields.', {
           timeout: 2000,
@@ -251,7 +257,7 @@ export default {
 
       let user
       try {
-        user = await User.api.register(this.registrationForm)
+        // user = await User.api.register(this.registrationForm)
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,

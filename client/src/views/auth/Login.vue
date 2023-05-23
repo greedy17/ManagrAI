@@ -39,7 +39,7 @@
       <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button>
       <div class="row">
         <p class="pad-right">New to Managr?</p>
-        <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
+        <router-link :to="{ name: 'RegisterSelection' }">Sign Up! </router-link>
       </div>
       <div class="row">
         <p class="pad-right">Forgot password?</p>
@@ -108,6 +108,7 @@ export default {
     },
   },
   async created() {
+    this.$store.dispatch('updateGoogleSignIn', {})
     if (this.$route.query.code) {
       this.selectedCrm = this.$route.query.state
       let modelClass = this.selectedCrmSwitcher
@@ -289,7 +290,7 @@ export default {
           // Call get endpoint for user by email
           // Log in with SSO endpoint if they have an account
           // Else, send them to screen for them to get a password and org
-          // this.$router.push({ name: 'GoogleRegister' })
+          this.$router.push({ name: 'Register' })
         } else {
           console.error('ID token not found in credential:', response.credential);
         }
