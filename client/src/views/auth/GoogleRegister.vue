@@ -174,11 +174,11 @@ export default {
   async created() {
     const validCode = this.$route.params.validCode
 
-    if (!validCode && !this.$route.query.code) {
-      this.$router.push({
-        name: 'Register',
-      })
-    }
+    // if (!validCode && !this.$route.query.code) {
+    //   this.$router.push({
+    //     name: 'Register',
+    //   })
+    // }
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })

@@ -137,7 +137,7 @@
             // Call get endpoint for user by email
             // Log in with SSO endpoint if they have an account
             // Else, send them to screen for them to get a password and org
-            this.$router.push({ name: 'Register' })
+            this.$router.push({ name: 'GoogleRegister' })
           } else {
             console.error('ID token not found in credential:', response.credential);
           }
