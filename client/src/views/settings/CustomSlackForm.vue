@@ -132,7 +132,7 @@
       </section>
       <div class="save-refresh-section">
         <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
-          <img src="@/assets/images/refresh.svg" />
+          <img height="18px" src="@/assets/images/refresh.svg" />
         </button>
         <PulseLoadingSpinnerButton
           v-else
