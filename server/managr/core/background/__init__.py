@@ -570,6 +570,10 @@ def _process_calendar_meetings(user_id, slack_int, date):
     if user.has_nylas_integration:
         try:
             processed_data = _process_calendar_details(user_id, date)
+            if user.has_zoom_integration:
+                meetings = user.zoom_account.helper_class.get_meetings_by_date(
+                    user.zoom_account.access_token, user.zoom_account.zoom_id, date
+                )["meetings"]
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
@@ -593,6 +597,13 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     "user": user,
                 }
                 if workflow_check is None and register_check:
+                    if user.has_zoom_integration:
+                        meetings_by_topic = [
+                            meeting for meeting in meetings if event["title"] == meeting["topic"]
+                        ]
+                        if len(meetings_by_topic):
+                            meeting = meetings_by_topic[0]
+                            meeting_data["id"] = meeting["id"]
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -1247,7 +1258,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     workflow_id = context.get("w", None)
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
-        workflow.operations = [slack_consts.MEETING___SUBMIT_CHAT_PROMPT]
         workflow.save()
     form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
@@ -1485,7 +1495,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         except crm_exceptions.FieldValidationError as e:
             logger.exception(f"There was and validation error submitting chat prompt data: {e}")
             has_error = True
-            message = f":no_entry_sign: Uh-oh we hit a validation: {e}"
+            logger.exception(
+                "There was and field validation error submitting chat prompt data: {e}"
+            )
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
@@ -1501,6 +1513,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             logger.exception(f"There was and error submitting chat prompt data: {e}")
             message = f":no_entry_sign: Uh-oh we hit a error: {e}"
             has_error = True
+            logger.exception("There was and error submitting chat prompt data: {e}")
             blocks = [
                 block_builders.section_with_button_block(
                     "Reopen Chat",
@@ -1545,7 +1558,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
     form_id = context.get("form_id")
     form = OrgCustomSlackFormInstance.objects.get(id=form_id)
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, top_p=0.1)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, full_prompt, 500, top_p=0.1)
     url = core_consts.OPEN_AI_COMPLETIONS_URI
     has_error = False
     attempts = 1
@@ -1601,7 +1614,7 @@ def _process_send_email_draft(payload, context):
     for form in forms:
         data_collector = {**data_collector, **form.saved_data}
     prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, temperature=0.2)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     attempts = 1
     while True:
         try:
@@ -1644,19 +1657,12 @@ def _process_send_email_draft(payload, context):
         block_builders.context_block("This version will not be saved."),
     ]
     try:
-        if context.get("channel_id", None):
-            slack_res = slack_requests.update_channel_message(
-                context.get("channel_id"),
-                context.get("ts"),
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
-        else:
-            slack_res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -1673,7 +1679,7 @@ def _process_send_next_steps(payload, context):
     for form in forms:
         data_collector = {**data_collector, **form.saved_data}
     prompt = core_consts.OPEN_AI_NEXT_STEPS(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, temperature=0.2)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     attempts = 1
     while True:
         try:
@@ -1716,19 +1722,12 @@ def _process_send_next_steps(payload, context):
         block_builders.context_block("This version will not be saved."),
     ]
     try:
-        if context.get("channel_id", None):
-            slack_res = slack_requests.update_channel_message(
-                context.get("channel_id"),
-                context.get("ts"),
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
-        else:
-            slack_res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -1783,6 +1782,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     return cleaned_data
 
 
+@background()
 def _process_send_summary_to_dm(payload, context):
     form_ids = context.get("form_ids").split(",")
     submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(

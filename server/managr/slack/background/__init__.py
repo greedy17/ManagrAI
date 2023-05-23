@@ -907,7 +907,7 @@ def _process_alert_send_deal_review(payload, context):
     prompt = core_consts.OPEN_AI_DEAL_REVIEW(
         deal_review_data, alert.template.resource_type, datetime.now().date(), user.crm
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, top_p=0.9, temperature=0.7)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, top_p=0.9, temperature=0.7)
     print(f"DEAL REVIEW BODY: {body}")
     blocks = payload["message"]["blocks"]
     has_error = False
@@ -993,7 +993,7 @@ def _process_send_deal_review(payload, context):
     prompt = core_consts.OPEN_AI_DEAL_REVIEW(
         deal_review_data, resource_type, datetime.now().date(), user.crm
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, top_p=0.9, temperature=0.7)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, top_p=0.9, temperature=0.7)
     has_error = False
     while True:
         try:

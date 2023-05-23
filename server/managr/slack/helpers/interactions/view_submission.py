@@ -167,6 +167,7 @@ def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     private_metadata = json.loads(payload["view"]["private_metadata"])
+    ts = context.get("ts", None)
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
@@ -253,6 +254,16 @@ def process_zoom_meeting_data(payload, context):
     workflow.save()
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
+    if ts is not None:
+        blocks = [block_builders.simple_section(f":white_check_mark: Meeting logged")]
+        try:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token
+            )
+        except Exception as e:
+            return logger.exception(
+                f"Failed To Show Loading Screen for user  {str(user.id)} email {user.email} {e}"
+            )
     return {"response_action": "clear"}
 
 
@@ -2626,6 +2637,7 @@ def process_submit_chat_prompt(payload, context):
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
             workflow.operations_list = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),
@@ -2720,13 +2732,24 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
-    pm = payload.get("view").get("private_metadata")
+    user = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload.get("view").get("private_metadata"))
     generative_action_values = payload["view"]["state"]["values"]["GENERATIVE_ACTION"]
     action = generative_action_values.get(list(generative_action_values.keys())[0])[
         "selected_option"
     ]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
-    action_res = action_func(payload, json.loads(pm))
+    loading_block = [*get_block_set("loading", {"message": "Generating content..."})]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=loading_block,
+        )
+        pm.update(ts=res["ts"])
+        action_res = action_func(payload, pm)
+    except Exception as e:
+        logger.exception(e)
     return {"response_action": "clear"}
 
 

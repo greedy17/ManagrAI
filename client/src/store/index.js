@@ -17,6 +17,7 @@ const state = {
   user: null,
   token: null,
   stages: null,
+  filters: [],
   meetings: [],
   showToolbarNav: false,
   pollingData: {
@@ -27,6 +28,7 @@ const state = {
   pollingItems: [],
   pricebooks: null,
   allOpps: [],
+  chatOpps: [],
   allContacts: [],
   allAccounts: [],
   allLeads: [],
@@ -49,6 +51,9 @@ const mutations = {
   UPDATE_USER: (state, payload) => {
     state.user = payload
   },
+  UPDATE_FILTERS: (state, payload) => {
+    state.filters = payload
+  },
   UPDATE_USERTOKEN: (state, payload) => {
     state.token = payload
   },
@@ -63,6 +68,9 @@ const mutations = {
   },
   SAVE_ALL_OPPS(state, allOpps) {
     state.allOpps = allOpps
+  },
+  SAVE_CHAT_OPPS(state, chatOpps) {
+    state.chatOpps = chatOpps
   },
   SAVE_ALL_CONTACTS(state, allContacts) {
     state.allContacts = allContacts
@@ -118,6 +126,33 @@ const actions = {
       console.log(e)
     }
   },
+  changeFilters({ commit }, filters) {
+    commit('UPDATE_FILTERS', filters)
+  },
+  async loadChatOpps({ state, commit }, page = 1) {
+    let resourceName = ''
+    if (state.user.crm === 'SALESFORCE') {
+      resourceName = 'Opportunity'
+    } else if (state.user.crm === 'HUBSPOT') {
+      resourceName = 'Deal'
+    } else {
+      resourceName = 'Opportunity'
+    }
+    let oldResults = []
+    if (page > 1) {
+      oldResults = state.chatOpps.results
+    }
+    let res
+    console.log('state.filters', state.filters)
+    if (!state.filters.length) {
+      res = await CRMObjects.api.getObjects(resourceName, page)
+    } else {
+      res = await CRMObjects.api.getObjects(resourceName, page, true, state.filters)
+    }
+    res.results = [...oldResults, ...res.results]
+    commit('SAVE_CHAT_OPPS', res)
+    return res
+  },
   async loadAllOpps({ state, commit }, filters = []) {
     try {
       let res
@@ -133,6 +168,7 @@ const actions = {
         res = await CRMObjects.api.getObjectsForWorkflows('Deal', true, filters)
       }
       commit('SAVE_ALL_OPPS', res.results)
+      return res.results
     } catch (e) {
       console.log(e)
     }

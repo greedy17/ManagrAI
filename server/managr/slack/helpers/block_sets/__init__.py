@@ -73,5 +73,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "bulk_recap_block_set": common_blocksets.bulk_recap_block_set,
         "direct_to_block_set": common_blocksets.direct_to_block_set,
         "paginated_meeting_blockset": meeting_review_block_sets.paginated_meeting_blockset,
+        "chat_meeting_blockset": meeting_review_block_sets.chat_meeting_blockset,
     }
     return switcher.get(set_name)(context, *args, **kwargs)
