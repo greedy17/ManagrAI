@@ -590,20 +590,21 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
                 id = event.get("id", None)
+                if user.has_zoom_integration:
+                    meeting_data = {
+                        **event,
+                        "user": user,
+                    }
+                    meetings_by_topic = [
+                        meeting for meeting in meetings if event["title"] == meeting["topic"]
+                    ]
+                    if len(meetings_by_topic):
+                        meeting = meetings_by_topic[0]
+                        meeting_data["id"] = meeting["id"]
+                        id = meeting["id"]
                 workflow_check = workflows.filter(meeting__meeting_id=id).first()
                 register_check = should_register_this_meetings(user_id, event)
-                meeting_data = {
-                    **event,
-                    "user": user,
-                }
                 if workflow_check is None and register_check:
-                    if user.has_zoom_integration:
-                        meetings_by_topic = [
-                            meeting for meeting in meetings if event["title"] == meeting["topic"]
-                        ]
-                        if len(meetings_by_topic):
-                            meeting = meetings_by_topic[0]
-                            meeting_data["id"] = meeting["id"]
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -843,7 +844,6 @@ def _process_check_trial_status(user_id):
     today = datetime.now().astimezone(pytz.UTC)
     days_active = (today - user.organization.datetime_created).days
     if days_active > 60 and not user.organization.is_paid:
-        logger.info(f"Organization {user.organization.name} has expired and is being deactivated")
         user.organization.deactivate_org()
         subject = f"Trial {user.organization.name} Expiration"
         recipient = ["support@mymanagr.com"]
@@ -1048,32 +1048,23 @@ def convert_date_string(date_string, value):
                 day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
                 if any("next" in s for s in split_date_string):
                     day_value = day_value + timezone.timedelta(days=7)
-                logger.info(f"CONVERT DATE STRING DEBUGGER: DAY SPECIFIC {day_value}")
                 return day_value
     elif any("end" in s for s in split_date_string):
         if any("week" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             start = current - timezone.timedelta(days=current.weekday())
-            logger.info(
-                f"CONVERT DATE STRING DEBUGGER: END WEEK {start + timezone.timedelta(days=4)}"
-            )
             return start + timezone.timedelta(days=4)
         elif any("month" in s for s in split_date_string):
             current = datetime.strptime(value, "%Y-%m-%d")
             last_of_month = calendar.monthrange(current.year, current.month)[1]
-            logger.info(
-                f"CONVERT DATE STRING DEBUGGER: END MONTH {current.replace(day=last_of_month)}"
-            )
             return current.replace(day=last_of_month)
     elif any("week" in s for s in split_date_string):
         current = datetime.strptime(value, "%Y-%m-%d")
-        logger.info(f"CONVERT DATE STRING DEBUGGER: WEEK {current + timezone.timedelta(days=7)}")
         return current + timezone.timedelta(days=7)
     if "back" in date_string:
         new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
             days=(time_key * number_key)
         )
-        logger.info(f"CONVERT DATE STRING DEBUGGER: END IF {new_value}")
     else:
         if time_key:
             new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
@@ -1086,7 +1077,6 @@ def convert_date_string(date_string, value):
             except Exception as e:
                 print(e)
                 new_value = value
-        logger.info(f"CONVERT DATE STRING DEBUGGER: BACK ELSE {new_value}")
     return new_value
 
 
@@ -1180,7 +1170,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
-    logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
+    # logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
 
 
@@ -1280,14 +1270,14 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
             )
-            logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
+            # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             Client = Variable_Client(timeout)
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
 
-                logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
+                # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
@@ -1356,7 +1346,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                                         resource = query.first()
                                     break
                         if resource:
-                            logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
+                            # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
                             form.resource_id = str(resource.id)
                             form.save()
                         else:
@@ -1440,91 +1430,19 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 ),
             )
         ]
-    update_attempts = 1
-    crm_res = None
-    while True and not has_error:
-        try:
-            if len(cleaned_data):
-                if form_type == "UPDATE":
-                    crm_res = resource.update(form.saved_data)
-                else:
-                    if crm_res is None:
-                        create_route = CRM_SWITCHER[user.crm][resource_type]["model"]
-                        resource_func = background_create_resource(user.crm)
-                        crm_res = resource_func.now([str(form.id)])
-                    resource = create_route.objects.get(integration_id=crm_res.integration_id)
-                    form.resource_id = str(resource.id)
-                    form.save()
-                form.is_submitted = True
-                form.submission_date = datetime.now()
-                form.save()
-            if cleaned_data["meeting_comments"] is not None:
-                if workflow_id:
-                    task_type = context.get("task_type")
-                    task = ADD_CALL_TO_CRM_FUNCTION(user.crm)(str(workflow_id), [task_type])
-                    workflow.operations.append(task.task_hash)
-                else:
-                    ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(form.id))
-            blocks = [
-                block_builders.section_with_button_block(
-                    "Generate Content",
-                    "GENERATIVE ACTION",
-                    section_text=f":white_check_mark: Successfully {'updated' if form_type == 'UPDATE' else 'created'} {resource_type} {resource.display_value}",
-                    action_id=action_with_params(
-                        slack_consts.OPEN_GENERATIVE_ACTION_MODAL,
-                        params=[f"u={str(user.id)}", f"form_ids={str(form.id)}", "type=command",],
-                    ),
-                )
-            ]
-            break
-        except crm_exceptions.TokenExpired:
-            if attempts >= 5:
-                has_error = True
-                logger.exception(
-                    f"Failed to Update data for user {str(user.id)} after {attempts} tries"
-                )
-                blocks = [
-                    block_builders.simple_section(
-                        f"Looks like we had an issue communicating with {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}"
-                    )
-                ]
-                break
-            else:
-                user.crm_account.regenerate_token()
-                update_attempts += 1
-        except crm_exceptions.FieldValidationError as e:
-            logger.exception(f"There was and validation error submitting chat prompt data: {e}")
-            has_error = True
-            logger.exception(
-                "There was and field validation error submitting chat prompt data: {e}"
+    if not has_error:
+        blocks = [
+            block_builders.section_with_button_block(
+                f"Review & Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",
+                "REVIEW_CHAT_UPDATE",
+                section_text=f":robot_face: {resource.display_value} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been filled, please review",
+                action_id=action_with_params(
+                    slack_consts.OPEN_REVIEW_CHAT_UPDATE_MODAL,
+                    params=[f"u={str(user.id)}", f"f={str(form.id)}", "type=command",],
+                ),
+                style="primary",
             )
-            blocks = [
-                block_builders.section_with_button_block(
-                    "Reopen Chat",
-                    "OPEN_CHAT",
-                    message,
-                    action_id=action_with_params(
-                        slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
-                    ),
-                )
-            ]
-            break
-        except Exception as e:
-            logger.exception(f"There was and error submitting chat prompt data: {e}")
-            message = f":no_entry_sign: Uh-oh we hit a error: {e}"
-            has_error = True
-            logger.exception("There was and error submitting chat prompt data: {e}")
-            blocks = [
-                block_builders.section_with_button_block(
-                    "Reopen Chat",
-                    "OPEN_CHAT",
-                    message,
-                    action_id=action_with_params(
-                        slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
-                    ),
-                )
-            ]
-            break
+        ]
     if workflow_id:
         if not has_error:
             form.workflow = workflow
@@ -1547,8 +1465,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             logger.exception(
                 f"ERROR sending update channel message for chat submittion because of <{e}>"
             )
-    if not has_error and form_type == "UPDATE":
-        value_update = form.resource_object.update_database_values(cleaned_data)
+    # if not has_error and form_type == "UPDATE":
+    #     value_update = form.resource_object.update_database_values(cleaned_data)
     return
 
 
@@ -1568,7 +1486,7 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
-                logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
+                # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]["text"]
                 data = eval(
                     choice[choice.index("{") : choice.index("}") + 1]
