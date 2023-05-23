@@ -27,7 +27,11 @@ export default {
   methods: {
     handleApplyCode() {
       if (this.code === this.leadershipCode) {
-        this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
+        if (Object.keys(this.$store.state.googleSignIn).length) {
+          this.$router.push({ name: 'GoogleRegister', params: { validCode: true } })
+        } else {
+          this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
+        }
       } else {
         this.$toast('Invalid Leadership code. please try again', {
           timeout: 2000,

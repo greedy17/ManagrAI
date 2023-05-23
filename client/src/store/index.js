@@ -16,6 +16,7 @@ export const STORAGE_KEY = `managr-${STORAGE_HASH}`
 const state = {
   user: null,
   token: null,
+  googleSignIn: {},
   stages: null,
   meetings: [],
   showToolbarNav: false,
@@ -48,6 +49,9 @@ const mutations = {
   },
   UPDATE_USER: (state, payload) => {
     state.user = payload
+  },
+  UPDATE_GOOGLE_SIGN_IN: (state, payload) => {
+    state.googleSignIn = payload
   },
   UPDATE_USERTOKEN: (state, payload) => {
     state.token = payload
@@ -235,6 +239,9 @@ const actions = {
   },
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)
+  },
+  updateGoogleSignIn({ commit }, payload) {
+    commit('UPDATE_GOOGLE_SIGN_IN', payload)
   },
   updateUserToken({ commit }, payload) {
     commit('UPDATE_USERTOKEN', payload)

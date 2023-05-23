@@ -35,6 +35,8 @@
         text="Log in"
         :loading="loggingIn"
       />
+      <h5 style="margin: 0.5rem;">Or</h5>
+      <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button>
       <div class="row">
         <p class="pad-right">New to Managr?</p>
         <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
@@ -82,6 +84,7 @@ export default {
       loggingIn: false,
       selectedCrm: null,
       showPassword: false,
+      newToken: false,
       loginForm: new UserLoginForm(),
       execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
@@ -132,6 +135,18 @@ export default {
         this.$router.push({ name: 'ListTemplates' })
       }
     }
+  },
+  mounted() {
+    window.google.accounts.id.initialize({
+      client_id: '1053178983159-40pr5voodgitli9ap0v9uifj8d3p9mgq.apps.googleusercontent.com',
+      callback: this.onGoogleSignIn,
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById('google-signin-button'),
+      { theme: 'outline', size: 'large' }
+    );
+
+    console.log('this.newToken', this.newToken)
   },
   methods: {
     async checkAccountStatus() {
@@ -240,6 +255,49 @@ export default {
         }
       }
     },
+    async verifyIdToken(idToken) {
+      const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + idToken);
+      const tokenInfo = await response.json();
+      return tokenInfo;
+    },
+    signInWithGoogle() {
+      // Trigger the Google Sign-In flow
+      window.google.accounts.id.prompt();
+    },
+    async onGoogleSignIn(response) {
+      // Handle the Google Sign-In response
+      if (response.credential) {
+        const idToken = response.credential
+        console.log('idToken', idToken)
+        const verifiedToken = await this.verifyIdToken(idToken)
+
+        console.log('verifiedToken', verifiedToken)
+
+        const { name, email } = verifiedToken;
+
+        console.log('User name:', name);
+        console.log('User email:', email);
+
+        if (verifiedToken) {
+          // Use the token for authentication or further processing
+          console.log('Google ID token:', verifiedToken);
+          this.newToken = true
+          // When logging out, call this function again, but with verifiedToken being an empty object
+          this.$store.dispatch('updateGoogleSignIn', verifiedToken)
+          console.log('this.newToken 2', this.newToken)
+
+          // Call get endpoint for user by email
+          // Log in with SSO endpoint if they have an account
+          // Else, send them to screen for them to get a password and org
+          // this.$router.push({ name: 'GoogleRegister' })
+        } else {
+          console.error('ID token not found in credential:', response.credential);
+        }
+      } else {
+        // Sign-In was unsuccessful
+        console.error('Google Sign-In failed:', response.error);
+      }
+    },
   },
 }
 </script>
@@ -315,7 +373,7 @@ input:focus {
   //   border: 0;
   // }
 }
-button {
+.login-button {
   @include primary-button();
   margin-bottom: 6px;
   width: 23vw;
@@ -431,5 +489,10 @@ label {
 .disabled {
   opacity: 0.6;
   cursor: text !important;
+}
+
+.google-signin-button {
+  border: none;
+  background: none;
 }
 </style>
