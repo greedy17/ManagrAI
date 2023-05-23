@@ -3952,7 +3952,6 @@ def process_launch_call_summary_review(payload, context):
 
 
 def process_open_review_chat_update_modal(payload, context):
-    print(context)
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
     user = form.user
     blocks = form.generate_form(form.saved_data)
