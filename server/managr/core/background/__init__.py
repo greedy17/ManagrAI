@@ -603,7 +603,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         ]
                         if len(meetings_by_topic):
                             meeting = meetings_by_topic[0]
-                            meeting_data["meeting_id"] = meeting["id"]
+                            meeting_data["id"] = meeting["id"]
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()

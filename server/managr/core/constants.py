@@ -108,7 +108,7 @@ OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
 )
 
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=False, temperature=False, top_p=False):
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,
