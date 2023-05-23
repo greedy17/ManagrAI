@@ -327,12 +327,13 @@ export default {
   background-color: $dark-green;
   color: white;
   border: none;
+  margin-bottom: 0.5rem;
 
   img {
     margin-right: 0.5rem;
     filter: invert(87%) sepia(25%) saturate(6867%) hue-rotate(2deg) brightness(107%) contrast(103%);
-    animation: shimmer 2s infinite;
-    -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+    // animation: shimmer 2s infinite;
+    // -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
   }
 }
 

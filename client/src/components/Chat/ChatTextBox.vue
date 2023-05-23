@@ -106,7 +106,7 @@ export default {
         setTimeout(() => {
           const newBotMessage = {
             id: newId + 1,
-            value: 'Successfully updated Opportunity Pied Piper! ✅',
+            value: '✅ Successfully updated Opportunity Pied Piper!',
             user: 'bot',
           }
           this.messages.push(newBotMessage)
