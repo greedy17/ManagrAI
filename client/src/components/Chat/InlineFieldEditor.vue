@@ -4,7 +4,23 @@
       class="field-container"
       v-if="dataType === 'TextArea' || dataType === 'String' || dataType.toLowerCase() === 'email'"
     >
-      <textarea class="inline-input" :value="inlinePlaceholder" :name="apiName" rows="1" />
+      <textarea
+        @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
+        :disabled="inlineLoader"
+        class="inline-input"
+        :value="inlinePlaceholder"
+        :name="apiName"
+        rows="1"
+      />
+
+      <div :class="{ disabled: inlineLoader }" class="save-close">
+        <div @click="inlineUpdate" class="save">
+          <span>&#x2713;</span>
+        </div>
+        <div @click="closeInline" class="close">
+          <span>x</span>
+        </div>
+      </div>
     </div>
 
     <div
@@ -22,14 +38,25 @@
         :value="inlinePlaceholder"
         :type="dataType"
         @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
+        :disabled="inlineLoader"
       />
-      <input class="inline-input" v-else type="number" />
+      <input
+        :value="inlinePlaceholder"
+        @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
+        :disabled="inlineLoader"
+        class="inline-input"
+        v-else
+        type="number"
+      />
 
-      <button :class="{ loading: inlineLoader }" @click="inlineUpdate" type="submit">update</button>
-
-      <!-- <div class="save-close">
-        <span>x</span>
-      </div> -->
+      <div :class="{ disabled: inlineLoader }" class="save-close">
+        <div @click="inlineUpdate" class="save">
+          <span>&#x2713;</span>
+        </div>
+        <div @click="closeInline" class="close">
+          <span>x</span>
+        </div>
+      </div>
     </div>
 
     <div
@@ -80,6 +107,9 @@ export default {
     setUpdateValues(key, val) {
       this.formData[key] = val
     },
+    closeInline() {
+      this.$emit('close-inline')
+    },
     async inlineUpdate() {
       this.inlineLoader = true
       try {
@@ -92,13 +122,11 @@ export default {
           from_workflow: false,
           workflow_title: 'None',
         })
-
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
         this.inlineLoader = false
-        this.$emit('close-inline')
+        this.closeInline()
       }
     },
   },
@@ -107,6 +135,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/styles/variables';
+@import '@/styles/buttons';
 
 .inline-input {
   outline: none;
@@ -114,6 +143,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   color: $base-gray;
+  width: 100%;
 }
 
 ::-webkit-calendar-picker-indicator {
@@ -123,15 +153,95 @@ export default {
 
 .field-container {
   position: relative;
+  // background-color: white;
+  padding-top: 1rem;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
 .save-close {
   position: absolute;
   right: 0;
-  top: 0;
+  top: -1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 13px;
+}
+
+.save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-green;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
 }
 
 .loading {
-  color: red;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // background-color: $soft-gray;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+button {
+  @include chat-button();
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: $dark-green;
+  color: white;
+  border: none;
+  font-size: 12px;
+}
+
+.flex-end {
+  display: flex;
+
+  align-items: center;
+}
+
+.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 </style>

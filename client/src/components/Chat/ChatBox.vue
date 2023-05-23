@@ -97,7 +97,7 @@ export default {
           user: 'bot',
           value: `Hey ${
             this.userName ? this.userName : 'there'
-          }! Welcome to Managr, your AI sales assistant.\n\nYou are currently in our Playground environment. Whenever you're ready, please go and connect your CRM along with the rest of your apps.\n\n- To get started, type in an easy command like, "update Opportunity Pied Piper, move close date to the end of the month" below.`,
+          }! Welcome to Managr, your AI sales assistant`,
         },
         // {
         //   id: 1,

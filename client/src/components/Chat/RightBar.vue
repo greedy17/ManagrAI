@@ -256,8 +256,7 @@
   
 <script>
 import SlackOAuth from '@/services/slack'
-import { CRMObjects, ObjectField } from '@/services/crm'
-// import Opportunity from '@/services/opportunity'
+import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
 import Tooltip from './Tooltip.vue'
@@ -393,6 +392,7 @@ export default {
     closeInline() {
       this.activeField = null
       this.editing = false
+      this.$store.dispatch('loadChatOpps')
     },
     setUpdateFormData(key, val) {
       if (val) {
@@ -407,7 +407,6 @@ export default {
       this.oppsLoading = true
       try {
         let res = await this.$store.dispatch('loadChatOpps', 1)
-        console.log(res)
       } catch (e) {
         console.log('error loading opps')
       } finally {
@@ -582,7 +581,6 @@ export default {
     }
     this.$store.dispatch('changeFilters', [])
     await this.$store.dispatch('loadChatOpps')
-    console.log('created displayedOpps', this.displayedOpps)
     this.setOppForms()
   },
 }
