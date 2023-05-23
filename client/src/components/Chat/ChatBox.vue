@@ -97,7 +97,7 @@ export default {
           user: 'bot',
           value: `Hey ${
             this.userName ? this.userName : 'there'
-          }! Welcome to Managr, your AI sales assistant.\n\nYou are currently in our Playground environment. Whenever you're ready, please go and connect your CRM along with the rest of your apps.\n\n- To get started, type in an easy command like, "update Opportunity Pied Piper, move close date to the end of the month" below.`,
+          }! Welcome to Managr, your AI sales assistant`,
         },
         // {
         //   id: 1,
@@ -327,12 +327,13 @@ export default {
   background-color: $dark-green;
   color: white;
   border: none;
+  margin-bottom: 0.5rem;
 
   img {
     margin-right: 0.5rem;
     filter: invert(87%) sepia(25%) saturate(6867%) hue-rotate(2deg) brightness(107%) contrast(103%);
-    animation: shimmer 2s infinite;
-    -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+    // animation: shimmer 2s infinite;
+    // -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
   }
 }
 
