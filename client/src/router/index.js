@@ -27,6 +27,11 @@ export default new Router({
       component: () => import('@/views/auth/Login')
     },
     {
+      path: '/loginsignup',
+      name: 'LoginOrSignup',
+      component: () => import('@/views/auth/LoginOrSignup')
+    },
+    {
       path: '/admin-registration',
       name: 'AdminRegistration',
       component: () => import('@/views/auth/AdminRegistration')
