@@ -505,6 +505,7 @@ def process_show_meeting_chat_modal(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
+    print(data)
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -3876,7 +3877,7 @@ def process_update_transcript_message(payload, context):
         else ["Contact", "Deal", "Company"]
     )
     action_id = (
-        slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL
+        slack_const.MEETING___SUBMIT_CHAT_PROMPT
         if select_option == "NO"
         else slack_const.MEETING__PROCESS_TRANSCRIPT_TASK
     )
@@ -3888,6 +3889,7 @@ def process_update_transcript_message(payload, context):
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Log Meeting",},
+            "callback_id": action_id,
             "blocks": blocks,
             "private_metadata": json.dumps(context),
             "external_id": f"{blockset}.{str(uuid.uuid4())}",

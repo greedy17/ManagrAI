@@ -773,6 +773,60 @@ def set_owner_field(resource, crm):
     return None
 
 
+def process_transcript_to_summaries(transcript, user):
+    from managr.core.exceptions import _handle_response
+    from managr.core import constants as core_consts
+    from managr.utils.client import Variable_Client
+
+    summary_parts = []
+    current_minute = 5
+    start_index = 0
+    split_transcript = []
+    while True:
+        check_time = (
+            f"00:0{str(current_minute)}:" if current_minute == 5 else f"00:{str(current_minute)}:"
+        )
+        end_index = transcript.find(check_time)
+        if end_index == -1:
+            split_transcript.append(transcript[start_index:])
+            break
+        else:
+            split_transcript.append(transcript[start_index:end_index])
+            start_index = end_index
+            current_minute += 5
+    if not len(summary_parts):
+        for index, transcript_part in enumerate(split_transcript):
+            transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
+            transcript_body = (
+                transcript_body.replace("\r\n", "")
+                .replace("\n", "")
+                .replace("    ", "")
+                .replace(" --> ", "-")
+            )
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                user.email, transcript_body, 500, top_p=0.9, temperature=0.7
+            )
+            with Variable_Client() as client:
+                while True:
+                    url = core_consts.OPEN_AI_COMPLETIONS_URI
+                    try:
+                        r = client.post(
+                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                        r = _handle_response(r)
+                        summary = r.get("choices")[0].get("text")
+
+                        summary = (
+                            summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
+                        )
+                        summary_split = summary.split("Summary:")
+                        summary_parts.append(summary_split[1])
+                        break
+                    except IndexError:
+                        continue
+    return summary_parts
+
+
 @background()
 def _process_get_transcript_and_update_crm(payload, context):
     from managr.core.models import User
@@ -795,6 +849,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                 "loading", {"message": "Summarizing your call. This may take a few minutes..."}
             ),
         )
+        ts = loading_res["message"]["ts"]
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -827,6 +882,14 @@ def _process_get_transcript_and_update_crm(payload, context):
             meeting.meeting_id, meeting.meeting_account.access_token
         )
         logger.info("Done!")
+        update_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            ts,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set(
+                "loading", {"message": f"Transcript found for {meeting.topic}!"}
+            ),
+        )
         recordings = meeting_data["recording_files"]
         filtered_recordings = [
             recording
@@ -840,52 +903,19 @@ def _process_get_transcript_and_update_crm(payload, context):
                 download_url, meeting.meeting_account.access_token
             )
             transcript = transcript.decode("utf-8")
-            current_minute = 5
-            start_index = 0
-            split_transcript = []
-            while True:
-                check_time = (
-                    f"00:0{str(current_minute)}:"
-                    if current_minute == 5
-                    else f"00:{str(current_minute)}:"
-                )
-                end_index = transcript.find(check_time)
-                if end_index == -1:
-                    split_transcript.append(transcript[start_index:])
-                    break
-                else:
-                    split_transcript.append(transcript[start_index:end_index])
-                    start_index = end_index
-                    current_minute += 5
-            if not len(summary_parts):
-                for index, transcript_part in enumerate(split_transcript):
-                    transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
-                    transcript_body = (
-                        transcript_body.replace("\r\n", "")
-                        .replace("\n", "")
-                        .replace("    ", "")
-                        .replace(" --> ", "-")
-                    )
-                    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, transcript_body, 500, top_p=0.9, temperature=0.7
-                    )
-                    with Variable_Client() as client:
-                        url = core_consts.OPEN_AI_COMPLETIONS_URI
-                        r = client.post(
-                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
-                        )
-                        r = _handle_response(r)
-                        summary = r.get("choices")[0].get("text")
-
-                        summary = (
-                            summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
-                        )
-                        summary_split = summary.split("Summary:")
-                        summary_parts.append(summary_split[1])
+            summary_parts = process_transcript_to_summaries(transcript, user)
             if len(summary_parts):
                 viable_data = False
                 timeout = 60.0
                 tokens = 500
+                update_res = slack_requests.update_channel_message(
+                    user.slack_integration.channel,
+                    ts,
+                    user.organization.slack_integration.access_token,
+                    block_set=get_block_set(
+                        "loading", {"message": f"Processing transcript for {meeting.topic}"}
+                    ),
+                )
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
                         fields_list, summary_parts
