@@ -257,12 +257,15 @@ def process_zoom_meeting_data(payload, context):
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_"
+                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_", "mrkdwn"
             )
         ]
         try:
-            res = slack_requests.send_channel_message(
-                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token
+            res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                block_set=blocks,
+                access_token=slack_access_token,
             )
         except Exception as e:
             return logger.exception(
@@ -2630,12 +2633,7 @@ def process_submit_chat_prompt(payload, context):
             resource_check = resource
             break
     block_set = [
-        *get_block_set(
-            "loading",
-            {
-                "message": f":rocket: We are saving your data to {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}..."
-            },
-        ),
+        *get_block_set("loading", {"message": f"Processing your submission..."},),
     ]
     try:
         if "w" in context.keys():
@@ -2650,23 +2648,13 @@ def process_submit_chat_prompt(payload, context):
                 date=str(workflow.datetime_created.date()),
             )
             emit_meeting_workflow_tracker(str(workflow.id))
-        else:
-            ts = context.get("ts", None)
-            channel = context.get("channel", None)
-            if ts and channel:
-                res = slack_requests.update_channel_message(
-                    channel,
-                    ts,
-                    user.organization.slack_integration.access_token,
-                    block_set=block_set,
-                )
-            else:
-                res = slack_requests.send_channel_message(
-                    user.slack_integration.channel,
-                    user.organization.slack_integration.access_token,
-                    block_set=block_set,
-                )
-            context.update(channel=res["channel"], ts=res["ts"])
+
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+        context.update(channel=res["channel"], ts=res["ts"])
         if resource_check:
             emit_process_submit_chat_prompt(
                 context.get("u"), prompt, resource_check, context,

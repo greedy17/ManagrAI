@@ -1432,6 +1432,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             )
         ]
     if not has_error:
+        params = [f"u={str(user.id)}", f"f={str(form.id)}", "type=command",]
+        if workflow_id:
+            params.append(f"w={workflow_id}")
         blocks = [
             block_builders.section_with_button_block(
                 f"Review & Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",
@@ -1439,7 +1442,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 section_text=f":robot_face: {resource.display_value} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been filled, please review",
                 action_id=action_with_params(
                     slack_consts.OPEN_REVIEW_CHAT_UPDATE_MODAL,
-                    params=[f"u={str(user.id)}", f"f={str(form.id)}", "type=command",],
+                    params=params,
                 ),
                 style="primary",
             )
@@ -1449,25 +1452,21 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             form.workflow = workflow
             form.update_source = "meeting (chat)"
             form.save()
-            workflow.completed_operations.append(slack_consts.MEETING___SUBMIT_CHAT_PROMPT)
             workflow.resource_type = resource_type
             workflow.resource_id = str(resource.id)
             workflow.save()
-        return
-    else:
-        try:
-            slack_res = slack_requests.update_channel_message(
-                context.get("channel"),
-                context.get("ts"),
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
-        except Exception as e:
-            logger.exception(
-                f"ERROR sending update channel message for chat submittion because of <{e}>"
-            )
-    # if not has_error and form_type == "UPDATE":
-    #     value_update = form.resource_object.update_database_values(cleaned_data)
+
+    try:
+        slack_res = slack_requests.update_channel_message(
+            context.get("channel"),
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
     return
 
 

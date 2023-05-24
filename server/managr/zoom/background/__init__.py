@@ -883,7 +883,6 @@ def _process_get_transcript_and_update_crm(payload, context):
                         summary_split = summary.split("Summary:")
                         summary_parts.append(summary_split[1])
             if len(summary_parts):
-
                 viable_data = False
                 timeout = 60.0
                 tokens = 500
@@ -948,6 +947,15 @@ def _process_get_transcript_and_update_crm(payload, context):
                             break
                         else:
                             timeout += 30.0
+            else:
+                has_error = True
+                blocks = [
+                    block_builders.header_block("AI Generated Call Summary"),
+                    block_builders.context_block(f"Meeting: {meeting.topic}"),
+                    block_builders.simple_section(
+                        f"Looks like there was a problem processing your transcript", "mrkdwn",
+                    ),
+                ]
     except Exception as e:
         logger.exception(e)
         has_error = True

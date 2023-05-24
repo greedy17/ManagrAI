@@ -3958,13 +3958,17 @@ def process_open_review_chat_update_modal(payload, context):
     context.update(
         message_ref=f"{user.slack_integration.channel}|{payload['container']['message_ts']}"
     )
+    callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    if "meeting" in form.update_source:
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        context.update(ts=payload["container"]["message_ts"])
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Chat Update Review"},
             "blocks": blocks,
-            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+            "callback_id": callback_id,
             "private_metadata": json.dumps(context),
             "submit": {"type": "plain_text", "text": "Submit"},
         },
