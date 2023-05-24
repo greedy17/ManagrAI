@@ -590,11 +590,12 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
                 id = event.get("id", None)
+                meeting_data = {
+                    **event,
+                    "user": user,
+                }
                 if user.has_zoom_integration:
-                    meeting_data = {
-                        **event,
-                        "user": user,
-                    }
+
                     meetings_by_topic = [
                         meeting for meeting in meetings if event["title"] == meeting["topic"]
                     ]
