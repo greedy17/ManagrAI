@@ -255,7 +255,11 @@ def process_zoom_meeting_data(payload, context):
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
     if ts is not None:
-        blocks = [block_builders.simple_section(f":white_check_mark: Meeting logged")]
+        blocks = [
+            block_builders.simple_section(
+                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_"
+            )
+        ]
         try:
             res = slack_requests.send_channel_message(
                 user.slack_integration.channel, block_set=blocks, access_token=slack_access_token
