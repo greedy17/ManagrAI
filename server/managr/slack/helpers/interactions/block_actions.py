@@ -1007,14 +1007,16 @@ def process_pick_custom_object(payload, context):
 @processor()
 def process_sync_calendar(payload, context):
     user = User.objects.get(id=context.get("u"))
-    date = context.get("date", None)
+    # date = context.get("date", None)
+    date = "2023-05-23"
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
     if date:
         message_date = datetime.strptime(date, "%Y-%m-%d")
     else:
-        message_date = datetime.today()
+        user_timezone = pytz.timezone(user.timezone)
+        message_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
     date_string = f":calendar: Today's Meetings: *{message_date.month}/{message_date.day}/{message_date.year}*"
     blocks = [
         block_builders.section_with_button_block(

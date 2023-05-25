@@ -624,9 +624,12 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         meeting_serializer.save()
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id), "date": date})
         else:
-            todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")
             user_timezone = pytz.timezone(user.timezone)
-            todays_date = pytz.utc.localize(todays_date).astimezone(user_timezone)
+            todays_date = (
+                pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                if date is None
+                else datetime.strptime(date, "%Y-%m-%d")
+            )
             date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
             blocks = [
                 block_builders.section_with_button_block(
