@@ -4,7 +4,7 @@
       <div class="center">
         <img src="@/assets/images/logo.png" height="66px" alt="" />
         <h1>Welcome Back</h1>
-        <small class="gray-blue">Login using your email & password</small>
+        <small class="gray-blue">Login with your email</small>
       </div>
 
       <FormField
