@@ -4,7 +4,7 @@
       <div class="center">
         <img src="@/assets/images/logo.png" height="66px" alt="" />
         <h1>Welcome Back</h1>
-        <small class="gray-blue">Enter your email & password to login to Managr</small>
+        <small class="gray-blue">Login using your email & password</small>
       </div>
 
       <FormField
@@ -13,7 +13,7 @@
         @blur="loginForm.field.email.validate()"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
-        placeholder="enter email"
+        placeholder="Email address"
         :errors="loginForm.field.email.errors"
       />
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
@@ -31,19 +31,25 @@
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
-        style="font-size: 14px"
-        text="Log in"
+        style="font-size: 14px; width: 23vw;"
+        text="Continue"
         :loading="loggingIn"
       />
-      <h5 style="margin: 0.5rem;">Or</h5>
-      <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button>
+      <div class="seperator">
+        <span> OR </span>
+      </div>
+      <!-- <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button> -->
+      <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
+        <img src="@/assets/images/google.svg" />
+        <span>Continue with Google</span>
+      </button>
       <div class="row">
         <p class="pad-right">New to Managr?</p>
-        <router-link :to="{ name: 'RegisterSelection' }">Sign Up! </router-link>
+        <router-link class="register-link" :to="{ name: 'RegisterSelection' }">Register </router-link>
       </div>
       <div class="row">
         <p class="pad-right">Forgot password?</p>
-        <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
+        <router-link :to="{ name: 'ForgotPassword' }"> Reset it </router-link>
       </div>
     </div>
     <div class="links">
@@ -142,12 +148,10 @@ export default {
       client_id: '1053178983159-40pr5voodgitli9ap0v9uifj8d3p9mgq.apps.googleusercontent.com',
       callback: this.onGoogleSignIn,
     });
-    window.google.accounts.id.renderButton(
-      document.getElementById('google-signin-button'),
-      { theme: 'outline', size: 'large' }
-    );
 
-    console.log('this.newToken', this.newToken)
+    // Attach event listener to the custom button
+    const customButton = document.getElementById('custom-google-signin-button');
+    customButton.addEventListener('click', this.signInWithGoogle);
   },
   methods: {
     async checkAccountStatus() {
@@ -381,6 +385,9 @@ input:focus {
   padding: 14px;
   box-shadow: none;
 }
+::v-deep .haAclf {
+  width: 23vw;
+}
 a {
   text-decoration: none;
   color: $light-gray-blue;
@@ -418,6 +425,7 @@ label {
 }
 .links {
   font-size: 13px;
+  letter-spacing: 0.75px;
   margin: 3rem;
 }
 ::v-deep .input-content {
@@ -492,8 +500,38 @@ label {
   cursor: text !important;
 }
 
-.google-signin-button {
-  border: none;
-  background: none;
+.seperator {
+  border-bottom: 1px solid $soft-gray;
+  width: 100%;
+  position: relative;
+  margin: 8px 0px;
+  span {
+    position: absolute;
+    left: 48%;
+    top: -8px;
+    background-color: white;
+    padding: 0 8px;
+    color: $light-gray-blue;
+    font-size: 13px;
+  }
 }
+
+.google-signin-button {
+  @include gray-text-button;
+  display: flex;
+  font-size: 15px;
+  padding: 0.65rem;
+  width: 23vw;
+  span {
+    margin-left: 0.5rem;
+  }
+  img {
+    height: 22px;
+  }
+}
+
+.register-link {
+    text-decoration: none;
+    color: $dark-green;
+  }
 </style>

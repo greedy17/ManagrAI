@@ -257,6 +257,17 @@ export default {
         })
         return
       }
+      const splitEmail = this.registrationForm.field.email.value.split('@')
+      if (splitEmail[splitEmail.length-1] === 'gmail.com') {
+        this.$toast('Please use a company email.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
 
       this.submitting = true
 

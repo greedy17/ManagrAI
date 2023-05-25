@@ -4,38 +4,28 @@
         <div style="width: 100vw; height: 94vh" class="registration__form">
           <div :class="{ disable: generatingToken }" class="form-card">
             <div class="center">
-              <img src="@/assets/images/logo.png" height="60px" alt="" />
+              <img src="@/assets/images/logo.png" height="66px" alt="" />
               <h1 class="logo-title">Welcome to Managr</h1>
               <small class="gray-blue" style="margin: 0px 0px 16px 8px"
                 >Register with Google to continue</small
               >
             </div>
-            <!-- <button
-              v-if="!generatingToken"
-              class="register-button"
-              @click="onGetAuthLink('SALESFORCE')"
-            >
-              <img src="@/assets/images/salesforce.png" height="auto" width="30px" alt="" />
-              Continue with Salesforce
-            </button> -->
-            <button id="google-signin-button" class="" style="border: none; background: none;" @click="signInWithGoogle">Register with Google</button>
-            <div v-if="!generatingToken" class="seperator">
+            <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
+              <img src="@/assets/images/google.svg" />
+              <span>Continue with Google</span>
+            </button>
+            <div class="seperator">
               <span> OR </span>
             </div>
             <button
-              v-if="!generatingToken"
               class="register-button-hs"
               @click="goToRegister"
             >
-              <!-- <img src="@/assets/images/hubspot_logo.webp" height="24px" width="auto" alt="" /> -->
-              Continue with Email
+              Register with company email
             </button>
-            <div class="center" v-else>
-              <PulseLoadingSpinner class="invert" />
-            </div>
             <div class="row2">
               <p class="pad-right">Already have an account?</p>
-              <router-link :to="{ name: 'Login' }">Log in! </router-link>
+              <router-link class="login-link" style="text-decoration: none;" :to="{ name: 'Login' }">Log in</router-link>
             </div>
             <div class="form-card__footer">
               <!-- <div>
@@ -43,7 +33,7 @@
                 <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a> and
                 <a href="https://managr.ai/privacy-policy" target="_blank">Policies</a>.
               </div> -->
-              <div class="links">
+              <!-- <div class="links">
                 <p style="color: #4d4e4c">
                   <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
                   |
@@ -51,8 +41,17 @@
                   |
                   <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
                 </p>
-              </div>
+              </div> -->
             </div>
+          </div>
+          <div class="links">
+            <p style="color: #4d4e4c">
+              <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+              |
+              <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
+              |
+              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>
+            </p>
           </div>
         </div>
       </div>
@@ -62,8 +61,6 @@
   import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
   import Button from '@thinknimble/button'
   import FormField from '@/components/forms/FormField'
-  import Salesforce from '@/services/salesforce'
-  import Hubspot from '@/services/hubspot'
   import PipelineLoader from '@/components/PipelineLoader'
   export default {
     name: 'RegisterSelection',
@@ -77,7 +74,6 @@
     data() {
       return {
         generatingToken: false,
-        selectedCrm: null,
       }
     },
     watch: {
@@ -87,29 +83,16 @@
 
     },
     mounted() {
-    window.google.accounts.id.initialize({
-      client_id: '1053178983159-40pr5voodgitli9ap0v9uifj8d3p9mgq.apps.googleusercontent.com',
-      callback: this.onGoogleSignIn,
-    });
-    window.google.accounts.id.renderButton(
-      document.getElementById('google-signin-button'),
-      { theme: 'outline', size: 'large' }
-    );
-  },
+      window.google.accounts.id.initialize({
+        client_id: '1053178983159-40pr5voodgitli9ap0v9uifj8d3p9mgq.apps.googleusercontent.com',
+        callback: this.onGoogleSignIn,
+      });
+
+      // Attach event listener to the custom button
+      const customButton = document.getElementById('custom-google-signin-button');
+      customButton.addEventListener('click', this.signInWithGoogle);
+    },
     methods: {
-      async onGetAuthLink(integration) {
-        this.generatingToken = true
-        this.selectedCrm = integration
-        let modelClass = this.selectedCrmSwitcher
-        try {
-          let res = await modelClass.api.getAuthLinkSSO()
-          if (res.link) {
-            window.location.href = res.link
-          }
-        } finally {
-          this.generatingToken = false
-        }
-      },
       goToRegister() {
         this.$router.push({ name: 'Register' })
       },
@@ -124,6 +107,7 @@
       },
       async onGoogleSignIn(response) {
         // Handle the Google Sign-In response
+        console.log('onGoogleSignIn')
         if (response.credential) {
           const idToken = response.credential
           const verifiedToken = await this.verifyIdToken(idToken)
@@ -148,16 +132,6 @@
       },
     },
     computed: {
-      selectedCrmSwitcher() {
-        switch (this.selectedCrm) {
-          case 'SALESFORCE':
-            return Salesforce
-          case 'HUBSPOT':
-            return Hubspot
-          default:
-            return null
-        }
-      },
       user() {
         return this.$store.state.user
       },
@@ -265,6 +239,7 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    margin-top: 7rem;
     gap: 12px;
     border-radius: 6px;
     background-color: white;
@@ -286,8 +261,10 @@
   .registration__form {
     background-color: transparent !important;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    flex-direction: column;
+    height: 95vh;
     z-index: 10;
   }
   .error {
@@ -318,8 +295,8 @@
     color: $base-gray;
   }
   a {
+    text-decoration: none;
     color: $light-gray-blue;
-    font-weight: bold;
   }
   .disabled {
     background-color: $soft-gray !important;
@@ -373,6 +350,8 @@
     border: 1px solid $soft-gray;
     width: 23vw;
     padding: 10px 2px;
+    font-size: 15px;
+    padding: 0.65rem;
     img {
       margin-right: 16px;
     }
@@ -387,6 +366,25 @@
   }
   .links {
     font-size: 13px;
+    letter-spacing: 0.75px;
     // margin: 3rem;
+  }
+  .google-signin-button {
+    @include gray-text-button;
+    display: flex;
+    font-size: 15px;
+    padding: 0.65rem;
+    width: 23vw;
+    span {
+      margin-left: 0.5rem;
+    }
+    img {
+      height: 22px;
+    }
+  }
+
+  .login-link {
+    text-decoration: none;
+    color: $dark-green;
   }
   </style>

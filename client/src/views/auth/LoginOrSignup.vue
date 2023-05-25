@@ -11,7 +11,7 @@
       </div>
       <div class="display-flex space-around">
         <button class="button" @click="goToLogin">Log In</button>
-        <button class="button" @click="goToRegister">Sign Up</button>
+        <button class="second-button" @click="goToRegister">Sign Up</button>
       </div>
       <div class="links">
         <p style="color: #4d4e4c">
@@ -41,6 +41,9 @@
       goToLogin() {
         this.$router.push({ name: 'Login' })
       },
+    },
+    created() {
+      this.$store.dispatch('updateGoogleSignIn', {})
     },
   }
 </script>
@@ -72,6 +75,10 @@
   }
   .button {
     @include primary-button;
+  }
+  .second-button {
+    @include gray-text-button;
+    color: $dark-green;
   }
   .links {
     font-size: 13px;
