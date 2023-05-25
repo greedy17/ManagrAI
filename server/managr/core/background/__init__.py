@@ -1432,7 +1432,11 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             )
         ]
     if not has_error:
-        params = [f"u={str(user.id)}", f"f={str(form.id)}", "type=command",]
+        params = [
+            f"u={str(user.id)}",
+            f"f={str(form.id)}",
+            "type=command",
+        ]
         if workflow_id:
             params.append(f"w={workflow_id}")
         blocks = [
@@ -1441,8 +1445,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 "REVIEW_CHAT_UPDATE",
                 section_text=f":robot_face: {resource.display_value} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been filled, please review",
                 action_id=action_with_params(
-                    slack_consts.OPEN_REVIEW_CHAT_UPDATE_MODAL,
-                    params=params,
+                    slack_consts.OPEN_REVIEW_CHAT_UPDATE_MODAL, params=params,
                 ),
                 style="primary",
             )
@@ -1530,7 +1533,12 @@ def _process_send_email_draft(payload, context):
     forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
     data_collector = {}
     for form in forms:
-        data_collector = {**data_collector, **form.saved_data}
+        try:
+            data = form.saved_data["meeting_comments"]
+            data_collector = {**data_collector, **data}
+        except Exception:
+            continue
+
     prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(data_collector)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     attempts = 1
