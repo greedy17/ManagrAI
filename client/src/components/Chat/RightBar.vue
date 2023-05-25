@@ -191,7 +191,10 @@
       <div class="selected-opp-section">
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
-            <h5 class="gray-text">{{ field.label }}</h5>
+            <h5 class="gray-text">
+              {{ field.label }}
+            </h5>
+
             <div
               @click="toggleEdit(field.id)"
               v-if="!editing || activeField !== field.id"
@@ -203,7 +206,7 @@
                   : '-'
               }}
             </div>
-            <div v-else>
+            <div style="padding-right: 0.5rem" v-else>
               <InlineFieldEditor
                 :inlinePlaceholder="selectedOpp['secondary_data'][field.apiName]"
                 :dataType="field.dataType"
@@ -211,13 +214,15 @@
                 :integrationId="selectedOpp.integrationId"
                 :resourceId="selectedOpp.id"
                 :resourceType="userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'"
+                :field="field"
+                :showing="editing"
                 @close-inline="closeInline"
               />
             </div>
           </div>
         </div>
 
-        <div class="edit-button">
+        <div v-if="!editing" class="edit-button">
           <button>Edit View</button>
         </div>
       </div>
@@ -616,6 +621,10 @@ export default {
 }
 
 .right-container {
+  position: sticky;
+  // right: 0;
+  // top: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -814,7 +823,7 @@ header {
 
   button {
     @include chat-button();
-    width: 100px;
+
     font-size: 14px;
     font-family: $base-font-family;
     color: $chat-font-color;
@@ -1080,8 +1089,6 @@ img {
 
 .rotate {
   animation: rotation 3s infinite linear;
-  // width: 100px;
-  // height: 100px;
 }
 
 .coming-soon {

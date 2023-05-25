@@ -224,12 +224,6 @@ export default {
   padding-left: 1rem;
 }
 .activeicon {
-  display: block;
-  font-size: 10px;
-  padding: 1px 4px;
-  background-color: white;
-  margin-left: -4px;
-  border-radius: 100%;
   animation: shimmer 1s infinite;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
@@ -248,7 +242,7 @@ export default {
   width: 250px;
   position: absolute;
   padding-bottom: 0.5rem;
-  bottom: 3.25rem;
+  bottom: 3.5rem;
   border-radius: 6px;
   background-color: white;
   box-shadow: 0 0 11px #b8bdc2;
@@ -346,5 +340,61 @@ export default {
   color: $light-gray-blue;
   margin-top: -0.25rem;
   cursor: pointer;
+}
+
+.tooltip {
+  display: block;
+  width: 228px;
+  height: auto;
+  position: absolute;
+  top: 0;
+  font-size: 14px;
+  background: $base-gray;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    p {
+      margin: 0;
+      padding: 0;
+      margin-top: 0.25rem;
+    }
+
+    p:last-of-type {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+}
+
+.tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $base-gray;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.showing-tooltip {
+  top: -30px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
 }
 </style>
