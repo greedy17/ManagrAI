@@ -45,14 +45,14 @@ OPEN_AI_UPDATE_PROMPT = (
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
     lambda meeting_comments: f"""You are a salesperson who just had a meeting with a prospect or customer. Your job is to now send a follow-up email. You must follow these instructions:
-    1) The email must include the desired command outlined "in the follow up email". This request supersedes any other instruction. Use the data from the meeting_comments to craft the email.
+    1) Use the meeting comments below to craft the email.
     2) writing style must be this (unless otherwise specified in the meeting comments):
     A casual and friendly tone, using informal salutations and contractions.
     Concise and to-the-point sentences that focus on the value proposition.
     Frequent paragraph breaks to enhance readability.
     Use of a question. Limit to one question, at the end, a clear call-to-action (no P.S. at the end)
-    3) The email cannot be more than 1000 characters.
-    Meeting Notes: {meeting_comments}"""
+    3) The email cannot be more than 1000 characters.\n
+    Meeting Comments: {meeting_comments}"""
 )
 OPEN_AI_NEXT_STEPS = (
     lambda data: f"Provide up to 3 listed out suggested next steps to take in order to close the prospect or move the deal forward based on meeting notes below, ranging from aggressive (close this month) to passive (close in the coming months)\n Meeting Notes: {data}"

@@ -1531,11 +1531,11 @@ def _process_send_email_draft(payload, context):
     user = User.objects.get(id=context.get("u"))
     form_ids = context.get("form_ids").split(",")
     forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
-    data_collector = {}
+    data_collector = []
     for form in forms:
         try:
             data = form.saved_data["meeting_comments"]
-            data_collector = {**data_collector, **data}
+            data_collector.append(data)
         except Exception:
             continue
 
