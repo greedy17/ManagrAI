@@ -1007,8 +1007,7 @@ def process_pick_custom_object(payload, context):
 @processor()
 def process_sync_calendar(payload, context):
     user = User.objects.get(id=context.get("u"))
-    # date = context.get("date", None)
-    date = "2023-05-23"
+    date = context.get("date", None)
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"
@@ -3907,7 +3906,6 @@ def process_meeting_transcript_task(payload, context):
     emit_process_get_transcript_and_update_crm(payload, context, schedule=datetime.now())
     user = User.objects.get(id=context.get("u"))
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     blocks = [
         block_builders.simple_section(
             f"Processing AI-call summary. We will DM you when its ready! :rocket:"

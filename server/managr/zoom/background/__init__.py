@@ -835,7 +835,7 @@ def _process_get_transcript_and_update_crm(payload, context):
     from managr.utils.client import Variable_Client
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
-    from managr.core.utils import max_token_calculator
+    from managr.core.background import emit_process_calendar_meetings
     import httpx
 
     pm = json.loads(payload["view"]["private_metadata"])
@@ -872,9 +872,18 @@ def _process_get_transcript_and_update_crm(payload, context):
     fields_list = list(fields.values_list("label", flat=True))
     workflow.resource_id = str(resource.id)
     workflow.resource_type = resource_type
+    workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
+    emit_process_calendar_meetings(
+        str(user.id),
+        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+        workflow.slack_interaction,
+        date=str(workflow.datetime_created.date()),
+    )
     meeting = workflow.meeting
     has_error = False
+    error_message = None
     summary_parts = []
     try:
         logger.info("Retreiving meeting data...")
@@ -970,10 +979,14 @@ def _process_get_transcript_and_update_crm(payload, context):
                                 block_builders.header_block("AI Generated Call Summary"),
                                 block_builders.context_block(f"Meeting: {meeting.topic}"),
                                 block_builders.simple_section(
-                                    "Looks like we had an issue communicating with Open AI"
+                                    ":no_entry_sign: Open AI is taking too long to respond",
+                                    "mrkdwn",
                                 ),
                             ]
                             has_error = True
+                            error_message = (
+                                "Looks like there was a problem processing your transcript"
+                            )
                             break
                         else:
                             timeout += 30.0
@@ -986,6 +999,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                         f"Looks like there was a problem processing your transcript", "mrkdwn",
                     ),
                 ]
+                error_message = "Looks like ther was a problem processing your transcript"
     except Exception as e:
         logger.exception(e)
         has_error = True
@@ -996,6 +1010,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                 f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
             ),
         ]
+        error_message = "Looks like ther was a problem processing your transcript"
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
@@ -1032,6 +1047,9 @@ def _process_get_transcript_and_update_crm(payload, context):
                 f"Your {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been updated, please review."
             ),
         ]
+    else:
+        workflow.failed_task_description.append(error_message)
+        workflow.save()
     try:
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
