@@ -228,6 +228,8 @@ def process_zoom_meeting_data(payload, context):
     if len(workflow.failed_task_description):
         workflow.build_retry_list()
     else:
+        if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
+            workflow.operations = []
         main_operation = (
             f"{sf_consts.MEETING_REVIEW__CREATE_RESOURCE}.{str(workflow.id)}"
             if create_form_check
@@ -255,10 +257,17 @@ def process_zoom_meeting_data(payload, context):
     workflow.begin_tasks()
     emit_meeting_workflow_tracker(str(workflow.id))
     if ts is not None:
-        blocks = [block_builders.simple_section(f":white_check_mark: Meeting logged")]
+        blocks = [
+            block_builders.simple_section(
+                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_", "mrkdwn"
+            )
+        ]
         try:
-            res = slack_requests.send_channel_message(
-                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token
+            res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                block_set=blocks,
+                access_token=slack_access_token,
             )
         except Exception as e:
             return logger.exception(
@@ -2626,18 +2635,13 @@ def process_submit_chat_prompt(payload, context):
             resource_check = resource
             break
     block_set = [
-        *get_block_set(
-            "loading",
-            {
-                "message": f":rocket: We are saving your data to {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}..."
-            },
-        ),
+        *get_block_set("loading", {"message": f"Processing your submission..."},),
     ]
     try:
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-            workflow.operations_list = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
-            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),
@@ -2646,23 +2650,13 @@ def process_submit_chat_prompt(payload, context):
                 date=str(workflow.datetime_created.date()),
             )
             emit_meeting_workflow_tracker(str(workflow.id))
-        else:
-            ts = context.get("ts", None)
-            channel = context.get("channel", None)
-            if ts and channel:
-                res = slack_requests.update_channel_message(
-                    channel,
-                    ts,
-                    user.organization.slack_integration.access_token,
-                    block_set=block_set,
-                )
-            else:
-                res = slack_requests.send_channel_message(
-                    user.slack_integration.channel,
-                    user.organization.slack_integration.access_token,
-                    block_set=block_set,
-                )
-            context.update(channel=res["channel"], ts=res["ts"])
+
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+        context.update(channel=res["channel"], ts=res["ts"])
         if resource_check:
             emit_process_submit_chat_prompt(
                 context.get("u"), prompt, resource_check, context,
@@ -2803,7 +2797,6 @@ def handle_view_submission(payload):
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
     }
-
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])
     return switcher.get(callback_id, NO_OP)(payload, view_context)

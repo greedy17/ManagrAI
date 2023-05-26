@@ -505,6 +505,7 @@ def process_show_meeting_chat_modal(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
+    print(data)
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -1013,7 +1014,8 @@ def process_sync_calendar(payload, context):
     if date:
         message_date = datetime.strptime(date, "%Y-%m-%d")
     else:
-        message_date = datetime.today()
+        user_timezone = pytz.timezone(user.timezone)
+        message_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
     date_string = f":calendar: Today's Meetings: *{message_date.month}/{message_date.day}/{message_date.year}*"
     blocks = [
         block_builders.section_with_button_block(
@@ -3876,7 +3878,7 @@ def process_update_transcript_message(payload, context):
         else ["Contact", "Deal", "Company"]
     )
     action_id = (
-        slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL
+        slack_const.MEETING___SUBMIT_CHAT_PROMPT
         if select_option == "NO"
         else slack_const.MEETING__PROCESS_TRANSCRIPT_TASK
     )
@@ -3888,6 +3890,7 @@ def process_update_transcript_message(payload, context):
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Log Meeting",},
+            "callback_id": action_id,
             "blocks": blocks,
             "private_metadata": json.dumps(context),
             "external_id": f"{blockset}.{str(uuid.uuid4())}",
@@ -3903,7 +3906,6 @@ def process_meeting_transcript_task(payload, context):
     emit_process_get_transcript_and_update_crm(payload, context, schedule=datetime.now())
     user = User.objects.get(id=context.get("u"))
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     blocks = [
         block_builders.simple_section(
             f"Processing AI-call summary. We will DM you when its ready! :rocket:"
@@ -3936,6 +3938,39 @@ def process_launch_call_summary_review(payload, context):
             "title": {"type": "plain_text", "text": "Call Summary Review"},
             "blocks": blocks,
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
+            "private_metadata": json.dumps(context),
+            "submit": {"type": "plain_text", "text": "Submit"},
+        },
+    }
+    try:
+        res = slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN,
+            data,
+            access_token=user.organization.slack_integration.access_token,
+        )
+    except Exception as e:
+        return logger.exception(f"Failed to send message for {e}")
+    return
+
+
+def process_open_review_chat_update_modal(payload, context):
+    form = OrgCustomSlackFormInstance.objects.get(id=context.get("f"))
+    user = form.user
+    blocks = form.generate_form(form.saved_data)
+    context.update(
+        message_ref=f"{user.slack_integration.channel}|{payload['container']['message_ts']}"
+    )
+    callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
+    if "meeting" in form.update_source:
+        callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
+        context.update(ts=payload["container"]["message_ts"])
+    data = {
+        "trigger_id": payload["trigger_id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Chat Update Review"},
+            "blocks": blocks,
+            "callback_id": callback_id,
             "private_metadata": json.dumps(context),
             "submit": {"type": "plain_text", "text": "Submit"},
         },
@@ -4024,6 +4059,7 @@ def handle_block_actions(payload):
         slack_const.MEETING__UPDATE_TRANSCRIPT_MESSAGE: process_update_transcript_message,
         slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_meeting_transcript_task,
         slack_const.CALL_LAUNCH_SUMMARY_REVIEW: process_launch_call_summary_review,
+        slack_const.OPEN_REVIEW_CHAT_UPDATE_MODAL: process_open_review_chat_update_modal,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
