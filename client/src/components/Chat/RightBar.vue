@@ -96,12 +96,22 @@
 
           <div v-show="filtersOpen" class="filter-container">
             <header>
-              <p v-if="!selectedFilter">Select Filters</p>
+              <p v-if="!selectedFilter">
+                Select Filters
+                <img
+                  @click="removeFilters"
+                  v-if="activeFilters.length"
+                  src="@/assets/images/clearfilter.svg"
+                  height="14px"
+                  alt=""
+                  style="margin-left: 0.5rem"
+                />
+              </p>
 
               <div
                 style="margin-left: -0.75rem"
                 v-else
-                @click="selectedFilter = null"
+                @click="clearFilter"
                 class="flexed-row pointer"
               >
                 <img src="@/assets/images/back.svg" height="16px;width:16px" alt="" />
@@ -142,7 +152,7 @@
                   :placeholder="`${selectedFilter.name}`"
                   style="width: 100%; font-size: 14px"
                   v-model="selectedOperator"
-                  :options="operators"
+                  :options="operators[selectedFilter.name]"
                   @select="selectOperator($event.value, $event.label)"
                   openDirection="below"
                   selectLabel=""
@@ -162,6 +172,28 @@
                     v-model="selectedFilter.value"
                     autofocus="true"
                   />
+
+                  <!-- <Multiselect
+                  :options="picklistOptions[field.id]"
+                  :placeholder="inlinePlaceholder || '-'"
+                  selectLabel=""
+                  track-by="value"
+                  label="label"
+                  :multiple="dataType === 'MultiPicklist' ? true : false"
+                  v-model="selectedOption"
+                  :disabled="inlineLoader"
+                  @select="
+                    setUpdateValues(
+                      apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+                      $event.value,
+                      dataType === 'MultiPicklist' ? true : false,
+                    )
+                  "
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                </Multiselect> -->
                 </div>
 
                 <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
@@ -226,14 +258,36 @@
           <button>Edit View</button>
         </div>
       </div>
-      <div class="selected-opp-section">
-        <h4 class="gray-text">Notes & History</h4>
+      <div style="padding-top: 0" class="selected-opp-section">
+        <h4 style="margin-top: 0; margin-left: -0.25rem" class="selected-opp sticky-top">
+          Notes & History
+        </h4>
         <div v-for="note in notes" :key="note.id">
-          <div>
-            <p style="margin: 0.25rem 0">{{ note.value }}</p>
+          <div class="row">
+            <p
+              :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+              style="margin-right: 0.25rem"
+            >
+              {{ note.previous_data__StageName }}
+            </p>
+
+            <img
+              v-if="note.saved_data__StageName"
+              src="@/assets/images/transition.svg"
+              height="12px"
+              alt=""
+            />
+
+            <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
           </div>
+          <div>
+            <p style="margin: 0.25rem 0">{{ note.meeting_comments || '---' }}</p>
+          </div>
+
           <small class="gray-text">{{
-            `${getMonth(note.date)} ${getDate(note.date)}, ${getYear(note.date)}`
+            `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
+              note.submission_date,
+            )}`
           }}</small>
         </div>
       </div>
@@ -276,6 +330,8 @@ export default {
   data() {
     return {
       updateFormData: {},
+      loadingNotes: false,
+      notes: [],
       editing: false,
       activeField: null,
       oppsLoading: false,
@@ -295,7 +351,6 @@ export default {
         // },
       }),
       page: 1,
-      notes: [{ id: 0, value: 'Moved close date back to end of June', date: Date.now() }],
       selectedOperator: null,
       months: {
         0: 'January',
@@ -311,15 +366,40 @@ export default {
         10: 'November',
         11: 'December',
       },
-      operators: [
-        { label: 'is', value: 'EQUALS' },
-        { label: 'is greater than', value: 'GREATER_THAN' },
-        { label: 'is greater than or equal to', value: 'GREATER_THAN_EQUALS' },
-        { label: 'is less than', value: 'LESS_THAN' },
-        { label: 'is less than or equal to', value: 'LESS_THAN_EQUALS' },
-        { label: 'contains', value: 'CONTAINS' },
-        { label: 'does not equal', value: 'NOT_EQUALS' },
-      ],
+      operators: {
+        Amount: [
+          { label: 'is', value: 'EQUALS' },
+          { label: 'is greater than', value: 'GREATER_THAN' },
+          { label: 'is greater than or equal to', value: 'GREATER_THAN_EQUALS' },
+          { label: 'is less than', value: 'LESS_THAN' },
+          { label: 'is less than or equal to', value: 'LESS_THAN_EQUALS' },
+          { label: 'contains', value: 'CONTAINS' },
+          { label: 'does not equal', value: 'NOT_EQUALS' },
+        ],
+        Owner: [{ label: 'contains', value: 'CONTAINS' }],
+        Stage: [{ label: 'contains', value: 'CONTAINS' }],
+        Name: [
+          { label: 'is', value: 'EQUALS' },
+          { label: 'contains', value: 'CONTAINS' },
+          { label: 'does not equal', value: 'NOT_EQUALS' },
+        ],
+        'Close date': [
+          { label: 'is', value: 'EQUALS' },
+          { label: 'is greater than', value: 'GREATER_THAN' },
+          { label: 'is greater than or equal to', value: 'GREATER_THAN_EQUALS' },
+          { label: 'is less than', value: 'LESS_THAN' },
+          { label: 'is less than or equal to', value: 'LESS_THAN_EQUALS' },
+          { label: 'does not equal', value: 'NOT_EQUALS' },
+        ],
+        'Last activity date': [
+          { label: 'is', value: 'EQUALS' },
+          { label: 'is greater than', value: 'GREATER_THAN' },
+          { label: 'is greater than or equal to', value: 'GREATER_THAN_EQUALS' },
+          { label: 'is less than', value: 'LESS_THAN' },
+          { label: 'is less than or equal to', value: 'LESS_THAN_EQUALS' },
+          { label: 'does not equal', value: 'NOT_EQUALS' },
+        ],
+      },
       selectedFilter: null,
       filters: [
         {
@@ -389,10 +469,52 @@ export default {
         }, 1000)
       }
     },
+    selectedOpp: 'getNotes',
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    async getNotes() {
+      if (this.selectedOpp) {
+        this.loadingNotes = true
+        try {
+          const res = await CRMObjects.api.getNotes({
+            resourceId: this.selectedOpp.id,
+          })
+          // if (res.length) {
+          //   this.notes = []
+          //   for (let i = 0; i < res.length; i++) {
+          //     this.notes.push(res[i])
+          //     this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+          //     this.notesLength = this.notes.length
+          //   }
+          // }
+          this.notes = res
+          console.log(res)
+        } catch (e) {
+          console.log(e)
+        } finally {
+          setTimeout(() => {
+            this.loadingNotes = false
+          }, 300)
+        }
+      } else {
+        return
+      }
+    },
+    clearFilter() {
+      this.selectedFilter = null
+      this.selectedOperator = null
+    },
+    async removeFilters() {
+      try {
+        this.$store.dispatch('changeFilters', [])
+        await this.$store.dispatch('loadChatOpps', 1)
+      } catch (e) {
+        console.log('Error removing filter', e)
+      } finally {
+      }
     },
     closeInline() {
       this.activeField = null
@@ -579,6 +701,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    picklistOptions() {
+      return this.$store.state.allPicklistOptions
+    },
   },
   async created() {
     if (this.userCRM === 'HUBSPOT') {
@@ -597,6 +722,10 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+::v-deep .multiselect * {
+  font-size: 13px;
+}
 
 @keyframes shimmer {
   100% {
@@ -659,6 +788,11 @@ export default {
 
 .rotate {
   transform: rotate(45deg);
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .expand-absolute {
@@ -760,9 +894,9 @@ header {
 
 .selected-opp-section {
   height: 50%;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  padding: 0.5rem 0rem;
+  overflow: hidden;
+
+  padding: 0.5rem 0.25rem;
   position: relative;
   h5,
   h4 {
@@ -770,9 +904,30 @@ header {
   }
 }
 
-.selected-opp-section:first-of-type {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+.selected-opp-section:hover {
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
+
+.selected-opp-section::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+  margin-left: 0.25rem;
+}
+.selected-opp-section::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+}
+
+// .selected-opp-section:first-of-type {
+//   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+// }
 
 .selected-opp-container {
   height: 100%;
@@ -814,6 +969,10 @@ header {
 
 .gray-text {
   color: $light-gray-blue;
+}
+
+.strike {
+  text-decoration: line-through;
 }
 
 .edit-button {
@@ -1108,5 +1267,13 @@ img {
 }
 .field {
   cursor: pointer;
+}
+
+.clear {
+  margin-left: 1rem;
+  background-color: $soft-gray;
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 4px;
 }
 </style>

@@ -154,7 +154,7 @@
     <div class="field-container" v-else-if="dataType === 'Reference'">
       <Multiselect
         :options="referenceOpts"
-        :placeholder="inlinePlaceholder || '-'"
+        :placeholder="loadingOptions ? 'Gathering options...' : inlinePlaceholder || '-'"
         selectLabel=""
         track-by="id"
         label="name"
