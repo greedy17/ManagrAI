@@ -1014,7 +1014,8 @@ def process_sync_calendar(payload, context):
     if date:
         message_date = datetime.strptime(date, "%Y-%m-%d")
     else:
-        message_date = datetime.today()
+        user_timezone = pytz.timezone(user.timezone)
+        message_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
     date_string = f":calendar: Today's Meetings: *{message_date.month}/{message_date.day}/{message_date.year}*"
     blocks = [
         block_builders.section_with_button_block(
@@ -3905,7 +3906,6 @@ def process_meeting_transcript_task(payload, context):
     emit_process_get_transcript_and_update_crm(payload, context, schedule=datetime.now())
     user = User.objects.get(id=context.get("u"))
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     blocks = [
         block_builders.simple_section(
             f"Processing AI-call summary. We will DM you when its ready! :rocket:"

@@ -574,11 +574,13 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 meetings = user.zoom_account.helper_class.get_meetings_by_date(
                     user.zoom_account.access_token, user.zoom_account.zoom_id, date
                 )["meetings"]
+                print(meetings)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
+            print(workflows)
             slack_interaction_check = set(
                 [
                     workflow.slack_interaction
@@ -589,23 +591,29 @@ def _process_calendar_meetings(user_id, slack_int, date):
             if len(list(slack_interaction_check)):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
+                print(event)
                 id = event.get("id", None)
                 meeting_data = {
                     **event,
                     "user": user,
                 }
                 if user.has_zoom_integration:
-
                     meetings_by_topic = [
                         meeting for meeting in meetings if event["title"] == meeting["topic"]
                     ]
+                    print(meetings)
+                    print(meetings_by_topic)
                     if len(meetings_by_topic):
                         meeting = meetings_by_topic[0]
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
+                print(id)
                 workflow_check = workflows.filter(meeting__meeting_id=id).first()
+                print(workflow_check)
                 register_check = should_register_this_meetings(user_id, event)
+                print(register_check)
                 if workflow_check is None and register_check:
+                    print("1")
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -616,6 +624,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
                 else:
+                    print("2")
                     if workflow_check:
                         meeting_serializer = MeetingSerializer(
                             instance=workflow_check.meeting, data=meeting_data
@@ -624,9 +633,12 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         meeting_serializer.save()
             blocks = get_block_set("paginated_meeting_blockset", {"u": str(user.id), "date": date})
         else:
-            todays_date = datetime.today() if date is None else datetime.strptime(date, "%Y-%m-%d")
             user_timezone = pytz.timezone(user.timezone)
-            todays_date = pytz.utc.localize(todays_date).astimezone(user_timezone)
+            todays_date = (
+                pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                if date is None
+                else datetime.strptime(date, "%Y-%m-%d")
+            )
             date_string = f":calendar: Today's Meetings: *{todays_date.month}/{todays_date.day}/{todays_date.year}*"
             blocks = [
                 block_builders.section_with_button_block(
@@ -1420,7 +1432,6 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-            return
         blocks = [
             block_builders.section_with_button_block(
                 "Reopen Chat",
@@ -1435,7 +1446,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         params = [
             f"u={str(user.id)}",
             f"f={str(form.id)}",
-            "type=command",
+            "type=chat",
         ]
         if workflow_id:
             params.append(f"w={workflow_id}")

@@ -1080,7 +1080,7 @@ def paginated_meeting_blockset(context):
             block = block_builders.section_with_button_block(
                 "Return to Form",
                 "RETURN_TO_FORM",
-                section_text=f":no_entry_sign: Uh-oh we hit a validation:\n{message}\n{title}",
+                section_text=f":no_entry_sign: Uh-oh we hit an error:\n{message}\n{title}",
                 block_id=str(workflow.id),
                 action_id=action_with_params(
                     slack_const.ZOOM_MEETING__INIT_REVIEW,
@@ -1088,10 +1088,15 @@ def paginated_meeting_blockset(context):
                 ),
             )
         elif len(workflow.operations) and workflow.progress < 100:
-            crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
-            block = block_builders.simple_section(
-                f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
-            )
+            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
+                block = block_builders.simple_section(
+                    ":robot_face: Processing your submission...", "mrkdwn"
+                )
+            else:
+                crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
+                block = block_builders.simple_section(
+                    f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
+                )
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             form_ids = [str(id) for id in list(workflow.forms.all().values_list("id", flat=True))]

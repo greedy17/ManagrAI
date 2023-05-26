@@ -228,6 +228,8 @@ def process_zoom_meeting_data(payload, context):
     if len(workflow.failed_task_description):
         workflow.build_retry_list()
     else:
+        if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
+            workflow.operations = []
         main_operation = (
             f"{sf_consts.MEETING_REVIEW__CREATE_RESOURCE}.{str(workflow.id)}"
             if create_form_check
@@ -2638,8 +2640,8 @@ def process_submit_chat_prompt(payload, context):
     try:
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-            workflow.operations_list = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
-            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),
