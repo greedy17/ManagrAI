@@ -158,6 +158,7 @@
                   selectLabel=""
                   track-by="value"
                   label="label"
+                  :preselectFirst="true"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
@@ -469,6 +470,15 @@ export default {
         }, 1000)
       }
     },
+    selectedOperator(newVal) {
+      if (this.selectedFilter) {
+        this.selectedFilter.operator = newVal.value
+        this.selectedFilter.operatorLabel = newVal.label
+      } else {
+        return
+      }
+    },
+    // : 'selectOperator',
     selectedOpp: 'getNotes',
   },
   methods: {
@@ -491,7 +501,6 @@ export default {
           //   }
           // }
           this.notes = res
-          console.log(res)
         } catch (e) {
           console.log(e)
         } finally {
@@ -593,7 +602,6 @@ export default {
       this.selectedFilter.operatorLabel = label
     },
     selectFilter(filter) {
-      console.log('filter', filter)
       this.selectedFilter = filter
     },
     toggleShowFilters() {
