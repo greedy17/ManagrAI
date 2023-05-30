@@ -46,7 +46,8 @@ from .serializers import (
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
-from managr.core.background import emit_process_calendar_meetings
+from managr.core.background import emit_process_calendar_meetings, emit_process_submit_chat_prompt
+
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -59,6 +60,14 @@ from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
 from .nylas.models import NylasAccountStatusList
 
 logger = logging.getLogger("managr")
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def submit_chat_prompt(request):
+    data = request.data
+    print(data)
+    emit_process_submit_chat_promp(data.user_id, data.prompt, data.resource_type, data.context)
 
 
 def field_syncs():
@@ -459,7 +468,10 @@ class UserViewSet(
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-tasks",
     )
     def admin_tasks(self, request, *args, **kwargs):
         tasks = CompletedTask.objects.all()[:100]
@@ -467,7 +479,10 @@ class UserViewSet(
         return Response(data={"tasks": dict_tasks})
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-users",
     )
     def admin_users(self, request, *args, **kwargs):
         param = request.query_params.get("org_id", None)
@@ -514,7 +529,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -522,7 +538,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -637,7 +655,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -877,7 +897,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -911,7 +933,9 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_task_status(request):
     data = {}
