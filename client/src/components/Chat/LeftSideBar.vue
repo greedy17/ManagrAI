@@ -12,7 +12,7 @@
       <div class="body"></div>
 
       <footer>
-        <button class="secondary-button">
+        <button class="secondary-button" @click="handleConfigureOpen">
           <!-- <font-awesome-icon icon="fa-solid fa-cog" /> -->
           <img style="margin-left: -2px" src="@/assets/images/settings.svg" height="18px" alt="" />
           <span>Configure</span>
@@ -51,6 +51,7 @@ export default {
   name: 'LeftSideBar',
   props: {
     handleProfileOpen: { type: Function },
+    handleConfigureOpen: { type: Function },
   },
   data() {
     return {
