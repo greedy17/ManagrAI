@@ -28,7 +28,7 @@
               @blur="registrationForm.field.fullName.validate()"
               :errors="registrationForm.field.fullName.errors"
               v-model="registrationForm.field.fullName.value"
-              placeholder=""
+              placeholder="Enter Full Name"
               id="name"
             />
           </span>
@@ -41,6 +41,7 @@
               v-model="registrationForm.field.email.value"
               type="email"
               id="email"
+              placeholder="Enter Email"
             />
           </span>
 
@@ -53,6 +54,7 @@
               :errors="registrationForm.field.password.errors"
               v-model="registrationForm.field.password.value"
               type="password"
+              placeholder="Must be 9 characters or longer"
             />
             <div class="column" v-for="(message, i) in errorMessages" :key="i">
               <small class="error">{{ message }}</small>
@@ -68,6 +70,7 @@
               :errors="registrationForm.field.confirmPassword.errors"
               v-model="registrationForm.field.confirmPassword.value"
               type="password"
+              placeholder="Must be 9 characters or longer"
             />
           </span>
 
@@ -77,7 +80,7 @@
               @blur="registrationForm.field.organizationName.validate()"
               :errors="registrationForm.field.organizationName.errors"
               v-model="registrationForm.field.organizationName.value"
-              placeholder=""
+              placeholder="Enter Company Name"
               id="company"
             />
           </span>
@@ -90,7 +93,7 @@
               v-model="userRole"
               :options="userRoles"
               openDirection="above"
-              style="width: 26vw; padding: 0"
+              style="width: 26vw; padding: 0; margin-top: 6px;"
               selectLabel="Enter"
               label="name"
               id="role"
@@ -461,6 +464,11 @@ input {
   color: $base-gray;
   letter-spacing: 0.5px;
   font-family: #{$base-font-family};
+  margin-top: 6px;
+}
+input::placeholder {
+  color: $very-light-gray;
+  font-size: 12px;
 }
 input:focus {
   outline: none;

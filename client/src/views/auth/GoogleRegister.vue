@@ -6,11 +6,15 @@
         <div :class="{ disable: generatingToken }" class="form-card">
           <div class="center">
             <img src="@/assets/images/logo.png" height="60px" alt="" />
-            <h2 class="logo-title">Welcome to Managr</h2>
-            <small class="gray-blue" style="margin: 8px 0px 16px 8px"
-              >Fill out the form below to get started</small
+            <h2 class="logo-title">Welcome to Managr{{ this.$store.state.googleSignIn ? `, ${this.$store.state.googleSignIn.given_name}` : ''}}</h2>
+            <small v-if="this.$store.state.googleSignIn" class="gray-blue centered" style="margin: 8px 0px 8px 8px"
+              ><img class="google-signing-pic__small" :src="this.$store.state.googleSignIn.picture" /> Logged in as {{ this.$store.state.googleSignIn.email }}</small
             >
+            <div class="separator"></div>
           </div>
+          <!-- <small class="" style="margin: 8px 0px 8px 0px"
+            >Fill out the form below to get started</small
+          > -->
 
           <!-- <button v-if="!generatingToken">Fill out register form</button>
 
@@ -45,18 +49,18 @@
           </span> -->
 
           <span class="col">
-            <label for="company">Company Name</label>
+            <label class="" for="company">Company Name</label>
             <input
               @blur="registrationForm.field.organizationName.validate()"
               :errors="registrationForm.field.organizationName.errors"
               v-model="registrationForm.field.organizationName.value"
-              placeholder=""
+              placeholder="Enter Company Name"
               id="company"
             />
           </span>
 
           <span>
-            <label for="password">Create Password</label>
+            <label class="" for="password">Create Password</label>
             <input
               id="password"
               @blur="showVals(registrationForm.field.password)"
@@ -64,6 +68,7 @@
               :errors="registrationForm.field.password.errors"
               v-model="registrationForm.field.password.value"
               type="password"
+              placeholder="Must be 9 characters or longer"
             />
             <div class="column" v-for="(message, i) in errorMessages" :key="i">
               <small class="error">{{ message }}</small>
@@ -71,7 +76,7 @@
           </span>
 
           <span>
-            <label for="confirm-password">Re-Enter Password</label>
+            <label class="" for="confirm-password">Re-Enter Password</label>
             <input
               id="confirm-password"
               label="Re-Enter Password"
@@ -79,6 +84,7 @@
               :errors="registrationForm.field.confirmPassword.errors"
               v-model="registrationForm.field.confirmPassword.value"
               type="password"
+              placeholder="Must be 9 characters or longer"
             />
           </span>
 
@@ -445,6 +451,11 @@ input {
   color: $base-gray;
   letter-spacing: 0.5px;
   font-family: #{$base-font-family};
+  margin-top: 6px;
+}
+input::placeholder {
+  color: $very-light-gray;
+  font-size: 12px;
 }
 input:focus {
   outline: none;
@@ -465,7 +476,7 @@ a {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-size: 28px;
+  font-size: 24px;
 }
 .seperator {
   border-bottom: 1px solid $soft-gray;
@@ -529,5 +540,19 @@ h2 {
   opacity: 0.7;
   background-color: white;
   cursor: text !important;
+}
+.google-signing-pic__small {
+  height: 16px;
+  border-radius: 1rem;
+  margin-right: 0.25rem;
+}
+.centered {
+  display: flex;
+  align-items: center;
+}
+.separator {
+  border-bottom: 1px solid $soft-gray;
+  width: 100%;
+  margin: 0.5rem 0;
 }
 </style>
