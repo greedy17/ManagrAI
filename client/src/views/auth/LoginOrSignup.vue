@@ -3,15 +3,15 @@
     <div class="elements-container">
       <div>
         <!-- logo -->
-        <img style="height: 40px" src="@/assets/images/logo.png" />
+        <img style="height: 66px" src="@/assets/images/logo.png" />
       </div>
       <div class="header">
-        <h4>Welcome to Managr</h4>
+        <h1>Welcome to Managr</h1>
         <h4>Log in with your Managr account to continue</h4>
       </div>
       <div class="display-flex space-around">
-        <button class="button" @click="goToLogin">Log In</button>
-        <button class="second-button" @click="goToRegister">Sign Up</button>
+        <button class="button button-sizing" @click="goToLogin">Log In</button>
+        <button class="second-button button-sizing" @click="goToRegister">Sign Up</button>
       </div>
       <div class="links">
         <p style="color: #4d4e4c">
@@ -67,7 +67,7 @@
     display: flex;
   }
   .space-around {
-    width: 50%;
+    width: 60%;
     justify-content: space-around;
   }
   .header {
@@ -89,5 +89,10 @@
   a {
     text-decoration: none;
     color: $light-gray-blue;
+  }
+  .button-sizing {
+    // font-size: 16px;
+    font-size: 13px;
+    padding: 0.55rem 1.2rem;
   }
 </style>
