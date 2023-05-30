@@ -14,6 +14,10 @@
               <img src="@/assets/images/google.svg" />
               <span>Continue with Google</span>
             </button>
+            <button class="google-signin-button" @click="signInWithMicrosoft">
+              <img src="@/assets/images/microsoft.svg" />
+              <span>Continue with Microsoft</span>
+            </button>
             <div class="seperator">
               <span> OR </span>
             </div>
@@ -62,6 +66,9 @@
   import Button from '@thinknimble/button'
   import FormField from '@/components/forms/FormField'
   import PipelineLoader from '@/components/PipelineLoader'
+
+  import { PublicClientApplication } from '@azure/msal-browser'
+
   export default {
     name: 'RegisterSelection',
     components: {
@@ -100,6 +107,24 @@
         const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + idToken);
         const tokenInfo = await response.json();
         return tokenInfo;
+      },
+      signInWithMicrosoft() {
+        const config = {
+          auth: {
+            clientId: 'ead3f8ef-4a75-4620-b660-5d9c0999f8bc',
+            authority: 'https://login.microsoftonline.com/common',
+            redirectUri: 'http://localhost:8080/auth/callback',
+          },
+          cache: {
+            cacheLocation: 'localStorage',
+          },
+        }
+
+        const myMSALObj = new PublicClientApplication(config)
+
+        myMSALObj.loginRedirect({
+          scopes: ['user.read'],
+        })
       },
       signInWithGoogle() {
         // Trigger the Google Sign-In flow
@@ -372,6 +397,7 @@
   .google-signin-button {
     @include gray-text-button;
     display: flex;
+    justify-content: start;
     font-size: 15px;
     padding: 0.65rem;
     width: 23vw;

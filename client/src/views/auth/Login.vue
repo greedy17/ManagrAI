@@ -43,6 +43,10 @@
         <img src="@/assets/images/google.svg" />
         <span>Continue with Google</span>
       </button>
+      <button class="google-signin-button" @click="signInWithMicrosoft">
+        <img src="@/assets/images/microsoft.svg" />
+        <span>Continue with Microsoft</span>
+      </button>
       <div class="row">
         <p class="pad-right">New to Managr?</p>
         <router-link class="register-link" :to="{ name: 'RegisterSelection' }">Register </router-link>
@@ -74,6 +78,10 @@ import debounce from 'lodash.debounce'
 import FormField from '@/components/forms/FormField'
 import Salesforce from '@/services/salesforce'
 import Hubspot from '@/services/hubspot'
+
+import { PublicClientApplication, EventType } from '@azure/msal-browser'
+// import { ConfidentialClientApplication } from '@azure/msal-node';
+
 /**
  * External Components
  */
@@ -265,6 +273,39 @@ export default {
       const tokenInfo = await response.json();
       return tokenInfo;
     },
+    async signInWithMicrosoft() {
+      const config = {
+        auth: {
+          clientId: 'ead3f8ef-4a75-4620-b660-5d9c0999f8bc',
+          authority: 'https://login.microsoftonline.com/common',
+          redirectUri: 'http://localhost:8080/auth/callback',
+        },
+        cache: {
+          cacheLocation: 'localStorage',
+        },
+      }
+
+      const myMSALObj = new PublicClientApplication(config)
+      // const cca = new ConfidentialClientApplication(config)
+
+      const authRequest = {
+        scopes: ['user.read'],
+        prompt: 'select_account',
+      };
+
+      // myMSALObj.loginRedirect({
+      //   scopes: ['user.read'],
+      // })
+      
+      try {
+        const res = await myMSALObj.loginPopup(authRequest)
+        // console.log('res.accessToken', res.accessToken)
+        // const res = await cca.acquireTokenByPopup(authRequest)
+        console.log('res.accessToken', res.accessToken)
+      } catch (e){
+        console.log('Error during sign-in:', e)
+      }
+    },
     signInWithGoogle() {
       // Trigger the Google Sign-In flow
       window.google.accounts.id.prompt();
@@ -440,22 +481,22 @@ label {
   flex-direction: row;
   align-items: center;
 }
-.seperator {
-  border-bottom: 1px solid $soft-gray;
-  width: 100%;
-  position: relative;
-  margin: 16px 0px;
+// .seperator {
+//   border-bottom: 1px solid $soft-gray;
+//   width: 100%;
+//   position: relative;
+//   margin: 16px 0px;
 
-  span {
-    position: absolute;
-    left: 46%;
-    top: -8px;
-    background-color: white;
-    padding: 0 8px;
-    color: $light-gray-blue;
-    font-size: 13px;
-  }
-}
+//   span {
+//     position: absolute;
+//     left: 46%;
+//     top: -8px;
+//     background-color: white;
+//     padding: 0 8px;
+//     color: $light-gray-blue;
+//     font-size: 13px;
+//   }
+// }
 
 .gray-blue {
   color: $light-gray-blue;
@@ -507,7 +548,7 @@ label {
   margin: 8px 0px;
   span {
     position: absolute;
-    left: 48%;
+    left: 10vw;
     top: -8px;
     background-color: white;
     padding: 0 8px;
@@ -519,6 +560,7 @@ label {
 .google-signin-button {
   @include gray-text-button;
   display: flex;
+  justify-content: start;
   font-size: 15px;
   padding: 0.65rem;
   width: 23vw;

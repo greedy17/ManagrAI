@@ -52,6 +52,11 @@ export default new Router({
       component: () => import('@/views/auth/GoogleRegister')
     },
     {
+      path: '/auth/callback',
+      name: 'AuthCallback',
+      component: () => import('@/views/auth/AuthCallback'),
+    },
+    {
       path: '/activation/:userId/:magicToken',
       name: 'RepRegistration',
       component: () => import('@/views/auth/Register')
