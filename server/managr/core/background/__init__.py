@@ -1106,7 +1106,13 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             field = fields.get(api_name=key)
             if resource and field.api_name in ["Name", "dealname"]:
                 cleaned_data[key] = resource.secondary_data[key]
-            if cleaned_data[key] is None or cleaned_data[key] == "":
+            if cleaned_data[key] is None or cleaned_data[key] in [
+                "",
+                "TBD",
+                "Unknown",
+                "None",
+                "N/A",
+            ]:
                 if resource:
                     cleaned_data[key] = resource.secondary_data[key]
                 continue
