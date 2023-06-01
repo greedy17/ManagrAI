@@ -1,11 +1,16 @@
 <template>
   <div class="display-flex-container">
     <div class="left-bar">
-      <ConfigureLeftBar />
+      <ConfigureLeftBar :configPage="configPage" :changeConfigPage="changeConfigPage" />
     </div>
     <div class="main-content">
       <div v-if="configPage === 'integrations'">
         <ConfigureIntegrations />
+      </div>
+      <div v-else>
+        <div>
+          <h2>Error loading page. Please try again later.</h2>
+        </div>
       </div>
     </div>
   </div>
@@ -27,6 +32,11 @@ export default {
   data() {
     return {
       configPage: 'integrations',
+    }
+  },
+  methods: {
+    changeConfigPage(page) {
+      this.configPage = page
     }
   }
 }
