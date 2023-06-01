@@ -245,16 +245,17 @@ def process_zoom_meeting_data(payload, context):
         else:
             workflow.operations_list = ops
         workflow.operations_list = ops
-    if len(user.slack_integration.realtime_alert_configs):
-        _send_instant_alert(current_form_ids)
+    workflow.save()
+    workflow.begin_tasks()
+    # if len(user.slack_integration.realtime_alert_configs):
+    #     _send_instant_alert(current_form_ids)
     emit_process_calendar_meetings(
         str(user.id),
         f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
         workflow.slack_interaction,
         date=str(workflow.datetime_created.date()),
     )
-    workflow.save()
-    workflow.begin_tasks()
+
     emit_meeting_workflow_tracker(str(workflow.id))
     if ts is not None:
         blocks = [

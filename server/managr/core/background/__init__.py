@@ -571,16 +571,18 @@ def _process_calendar_meetings(user_id, slack_int, date):
         try:
             processed_data = _process_calendar_details(user_id, date)
             if user.has_zoom_integration:
+                if date is None:
+                    user_timezone = pytz.timezone(user.timezone)
+                    todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                    date = str(todays_date.date())
                 meetings = user.zoom_account.helper_class.get_meetings_by_date(
                     user.zoom_account.access_token, user.zoom_account.zoom_id, date
                 )["meetings"]
-                print(meetings)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
-            print(workflows)
             slack_interaction_check = set(
                 [
                     workflow.slack_interaction
@@ -591,7 +593,6 @@ def _process_calendar_meetings(user_id, slack_int, date):
             if len(list(slack_interaction_check)):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
-                print(event)
                 id = event.get("id", None)
                 meeting_data = {
                     **event,
@@ -601,19 +602,13 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     meetings_by_topic = [
                         meeting for meeting in meetings if event["title"] == meeting["topic"]
                     ]
-                    print(meetings)
-                    print(meetings_by_topic)
                     if len(meetings_by_topic):
                         meeting = meetings_by_topic[0]
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
-                print(id)
                 workflow_check = workflows.filter(meeting__meeting_id=id).first()
-                print(workflow_check)
                 register_check = should_register_this_meetings(user_id, event)
-                print(register_check)
                 if workflow_check is None and register_check:
-                    print("1")
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -624,7 +619,6 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
                 else:
-                    print("2")
                     if workflow_check:
                         meeting_serializer = MeetingSerializer(
                             instance=workflow_check.meeting, data=meeting_data
@@ -1262,7 +1256,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
         workflow.save()
-    form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
+    form_type = "UPDATE" if "update" in prompt.lower() else "CREATE"
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
     form = OrgCustomSlackFormInstance.objects.create(
         template=form_template, user=user, update_source="chat", chat_submission=prompt

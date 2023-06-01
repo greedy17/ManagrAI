@@ -796,6 +796,7 @@ def process_transcript_to_summaries(transcript, user):
             current_minute += 5
     if not len(summary_parts):
         for index, transcript_part in enumerate(split_transcript):
+            print(index)
             transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
             transcript_body = (
                 transcript_body.replace("\r\n", "")
@@ -875,12 +876,12 @@ def _process_get_transcript_and_update_crm(payload, context):
     workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
-    emit_process_calendar_meetings(
-        str(user.id),
-        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
-        workflow.slack_interaction,
-        date=str(workflow.datetime_created.date()),
-    )
+    # emit_process_calendar_meetings(
+    #     str(user.id),
+    #     f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+    #     workflow.slack_interaction,
+    #     date=str(workflow.datetime_created.date()),
+    # )
     meeting = workflow.meeting
     has_error = False
     error_message = None
@@ -953,12 +954,15 @@ def _process_get_transcript_and_update_crm(payload, context):
                             if data.get("summary", None)
                             else data.pop("Summary", None)
                         )
+                        print(data)
                         owner_field = set_owner_field(resource_type, user.crm)
                         data[owner_field] = user.crm_account.crm_id
                         swapped_field_data = swap_submitted_data_labels(data, fields)
+                        print(swapped_field_data)
                         cleaned_data = clean_prompt_return_data(
                             swapped_field_data, fields, user.crm, resource
                         )
+                        print(cleaned_data)
                         break
                     except StopReasonLength:
                         tokens += 500
@@ -1048,18 +1052,19 @@ def _process_get_transcript_and_update_crm(payload, context):
             ),
         ]
     else:
+        print(error_message)
         workflow.failed_task_description.append(error_message)
         workflow.save()
-    try:
-        slack_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            loading_res["message"]["ts"],
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
-    except Exception as e:
-        logger.exception(
-            f"ERROR sending update channel message for chat submittion because of <{e}>"
-        )
+    # try:
+    #     slack_res = slack_requests.update_channel_message(
+    #         user.slack_integration.channel,
+    #         loading_res["message"]["ts"],
+    #         user.organization.slack_integration.access_token,
+    #         block_set=blocks,
+    #     )
+    # except Exception as e:
+    #     logger.exception(
+    #         f"ERROR sending update channel message for chat submittion because of <{e}>"
+    #     )
     return
 

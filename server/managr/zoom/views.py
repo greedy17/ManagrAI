@@ -375,7 +375,6 @@ def zoom_recordings_webhook(request):
     main_payload = request.data.get("payload")
     obj = main_payload.get("object", None)
     topic = main_payload.get("topic", None)
-    print(main_payload)
     user = User.objects.get(zoom_account__account_id=obj["account_id"])
     if event == zoom_consts.ZOOM_RECORDING_COMPLETED:
         download_object = list(

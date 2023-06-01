@@ -9,6 +9,7 @@ from managr.api.decorators import slack_api_exceptions, log_all_exceptions
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.core.models import User
 from managr.core.background import emit_process_send_summary_to_dm
+from managr.core.exceptions import _handle_response
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
@@ -916,8 +917,7 @@ def _process_alert_send_deal_review(payload, context):
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 response_text = r.get("choices")[0].get("text")
                 break
         except Exception as e:
@@ -993,20 +993,21 @@ def _process_send_deal_review(payload, context):
     prompt = core_consts.OPEN_AI_DEAL_REVIEW(
         deal_review_data, resource_type, datetime.now().date(), user.crm
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, top_p=0.9, temperature=0.7)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+        user.email, prompt, 1000, top_p=0.9, temperature=0.7
+    )
     has_error = False
     while True:
         try:
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 response_text = r.get("choices")[0].get("text")
                 break
         except Exception as e:
             has_error = True
-            text = "There was an error generating your review"
+            response_text = f"There was an error generating your review: {str(e)}"
             break
     try:
         chat_blocks = [
