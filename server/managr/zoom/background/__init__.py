@@ -1065,9 +1065,7 @@ def _process_get_transcript_and_update_crm(payload, context):
         ]
     else:
         print(error_message)
-        workflow.failed_task_description.append(
-            f"{slack_consts.MEETING_REVIEW_UPDATE_RESOURCE}.{error_message}"
-        )
+        workflow.failed_task_description.append(f"MEETING_REVIEW__UPDATE_RESOURCE.{error_message}")
         workflow.save()
     try:
         slack_res = slack_requests.update_channel_message(
