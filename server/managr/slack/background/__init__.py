@@ -1100,6 +1100,7 @@ def _process_chat_action(payload, context):
                 ":no_entry_sign: Invalid submission: This action was not found"
             )
         )
+    print(context)
     action_func(payload, context)
     if len(blocks):
         try:

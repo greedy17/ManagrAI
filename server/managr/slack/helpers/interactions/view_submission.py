@@ -239,7 +239,10 @@ def process_zoom_meeting_data(payload, context):
             main_operation,
         ]
         if workflow.resource_type not in user.crm_account.custom_objects:
-            ops.append(f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}")
+            call_log_string = f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}"
+            if task_type is not None:
+                call_log_string = call_log_string + f",{task_type}"
+            ops.append(call_log_string)
         if len(workflow.operations_list):
             workflow.operations_list = [*workflow.operations_list, *ops]
         else:
@@ -260,15 +263,13 @@ def process_zoom_meeting_data(payload, context):
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_", "mrkdwn"
+                f":white_check_mark: Got it! Check your meeting channel - _{workflow.meeting.topic}_",
+                "mrkdwn",
             )
         ]
         try:
-            res = slack_requests.update_channel_message(
-                user.slack_integration.channel,
-                ts,
-                block_set=blocks,
-                access_token=slack_access_token,
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token,
             )
         except Exception as e:
             return logger.exception(
