@@ -14,9 +14,9 @@ from collections import OrderedDict
 from managr.core import constants as core_const
 
 
-def max_token_calculator(character_count, add_tokens):
+def max_token_calculator(character_count):
     base_count = character_count / 4
-    token_count = base_count + add_tokens
+    token_count = 4090 - base_count
     return int(token_count)
 
 

@@ -32,7 +32,7 @@ from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
-from managr.core.exceptions import StopReasonLength
+from managr.core.exceptions import StopReasonLength, ServerError
 
 logger = logging.getLogger("managr")
 
@@ -837,6 +837,7 @@ def _process_get_transcript_and_update_crm(payload, context):
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_calendar_meetings
+    from managr.core.utils import max_token_calculator
     import httpx
 
     pm = json.loads(payload["view"]["private_metadata"])
@@ -917,7 +918,7 @@ def _process_get_transcript_and_update_crm(payload, context):
             if len(summary_parts):
                 viable_data = False
                 timeout = 60.0
-                tokens = 500
+                tokens = 1500
                 update_res = slack_requests.update_channel_message(
                     user.slack_integration.channel,
                     ts,
@@ -926,10 +927,12 @@ def _process_get_transcript_and_update_crm(payload, context):
                         "loading", {"message": f"Processing transcript for {meeting.topic}"}
                     ),
                 )
+                attempts = 1
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
                         fields_list, summary_parts
                     )
+                    tokens = max_token_calculator(len(summary_body))
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, summary_body, tokens, top_p=0.9, temperature=0.7
                     )
@@ -957,15 +960,20 @@ def _process_get_transcript_and_update_crm(payload, context):
                         owner_field = set_owner_field(resource_type, user.crm)
                         data[owner_field] = user.crm_account.crm_id
                         swapped_field_data = swap_submitted_data_labels(data, fields)
-                        print(swapped_field_data)
                         cleaned_data = clean_prompt_return_data(
                             swapped_field_data, fields, user.crm, resource
                         )
-                        print(cleaned_data)
                         break
                     except StopReasonLength:
                         tokens += 500
                         continue
+                    except ServerError:
+                        if attempts >= 5:
+                            has_error = True
+                            error_message = "There was a server error with Open AI"
+                            break
+                        else:
+                            attempts += 1
                     except ValueError as e:
                         print(e)
                         if str(e) == "substring not found":
@@ -977,12 +985,12 @@ def _process_get_transcript_and_update_crm(payload, context):
                         logger.exception(
                             f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
                         )
-                        if timeout >= 90.0:
+                        if timeout >= 120.0:
                             blocks = [
                                 block_builders.header_block("AI Generated Call Summary"),
                                 block_builders.context_block(f"Meeting: {meeting.topic}"),
                                 block_builders.simple_section(
-                                    ":no_entry_sign: Open AI is taking too long to respond",
+                                    ":no_entry_sign: Look like Open AI servers are too busy right now, we'll try again in a bit",
                                     "mrkdwn",
                                 ),
                             ]
@@ -1002,7 +1010,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                         f"Looks like there was a problem processing your transcript", "mrkdwn",
                     ),
                 ]
-                error_message = "Looks like ther was a problem processing your transcript"
+                error_message = "Looks like there was a problem processing your transcript"
     except Exception as e:
         logger.exception(e)
         has_error = True
@@ -1013,7 +1021,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                 f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
             ),
         ]
-        error_message = "Looks like ther was a problem processing your transcript"
+        error_message = "Looks like there was a problem processing your transcript"
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
@@ -1052,7 +1060,9 @@ def _process_get_transcript_and_update_crm(payload, context):
         ]
     else:
         print(error_message)
-        workflow.failed_task_description.append(error_message)
+        workflow.failed_task_description.append(
+            f"{slack_consts.MEETING_REVIEW_UPDATE_RESOURCE}.{error_message}"
+        )
         workflow.save()
     try:
         slack_res = slack_requests.update_channel_message(

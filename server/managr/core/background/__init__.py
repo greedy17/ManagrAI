@@ -1256,7 +1256,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
         workflow.save()
-    form_type = "UPDATE" if "update" in prompt.lower() else "CREATE"
+    form_type = (
+        "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
+    )
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
     form = OrgCustomSlackFormInstance.objects.create(
         template=form_template, user=user, update_source="chat", chat_submission=prompt
@@ -1270,7 +1272,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     resource_check = None
     blocks = []
     token_amount = 500
-    timeout = 30.0
+    timeout = 60.0
     while True:
         message = None
         try:
@@ -1385,7 +1387,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     continue
         except httpx.ReadTimeout as e:
             timeout += 30.0
-            if attempts >= 2:
+            if timeout >= 120.0:
                 has_error = True
                 message = "There was an error communicating with Open AI"
                 logger.exception(f"Read timeout from Open AI {e}")
@@ -1430,7 +1432,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             block_builders.section_with_button_block(
                 "Reopen Chat",
                 "OPEN_CHAT",
-                f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                f":no_entry_sign: {message}",
                 action_id=action_with_params(
                     slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                 ),
