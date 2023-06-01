@@ -152,9 +152,11 @@ export default {
     }
   },
   mounted() {
+    const loginURI = 'http://localhost:8080/login'
     window.google.accounts.id.initialize({
       client_id: '1053178983159-40pr5voodgitli9ap0v9uifj8d3p9mgq.apps.googleusercontent.com',
       callback: this.onGoogleSignIn,
+      login_uri: loginURI
     });
 
     // Attach event listener to the custom button
