@@ -671,7 +671,13 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             field = fields.get(api_name=key)
             if resource and field.api_name in ["Name", "dealname"]:
                 cleaned_data[key] = resource.secondary_data[key]
-            if cleaned_data[key] is None or cleaned_data[key] == "":
+            if cleaned_data[key] is None or cleaned_data[key] in [
+                "",
+                "TBD",
+                "Unknown",
+                "None",
+                "N/A",
+            ]:
                 if resource:
                     cleaned_data[key] = resource.secondary_data[key]
                 continue
@@ -796,7 +802,6 @@ def process_transcript_to_summaries(transcript, user):
             current_minute += 5
     if not len(summary_parts):
         for index, transcript_part in enumerate(split_transcript):
-            print(index)
             transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
             transcript_body = (
                 transcript_body.replace("\r\n", "")
@@ -877,12 +882,6 @@ def _process_get_transcript_and_update_crm(payload, context):
     workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
-    emit_process_calendar_meetings(
-        str(user.id),
-        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
-        workflow.slack_interaction,
-        date=str(workflow.datetime_created.date()),
-    )
     meeting = workflow.meeting
     has_error = False
     error_message = None
@@ -893,14 +892,17 @@ def _process_get_transcript_and_update_crm(payload, context):
             meeting.meeting_id, meeting.meeting_account.access_token
         )
         logger.info("Done!")
-        update_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            ts,
-            user.organization.slack_integration.access_token,
-            block_set=get_block_set(
-                "loading", {"message": f"Transcript found for {meeting.topic}!"}
-            ),
-        )
+        try:
+            update_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading", {"message": f"Transcript found for {meeting.topic}!"}
+                ),
+            )
+        except Exception as e:
+            logger.exception(f"Could not update channel message because of {e} ts {ts}")
         recordings = meeting_data["recording_files"]
         filtered_recordings = [
             recording
@@ -919,14 +921,17 @@ def _process_get_transcript_and_update_crm(payload, context):
                 viable_data = False
                 timeout = 60.0
                 tokens = 1500
-                update_res = slack_requests.update_channel_message(
-                    user.slack_integration.channel,
-                    ts,
-                    user.organization.slack_integration.access_token,
-                    block_set=get_block_set(
-                        "loading", {"message": f"Processing transcript for {meeting.topic}"}
-                    ),
-                )
+                try:
+                    update_res = slack_requests.update_channel_message(
+                        user.slack_integration.channel,
+                        ts,
+                        user.organization.slack_integration.access_token,
+                        block_set=get_block_set(
+                            "loading", {"message": f"Processing transcript for {meeting.topic}"}
+                        ),
+                    )
+                except Exception as e:
+                    logger.exception(f"Could not update channel message because of {e} ts {ts}")
                 attempts = 1
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(

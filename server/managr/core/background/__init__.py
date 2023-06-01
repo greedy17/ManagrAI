@@ -1723,14 +1723,18 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
 
 @background()
 def _process_send_summary_to_dm(payload, context):
-    form_ids = context.get("form_ids").split(",")
-    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
-        template__resource="OpportunityLineItem"
-    )
+    form_ids = context.get("form_ids", [])
+    if len(form_ids):
+        form_ids = form_ids.split(",")
+        submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+            template__resource="OpportunityLineItem"
+        )
+    else:
+        user = User.objects.get(id=context.get("u"))
+        submitted_forms = OrgCustomSlackFormInstance.objects.for_user(user).exclude(
+            template__resource="OpportunityLineItem"
+        )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
-    user = main_form.user
-    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
-    main_form.save()
     user = main_form.user
     old_data = dict()
     if main_form.template.form_type == "UPDATE":
