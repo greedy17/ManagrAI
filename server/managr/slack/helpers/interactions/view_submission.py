@@ -228,6 +228,8 @@ def process_zoom_meeting_data(payload, context):
     if len(workflow.failed_task_description):
         workflow.build_retry_list()
     else:
+        if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
+            workflow.operations = []
         main_operation = (
             f"{sf_consts.MEETING_REVIEW__CREATE_RESOURCE}.{str(workflow.id)}"
             if create_form_check
@@ -237,35 +239,37 @@ def process_zoom_meeting_data(payload, context):
             main_operation,
         ]
         if workflow.resource_type not in user.crm_account.custom_objects:
-            ops.append(f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}")
+            call_log_string = f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}"
+            if task_type is not None:
+                call_log_string = call_log_string + f",{task_type}"
+            ops.append(call_log_string)
         if len(workflow.operations_list):
             workflow.operations_list = [*workflow.operations_list, *ops]
         else:
             workflow.operations_list = ops
         workflow.operations_list = ops
-    if len(user.slack_integration.realtime_alert_configs):
-        _send_instant_alert(current_form_ids)
+    workflow.save()
+    workflow.begin_tasks()
+    # if len(user.slack_integration.realtime_alert_configs):
+    #     _send_instant_alert(current_form_ids)
     emit_process_calendar_meetings(
         str(user.id),
         f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
         workflow.slack_interaction,
         date=str(workflow.datetime_created.date()),
     )
-    workflow.save()
-    workflow.begin_tasks()
+
     emit_meeting_workflow_tracker(str(workflow.id))
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_", "mrkdwn"
+                f":white_check_mark: Got it! Check your meeting channel - _{workflow.meeting.topic}_",
+                "mrkdwn",
             )
         ]
         try:
-            res = slack_requests.update_channel_message(
-                user.slack_integration.channel,
-                ts,
-                block_set=blocks,
-                access_token=slack_access_token,
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token,
             )
         except Exception as e:
             return logger.exception(
@@ -2638,8 +2642,8 @@ def process_submit_chat_prompt(payload, context):
     try:
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-            workflow.operations_list = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
-            workflow.operations = [slack_const.MEETING___SUBMIT_CHAT_PROMPT]
+            workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),

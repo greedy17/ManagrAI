@@ -1,5 +1,5 @@
 class NylasAPIError(Exception):
-    def __init(self, error="Nylas API error"):
+    def __init__(self, error="Nylas API error"):
         self.message = error
         super().__init__(self.message)
 

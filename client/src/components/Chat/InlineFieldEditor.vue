@@ -10,14 +10,23 @@
         class="inline-input"
         :value="inlinePlaceholder"
         :name="apiName"
+        v-autoresize
+        autofocus="true"
         rows="1"
       />
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span>&#x2713;</span>
+          <span v-if="!inlineLoader">&#x2713;</span>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
         </div>
-        <div @click="closeInline" class="close">
+        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
           <span>x</span>
         </div>
       </div>
@@ -51,9 +60,16 @@
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span>&#x2713;</span>
+          <span v-if="!inlineLoader">&#x2713;</span>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
         </div>
-        <div @click="closeInline" class="close">
+        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
           <span>x</span>
         </div>
       </div>
@@ -63,10 +79,112 @@
       class="field-container"
       v-else-if="dataType === 'Picklist' || dataType === 'MultiPicklist'"
     >
-      picklist here
+      <Multiselect
+        :options="picklistOptions[field.id]"
+        :placeholder="inlinePlaceholder || '-'"
+        selectLabel=""
+        track-by="value"
+        label="label"
+        :multiple="dataType === 'MultiPicklist' ? true : false"
+        v-model="selectedOption"
+        :disabled="inlineLoader"
+        @select="
+          setUpdateValues(
+            apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+            $event.value,
+            dataType === 'MultiPicklist' ? true : false,
+          )
+        "
+      >
+        <template slot="noResult">
+          <p class="multi-slot">No results.</p>
+        </template>
+      </Multiselect>
+
+      <div :class="{ disabled: inlineLoader }" class="save-close">
+        <div @click="inlineUpdate" class="save">
+          <span v-if="!inlineLoader">&#x2713;</span>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
+        </div>
+        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>x</span>
+        </div>
+      </div>
     </div>
 
-    <div class="field-container" v-else-if="dataType === 'Reference'">{{ dataType }}</div>
+    <div class="field-container" v-else-if="dataType === 'Boolena'">
+      <Multiselect
+        :options="booleans"
+        :placeholder="inlinePlaceholder || '-'"
+        selectLabel=""
+        v-model="selectedOption"
+        :disabled="inlineLoader"
+        @select="
+          setUpdateValues(apiName, $event.value, dataType === 'MultiPicklist' ? true : false)
+        "
+      >
+        <template slot="noResult">
+          <p class="multi-slot">No results.</p>
+        </template>
+      </Multiselect>
+
+      <div :class="{ disabled: inlineLoader }" class="save-close">
+        <div @click="inlineUpdate" class="save">
+          <span v-if="!inlineLoader">&#x2713;</span>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
+        </div>
+        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>x</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-container" v-else-if="dataType === 'Reference'">
+      <Multiselect
+        :options="referenceOpts"
+        :placeholder="loadingOptions ? 'Gathering options...' : inlinePlaceholder || '-'"
+        selectLabel=""
+        track-by="id"
+        label="name"
+        v-model="selectedOption"
+        :disabled="inlineLoader || loadingOptions"
+        :loading="loadingOptions"
+        @select="setUpdateValues(apiName, $event.id, false)"
+        @open="getReferenceOptions(field.id)"
+      >
+        <template slot="noResult">
+          <p class="multi-slot">No results.</p>
+        </template>
+      </Multiselect>
+
+      <div :class="{ disabled: inlineLoader }" class="save-close">
+        <div @click="inlineUpdate" class="save">
+          <span v-if="!inlineLoader">&#x2713;</span>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
+        </div>
+        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>x</span>
+        </div>
+      </div>
+    </div>
 
     <div class="field-container" v-else>Can't update {{ dataType }} fields... yet</div>
   </div>
@@ -74,6 +192,7 @@
 
 <script>
 import { CRMObjects } from '@/services/crm'
+import { SObjects } from '@/services/salesforce'
 
 export default {
   name: 'InlineFieldEditor',
@@ -81,7 +200,14 @@ export default {
     return {
       formData: {},
       inlineLoader: false,
+      selectedOption: null,
+      booleans: ['true', 'false'],
+      loadingOptions: false,
+      referenceOpts: [],
     }
+  },
+  components: {
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     dataType: {
@@ -102,10 +228,17 @@ export default {
     resourceType: {
       type: String,
     },
+    field: {},
   },
   methods: {
-    setUpdateValues(key, val) {
-      this.formData[key] = val
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
+          : val.split(/&#39;/g)[0]
+      } else {
+        this.formData[key] = val
+      }
     },
     closeInline() {
       this.$emit('close-inline')
@@ -125,9 +258,48 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.inlineLoader = false
-        this.closeInline()
+        setTimeout(() => {
+          this.inlineLoader = false
+          this.closeInline()
+        }, 1000)
       }
+    },
+    async getReferenceOptions(id) {
+      this.loadingOptions = true
+      try {
+        let res = await SObjects.api.getSobjectPicklistValues({
+          sobject_id: id,
+          value: '',
+          for_filter: null,
+        })
+
+        this.referenceOpts = res
+
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loadingOptions = false
+        })
+      }
+    },
+  },
+  computed: {
+    picklistOptions() {
+      return this.$store.state.allPicklistOptions
+    },
+  },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('focus', adjustTextareaHeight)
+      },
     },
   },
 }
@@ -137,6 +309,10 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+::v-deep .multiselect * {
+  font-size: 13px;
+}
+
 .inline-input {
   outline: none;
   padding: 0.5rem 0.75rem;
@@ -144,6 +320,11 @@ export default {
   border-radius: 6px;
   color: $base-gray;
   width: 100%;
+  font-family: $base-font-family;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  resize: none;
 }
 
 ::-webkit-calendar-picker-indicator {
@@ -153,16 +334,14 @@ export default {
 
 .field-container {
   position: relative;
-  // background-color: white;
   padding-top: 1rem;
-  // border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }
 
 .save-close {
   position: absolute;
   right: 0;
-  top: -1rem;
+  top: -1.5rem;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -182,6 +361,12 @@ export default {
   margin-left: 0.5rem;
   margin-right: 2px;
   font-size: 13px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
 }
 
 .save {
@@ -196,6 +381,12 @@ export default {
   border-radius: 3px;
   cursor: pointer;
   font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
 }
 
 .loading {
@@ -243,5 +434,18 @@ button {
 .disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotate {
+  animation: rotation 1s infinite linear;
 }
 </style>
