@@ -2,97 +2,72 @@
   <div>
     <div
       class="field-container"
-      v-if="dataType === 'TextArea' || dataType === 'String' || dataType.toLowerCase() === 'email'"
+      v-if="
+        field.dataType === 'TextArea' ||
+        field.dataType === 'String' ||
+        field.dataType.toLowerCase() === 'email'
+      "
     >
+      <label for="">{{ field.label }}</label>
       <textarea
-        @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
-        :disabled="inlineLoader"
+        @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+        :disabled="loader"
         class="inline-input"
-        :value="inlinePlaceholder"
-        :name="apiName"
+        :value="placeholder"
+        :name="field.apiName"
         v-autoresize
-        autofocus="true"
         rows="1"
       />
-
-      <div :class="{ disabled: inlineLoader }" class="save-close">
-        <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
-          <img
-            class="rotate disabled"
-            v-else
-            src="@/assets/images/refresh.svg"
-            height="11px"
-            alt=""
-          />
-        </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
-      </div>
     </div>
 
     <div
       class="field-container"
       v-else-if="
-        dataType === 'Date' ||
-        dataType === 'Datetime' ||
-        dataType === 'Double' ||
-        dataType === 'Currency'
+        field.dataType === 'Date' ||
+        field.dataType === 'Datetime' ||
+        field.dataType === 'Double' ||
+        field.dataType === 'Currency'
       "
     >
+      <label for="">{{ field.label }}</label>
       <input
         class="inline-input"
-        v-if="dataType !== 'Double' || dataType !== 'Currency'"
-        :value="inlinePlaceholder"
-        :type="dataType"
-        @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
-        :disabled="inlineLoader"
+        v-if="field.dataType !== 'Double' || field.dataType !== 'Currency'"
+        :value="placeholder"
+        :type="field.dataType"
+        @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+        :disabled="loader"
       />
       <input
-        :value="inlinePlaceholder"
-        @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
-        :disabled="inlineLoader"
+        :value="placeholder"
+        @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
+        :disabled="loader"
         class="inline-input"
         v-else
         type="number"
       />
-
-      <div :class="{ disabled: inlineLoader }" class="save-close">
-        <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
-          <img
-            class="rotate disabled"
-            v-else
-            src="@/assets/images/refresh.svg"
-            height="11px"
-            alt=""
-          />
-        </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
-      </div>
     </div>
 
     <div
       class="field-container"
-      v-else-if="dataType === 'Picklist' || dataType === 'MultiPicklist'"
+      v-else-if="field.dataType === 'Picklist' || field.dataType === 'MultiPicklist'"
     >
+      <label for="">{{ field.label }}</label>
       <Multiselect
         :options="picklistOptions[field.id]"
-        :placeholder="inlinePlaceholder || '-'"
         selectLabel=""
         track-by="value"
         label="label"
-        :multiple="dataType === 'MultiPicklist' ? true : false"
-        v-model="selectedOption"
-        :disabled="inlineLoader"
+        :multiple="field.dataType === 'MultiPicklist' ? true : false"
+        :placeholder="placeholder || 'select option'"
+        :disabled="loader"
+        selectedLabel=""
+        deselectLabel=""
         @select="
           setUpdateValues(
-            apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
+            field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.field.apiName,
             $event.value,
-            dataType === 'MultiPicklist' ? true : false,
+            field.dataType === 'MultiPicklist' ? true : false,
           )
         "
       >
@@ -100,93 +75,54 @@
           <p class="multi-slot">No results.</p>
         </template>
       </Multiselect>
-
-      <div :class="{ disabled: inlineLoader }" class="save-close">
-        <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
-          <img
-            class="rotate disabled"
-            v-else
-            src="@/assets/images/refresh.svg"
-            height="11px"
-            alt=""
-          />
-        </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
-      </div>
     </div>
 
-    <div class="field-container" v-else-if="dataType === 'Boolean'">
+    <div class="field-container" v-else-if="field.dataType === 'Boolean'">
+      <label for="">{{ field.label }}</label>
       <Multiselect
         :options="booleans"
-        :placeholder="inlinePlaceholder || '-'"
         selectLabel=""
-        v-model="selectedOption"
-        :disabled="inlineLoader"
+        :value="placeholder"
+        :disabled="loader"
+        selectedLabel=""
+        deselectLabel=""
         @select="
-          setUpdateValues(apiName, $event.value, dataType === 'MultiPicklist' ? true : false)
+          setUpdateValues(
+            field.apiName,
+            $event.value,
+            field.dataType === 'MultiPicklist' ? true : false,
+          )
         "
       >
         <template slot="noResult">
           <p class="multi-slot">No results.</p>
         </template>
       </Multiselect>
-
-      <div :class="{ disabled: inlineLoader }" class="save-close">
-        <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
-          <img
-            class="rotate disabled"
-            v-else
-            src="@/assets/images/refresh.svg"
-            height="11px"
-            alt=""
-          />
-        </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
-      </div>
     </div>
 
-    <div class="field-container" v-else-if="dataType === 'Reference'">
+    <div class="field-container" v-else-if="field.dataType === 'Reference'">
+      <label for="">{{ field.label }}</label>
+      <!-- :placeholder="loadingOptions ? 'Gathering options...' : placeholder || '-'" -->
       <Multiselect
         :options="referenceOpts"
-        :placeholder="loadingOptions ? 'Gathering options...' : inlinePlaceholder || '-'"
         selectLabel=""
         track-by="id"
         label="name"
-        v-model="selectedOption"
-        :disabled="inlineLoader || loadingOptions"
+        :value="placeholder"
+        :disabled="loader || loadingOptions"
         :loading="loadingOptions"
-        @select="setUpdateValues(apiName, $event.id, false)"
+        @select="setUpdateValues(field.apiName, $event.id, false)"
         @open="getReferenceOptions(field.id)"
+        selectedLabel=""
+        deselectLabel=""
       >
         <template slot="noResult">
           <p class="multi-slot">No results.</p>
         </template>
       </Multiselect>
-
-      <div :class="{ disabled: inlineLoader }" class="save-close">
-        <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
-          <img
-            class="rotate disabled"
-            v-else
-            src="@/assets/images/refresh.svg"
-            height="11px"
-            alt=""
-          />
-        </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
-      </div>
     </div>
 
-    <div class="field-container" v-else>Can't update {{ dataType }} fields... yet</div>
+    <div class="field-container" v-else>Can't update {{ field.dataType }} fields... yet</div>
   </div>
 </template>
 
@@ -195,11 +131,11 @@ import { CRMObjects } from '@/services/crm'
 import { SObjects } from '@/services/salesforce'
 
 export default {
-  name: 'InlineFieldEditor',
+  name: 'ChatFormField',
   data() {
     return {
       formData: {},
-      inlineLoader: false,
+      loader: false,
       selectedOption: null,
       booleans: ['true', 'false'],
       loadingOptions: false,
@@ -210,25 +146,11 @@ export default {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
-    dataType: {
-      type: String,
-    },
-    apiName: {
-      type: String,
-    },
-    inlinePlaceholder: {
-      type: String,
-    },
-    integrationId: {
-      type: String,
-    },
-    resourceId: {
-      type: String,
-    },
-    resourceType: {
+    placeholder: {
       type: String,
     },
     field: {},
+    chatData: {},
   },
   methods: {
     setUpdateValues(key, val, multi) {
@@ -243,27 +165,7 @@ export default {
     closeInline() {
       this.$emit('close-inline')
     },
-    async inlineUpdate() {
-      this.inlineLoader = true
-      try {
-        const res = await CRMObjects.api.updateResource({
-          form_data: this.formData,
-          resource_type: this.resourceType,
-          form_type: 'UPDATE',
-          resource_id: this.resourceId,
-          integration_ids: [this.integrationId],
-          from_workflow: false,
-          workflow_title: 'None',
-        })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        setTimeout(() => {
-          this.inlineLoader = false
-          this.closeInline()
-        }, 1000)
-      }
-    },
+
     async getReferenceOptions(id) {
       this.loadingOptions = true
       try {
@@ -311,6 +213,31 @@ export default {
 
 ::v-deep .multiselect * {
   font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  top: 3rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
+}
+
+label {
+  font-size: 12px;
+  font-family: $base-font-family;
+  margin-bottom: 8px;
 }
 
 .inline-input {

@@ -42,6 +42,7 @@ const state = {
     checker: null,
   },
   recordTypes: [],
+  chatTitle: 'All Open Opportunities'
 }
 
 const mutations = {
@@ -59,6 +60,9 @@ const mutations = {
   },
   UPDATE_RECORD_TYPES: (state, payload) => {
     state.recordTypes = payload
+  },
+  UPDATE_CHAT_TITLE: (state, payload) => {
+    state.chatTitle = payload
   },
   // Log out the user by resetting the state to defaults
   LOGOUT_USER(state) {
@@ -109,6 +113,9 @@ const actions = {
     const res = await Status.api.list({})
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
+  },
+  updateChatTitle({ commit }, title) {
+    commit('UPDATE_CHAT_TITLE', title)
   },
   async loadTemplates({ commit }) {
     try {

@@ -650,6 +650,8 @@ export default {
             ? field.apiName !== 'Email'
             : true),
       )
+
+      this.$emit('set-fields', this.oppFields)
     },
     getDate(input) {
       let newer = new Date(input)

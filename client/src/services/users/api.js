@@ -31,6 +31,7 @@ const PULL_USAGE_DATA = '/users/pull-usage-data/'
 const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
+const CHAT_SUBMISSION = 'users/chat/submission/'
 
 export default class UserAPI {
   get client() {
@@ -53,6 +54,13 @@ export default class UserAPI {
    **/
   static create(cls) {
     return new UserAPI(cls)
+  }
+
+  async chatUpdate(data) {
+    return this.client
+      .post(CHAT_SUBMISSION, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatUpdate' }))
   }
 
   async list({ pagination, filters }) {

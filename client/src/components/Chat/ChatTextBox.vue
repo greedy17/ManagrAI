@@ -40,7 +40,7 @@
           ⚡️
         </span>
         <textarea
-          @keydown.enter.exact.prevent="sendMessage"
+          @keydown.enter.exact.prevent="testChat"
           class="area-input"
           rows="1"
           placeholder="Send a message."
@@ -53,7 +53,7 @@
           class="gray"
           style="margin-bottom: 4px; height: 14px; cursor: pointer"
           icon="fa-regular fa-paper-plane"
-          @click="sendMessage"
+          @click="testChat"
         />
       </div>
     </div>
@@ -62,6 +62,7 @@
 
 <script>
 import Conversation from '@/services/conversations/models'
+import User from '@/services/users'
 
 export default {
   name: 'ChatTextBox',
@@ -78,6 +79,7 @@ export default {
     return {
       message: '',
       templatesOpen: false,
+      chatRes: null,
       actions: [
         { name: 'Update', value: 'Update Opportunity Pied Piper' },
         { name: 'Run review', value: 'Run Review for Opportunity Pied Piper' },
@@ -87,6 +89,37 @@ export default {
   },
 
   methods: {
+    async testChat() {
+      let chatmsg = this.message
+      this.$emit('set-message', { user: 'user', value: chatmsg })
+      this.$emit('message-loading', true)
+      try {
+        setTimeout(() => {
+          this.message = ''
+        }, 300)
+        let res = await User.api.chatUpdate({
+          user_id: this.user.id,
+          prompt: chatmsg,
+          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+        })
+        this.chatRes = res
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$emit('message-loading', false)
+        this.$emit('set-message', {
+          user: 'bot',
+          value: this.chatRes['res'][0],
+          resource: this.chatRes['resource'][0],
+          formId: this.chatRes['form'],
+          data: this.chatRes['data'],
+          resourceId: this.chatRes['resourceId'],
+          integrationId: this.chatRes['integrationId'],
+        })
+        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+      }
+    },
     async sendMessage() {
       this.$refs.chatTextArea.style.height = 'auto'
       this.$emit('message-loading', true)
@@ -100,7 +133,7 @@ export default {
         this.messages.push(newMessage)
         // call post to send message here
         const id = 1
-        const res = await Conversation.api.sendMessage(id, this.messages)
+        await Conversation.api.sendMessage(id, this.messages)
         this.message = ''
         this.scrollToBottom()
         setTimeout(() => {
@@ -131,7 +164,11 @@ export default {
       this.templatesOpen = !this.templatesOpen
     },
   },
-  computed: {},
+  computed: {
+    user() {
+      return this.$store.state.user
+    },
+  },
   created() {},
   directives: {
     autoresize: {

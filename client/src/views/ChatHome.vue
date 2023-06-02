@@ -1,6 +1,49 @@
 <template>
   <div :class="{ background: showBackground }" id="chat">
     <Modal
+      v-if="chatModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), toggleChatModal()
+        }
+      "
+    >
+      <div class="chat-modal-container">
+        <div class="chat-modal-header">
+          <div>
+            <h4 class="elipsis-text" style="margin-bottom: 0.25rem">
+              Update {{ chatData.resource }}
+            </h4>
+            <span class="gray-text smaller"
+              >Your CRM fields have been auto-filled. Pleae review and click submit.</span
+            >
+          </div>
+
+          <h4 @click="toggleChatModal" style="cursor: pointer">x</h4>
+        </div>
+
+        <!-- <div>
+          {{ chatData.data }}
+        </div> -->
+
+        <div class="chat-body" v-for="(field, i) in formFields" :key="i">
+          <ChatFormField
+            :placeholder="chatData.data[field.apiName]"
+            :field="field"
+            :resourceId="chatData.resourceId"
+            :integrationId="chatData.integrationId"
+            :chatData="chatData.data"
+          />
+        </div>
+
+        <div class="chat-modal-footer">
+          <button @click="toggleChatModal">Close</button>
+          <button @click="onSubmitChat">Submit</button>
+        </div>
+      </div>
+    </Modal>
+    <Modal
       v-if="profileModalOpen"
       dimmed
       @close-modal="
@@ -119,10 +162,10 @@
       />
     </aside>
     <main id="main">
-      <ChatBox />
+      <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
     <aside id="right-sidebar">
-      <RightBar />
+      <RightBar @set-fields="setFormFields" />
     </aside>
   </div>
 </template>
@@ -132,9 +175,10 @@ import ChatBox from '../components/Chat/ChatBox.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 import Modal from '@/components/InviteModal'
-
+import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
+import { CRMObjects } from '@/services/crm'
 
 export default {
   name: 'Home',
@@ -143,13 +187,18 @@ export default {
     RightBar,
     LeftSideBar,
     Modal,
+    ChatFormField,
   },
   data() {
     return {
       showBackground: false,
       profileModalOpen: false,
+      submitting: false,
       profileOrTeam: 'profile',
       team: CollectionManager.create({ ModelClass: User }),
+      chatModalOpen: false,
+      chatData: null,
+      formFields: [],
     }
   },
   created() {
@@ -157,6 +206,33 @@ export default {
   },
   watch: {},
   methods: {
+    async onSubmitChat() {
+      this.submitting = true
+      try {
+        const res = await CRMObjects.api.updateResource({
+          form_data: this.chatData.data,
+          from_workflow: false,
+          workflow_title: 'None',
+          form_type: this.chatData.formType,
+          integration_ids: [this.chatData.integrationId],
+          resource_type: this.chatData.resource_type,
+          resource_id: this.chatData.resourceId,
+          //stage_name: this.storedStageName
+          //   ? this.storedStageName
+          //   : this.stageGateField
+          //   ? this.stageGateField
+          //   : null,
+        })
+        console.log(res)
+        this.toggleChatModal()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.submitting = false
+        }, 300)
+      }
+    },
     test(log) {
       console.log('log', log)
     },
@@ -179,6 +255,15 @@ export default {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
       localStorage.isLoggedOut = true
+    },
+    toggleChatModal(data) {
+      this.chatModalOpen = !this.chatModalOpen
+      if (data) {
+        this.chatData = data
+      }
+    },
+    setFormFields(fields) {
+      this.formFields = fields
     },
     handleInvite() {
       console.log('handled')
@@ -255,6 +340,13 @@ body {
   z-index: 5;
 }
 
+.elipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 400px;
+}
+
 #right-sidebar {
   width: 400px;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
@@ -329,6 +421,61 @@ body {
   overflow-y: scroll;
   overflow-x: hidden;
   position: relative;
+}
+
+.chat-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 525px;
+  height: 90vh;
+  padding: 0 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow-y: scroll;
+  position: relative;
+}
+
+.chat-modal-header {
+  position: sticky;
+  background-color: white;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+
+.chat-modal-footer {
+  position: sticky;
+  padding: 1rem 0;
+  background-color: white;
+  bottom: 0;
+  z-index: 1000;
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  // border-top: 1px solid $soft-gray;
+  margin-top: 1rem;
+
+  button {
+    @include chat-button();
+    padding: 0.5rem 1rem;
+    margin-left: 1rem;
+    font-size: 12px;
+  }
+
+  button:last-of-type {
+    background-color: $dark-green;
+    color: white;
+    border: none;
+  }
+}
+
+.gray-text {
+  color: $light-gray-blue;
+}
+.smaller {
+  font-size: 12px;
 }
 
 .modal-header {
