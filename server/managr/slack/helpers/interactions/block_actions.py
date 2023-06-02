@@ -505,7 +505,6 @@ def process_show_meeting_chat_modal(payload, context):
             "private_metadata": json.dumps(context),
         },
     }
-    print(data)
     try:
         res = slack_requests.generic_request(url, data, access_token=access_token)
     except InvalidBlocksException as e:
@@ -599,7 +598,6 @@ def process_meeting_selected_resource_option(payload, context):
         action, r = select.split(".")
     except ValueError:
         pass
-
     if not action:
         blocks = []
         try:
@@ -3928,9 +3926,26 @@ def process_meeting_transcript_task(payload, context):
 
 def process_launch_call_summary_review(payload, context):
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("form_id"))
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = form.user
     blocks = form.generate_form(form.saved_data)
     context.update(ts=payload["container"]["message_ts"])
+    stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+    try:
+        index, block = block_finder(stage_name, blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if block:
+        block = {
+            **block,
+            "accessory": {
+                **block["accessory"],
+                "action_id": f"{slack_const.ZOOM_MEETING__STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}&w={str(workflow.id)}",
+            },
+        }
+        blocks = [*blocks[:index], block, *blocks[index + 1 :]]
     data = {
         "trigger_id": payload["trigger_id"],
         "view": {
@@ -3940,6 +3955,7 @@ def process_launch_call_summary_review(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT,
             "private_metadata": json.dumps(context),
             "submit": {"type": "plain_text", "text": "Submit"},
+            "external_id": f"meeting_review_modal.{str(uuid.uuid4())}",
         },
     }
     try:
@@ -3960,6 +3976,31 @@ def process_open_review_chat_update_modal(payload, context):
     context.update(
         message_ref=f"{user.slack_integration.channel}|{payload['container']['message_ts']}"
     )
+    stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+    try:
+        index, block = block_finder(stage_name, blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+
+    if block:
+        block = {
+            **block,
+            "accessory": {
+                **block["accessory"],
+                "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}&type=chat",
+            },
+        }
+        blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+
+    try:
+        index, block = block_finder(slack_const.NO_FORM_FIELDS, blocks)
+    except ValueError:
+        # did not find the block
+        show_submit_button_if_fields_added = True
+        pass
+
     callback_id = slack_const.COMMAND_FORMS__SUBMIT_FORM
     if "meeting" in form.update_source:
         callback_id = slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT
@@ -3973,6 +4014,7 @@ def process_open_review_chat_update_modal(payload, context):
             "callback_id": callback_id,
             "private_metadata": json.dumps(context),
             "submit": {"type": "plain_text", "text": "Submit"},
+            "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
         },
     }
     try:

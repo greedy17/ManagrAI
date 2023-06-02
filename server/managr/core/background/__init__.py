@@ -571,16 +571,18 @@ def _process_calendar_meetings(user_id, slack_int, date):
         try:
             processed_data = _process_calendar_details(user_id, date)
             if user.has_zoom_integration:
+                if date is None:
+                    user_timezone = pytz.timezone(user.timezone)
+                    todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                    date = str(todays_date.date())
                 meetings = user.zoom_account.helper_class.get_meetings_by_date(
                     user.zoom_account.access_token, user.zoom_account.zoom_id, date
                 )["meetings"]
-                print(meetings)
         except Exception as e:
             logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
             processed_data = None
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
-            print(workflows)
             slack_interaction_check = set(
                 [
                     workflow.slack_interaction
@@ -591,7 +593,6 @@ def _process_calendar_meetings(user_id, slack_int, date):
             if len(list(slack_interaction_check)):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
-                print(event)
                 id = event.get("id", None)
                 meeting_data = {
                     **event,
@@ -601,19 +602,13 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     meetings_by_topic = [
                         meeting for meeting in meetings if event["title"] == meeting["topic"]
                     ]
-                    print(meetings)
-                    print(meetings_by_topic)
                     if len(meetings_by_topic):
                         meeting = meetings_by_topic[0]
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
-                print(id)
                 workflow_check = workflows.filter(meeting__meeting_id=id).first()
-                print(workflow_check)
                 register_check = should_register_this_meetings(user_id, event)
-                print(register_check)
                 if workflow_check is None and register_check:
-                    print("1")
                     meeting_serializer = MeetingSerializer(data=meeting_data)
                     meeting_serializer.is_valid(raise_exception=True)
                     meeting_serializer.save()
@@ -624,7 +619,6 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         operation_type="MEETING_REVIEW", meeting=meeting, user=user,
                     )
                 else:
-                    print("2")
                     if workflow_check:
                         meeting_serializer = MeetingSerializer(
                             instance=workflow_check.meeting, data=meeting_data
@@ -1112,7 +1106,13 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             field = fields.get(api_name=key)
             if resource and field.api_name in ["Name", "dealname"]:
                 cleaned_data[key] = resource.secondary_data[key]
-            if cleaned_data[key] is None or cleaned_data[key] == "":
+            if cleaned_data[key] is None or cleaned_data[key] in [
+                "",
+                "TBD",
+                "Unknown",
+                "None",
+                "N/A",
+            ]:
                 if resource:
                     cleaned_data[key] = resource.secondary_data[key]
                 continue
@@ -1262,7 +1262,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
         workflow.save()
-    form_type = "CREATE" if "create" in prompt.lower() else "UPDATE"
+    form_type = (
+        "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
+    )
     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
     form = OrgCustomSlackFormInstance.objects.create(
         template=form_template, user=user, update_source="chat", chat_submission=prompt
@@ -1276,7 +1278,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     resource_check = None
     blocks = []
     token_amount = 500
-    timeout = 30.0
+    timeout = 60.0
     while True:
         message = None
         try:
@@ -1391,7 +1393,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     continue
         except httpx.ReadTimeout as e:
             timeout += 30.0
-            if attempts >= 2:
+            if timeout >= 120.0:
                 has_error = True
                 message = "There was an error communicating with Open AI"
                 logger.exception(f"Read timeout from Open AI {e}")
@@ -1436,7 +1438,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             block_builders.section_with_button_block(
                 "Reopen Chat",
                 "OPEN_CHAT",
-                f":no_entry_sign: We could not find a {resource_type} named {resource_check}",
+                f":no_entry_sign: {message}",
                 action_id=action_with_params(
                     slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"]
                 ),
@@ -1721,14 +1723,18 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
 
 @background()
 def _process_send_summary_to_dm(payload, context):
-    form_ids = context.get("form_ids").split(",")
-    submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
-        template__resource="OpportunityLineItem"
-    )
+    form_ids = context.get("form_ids", [])
+    if len(form_ids):
+        form_ids = form_ids.split(",")
+        submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
+            template__resource="OpportunityLineItem"
+        )
+    else:
+        user = User.objects.get(id=context.get("u"))
+        submitted_forms = OrgCustomSlackFormInstance.objects.for_user(user).exclude(
+            template__resource="OpportunityLineItem"
+        )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
-    user = main_form.user
-    main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
-    main_form.save()
     user = main_form.user
     old_data = dict()
     if main_form.template.form_type == "UPDATE":

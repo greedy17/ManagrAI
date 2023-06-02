@@ -141,31 +141,22 @@ class CustomAPIException:
             raise SFQueryOffsetError(self.message)
         elif self.status_code == 400 and self.param == "invalid_grant":
             raise InvalidRefreshToken(self.message)
-        elif self.status_code == 400 and self.param == "INVALID_FIELD":
+        elif self.status_code == 400 and "Property values were not valid" in self.message:
             # invalid field could apply to a number of different errors
             # we are trying to parse out duplicate field errors and non queryable errors
-            message_split = self.message.splitlines()
-            if len(message_split) == 5:
-                error_line = message_split[4]
-                # check if error is on column
-                no_column_match = re.match(r"(No such column)", error_line)
-                if no_column_match:
-                    field = re.match(r"\s+\'\w+\' ", error_line[no_column_match.end() :])
-                    field_str = (
-                        error_line[
-                            no_column_match.end()
-                            + field.start() : no_column_match.end()
-                            + field.end()
-                        ]
-                        .lstrip(" ")
-                        .rstrip(" ")
-                    )
-                    logger.info(f"Invalid Field {field_str}")
-                    raise InvalidFieldError(f"{field_str}")
-
-            raise InvalidFieldError(
-                f"There was an error in the data sent to hubspot but we could not determine what field caused this {self.message}"
-            )
+            try:
+                removed_string = self.message[self.message.index("[") : self.message.index("]") + 1]
+                removed_string = removed_string.replace("false", "False")
+                eval_list = eval(removed_string)
+                error_message = eval_list[0].get("localizedErrorMessage", None)
+                error_message_field = eval_list[0].get("name", None)
+                raise InvalidFieldError(
+                    f"There was an error with on of your field values: {error_message_field} - {error_message}"
+                )
+            except Exception:
+                raise InvalidFieldError(
+                    f"There was an error with on of your field values: {self.message}"
+                )
 
         elif self.status_code == 400 and self.param == "NOT_FOUND":
             raise UnhandledCRMError(f"The selected object does not exist in hubspot {self.message}")
