@@ -164,7 +164,8 @@
           </div>
         </div>
         <div class="flex-row" style="flex-direction: column; margin: 0; width: 96%; height: 13vh; justify-content: space-between;">
-          <img v-if="errorOrSuccess === 'error'" src="@/assets/images/rounded_exclamation.svg" class="filtered-red" style="height: 40px;" />
+          <img v-if="errorOrSuccess === 'premium'" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 40px;" />
+          <img v-else-if="errorOrSuccess === 'error'" src="@/assets/images/rounded_exclamation.svg" class="filtered-red" style="height: 40px;" />
           <img v-else src="@/assets/images/rounded_check.svg" class="green-filter" style="height: 40px;" />
           <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem; text-align: center;">
             {{errSuccMessage}}
@@ -292,7 +293,8 @@
               Slack
             </h3>
           </div>
-          <p class="card-text">Interact with Managr through Slack</p>
+          <p v-if="hasSlackIntegration" class="card-text">Slack Connected</p>
+          <p v-else class="card-text">Interact with Managr through Slack</p>
           <div class="sep-button-container">
             <div class="separator"></div>
             <button v-if="hasSlackIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('SLACK')">
@@ -323,7 +325,8 @@
               Calendar
             </h3>
           </div>
-          <p class="card-text">Accesses your upcoming meetings</p>
+          <p v-if="hasNylasIntegration" class="card-text">Calendar Connected</p>
+          <p v-else class="card-text">Accesses your upcoming meetings</p>
           <div class="sep-button-container">
             <div class="separator"></div>
             <button v-if="hasNylasIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('NYLAS')">
@@ -366,24 +369,26 @@
       </div>
 
       <div class="card">
-        <div class="card__header " style="">
+        <div class="card__header " style="justify-content: space-between;">
           <img style="height: 40px" src="@/assets/images/zoom.png" />
+          <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" />
         </div>
 
         <div class="card__body">
-          <div style="display: flex">
+          <div style="display: flex;">
             <h3 class="card__title">
               <img v-if="hasZoomIntegration" src="@/assets/images/dot.svg" class="green-filter" />
               Zoom
             </h3>
           </div>
-          <p class="card-text">Activates meeting workflow automations</p>
+          <p v-if="hasZoomIntegration" class="card-text">Zoom Connected</p>
+          <p v-else class="card-text">Activate AI-note taking & call summaries</p>
           <div class="sep-button-container">
             <div class="separator"></div>
             <button v-if="hasZoomIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('ZOOM')">
               Disconnect
             </button>
-            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="isPaid ? connectApp('ZOOM') : showErrorSuccessModal('error', 'Please sign up for the paid plan to access this feature')">
+            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="isPaid ? connectApp('ZOOM') : showErrorSuccessModal('premium', 'This feature is available in the Business Plan')">
               Connect 
               <img 
                 src="@/assets/images/angle-small-right.svg" 
@@ -686,7 +691,6 @@ export default {
       console.log('log', log)
     },
     async onGetAuthLink(integration) {
-      console.log('intergration', integration)
       if (!integration) {
         return
       }
@@ -1468,6 +1472,9 @@ a {
 .filtered-red {
   filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
 }
+.filtered-gray {
+  filter: invert(45%)
+}
 .green-filter {
   filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
     contrast(82%);
@@ -1486,7 +1493,7 @@ a {
   border: 1px solid $soft-gray;
   cursor: pointer;
   width: 15vw;
-  border-radius: 0.75rem;
+  // border-radius: 0.75rem;
   display: flex;
   align-items: center;
   padding: 0.25rem 0.5rem;
@@ -1525,4 +1532,5 @@ a {
 .padding-button {
   padding: 0.8rem 1.2rem;
 }
+
 </style>
