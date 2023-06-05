@@ -6,31 +6,31 @@
       </div>
         <!-- <div class="configure-text">Configure</div> -->
       <div style="margin-top: 1.6rem;">
-        <div class="pointer" :class="configPage === 'integrations' ? 'left-active' : ''" @click="changeConfigPage('integrations')">
+        <div class="base-select" :class="configPage === 'integrations' ? 'left-active' : 'pointer'" @click="changeConfigPage('integrations')">
           <p><img src='@/assets/images/settings-sliders.svg' :class="configPage === 'integrations' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Integrations</p> <span class="config-number">{{ integrationsLength }}</span>
         </div>
-        <div class="pointer" :class="configPage === 'forms' ? 'left-active' : ''" @click="changeConfigPage('forms')">
-          <p><img src='@/assets/images/rectangle-list.svg' :class="configPage === 'forms' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />CRM Fields</p>
+        <div class="base-select" :class="configPage === 'forms' ? 'left-active' : 'pointer'" @click="changeConfigPage('forms')">
+          <p><img src='@/assets/images/rectangle-list.svg' :class="configPage === 'forms' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />CRM Fields</p> <span class="config-number">{{ forms.length }}</span>
         </div>
-        <div class="pointer" :class="configPage === 'workflows' ? 'left-active' : ''" @click="changeConfigPage('workflows')">
+        <div class="base-select" :class="configPage === 'workflows' ? 'left-active' : 'pointer'" @click="changeConfigPage('workflows')">
           <p><img src='@/assets/images/workflows-chat.svg' :class="configPage === 'workflows' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Workflows</p>
         </div>
-        <div class="pointer" :class="configPage === 'notes' ? 'left-active' : ''" @click="changeConfigPage('notes')">
+        <div class="base-select" :class="configPage === 'notes' ? 'left-active' : 'pointer'" @click="changeConfigPage('notes')">
           <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Note Templates</p>
         </div>
-        <div class="pointer" :class="configPage === 'meetings' ? 'left-active' : ''" @click="changeConfigPage('meetings')">
-          <p><img src='@/assets/images/calendar.svg' :class="configPage === 'meetings' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Meetings</p>
+        <div class="base-select" :class="configPage === 'sync' ? 'left-active' : 'pointer'" @click="changeConfigPage('sync')">
+          <p><img src='@/assets/images/calendar.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
         </div>
-        <div class="pointer" :class="configPage === 'profile' ? 'left-active' : ''" @click="changeConfigPage('profile')">
+        <div class="base-select" :class="configPage === 'profile' ? 'left-active' : 'pointer'" @click="changeConfigPage('profile')">
           <p><img src='@/assets/images/user.svg' :class="configPage === 'profile' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Profile</p>
         </div>
       </div>
     </div>
     <div>
-      <div class="pointer" :class="configPage === 'demo' ? 'left-active' : ''" @click="changeConfigPage('demo')">
+      <div class="base-select" :class="configPage === 'demo' ? 'left-active' : 'pointer'" @click="changeConfigPage('demo')">
         <p><img src="@/assets/images/play-alt.svg" :class="configPage === 'demo' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Demo Center</p>
       </div>
-      <div class="pointer" @click="logOut">
+      <div class="base-select" @click="logOut">
         <p><img src="@/assets/images/logout.svg" style="height: 12px; margin-right: 0.5rem;" />Log out</p>
       </div>
     </div>
@@ -46,6 +46,9 @@ export default {
     },
     configPage: {
       type: String
+    },
+    forms: {
+      type: Array
     }
   },
   data() {
@@ -106,22 +109,33 @@ export default {
   // justify-content: center;
   // margin-left: 1rem;
 }
-.pointer {
+.base-select {
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
   padding: 0.5rem;
-  color: $light-gray-blue;
   font-size: 11px;
+  border-radius: 4px;
+  margin: 0.2rem 0;
+  transition: all 0.3s;
   p {
     margin: 0;
     display: flex;
     align-items: center;
   }
+}
+.pointer {
   img {
     filter: invert(45%);
   }
+}
+.pointer:hover {
+  // background-color: $white-green;
+  opacity: 60%;
+}
+.cursor-color {
+  color: $light-gray-blue;
 }
 .configure-text {
   color: $light-gray-blue;
