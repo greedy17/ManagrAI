@@ -842,7 +842,6 @@ def process_transcript_to_summaries(transcript, user):
                             return []
                         else:
                             attempts += 1
-    print("SUMMARY PARTS", summary_parts)
     return summary_parts
 
 
@@ -990,7 +989,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                     except ServerError:
                         if attempts >= 5:
                             has_error = True
-                            error_message = "There was a server error with Open AI"
+                            error_message = ":no_entry_sign: There was a server error with Open AI"
                             break
                         else:
                             attempts += 1
@@ -1000,7 +999,9 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             continue
                         else:
                             has_error = True
-                            error_message = "Looks like we ran into an issue"
+                            error_message = (
+                                ":no_entry_sign: Looks like we ran into an internal issue"
+                            )
                             break
                     except SyntaxError as e:
                         print(e)
@@ -1010,55 +1011,27 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
                         )
                         if timeout >= 120.0:
-                            blocks = [
-                                block_builders.header_block("AI Generated Call Summary"),
-                                block_builders.context_block(f"Meeting: {meeting.topic}"),
-                                block_builders.simple_section(
-                                    ":no_entry_sign: Look like Open AI servers are too busy right now, we'll try again in a bit",
-                                    "mrkdwn",
-                                ),
-                            ]
                             has_error = True
-                            error_message = (
-                                "Looks like there was a problem processing your transcript"
-                            )
+                            error_message = ":rocket: OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
                             schedule = datetime.now() + timezone.timedelta(minutes=5)
-                            return emit_process_get_transcript_and_update_crm(
+                            emit_process_get_transcript_and_update_crm(
                                 payload, context, summary_parts, viable_data, schedule
                             )
+                            break
                         else:
                             timeout += 30.0
             else:
                 has_error = True
-                blocks = [
-                    block_builders.header_block("AI Generated Call Summary"),
-                    block_builders.context_block(f"Meeting: {meeting.topic}"),
-                    block_builders.simple_section(
-                        f"Looks like there was a problem processing your transcript", "mrkdwn",
-                    ),
-                ]
-                error_message = "Looks like there was a problem processing your transcript"
+                error_message = ":no_entry_sign: Unknown error"
         else:
             has_error = True
-            blocks = [
-                block_builders.header_block("AI Generated Call Summary"),
-                block_builders.context_block(f"Meeting: {meeting.topic}"),
-                block_builders.simple_section(
-                    "We could not find a transcript for this meeting", "mrkdwn",
-                ),
-            ]
-            error_message = "We could not find a transcript for this meeting"
+            error_message = ":no_entry_sign: We could not find a transcript for this meeting"
     except Exception as e:
         logger.exception(e)
         has_error = True
-        blocks = [
-            block_builders.header_block("AI Generated Call Summary"),
-            block_builders.context_block(f"Meeting: {meeting.topic}"),
-            block_builders.simple_section(
-                f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
-            ),
-        ]
-        error_message = "Looks like there was a problem processing your transcript"
+        error_message = (
+            f":no_entry_sign: We encountered an unknow error processing your transcript: {str(e)}"
+        )
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
@@ -1097,9 +1070,13 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
             ),
         ]
     else:
-        print(error_message)
         workflow.failed_task_description.append(f"MEETING_REVIEW__UPDATE_RESOURCE.{error_message}")
         workflow.save()
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.simple_section(f"{error_message}", "mrkdwn"),
+        ]
     try:
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,

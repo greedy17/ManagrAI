@@ -3173,7 +3173,7 @@ def process_view_recap(payload, context):
     user = main_form.user
     access_token = user.organization.slack_integration.access_token
     loading_view_data = send_loading_screen(
-        access_token, "Processing your recap", "open", str(user.id), payload["trigger_id"]
+        access_token, ":robot_face: Processing your recap", "open", str(user.id), payload["trigger_id"]
     )
     old_data = dict()
     if main_form.template.form_type == "UPDATE":
