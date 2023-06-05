@@ -820,6 +820,7 @@ def process_transcript_to_summaries(transcript, user):
                             url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                         )
                         r = _handle_response(r)
+                        print(r)
                         summary = r.get("choices")[0].get("text")
 
                         summary = (
@@ -830,6 +831,7 @@ def process_transcript_to_summaries(transcript, user):
                         break
                     except IndexError:
                         continue
+    print("SUMMARY PARTS", summary_parts)
     return summary_parts
 
 
@@ -917,6 +919,7 @@ def _process_get_transcript_and_update_crm(payload, context):
             )
             transcript = transcript.decode("utf-8")
             summary_parts = process_transcript_to_summaries(transcript, user)
+            print(len(summary_parts))
             if len(summary_parts):
                 viable_data = False
                 timeout = 60.0
@@ -949,6 +952,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
+                                print(r.json())
                             r = _handle_response(r)
                             logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
@@ -983,6 +987,10 @@ def _process_get_transcript_and_update_crm(payload, context):
                         print(e)
                         if str(e) == "substring not found":
                             continue
+                        else:
+                            has_error = True
+                            error_message = "Looks like we ran into an issue"
+                            break
                     except SyntaxError as e:
                         print(e)
                         continue
@@ -1056,6 +1064,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                             slack_consts.CALL_LAUNCH_SUMMARY_REVIEW,
                             [f"form_id={str(new_form.id)}&u={str(user.id)}&w={str(workflow.id)}"],
                         ),
+                        style="primary",
                     )
                 ]
             ),

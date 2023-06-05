@@ -3905,9 +3905,7 @@ def process_meeting_transcript_task(payload, context):
     user = User.objects.get(id=context.get("u"))
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     blocks = [
-        block_builders.simple_section(
-            f"Processing AI-call summary. We will DM you when its ready! :rocket:"
-        )
+        block_builders.simple_section(f":robot_face: Processing AI call summary. Check your DM!")
     ]
     data = {
         "view_id": payload["view"]["id"],
