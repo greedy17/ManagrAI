@@ -96,6 +96,7 @@ export default {
       try {
         setTimeout(() => {
           this.message = ''
+          this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
         }, 300)
         let res = await User.api.chatUpdate({
           user_id: this.user.id,
@@ -186,6 +187,8 @@ export default {
 
         el.addEventListener('input', adjustTextareaHeight)
         el.addEventListener('focus', adjustTextareaHeight)
+        el.addEventListener('textarea-clear', adjustTextareaHeight)
+        adjustTextareaHeight()
       },
     },
   },

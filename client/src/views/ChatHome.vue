@@ -238,14 +238,14 @@ export default {
           workflow_title: 'None',
         })
         console.log(res)
-        this.toggleChatModal()
       } catch (e) {
         console.log(e)
       } finally {
         setTimeout(() => {
           this.submitting = false
+          this.toggleChatModal()
           this.$store.dispatch('messageUpdated', this.chatData.id)
-        }, 400)
+        }, 600)
       }
     },
     test(log) {

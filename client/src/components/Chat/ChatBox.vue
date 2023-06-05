@@ -7,24 +7,15 @@
       <div v-for="(message, i) in messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
-            <!-- v-if="message.user === 'bot' && !message.updated" -->
             <span
-              v-if="message.user === 'bot'"
+              v-if="message.user === 'bot' && !message.updated"
               style="font-size: 24px; margin-right: 0.25rem; padding-top: 0.5rem"
             >
               🤖
             </span>
-            <!-- <span
-              v-else-if="message.user === 'bot' && message.updated"
-              style="
-                font-size: 20px;
-                margin-right: 0.25rem;
-                padding-top: 0.5rem;
-                margin-left: 0.25rem;
-              "
-            >
-              ✅
-            </span> -->
+            <span v-else-if="message.user === 'bot' && message.updated">
+              <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
+            </span>
 
             <div class="avatar" v-else>{{ userName[0] }}</div>
           </div>
@@ -53,7 +44,8 @@
             v-if="!selectingContent || selectedIndex !== i"
             class="generate-button"
           >
-            <img src="@/assets/images/sparkle.svg" height="16px" alt="" /> Generate content
+            <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
+            Generate content
           </button>
 
           <div
@@ -78,12 +70,21 @@
               summary
             </button>
 
-            <div @click="selectingContent = !selectingContent" class="go-back">
+            <img
+              style="margin-left: 0.25rem; cursor: pointer"
+              class="gray-blue-scale"
+              @click="selectingContent = !selectingContent"
+              src="@/assets/images/return.svg"
+              height="18px"
+              alt=""
+            />
+
+            <!-- <div @click="selectingContent = !selectingContent" class="go-back">
               <div class="back">
                 <p>X</p>
-                <!-- <img src="@/assets/images/transition.svg" height="12px" alt="" /> -->
+               
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -210,6 +211,9 @@ export default {
     -webkit-mask-position: left;
   }
 }
+.gray-blue-scale {
+  filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
+}
 
 .row {
   display: flex;
@@ -321,6 +325,11 @@ export default {
 .green-filter {
   filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
     contrast(82%);
+}
+.gold-filter {
+  filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(90%) contrast(87%);
+  animation: shimmer 2s;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
 .invert {

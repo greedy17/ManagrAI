@@ -305,7 +305,9 @@ export default {
           el.style.height = el.scrollHeight + 'px'
         }
 
+        el.addEventListener('input', adjustTextareaHeight)
         el.addEventListener('focus', adjustTextareaHeight)
+        adjustTextareaHeight()
       },
     },
   },

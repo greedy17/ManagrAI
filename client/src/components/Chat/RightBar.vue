@@ -64,25 +64,9 @@
 
         <div class="flexed-row-spread">
           <div class="input">
-            <img
-              style="cursor: text"
-              v-if="!searchText"
-              src="@/assets/images/search.svg"
-              height="16px"
-              alt=""
-            />
-            <img
-              style="cursor: text"
-              v-else
-              src="@/assets/images/return.svg"
-              height="16px"
-              alt=""
-            />
-            <input
-              class="search-input"
-              v-model="searchText"
-              :placeholder="`Search ${user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'} by name`"
-            />
+            <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
+
+            <input class="search-input" v-model="searchText" :placeholder="`Search by name`" />
             <img
               v-show="searchText"
               @click="clearText"
@@ -217,7 +201,7 @@
                 <button
                   @click="addFilter()"
                   v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
-                  class="chat-button shimmer"
+                  class="chat-button"
                   style="padding: 0.5rem 1rem"
                 >
                   Add filter
@@ -316,7 +300,7 @@
       <div style="margin-bottom: 0.25rem" class="space-between">
         <button
           :disabled="loadingMore"
-          class="chat-button"
+          class="chat-button no-border gray-scale"
           v-if="displayedOpps.next"
           @click="loadMoreOpps"
         >
@@ -569,31 +553,17 @@ export default {
     async reloadOpps() {
       this.oppsLoading = true
       try {
-        let res = await this.$store.dispatch('loadChatOpps', 1)
+        await this.$store.dispatch('loadChatOpps').then(() => {
+          this.setOppForms()
+        })
       } catch (e) {
         console.log('error loading opps')
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
-          this.setOppForms()
         }, 1000)
       }
     },
-    // async searchFilter() {
-    //   if (this.searchText) {
-    //     try {
-    //       this.$store.dispatch('changeFilters', [
-    //         ...this.$store.state.filters,
-    //         ['CONTAINS', 'Name', this.searchText],
-    //       ])
-    //       await this.$store.dispatch('loadChatOpps', 1)
-    //     } catch (e) {
-    //       console.log(e)
-    //     }
-    //   } else {
-    //     return
-    //   }
-    // },
     async addFilter() {
       let filter = []
       filter = [
@@ -664,6 +634,11 @@ export default {
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
       )
 
+      let allFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'Name' && field.apiName !== 'dealname' && field.apiName !== 'name',
+      )
+
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
@@ -679,7 +654,7 @@ export default {
             : true),
       )
 
-      this.$emit('set-fields', this.oppFields)
+      this.$emit('set-fields', allFields)
     },
     getDate(input) {
       let newer = new Date(input)
@@ -761,8 +736,14 @@ export default {
     activeFilters() {
       return this.$store.state.filters
     },
-    displayedOpps() {
-      return this.$store.state.chatOpps
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
     },
     userCRM() {
       return this.$store.state.user.crm
@@ -803,14 +784,14 @@ export default {
 }
 
 .shimmer {
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
 .pop-transition {
   transition: transform 0.3s ease; /* Adjust the transition duration and easing as per your preference */
   transform: scale(1.25); /* Adjust the transform properties to create the desired effect */
-  animation: shimmer 1s infinite;
+  animation: shimmer 2s infinite;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
@@ -1056,6 +1037,7 @@ header {
     font-family: $base-font-family;
     color: $chat-font-color;
     background-color: white;
+    padding: 0.75rem;
   }
 }
 
@@ -1068,6 +1050,22 @@ header {
   background-color: white;
   img {
     margin-left: 0;
+  }
+}
+
+.no-border {
+  border: none !important;
+  background-color: transparent !important;
+
+  &:hover {
+    box-shadow: none;
+  }
+}
+
+.gray-scale {
+  color: $light-gray-blue;
+  img {
+    filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
   }
 }
 
