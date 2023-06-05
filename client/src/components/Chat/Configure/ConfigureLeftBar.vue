@@ -19,7 +19,7 @@
           <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Note Templates</p>
         </div>
         <div class="base-select" :class="configPage === 'sync' ? 'left-active' : 'pointer'" @click="changeConfigPage('sync')">
-          <p><img src='@/assets/images/calendar.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
+          <p><img src='@/assets/images/cycle.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
         </div>
         <div class="base-select" :class="configPage === 'profile' ? 'left-active' : 'pointer'" @click="changeConfigPage('profile')">
           <p><img src='@/assets/images/user.svg' :class="configPage === 'profile' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Profile</p>
@@ -30,7 +30,7 @@
       <div class="base-select" :class="configPage === 'demo' ? 'left-active' : 'pointer'" @click="changeConfigPage('demo')">
         <p><img src="@/assets/images/play-alt.svg" :class="configPage === 'demo' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Demo Center</p>
       </div>
-      <div class="base-select" @click="logOut">
+      <div class="base-select pointer" @click="logOut">
         <p><img src="@/assets/images/logout.svg" style="height: 12px; margin-right: 0.5rem;" />Log out</p>
       </div>
     </div>
@@ -126,6 +126,7 @@ export default {
   }
 }
 .pointer {
+  color: $light-gray-blue;
   img {
     filter: invert(45%);
   }

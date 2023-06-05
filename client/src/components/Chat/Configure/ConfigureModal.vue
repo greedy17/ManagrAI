@@ -26,6 +26,9 @@
         :stageForms="formStages"
         />
       </div>
+      <div v-else-if="configPage === 'sync'">
+        <ConfigureSync />
+      </div>
       <div v-else>
         <div>
           <h2>Error loading page. Please try again later.</h2>
@@ -39,6 +42,7 @@
 import ConfigureLeftBar from './ConfigureLeftBar.vue'
 import ConfigureIntegrations from './ConfigureIntegrations.vue'
 import ConfigureForms from './ConfigureForms.vue'
+import ConfigureSync from './ConfigureSync.vue'
 import { SObjectPicklist } from '@/services/salesforce'
 import SlackOAuth from '@/services/slack'
 import { CollectionManager } from '@thinknimble/tn-models'
@@ -53,7 +57,8 @@ export default {
   components: {
     ConfigureLeftBar,
     ConfigureIntegrations,
-    ConfigureForms
+    ConfigureForms,
+    ConfigureSync,
   },
   data() {
     return {

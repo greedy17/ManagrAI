@@ -342,30 +342,6 @@
             </button>
           </div>
         </div>
-
-        <!-- <div class="card__body">
-          <h3>Calendar</h3>
-          <p class="card-text">Accesses your upcoming meetings</p>
-          <div>
-            <PulseLoadingSpinnerButton
-              v-if="!hasNylasIntegration"
-              @click="onGetAuthLink('NYLAS')"
-              class="orange_button"
-              text="Connect"
-              :loading="generatingToken && selectedIntegration == 'NYLAS'"
-            ></PulseLoadingSpinnerButton>
-            <div v-else>
-              <div class="img-border">
-                <img
-                  @click="setRemoveApp('NYLAS')"
-                  src="@/assets/images/revoke.svg"
-                  height="16"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-        </div> -->
       </div>
 
       <div class="card">
@@ -1515,14 +1491,36 @@ a {
 .cancel-button {
   @include gray-button();
 }
-.custom-picklist-font {
-  font-size: 12px;
+// .custom-picklist-font {
+//   font-size: 12px;
+// }
+// ::v-deep .custom-picklist-font input::placeholder {
+//   font-size: 12px;
+// }
+// ::v-deep .custom-picklist-font span {
+//   font-size: 12px;
+// }
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
 }
-::v-deep .custom-picklist-font input::placeholder {
-  font-size: 12px;
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
 }
-::v-deep .custom-picklist-font span {
-  font-size: 12px;
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  min-width: 250px;
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 .sep-button-container {
   display: flex;

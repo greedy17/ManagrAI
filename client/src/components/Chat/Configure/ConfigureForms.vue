@@ -211,7 +211,7 @@
       </div>
     </div> -->
     <div class="fields-container">
-      <div class="row__ border-bottom-top" style="margin: 1rem 2rem 0 2rem; padding-bottom: 0;">
+      <div class="row__ border-bottom-top" style="margin: 1rem 1.5rem 0 2rem; padding-bottom: 0;">
         <!-- :style="user.crm === 'SALESFORCE' ? 'justify-content: space-between;' : 'justify-content: space-around;'" -->
         <div class="display-flex">
           <div v-for="object in resources" :key="object.value" class="small-margin-right">
@@ -253,8 +253,8 @@
             style="margin: 0"
           >
             <div style="display: flex; flex-direction: column">
-              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
-                <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
+              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="half-view-flex" style="align-items: center; margin-top: 1rem;">
+                <div class="row__" style="gap: 6px; margin-left: 0;">
                   <div class="header-text">View:</div>
                   <Multiselect
                     @input="changeObject(selectedObject, $event, false)"
@@ -320,21 +320,22 @@
                     "
                     @click="confirmDeleteModal = !confirmDeleteModal"
                     class="img-button"
-                    style="padding: 0.5rem;"
+                    style="padding: 0.5rem; margin: 0;"
                   >
                     <!-- Delete Form -->
                     <img src="@/assets/images/trash.svg" class="trash-button" />
                   </button>
                 </div>
               </div>
-              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
+              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" class="half-view-flex">
                 <div v-if="modalLoading">
                   <Loader :loaderText="loaderText" />
                 </div>
                 <div v-else>
                   <div
                     v-if="createdCustomObjects.length"
-                    style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;"
+                    style="margin-top: 1rem;"
+                    class="half-view-flex"
                   >
                     <Multiselect
                       @input="getCreatedCO"
@@ -371,7 +372,7 @@
                       Delete
                     </button>
                   </div>
-                  <div v-else style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;">
+                  <div v-else class="half-view-flex" style="margin-top: 1rem;">
                     <Multiselect
                       @input="getCustomObjectFields"
                       :options="customObjects"
@@ -2389,7 +2390,7 @@ img:hover {
   // font-size: 12px;
   // transition: all 0.3s;
   @include primary-button();
-  margin-right: 0.5rem;
+  margin-right: 0.1rem;
 }
 // .red-button {
 //   @include button-danger();
@@ -2715,8 +2716,30 @@ img:hover {
   background: $base-gray;
   color: #ffffff;
 }
-.multiselect-font {
-  font-size: 12px !important;
+// .multiselect-font {
+//   font-size: 12px !important;
+// }
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  min-width: 250px;
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 .green-check {
   height: 0.6rem;
@@ -2857,5 +2880,10 @@ img:hover {
 }
 .cancel-button {
   @include gray-button();
+}
+.half-view-flex {
+  display: flex; 
+  justify-content: space-between; 
+  width: 55.75vw;
 }
 </style>
