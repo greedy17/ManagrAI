@@ -96,13 +96,14 @@ OPEN_AI_TRANSCRIPT_PROMPT = (
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
+    lambda date, fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript from {date}. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
 1) You are VP of Sales. Create one summary, in paragraph of how this call went. Include relevant data regarding: customer pain, customer objections, objection handling by salesperson, competitors mentioned, timeline to close, decision process, the next steps and overall tone of the meeting.
 2) The summary must be no less than 1,500 characters and no greater than 2,000 characters.
 3) Write the summary using casual, engaging, conversational, and slightly witty tone.
 4) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary.\n
-5) The output must be a python dictionary. The summary must be added to the dictionary using a key called 'summary'.\n
-    CRM fields:{fields}\nSummaries: {summaries}"""
+5) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called 'summary'.\n
+6) Lastly, today's date is {date} \n
+CRM fields:{fields}\n Summaries: {summaries}"""
 )
 
 

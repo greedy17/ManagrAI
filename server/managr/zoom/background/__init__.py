@@ -826,7 +826,6 @@ def process_transcript_to_summaries(transcript, user):
                             url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                         )
                         r = _handle_response(r)
-                        print(r)
                         summary = r.get("choices")[0].get("text")
 
                         summary = (
@@ -903,7 +902,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
             meeting.meeting_id, meeting.meeting_account.access_token
         )
-        logger.info(f"Done! {meeting_data}")
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
         try:
             update_res = slack_requests.update_channel_message(
                 user.slack_integration.channel,
@@ -948,7 +948,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                 attempts = 1
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
-                        fields_list, summary_parts
+                        workflow.datetime_created.date(), fields_list, summary_parts
                     )
                     tokens = max_token_calculator(len(summary_body))
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
@@ -962,7 +962,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
-                                print(r.json())
                             r = _handle_response(r)
                             logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
