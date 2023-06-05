@@ -110,12 +110,16 @@ export default {
         this.$emit('message-loading', false)
         this.$emit('set-message', {
           user: 'bot',
+          id: this.chatRes['id'],
           value: this.chatRes['res'][0],
           resource: this.chatRes['resource'][0],
           formId: this.chatRes['form'],
           data: this.chatRes['data'],
           resourceId: this.chatRes['resourceId'],
+          formType: this.chatRes['formType'],
           integrationId: this.chatRes['integrationId'],
+          resourceType: this.chatRes['resourceType'],
+          updated: false,
         })
         this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
       }
@@ -181,6 +185,7 @@ export default {
         }
 
         el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
       },
     },
   },

@@ -479,6 +479,7 @@ def submit_chat_prompt(request):
 
     return Response(
         data={
+            **r,
             "form": form.id,
             "data": cleaned_data,
             "resource": {resource.display_value},

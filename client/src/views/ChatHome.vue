@@ -12,34 +12,44 @@
       <div class="chat-modal-container">
         <div class="chat-modal-header">
           <div>
-            <h4 class="elipsis-text" style="margin-bottom: 0.25rem">
+            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
               Update {{ chatData.resource }}
-            </h4>
+            </h3>
             <span class="gray-text smaller"
               >Your CRM fields have been auto-filled. Pleae review and click submit.</span
             >
           </div>
 
-          <h4 @click="toggleChatModal" style="cursor: pointer">x</h4>
+          <h4 v-if="!submitting" @click="toggleChatModal" style="cursor: pointer">x</h4>
+          <img
+            v-else
+            class="spinning-load"
+            @click="reloadOpps"
+            src="@/assets/images/refresh.svg"
+            height="18px"
+            alt=""
+          />
         </div>
 
-        <!-- <div>
-          {{ chatData.data }}
-        </div> -->
-
-        <div class="chat-body" v-for="(field, i) in formFields" :key="i">
+        <div
+          :class="{ disabled: submitting }"
+          class="chat-body"
+          v-for="(field, i) in formFields"
+          :key="i"
+        >
           <ChatFormField
             :placeholder="chatData.data[field.apiName]"
             :field="field"
             :resourceId="chatData.resourceId"
             :integrationId="chatData.integrationId"
             :chatData="chatData.data"
+            @set-value="setUpdateValues"
           />
         </div>
 
         <div class="chat-modal-footer">
-          <button @click="toggleChatModal">Close</button>
-          <button @click="onSubmitChat">Submit</button>
+          <button :disabled="submitting" @click="toggleChatModal">Close</button>
+          <button :disabled="submitting" @click="onSubmitChat">Submit</button>
         </div>
       </div>
     </Modal>
@@ -206,22 +216,26 @@ export default {
   },
   watch: {},
   methods: {
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.chatData.data[key] = this.chatData.data[key]
+          ? this.chatData.data[key] + ';' + val
+          : val.split(/&#39;/g)[0]
+      } else {
+        this.chatData.data[key] = val
+      }
+    },
     async onSubmitChat() {
       this.submitting = true
       try {
         const res = await CRMObjects.api.updateResource({
           form_data: this.chatData.data,
+          resource_type: this.chatData.resourceType,
+          form_type: this.chatData.formType,
+          resource_id: this.chatData.resourceId,
+          integration_ids: [this.chatData.integrationId],
           from_workflow: false,
           workflow_title: 'None',
-          form_type: this.chatData.formType,
-          integration_ids: [this.chatData.integrationId],
-          resource_type: this.chatData.resource_type,
-          resource_id: this.chatData.resourceId,
-          //stage_name: this.storedStageName
-          //   ? this.storedStageName
-          //   : this.stageGateField
-          //   ? this.stageGateField
-          //   : null,
         })
         console.log(res)
         this.toggleChatModal()
@@ -230,7 +244,8 @@ export default {
       } finally {
         setTimeout(() => {
           this.submitting = false
-        }, 300)
+          this.$store.dispatch('messageUpdated', this.chatData.id)
+        }, 400)
       }
     },
     test(log) {
@@ -332,7 +347,9 @@ body {
   width: 260px;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.5rem;
+  padding-bottom: 0;
 }
+
 #main {
   flex: 1;
   width: 54vw;
@@ -654,5 +671,23 @@ body {
     color: $base-gray;
   }
   font-size: 14px;
+}
+.disabled {
+  opacity: 0.5;
+}
+.spinning-load {
+  animation: rotation 3s infinite linear;
+  opacity: 0.3;
+  cursor: not-allowed;
+  margin-top: 1rem;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }
 </style>

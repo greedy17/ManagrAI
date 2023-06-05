@@ -1,6 +1,6 @@
 <template>
   <div class="sidebar" :class="{ open: isOpen }">
-    <section>
+    <section style="position: relative">
       <header>
         <button @mouseenter="soonThreadText" @mouseleave="newThreadText" class="primary-button">
           <!-- <font-awesome-icon style="color: #183153" icon="fa-solid fa-rocket" /> -->
@@ -107,7 +107,7 @@ export default {
   }
 
   section {
-    padding: 1rem;
+    padding: 1rem 1rem 0 1rem;
     // Add your nav styles here
   }
 }
@@ -129,52 +129,51 @@ export default {
 }
 
 .body {
-  height: 66vh;
+  min-height: 66vh;
   overflow-y: scroll;
   overflow-x: hidden;
   text-overflow: ellipsis;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 @media (max-height: 600px) {
   .body {
-    height: 56vh;
+    min-height: 56vh;
   }
 }
 
 @media (max-height: 750px) {
   .body {
-    height: 66vh;
+    min-height: 66vh;
   }
 }
 
 @media (min-height: 875px) {
   .body {
-    height: 70vh;
+    min-height: 70vh;
   }
 }
 
 @media (min-height: 1025px) {
   .body {
-    height: 75vh;
+    min-height: 75vh;
   }
 }
 
 @media (min-height: 1200px) {
   .body {
-    height: 78vh;
+    min-height: 78vh;
   }
 }
 
 footer {
-  height: 20vh;
-  position: relative;
-  margin-top: auto;
+  position: fixed;
+  bottom: 0;
   width: 230px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0.75rem 0 0.5rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .primary-button {

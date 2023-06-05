@@ -32,6 +32,7 @@ const state = {
   allContacts: [],
   allAccounts: [],
   allLeads: [],
+  messages: [],
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -103,6 +104,27 @@ const mutations = {
   UPDATE_CUSTOM_OBJECT: (state, payload) => {
     state.customObject = payload
   },
+  UPDATE_MESSAGES: (state, payload) => {
+    state.messages.push(payload)
+  },
+  MESSAGE_UPDATED: (state, payload) => {
+    let updatedMsg = state.messages.filter(msg => msg.id === payload)
+    updatedMsg[0].updated = true
+    updatedMsg[0].value = `successfully updated ${updatedMsg[0].resource}! `
+
+    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload);
+
+    if (indexToUpdate !== -1) {
+      state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
+    }
+    console.log(updatedMsg, 'UPDATED MESSAGE')
+    console.log(state.messages, 'MESSAGES')
+
+  },
+  CLEAR_MESSAGES: (state) => {
+    state.messages = []
+    state.chatTitle = 'All Open Opportunities'
+  }
 
 }
 
@@ -133,8 +155,33 @@ const actions = {
       console.log(e)
     }
   },
+  updateMessages({ commit }, message) {
+    commit('UPDATE_MESSAGES', message)
+  },
+  messageUpdated({ commit }, id) {
+    commit('MESSAGE_UPDATED', id)
+  },
+  clearMessages({ commit }) {
+    commit('CLEAR_MESSAGES',)
+  },
   changeFilters({ commit }, filters) {
     commit('UPDATE_FILTERS', filters)
+  },
+  async loadMoreChatOpps({ state, commit }, { page = 1, text }) {
+    let resourceName = ''
+    if (state.user.crm === 'SALESFORCE') {
+      resourceName = 'Opportunity'
+    } else if (state.user.crm === 'HUBSPOT') {
+      resourceName = 'Deal'
+    }
+    let oldResults = []
+    if (page > 1) {
+      oldResults = state.chatOpps.results
+    }
+    let res = await CRMObjects.api.getObjects(resourceName, page, true, [['CONTAINS', 'Name', text]])
+    res.results = [...oldResults, ...res.results]
+    commit('SAVE_CHAT_OPPS', res)
+    return res
   },
   async loadChatOpps({ state, commit }, page = 1) {
     let resourceName = ''
@@ -142,8 +189,6 @@ const actions = {
       resourceName = 'Opportunity'
     } else if (state.user.crm === 'HUBSPOT') {
       resourceName = 'Deal'
-    } else {
-      resourceName = 'Opportunity'
     }
     let oldResults = []
     if (page > 1) {

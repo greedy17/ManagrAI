@@ -63,9 +63,10 @@
         :disabled="loader"
         selectedLabel=""
         deselectLabel=""
+        v-model="selectedOption"
         @select="
           setUpdateValues(
-            field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.field.apiName,
+            field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
             $event.value,
             field.dataType === 'MultiPicklist' ? true : false,
           )
@@ -86,6 +87,7 @@
         :disabled="loader"
         selectedLabel=""
         deselectLabel=""
+        v-model="selectedOption"
         @select="
           setUpdateValues(
             field.apiName,
@@ -111,6 +113,7 @@
         :value="placeholder"
         :disabled="loader || loadingOptions"
         :loading="loadingOptions"
+        v-model="selectedOption"
         @select="setUpdateValues(field.apiName, $event.id, false)"
         @open="getReferenceOptions(field.id)"
         selectedLabel=""
@@ -154,18 +157,11 @@ export default {
   },
   methods: {
     setUpdateValues(key, val, multi) {
-      if (multi) {
-        this.formData[key] = this.formData[key]
-          ? this.formData[key] + ';' + val
-          : val.split(/&#39;/g)[0]
-      } else {
-        this.formData[key] = val
-      }
+      this.$emit('set-value', key, val, multi)
     },
     closeInline() {
       this.$emit('close-inline')
     },
-
     async getReferenceOptions(id) {
       this.loadingOptions = true
       try {
@@ -226,7 +222,7 @@ export default {
 
 ::v-deep .multiselect__content-wrapper {
   border-radius: 5px;
-  top: 3rem;
+  margin: 0.5rem 0rem;
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }

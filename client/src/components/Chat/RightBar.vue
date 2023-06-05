@@ -18,7 +18,7 @@
               />
             </span>
 
-            <p>Opportunity</p>
+            <p>{{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</p>
           </div>
           <div class="flexed-row">
             <img
@@ -43,7 +43,11 @@
 
       <section v-else>
         <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ displayedOpps.count }})</p>
+          <p style="margin-bottom: 0.25rem">
+            All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
+              displayedOpps.count
+            }})
+          </p>
 
           <div class="flexed-row">
             <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
@@ -60,19 +64,24 @@
 
         <div class="flexed-row-spread">
           <div class="input">
-            <img v-if="!searchText" src="@/assets/images/search.svg" height="16px" alt="" />
             <img
+              style="cursor: text"
+              v-if="!searchText"
+              src="@/assets/images/search.svg"
+              height="16px"
+              alt=""
+            />
+            <img
+              style="cursor: text"
               v-else
-              @click="searchFilter"
               src="@/assets/images/return.svg"
               height="16px"
               alt=""
             />
             <input
               class="search-input"
-              @keydown.enter.exact.prevent="searchFilter"
               v-model="searchText"
-              placeholder="Search Opportunity by name"
+              :placeholder="`Search ${user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal'} by name`"
             />
             <img
               v-show="searchText"
@@ -171,7 +180,7 @@
                     :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
                     :type="`${selectedFilter.dataType}`"
                     v-model="selectedFilter.value"
-                    autofocus="true"
+                    autofocus
                   />
 
                   <!-- <Multiselect
@@ -250,6 +259,7 @@
                 :field="field"
                 :showing="editing"
                 @close-inline="closeInline"
+                @setFields="setOppForms"
               />
             </div>
           </div>
@@ -282,7 +292,7 @@
             <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
           </div>
           <div>
-            <p style="margin: 0.25rem 0">{{ note.meeting_comments || '---' }}</p>
+            <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
           </div>
 
           <small class="gray-text">{{
@@ -303,12 +313,18 @@
       >
         <p style="margin: 0">{{ opp.name }}</p>
       </div>
-      <div class="space-between">
-        <p v-if="searchText">End of list</p>
-        <span v-else></span>
-        <button class="chat-button" v-if="displayedOpps.next" @click="loadMoreOpps">
+      <div style="margin-bottom: 0.25rem" class="space-between">
+        <button
+          :disabled="loadingMore"
+          class="chat-button"
+          v-if="displayedOpps.next"
+          @click="loadMoreOpps"
+        >
+          <img src="@/assets/images/load-more.svg" height="14px" alt="" />
           Load More
         </button>
+
+        <p v-else>End of list</p>
       </div>
     </div>
   </section>
@@ -332,6 +348,7 @@ export default {
     return {
       updateFormData: {},
       loadingNotes: false,
+      loadingMore: false,
       notes: [],
       editing: false,
       activeField: null,
@@ -352,6 +369,7 @@ export default {
         // },
       }),
       page: 1,
+      loadMorePage: 0,
       selectedOperator: null,
       months: {
         0: 'January',
@@ -380,9 +398,9 @@ export default {
         Owner: [{ label: 'contains', value: 'CONTAINS' }],
         Stage: [{ label: 'contains', value: 'CONTAINS' }],
         Name: [
-          { label: 'is', value: 'EQUALS' },
           { label: 'contains', value: 'CONTAINS' },
           { label: 'does not equal', value: 'NOT_EQUALS' },
+          { label: 'is', value: 'EQUALS' },
         ],
         'Close date': [
           { label: 'is', value: 'EQUALS' },
@@ -478,6 +496,15 @@ export default {
         return
       }
     },
+    searchText(newVal, oldVal) {
+      if (newVal !== oldVal && newVal !== '') {
+        return
+      } else {
+        this.$store.dispatch('loadChatOpps')
+        this.page = 0
+        this.loadMorePage = 0
+      }
+    },
     // : 'selectOperator',
     selectedOpp: 'getNotes',
   },
@@ -548,24 +575,25 @@ export default {
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
+          this.setOppForms()
         }, 1000)
       }
     },
-    async searchFilter() {
-      if (this.searchText) {
-        try {
-          this.$store.dispatch('changeFilters', [
-            ...this.$store.state.filters,
-            ['CONTAINS', 'Name', this.searchText],
-          ])
-          await this.$store.dispatch('loadChatOpps', 1)
-        } catch (e) {
-          console.log(e)
-        }
-      } else {
-        return
-      }
-    },
+    // async searchFilter() {
+    //   if (this.searchText) {
+    //     try {
+    //       this.$store.dispatch('changeFilters', [
+    //         ...this.$store.state.filters,
+    //         ['CONTAINS', 'Name', this.searchText],
+    //       ])
+    //       await this.$store.dispatch('loadChatOpps', 1)
+    //     } catch (e) {
+    //       console.log(e)
+    //     }
+    //   } else {
+    //     return
+    //   }
+    // },
     async addFilter() {
       let filter = []
       filter = [
@@ -689,14 +717,45 @@ export default {
       }
     },
     async loadMoreOpps() {
-      this.page += 1
-      await this.$store.dispatch('loadChatOpps', this.page)
+      if (this.searchText) {
+        this.loadMorePage += 1
+        this.loadingMore = true
+        try {
+          let res = await this.$store.dispatch('loadMoreChatOpps', {
+            page: this.loadMorePage,
+            text: this.searchText,
+          })
+          console.log(res)
+        } catch (e) {
+          console.log(e)
+          this.page = 0
+          this.loadMorePage = 0
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      } else {
+        this.page += 1
+        this.loadingMore = true
+        try {
+          await this.$store.dispatch('loadChatOpps', this.page)
+        } catch (e) {
+          console.log(e)
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      }
     },
   },
   computed: {
     opportunities() {
       if (this.displayedOpps.results) {
-        return this.displayedOpps.results
+        return this.displayedOpps.results.filter((opp) =>
+          opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        )
       } else return []
     },
     activeFilters() {
@@ -1002,11 +1061,14 @@ header {
 
 .chat-button {
   @include chat-button();
-  width: 100px;
+  padding: 0.75rem;
   font-size: 14px;
   font-family: $base-font-family;
   color: $chat-font-color;
   background-color: white;
+  img {
+    margin-left: 0;
+  }
 }
 
 svg,

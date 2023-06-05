@@ -88,6 +88,8 @@
         :multiple="dataType === 'MultiPicklist' ? true : false"
         v-model="selectedOption"
         :disabled="inlineLoader"
+        selectedLabel=""
+        deselectLabel=""
         @select="
           setUpdateValues(
             apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -125,6 +127,8 @@
         selectLabel=""
         v-model="selectedOption"
         :disabled="inlineLoader"
+        selectedLabel=""
+        deselectLabel=""
         @select="
           setUpdateValues(apiName, $event.value, dataType === 'MultiPicklist' ? true : false)
         "
@@ -158,6 +162,8 @@
         selectLabel=""
         track-by="id"
         label="name"
+        selectedLabel=""
+        deselectLabel=""
         v-model="selectedOption"
         :disabled="inlineLoader || loadingOptions"
         :loading="loadingOptions"
@@ -261,6 +267,7 @@ export default {
         setTimeout(() => {
           this.inlineLoader = false
           this.closeInline()
+          this.$emit('setFields')
         }, 1000)
       }
     },
@@ -311,6 +318,25 @@ export default {
 
 ::v-deep .multiselect * {
   font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 
 .inline-input {

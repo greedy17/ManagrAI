@@ -1,20 +1,21 @@
 <template>
   <section class="chat-container">
     <header class="title-header">
-      <p @click="getAllCustomSlackForms">{{ chatTitle }}</p>
+      <p @click="clearMessages">{{ chatTitle }}</p>
     </header>
     <div class="margin-top" ref="chatWindow">
       <div v-for="(message, i) in messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
-            <!-- <img
-              class="green-filter"
-              v-if="message.user === 'bot'"
-              src="@/assets/images/logo.png"
-              height="30px"
-            /> -->
+            <!-- v-if="message.user === 'bot' && !message.updated" -->
             <span
               v-if="message.user === 'bot'"
+              style="font-size: 24px; margin-right: 0.25rem; padding-top: 0.5rem"
+            >
+              🤖
+            </span>
+            <!-- <span
+              v-else-if="message.user === 'bot' && message.updated"
               style="
                 font-size: 20px;
                 margin-right: 0.25rem;
@@ -22,8 +23,8 @@
                 margin-left: 0.25rem;
               "
             >
-              🤖
-            </span>
+              ✅
+            </span> -->
 
             <div class="avatar" v-else>{{ userName[0] }}</div>
           </div>
@@ -33,24 +34,33 @@
           </div>
         </div>
 
-        <div v-if="message.user === 'bot' && message.formId" class="generate-container">
-          <!-- <button
-            @click="toggleSelectContentOption"
-            v-if="!selectingContent"
+        <div
+          v-if="message.user === 'bot' && message.formId && !message.updated"
+          class="generate-container"
+        >
+          <button @click="toggleChatModal(message)" class="generate-button green">
+            <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
+            {{ `Review & update ${user.crm.toLowerCase()}` }}
+          </button>
+        </div>
+
+        <div
+          v-else-if="message.user === 'bot' && message.formId && message.updated"
+          class="generate-container"
+        >
+          <button
+            @click="toggleSelectContentOption(i)"
+            v-if="!selectingContent || selectedIndex !== i"
             class="generate-button"
           >
             <img src="@/assets/images/sparkle.svg" height="16px" alt="" /> Generate content
-          </button> -->
-          <button
-            @click="toggleChatModal(message)"
-            v-if="!selectingContent"
-            class="generate-button"
-          >
-            <img src="@/assets/images/wand.svg" height="14px" alt="" />
-            {{ `Review & update ${user.crm.toLowerCase()}` }}
           </button>
 
-          <div class="row" v-else>
+          <div
+            style="position: relative; margin-bottom: 0.5rem"
+            class="row"
+            v-else-if="selectingContent && selectedIndex === i"
+          >
             <button class="content-button">
               <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-envelope" />Draft
               follow-up email
@@ -67,6 +77,13 @@
               <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-file-lines" />Get
               summary
             </button>
+
+            <div @click="selectingContent = !selectingContent" class="go-back">
+              <div class="back">
+                <p>X</p>
+                <!-- <img src="@/assets/images/transition.svg" height="12px" alt="" /> -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -117,28 +134,26 @@ export default {
     return {
       selectingContent: false,
       messageLoading: false,
-      messages: [
-        // {
-        //   id: 0,
-        //   user: 'bot',
-        //   value: `Hey ${
-        //     this.userName ? this.userName : 'there'
-        //   }! Welcome to Managr, your AI sales assistant`,
-        // },
-      ],
+      selectedIndex: null,
     }
   },
   methods: {
-    async getAllCustomSlackForms() {
-      try {
-        let res = await SlackOAuth.api.slackFormInstances()
-        console.log(res)
-      } catch (e) {
-        console.log(e)
-      } finally {
-      }
+    clearMessages() {
+      this.$store.dispatch('clearMessages')
     },
-    toggleSelectContentOption() {
+    // async getAllCustomSlackForms() {
+    //   try {
+    //     let res = await SlackOAuth.api.slackFormInstances()
+    //     console.log(res)
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //   }
+    // },
+    toggleSelectContentOption(i) {
+      if (i) {
+        this.selectedIndex = i
+      }
       this.selectingContent = !this.selectingContent
     },
     scrollToBottom() {
@@ -151,7 +166,7 @@ export default {
       this.messageLoading = val
     },
     setMessage(msg) {
-      this.messages.push(msg)
+      this.$store.dispatch('updateMessages', msg)
     },
     setTitle(title) {
       this.$store.dispatch('updateChatTitle', title)
@@ -169,6 +184,9 @@ export default {
     },
     chatTitle() {
       return this.$store.state.chatTitle
+    },
+    messages() {
+      return this.$store.state.messages
     },
   },
   created() {
@@ -305,6 +323,16 @@ export default {
     contrast(82%);
 }
 
+.invert {
+  filter: invert(95%);
+}
+
+.green {
+  background-color: $dark-green !important;
+  color: white !important;
+  border: 1px solid $dark-green !important;
+}
+
 .loader-container {
   display: flex;
   align-items: flex-start;
@@ -391,6 +419,40 @@ export default {
   }
 }
 
+.go-back {
+  position: absolute;
+  right: 0.5rem;
+  top: -1.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+
+  img {
+    transform: rotate(180deg);
+  }
+}
 // @keyframes typing {
 //   from {
 //     width: 0;
