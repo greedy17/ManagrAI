@@ -5,6 +5,7 @@ import re
 import uuid
 import random
 from datetime import datetime
+from django.utils import timezone
 from django.conf import settings
 
 from background_task import background
@@ -71,8 +72,12 @@ def emit_process_schedule_zoom_meeting(user, zoom_data):
     return _process_schedule_zoom_meeting(user, zoom_data)
 
 
-def emit_process_get_transcript_and_update_crm(payload, context, schedule):
-    return _process_get_transcript_and_update_crm(payload, context, schedule=schedule)
+def emit_process_get_transcript_and_update_crm(
+    payload, context, summary_parts=[], viable_data=False, schedule=datetime.now()
+):
+    return _process_get_transcript_and_update_crm(
+        payload, context, summary_parts, viable_data, schedule=schedule
+    )
 
 
 def _send_zoom_error_message(user, meeting_uuid):
@@ -813,6 +818,7 @@ def process_transcript_to_summaries(transcript, user):
                 user.email, transcript_body, 500, top_p=0.9, temperature=0.7
             )
             with Variable_Client() as client:
+                attempts = 1
                 while True:
                     url = core_consts.OPEN_AI_COMPLETIONS_URI
                     try:
@@ -820,7 +826,6 @@ def process_transcript_to_summaries(transcript, user):
                             url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                         )
                         r = _handle_response(r)
-                        print(r)
                         summary = r.get("choices")[0].get("text")
 
                         summary = (
@@ -831,12 +836,16 @@ def process_transcript_to_summaries(transcript, user):
                         break
                     except IndexError:
                         continue
-    print("SUMMARY PARTS", summary_parts)
+                    except ServerError:
+                        if attempts >= 5:
+                            return []
+                        else:
+                            attempts += 1
     return summary_parts
 
 
 @background()
-def _process_get_transcript_and_update_crm(payload, context):
+def _process_get_transcript_and_update_crm(payload, context, summary_parts, viable_data):
     from managr.core.models import User
     from managr.salesforce.models import MeetingWorkflow
     from managr.crm.utils import CRM_SWITCHER
@@ -855,7 +864,8 @@ def _process_get_transcript_and_update_crm(payload, context):
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
             block_set=get_block_set(
-                "loading", {"message": "Summarizing your call. This may take a few minutes..."}
+                "loading",
+                {"message": ":robot_face: Summarizing your call. This may take a few minutes..."},
             ),
         )
         ts = loading_res["message"]["ts"]
@@ -887,20 +897,21 @@ def _process_get_transcript_and_update_crm(payload, context):
     meeting = workflow.meeting
     has_error = False
     error_message = None
-    summary_parts = []
     try:
         logger.info("Retreiving meeting data...")
         meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
             meeting.meeting_id, meeting.meeting_account.access_token
         )
-        logger.info("Done!")
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
         try:
             update_res = slack_requests.update_channel_message(
                 user.slack_integration.channel,
                 ts,
                 user.organization.slack_integration.access_token,
                 block_set=get_block_set(
-                    "loading", {"message": f"Transcript found for {meeting.topic}!"}
+                    "loading",
+                    {"message": f":telephone_receiver: Transcript found for {meeting.topic}"},
                 ),
             )
         except Exception as e:
@@ -912,16 +923,15 @@ def _process_get_transcript_and_update_crm(payload, context):
             if recording["recording_type"] == "audio_transcript"
         ]
         if len(filtered_recordings):
-            recording_obj = filtered_recordings[0]
-            download_url = recording_obj["download_url"]
-            transcript = meeting.meeting_account.helper_class.get_transcript(
-                download_url, meeting.meeting_account.access_token
-            )
-            transcript = transcript.decode("utf-8")
-            summary_parts = process_transcript_to_summaries(transcript, user)
-            print(len(summary_parts))
+            if not len(summary_parts):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = meeting.meeting_account.helper_class.get_transcript(
+                    download_url, meeting.meeting_account.access_token
+                )
+                transcript = transcript.decode("utf-8")
+                summary_parts = process_transcript_to_summaries(transcript, user)
             if len(summary_parts):
-                viable_data = False
                 timeout = 60.0
                 tokens = 1500
                 try:
@@ -938,7 +948,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                 attempts = 1
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
-                        fields_list, summary_parts
+                        workflow.datetime_created.date(), fields_list, summary_parts
                     )
                     tokens = max_token_calculator(len(summary_body))
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
@@ -952,7 +962,6 @@ def _process_get_transcript_and_update_crm(payload, context):
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
-                                print(r.json())
                             r = _handle_response(r)
                             logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
@@ -979,7 +988,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                     except ServerError:
                         if attempts >= 5:
                             has_error = True
-                            error_message = "There was a server error with Open AI"
+                            error_message = ":no_entry_sign: There was a server error with Open AI"
                             break
                         else:
                             attempts += 1
@@ -989,7 +998,9 @@ def _process_get_transcript_and_update_crm(payload, context):
                             continue
                         else:
                             has_error = True
-                            error_message = "Looks like we ran into an issue"
+                            error_message = (
+                                ":no_entry_sign: Looks like we ran into an internal issue"
+                            )
                             break
                     except SyntaxError as e:
                         print(e)
@@ -999,42 +1010,27 @@ def _process_get_transcript_and_update_crm(payload, context):
                             f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
                         )
                         if timeout >= 120.0:
-                            blocks = [
-                                block_builders.header_block("AI Generated Call Summary"),
-                                block_builders.context_block(f"Meeting: {meeting.topic}"),
-                                block_builders.simple_section(
-                                    ":no_entry_sign: Look like Open AI servers are too busy right now, we'll try again in a bit",
-                                    "mrkdwn",
-                                ),
-                            ]
                             has_error = True
-                            error_message = (
-                                "Looks like there was a problem processing your transcript"
+                            error_message = ":rocket: OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
+                            schedule = datetime.now() + timezone.timedelta(minutes=5)
+                            emit_process_get_transcript_and_update_crm(
+                                payload, context, summary_parts, viable_data, schedule
                             )
                             break
                         else:
                             timeout += 30.0
             else:
                 has_error = True
-                blocks = [
-                    block_builders.header_block("AI Generated Call Summary"),
-                    block_builders.context_block(f"Meeting: {meeting.topic}"),
-                    block_builders.simple_section(
-                        f"Looks like there was a problem processing your transcript", "mrkdwn",
-                    ),
-                ]
-                error_message = "Looks like there was a problem processing your transcript"
+                error_message = ":no_entry_sign: Unknown error"
+        else:
+            has_error = True
+            error_message = ":no_entry_sign: We could not find a transcript for this meeting"
     except Exception as e:
         logger.exception(e)
         has_error = True
-        blocks = [
-            block_builders.header_block("AI Generated Call Summary"),
-            block_builders.context_block(f"Meeting: {meeting.topic}"),
-            block_builders.simple_section(
-                f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
-            ),
-        ]
-        error_message = "Looks like there was a problem processing your transcript"
+        error_message = (
+            f":no_entry_sign: We encountered an unknow error processing your transcript: {str(e)}"
+        )
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
@@ -1073,9 +1069,13 @@ def _process_get_transcript_and_update_crm(payload, context):
             ),
         ]
     else:
-        print(error_message)
         workflow.failed_task_description.append(f"MEETING_REVIEW__UPDATE_RESOURCE.{error_message}")
         workflow.save()
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.simple_section(f"{error_message}", "mrkdwn"),
+        ]
     try:
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,

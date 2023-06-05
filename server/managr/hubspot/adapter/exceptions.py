@@ -153,7 +153,8 @@ class CustomAPIException:
                 raise InvalidFieldError(
                     f"There was an error with on of your field values: {error_message_field} - {error_message}"
                 )
-            except Exception:
+            except Exception as e:
+                logger.exception(e)
                 raise InvalidFieldError(
                     f"There was an error with on of your field values: {self.message}"
                 )

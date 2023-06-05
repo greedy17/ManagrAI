@@ -2637,7 +2637,7 @@ def process_submit_chat_prompt(payload, context):
             resource_check = resource
             break
     block_set = [
-        *get_block_set("loading", {"message": f"Processing your submission..."},),
+        *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
     ]
     try:
         if "w" in context.keys():
@@ -2755,7 +2755,9 @@ def process_chat_action_submit(payload, context):
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set("loading", {"message": "Processing your action submission..."}),
+            block_set=get_block_set(
+                "loading", {"message": ":robot_face: Processing your action submission..."}
+            ),
         )
     except Exception as e:
         logger.exception(f"Failed to send DM to {user.email} because of <{e}>")

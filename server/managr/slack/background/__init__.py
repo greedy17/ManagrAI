@@ -909,7 +909,6 @@ def _process_alert_send_deal_review(payload, context):
         deal_review_data, alert.template.resource_type, datetime.now().date(), user.crm
     )
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, top_p=0.9, temperature=0.7)
-    print(f"DEAL REVIEW BODY: {body}")
     blocks = payload["message"]["blocks"]
     has_error = False
     while True:
@@ -1100,7 +1099,6 @@ def _process_chat_action(payload, context):
                 ":no_entry_sign: Invalid submission: This action was not found"
             )
         )
-    print(context)
     action_func(payload, context)
     if len(blocks):
         try:
