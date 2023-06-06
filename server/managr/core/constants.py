@@ -106,6 +106,22 @@ OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
 CRM fields:{fields}\n Summaries: {summaries}"""
 )
 
+OPEN_AI_CALL_ANALYSIS_PROMPT = (
+    lambda summaries, date: f"""
+    Below are short summaries, summarizing parts of a sales call transcript from {date}. 
+    These summaries are in chronological order. Your are an experienced VP of Sales, follow the instructions below:\n
+    1. During the call, identify specific moments where the prospect exhibits high engagement\n
+    2. During the call, identify specific moments where the prospect exhibits disinterest\n
+    3. During the call, identify specific moments where the prospect has questions or concerns\n
+    4. Provide a sentiment analysis overview using a score and keep the explanation under 150 characters.\n
+    Response needs to be in this format:\n
+    High Engagement:\n
+    Disinterest:\n
+    Questions or Concerns:\n
+    Sentiment:\n
+    Summaries: {summaries}"""
+)
+
 
 def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {

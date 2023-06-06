@@ -2735,7 +2735,7 @@ def process_selected_generative_action(payload, context):
         "selected_option"
     ]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
-    loading_block = [*get_block_set("loading", {"message": "Generating content..."})]
+    loading_block = [*get_block_set("loading", {"message": ":robot_face: Generating content..."})]
     try:
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
