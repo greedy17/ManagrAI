@@ -151,6 +151,8 @@
                   selectLabel=""
                   track-by="value"
                   label="label"
+                  selectedLabel=""
+                  deselectLabel=""
                   :preselectFirst="true"
                 >
                   <template slot="noResult">
@@ -176,6 +178,8 @@
                   :multiple="dataType === 'MultiPicklist' ? true : false"
                   v-model="selectedOption"
                   :disabled="inlineLoader"
+                  selectedLabel=""
+                  deselectLabel=""
                   @select="
                     setUpdateValues(
                       apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -190,22 +194,28 @@
                 </Multiselect> -->
                 </div>
 
-                <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
-                  <p>
+                <div
+                  style="margin: 1rem 0 1rem 0.25rem; position: relative"
+                  v-if="selectedFilter.value"
+                >
+                  <p class="wrap-text">
                     <span style="color: #9596b4">Filter : </span>
                     "{{ selectedFilter.name }} {{ selectedFilter.operatorLabel }}
                     {{ selectedFilter.value }}"
                   </p>
-                </div>
 
-                <button
-                  @click="addFilter()"
-                  v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
-                  class="chat-button"
-                  style="padding: 0.5rem 1rem"
-                >
-                  Add filter
-                </button>
+                  <div
+                    v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
+                    class="save-close"
+                  >
+                    <div @click="addFilter()" class="save">
+                      <span v-if="!inlineLoader">&#x2713;</span>
+                    </div>
+                    <div @click="clearFilter" class="close">
+                      <span>x</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -214,7 +224,7 @@
     </header>
 
     <div class="selected-opp-container" v-if="selectedOpp">
-      <div class="selected-opp-section">
+      <div style="margin-bottom: 0.5rem; padding-left: 0.5rem" class="selected-opp-section">
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <h5 class="gray-text">
@@ -250,14 +260,15 @@
         </div>
 
         <div v-if="!editing" class="edit-button">
-          <button>Edit View</button>
+          <button class="no-border gray-scale no-padding">
+            <img src="@/assets/images/edit.svg" height="14px" alt="" />
+            Edit View
+          </button>
         </div>
       </div>
-      <div style="padding-top: 0" class="selected-opp-section">
-        <h4 style="margin-top: 0; margin-left: -0.25rem" class="selected-opp sticky-top">
-          Notes & History
-        </h4>
-        <div v-for="note in notes" :key="note.id">
+      <div style="padding-top: 0; margin-left: -0.25rem" class="selected-opp-section">
+        <h4 style="margin-top: 0" class="selected-opp sticky-top">Notes & History</h4>
+        <div class="note-section" v-for="note in notes" :key="note.id">
           <div class="row">
             <p
               :class="{ 'gray-text strike': !!note.saved_data__StageName }"
@@ -577,9 +588,7 @@ export default {
       } catch (e) {
         console.log('Error in addFilter', e)
       } finally {
-        setTimeout(() => {
-          this.toggleShowFilters()
-        }, 100)
+        this.toggleShowFilters()
       }
     },
     async removeFilter(targetList) {
@@ -798,6 +807,28 @@ export default {
 ::v-deep .multiselect__single {
   font-size: 14px;
 }
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
+}
 
 .right-container {
   position: sticky;
@@ -853,13 +884,10 @@ export default {
 }
 .opp-scroll-container {
   height: 100%;
-  overflow: hidden;
-  padding: 0.5rem 0;
-}
-
-.opp-scroll-container:hover {
-  overflow: auto;
+  width: 101%;
+  overflow-y: scroll;
   scroll-behavior: smooth;
+  padding: 0.5rem 0;
 }
 
 .opp-scroll-container::-webkit-scrollbar {
@@ -868,11 +896,15 @@ export default {
   margin-left: 0.25rem;
 }
 .opp-scroll-container::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
-
+.opp-scroll-container:hover::-webkit-scrollbar-thumb {
+  overflow: auto;
+  scroll-behavior: smooth;
+  background-color: $base-gray;
+}
 header {
   margin: 0;
   padding: 0;
@@ -942,10 +974,20 @@ header {
   }
 }
 
-.selected-opp-section {
-  height: 50%;
-  overflow: hidden;
+.note-section {
+  background-color: white;
+  padding-left: 1rem;
+  padding-bottom: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 0.5rem 0;
+}
 
+.selected-opp-section {
+  height: 45%;
+  width: 101%;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
   padding: 0.5rem 0.25rem;
   position: relative;
   h5,
@@ -954,9 +996,8 @@ header {
   }
 }
 
-.selected-opp-section:hover {
-  overflow-y: auto;
-  scroll-behavior: smooth;
+.selected-opp-section:last-of-type {
+  height: 55%;
 }
 
 .selected-opp-section::-webkit-scrollbar {
@@ -965,9 +1006,12 @@ header {
   margin-left: 0.25rem;
 }
 .selected-opp-section::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
+}
+.selected-opp-section:hover::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
 }
 
 .sticky-top {
@@ -1058,15 +1102,19 @@ header {
   background-color: transparent !important;
 
   &:hover {
-    box-shadow: none;
+    box-shadow: none !important;
   }
 }
 
 .gray-scale {
-  color: $light-gray-blue;
+  color: $light-gray-blue !important;
   img {
     filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
   }
+}
+
+.no-padding {
+  padding: 0 !important;
 }
 
 svg,
@@ -1345,5 +1393,65 @@ img {
   font-size: 11px;
   border-radius: 4px;
   padding: 4px;
+}
+
+.wrap-text {
+  width: 90%;
+
+  overflow: hidden;
+}
+
+.save-close {
+  position: absolute;
+  right: 0;
+  top: -0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: red;
+  padding: 0.25rem;
+  background-color: white;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 13px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+}
+
+.save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-green;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
 }
 </style>
