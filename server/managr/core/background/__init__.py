@@ -158,6 +158,10 @@ def emit_process_send_call_analysis_to_dm(payload, context):
     return _process_send_call_analysis_to_dm(payload, context)
 
 
+def emit_process_send_call_summary_to_dm(payload, context):
+    return _process_send_call_summary_to_dm(payload, context)
+
+
 #########################################################
 # Helper functions
 #########################################################
@@ -1853,6 +1857,35 @@ def _process_send_call_analysis_to_dm(payload, context):
     )
     blocks = [
         block_builders.header_block("AI Generated Call Analysis"),
+        block_builders.context_block(f"{workflow.meeting.topic}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn"),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_call_summary_to_dm(payload, context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
+    text = (
+        workflow.transcript_summary
+        if workflow.transcript_summary
+        else "There was an issue creating your analysis"
+    )
+    blocks = [
+        block_builders.header_block("AI Generated Call Summary"),
         block_builders.context_block(f"{workflow.meeting.topic}"),
         block_builders.divider_block(),
         block_builders.simple_section(text, "mrkdwn"),
