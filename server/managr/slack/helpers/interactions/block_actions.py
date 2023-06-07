@@ -40,6 +40,7 @@ from managr.core.background import (
     emit_process_calendar_meetings,
     emit_process_send_email_draft,
     emit_process_send_next_steps,
+    emit_process_send_call_analysis_to_dm,
 )
 from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
@@ -1114,6 +1115,8 @@ def GET_ACTION_TEMPLATE(user, template_value):
     action_switcher = {
         "GET_SUMMARY": f"Get summary for {object_type} Pied Piper",
         "DEAL_REVIEW": f"Run a review for {object_type} Pied Piper",
+        "CALL_SUMMARY": f"Get the call summary for {object_type} Pied Piper",
+        "CALL_ANALYSIS": f"Get the call analysis for {object_type} Pied Piper",
     }
     return action_switcher[template_value]
 
@@ -3173,7 +3176,11 @@ def process_view_recap(payload, context):
     user = main_form.user
     access_token = user.organization.slack_integration.access_token
     loading_view_data = send_loading_screen(
-        access_token, "Processing your recap", "open", str(user.id), payload["trigger_id"]
+        access_token,
+        ":robot_face: Processing your recap",
+        "open",
+        str(user.id),
+        payload["trigger_id"],
     )
     old_data = dict()
     if main_form.template.form_type == "UPDATE":
@@ -3763,7 +3770,7 @@ def process_regenerate_action(payload, context):
     ts = payload["message"]["ts"]
     context.update(channel_id=channel_id, ts=ts)
     blocks = payload["message"]["blocks"][:2]
-    loading_block = get_block_set("loading", {"message": "Regenerating content..."})
+    loading_block = get_block_set("loading", {"message": ":robot_face: Regenerating content..."})
     blocks.extend(loading_block)
     try:
         res = slack_requests.update_channel_message(
@@ -3905,9 +3912,7 @@ def process_meeting_transcript_task(payload, context):
     user = User.objects.get(id=context.get("u"))
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     blocks = [
-        block_builders.simple_section(
-            f"Processing AI-call summary. We will DM you when its ready! :rocket:"
-        )
+        block_builders.simple_section(f":robot_face: Processing AI call summary. Check your DM!")
     ]
     data = {
         "view_id": payload["view"]["id"],
@@ -3928,7 +3933,24 @@ def process_launch_call_summary_review(payload, context):
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("form_id"))
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = form.user
-    blocks = form.generate_form(form.saved_data)
+    blocks = []
+    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
+    field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+    try:
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
+        blocks.append(
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
+        )
+    except Exception as e:
+        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
+    blocks.extend(form.generate_form(form.saved_data))
     context.update(ts=payload["container"]["message_ts"])
     stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
     try:
@@ -4028,6 +4050,27 @@ def process_open_review_chat_update_modal(payload, context):
     return
 
 
+def process_send_call_analysis_to_dm(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    channel_id = payload["channel"]["id"]
+    loading_block = get_block_set(
+        "loading", {"message": ":robot_face: Processing your call analysis..."}
+    )
+    blocks = payload["message"]["blocks"][:2]
+    blocks.extend(loading_block)
+    try:
+        res = slack_requests.send_channel_message(
+            channel_id, user.organization.slack_integration.access_token, block_set=blocks
+        )
+        ts = res["ts"]
+        context.update(ts=ts)
+        emit_process_send_call_analysis_to_dm(payload, context)
+    except Exception as e:
+        logger.exception(e)
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -4102,6 +4145,7 @@ def handle_block_actions(payload):
         slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_meeting_transcript_task,
         slack_const.CALL_LAUNCH_SUMMARY_REVIEW: process_launch_call_summary_review,
         slack_const.OPEN_REVIEW_CHAT_UPDATE_MODAL: process_open_review_chat_update_modal,
+        slack_const.SEND_CALL_ANALYSIS_TO_DM: process_send_call_analysis_to_dm,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

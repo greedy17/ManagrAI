@@ -692,6 +692,8 @@ class MeetingWorkflow(SFSyncOperation):
         blank=True,
         help_text="list of dict failures",
     )
+    transcript_summary = models.TextField(null=True, blank=True)
+    transcript_analysis = models.TextField(null=True, blank=True)
     objects = MeetingWorkflowQuerySet.as_manager()
 
     class Meta:
@@ -771,7 +773,11 @@ class MeetingWorkflow(SFSyncOperation):
     def build_retry_list(self):
         retry_operations = []
         for op in self.operations_list:
-            operation, param, task_hash = op.split(".")
+            try:
+                operation, param, task_hash = op.split(".")
+            except Exception as e:
+                logger.exception(f"Failed to split params for workflow {self.id} because of {e}")
+                pass
             for failed_task in self.failed_task_description:
                 failed_list = failed_task.split(".")
                 if operation in failed_list:

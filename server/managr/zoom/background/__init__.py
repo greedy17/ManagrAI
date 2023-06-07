@@ -5,6 +5,7 @@ import re
 import uuid
 import random
 from datetime import datetime
+from django.utils import timezone
 from django.conf import settings
 
 from background_task import background
@@ -71,8 +72,12 @@ def emit_process_schedule_zoom_meeting(user, zoom_data):
     return _process_schedule_zoom_meeting(user, zoom_data)
 
 
-def emit_process_get_transcript_and_update_crm(payload, context, schedule):
-    return _process_get_transcript_and_update_crm(payload, context, schedule=schedule)
+def emit_process_get_transcript_and_update_crm(
+    payload, context, summary_parts=[], viable_data=False, schedule=datetime.now()
+):
+    return _process_get_transcript_and_update_crm(
+        payload, context, summary_parts, viable_data, schedule=schedule
+    )
 
 
 def _send_zoom_error_message(user, meeting_uuid):
@@ -802,6 +807,8 @@ def process_transcript_to_summaries(transcript, user):
             current_minute += 5
     if not len(summary_parts):
         for index, transcript_part in enumerate(split_transcript):
+            if not settings.IN_PROD:
+                print(index)
             transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
             transcript_body = (
                 transcript_body.replace("\r\n", "")
@@ -813,6 +820,7 @@ def process_transcript_to_summaries(transcript, user):
                 user.email, transcript_body, 500, top_p=0.9, temperature=0.7
             )
             with Variable_Client() as client:
+                attempts = 1
                 while True:
                     url = core_consts.OPEN_AI_COMPLETIONS_URI
                     try:
@@ -830,18 +838,23 @@ def process_transcript_to_summaries(transcript, user):
                         break
                     except IndexError:
                         continue
+                    except ServerError:
+                        if attempts >= 5:
+                            return []
+                        else:
+                            attempts += 1
     return summary_parts
 
 
 @background()
-def _process_get_transcript_and_update_crm(payload, context):
+def _process_get_transcript_and_update_crm(payload, context, summary_parts, viable_data):
     from managr.core.models import User
     from managr.salesforce.models import MeetingWorkflow
     from managr.crm.utils import CRM_SWITCHER
     from managr.utils.client import Variable_Client
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
-    from managr.core.background import emit_process_calendar_meetings
+    from managr.core.background import emit_process_add_call_analysis
     from managr.core.utils import max_token_calculator
     import httpx
 
@@ -853,7 +866,8 @@ def _process_get_transcript_and_update_crm(payload, context):
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
             block_set=get_block_set(
-                "loading", {"message": "Summarizing your call. This may take a few minutes..."}
+                "loading",
+                {"message": ":robot_face: Summarizing your call. This may take a few minutes..."},
             ),
         )
         ts = loading_res["message"]["ts"]
@@ -885,20 +899,22 @@ def _process_get_transcript_and_update_crm(payload, context):
     meeting = workflow.meeting
     has_error = False
     error_message = None
-    summary_parts = []
     try:
-        logger.info("Retreiving meeting data...")
+        if not settings.IN_PROD:
+            logger.info("Retreiving meeting data...")
         meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
             meeting.meeting_id, meeting.meeting_account.access_token
         )
-        logger.info("Done!")
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
         try:
             update_res = slack_requests.update_channel_message(
                 user.slack_integration.channel,
                 ts,
                 user.organization.slack_integration.access_token,
                 block_set=get_block_set(
-                    "loading", {"message": f"Transcript found for {meeting.topic}!"}
+                    "loading",
+                    {"message": f":telephone_receiver: Transcript found for {meeting.topic}"},
                 ),
             )
         except Exception as e:
@@ -910,15 +926,15 @@ def _process_get_transcript_and_update_crm(payload, context):
             if recording["recording_type"] == "audio_transcript"
         ]
         if len(filtered_recordings):
-            recording_obj = filtered_recordings[0]
-            download_url = recording_obj["download_url"]
-            transcript = meeting.meeting_account.helper_class.get_transcript(
-                download_url, meeting.meeting_account.access_token
-            )
-            transcript = transcript.decode("utf-8")
-            summary_parts = process_transcript_to_summaries(transcript, user)
+            if not len(summary_parts):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = meeting.meeting_account.helper_class.get_transcript(
+                    download_url, meeting.meeting_account.access_token
+                )
+                transcript = transcript.decode("utf-8")
+                summary_parts = process_transcript_to_summaries(transcript, user)
             if len(summary_parts):
-                viable_data = False
                 timeout = 60.0
                 tokens = 1500
                 try:
@@ -927,7 +943,8 @@ def _process_get_transcript_and_update_crm(payload, context):
                         ts,
                         user.organization.slack_integration.access_token,
                         block_set=get_block_set(
-                            "loading", {"message": f"Processing transcript for {meeting.topic}"}
+                            "loading",
+                            {"message": f":robot_face: Processing transcript for {meeting.topic}"},
                         ),
                     )
                 except Exception as e:
@@ -935,7 +952,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                 attempts = 1
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
-                        fields_list, summary_parts
+                        workflow.datetime_created.date(), fields_list, summary_parts
                     )
                     tokens = max_token_calculator(len(summary_body))
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
@@ -950,7 +967,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
-                            logger.info(f"Summary response: {r}")
+                            # logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
                             summary = clean_prompt_string(choice)
                             data = eval(summary)
@@ -968,6 +985,8 @@ def _process_get_transcript_and_update_crm(payload, context):
                         cleaned_data = clean_prompt_return_data(
                             swapped_field_data, fields, user.crm, resource
                         )
+                        workflow.transcript_summary = combined_summary
+                        workflow.save()
                         break
                     except StopReasonLength:
                         tokens += 500
@@ -975,7 +994,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                     except ServerError:
                         if attempts >= 5:
                             has_error = True
-                            error_message = "There was a server error with Open AI"
+                            error_message = ":no_entry_sign: There was a server error with Open AI"
                             break
                         else:
                             attempts += 1
@@ -983,6 +1002,12 @@ def _process_get_transcript_and_update_crm(payload, context):
                         print(e)
                         if str(e) == "substring not found":
                             continue
+                        else:
+                            has_error = True
+                            error_message = (
+                                ":no_entry_sign: Looks like we ran into an internal issue"
+                            )
+                            break
                     except SyntaxError as e:
                         print(e)
                         continue
@@ -991,42 +1016,55 @@ def _process_get_transcript_and_update_crm(payload, context):
                             f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
                         )
                         if timeout >= 120.0:
-                            blocks = [
-                                block_builders.header_block("AI Generated Call Summary"),
-                                block_builders.context_block(f"Meeting: {meeting.topic}"),
-                                block_builders.simple_section(
-                                    ":no_entry_sign: Look like Open AI servers are too busy right now, we'll try again in a bit",
-                                    "mrkdwn",
-                                ),
-                            ]
                             has_error = True
-                            error_message = (
-                                "Looks like there was a problem processing your transcript"
+                            error_message = ":rocket: OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
+                            schedule = datetime.now() + timezone.timedelta(minutes=5)
+                            emit_process_get_transcript_and_update_crm(
+                                payload, context, summary_parts, viable_data, schedule
                             )
                             break
                         else:
                             timeout += 30.0
             else:
                 has_error = True
-                blocks = [
-                    block_builders.header_block("AI Generated Call Summary"),
-                    block_builders.context_block(f"Meeting: {meeting.topic}"),
-                    block_builders.simple_section(
-                        f"Looks like there was a problem processing your transcript", "mrkdwn",
-                    ),
-                ]
-                error_message = "Looks like there was a problem processing your transcript"
+                error_message = ":no_entry_sign: Unknown error"
+        else:
+            has_error = True
+            error_message = ":no_entry_sign: We could not find a transcript for this meeting"
     except Exception as e:
         logger.exception(e)
         has_error = True
-        blocks = [
-            block_builders.header_block("AI Generated Call Summary"),
-            block_builders.context_block(f"Meeting: {meeting.topic}"),
-            block_builders.simple_section(
-                f"Looks like there was a problem processing your transcript: {str(e)}", "mrkdwn"
-            ),
-        ]
-        error_message = "Looks like there was a problem processing your transcript"
+        error_message = (
+            f":no_entry_sign: We encountered an unknow error processing your transcript: {str(e)}"
+        )
+    # summary_parts = [
+    #     " Colin and Michael were discussing the benefits of using an AI assistant for sales people. Colin had been using Chat Gbt and was looking for a free or low cost tool to help with emails and prioritization. They then discussed a meeting with Scratch Pad that an AE on Colin's team had booked and the benefits of using it for digital accessibility. Michael then asked Colin what kind of problems he had been running into with Chat Gbt.",
+    #     " Colin O'Grady is a sales rep for a SaaS company who was reviewing the AI note taking software offered by Manager. He had already met with the CEO of another tool at 1.2, but the customer wasn't interested in having too many tools touch their system. Michael Gorodisher, the CEO of Manager, explained that they are a pass-through service that does not store any data and are listed in the Slack marketplace. He then asked Colin what got him to Manager's website, and Colin explained he found it after searching for AI sales tools. Michael then explained the features of Manager's software, including AI note taking, call summaries, and the ability to ask questions. Colin was interested in the AI note taking because it would help him with data entry and note taking.",
+    #     " Michael and Colin discussed the benefits of using Wingman's AI to streamline customer interactions and replace scratch pad. They discussed the subscription terms and the 30 day free trial period. Colin mentioned that he wanted to use Wingman's AI to streamline his note taking and have a checklist to ensure he captures the necessary information from customer calls. They agreed to compare Wingman's summary with Michael's and discussed the next steps.",
+    #     " In this section of the call transcript, Michael is demonstrating how to use Manager's AI-assisted solution to streamline the sales process. He goes over how the AI can fill out fields like customer pain, timeline, competitors, and decision process, and how the user can then generate a follow-up email, suggested next steps, and a summary to send to their executives. He also shows how the AI can be used to send a follow up email using a template as a poem and fill out fields quickly in Salesforce.",
+    #     " In this section of the call, Michael and Colin discuss the AI automation features of the Manager app. Michael explains how it can help a salesperson log their notes, work faster, and enter data. Colin asks if they can also use the AI to draft a follow-up email that is short, funny, and provides bullet-point value. Michael confirms that they can, and demonstrates how the AI will automatically update the fields and tasks in the CRM. They also discuss how the AI can correct spelling mistakes.",
+    #     " In this section of the call, Michael and Colin discussed the potential benefits of using the chat GPT software, including the AI note taking, automated follow up emails, and actionable alerts. They discussed the potential for Colin to demonstrate the tool to his leadership and the benefits of the tool for staying organized, timely, and accurate. They also discussed the potential to use the tool for deal reviews and the possibility of using the software without the AI note taking.",
+    #     " Michael and Colin are discussing the value of Scratch Pad, a tool that adds AI call summaries, activity updating, and follow-up email suggestions to individual and group packages for an extra $15 per month. Colin is impressed with the tool and is looking forward to training with Michael on how to use it. He also wants to know how he can explain it to his buddy, who already uses Scratch Pad. Michael clarifies that the tool is not just a shortcut, but a much more efficient and better way to utilize Chat GPT as a superpower.",
+    #     " Colin and Michael discussed how Manager, a tool to help salespeople work more efficiently, leveraged AI to do data entry and generate summaries. They discussed how this is different from their competitor, Scratch Pad, and how Manager’s AI-powered features could benefit executives, allowing them to see into deals more deeply and efficiently. They concluded by explaining that this was the perfect time for Manager to launch with its new AI engine, as executives are now more focused on value creation than time savings.",
+    #     " Michael and Colin discussed how AI can help sales reps with data entry and other tasks to ensure nothing is forgotten during customer calls. Colin mentioned that some reps are better than others at taking notes during calls and that the AI can act as a back up to make sure nothing is missed. Michael suggested that Colin evaluate the company plan and business plan to get access to the AI. They decided to check in next week to see what Colin decides.",
+    # ]
+    # cleaned_data = {
+    #     "call_recording__c": "Chorus",
+    #     "champion__c": "Colin O’Grady\n\nColin O'Grady\n\nColin O'Grady\r\n\r\nNancy\r\r\r\r\n\r\r\r\r\nJerry\r\r\r\r\r\n\r\r\r\r\r\nJerry\r\r\r\r\r\r\n\r\r\r\r\r\r\nRon\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\nRon\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\nRon\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\nMichael Gorodisher\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\nStephen Russo\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\nJohn Miller\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\n ",
+    #     "competitors__c": "Scratchpad",
+    #     "crm__c": "Salesforce",
+    #     "hs_manual_forecast_category": "COMMIT",
+    #     "hs_next_step": "Submit follow up email\n\nTrialing Wingman, Signing up for individual access, Onboarding business accounts\n\nDecision Process\r\n\r\nFollow up\r\r\r\r\n\r\r\r\r\nEmail Jerry outlining our value proposition and why he needs to use Managr\r\r\r\r\r\n\r\r\r\r\r\nEmail Jerry\r\r\r\r\r\r\n\r\r\r\r\r\r\nFollow up call with his team to get buy in from the AEs\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\nDemonstrate the product\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\nFollow up with Ron in mid June\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\nFollow up with Ron in mid June\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\nMeeting with CFO\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\nEvaluate AI system\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\nMeeting with CFO for final approval\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\nUpdate Deal\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\nTEAM Demo\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\nTEAM Demo\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\n\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\nMove close date\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\n ",
+    #     "next_step_date__c": "2023-06-07T00:00:00.000Z",
+    #     "dealname": "Starbucks",
+    #     "amount": "20K",
+    #     "dealstage": "qualifiedtobuy",
+    #     "closedate": "2023-06-14T00:00:00.000Z",
+    #     "hubspot_owner_id": "153800017",
+    #     "meeting_comments": "The sales call between Michael Gorodisher, a sales rep from Wingman, and Colin O’Grady, an AE for a SAS company, was successful. Michael was able to identify Colin’s pain points and present the advantages of Wingman’s AI-enabled software, which could help Colin streamline his sales process. Colin was interested in the 30-day free trial and the ability to opt-out if they’re not happy with it. Michael also discussed the value of Manager compared to Scratch Pad, which offers no additional value beyond a different view of Salesforce. Colin expressed his interest in the $29 individual package plus $15 a month to look like the best salesperson and be more efficient. At the end of the call, Colin and Michael agreed to keep in touch next week to see what Colin decides.",
+    #     "meeting_type": "Sales Call Summary",
+    # }
+    # combined_summary = "The VP of Sales had a positive meeting with Colin O'Grady, a sales rep for a SaaS company, to discuss Manager's AI-assisted solution. Colin had previously used Chat Gbt and was looking for a low cost tool to help with emails and prioritization. Michael Gorodisher, the CEO of Manager, explained how their pass-through service was listed in the Slack Marketplace and discussed the features of their software, such as AI note taking, call summaries, and the ability to ask questions. Colin was interested in the AI note taking and the two discussed the benefits of using Wingman's AI to streamline customer interactions, the subscription terms, and the 30 day free trial period. They also discussed the potential to use the tool for deal reviews and the possibility of using the software without the AI note taking. Michael showed Colin how the AI can fill out fields like customer pain, timeline, competitors, and decision process and generate a follow-up email, suggested next steps, and a summary to send to their executives. He also showed how the AI can be used to send a follow up email using a template as a poem and fill out fields quickly in Salesforce. They discussed how the AI can help sales reps with data entry and other tasks to ensure nothing is forgotten during customer calls. They concluded by discussing the perfect time for Manager to launch with its new AI engine, as executives are now more focused on value creation than time savings. They decided to check in next week to see what Colin decides. Overall, the meeting had a positive tone and Michael and Colin are optimistic about the potential of Manager's AI-assisted solution."
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
@@ -1040,6 +1078,7 @@ def _process_get_transcript_and_update_crm(payload, context):
                 workflow=workflow,
             )
             new_form.save_form(cleaned_data, False)
+        emit_process_add_call_analysis(str(workflow.id), summary_parts)
         blocks = [
             block_builders.header_block("AI Generated Call Summary"),
             block_builders.context_block(f"Meeting: {meeting.topic}"),
@@ -1056,7 +1095,16 @@ def _process_get_transcript_and_update_crm(payload, context):
                             slack_consts.CALL_LAUNCH_SUMMARY_REVIEW,
                             [f"form_id={str(new_form.id)}&u={str(user.id)}&w={str(workflow.id)}"],
                         ),
-                    )
+                        style="primary",
+                    ),
+                    block_builders.simple_button_block(
+                        "Call Analysis",
+                        "CALL_ANALYSIS",
+                        action_id=action_with_params(
+                            slack_consts.SEND_CALL_ANALYSIS_TO_DM,
+                            [f"u={str(user.id)}&w={str(workflow.id)}"],
+                        ),
+                    ),
                 ]
             ),
             block_builders.context_block(
@@ -1064,9 +1112,13 @@ def _process_get_transcript_and_update_crm(payload, context):
             ),
         ]
     else:
-        print(error_message)
         workflow.failed_task_description.append(f"MEETING_REVIEW__UPDATE_RESOURCE.{error_message}")
         workflow.save()
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.simple_section(f"{error_message}", "mrkdwn"),
+        ]
     try:
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,

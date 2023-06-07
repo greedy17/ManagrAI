@@ -260,7 +260,7 @@
           </div>
 
           <p class="card-text">Activates meeting workflow automations.</p>
-          <div v-if="isPaid">
+          <div>
             <PulseLoadingSpinnerButton
               v-if="!hasZoomIntegration"
               :disabled="hasZoomIntegration"
@@ -289,12 +289,12 @@
               </div>
             </div>
           </div>
-          <div v-else class="side-wrapper">
+          <!-- <div v-else class="side-wrapper">
             <label class="side-icon side-workflow" style="">
               <span class="side-tooltip">Upgrade your plan</span>
               <img class="shimmer" src="@/assets/images/lock.svg" height="18" alt="" />
             </label>
-          </div>
+          </div> -->
         </div>
       </div>
 

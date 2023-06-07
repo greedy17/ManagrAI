@@ -1071,12 +1071,13 @@ def paginated_meeting_blockset(context):
         section_text = f"*{title}*\n{formatted_start} - {formatted_end}"
         if len(workflow.failed_task_description):
             message = ""
+            f_index = 0 if u.crm == "SALESFORCE" else 1
             for i, m in enumerate(workflow.failed_task_description):
                 m_split = m.split(".")
                 if i == len(workflow.failed_task_description) - 1:
-                    message += f"{m_split[0]}"
+                    message += f"{m_split[f_index]}"
                 else:
-                    message += f"{m_split[0]},"
+                    message += f"{m_split[f_index]},"
             block = block_builders.section_with_button_block(
                 "Return to Form",
                 "RETURN_TO_FORM",
@@ -1088,11 +1089,7 @@ def paginated_meeting_blockset(context):
                 ),
             )
         elif len(workflow.operations) and workflow.progress < 100:
-            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
-                block = block_builders.simple_section(
-                    ":robot_face: Processing your submission...", "mrkdwn"
-                )
-            else:
+            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
                 crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
                 block = block_builders.simple_section(
                     f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"

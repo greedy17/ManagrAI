@@ -16,7 +16,7 @@ from managr.core import constants as core_const
 
 def max_token_calculator(character_count):
     base_count = character_count / 4
-    token_count = 4090 - base_count
+    token_count = 2500 - base_count
     return int(token_count)
 
 
@@ -306,7 +306,8 @@ def pull_usage_data(month_only=False):
 
 def get_summary_completion(user, data):
     summary_prompt = core_const.OPEN_AI_SUMMARY_PROMPT(data)
-    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, 500, top_p=0.1)
+    tokens = max_token_calculator(len(summary_prompt))
+    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, tokens, top_p=0.1)
     url = core_const.OPEN_AI_COMPLETIONS_URI
     with Client as client:
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)

@@ -25,7 +25,7 @@ if settings.USE_OPEN_AI:
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 
 OPEN_AI_SUMMARY_PROMPT = (
-    lambda object: f"""Summarize the meetings notes below in the most concise way (300 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
+    lambda object: f"""Summarize the meetings notes below in the most concise way (1000 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
     Highlight the most important information first like, the deal stage, next step and close date. 
     Also mention what kind of interaction it was - a call, meeting, or just an update. 
     Deliver message in sentence format
@@ -96,13 +96,30 @@ OPEN_AI_TRANSCRIPT_PROMPT = (
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
+    lambda date, fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript from {date}. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
 1) You are VP of Sales. Create one summary, in paragraph of how this call went. Include relevant data regarding: customer pain, customer objections, objection handling by salesperson, competitors mentioned, timeline to close, decision process, the next steps and overall tone of the meeting.
 2) The summary must be no less than 1,500 characters and no greater than 2,000 characters.
 3) Write the summary using casual, engaging, conversational, and slightly witty tone.
 4) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary.\n
-5) The output must be a python dictionary. The summary must be added to the dictionary using a key called 'summary'.\n
-    CRM fields:{fields}\nSummaries: {summaries}"""
+5) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called 'summary'.\n
+6) Lastly, today's date is {date} \n
+CRM fields:{fields}\n Summaries: {summaries}"""
+)
+
+OPEN_AI_CALL_ANALYSIS_PROMPT = (
+    lambda summaries, date: f"""
+    Below are short summaries, summarizing parts of a sales call transcript from {date}. 
+    These summaries are in chronological order. Your are an experienced VP of Sales, follow the instructions below:\n
+    1. During the call, identify specific moments where the prospect exhibits high engagement\n
+    2. During the call, identify specific moments where the prospect exhibits disinterest\n
+    3. During the call, identify specific moments where the prospect has questions or concerns\n
+    4. Provide a sentiment analysis overview using a score and keep the explanation under 150 characters.\n
+    Response needs to be in this format:\n
+    High Engagement:\n
+    Disinterest:\n
+    Questions or Concerns:\n
+    Sentiment:\n
+    Summaries: {summaries}"""
 )
 
 

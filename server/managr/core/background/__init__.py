@@ -150,6 +150,18 @@ def emit_process_send_summary_to_dm(payload, context):
     return _process_send_summary_to_dm(payload, context)
 
 
+def emit_process_add_call_analysis(workflow_id, summaries):
+    return _process_add_call_analysis(workflow_id, summaries)
+
+
+def emit_process_send_call_analysis_to_dm(payload, context):
+    return _process_send_call_analysis_to_dm(payload, context)
+
+
+def emit_process_send_call_summary_to_dm(payload, context):
+    return _process_send_call_summary_to_dm(payload, context)
+
+
 #########################################################
 # Helper functions
 #########################################################
@@ -1571,9 +1583,7 @@ def _process_send_email_draft(payload, context):
 
     blocks = [
         block_builders.header_block("AI Generated Email"),
-        block_builders.context_block(
-            "ManagrGPT was used to draft this email based on your last update."
-        ),
+        block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
         block_builders.simple_section(text, "mrkdwn"),
         block_builders.divider_block(),
@@ -1636,9 +1646,7 @@ def _process_send_next_steps(payload, context):
 
     blocks = [
         block_builders.header_block("AI Generated Next Steps"),
-        block_builders.context_block(
-            "ManagrGPT was used to suggest a range of next steps based on your last update."
-        ),
+        block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
         block_builders.simple_section(text, "mrkdwn"),
         block_builders.divider_block(),
@@ -1745,9 +1753,7 @@ def _process_send_summary_to_dm(payload, context):
         new_data = {**new_data, **form.saved_data}
     blocks = [
         block_builders.header_block("AI Generated Summary"),
-        block_builders.context_block(
-            "ManagrGPT was used to generate this summary based on your last update."
-        ),
+        block_builders.context_block(f"{main_form.resource_object.display_value}"),
         block_builders.divider_block(),
     ]
     cleaned_data = clean_data_for_summary(
@@ -1779,3 +1785,121 @@ def _process_send_summary_to_dm(payload, context):
             f"ERROR sending update channel message for chat submittion because of <{e}>"
         )
     return
+
+
+@background()
+def _process_add_call_analysis(workflow_id, summaries):
+    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+    from managr.core.utils import max_token_calculator
+    import httpx
+
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    user = workflow.user
+    timeout = 60.0
+    prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
+    tokens = max_token_calculator(len(prompt))
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, tokens)
+    has_error = False
+    attempts = 1
+    while True:
+        try:
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = _handle_response(r)
+            text = r.get("choices")[0].get("text")
+            break
+        except StopReasonLength:
+            tokens += 500
+            continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = ":no_entry_sign: There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = ":no_entry_sign: Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+    print(r)
+    if has_error:
+        return
+    else:
+        workflow.transcript_analysis = text
+        workflow.save()
+    return
+
+
+@background()
+def _process_send_call_analysis_to_dm(payload, context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
+    text = (
+        workflow.transcript_analysis
+        if workflow.transcript_analysis
+        else "There was an issue creating your analysis"
+    )
+    blocks = [
+        block_builders.header_block("AI Generated Call Analysis"),
+        block_builders.context_block(f"{workflow.meeting.topic}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn"),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_call_summary_to_dm(payload, context):
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    user = workflow.user
+    text = (
+        workflow.transcript_summary
+        if workflow.transcript_summary
+        else "There was an issue creating your analysis"
+    )
+    blocks = [
+        block_builders.header_block("AI Generated Call Summary"),
+        block_builders.context_block(f"{workflow.meeting.topic}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn"),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
