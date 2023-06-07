@@ -84,6 +84,8 @@ export default {
         { name: 'Update', value: 'Update Opportunity Pied Piper' },
         { name: 'Run review', value: 'Run Review for Opportunity Pied Piper' },
         { name: 'Get summary', value: 'Get Summary for Opportunity Pied Piper' },
+        { name: 'call summary', value: 'Get Summary for Opportunity Pied Piper' },
+        { name: 'call analysis', value: 'Get Summary for Opportunity Pied Piper' },
       ],
     }
   },

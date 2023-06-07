@@ -22,6 +22,50 @@
 
           <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
             <p>{{ message.value }}</p>
+
+            <div v-if="message.generated">
+              <div style="margin-top: 0.5rem" v-if="!generating" class="row">
+                <button class="content-button padding-small">
+                  <img
+                    style="margin-right: 0.6rem"
+                    src="@/assets/images/sparkle.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Regenerate
+                </button>
+                <!-- 
+                <button
+                  @click="nextSteps(message.data['meeting_comments'], message.id)"
+                  class="content-button padding-small"
+                >
+                  <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
+                  Suggest next steps
+                </button>
+                <button
+                  @click="
+                    getSummary(
+                      message.data,
+                      message.integrationId,
+                      message.resourceType,
+                      message.id,
+                    )
+                  "
+                  class="content-button padding-small"
+                >
+                  <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
+                </button> -->
+              </div>
+
+              <div v-else style="border-radius: 6px; padding: 0.25rem 0" class="row">
+                <p>Regenerating response</p>
+                <div class="loading">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -31,7 +75,7 @@
         >
           <button @click="toggleChatModal(message)" class="generate-button green">
             <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-            {{ `Review & update ${user.crm.toLowerCase()}` }}
+            {{ `Review & update ${user.crm[0] + user.crm.slice(1).toLowerCase()}` }}
           </button>
         </div>
 
@@ -39,52 +83,77 @@
           v-else-if="message.user === 'bot' && message.formId && message.updated"
           class="generate-container"
         >
-          <button
-            @click="toggleSelectContentOption(i)"
-            v-if="!selectingContent || selectedIndex !== i"
-            class="generate-button"
-          >
-            <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
-            Generate content
-          </button>
-
-          <div
-            style="position: relative; margin-bottom: 0.5rem"
-            class="row"
-            v-else-if="selectingContent && selectedIndex === i"
-          >
-            <button class="content-button">
-              <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-envelope" />Draft
-              follow-up email
-            </button>
-            <button class="content-button">
-              <font-awesome-icon
-                style="height: 10px"
-                @click="selectedOpp = null"
-                icon="fa-solid fa-angles-right"
-              />
-              Suggest next steps
-            </button>
-            <button class="content-button">
-              <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-file-lines" />Get
-              summary
+          <div v-if="!message.generated">
+            <button
+              @click="toggleSelectContentOption(i)"
+              v-if="!selectingContent || selectedIndex !== i"
+              class="generate-button"
+            >
+              <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
+              Generate content
             </button>
 
-            <img
-              style="margin-left: 0.25rem; cursor: pointer"
-              class="gray-blue-scale"
-              @click="selectingContent = !selectingContent"
-              src="@/assets/images/return.svg"
-              height="18px"
-              alt=""
-            />
+            <div v-else-if="selectingContent && selectedIndex === i">
+              <div style="position: relative; margin-bottom: 0.5rem" class="row" v-if="!generating">
+                <button
+                  @click="generateEmail(message.data['meeting_comments'], message.id)"
+                  class="content-button"
+                >
+                  <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
+                </button>
+                <button
+                  @click="nextSteps(message.data['meeting_comments'], message.id)"
+                  class="content-button"
+                >
+                  <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
+                  Suggest next steps
+                </button>
+                <button
+                  @click="
+                    getSummary(
+                      message.data,
+                      message.integrationId,
+                      message.resourceType,
+                      message.id,
+                    )
+                  "
+                  class="content-button"
+                >
+                  <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
+                </button>
 
-            <!-- <div @click="selectingContent = !selectingContent" class="go-back">
-              <div class="back">
-                <p>X</p>
-               
+                <img
+                  style="margin-left: 0.25rem; cursor: pointer"
+                  class="gray-blue-scale"
+                  @click="selectingContent = !selectingContent"
+                  src="@/assets/images/return.svg"
+                  height="18px"
+                  alt=""
+                />
               </div>
-            </div> -->
+
+              <div v-else class="loader-container">
+                <span
+                  style="
+                    font-size: 20px;
+                    margin-right: 0.75rem;
+                    padding-top: 0.5rem;
+                    margin-left: -2.25rem;
+                    margin-top: 0.5rem;
+                  "
+                  >🚀</span
+                >
+
+                <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
+                  <p>Processing your submission</p>
+                  <div class="loading">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -95,10 +164,7 @@
           >🚀</span
         >
 
-        <div
-          style="background-color: #eeeeee; border-radius: 6px; padding: 0.25rem 0.75rem"
-          class="row"
-        >
+        <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
           <p>Processing your submission</p>
           <div class="loading">
             <div class="dot"></div>
@@ -124,7 +190,7 @@
   
 <script>
 import ChatTextBox from './ChatTextBox.vue'
-import SlackOAuth from '@/services/slack'
+import User from '@/services/users'
 
 export default {
   name: 'ChatBox',
@@ -135,7 +201,9 @@ export default {
     return {
       selectingContent: false,
       messageLoading: false,
+      generating: false,
       selectedIndex: null,
+      generativeRes: null,
     }
   },
   methods: {
@@ -151,6 +219,85 @@ export default {
     //   } finally {
     //   }
     // },
+    async generateEmail(note, id) {
+      this.generating = true
+      try {
+        let res = await User.api.chatEmail({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: id,
+          generated: true,
+          value: 'Email generated',
+        })
+        this.setMessage({
+          user: 'bot',
+          id: this.generativeRes['id'],
+          value: this.generativeRes['res'],
+        })
+
+        this.generating = false
+      }
+    },
+
+    async nextSteps(note, id) {
+      this.generating = true
+      try {
+        let res = await User.api.chatNextSteps({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: id,
+          generated: true,
+          value: 'Suggested next steps.',
+        })
+        this.setMessage({
+          user: 'bot',
+          id: this.generativeRes['id'],
+          value: this.generativeRes['res'],
+        })
+
+        this.generating = false
+      }
+    },
+
+    async getSummary(data, id, resource, mId) {
+      this.generating = true
+      try {
+        let res = await User.api.getSummary({
+          id: this.user.id,
+          data: data,
+          integrationId: id,
+          resource: resource,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: mId,
+          generated: true,
+          value: 'Summary generated',
+        })
+        this.setMessage({
+          user: 'bot',
+          id: this.generativeRes['id'],
+          value: this.generativeRes['res'],
+        })
+
+        this.generating = false
+      }
+    },
     toggleSelectContentOption(i) {
       if (i) {
         this.selectedIndex = i
@@ -213,6 +360,10 @@ export default {
 }
 .gray-blue-scale {
   filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
+}
+
+.padding-small {
+  padding: 0.5rem 0.75rem !important;
 }
 
 .row {
@@ -404,6 +555,9 @@ export default {
 
 .content-button {
   @include chat-button();
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   margin-right: 0.5rem;
   svg {
     margin-right: 0.5rem;

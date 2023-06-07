@@ -32,6 +32,9 @@ const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 const CHAT_SUBMISSION = 'users/chat/submission/'
+const CHAT_EMAIL = 'users/chat/follow-up-email/'
+const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
+const CHAT_SUMMARY = 'users/chat/summary/'
 
 export default class UserAPI {
   get client() {
@@ -61,6 +64,27 @@ export default class UserAPI {
       .post(CHAT_SUBMISSION, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'User.chatUpdate' }))
+  }
+
+  async chatEmail(data) {
+    return this.client
+      .post(CHAT_EMAIL, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatEmail' }))
+  }
+
+  async chatNextSteps(data) {
+    return this.client
+      .post(CHAT_NEXT_STEPS, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatNextSteps' }))
+  }
+
+  async getSummary(data) {
+    return this.client
+      .post(CHAT_SUMMARY, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatSummary' }))
   }
 
   async list({ pagination, filters }) {

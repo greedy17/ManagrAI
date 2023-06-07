@@ -65,6 +65,7 @@ from managr.salesforce.cron import (
 from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
 from .nylas.models import NylasAccountStatusList
 from managr.utils.client import Client, Variable_Client
+from ..core import constants as core_consts
 
 logger = logging.getLogger("managr")
 
@@ -314,6 +315,54 @@ def correct_data_keys(data):
     return data
 
 
+def clean_data_for_summary(user_id, data, integration_id, resource_type):
+    from managr.hubspot.routes import routes as hs_routes
+    from managr.salesforce.routes import routes as sf_routes
+
+    print("DATA IS HERE,", data)
+    cleaned_data = dict(data)
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    user = User.objects.get(id=user_id)
+    owner_field = "hubspot_owner_id" if user.crm == "HUBSPOT" else "OwnerId"
+    try:
+        cleaned_data.pop(owner_field)
+    except KeyError:
+        owner_field = None
+    if "meeting_comments" in data.keys() and data["meeting_comments"] is None:
+        cleaned_data.pop("meeting_comments")
+        cleaned_data.pop("meeting_type")
+    fields = user.object_fields.filter(api_name__in=cleaned_data.keys())
+    ref_fields = fields.filter(data_type="Reference", crm_object=resource_type)
+    if user.crm == "HUBSPOT":
+        if "dealstage" in data.keys():
+            found_stage = False
+            field = fields.filter(api_name="dealstage").first()
+            for pipeline in field.options[0].keys():
+                if found_stage:
+                    break
+                current_pipeline = field.options[0][pipeline]["stages"]
+                for stage in current_pipeline:
+                    if stage["id"] == cleaned_data["dealstage"]:
+                        cleaned_data["dealstage"] = stage["label"]
+                        found_stage = True
+    if len(ref_fields):
+        for field in ref_fields:
+            relationship = field.reference_to_infos[0]["api_name"]
+            try:
+                reference_record = (
+                    CRM_SWITCHER[user.crm][relationship]["model"]
+                    .objects.filter(integration_id=cleaned_data[field.api_name])
+                    .first()
+                ).display_value
+
+            except Exception as e:
+                logger.info(e)
+                reference_record = integration_id
+                pass
+            cleaned_data[field.api_name] = reference_record
+    return cleaned_data
+
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def submit_chat_prompt(request):
@@ -490,6 +539,86 @@ def submit_chat_prompt(request):
             "resourceType": request.data["resource_type"],
         }
     )
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def draft_follow_up(request):
+
+    user = User.objects.get(id=request.data["id"])
+    prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    attempts = 1
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            if r.status_code == 200:
+                r = r.json()
+                text = r.get("choices")[0].get("text")
+                return Response(data={**r, "res": text})
+        except Exception as e:
+            return Response(data={"res": [e]})
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def chat_next_steps(request):
+    user = User.objects.get(id=request.data["id"])
+
+    prompt = core_consts.OPEN_AI_NEXT_STEPS(request.data["notes"])
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    attempts = 1
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            if r.status_code == 200:
+                r = r.json()
+                text = r.get("choices")[0].get("text")
+                return Response(data={**r, "res": text})
+        except Exception as e:
+            return Response(data={"res": [e]})
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def get_chat_summary(request):
+
+    user = User.objects.get(id=request.data["id"])
+
+    cleaned_data = clean_data_for_summary(
+        str(user.id),
+        request.data["data"],
+        request.data["integrationId"],
+        request.data["resource"],
+    )
+    try:
+        summary_prompt = core_consts.OPEN_AI_SUMMARY_PROMPT(cleaned_data)
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, 500, top_p=0.1)
+        url = core_consts.OPEN_AI_COMPLETIONS_URI
+        with Client as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+            if r.status_code == 200:
+                r = r.json()
+                message_string_for_recap = r["choices"][0]["text"]
+                return Response(data={**r, "res": message_string_for_recap})
+    except Exception as e:
+        return Response(data={"res": [e]})
 
 
 def field_syncs():

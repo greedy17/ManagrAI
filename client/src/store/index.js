@@ -107,6 +107,22 @@ const mutations = {
   UPDATE_MESSAGES: (state, payload) => {
     state.messages.push(payload)
   },
+  EDIT_MESSAGES: (state, { id, generated, value }) => {
+
+    let newMsg
+    newMsg = state.messages.filter((message) => message.id === id)
+    newMsg[0]['generated'] = generated
+    newMsg[0]['value'] = value
+
+    console.log(newMsg)
+
+    for (let i = 0; i < state.messages.length; i++) {
+      if (state.messages[i].id === id) {
+        state.messages[i] = newMsg[0];
+        break;
+      }
+    }
+  },
   MESSAGE_UPDATED: (state, payload) => {
     let updatedMsg = state.messages.filter(msg => msg.id === payload)
     updatedMsg[0].updated = true
@@ -154,6 +170,9 @@ const actions = {
     } catch (e) {
       console.log(e)
     }
+  },
+  editMessages({ commit }, { id, generated, value }) {
+    commit('EDIT_MESSAGES', { id, generated, value })
   },
   updateMessages({ commit }, message) {
     commit('UPDATE_MESSAGES', message)

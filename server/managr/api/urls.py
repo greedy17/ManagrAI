@@ -48,6 +48,21 @@ urlpatterns = [
         name="submit_chat_prompt",
     ),
     path(
+        "users/chat/follow-up-email/",
+        core_views.draft_follow_up,
+        name="draft_follow_up",
+    ),
+    path(
+        "users/chat/next-steps/",
+        core_views.chat_next_steps,
+        name="chat_next_steps",
+    ),
+    path(
+        "users/chat/summary/",
+        core_views.get_chat_summary,
+        name="get_chat_summary",
+    ),
+    path(
         "users/nylas/authorization/",
         core_views.get_email_authorization_link,
         name="get_email_auth_link",

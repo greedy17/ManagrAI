@@ -24,7 +24,6 @@
           <img
             v-else
             class="spinning-load"
-            @click="reloadOpps"
             src="@/assets/images/refresh.svg"
             height="18px"
             alt=""
@@ -44,6 +43,8 @@
             :integrationId="chatData.integrationId"
             :chatData="chatData.data"
             @set-value="setUpdateValues"
+            :stageFields="stageFields"
+            :stagesWithForms="stagesWithForms"
           />
         </div>
 
@@ -175,7 +176,7 @@
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
     <aside id="right-sidebar">
-      <RightBar @set-fields="setFormFields" />
+      <RightBar @set-fields="setFormFields" @set-stages="setStageFields" />
     </aside>
   </div>
 </template>
@@ -209,6 +210,7 @@ export default {
       chatModalOpen: false,
       chatData: null,
       formFields: [],
+      stageFields: [],
     }
   },
   created() {
@@ -280,6 +282,11 @@ export default {
     setFormFields(fields) {
       this.formFields = fields
     },
+    setStageFields(fields, stagesWithForms) {
+      this.stageFields = fields
+      this.stagesWithForms = stagesWithForms
+    },
+
     handleInvite() {
       console.log('handled')
     },

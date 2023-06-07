@@ -262,39 +262,40 @@
         <div v-if="!editing" class="edit-button">
           <button class="no-border gray-scale no-padding">
             <img src="@/assets/images/edit.svg" height="14px" alt="" />
-            Edit View
+            Edit view
           </button>
         </div>
       </div>
       <div style="padding-top: 0; margin-left: -0.25rem" class="selected-opp-section">
-        <h4 style="margin-top: 0" class="selected-opp sticky-top">Notes & History</h4>
-        <div class="note-section" v-for="note in notes" :key="note.id">
-          <div class="row">
-            <p
-              :class="{ 'gray-text strike': !!note.saved_data__StageName }"
-              style="margin-right: 0.25rem"
-            >
-              {{ note.previous_data__StageName }}
-            </p>
-
-            <img
-              v-if="note.saved_data__StageName"
-              src="@/assets/images/transition.svg"
-              height="12px"
-              alt=""
-            />
-
-            <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
-          </div>
-          <div>
-            <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
-          </div>
-
-          <small class="gray-text">{{
+        <h4 style="margin-top: 0" class="selected-opp sticky-top gray-bg">Notes & History</h4>
+        <div v-for="note in notes" :key="note.id">
+          <small class="gray-text left-margin">{{
             `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
               note.submission_date,
             )}`
           }}</small>
+          <div class="note-section">
+            <div class="row">
+              <p
+                :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                style="margin-right: 0.25rem"
+              >
+                {{ note.previous_data__StageName }}
+              </p>
+
+              <img
+                v-if="note.saved_data__StageName"
+                src="@/assets/images/transition.svg"
+                height="12px"
+                alt=""
+              />
+
+              <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+            </div>
+            <div>
+              <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -341,6 +342,7 @@ export default {
   },
   data() {
     return {
+      stageValidationFields: {},
       updateFormData: {},
       loadingNotes: false,
       loadingMore: false,
@@ -636,6 +638,8 @@ export default {
       this.filtering = !this.filtering
     },
     async setOppForms() {
+      let stageGateForms
+      let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
 
       this.updateOppForm = formsRes.filter(
@@ -663,7 +667,37 @@ export default {
             : true),
       )
 
+      stageGateForms = formsRes.filter(
+        (obj) =>
+          obj.formType === 'STAGE_GATING' &&
+          obj.resource === (this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'),
+      )
+
+      if (stageGateForms.length) {
+        // this.stageGateCopy = stageGateForms[0].fieldsRef
+
+        let stages = stageGateForms.map((field) => field.stage)
+        let newStages = []
+        if (this.userCRM === 'HUBSPOT') {
+          for (let i = 0; i < stages.length; i++) {
+            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          }
+        } else {
+          newStages = stages
+        }
+        stagesWithForms = newStages
+        for (const field of stageGateForms) {
+          if (this.userCRM === 'SALESFORCE') {
+            this.stageValidationFields[field.stage] = field.fieldsRef
+          } else {
+            this.stageValidationFields[field.stage.split(' ').join('').toLowerCase()] =
+              field.fieldsRef
+          }
+        }
+      }
+
       this.$emit('set-fields', allFields)
+      this.$emit('set-stages', this.stageValidationFields, stagesWithForms)
     },
     getDate(input) {
       let newer = new Date(input)
@@ -964,8 +998,14 @@ header {
   width: 350px;
   border-radius: 6px;
   padding: 0.75rem;
-  background-color: $soft-gray;
   margin-bottom: 1rem;
+  background: rgb(65, 184, 131);
+  background: linear-gradient(
+    90deg,
+    rgba(65, 184, 131, 1) 0%,
+    rgba(65, 184, 131, 0.6951374299719888) 100%
+  );
+  color: white;
 
   h4 {
     text-overflow: ellipsis;
@@ -974,19 +1014,28 @@ header {
   }
 }
 
+.gray-bg {
+  background: $off-white;
+  padding-left: 0.5rem;
+  background-color: $off-white !important;
+  color: $base-gray;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+}
+
 .note-section {
   background-color: white;
-  padding-left: 1rem;
-  padding-bottom: 1rem;
+  padding: 0 1rem 1rem 1.1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   margin: 0.5rem 0;
 }
 
 .selected-opp-section {
-  height: 45%;
+  height: 40%;
   width: 101%;
   overflow-y: scroll;
+  overflow-x: hidden;
   scroll-behavior: smooth;
   padding: 0.5rem 0.25rem;
   position: relative;
@@ -997,7 +1046,7 @@ header {
 }
 
 .selected-opp-section:last-of-type {
-  height: 55%;
+  height: 60%;
 }
 
 .selected-opp-section::-webkit-scrollbar {
@@ -1008,7 +1057,7 @@ header {
 .selected-opp-section::-webkit-scrollbar-thumb {
   background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 6px;
+  border-radius: 6px !important;
 }
 .selected-opp-section:hover::-webkit-scrollbar-thumb {
   background-color: $base-gray;
@@ -1064,6 +1113,9 @@ header {
 .gray-text {
   color: $light-gray-blue;
 }
+.left-margin {
+  margin-left: 0.5rem;
+}
 
 .strike {
   text-decoration: line-through;
@@ -1077,7 +1129,7 @@ header {
   button {
     @include chat-button();
 
-    font-size: 14px;
+    font-size: 13px;
     font-family: $base-font-family;
     color: $chat-font-color;
     background-color: white;
