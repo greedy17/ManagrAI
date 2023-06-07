@@ -339,21 +339,21 @@
           <span :class="user.nylasRef ? '' : 'grayscale'">
             <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
           </span>
-          <!-- <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
+          <span :class="user.hasZoomIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/zoom.png" alt="" height="18px" />
+          </span>
+          <!-- <span v-if="user.hasOutreachIntegration">
+            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
           </span> -->
-          <span v-if="user.hasOutreachIntegration">
-            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-          </span>
-          <span v-else-if="user.hasSalesloftIntegration">
+          <!-- <span v-else-if="user.hasSalesloftIntegration">
             <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
-          </span>
-          <span v-else class="grayscale">
+          </span> -->
+          <!-- <span v-else class="grayscale">
             <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-          </span>
-          <span :class="user.hasGongIntegration ? '' : 'grayscale'">
+          </span> -->
+          <!-- <span :class="user.hasGongIntegration ? '' : 'grayscale'">
             <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
-          </span>
+          </span> -->
         </div>
         <div
           style="display: flex; align-items: flex-start"
@@ -448,27 +448,27 @@
             <span :class="(member.slackRef || member.slack_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
             </span>
-            <!-- <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
-              <img src="@/assets/images/zoom.png" alt="" height="18px" />
-            </span> -->
-            <!-- <span :class="(member.hasOutreachIntegration || member.has_outreach_integration) ? '' : 'grayscale'">
-              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-            </span> -->
             <span :class="(member.nylasRef || member.nylas_ref) ? '' : 'grayscale'">
               <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
             </span>
-            <span v-if="(member.hasOutreachIntegration || member.has_outreach_integration)">
-              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+            <span :class="(member.hasZoomIntegration || member.has_zoom_integration) ? '' : 'grayscale'">
+              <img src="@/assets/images/zoom.png" alt="" height="18px" />
             </span>
-            <span v-else-if="(member.hasSalesloftIntegration || member.has_salesloft_integration)">
+            <!-- <span :class="(member.hasOutreachIntegration || member.has_outreach_integration) ? '' : 'grayscale'">
+              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+            </span> -->
+            <!-- <span v-if="(member.hasOutreachIntegration || member.has_outreach_integration)">
+              <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+            </span> -->
+            <!-- <span v-else-if="(member.hasSalesloftIntegration || member.has_salesloft_integration)">
               <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
-            </span>
-            <span v-else class="grayscale">
+            </span> -->
+            <!-- <span v-else class="grayscale">
               <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-            </span>
-            <span style="" :class="(member.hasGongIntegration || member.has_gong_integration) ? '' : 'grayscale'">
+            </span> -->
+            <!-- <span style="" :class="(member.hasGongIntegration || member.has_gong_integration) ? '' : 'grayscale'">
               <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
-            </span>
+            </span> -->
           </div>
           <div
             style="display: flex; align-items: flex-start"
