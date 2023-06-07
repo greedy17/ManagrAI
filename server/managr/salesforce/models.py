@@ -692,6 +692,8 @@ class MeetingWorkflow(SFSyncOperation):
         blank=True,
         help_text="list of dict failures",
     )
+    transcript_summary = models.TextField(null=True, blank=True)
+    transcript_analysis = models.TextField(null=True, blank=True)
     objects = MeetingWorkflowQuerySet.as_manager()
 
     class Meta:
