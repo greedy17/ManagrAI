@@ -25,7 +25,7 @@ if settings.USE_OPEN_AI:
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 
 OPEN_AI_SUMMARY_PROMPT = (
-    lambda object: f"""Summarize the meetings notes below in the most concise way (300 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
+    lambda object: f"""Summarize the meetings notes below in the most concise way (1000 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
     Highlight the most important information first like, the deal stage, next step and close date. 
     Also mention what kind of interaction it was - a call, meeting, or just an update. 
     Deliver message in sentence format

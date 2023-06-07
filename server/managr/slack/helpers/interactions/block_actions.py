@@ -1115,6 +1115,8 @@ def GET_ACTION_TEMPLATE(user, template_value):
     action_switcher = {
         "GET_SUMMARY": f"Get summary for {object_type} Pied Piper",
         "DEAL_REVIEW": f"Run a review for {object_type} Pied Piper",
+        "CALL_SUMMARY": f"Get the call summary for {object_type} Pied Piper",
+        "CALL_ANALYSIS": f"Get the call analysis for {object_type} Pied Piper",
     }
     return action_switcher[template_value]
 
@@ -3931,7 +3933,24 @@ def process_launch_call_summary_review(payload, context):
     form = OrgCustomSlackFormInstance.objects.get(id=context.get("form_id"))
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user = form.user
-    blocks = form.generate_form(form.saved_data)
+    blocks = []
+    resource = "Task" if user.crm == "SALESFORCE" else "Meeting"
+    field = "Type" if user.crm == "SALESFORCE" else "hs_meeting_outcome"
+    type_text = "Note Type" if user.crm == "SALESFORCE" else "Meeting Outcome"
+    try:
+        note_options = user.crm_account.get_individual_picklist_values(resource, field)
+        note_options = note_options.values if user.crm == "SALESFORCE" else note_options.values()
+        note_options_list = [
+            block_builders.option(opt.get("label"), opt.get("value")) for opt in note_options
+        ]
+        blocks.append(
+            block_builders.static_select(
+                type_text, options=note_options_list, block_id="managr_task_type"
+            )
+        )
+    except Exception as e:
+        logger.exception(f"Could not pull note type for {user.email} due to <{e}>")
+    blocks.extend(form.generate_form(form.saved_data))
     context.update(ts=payload["container"]["message_ts"])
     stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
     try:
