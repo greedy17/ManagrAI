@@ -36,7 +36,7 @@ def count_character_tokens(text):
 def max_token_calculator(text):
     token_count = count_character_tokens(text)
     use_tokens = 4000 - token_count
-    tokens = int(use_tokens) if int(use_tokens) > 0 else None
+    tokens = int(use_tokens) if int(use_tokens) > 0 else 0
     return tokens
 
 
