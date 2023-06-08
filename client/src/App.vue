@@ -30,28 +30,29 @@ export default {
   watch: {
     // When route changes,
     '$route.path': function watchRoutePath() {
-      if (this.userIsLoggedIn) {
-        if (this.isOnboarding && user.isAdmin && this.$route.path !== '/alerts/list-templates') {
-          this.$router.push({ name: 'ListTemplates' })
-        }
-        const newDateTime = Date.now()
-        // If it's been more than an hour,
-        if (newDateTime - localStorage.dateTime > 3600000) {
-          // Log out
-          if (localStorage.isLoggedOut) {
-            return
-          } else {
-            localStorage.isLoggedOut = true
-            this.$store.dispatch('logoutUser')
-            this.$router.push({ name: 'Login' })
-          }
-        } else {
-          // reset localStorage datetime
-          localStorage.dateTime = newDateTime
-          // scroll to the top
-          VueScrollTo.scrollTo('#app', 200)
-        }
-      }
+      VueScrollTo.scrollTo('#app', 200)
+      // if (this.userIsLoggedIn) {
+      //   if (this.isOnboarding && this.user.isAdmin && this.$route.path !== '/alerts/list-templates') {
+      //     this.$router.push({ name: 'ListTemplates' })
+      //   }
+      //   const newDateTime = Date.now()
+      //   // If it's been more than an hour,
+      //   if (newDateTime - localStorage.dateTime > 3600000) {
+      //     // Log out
+      //     if (localStorage.isLoggedOut) {
+      //       return
+      //     } else {
+      //       localStorage.isLoggedOut = true
+      //       this.$store.dispatch('logoutUser')
+      //       this.$router.push({ name: 'Login' })
+      //     }
+      //   } else {
+      //     // reset localStorage datetime
+      //     localStorage.dateTime = newDateTime
+      //     // scroll to the top
+      //     VueScrollTo.scrollTo('#app', 200)
+      //   }
+      // }
     },
   },
 
