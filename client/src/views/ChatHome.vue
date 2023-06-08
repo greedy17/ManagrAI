@@ -271,7 +271,7 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
-      localStorage.isLoggedOut = true
+      // localStorage.isLoggedOut = true
     },
     toggleChatModal(data) {
       this.chatModalOpen = !this.chatModalOpen
