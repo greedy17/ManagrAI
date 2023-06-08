@@ -2642,8 +2642,10 @@ def process_submit_chat_prompt(payload, context):
     try:
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-            workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
-            workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+                workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
+                workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),

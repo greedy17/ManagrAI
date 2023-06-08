@@ -843,6 +843,7 @@ def process_transcript_to_summaries(transcript, user):
                             return []
                         else:
                             attempts += 1
+                            time.sleep(10.0)
     return summary_parts
 
 
@@ -893,8 +894,10 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     fields_list = list(fields.values_list("label", flat=True))
     workflow.resource_id = str(resource.id)
     workflow.resource_type = resource_type
-    workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
-    workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+        workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
+        workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
     meeting = workflow.meeting
     has_error = False
@@ -998,6 +1001,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             break
                         else:
                             attempts += 1
+                            time.sleep(10.0)
                     except ValueError as e:
                         print(e)
                         if str(e) == "substring not found":
