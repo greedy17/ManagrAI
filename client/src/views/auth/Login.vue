@@ -128,7 +128,7 @@ export default {
         })
       } finally {
         this.loggingIn = false
-        localStorage.dateTime = Date.now()
+        // localStorage.dateTime = Date.now()
         this.$router.push({ name: 'ListTemplates' })
       }
     }
@@ -188,10 +188,10 @@ export default {
       } finally {
         this.$store.dispatch('updateUserToken', key)
         this.$store.dispatch('updateUser', User.fromAPI(user))
-        localStorage.dateTime = Date.now()
+        // localStorage.dateTime = Date.now()
         this.$router.push({ name: 'ListTemplates' })
         this.loggingIn = false
-        localStorage.isLoggedOut = false
+        // localStorage.isLoggedOut = false
       }
     },
     async handleLoginAttempt() {
@@ -205,7 +205,7 @@ export default {
           delete userData.token
           this.$store.dispatch('updateUserToken', token)
           this.$store.dispatch('updateUser', User.fromAPI(userData))
-          localStorage.dateTime = Date.now()
+          // localStorage.dateTime = Date.now()
           // if (this.$route.query.redirect) {
           //   this.$router.push(this.$route.query.redirect)
           // }
@@ -236,7 +236,7 @@ export default {
           }
         } finally {
           this.loggingIn = false
-          localStorage.isLoggedOut = false
+          // localStorage.isLoggedOut = false
         }
       }
     },
