@@ -1092,7 +1092,7 @@ def _process_chat_action(payload, context):
         )
         if action_key in ["summary", "review"]:
             form = OrgCustomSlackFormInstance.objects.filter(resource_id=str(resource.id)).first()
-            form_id = str(form.id) if form else None
+            form_id = str(form.id) if form else []
             context.update(
                 resource_id=str(resource.id), resource_type=resource_check, form_ids=form_id
             )

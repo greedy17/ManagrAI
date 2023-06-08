@@ -1732,7 +1732,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
 @background()
 def _process_send_summary_to_dm(payload, context):
     form_ids = context.get("form_ids", [])
-    if len(form_ids):
+    if form_ids and len(form_ids):
         form_ids = form_ids.split(",")
         submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
             template__resource="OpportunityLineItem"
@@ -1744,10 +1744,6 @@ def _process_send_summary_to_dm(payload, context):
         )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
-    old_data = dict()
-    if main_form.template.form_type == "UPDATE":
-        for additional_stage_form in submitted_forms:
-            old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
@@ -1794,10 +1790,9 @@ def _process_add_call_analysis(workflow_id, summaries):
     import httpx
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    tokens = max_token_calculator(len(prompt))
+    tokens = max_token_calculator(prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, tokens)
     has_error = False
     attempts = 1
@@ -1819,6 +1814,7 @@ def _process_add_call_analysis(workflow_id, summaries):
                 break
             else:
                 attempts += 1
+                time.sleep(5.0)
         except ValueError as e:
             print(e)
             if str(e) == "substring not found":

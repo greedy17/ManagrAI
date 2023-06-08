@@ -29,7 +29,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
 from .. import constants as zoom_consts
-from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
+from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel, RecordingNotFound
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
@@ -957,7 +957,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
                         workflow.datetime_created.date(), fields_list, summary_parts
                     )
-                    tokens = max_token_calculator(len(summary_body))
+                    tokens = max_token_calculator(summary_body)
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, summary_body, tokens, top_p=0.9, temperature=0.7
                     )
@@ -1035,6 +1035,19 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         else:
             has_error = True
             error_message = ":no_entry_sign: We could not find a transcript for this meeting"
+    except RecordingNotFound:
+        has_error = True
+        retry = context.get("retry_attempts", 0) + 1
+        context.update(retry_attempts=retry)
+        error_message = (
+            f":rocket: Looks like you're transcript is not done processing, we'll try again in a bit!"
+            if retry <= 3
+            else "We could not find a recording for this meeting"
+        )
+        if retry < 3:
+            emit_process_get_transcript_and_update_crm(
+                payload, context, schedule=(datetime.now() + timezone.timedelta(minutes=30))
+            )
     except Exception as e:
         logger.exception(e)
         has_error = True
@@ -1116,8 +1129,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
             ),
         ]
     else:
-        workflow.failed_task_description.append(f"MEETING_REVIEW__UPDATE_RESOURCE.{error_message}")
-        workflow.save()
         blocks = [
             block_builders.header_block("AI Generated Call Summary"),
             block_builders.context_block(f"Meeting: {meeting.topic}"),

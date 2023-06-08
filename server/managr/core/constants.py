@@ -25,7 +25,7 @@ if settings.USE_OPEN_AI:
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 
 OPEN_AI_SUMMARY_PROMPT = (
-    lambda object: f"""Summarize the meetings notes below in the most concise way (1000 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
+    lambda object: f"""Summarize the meeting notes below in the most concise way (no less than 1,500 characters and no greater than 2,000 characters) as if you are reporting back to a VP of Sales, tone is casual yet professional.
     Highlight the most important information first like, the deal stage, next step and close date. 
     Also mention what kind of interaction it was - a call, meeting, or just an update. 
     Deliver message in sentence format
@@ -198,18 +198,9 @@ NOTIFICATION_CLASS_ALERT = "ALERT"
 NOTIFICATION_CLASS_EMAIL = "EMAIL"
 NOTIFICATION_CLASS_SLACK = "SLACK"
 NOTIFICATION_CLASS_CHOICES = (
-    (
-        NOTIFICATION_CLASS_ALERT,
-        "ALERT",
-    ),
-    (
-        NOTIFICATION_CLASS_EMAIL,
-        "EMAIL",
-    ),
-    (
-        NOTIFICATION_CLASS_SLACK,
-        "SLACK",
-    ),
+    (NOTIFICATION_CLASS_ALERT, "ALERT",),
+    (NOTIFICATION_CLASS_EMAIL, "EMAIL",),
+    (NOTIFICATION_CLASS_SLACK, "SLACK",),
 )
 
 
@@ -220,10 +211,7 @@ NOTIFICATION_RESOURCE_REPORT = "REPORT"
 NOTIFICATION_RESOURCE_OPPORTUNITY = "OPPORTUNITY"
 NOTIFICATION_RESOURCE_USER = "USER"
 NOTIFICATION_RESOURCES = (
-    (
-        NOTIFICATION_RESOURCE_ACCOUNT,
-        "Account",
-    ),
+    (NOTIFICATION_RESOURCE_ACCOUNT, "Account",),
     (NOTIFICATION_RESOURCE_ORGANIZATION, "Organization"),
     (NOTIFICATION_RESOURCE_REPORT, "Report"),
     (NOTIFICATION_RESOURCE_OPPORTUNITY, "Opportunity"),
