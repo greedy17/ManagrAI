@@ -2232,18 +2232,21 @@
                           <span :class="user.nylas ? '' : 'grayscale'">
                             <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
                           </span>
-                          <span v-if="user.outreach_account">
-                            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+                          <span :class="user.zoom_account ? '' : 'grayscale'">
+                            <img src="@/assets/images/zoom.png" alt="" height="18px" />
                           </span>
-                          <span v-else-if="user.salesloft_account">
+                          <!-- <span v-if="user.outreach_account">
+                            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
+                          </span> -->
+                          <!-- <span v-else-if="user.salesloft_account">
                             <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
-                          </span>
-                          <span v-else class="grayscale">
+                          </span> -->
+                          <!-- <span v-else class="grayscale">
                             <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-                          </span>
-                          <span :class="user.gong_account ? '' : 'grayscale'">
+                          </span> -->
+                          <!-- <span :class="user.gong_account ? '' : 'grayscale'">
                             <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
-                          </span>
+                          </span> -->
                         </div>
                       </div>
                     </div>
@@ -2642,6 +2645,7 @@ export default {
     },
     dayTrialUsers() {
       const trialUsers = this.trialUsers.filter(user => user.days_active <= this.filterByDay)
+      console.log('trialUsers.sort((a, b) => a.days_active - b.days_active)', trialUsers.sort((a, b) => a.days_active - b.days_active))
       return trialUsers.sort((a, b) => a.days_active - b.days_active)
     }
   },

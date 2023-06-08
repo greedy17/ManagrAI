@@ -1,67 +1,176 @@
 <template>
   <section class="chat-container">
-    <header class="title-header"><p>All Open Opportunities</p></header>
+    <header class="title-header">
+      <p @click="clearMessages">{{ chatTitle }}</p>
+    </header>
     <div class="margin-top" ref="chatWindow">
       <div v-for="(message, i) in messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
-            <img
-              class="green-filter"
-              v-if="message.user === 'bot'"
-              src="@/assets/images/logo.png"
-              height="30px"
-            />
+            <span
+              v-if="message.user === 'bot' && !message.updated"
+              style="font-size: 24px; margin-right: 0.25rem; padding-top: 0.5rem"
+            >
+              🤖
+            </span>
+            <span v-else-if="message.user === 'bot' && message.updated">
+              <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
+            </span>
 
             <div class="avatar" v-else>{{ userName[0] }}</div>
           </div>
 
           <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
             <p>{{ message.value }}</p>
+
+            <div v-if="message.generated">
+              <div style="margin-top: 0.5rem" v-if="!generating" class="row">
+                <button class="content-button padding-small">
+                  <img
+                    style="margin-right: 0.6rem"
+                    src="@/assets/images/sparkle.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Regenerate
+                </button>
+                <!-- 
+                <button
+                  @click="nextSteps(message.data['meeting_comments'], message.id)"
+                  class="content-button padding-small"
+                >
+                  <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
+                  Suggest next steps
+                </button>
+                <button
+                  @click="
+                    getSummary(
+                      message.data,
+                      message.integrationId,
+                      message.resourceType,
+                      message.id,
+                    )
+                  "
+                  class="content-button padding-small"
+                >
+                  <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
+                </button> -->
+              </div>
+
+              <div v-else style="border-radius: 6px; padding: 0.25rem 0" class="row">
+                <p>Regenerating response</p>
+                <div class="loading">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div v-if="message.user === 'bot' && i !== 0" class="generate-container">
-          <button
-            @click="toggleSelectContentOption"
-            v-if="!selectingContent"
-            class="generate-button"
-          >
-            <img src="@/assets/images/sparkle.svg" height="16px" alt="" /> Generate content
+        <div
+          v-if="message.user === 'bot' && message.formId && !message.updated"
+          class="generate-container"
+        >
+          <button @click="toggleChatModal(message)" class="generate-button green">
+            <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
+            {{ `Review & update ${user.crm[0] + user.crm.slice(1).toLowerCase()}` }}
           </button>
+        </div>
 
-          <div class="row" v-else>
-            <button class="content-button">
-              <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-envelope" />Draft
-              follow-up email
+        <div
+          v-else-if="message.user === 'bot' && message.formId && message.updated"
+          class="generate-container"
+        >
+          <div v-if="!message.generated">
+            <button
+              @click="toggleSelectContentOption(i)"
+              v-if="!selectingContent || selectedIndex !== i"
+              class="generate-button"
+            >
+              <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
+              Generate content
             </button>
-            <button class="content-button">
-              <font-awesome-icon
-                style="height: 10px"
-                @click="selectedOpp = null"
-                icon="fa-solid fa-angles-right"
-              />
-              Suggest next steps
-            </button>
-            <button class="content-button">
-              <font-awesome-icon @click="selectedOpp = null" icon="fa-regular fa-file-lines" />Get
-              summary
-            </button>
+
+            <div v-else-if="selectingContent && selectedIndex === i">
+              <div style="position: relative; margin-bottom: 0.5rem" class="row" v-if="!generating">
+                <button
+                  @click="generateEmail(message.data['meeting_comments'], message.id)"
+                  class="content-button"
+                >
+                  <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
+                </button>
+                <button
+                  @click="nextSteps(message.data['meeting_comments'], message.id)"
+                  class="content-button"
+                >
+                  <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
+                  Suggest next steps
+                </button>
+                <button
+                  @click="
+                    getSummary(
+                      message.data,
+                      message.integrationId,
+                      message.resourceType,
+                      message.id,
+                    )
+                  "
+                  class="content-button"
+                >
+                  <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
+                </button>
+
+                <img
+                  style="margin-left: 0.25rem; cursor: pointer"
+                  class="gray-blue-scale"
+                  @click="selectingContent = !selectingContent"
+                  src="@/assets/images/return.svg"
+                  height="18px"
+                  alt=""
+                />
+              </div>
+
+              <div v-else class="loader-container">
+                <span
+                  style="
+                    font-size: 20px;
+                    margin-right: 0.75rem;
+                    padding-top: 0.5rem;
+                    margin-left: -2.25rem;
+                    margin-top: 0.5rem;
+                  "
+                  >🚀</span
+                >
+
+                <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
+                  <p>Processing your submission</p>
+                  <div class="loading">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div v-show="messageLoading" class="loader-container">
-        <img
-          class="green-filter"
-          style="margin-right: 1rem"
-          src="@/assets/images/logo.png"
-          height="30px"
-        />
+        <span
+          style="font-size: 20px; margin-right: 1.1rem; padding-top: 0.5rem; margin-left: 0.25rem"
+          >🚀</span
+        >
 
-        <div class="loading">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
+        <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
+          <p>Processing your submission</p>
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
         </div>
       </div>
 
@@ -71,6 +180,8 @@
     <ChatTextBox
       class="bottom"
       @message-loading="setLoader"
+      @set-message="setMessage"
+      @set-title="setTitle"
       :messages="messages"
       :scrollToBottom="scrollToBottom"
     />
@@ -79,6 +190,7 @@
   
 <script>
 import ChatTextBox from './ChatTextBox.vue'
+import User from '@/services/users'
 
 export default {
   name: 'ChatBox',
@@ -87,29 +199,109 @@ export default {
   },
   data() {
     return {
-      // user: { },
       selectingContent: false,
       messageLoading: false,
-      messages: [
-        // { id: 0, value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", user: '1' },
-        {
-          id: 0,
-          user: 'bot',
-          value: `Hey ${
-            this.userName ? this.userName : 'there'
-          }! Welcome to Managr, your AI sales assistant`,
-        },
-        // {
-        //   id: 1,
-        //   value: 'Update Opportunity Pied Piper, move close date to the end of June.',
-        //   user: 1,
-        // },
-        // { id: 2, value: 'Successfully updated Pied Piper', user: 'bot' },
-      ],
+      generating: false,
+      selectedIndex: null,
+      generativeRes: null,
     }
   },
   methods: {
-    toggleSelectContentOption() {
+    clearMessages() {
+      this.$store.dispatch('clearMessages')
+    },
+    // async getAllCustomSlackForms() {
+    //   try {
+    //     let res = await SlackOAuth.api.slackFormInstances()
+    //     console.log(res)
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //   }
+    // },
+    async generateEmail(note, id) {
+      this.generating = true
+      try {
+        let res = await User.api.chatEmail({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: id,
+          generated: true,
+          value: 'Email generated',
+        })
+        this.setMessage({
+          user: 'bot',
+          id: this.generativeRes['id'],
+          value: this.generativeRes['res'],
+        })
+
+        this.generating = false
+      }
+    },
+
+    async nextSteps(note, id) {
+      this.generating = true
+      try {
+        let res = await User.api.chatNextSteps({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: id,
+          generated: true,
+          value: 'Suggested next steps.',
+        })
+        this.setMessage({
+          user: 'bot',
+          id: this.generativeRes['id'],
+          value: this.generativeRes['res'],
+        })
+
+        this.generating = false
+      }
+    },
+
+    async getSummary(data, id, resource, mId) {
+      this.generating = true
+      try {
+        let res = await User.api.getSummary({
+          id: this.user.id,
+          data: data,
+          integrationId: id,
+          resource: resource,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: mId,
+          generated: true,
+          value: 'Summary generated',
+        })
+        this.setMessage({
+          user: 'bot',
+          id: this.generativeRes['id'],
+          value: this.generativeRes['res'],
+        })
+
+        this.generating = false
+      }
+    },
+    toggleSelectContentOption(i) {
+      if (i) {
+        this.selectedIndex = i
+      }
       this.selectingContent = !this.selectingContent
     },
     scrollToBottom() {
@@ -121,6 +313,15 @@ export default {
     setLoader(val) {
       this.messageLoading = val
     },
+    setMessage(msg) {
+      this.$store.dispatch('updateMessages', msg)
+    },
+    setTitle(title) {
+      this.$store.dispatch('updateChatTitle', title)
+    },
+    toggleChatModal(data) {
+      this.$emit('toggle-chat-modal', data)
+    },
   },
   computed: {
     user() {
@@ -129,11 +330,19 @@ export default {
     userName() {
       return this.$store.state.user.firstName
     },
+    chatTitle() {
+      return this.$store.state.chatTitle
+    },
+    messages() {
+      return this.$store.state.messages
+    },
   },
-
   created() {
     this.scrollToBottom()
   },
+  // beforeRouteLeave() {
+  //   this.$store.dispatch('updateChatTitle', 'All Open Opportunities')
+  // },
 }
 </script>
   
@@ -148,6 +357,13 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+.gray-blue-scale {
+  filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
+}
+
+.padding-small {
+  padding: 0.5rem 0.75rem !important;
 }
 
 .row {
@@ -184,21 +400,6 @@ export default {
   height: 96%;
   overflow-y: scroll;
 }
-// .margin-top:hover {
-//   overflow-y: auto;
-//   scroll-behavior: smooth;
-// }
-
-// .margin-top::-webkit-scrollbar {
-//   width: 6px;
-//   height: 0px;
-//   margin-left: 0.25rem;
-// }
-// .margin-top::-webkit-scrollbar-thumb {
-//   background-color: $base-gray;
-//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-//   border-radius: 6px;
-// }
 .container-padding {
   border-radius: 6px;
   padding: 0.5rem;
@@ -276,6 +477,21 @@ export default {
   filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
     contrast(82%);
 }
+.gold-filter {
+  filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(90%) contrast(87%);
+  animation: shimmer 2s;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
+}
+
+.invert {
+  filter: invert(95%);
+}
+
+.green {
+  background-color: $dark-green !important;
+  color: white !important;
+  border: 1px solid $dark-green !important;
+}
 
 .loader-container {
   display: flex;
@@ -294,8 +510,8 @@ export default {
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   margin: 0 5px;
   background: rgb(97, 96, 96);
   border-radius: 50%;
@@ -324,14 +540,14 @@ export default {
 .generate-button {
   @include chat-button();
   padding: 0.7rem 0.8rem;
-  background-color: $dark-green;
-  color: white;
-  border: none;
+  // background-color: $dark-green;
+  // border: 1px solid $dark-green;
+  // color: $dark-green;
   margin-bottom: 0.5rem;
 
   img {
     margin-right: 0.5rem;
-    filter: invert(87%) sepia(25%) saturate(6867%) hue-rotate(2deg) brightness(107%) contrast(103%);
+    // filter: invert(87%) sepia(25%) saturate(6867%) hue-rotate(2deg) brightness(107%) contrast(103%);
     // animation: shimmer 2s infinite;
     // -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
   }
@@ -339,6 +555,9 @@ export default {
 
 .content-button {
   @include chat-button();
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   margin-right: 0.5rem;
   svg {
     margin-right: 0.5rem;
@@ -363,6 +582,40 @@ export default {
   }
 }
 
+.go-back {
+  position: absolute;
+  right: 0.5rem;
+  top: -1.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+
+  img {
+    transform: rotate(180deg);
+  }
+}
 // @keyframes typing {
 //   from {
 //     width: 0;

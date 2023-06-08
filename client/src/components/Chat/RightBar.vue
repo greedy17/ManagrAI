@@ -18,7 +18,7 @@
               />
             </span>
 
-            <p>Opportunity</p>
+            <p>{{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</p>
           </div>
           <div class="flexed-row">
             <img
@@ -43,7 +43,11 @@
 
       <section v-else>
         <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ displayedOpps.count }})</p>
+          <p style="margin-bottom: 0.25rem">
+            All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
+              displayedOpps.count
+            }})
+          </p>
 
           <div class="flexed-row">
             <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
@@ -60,20 +64,9 @@
 
         <div class="flexed-row-spread">
           <div class="input">
-            <img v-if="!searchText" src="@/assets/images/search.svg" height="16px" alt="" />
-            <img
-              v-else
-              @click="searchFilter"
-              src="@/assets/images/return.svg"
-              height="16px"
-              alt=""
-            />
-            <input
-              class="search-input"
-              @keydown.enter.exact.prevent="searchFilter"
-              v-model="searchText"
-              placeholder="Search Opportunity by name"
-            />
+            <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
+
+            <input class="search-input" v-model="searchText" :placeholder="`Search by name`" />
             <img
               v-show="searchText"
               @click="clearText"
@@ -158,6 +151,8 @@
                   selectLabel=""
                   track-by="value"
                   label="label"
+                  selectedLabel=""
+                  deselectLabel=""
                   :preselectFirst="true"
                 >
                   <template slot="noResult">
@@ -171,7 +166,7 @@
                     :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
                     :type="`${selectedFilter.dataType}`"
                     v-model="selectedFilter.value"
-                    autofocus="true"
+                    autofocus
                   />
 
                   <!-- <Multiselect
@@ -183,6 +178,8 @@
                   :multiple="dataType === 'MultiPicklist' ? true : false"
                   v-model="selectedOption"
                   :disabled="inlineLoader"
+                  selectedLabel=""
+                  deselectLabel=""
                   @select="
                     setUpdateValues(
                       apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -197,22 +194,28 @@
                 </Multiselect> -->
                 </div>
 
-                <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
-                  <p>
+                <div
+                  style="margin: 1rem 0 1rem 0.25rem; position: relative"
+                  v-if="selectedFilter.value"
+                >
+                  <p class="wrap-text">
                     <span style="color: #9596b4">Filter : </span>
                     "{{ selectedFilter.name }} {{ selectedFilter.operatorLabel }}
                     {{ selectedFilter.value }}"
                   </p>
-                </div>
 
-                <button
-                  @click="addFilter()"
-                  v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
-                  class="chat-button shimmer"
-                  style="padding: 0.5rem 1rem"
-                >
-                  Add filter
-                </button>
+                  <div
+                    v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
+                    class="save-close"
+                  >
+                    <div @click="addFilter()" class="save">
+                      <span v-if="!inlineLoader">&#x2713;</span>
+                    </div>
+                    <div @click="clearFilter" class="close">
+                      <span>x</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -221,7 +224,7 @@
     </header>
 
     <div class="selected-opp-container" v-if="selectedOpp">
-      <div class="selected-opp-section">
+      <div style="margin-bottom: 0.5rem; padding-left: 0.5rem" class="selected-opp-section">
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <h5 class="gray-text">
@@ -250,46 +253,49 @@
                 :field="field"
                 :showing="editing"
                 @close-inline="closeInline"
+                @setFields="setOppForms"
               />
             </div>
           </div>
         </div>
 
         <div v-if="!editing" class="edit-button">
-          <button>Edit View</button>
+          <button class="no-border gray-scale no-padding">
+            <img src="@/assets/images/edit.svg" height="14px" alt="" />
+            Edit view
+          </button>
         </div>
       </div>
-      <div style="padding-top: 0" class="selected-opp-section">
-        <h4 style="margin-top: 0; margin-left: -0.25rem" class="selected-opp sticky-top">
-          Notes & History
-        </h4>
+      <div style="padding-top: 0; margin-left: -0.25rem" class="selected-opp-section">
+        <h4 style="margin-top: 0" class="selected-opp sticky-top gray-bg">Notes & History</h4>
         <div v-for="note in notes" :key="note.id">
-          <div class="row">
-            <p
-              :class="{ 'gray-text strike': !!note.saved_data__StageName }"
-              style="margin-right: 0.25rem"
-            >
-              {{ note.previous_data__StageName }}
-            </p>
-
-            <img
-              v-if="note.saved_data__StageName"
-              src="@/assets/images/transition.svg"
-              height="12px"
-              alt=""
-            />
-
-            <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
-          </div>
-          <div>
-            <p style="margin: 0.25rem 0">{{ note.meeting_comments || '---' }}</p>
-          </div>
-
-          <small class="gray-text">{{
+          <small class="gray-text left-margin">{{
             `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
               note.submission_date,
             )}`
           }}</small>
+          <div class="note-section">
+            <div class="row">
+              <p
+                :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                style="margin-right: 0.25rem"
+              >
+                {{ note.previous_data__StageName }}
+              </p>
+
+              <img
+                v-if="note.saved_data__StageName"
+                src="@/assets/images/transition.svg"
+                height="12px"
+                alt=""
+              />
+
+              <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+            </div>
+            <div>
+              <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -303,12 +309,18 @@
       >
         <p style="margin: 0">{{ opp.name }}</p>
       </div>
-      <div class="space-between">
-        <p v-if="searchText">End of list</p>
-        <span v-else></span>
-        <button class="chat-button" v-if="displayedOpps.next" @click="loadMoreOpps">
+      <div style="margin-bottom: 0.25rem" class="space-between">
+        <button
+          :disabled="loadingMore"
+          class="chat-button no-border gray-scale"
+          v-if="displayedOpps.next"
+          @click="loadMoreOpps"
+        >
+          <img src="@/assets/images/load-more.svg" height="14px" alt="" />
           Load More
         </button>
+
+        <p v-else>End of list</p>
       </div>
     </div>
   </section>
@@ -330,8 +342,10 @@ export default {
   },
   data() {
     return {
+      stageValidationFields: {},
       updateFormData: {},
       loadingNotes: false,
+      loadingMore: false,
       notes: [],
       editing: false,
       activeField: null,
@@ -352,6 +366,7 @@ export default {
         // },
       }),
       page: 1,
+      loadMorePage: 0,
       selectedOperator: null,
       months: {
         0: 'January',
@@ -380,9 +395,9 @@ export default {
         Owner: [{ label: 'contains', value: 'CONTAINS' }],
         Stage: [{ label: 'contains', value: 'CONTAINS' }],
         Name: [
-          { label: 'is', value: 'EQUALS' },
           { label: 'contains', value: 'CONTAINS' },
           { label: 'does not equal', value: 'NOT_EQUALS' },
+          { label: 'is', value: 'EQUALS' },
         ],
         'Close date': [
           { label: 'is', value: 'EQUALS' },
@@ -478,6 +493,15 @@ export default {
         return
       }
     },
+    searchText(newVal, oldVal) {
+      if (newVal !== oldVal && newVal !== '') {
+        return
+      } else {
+        this.$store.dispatch('loadChatOpps')
+        this.page = 0
+        this.loadMorePage = 0
+      }
+    },
     // : 'selectOperator',
     selectedOpp: 'getNotes',
   },
@@ -542,28 +566,15 @@ export default {
     async reloadOpps() {
       this.oppsLoading = true
       try {
-        let res = await this.$store.dispatch('loadChatOpps', 1)
+        await this.$store.dispatch('loadChatOpps').then(() => {
+          this.setOppForms()
+        })
       } catch (e) {
         console.log('error loading opps')
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
         }, 1000)
-      }
-    },
-    async searchFilter() {
-      if (this.searchText) {
-        try {
-          this.$store.dispatch('changeFilters', [
-            ...this.$store.state.filters,
-            ['CONTAINS', 'Name', this.searchText],
-          ])
-          await this.$store.dispatch('loadChatOpps', 1)
-        } catch (e) {
-          console.log(e)
-        }
-      } else {
-        return
       }
     },
     async addFilter() {
@@ -579,9 +590,7 @@ export default {
       } catch (e) {
         console.log('Error in addFilter', e)
       } finally {
-        setTimeout(() => {
-          this.toggleShowFilters()
-        }, 100)
+        this.toggleShowFilters()
       }
     },
     async removeFilter(targetList) {
@@ -629,11 +638,18 @@ export default {
       this.filtering = !this.filtering
     },
     async setOppForms() {
+      let stageGateForms
+      let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
 
       this.updateOppForm = formsRes.filter(
         (obj) =>
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
+      )
+
+      let allFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'Name' && field.apiName !== 'dealname' && field.apiName !== 'name',
       )
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
@@ -650,6 +666,38 @@ export default {
             ? field.apiName !== 'Email'
             : true),
       )
+
+      stageGateForms = formsRes.filter(
+        (obj) =>
+          obj.formType === 'STAGE_GATING' &&
+          obj.resource === (this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'),
+      )
+
+      if (stageGateForms.length) {
+        // this.stageGateCopy = stageGateForms[0].fieldsRef
+
+        let stages = stageGateForms.map((field) => field.stage)
+        let newStages = []
+        if (this.userCRM === 'HUBSPOT') {
+          for (let i = 0; i < stages.length; i++) {
+            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          }
+        } else {
+          newStages = stages
+        }
+        stagesWithForms = newStages
+        for (const field of stageGateForms) {
+          if (this.userCRM === 'SALESFORCE') {
+            this.stageValidationFields[field.stage] = field.fieldsRef
+          } else {
+            this.stageValidationFields[field.stage.split(' ').join('').toLowerCase()] =
+              field.fieldsRef
+          }
+        }
+      }
+
+      this.$emit('set-fields', allFields)
+      this.$emit('set-stages', this.stageValidationFields, stagesWithForms)
     },
     getDate(input) {
       let newer = new Date(input)
@@ -687,21 +735,58 @@ export default {
       }
     },
     async loadMoreOpps() {
-      this.page += 1
-      await this.$store.dispatch('loadChatOpps', this.page)
+      if (this.searchText) {
+        this.loadMorePage += 1
+        this.loadingMore = true
+        try {
+          let res = await this.$store.dispatch('loadMoreChatOpps', {
+            page: this.loadMorePage,
+            text: this.searchText,
+          })
+          console.log(res)
+        } catch (e) {
+          console.log(e)
+          this.page = 0
+          this.loadMorePage = 0
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      } else {
+        this.page += 1
+        this.loadingMore = true
+        try {
+          await this.$store.dispatch('loadChatOpps', this.page)
+        } catch (e) {
+          console.log(e)
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      }
     },
   },
   computed: {
     opportunities() {
       if (this.displayedOpps.results) {
-        return this.displayedOpps.results
+        return this.displayedOpps.results.filter((opp) =>
+          opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        )
       } else return []
     },
     activeFilters() {
       return this.$store.state.filters
     },
-    displayedOpps() {
-      return this.$store.state.chatOpps
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
     },
     userCRM() {
       return this.$store.state.user.crm
@@ -742,19 +827,41 @@ export default {
 }
 
 .shimmer {
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
 .pop-transition {
   transition: transform 0.3s ease; /* Adjust the transition duration and easing as per your preference */
   transform: scale(1.25); /* Adjust the transform properties to create the desired effect */
-  animation: shimmer 1s infinite;
+  animation: shimmer 2s infinite;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
 ::v-deep .multiselect__single {
   font-size: 14px;
+}
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 
 .right-container {
@@ -811,13 +918,10 @@ export default {
 }
 .opp-scroll-container {
   height: 100%;
-  overflow: hidden;
-  padding: 0.5rem 0;
-}
-
-.opp-scroll-container:hover {
-  overflow: auto;
+  width: 101%;
+  overflow-y: scroll;
   scroll-behavior: smooth;
+  padding: 0.5rem 0;
 }
 
 .opp-scroll-container::-webkit-scrollbar {
@@ -826,11 +930,15 @@ export default {
   margin-left: 0.25rem;
 }
 .opp-scroll-container::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
-
+.opp-scroll-container:hover::-webkit-scrollbar-thumb {
+  overflow: auto;
+  scroll-behavior: smooth;
+  background-color: $base-gray;
+}
 header {
   margin: 0;
   padding: 0;
@@ -890,8 +998,14 @@ header {
   width: 350px;
   border-radius: 6px;
   padding: 0.75rem;
-  background-color: $soft-gray;
   margin-bottom: 1rem;
+  background: rgb(65, 184, 131);
+  background: linear-gradient(
+    90deg,
+    rgba(65, 184, 131, 1) 0%,
+    rgba(65, 184, 131, 0.6951374299719888) 100%
+  );
+  color: white;
 
   h4 {
     text-overflow: ellipsis;
@@ -900,10 +1014,29 @@ header {
   }
 }
 
-.selected-opp-section {
-  height: 50%;
-  overflow: hidden;
+.gray-bg {
+  background: $off-white;
+  padding-left: 0.5rem;
+  background-color: $off-white !important;
+  color: $base-gray;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+}
 
+.note-section {
+  background-color: white;
+  padding: 0 1rem 1rem 1.1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 0.5rem 0;
+}
+
+.selected-opp-section {
+  height: 40%;
+  width: 101%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
   padding: 0.5rem 0.25rem;
   position: relative;
   h5,
@@ -912,9 +1045,8 @@ header {
   }
 }
 
-.selected-opp-section:hover {
-  overflow-y: auto;
-  scroll-behavior: smooth;
+.selected-opp-section:last-of-type {
+  height: 60%;
 }
 
 .selected-opp-section::-webkit-scrollbar {
@@ -923,9 +1055,12 @@ header {
   margin-left: 0.25rem;
 }
 .selected-opp-section::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 6px;
+  border-radius: 6px !important;
+}
+.selected-opp-section:hover::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
 }
 
 .sticky-top {
@@ -978,6 +1113,9 @@ header {
 .gray-text {
   color: $light-gray-blue;
 }
+.left-margin {
+  margin-left: 0.5rem;
+}
 
 .strike {
   text-decoration: line-through;
@@ -991,20 +1129,44 @@ header {
   button {
     @include chat-button();
 
-    font-size: 14px;
+    font-size: 13px;
     font-family: $base-font-family;
     color: $chat-font-color;
     background-color: white;
+    padding: 0.75rem;
   }
 }
 
 .chat-button {
   @include chat-button();
-  width: 100px;
+  padding: 0.75rem;
   font-size: 14px;
   font-family: $base-font-family;
   color: $chat-font-color;
   background-color: white;
+  img {
+    margin-left: 0;
+  }
+}
+
+.no-border {
+  border: none !important;
+  background-color: transparent !important;
+
+  &:hover {
+    box-shadow: none !important;
+  }
+}
+
+.gray-scale {
+  color: $light-gray-blue !important;
+  img {
+    filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
+  }
+}
+
+.no-padding {
+  padding: 0 !important;
 }
 
 svg,
@@ -1283,5 +1445,65 @@ img {
   font-size: 11px;
   border-radius: 4px;
   padding: 4px;
+}
+
+.wrap-text {
+  width: 90%;
+
+  overflow: hidden;
+}
+
+.save-close {
+  position: absolute;
+  right: 0;
+  top: -0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: red;
+  padding: 0.25rem;
+  background-color: white;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 13px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+}
+
+.save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-green;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
 }
 </style>
