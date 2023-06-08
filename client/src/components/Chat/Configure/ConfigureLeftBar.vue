@@ -21,15 +21,15 @@
         <div class="base-select" :class="configPage === 'sync' ? 'left-active' : 'pointer'" @click="changeConfigPage('sync')">
           <p><img src='@/assets/images/cycle.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
         </div>
-        <div class="base-select" :class="configPage === 'profile' ? 'left-active' : 'pointer'" @click="changeConfigPage('profile')">
+        <!-- <div class="base-select" :class="configPage === 'profile' ? 'left-active' : 'pointer'" @click="changeConfigPage('profile')">
           <p><img src='@/assets/images/user.svg' :class="configPage === 'profile' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Profile</p>
-        </div>
+        </div> -->
       </div>
     </div>
     <div>
-      <div class="base-select" :class="configPage === 'demo' ? 'left-active' : 'pointer'" @click="changeConfigPage('demo')">
+      <!-- <div class="base-select" :class="configPage === 'demo' ? 'left-active' : 'pointer'" @click="changeConfigPage('demo')">
         <p><img src="@/assets/images/play-alt.svg" :class="configPage === 'demo' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Demo Center</p>
-      </div>
+      </div> -->
       <div class="base-select pointer" @click="logOut">
         <p><img src="@/assets/images/logout.svg" style="height: 12px; margin-right: 0.5rem;" />Log out</p>
       </div>

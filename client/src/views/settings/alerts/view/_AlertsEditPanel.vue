@@ -103,48 +103,21 @@
       </div>
     </Modal>
     <div v-if="fromConfig" class="alerts-header-inner">
-      <button @click="closeBuilder" class="back-button">
-        <img src="@/assets/images/left.svg" height="14px" alt="" />
-        Back
-      </button>
-
-      <h3>{{ alert.title }}</h3>
-
-      <div style="display: flex;">
-        <button @click="deleteItem(alert.id)" class="delete">Delete</button>
-        <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
-          Update
+      <div class="alerts-header-inner-width">
+        <button @click="closeBuilder" class="back-button">
+          <img src="@/assets/images/left.svg" alt="" />
+          Back
         </button>
+  
+        <h3>{{ alert.title }}</h3>
+  
+        <div style="display: flex;">
+          <button @click="deleteItem(alert.id)" class="delete">Delete</button>
+          <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
+            Save
+          </button>
+        </div>
       </div>
-
-      <!-- <div v-if="hasSlack">
-        <PulseLoadingSpinnerButton
-          :loading="savingTemplate"
-          :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
-          text="Activate Template"
-          @click.stop="onSave"
-          :disabled="!verifySubmit() || savingTemplate"
-        />
-      </div> -->
-
-      <!-- <div v-else>
-        <button
-          v-if="largeOpps"
-          :disabled="!selectFieldBool || !largeOppsBool"
-          @click="noSlackSave"
-          :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button '"
-        >
-          Activate without Slack
-        </button>
-        <button
-          v-else
-          @click="noSlackSave"
-          :disabled="selectField ? !selectFieldBool : null"
-          :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button '"
-        >
-          Activate without Slack
-        </button>
-      </div> -->
     </div>
     <div class="title">
       <h4 class="title__head">General</h4>
@@ -963,7 +936,8 @@ export default {
   border: 1px solid $soft-gray;
   color: $base-gray;
   border-radius: 6px;
-  width: 50vw;
+  width: 62vw;
+  // width: 50vw;
   // min-height: 25vh;
   letter-spacing: 0.75px;
   padding: 0px 0px 32px 0px;
@@ -1239,7 +1213,7 @@ input[type='search']:focus {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   // gap: 24px;
 
   h3 {
@@ -1250,18 +1224,28 @@ input[type='search']:focus {
     color: $light-gray-blue;
   }
 }
+.alerts-header-inner-width {
+  width: 80%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
 .back-button {
-  color: $base-gray;
+  color: $light-gray-blue;
   background-color: transparent;
   display: flex;
   align-items: center;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 13px;
   letter-spacing: 0.75px;
 
   img {
-    margin-right: 8px;
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+    height: 12px;
+    filter: invert(70%);
   }
 }
 .purple__button {
@@ -1296,8 +1280,9 @@ input[type='search']:focus {
   font-size: 14px;
 }
 .delete {
-  @include button-danger();
+  @include white-button-danger();
   font-size: 12px;
   padding: 8px 16px;
+  border: 1px solid $soft-gray;
 }
 </style>

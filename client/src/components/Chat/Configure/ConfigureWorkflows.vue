@@ -188,13 +188,12 @@
     <template v-if="!templates.refreshing && (!isOnboarding || !user.isAdmin)">
       <!-- <transition name="fade">
       </transition> -->
-      <div class="create-workflow-container" style="margin-top: 2rem;">
+      <!-- <div class="create-workflow-container" style="margin-top: 2rem;">
         <button :disabled="!isPaid" class="green_button right-margin side-wrapper" @click="switchBuildCustom">
           Create Workflow
           <label class="side-icon side-workflow">
             <span class="side-tooltip-single" style="top: -5px; right: 142px; width: 200px;">Upgrade your plan</span>
             <img
-              class="shimmer"
               style="filter: invert(40%)"
               src="@/assets/images/lock.svg"
               height="14px"
@@ -202,12 +201,12 @@
             />
           </label>
         </button>
-      </div>
+      </div> -->
 
-      <div style="margin-top: 2rem" v-if="editing" class="alert_cards">
+      <div style="margin-top: 5rem" v-if="editing" class="alert_cards">
         <div v-if="!zoomChannel" class="card">
           <div class="card__header" style="">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
             <div>
               <h4>Log Meeting</h4>
@@ -279,7 +278,8 @@
                   />
                 </button>
               </div>
-              <div v-if="hasSlackIntegration">
+              <div v-if="hasSlackIntegration" class="toggle-container">
+                <span>{{ alert.isActive ? 'On' : 'Off' }}</span>
                 <ToggleCheckBox
                   @input="onToggleAlert(alert.id, alert.isActive)"
                   v-model="alert.isActive"
@@ -345,24 +345,23 @@
           v-show="!templateTitles.includes(config.title)"
         >
           <div class="card__header" style="">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
             <div>
               <h4>{{ config.title }}</h4>
-              <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
+              <p style="margin-top: 0.25rem;" class="card-text">{{ config.subtitle }}</p>
             </div>
             <div class="separator"></div>
             <div
               v-if="config.title !== 'Empty Field'"
               class="card__body__between"
-              style="margin-top: 8px"
             >
               <p></p>
               <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
             </div>
 
-            <div v-else class="card__body__between" style="margin-top: 8px">
+            <div v-else class="card__body__between">
               <p></p>
               <button
                 v-if="isPaid && userLevel == 'MANAGER'"
@@ -373,9 +372,9 @@
               </button>
               <div v-else class="tooltip-left">
                 <img
-                  class="shimmer"
+                  class=""
                   style="filter: invert(40%)"
-                  src="@/assets/images/lock.svg"
+                  src="@/assets/images/chat-lock.svg"
                   height="16px"
                   alt=""
                 />
@@ -386,7 +385,7 @@
 
         <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
           <div class="card__header" style="">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
             <div>
@@ -399,6 +398,46 @@
             <div class="card__body__between">
               <p></p>
               <button @click="goToWorkflow('ZoomRecap')" class="white_button">Activate</button>
+            </div>
+        </div>
+        <div class="card">
+          <div class="card__header" style="">
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+            <div>
+              <h4>Create Workflow</h4>
+              <small class="card-text"
+                >Create a workflow with your own settings.</small
+              >
+            </div>
+            <div class="separator"></div>
+            <div class="card__body__between">
+              <p></p>
+              <!-- side-wrapper -->
+              <button v-if="isPaid" :disabled="!isPaid" class="green_button right-margin" @click="switchBuildCustom">
+                Create Workflow
+                <!-- <label class="side-icon side-workflow">
+                  <span class="side-tooltip-single" style="top: -5px; right: 142px; width: 200px;">Upgrade your plan</span>
+                  <img
+                    style="filter: invert(40%)"
+                    src="@/assets/images/lock.svg"
+                    height="14px"
+                    alt=""
+                  />
+                </label> -->
+              </button>
+              <div v-else class="tooltip-left">
+                <img
+                  class=""
+                  style="filter: invert(40%)"
+                  src="@/assets/images/chat-lock.svg"
+                  height="16px"
+                  alt=""
+                />
+                <small class="tooltiptext-left">Upgrade your plan</small>
+              </div>
+              <!-- <button @click="goToWorkflow('ZoomRecap')" class="white_button">Create Workflow</button> -->
             </div>
         </div>
       </div>
@@ -805,7 +844,7 @@ export default {
   /* Position the tooltip text - */
   position: absolute;
   z-index: 1;
-  top: 1px;
+  top: -5px;
   right: 105%;
 }
 /* Show the tooltip text when you mouse over the tooltip container */
@@ -1349,7 +1388,7 @@ a {
 }
 .separator {
   border-top: 1px solid $soft-gray;
-  width: 15vw;
+  width: 16.5vw;
   margin-bottom: 0.5rem;
   // margin: 0rem 0 0.1rem 0;
 }
@@ -1384,7 +1423,8 @@ a {
   position: relative;
   // background: #FFFFFF;
   border-radius: 50%;
-  padding: 12px;
+  // padding: 12px;
+  // padding: 8px 16px;
   // margin: 20px 12px 0px 10px;
   width: 18px;
   height: 18px;
@@ -1460,5 +1500,18 @@ a {
   img {
     filter: invert(90%);
   }
+}
+.toggle-container {
+  display: flex;
+  align-items: center;
+  // margin-right: 1.25rem;
+  span {
+    font-size: 12px;
+    color: $light-gray-blue;
+    margin-right: 0.5rem;
+  }
+}
+.gray-logo {
+  filter: invert(40%);
 }
 </style>
