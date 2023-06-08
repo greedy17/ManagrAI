@@ -28,7 +28,7 @@
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="width: 15vw"
+              style="width: 12vw; margin-right: 0.5rem;"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -62,7 +62,7 @@
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="width: 15vw"
+              style="width: 12vw; margin-right: 0.5rem;"
               selectLabel="Enter"
               label="label"
             >
@@ -95,7 +95,7 @@
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="width: 15vw"
+                style="width: 12vw; margin-right: 0.5rem;"
                 selectLabel="Enter"
                 label="label"
               >
@@ -122,7 +122,7 @@
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="width: 15vw"
+                  style="width: 12vw; margin-right: 0.5rem;"
                   selectLabel="Enter"
                   label="label"
                 >
@@ -158,7 +158,7 @@
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 15vw; margin-right: 12px"
+                      style="width: 12vw; margin-right: 0.5rem;"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -558,7 +558,7 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 15vw;
+  width: 12vw;
   border: 1px solid #e8e8e8 !important;
   border-radius: 0.3rem;
   background-color: white;
@@ -568,7 +568,7 @@ export default {
 }
 
 ::v-deep .input-form {
-  width: 15vw;
+  width: 12vw;
 }
 ::v-deep .input-form__active {
   border: none;

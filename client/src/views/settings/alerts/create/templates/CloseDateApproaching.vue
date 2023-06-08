@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT : allConfigs.CLOSE_DATE_APPROACHING" />
+  <PopularWorkflows :closeBuilder="closeBuilder" :noRenderHeader="noRenderHeader" :config="userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT : allConfigs.CLOSE_DATE_APPROACHING" />
 </template>
 
 <script>
@@ -15,6 +15,14 @@ export default {
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Function
+    }
   },
   data() {
     return {

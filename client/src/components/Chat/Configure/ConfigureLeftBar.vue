@@ -13,7 +13,7 @@
           <p><img src='@/assets/images/rectangle-list.svg' :class="configPage === 'forms' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />CRM Fields</p> <span class="config-number">{{ forms.length }}</span>
         </div>
         <div class="base-select" :class="configPage === 'workflows' ? 'left-active' : 'pointer'" @click="changeConfigPage('workflows')">
-          <p><img src='@/assets/images/workflows-chat.svg' :class="configPage === 'workflows' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Workflows</p>
+          <p><img src='@/assets/images/workflows-chat.svg' :class="configPage === 'workflows' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Workflows</p> <span class="config-number">{{ activeTemplatesLength }}</span>
         </div>
         <div class="base-select" :class="configPage === 'notes' ? 'left-active' : 'pointer'" @click="changeConfigPage('notes')">
           <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Note Templates</p>
@@ -38,6 +38,9 @@
 </template>
 
 <script>
+import { CollectionManager } from '@thinknimble/tn-models'
+import AlertTemplate from '@/services/alerts/'
+
 export default {
   name: 'ConfigureLeftBar',
   props: {
@@ -53,8 +56,14 @@ export default {
   },
   data() {
     return {
-
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
     }
+  },
+  created() {
+    this.templates.refresh();
   },
   methods: {
     logOut() {
@@ -82,6 +91,9 @@ export default {
         }
       }
       return count
+    },
+    activeTemplatesLength() {
+      return this.templates.list.length
     }
   }
 }

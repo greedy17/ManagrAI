@@ -9,7 +9,7 @@
     <!-- v-on="$listeners" loads listeners from parent -->
     <slot name="input">
       <InputField
-        style="width: 23vw !important"
+        style="width: 21vw !important"
         :id="$attrs.id"
         v-bind="$attrs"
         v-on="$listeners"

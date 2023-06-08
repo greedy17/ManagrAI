@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :config="allConfigs.CLOSING_THIS_QUARTER" />
+  <PopularWorkflows :closeBuilder="closeBuilder" :noRenderHeader="noRenderHeader" :config="allConfigs.CLOSING_THIS_QUARTER" />
 </template>
 
 <script>
@@ -15,6 +15,14 @@ export default {
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Function
+    }
   },
   data() {
     return {

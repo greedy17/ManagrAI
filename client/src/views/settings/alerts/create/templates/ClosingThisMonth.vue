@@ -3,6 +3,8 @@
     :config="
       userCRM == 'HUBSPOT' ? allConfigs.CLOSING_THIS_MONTH_HUBSPOT : allConfigs.CLOSING_THIS_MONTH
     "
+    :noRenderHeader="noRenderHeader"
+    :closeBuilder="closeBuilder"
   />
 </template>
 
@@ -19,6 +21,14 @@ export default {
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Boolean
+    }
   },
   data() {
     return {

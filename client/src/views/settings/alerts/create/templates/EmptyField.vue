@@ -3,6 +3,8 @@
     :config="userCRM === 'HUBSPOT' ? allConfigs.EMPTY_FIELD_HUBSPOT : allConfigs.EMPTY_FIELD"
     :selectField="true"
     :isEmpty="true"
+    :noRenderHeader="noRenderHeader"
+    :closeBuilder="closeBuilder"
   />
 </template>
 
@@ -19,6 +21,14 @@ export default {
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Function
+    }
   },
   data() {
     return {

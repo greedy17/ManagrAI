@@ -1,7 +1,44 @@
 <template>
-  <div class="alerts-page">
-    <div class="alerts-header">
+  <div class="alerts-page" :style="noRenderHeader ? 'margin-top: 0rem;' : ''">
+    <div v-if="!noRenderHeader" class="alerts-header">
       <button @click="$router.push({ name: 'ListTemplates' })" class="back-button">
+        <img src="@/assets/images/left.svg" height="14px" alt="" />
+        Back
+      </button>
+
+      <h3>{{ config.title }}</h3>
+
+      <div v-if="hasSlack">
+        <PulseLoadingSpinnerButton
+          :loading="savingTemplate"
+          :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
+          text="Activate Template"
+          @click.stop="onSave"
+          :disabled="!verifySubmit() || savingTemplate"
+        />
+      </div>
+
+      <div v-else>
+        <button
+          v-if="largeOpps"
+          :disabled="!selectFieldBool || !largeOppsBool"
+          @click="noSlackSave"
+          :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+        <button
+          v-else
+          @click="noSlackSave"
+          :disabled="selectField ? !selectFieldBool : null"
+          :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+      </div>
+    </div>
+    <div v-else class="alerts-header-inner">
+      <button @click="closeBuilder" class="back-button">
         <img src="@/assets/images/left.svg" height="14px" alt="" />
         Back
       </button>
@@ -243,7 +280,7 @@
                   style="width: 20vw"
                   selectLabel="Enter"
                   track-by="id"
-                  label="fullName"
+                  :custom-label="selectUsersCustomLabel"
                   :multiple="true"
                   :closeOnSelect="false"
                 >
@@ -481,7 +518,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'PopularWorkflows',
-  props: ['selectField', 'largeOpps', 'config', 'isEmpty'],
+  props: ['selectField', 'largeOpps', 'config', 'isEmpty', 'noRenderHeader', 'closeBuilder'],
   components: {
     ToggleCheckBox,
     FormField,
@@ -660,6 +697,9 @@ export default {
   methods: {
     checkForChannel() {
       !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
+    },
+    selectUsersCustomLabel(prop) {
+      return prop.fullName.trim() ? prop.fullName : prop.email
     },
     repsPipeline() {
       if (this.userLevel !== 'MANAGER') {
@@ -1168,7 +1208,7 @@ export default {
   width: 1ex;
   height: 0.3ex;
   background: rgba(0, 0, 0, 0);
-  top: 0.9ex;
+  top: 1.3ex;
   left: 0.4ex;
   border: 2px solid $dark-green;
   border-top: none;
@@ -1266,6 +1306,32 @@ export default {
     letter-spacing: 0.75px;
     line-height: 1.2;
     cursor: pointer;
+    color: $light-gray-blue;
+  }
+}
+.alerts-header-inner {
+  // position: fixed;
+  z-index: 10;
+  // top: 0;
+  // left: 60px;
+  background-color: $white;
+  // width: 96vw;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
     color: $light-gray-blue;
   }
 }
@@ -1513,5 +1579,30 @@ input[type='search']:focus {
       }
     }
   }
+}
+.inner-header {
+  display: flex;
+  justify-content: space-between;
+}
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 </style>

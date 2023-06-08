@@ -1,8 +1,35 @@
 <template>
-  <div class="logZoomPage">
-    <div class="alerts-header">
+  <div class="logZoomPage" :style="noRenderHeader ? 'margin-top: 0rem;' : ''">
+    <div v-if="!noRenderHeader" class="alerts-header">
       <button @click="$router.push({ name: 'ListTemplates' })" class="back-button">
         <img class="invert" src="@/assets/images/left.svg" alt="" height="12px" />
+        Back
+      </button>
+
+      <h3>Log Meetings</h3>
+
+      <button
+        class="green__button"
+        v-if="!create"
+        :disabled="!(channelCreated || zoomChannel)"
+        @click="handleZoomUpdate(zoomChannel)"
+      >
+        Activate Channel
+      </button>
+
+      <button
+        v-else
+        class="green__button"
+        @click="handleZoomUpdate(createdZoomChannel)"
+        :disabled="!(channelCreated || zoomChannel)"
+      >
+        Activate Channel
+      </button>
+    </div>
+
+    <div v-else class="alerts-header-inner">
+      <button @click="closeBuilder" class="back-button">
+        <img src="@/assets/images/left.svg" height="14px" alt="" />
         Back
       </button>
 
@@ -136,6 +163,14 @@ export default {
     ToggleCheckBox,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     FormField,
+  },
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Function,
+    },
   },
   data() {
     return {
@@ -507,5 +542,31 @@ input {
   border: 1px solid white;
   border-radius: 0.25rem;
   margin-top: 0.5rem;
+}
+.alerts-header-inner {
+  // position: fixed;
+  z-index: 10;
+  // top: 0;
+  // left: 60px;
+  background-color: $white;
+  // width: 96vw;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    color: $light-gray-blue;
+  }
 }
 </style>

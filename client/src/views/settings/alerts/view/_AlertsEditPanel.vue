@@ -1,5 +1,5 @@
 <template>
-  <div class="edit-panel">
+  <div class="edit-panel" :style="fromConfig ? 'padding-top: 0' : ''">
     <Modal v-if="modalOpen" dimmed>
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
@@ -102,6 +102,50 @@
         </div>
       </div>
     </Modal>
+    <div v-if="fromConfig" class="alerts-header-inner">
+      <button @click="closeBuilder" class="back-button">
+        <img src="@/assets/images/left.svg" height="14px" alt="" />
+        Back
+      </button>
+
+      <h3>{{ alert.title }}</h3>
+
+      <div style="display: flex;">
+        <button @click="deleteItem(alert.id)" class="delete">Delete</button>
+        <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
+          Update
+        </button>
+      </div>
+
+      <!-- <div v-if="hasSlack">
+        <PulseLoadingSpinnerButton
+          :loading="savingTemplate"
+          :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
+          text="Activate Template"
+          @click.stop="onSave"
+          :disabled="!verifySubmit() || savingTemplate"
+        />
+      </div> -->
+
+      <!-- <div v-else>
+        <button
+          v-if="largeOpps"
+          :disabled="!selectFieldBool || !largeOppsBool"
+          @click="noSlackSave"
+          :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+        <button
+          v-else
+          @click="noSlackSave"
+          :disabled="selectField ? !selectFieldBool : null"
+          :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+      </div> -->
+    </div>
     <div class="title">
       <h4 class="title__head">General</h4>
 
@@ -337,6 +381,7 @@ import AlertTemplate, {
 import { stringRenderer } from '@/services/utils'
 import { ObjectField } from '@/services/crm'
 import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 export default {
   name: 'AlertsEditPanel',
@@ -346,6 +391,7 @@ export default {
     Modal,
     AlertGroup,
     AlertOperandRow,
+    PulseLoadingSpinnerButton,
     draggable,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -353,6 +399,12 @@ export default {
     alert: {
       type: AlertTemplate,
       required: true,
+    },
+    fromConfig: {
+      type: Boolean,
+    },
+    closeBuilder: {
+      type: Function,
     },
   },
   data() {
@@ -369,6 +421,7 @@ export default {
       messageTemplateForm: new AlertMessageTemplateForm(),
       savedChanges: false,
       savingInTab: false,
+      savingTemplate: false,
       // valuePromise: null,
       slackMessage: [],
       formattedSlackMessage: [],
@@ -435,6 +488,9 @@ export default {
     stateRecordTypes() {
       return this.$store.state.recordTypes
     },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
+    },
   },
   methods: {
     test(log) {
@@ -444,6 +500,27 @@ export default {
       this.deliveryModalOpen = !this.deliveryModalOpen
       this.deliveryForm = null
       this.groupIndex = null
+    },
+    verifySubmit() {
+      if (this.largeOpps) {
+        return (false
+          // this.config.newGroups[0].newOperands[0].operandIdentifier &&
+          // this.config.newGroups[0].newOperands[0].operandValue &&
+          // this.config.newConfigs[0].alertTargets.length &&
+          // this.selectUsersBool &&
+          // this.selectFieldBool &&
+          // this.largeOppsBool
+        )
+      } else {
+        return (false
+          // (this.config.newConfigs[0].recurrenceDays.length ||
+          //   this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+          // this.config.newConfigs[0].alertTargets.length &&
+          // this.selectUsersBool &&
+          // (this.setDaysBool || this.selectFieldBool) &&
+          // this.config.messageTemplate.body.length
+        )
+      }
     },
     updateWorkflow() {
       this.updateTemplate()
@@ -474,6 +551,13 @@ export default {
           this.savingInTab = false
         }
       }
+    },
+    deleteItem(id) {
+      console.log('hit lower')
+      this.$emit('delete-item', id)
+    },
+    updateItem() {
+      this.$emit('update-item')
     },
     resetGroupModal() {
       this.groupModalOpen = !this.groupModalOpen
@@ -1139,5 +1223,81 @@ input[type='search']:focus {
 }
 .margin-top {
   margin-top: 2rem;
+}
+.alerts-header-inner {
+  // position: fixed;
+  z-index: 10;
+  // top: 0;
+  // left: 60px;
+  background-color: $white;
+  // width: 96vw;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    color: $light-gray-blue;
+  }
+}
+.back-button {
+  color: $base-gray;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  letter-spacing: 0.75px;
+
+  img {
+    margin-right: 8px;
+  }
+}
+.purple__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.3rem;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  cursor: pointer;
+  min-width: 10rem;
+  font-size: 14px;
+}
+.disabled__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $soft-gray;
+  color: $gray;
+  cursor: not-allowed;
+
+  font-size: 14px;
+}
+.delete {
+  @include button-danger();
+  font-size: 12px;
+  padding: 8px 16px;
 }
 </style>

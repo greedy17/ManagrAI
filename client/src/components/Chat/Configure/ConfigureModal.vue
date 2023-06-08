@@ -30,7 +30,7 @@
         <ConfigureSync />
       </div>
       <div v-else-if="configPage === 'workflows'">
-        <ConfigureWorkflows :config="userCRM === 'HUBSPOT' ? allConfigs.DEAL_REVIEW_HUBSPOT : allConfigs.DEAL_REVIEW" />
+        <ConfigureAlerts :config="userCRM === 'HUBSPOT' ? allConfigs.DEAL_REVIEW_HUBSPOT : allConfigs.DEAL_REVIEW" />
       </div>
       <div v-else>
         <div>
@@ -47,6 +47,7 @@ import ConfigureIntegrations from './ConfigureIntegrations.vue'
 import ConfigureForms from './ConfigureForms.vue'
 import ConfigureSync from './ConfigureSync.vue'
 import ConfigureWorkflows from './ConfigureWorkflows.vue'
+import ConfigureAlerts from './ConfigureAlerts.vue'
 import { SObjectPicklist } from '@/services/salesforce'
 import SlackOAuth from '@/services/slack'
 import { CollectionManager } from '@thinknimble/tn-models'
@@ -65,6 +66,7 @@ export default {
     ConfigureForms,
     ConfigureSync,
     ConfigureWorkflows,
+    ConfigureAlerts,
   },
   data() {
     return {
@@ -177,6 +179,7 @@ export default {
   display: flex;
   flex-direction: row;
   height: 90vh;
+  overflow-y: hidden;
 }
 
 .test {
@@ -185,8 +188,11 @@ export default {
 
 .left-bar {
   width: 15%;
+  // position: relative;
+  // top: 0;
 }
 .main-content {
   width: 85%;
+  overflow-y: auto;
 }
 </style>
