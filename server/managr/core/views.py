@@ -163,7 +163,7 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
-    filter_fields = ("organization",)
+    filter_fields = ("organization", "email",)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,

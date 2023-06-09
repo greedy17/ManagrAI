@@ -227,6 +227,14 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
   }
 
+  getUserByEmail(email) {
+    const url = USERS_ENDPOINT
+    return this.client
+      .get(url, { params: { email } })
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'Get User by Email API error' }))
+  }
+
   getForecastValues() {
     const url = FORECAST_VALUES_ENDPOINT
     return this.client
