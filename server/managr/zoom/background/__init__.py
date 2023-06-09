@@ -957,7 +957,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
                         workflow.datetime_created.date(), fields_list, summary_parts
                     )
-                    tokens = max_token_calculator(summary_body)
+                    tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, summary_body, tokens, top_p=0.9, temperature=0.7
                     )
@@ -970,7 +970,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
-                            # logger.info(f"Summary response: {r}")
+                            logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
                             summary = clean_prompt_string(choice)
                             data = eval(summary)
@@ -992,8 +992,11 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         workflow.save()
                         break
                     except StopReasonLength:
-                        tokens += 500
-                        continue
+                        if tokens >= 2000:
+                            break
+                        else:
+                            tokens += 500
+                            continue
                     except ServerError:
                         if attempts >= 5:
                             has_error = True
