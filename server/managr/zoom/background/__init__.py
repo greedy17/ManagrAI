@@ -29,7 +29,7 @@ from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact
 from .. import constants as zoom_consts
-from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel
+from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel, RecordingNotFound
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
 from ..zoom_helper.models import ZoomAcct
@@ -788,6 +788,7 @@ def process_transcript_to_summaries(transcript, user):
     from managr.core.exceptions import _handle_response
     from managr.core import constants as core_consts
     from managr.utils.client import Variable_Client
+    from managr.core.utils import max_token_calculator
 
     summary_parts = []
     current_minute = 5
@@ -816,6 +817,9 @@ def process_transcript_to_summaries(transcript, user):
                 .replace("    ", "")
                 .replace(" --> ", "-")
             )
+            if not settings.IN_PROD:
+                token_check = max_token_calculator(transcript_body)
+                print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                 user.email, transcript_body, 500, top_p=0.9, temperature=0.7
             )
@@ -843,6 +847,7 @@ def process_transcript_to_summaries(transcript, user):
                             return []
                         else:
                             attempts += 1
+                            time.sleep(10.0)
     return summary_parts
 
 
@@ -893,8 +898,10 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     fields_list = list(fields.values_list("label", flat=True))
     workflow.resource_id = str(resource.id)
     workflow.resource_type = resource_type
-    workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
-    workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+        workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
+        workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
     meeting = workflow.meeting
     has_error = False
@@ -954,7 +961,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
                         workflow.datetime_created.date(), fields_list, summary_parts
                     )
-                    tokens = max_token_calculator(len(summary_body))
+                    tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, summary_body, tokens, top_p=0.9, temperature=0.7
                     )
@@ -967,7 +974,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
-                            # logger.info(f"Summary response: {r}")
+                            logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
                             summary = clean_prompt_string(choice)
                             data = eval(summary)
@@ -989,8 +996,11 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         workflow.save()
                         break
                     except StopReasonLength:
-                        tokens += 500
-                        continue
+                        if tokens >= 2000:
+                            break
+                        else:
+                            tokens += 500
+                            continue
                     except ServerError:
                         if attempts >= 5:
                             has_error = True
@@ -998,6 +1008,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             break
                         else:
                             attempts += 1
+                            time.sleep(10.0)
                     except ValueError as e:
                         print(e)
                         if str(e) == "substring not found":
@@ -1031,6 +1042,19 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         else:
             has_error = True
             error_message = ":no_entry_sign: We could not find a transcript for this meeting"
+    except RecordingNotFound:
+        has_error = True
+        retry = context.get("retry_attempts", 0) + 1
+        context.update(retry_attempts=retry)
+        error_message = (
+            f":rocket: Looks like you're transcript is not done processing, we'll try again in a bit!"
+            if retry <= 3
+            else "We could not find a recording for this meeting"
+        )
+        if retry < 3:
+            emit_process_get_transcript_and_update_crm(
+                payload, context, schedule=(datetime.now() + timezone.timedelta(minutes=30))
+            )
     except Exception as e:
         logger.exception(e)
         has_error = True
@@ -1112,8 +1136,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
             ),
         ]
     else:
-        workflow.failed_task_description.append(f"MEETING_REVIEW__UPDATE_RESOURCE.{error_message}")
-        workflow.save()
         blocks = [
             block_builders.header_block("AI Generated Call Summary"),
             block_builders.context_block(f"Meeting: {meeting.topic}"),

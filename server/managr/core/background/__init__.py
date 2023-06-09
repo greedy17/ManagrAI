@@ -42,6 +42,7 @@ from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
 from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
+from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
 
 logger = logging.getLogger("managr")
 
@@ -1301,37 +1302,10 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             Client = Variable_Client(timeout)
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
-
+                r = _handle_response(r)
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
-                stop_reason = choice["finish_reason"]
-                if stop_reason == "length":
-                    if token_amount <= 2000:
-                        if workflow_id is None:
-                            slack_res = slack_requests.update_channel_message(
-                                context.get("channel"),
-                                context.get("ts"),
-                                user.organization.slack_integration.access_token,
-                                block_set=[
-                                    block_builders.section_with_button_block(
-                                        "Reopen Chat",
-                                        "OPEN_CHAT",
-                                        "Look like your prompt message is too long to process. Try removing white spaces!",
-                                        action_id=action_with_params(
-                                            slack_consts.REOPEN_CHAT_MODAL,
-                                            [f"form_id={str(form.id)}"],
-                                        ),
-                                    )
-                                ],
-                            )
 
-                        return
-
-                    else:
-                        token_amount += 500
-                        continue
                 text = choice["text"]
                 cleaned_choice = clean_prompt_string(text)
                 data = eval(cleaned_choice)
@@ -1397,12 +1371,28 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 else:
                     has_error = True
                 break
+        except StopReasonLength:
+            if token_amount <= 2000:
+                if workflow_id is None:
+                    slack_res = slack_requests.update_channel_message(
+                        context.get("channel"),
+                        context.get("ts"),
+                        user.organization.slack_integration.access_token,
+                        block_set=[
+                            block_builders.section_with_button_block(
+                                "Reopen Chat",
+                                "OPEN_CHAT",
+                                "Look like your prompt message is too long to process. Try removing white spaces!",
+                                action_id=action_with_params(
+                                    slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"],
+                                ),
+                            )
+                        ],
+                    )
+                return
             else:
-                if attempts >= 5:
-                    break
-                else:
-                    attempts += 1
-                    continue
+                token_amount += 500
+                continue
         except httpx.ReadTimeout as e:
             timeout += 30.0
             if timeout >= 120.0:
@@ -1512,9 +1502,8 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
         try:
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
+                r = _handle_response(r)
                 choice = r["choices"][0]["text"]
                 data = eval(
                     choice[choice.index("{") : choice.index("}") + 1]
@@ -1543,8 +1532,6 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
                 else:
                     has_error = True
                 break
-            else:
-                attempts += 1
         except Exception as e:
             logger.exception(e)
             return
@@ -1572,10 +1559,9 @@ def _process_send_email_draft(payload, context):
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 text = r.get("choices")[0].get("text")
-                break
+            break
         except Exception as e:
             logger.exception(e)
             text = "There was an error generating your draft"
@@ -1635,8 +1621,7 @@ def _process_send_next_steps(payload, context):
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 text = r.get("choices")[0].get("text")
                 break
         except Exception as e:
@@ -1732,7 +1717,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
 @background()
 def _process_send_summary_to_dm(payload, context):
     form_ids = context.get("form_ids", [])
-    if len(form_ids):
+    if form_ids and len(form_ids):
         form_ids = form_ids.split(",")
         submitted_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids).exclude(
             template__resource="OpportunityLineItem"
@@ -1744,10 +1729,6 @@ def _process_send_summary_to_dm(payload, context):
         )
     main_form = submitted_forms.filter(template__form_type__in=["CREATE", "UPDATE"]).first()
     user = main_form.user
-    old_data = dict()
-    if main_form.template.form_type == "UPDATE":
-        for additional_stage_form in submitted_forms:
-            old_data = {**old_data, **additional_stage_form.previous_data}
     new_data = dict()
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
@@ -1789,15 +1770,13 @@ def _process_send_summary_to_dm(payload, context):
 
 @background()
 def _process_add_call_analysis(workflow_id, summaries):
-    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
     from managr.core.utils import max_token_calculator
     import httpx
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    user = workflow.user
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    tokens = max_token_calculator(len(prompt))
+    tokens = max_token_calculator(prompt)
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, tokens)
     has_error = False
     attempts = 1
@@ -1810,8 +1789,11 @@ def _process_add_call_analysis(workflow_id, summaries):
             text = r.get("choices")[0].get("text")
             break
         except StopReasonLength:
-            tokens += 500
-            continue
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
         except ServerError:
             if attempts >= 5:
                 has_error = True
@@ -1819,6 +1801,7 @@ def _process_add_call_analysis(workflow_id, summaries):
                 break
             else:
                 attempts += 1
+                time.sleep(5.0)
         except ValueError as e:
             print(e)
             if str(e) == "substring not found":
@@ -1837,7 +1820,8 @@ def _process_add_call_analysis(workflow_id, summaries):
                 break
             else:
                 timeout += 30.0
-    print(r)
+        except Exception as e:
+            logger.exception(f"Unknown error on call analysis for {str(workflow.id)} <{e}>")
     if has_error:
         return
     else:
