@@ -788,6 +788,7 @@ def process_transcript_to_summaries(transcript, user):
     from managr.core.exceptions import _handle_response
     from managr.core import constants as core_consts
     from managr.utils.client import Variable_Client
+    from managr.core.utils import max_token_calculator
 
     summary_parts = []
     current_minute = 5
@@ -816,6 +817,9 @@ def process_transcript_to_summaries(transcript, user):
                 .replace("    ", "")
                 .replace(" --> ", "-")
             )
+            if not settings.IN_PROD:
+                token_check = max_token_calculator(transcript_body)
+                print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                 user.email, transcript_body, 500, top_p=0.9, temperature=0.7
             )
