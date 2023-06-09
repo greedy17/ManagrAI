@@ -2,6 +2,7 @@
   <div>
     <div
       class="field-container"
+      :class="{ seperator: field.label === 'Notes' }"
       v-if="
         field.dataType === 'TextArea' ||
         field.dataType === 'String' ||
@@ -16,7 +17,7 @@
         :value="placeholder"
         :name="field.apiName"
         v-autoresize
-        rows="1"
+        :rows="field.label === 'Notes' ? 3 : 1"
       />
     </div>
 
@@ -420,16 +421,21 @@ export default {
 }
 
 .stage-container {
-  padding: 0.5rem;
-  border: 1px solid $light-gray-blue;
+  // border-left: 1px solid $light-gray-blue;
   margin-top: 1.5rem;
-  padding-bottom: 2rem;
+
   border-radius: 4px;
   position: relative;
 
-  // label {
-  //   color: $light-gray-blue;
-  // }
+  label {
+    color: $coral;
+  }
+}
+
+.seperator {
+  border-bottom: 1px solid $soft-gray;
+  border-radius: 0 !important;
+  padding-bottom: 1.25rem;
 }
 
 .filter-blue {

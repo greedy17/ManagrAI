@@ -25,7 +25,12 @@
 
             <div v-if="message.generated">
               <div style="margin-top: 0.5rem" v-if="!generating" class="row">
-                <button class="content-button padding-small">
+                <button
+                  @click="
+                    regenerate(message.generatedType, message.data['meeting_comments'], message.id)
+                  "
+                  class="content-button padding-small"
+                >
                   <img
                     style="margin-right: 0.6rem"
                     src="@/assets/images/sparkle.svg"
@@ -34,27 +39,6 @@
                   />
                   Regenerate
                 </button>
-                <!-- 
-                <button
-                  @click="nextSteps(message.data['meeting_comments'], message.id)"
-                  class="content-button padding-small"
-                >
-                  <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
-                  Suggest next steps
-                </button>
-                <button
-                  @click="
-                    getSummary(
-                      message.data,
-                      message.integrationId,
-                      message.resourceType,
-                      message.id,
-                    )
-                  "
-                  class="content-button padding-small"
-                >
-                  <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
-                </button> -->
               </div>
 
               <div v-else style="border-radius: 6px; padding: 0.25rem 0" class="row">
@@ -207,18 +191,15 @@ export default {
     }
   },
   methods: {
+    regenerate(type, data, id, editId) {
+      console.log(type)
+      if (type === 'email') {
+        this.regenerateEmail(data, id, editId)
+      }
+    },
     clearMessages() {
       this.$store.dispatch('clearMessages')
     },
-    // async getAllCustomSlackForms() {
-    //   try {
-    //     let res = await SlackOAuth.api.slackFormInstances()
-    //     console.log(res)
-    //   } catch (e) {
-    //     console.log(e)
-    //   } finally {
-    //   }
-    // },
     async generateEmail(note, id) {
       this.generating = true
       try {
@@ -233,6 +214,8 @@ export default {
         this.$store.dispatch('editMessages', {
           id: id,
           generated: true,
+          generatedType: 'email',
+          generatedId: this.generativeRes['id'],
           value: 'Email generated',
         })
         this.setMessage({
@@ -241,6 +224,25 @@ export default {
           value: this.generativeRes['res'],
         })
 
+        this.generating = false
+      }
+    },
+
+    async regenerateEmail(note, id, editId) {
+      this.generating = true
+      try {
+        let res = await User.api.chatEmail({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: editId,
+          value: this.generativeRes['res'],
+        })
         this.generating = false
       }
     },

@@ -227,15 +227,29 @@ export default {
         this.chatData.data[key] = val
       }
     },
+    removeEmptyValues(obj) {
+      for (let key in obj) {
+        console.log(!!obj.hasOwnProperty(key))
+        if (obj.hasOwnProperty(key)) {
+          if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
+            delete obj[key]
+          }
+        }
+      }
+      return obj
+    },
+
     async onSubmitChat() {
       this.submitting = true
+      let data = this.removeEmptyValues(this.chatData.data)
       try {
         const res = await CRMObjects.api.updateResource({
-          form_data: this.chatData.data,
+          form_data: data,
           resource_type: this.chatData.resourceType,
           form_type: this.chatData.formType,
           resource_id: this.chatData.resourceId,
           integration_ids: [this.chatData.integrationId],
+          chat_form_id: [this.chatData.formId],
           from_workflow: false,
           workflow_title: 'None',
         })
@@ -246,8 +260,8 @@ export default {
         setTimeout(() => {
           this.submitting = false
           this.toggleChatModal()
-          this.$store.dispatch('messageUpdated', this.chatData.id)
-        }, 600)
+          this.$store.dispatch('messageUpdated', this.chatData.id, this.chatData.data)
+        }, 1000)
       }
     },
     test(log) {
@@ -368,11 +382,11 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 400px;
+  width: 450px;
 }
 
 #right-sidebar {
-  width: 400px;
+  width: 450px;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.5rem;
 }

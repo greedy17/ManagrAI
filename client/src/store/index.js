@@ -107,14 +107,19 @@ const mutations = {
   UPDATE_MESSAGES: (state, payload) => {
     state.messages.push(payload)
   },
-  EDIT_MESSAGES: (state, { id, generated, value }) => {
+  EDIT_MESSAGES: (state, { id, generated, generatedType, generatedId, value }) => {
 
     let newMsg
     newMsg = state.messages.filter((message) => message.id === id)
-    newMsg[0]['generated'] = generated
-    newMsg[0]['value'] = value
-
-    console.log(newMsg)
+    if (generated) {
+      newMsg[0]['generated'] = generated
+      newMsg[0]['generatedType'] = generatedType
+      newMsg[0]['generatedId'] = generatedId
+      newMsg[0]['value'] = value
+    } else {
+      newMsg[0]['value'] = value
+      console.log('HERE I AM BROTHER')
+    }
 
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
@@ -124,11 +129,13 @@ const mutations = {
     }
   },
   MESSAGE_UPDATED: (state, payload) => {
-    let updatedMsg = state.messages.filter(msg => msg.id === payload)
+    console.log(payload)
+    let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
-    updatedMsg[0].value = `successfully updated ${updatedMsg[0].resource}! `
+    updatedMsg[0].data = payload.data
+    updatedMsg[0].value = `successfully updated ${updatedMsg[0].resource}!`
 
-    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload);
+    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
 
     if (indexToUpdate !== -1) {
       state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
@@ -171,14 +178,15 @@ const actions = {
       console.log(e)
     }
   },
-  editMessages({ commit }, { id, generated, value }) {
-    commit('EDIT_MESSAGES', { id, generated, value })
+  editMessages({ commit }, { id, generated, generatedType, generatedId, value }) {
+    commit('EDIT_MESSAGES', { id, generated, generatedType, generatedId, value })
   },
   updateMessages({ commit }, message) {
     commit('UPDATE_MESSAGES', message)
   },
-  messageUpdated({ commit }, id) {
-    commit('MESSAGE_UPDATED', id)
+  messageUpdated({ commit }, { id, data }) {
+    console.log('HERE', id, data)
+    commit('MESSAGE_UPDATED', { id, data })
   },
   clearMessages({ commit }) {
     commit('CLEAR_MESSAGES',)

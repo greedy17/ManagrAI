@@ -43,7 +43,7 @@
           @keydown.enter.exact.prevent="testChat"
           class="area-input"
           rows="1"
-          placeholder="Send a message."
+          placeholder="What would you like to do?"
           v-model="message"
           v-autoresize
           ref="chatTextArea"
@@ -82,10 +82,10 @@ export default {
       chatRes: null,
       actions: [
         { name: 'Update', value: 'Update Opportunity Pied Piper' },
-        { name: 'Run review', value: 'Run Review for Opportunity Pied Piper' },
-        { name: 'Get summary', value: 'Get Summary for Opportunity Pied Piper' },
-        { name: 'call summary', value: 'Get Summary for Opportunity Pied Piper' },
-        { name: 'call analysis', value: 'Get Summary for Opportunity Pied Piper' },
+        { name: 'Run Review', value: 'Run Review for Opportunity Pied Piper' },
+        { name: 'Get Summary', value: 'Get Summary for Opportunity Pied Piper' },
+        { name: 'Call Summary', value: 'Get call summary for Opportunity Pied Piper' },
+        { name: 'Call Analysis', value: 'Get call analysis for Opportunity Pied Piper' },
       ],
     }
   },
