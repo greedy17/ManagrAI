@@ -3721,12 +3721,16 @@ def process_open_generative_action_modal(payload, context):
             block_builders.option("Draft Follow-up Email", "DRAFT_EMAIL"),
             block_builders.option("Suggest Next Steps", "NEXT_STEPS"),
             block_builders.option("Get Summary", "SEND_SUMMARY"),
+            block_builders.option("Ask Managr", "ASK_MANAGR"),
         ]
         blocks = [
             block_builders.static_select(
                 "Select the type of content to generate",
                 options=options,
                 block_id="GENERATIVE_ACTION",
+                action_id=action_with_params(
+                    slack_const.PROCESS_SELECTED_GENERATIVE_ACTION, params=[f"u={str(user.id)}"]
+                ),
             ),
             block_builders.context_block("Powered by ManagrGPT © :robot_face:"),
         ]
@@ -3756,11 +3760,96 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
-    pm = payload.get("view").get("private_metadata")
-    action = payload["actions"][0]["selected_option"]["value"]
-    action_func = GENERATIVE_ACTION_SWITCHER[action]
-    action_res = action_func(payload, json.loads(pm))
-    return {"response_action": "clear"}
+    print(payload)
+    print(context)
+    user = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload.get("view").get("private_metadata"))
+    resource_type = context.get("resource_type", None)
+    resource_id = None
+    print(resource_type)
+    if resource_type:
+        action = "ASK_MANAGR"
+        if (
+            len(payload["actions"])
+            and slack_const.PROCESS_SELECTED_GENERATIVE_ACTION in payload["actions"][0]["action_id"]
+        ):
+            resource_id = payload["actions"][0]["selected_option"]["value"]
+    else:
+        generative_action_values = payload["view"]["state"]["values"]["GENERATIVE_ACTION"]
+        action = generative_action_values.get(list(generative_action_values.keys())[0])[
+            "selected_option"
+        ]["value"]
+    if action == "ASK_MANAGR":
+        resource_list = (
+            ["Opportunity", "Account", "Contact", "Lead"]
+            if user.crm == "SALESFORCE"
+            else ["Company", "Deal", "Contact"]
+        )
+        options = "%".join(resource_list)
+        blocks = [
+            *get_block_set(
+                "ask_managr_blockset",
+                {
+                    "u": str(user.id),
+                    "options": options,
+                    "action_id": slack_const.PROCESS_SELECTED_GENERATIVE_ACTION,
+                    "resource_type": resource_type,
+                    "resource_id": resource_id,
+                },
+            )
+        ]
+        user = User.objects.get(id=pm.get("u"))
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.PROCESS_ASK_MANAGR,
+                "title": {"type": "plain_text", "text": "Generate Content"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit"},
+                "private_metadata": json.dumps(context),
+                "external_id": f"ask_managr_blockset.{str(uuid.uuid4())}",
+            },
+        }
+        try:
+            slack_requests.generic_request(
+                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+                data,
+                access_token=user.organization.slack_integration.access_token,
+            )
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+            )
+        return
+    else:
+        action_func = GENERATIVE_ACTION_SWITCHER[action]
+        loading_block = [
+            *get_block_set("loading", {"message": ":robot_face: Generating content..."})
+        ]
+        try:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=loading_block,
+            )
+            pm.update(ts=res["ts"])
+            action_res = action_func(payload, pm)
+        except Exception as e:
+            logger.exception(e)
+        return {"response_action": "clear"}
 
 
 def process_regenerate_action(payload, context):
@@ -4146,11 +4235,13 @@ def handle_block_actions(payload):
         slack_const.CALL_LAUNCH_SUMMARY_REVIEW: process_launch_call_summary_review,
         slack_const.OPEN_REVIEW_CHAT_UPDATE_MODAL: process_open_review_chat_update_modal,
         slack_const.SEND_CALL_ANALYSIS_TO_DM: process_send_call_analysis_to_dm,
+        slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
+    print(action_id)
     action_params = processed_string.get("params")
     # added special key __block_action to allow us to override the defaults since the action_id is used for both the suggestions and the actions
     if action_params.get("__block_action", None):

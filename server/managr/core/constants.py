@@ -138,6 +138,47 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
     return body
 
 
+def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
+
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    user = User.objects.get(id=user_id)
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    workflow_check = MeetingWorkflow.objects.filter(user=user, resource_id=resource_id).first()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user_id, resource_id=resource_id
+    ).first()
+    body = f"""You are an experience VP of Sales, an expert at getting deals to close quickly. 
+    You are also slightly pushy and very direct. I am your sales rep and need your help, my request is below. 
+    Output tone must be casual, direct, and persuasive. Output length cannot exceed 800 characters.
+    My request:{prompt}\n
+    Provide an actionable suggestion based on the data below: CRM Data, Summary and Analysis.\n"""
+    if form_check and form_check.saved_data:
+        body += f"CRM Data: {form_check.saved_data}\n"
+    else:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(resource=resource_type, form_type="UPDATE")
+            .first()
+        )
+        api_names = template.list_field_api_names()
+        data_from_resource = {}
+        for name in api_names:
+            data_from_resource[name] = resource.secondary_data[name]
+        print(data_from_resource)
+        body += f"CRM Data: {data_from_resource}\n"
+    if workflow_check:
+        if workflow_check.transcript_summary:
+            body += f"Summary: {workflow_check.transcript_summary}\n"
+        if workflow_check.transcript_analysis:
+            body += f"Analysis: {workflow_check.transcript_analysis}\n"
+    return body
+
+
 # OAuth permission scopes to request from Nylas
 SCOPE_EMAIL_CALENDAR = "calendar"
 
@@ -324,3 +365,4 @@ def REMINDERS():
         REMINDER_MESSAGE_REP: True,
         REMINDER_MESSAGE_MANAGER: True,
     }
+
