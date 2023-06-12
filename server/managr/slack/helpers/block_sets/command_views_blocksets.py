@@ -631,7 +631,6 @@ def ask_managr_blockset(context, *args, **kwargs):
                 else None,
             ),
         )
-    print(resource_type, resource_id)
     if resource_id and resource_type:
         blocks.extend(
             [

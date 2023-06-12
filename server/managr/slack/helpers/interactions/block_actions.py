@@ -3760,13 +3760,10 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
-    print(payload)
-    print(context)
     user = User.objects.get(id=context.get("u"))
     pm = json.loads(payload.get("view").get("private_metadata"))
     resource_type = context.get("resource_type", None)
     resource_id = None
-    print(resource_type)
     if resource_type:
         action = "ASK_MANAGR"
         if (
@@ -4241,7 +4238,6 @@ def handle_block_actions(payload):
     action_query_string = payload["actions"][0]["action_id"]
     processed_string = process_action_id(action_query_string)
     action_id = processed_string.get("true_id")
-    print(action_id)
     action_params = processed_string.get("params")
     # added special key __block_action to allow us to override the defaults since the action_id is used for both the suggestions and the actions
     if action_params.get("__block_action", None):

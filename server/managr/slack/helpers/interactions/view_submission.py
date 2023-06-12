@@ -2819,7 +2819,6 @@ def process_chat_action_submit(payload, context):
 
 
 def process_submit_ask_managr(payload, context):
-    print(context)
     user = User.objects.get(id=context.get("u"))
     resource_list = (
         ["Opportunity", "Account", "Contact", "Lead"]

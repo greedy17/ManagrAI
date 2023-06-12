@@ -144,6 +144,7 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
     from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
     from managr.salesforce.routes import routes as sf_routes
     from managr.hubspot.routes import routes as hs_routes
+    from datetime import datetime
 
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
@@ -152,13 +153,16 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
     form_check = OrgCustomSlackFormInstance.objects.filter(
         user=user_id, resource_id=resource_id
     ).first()
-    body = f"""You are an experience VP of Sales, an expert at getting deals to close quickly. 
-    You are also slightly pushy and very direct. I am your sales rep and need your help, my request is below. 
-    Output tone must be casual, direct, and persuasive. Output length cannot exceed 800 characters.
-    My request:{prompt}\n
-    Provide an actionable suggestion based on the data below: CRM Data, Summary and Analysis.\n"""
+    today = datetime.today()
+    body = f"""Today's date is {today}. You are a slightly pushy, very direct and charismatic VP of sales. 
+    I am your sales rep and need your help. You must follow the instructions below:
+    1) Answer my request, speaking to me directly. Use the CRM data below for context
+    2) Output tone must be casual, direct, and persuasive.
+    3) Output length cannot exceed 800 characters.
+    My request:{prompt}\n"""
+
     if form_check and form_check.saved_data:
-        body += f"CRM Data: {form_check.saved_data}\n"
+        data_from_resource = form_check.saved_data
     else:
         template = (
             OrgCustomSlackForm.objects.for_user(user)
@@ -169,13 +173,13 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
         data_from_resource = {}
         for name in api_names:
             data_from_resource[name] = resource.secondary_data[name]
-        print(data_from_resource)
-        body += f"CRM Data: {data_from_resource}\n"
+
     if workflow_check:
         if workflow_check.transcript_summary:
-            body += f"Summary: {workflow_check.transcript_summary}\n"
+            data_from_resource["summary"] = workflow_check.transcript_summary
         if workflow_check.transcript_analysis:
-            body += f"Analysis: {workflow_check.transcript_analysis}\n"
+            data_from_resource["analysis"] = workflow_check.transcript_analysis
+    body += f"CRM Data: {data_from_resource}\n"
     return body
 
 
