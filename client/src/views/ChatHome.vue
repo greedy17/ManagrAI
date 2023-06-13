@@ -176,7 +176,7 @@
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
     <aside id="right-sidebar">
-      <RightBar @set-fields="setFormFields" @set-stages="setStageFields" />
+      <RightBar ref="rightSideBar" @set-fields="setFormFields" @set-stages="setStageFields" />
     </aside>
   </div>
 </template>
@@ -211,6 +211,7 @@ export default {
       chatData: null,
       formFields: [],
       stageFields: [],
+      barOpen: true,
     }
   },
   created() {
@@ -218,6 +219,12 @@ export default {
   },
   watch: {},
   methods: {
+    toggleLeftbarOn() {
+      this.barOpen = true
+    },
+    toggleLeftbarOff() {
+      this.barOpen = false
+    },
     setUpdateValues(key, val, multi) {
       if (multi) {
         this.chatData.data[key] = this.chatData.data[key]
@@ -227,27 +234,42 @@ export default {
         this.chatData.data[key] = val
       }
     },
+    removeEmptyValues(obj) {
+      for (let key in obj) {
+        console.log(!!obj.hasOwnProperty(key))
+        if (obj.hasOwnProperty(key)) {
+          if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
+            delete obj[key]
+          }
+        }
+      }
+      return obj
+    },
+
     async onSubmitChat() {
       this.submitting = true
+      let data = this.removeEmptyValues(this.chatData.data)
       try {
         const res = await CRMObjects.api.updateResource({
-          form_data: this.chatData.data,
+          form_data: data,
           resource_type: this.chatData.resourceType,
           form_type: this.chatData.formType,
           resource_id: this.chatData.resourceId,
           integration_ids: [this.chatData.integrationId],
+          chat_form_id: [this.chatData.formId],
           from_workflow: false,
           workflow_title: 'None',
+          stage_name: null,
         })
-        console.log(res)
+        this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
       } catch (e) {
         console.log(e)
       } finally {
+        this.$refs.rightSideBar.reloadOpps()
         setTimeout(() => {
-          this.submitting = false
           this.toggleChatModal()
-          this.$store.dispatch('messageUpdated', this.chatData.id)
-        }, 600)
+          this.submitting = false
+        }, 1000)
       }
     },
     test(log) {
@@ -329,7 +351,6 @@ body {
 .chat-display {
   display: flex;
 }
-
 #chat {
   height: 100vh;
   width: 100vw;
@@ -352,15 +373,12 @@ body {
 
 #left-sidebar {
   width: 260px;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  padding-bottom: 0;
 }
 
 #main {
   flex: 1;
   width: 54vw;
-  background-color: $off-white;
+  background-color: white;
   z-index: 5;
 }
 
@@ -368,13 +386,12 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 400px;
+  width: 450px;
 }
 
 #right-sidebar {
-  width: 400px;
+  width: 450px;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
 }
 
 @media (max-width: 1000px) {
