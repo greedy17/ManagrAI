@@ -163,6 +163,10 @@ def emit_process_send_call_summary_to_dm(payload, context):
     return _process_send_call_summary_to_dm(payload, context)
 
 
+def emit_process_send_ask_managr_to_dm(payload, context):
+    return _process_send_ask_managr_to_dm(payload, context)
+
+
 #########################################################
 # Helper functions
 #########################################################
@@ -1887,3 +1891,45 @@ def _process_send_call_summary_to_dm(payload, context):
         )
     return
 
+
+@background
+def _process_send_ask_managr_to_dm(payload, context):
+    user = User.objects.get(id=context.get("u"))
+
+    prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
+        str(user.id),
+        context.get("prompt"),
+        context.get("resource_type"),
+        context.get("resource_id"),
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = _handle_response(r)
+            text = r.get("choices")[0].get("text")
+            break
+        except Exception as e:
+            logger.info(e)
+    blocks = [
+        block_builders.header_block("Ask Managr"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn"),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
