@@ -237,8 +237,7 @@ class CRMObjectViewSet(
             while True:
                 crm = user.crm_account
 
-                if "meeting_comments" in all_form_data.keys():
-                    print("IN THE BUILDING")
+                if "meeting_comments" in all_form_data.keys() and not chat_form_id:
                     if all_form_data.get("meeting_comments", None) is not None:
                         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                     data = {
@@ -306,9 +305,7 @@ class CRMObjectViewSet(
                 ):
                     _send_instant_alert(form_ids)
                 all_forms.update(is_submitted=True, submission_date=timezone.now())
-                print("IM IN THE FINAL SECTION AS WELL")
                 value_update = main_form.resource_object.update_database_values(all_form_data)
-                print("VALUE UPDATE", value_update)
                 # from_workflow = data.get("from_workflow")
                 # title = data.get("workflow_title", None)
                 # if from_workflow:

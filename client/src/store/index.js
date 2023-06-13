@@ -118,7 +118,6 @@ const mutations = {
       newMsg[0]['value'] = value
     } else {
       newMsg[0]['value'] = value
-      console.log('HERE I AM BROTHER')
     }
 
     for (let i = 0; i < state.messages.length; i++) {
@@ -140,9 +139,6 @@ const mutations = {
     if (indexToUpdate !== -1) {
       state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
     }
-    console.log(updatedMsg, 'UPDATED MESSAGE')
-    console.log(state.messages, 'MESSAGES')
-
   },
   CLEAR_MESSAGES: (state) => {
     state.messages = []
@@ -185,7 +181,6 @@ const actions = {
     commit('UPDATE_MESSAGES', message)
   },
   messageUpdated({ commit }, { id, data }) {
-    console.log('HERE', id, data)
     commit('MESSAGE_UPDATED', { id, data })
   },
   clearMessages({ commit }) {

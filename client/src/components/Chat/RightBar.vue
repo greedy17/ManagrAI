@@ -2,35 +2,7 @@
   <section class="right-container">
     <header>
       <section v-if="selectedOpp">
-        <div class="flexed-row-s">
-          <!-- <div class="flexed-row">
-            <span class="icon-bg">
-              <img
-                @click="selectedOpp = null"
-                src="@/assets/images/back.svg"
-                height="16px;width:16px"
-                alt=""
-              />
-            </span>
-
-            <p>{{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</p>
-          </div>
-          <div style="margin-left: -8px" class="flexed-row">
-            <img
-              :class="{ 'rotate opaque not-allowed': oppsLoading }"
-              @click="reloadOpps"
-              src="@/assets/images/refresh.svg"
-              height="18px"
-              alt=""
-            />
-
-            <font-awesome-icon
-              style="height: 24px; width: 24px; color: #0d9dda"
-              icon="fa-brands fa-salesforce"
-              @click="openInCrm(selectedOpp.integration_id)"
-            />
-          </div> -->
-        </div>
+        <div class="flexed-row-s"></div>
         <span style="margin-top: -4px" class="flexed-row-spread header-bg">
           <div class="elipsis-text">
             <span class="icon-bg">
@@ -65,11 +37,6 @@
       </section>
 
       <section v-else>
-        <!-- <div class="flexed-row-spread">
-          <p class="menu-option">Pipeline</p>
-          <p class="menu-option">Call Summaries</p>
-          <p class="menu-option">Email</p>
-        </div> -->
         <div class="flexed-row-spread">
           <p style="margin-bottom: 0.25rem">
             All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
@@ -251,16 +218,38 @@
       </section>
     </header>
 
-    <div v-if="selectedOpp" class="section-header">
+    <div class="switcher" v-if="selectedOpp">
+      <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
+        <img src="@/assets/images/crmlist.svg" height="16px" alt="" />
+        Details
+      </div>
+      <div
+        @click="switchView('notes')"
+        :class="{ activeswitch: view === 'notes' }"
+        class="switch-item"
+      >
+        <img src="@/assets/images/note.svg" height="12px" alt="" />
+        Notes
+      </div>
+      <div style="cursor: not-allowed" class="switch-item">
+        <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
+        Summaries
+      </div>
+    </div>
+
+    <!-- <div v-if="selectedOpp && view === 'crm'" class="section-header">
       <h4>
         {{ user.crm === 'SALESFORCE' ? 'Salesforce Fields' : 'Hubspot properties' }}
       </h4>
 
       <img src="@/assets/images/settings.svg" height="18px" alt="" />
-    </div>
+    </div> -->
 
     <div class="selected-opp-container" v-if="selectedOpp">
-      <div style="margin-bottom: 0.25rem" class="selected-opp-section bordered">
+      <div v-show="view === 'crm'" class="selected-opp-section bordered">
+        <div class="absolute-img">
+          <img src="@/assets/images/settings.svg" height="18px" alt="" />
+        </div>
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <p style="font-size: 12px" class="gray-text">
@@ -289,14 +278,16 @@
                 :field="field"
                 :showing="editing"
                 @close-inline="closeInline"
-                @setFields="setOppForms"
+                @setFields="reloadOpps"
               />
             </div>
           </div>
         </div>
       </div>
-      <div style="padding-top: 0" class="selected-opp-section">
-        <h4 style="margin-top: 0" class="selected-opp sticky-top gray-bg">Notes & History</h4>
+      <div v-show="view === 'notes'" class="selected-opp-section">
+        <h4 style="margin-top: 0; background-color: white" class="selected-opp">
+          June 2023 <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+        </h4>
         <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
             <div class="note-section">
@@ -379,6 +370,7 @@ export default {
   },
   data() {
     return {
+      view: 'crm',
       stageValidationFields: {},
       updateFormData: {},
       loadingNotes: false,
@@ -546,6 +538,11 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    switchView(view) {
+      if (view !== this.view) {
+        this.view = view
+      }
+    },
     async getNotes() {
       if (this.selectedOpp) {
         this.loadingNotes = true
@@ -602,12 +599,15 @@ export default {
     },
     async reloadOpps() {
       this.oppsLoading = true
+      let newOpp
       try {
-        await this.$store.dispatch('loadChatOpps').then(() => {
-          this.setOppForms()
-        })
+        let res = await this.$store.dispatch('loadChatOpps')
+        if (this.selectedOpp) {
+          newOpp = res.results.filter((opp) => opp.id === this.selectedOpp.id)
+          this.selectedOpp = newOpp[0]
+        }
       } catch (e) {
-        console.log('error loading opps')
+        console.log(e)
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
@@ -863,6 +863,51 @@ export default {
   }
 }
 
+.switcher {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 6px;
+  padding: 2px 0;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $light-gray-blue;
+  white-space: nowrap;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-left: -0.25rem;
+  }
+}
+
+.activeswitch {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $base-gray;
+  img {
+    filter: none;
+  }
+}
+
+.absolute-img {
+  position: absolute;
+  top: 1rem;
+  right: 2px;
+  background-color: white;
+}
+
 .shimmer {
   animation: shimmer 2s;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
@@ -906,8 +951,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   margin: 0;
-  padding-top: 0.25rem;
-  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
   padding-left: 0.5rem;
 
   h4,
@@ -934,6 +979,7 @@ export default {
 
 .right-container {
   position: sticky;
+  background-color: white;
   // right: 0;
   // top: 0;
   overflow: hidden;
@@ -941,7 +987,7 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 1rem 0.5rem 0.25rem 1rem;
+  padding: 1rem 1.25rem 0 1.25rem;
   font-family: $base-font-family;
   font-size: 14px;
 }
@@ -986,7 +1032,7 @@ export default {
 }
 .opp-scroll-container {
   height: 100%;
-  width: 100%;
+  width: 101%;
   overflow-y: scroll;
   scroll-behavior: smooth;
   padding: 0.5rem 0;
@@ -1116,7 +1162,7 @@ header {
 .note-section {
   background-color: white;
   width: 409px;
-  padding: 0 0 1rem 1rem;
+  padding: 0 0.5rem 1rem 1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   margin: 0.5rem 0;
@@ -1126,14 +1172,14 @@ header {
 .bordered {
   width: 100%;
   background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
   padding: 0 0 0.5rem 1rem !important;
   border-radius: 5px;
-  margin: 0.5rem 0;
+  margin-top: 0.5rem;
 }
 
 .selected-opp-section {
-  height: 45%;
+  height: 100%;
   width: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
@@ -1146,9 +1192,8 @@ header {
 }
 
 .selected-opp-section:last-of-type {
-  height: 55%;
+  height: 98%;
   width: 102%;
-  border: none;
 }
 
 .selected-opp-section::-webkit-scrollbar {
@@ -1176,6 +1221,9 @@ header {
 
 .selected-opp-container {
   height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 0 !important;
 }
 
 .input {
