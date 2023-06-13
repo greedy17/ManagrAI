@@ -636,6 +636,7 @@ export default {
 }
 
 .small-button {
+  @include chat-button();
   border: 1px solid rgba(0, 0, 0, 0.1);
   background-color: transparent;
   display: flex;
