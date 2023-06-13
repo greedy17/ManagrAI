@@ -2,21 +2,21 @@
   <section class="chat-container">
     <header class="title-header">
       <p style="margin-right: auto"><span>Latest: </span>{{ chatTitle }}</p>
-      <div class="row pointer">
+      <!-- <div class="row pointer">
         <img src="@/assets/images/cloud.svg" height="18px" alt="" />
       </div>
 
       <div class="row pointer" @click="clearMessages">
         <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
-      </div>
-      <!-- <button class="small-button">
+      </div> -->
+      <button class="small-button">
         <img src="@/assets/images/cloud.svg" height="16px" alt="" />
         sync
       </button>
       <button class="small-button">
         <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
         clear
-      </button> -->
+      </button>
     </header>
     <div class="margin-top" ref="chatWindow">
       <div v-for="(message, i) in messages" :key="i" class="col-start">
@@ -636,20 +636,20 @@ export default {
 }
 
 .small-button {
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 12px;
-  padding: 0.25rem;
+  padding: 0.35rem;
   margin-left: 1rem;
   font-weight: normal;
 
   img {
     margin: 0;
-    margin-right: 0.25rem;
+    margin-right: 0.5rem;
   }
 }
 
