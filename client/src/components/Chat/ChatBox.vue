@@ -13,7 +13,7 @@
         <img src="@/assets/images/cloud.svg" height="16px" alt="" />
         sync
       </button>
-      <button class="small-button">
+      <button @click="clearMessages" class="small-button">
         <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
         clear
       </button>
