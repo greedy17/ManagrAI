@@ -1914,8 +1914,42 @@ def _process_send_ask_managr_to_dm(payload, context):
             r = _handle_response(r)
             text = r.get("choices")[0].get("text")
             break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = ":no_entry_sign: There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = ":no_entry_sign: Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
         except Exception as e:
-            logger.info(e)
+            logger.exception(f"Unknown error on ask managr <{e}>")
+    if has_error:
+        return
     blocks = [
         block_builders.header_block("Ask Managr"),
         block_builders.divider_block(),
