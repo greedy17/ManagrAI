@@ -20,7 +20,7 @@
     </header>
     <div class="margin-top" ref="chatWindow">
       <div v-for="(message, i) in messages" :key="i" class="col-start">
-        <div :class="{ 'offwhite-bg': message.user === 'bot' }" class="message-container">
+        <div class="message-container">
           <div class="images">
             <span
               v-if="message.user === 'bot' && !message.updated"
@@ -78,7 +78,7 @@
 
         <div
           v-if="message.user === 'bot' && message.formId && !message.updated"
-          class="generate-container 'offwhite-bg'"
+          class="generate-container"
         >
           <button @click="toggleChatModal(message)" class="generate-button green">
             <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
@@ -449,7 +449,7 @@ export default {
 }
 
 .offwhite-bg {
-  background-color: $off-white !important;
+  background-color: white !important;
 }
 
 .message-container {
@@ -463,6 +463,10 @@ export default {
   p {
     padding: 0;
     margin: 0;
+  }
+
+  &:hover {
+    background-color: $off-white !important;
   }
 }
 .margin-top {
@@ -482,6 +486,10 @@ export default {
   padding: 0.5rem 0.75rem;
   line-height: 1.75;
   position: relative;
+
+  &:hover {
+    background-color: $off-white !important;
+  }
 }
 
 .text-container {
@@ -611,7 +619,7 @@ export default {
 
 .generate-container {
   padding: 0 1rem 0.5rem 4.75rem;
-  background-color: $off-white;
+  background-color: white;
   width: 100%;
 }
 
