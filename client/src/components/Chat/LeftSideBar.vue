@@ -57,7 +57,7 @@
               class="menu-item"
             >
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p @click="changeView(alert.title)">{{ alert.title }}</p>
+              <p @click="changeView(alert.title, alert)">{{ alert.title }}</p>
 
               <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">
                 <p>
@@ -137,8 +137,11 @@ export default {
     console.log(this.templates)
   },
   methods: {
-    changeView(view) {
+    changeView(view, alert) {
       this.view = view
+      if (alert) {
+        this.$store.dispatch('setCurrentView', alert)
+      }
     },
     toggleSidebar() {
       this.isOpen = !this.isOpen

@@ -33,6 +33,7 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
+  currentView: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -107,6 +108,9 @@ const mutations = {
   UPDATE_MESSAGES: (state, payload) => {
     state.messages.push(payload)
   },
+  SET_VIEW: (state, payload) => {
+    state.currentView = payload
+  },
   EDIT_MESSAGES: (state, { id, generated, generatedType, generatedId, value }) => {
 
     let newMsg
@@ -173,6 +177,9 @@ const actions = {
     } catch (e) {
       console.log(e)
     }
+  },
+  setCurrentView({ commit }, view) {
+    commit('SET_VIEW', view)
   },
   editMessages({ commit }, { id, generated, generatedType, generatedId, value }) {
     commit('EDIT_MESSAGES', { id, generated, generatedType, generatedId, value })
