@@ -128,7 +128,6 @@ const mutations = {
     }
   },
   MESSAGE_UPDATED: (state, payload) => {
-    console.log(payload)
     let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
     updatedMsg[0].data = payload.data

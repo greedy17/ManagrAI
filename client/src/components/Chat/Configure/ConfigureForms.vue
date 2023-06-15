@@ -323,7 +323,8 @@
                     style="padding: 0.5rem; margin: 0;"
                   >
                     <!-- Delete Form -->
-                    <img src="@/assets/images/trash.svg" class="trash-button" />
+                    <!-- <img src="@/assets/images/trash.svg" class="trash-button" /> -->
+                    <img src="@/assets/images/chat-trash.svg" class="filtered-red" style="height: 14px" alt="" />
                   </button>
                 </div>
               </div>
@@ -1940,6 +1941,9 @@ export default {
           this.savingForm = false
           this.getAllForms()
           this.formChange = false
+          if (this.newCustomForm.formType === 'STAGE_GATING') {
+            this.$router.go()
+          }
         })
     },
     async getAllForms() {
@@ -2885,5 +2889,8 @@ img:hover {
   display: flex; 
   justify-content: space-between; 
   width: 55.75vw;
+}
+.filtered-red {
+  filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
 }
 </style>

@@ -347,12 +347,13 @@
                   @click="openDeleteWorkflow(alert)"
                   v-if="user.id === alert.user"
                 >
-                  <img
+                  <!-- <img
                     src="@/assets/images/trash.svg"
                     style="filter: invert(40%)"
                     height="14px"
                     alt=""
-                  />
+                  /> -->
+                  <img src="@/assets/images/chat-trash.svg" class="filtered-red" style="height: 14px" alt="" />
                 </button>
               </div>
               <div v-if="hasSlackIntegration" class="toggle-container">
@@ -1718,5 +1719,8 @@ a {
 }
 .red-button {
   @include button-danger();
+}
+.filtered-red {
+  filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
 }
 </style>

@@ -27,7 +27,7 @@
         />
       </div>
       <div v-else-if="configPage === 'notes'">
-        <ConfigureSync />
+        <ConfigureNotes />
       </div>
       <div v-else-if="configPage === 'sync'">
         <ConfigureSync />
@@ -51,6 +51,7 @@ import ConfigureForms from './ConfigureForms.vue'
 import ConfigureSync from './ConfigureSync.vue'
 import ConfigureWorkflows from './ConfigureWorkflows.vue'
 import ConfigureAlerts from './ConfigureAlerts.vue'
+import ConfigureNotes from './ConfigureNotes.vue'
 import { SObjectPicklist } from '@/services/salesforce'
 import SlackOAuth from '@/services/slack'
 import { CollectionManager } from '@thinknimble/tn-models'
@@ -70,6 +71,7 @@ export default {
     ConfigureSync,
     ConfigureWorkflows,
     ConfigureAlerts,
+    ConfigureNotes,
   },
   data() {
     return {
@@ -165,7 +167,7 @@ export default {
   computed: {
     userCRM() {
       return this.$store.state.user.crm
-    }
+    },
   }
 }
 </script>
