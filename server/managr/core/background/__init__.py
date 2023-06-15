@@ -1780,10 +1780,10 @@ def _process_add_call_analysis(workflow_id, summaries):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    tokens = max_token_calculator(prompt)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, tokens)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, token_amount=500)
     has_error = False
     attempts = 1
+    text = None
     while True:
         try:
             with Variable_Client(timeout) as client:
@@ -1827,6 +1827,7 @@ def _process_add_call_analysis(workflow_id, summaries):
         except Exception as e:
             logger.exception(f"Unknown error on call analysis for {str(workflow.id)} <{e}>")
     if has_error:
+        print("ERROR")
         return
     else:
         workflow.transcript_analysis = text

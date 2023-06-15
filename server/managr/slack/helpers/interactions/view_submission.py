@@ -2737,68 +2737,19 @@ def process_selected_generative_action(payload, context):
     action = generative_action_values.get(list(generative_action_values.keys())[0])[
         "selected_option"
     ]["value"]
-    if action == "ASK_MANAGR":
-        blocks = [
-            block_builders.input_block(
-                f"What would you like to ask?",
-                placeholder=f"Type or select an action template",
-                block_id="CHAT_PROMPT",
-                multiline=True,
-                optional=False,
-            ),
-            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
-        ]
-        user = User.objects.get(id=pm.get("u"))
-        data = {
-            "view_id": payload["view"]["id"],
-            "view": {
-                "type": "modal",
-                "callback_id": slack_const.PROCESS_ASK_MANAGR,
-                "title": {"type": "plain_text", "text": "Generate Content"},
-                "blocks": blocks,
-                "submit": {"type": "plain_text", "text": "Submit"},
-                "private_metadata": json.dumps(context),
-            },
-        }
-        try:
-            slack_requests.generic_request(
-                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-                data,
-                access_token=user.organization.slack_integration.access_token,
-            )
-        except InvalidBlocksException as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
-            )
-        except InvalidBlocksFormatException as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
-            )
-        except UnHandeledBlocksException as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
-            )
-        except InvalidAccessToken as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
-            )
-        return
-    else:
-        action_func = GENERATIVE_ACTION_SWITCHER[action]
-        loading_block = [
-            *get_block_set("loading", {"message": ":robot_face: Generating content..."})
-        ]
-        try:
-            res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=loading_block,
-            )
-            pm.update(ts=res["ts"])
-            action_res = action_func(payload, pm)
-        except Exception as e:
-            logger.exception(e)
-        return {"response_action": "clear"}
+    action_func = GENERATIVE_ACTION_SWITCHER[action]
+    loading_block = [*get_block_set("loading", {"message": ":robot_face: Generating content..."})]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=loading_block,
+        )
+        pm.update(ts=res["ts"])
+        action_res = action_func(payload, pm)
+    except Exception as e:
+        logger.exception(e)
+    return {"response_action": "clear"}
 
 
 def process_chat_action_submit(payload, context):

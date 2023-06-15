@@ -61,6 +61,7 @@ def _handle_response(response, fn_name=None):
             data = response.json()
             choice = data["choices"][0]
             stop_reason = choice["finish_reason"]
+
             if stop_reason == "length":
                 raise StopReasonLength()
         except StopReasonLength:

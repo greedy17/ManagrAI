@@ -1117,6 +1117,7 @@ def GET_ACTION_TEMPLATE(user, template_value):
         "DEAL_REVIEW": f"Run a review for {object_type} Pied Piper",
         "CALL_SUMMARY": f"Get the call summary for {object_type} Pied Piper",
         "CALL_ANALYSIS": f"Get the call analysis for {object_type} Pied Piper",
+        "ASK_MANAGR": f"Ask Managr ... for {object_type} Pied Piper",
     }
     return action_switcher[template_value]
 
@@ -3721,16 +3722,12 @@ def process_open_generative_action_modal(payload, context):
             block_builders.option("Draft Follow-up Email", "DRAFT_EMAIL"),
             block_builders.option("Suggest Next Steps", "NEXT_STEPS"),
             block_builders.option("Get Summary", "SEND_SUMMARY"),
-            block_builders.option("Ask Managr", "ASK_MANAGR"),
         ]
         blocks = [
             block_builders.static_select(
                 "Select the type of content to generate",
                 options=options,
                 block_id="GENERATIVE_ACTION",
-                action_id=action_with_params(
-                    slack_const.PROCESS_SELECTED_GENERATIVE_ACTION, params=[f"u={str(user.id)}"]
-                ),
             ),
             block_builders.context_block("Powered by ManagrGPT © :robot_face:"),
         ]
