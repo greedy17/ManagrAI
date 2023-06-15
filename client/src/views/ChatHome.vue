@@ -14,6 +14,60 @@
       </div>
     </Modal>
     <Modal
+      v-if="chatModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), toggleChatModal()
+        }
+      "
+    >
+      <div class="chat-modal-container">
+        <div class="chat-modal-header">
+          <div>
+            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
+              Update {{ chatData.resource }}
+            </h3>
+            <span class="gray-text smaller"
+              >Your CRM fields have been auto-filled. Pleae review and click submit.</span
+            >
+          </div>
+
+          <h4 v-if="!submitting" @click="toggleChatModal" style="cursor: pointer">x</h4>
+          <img
+            v-else
+            class="spinning-load"
+            src="@/assets/images/refresh.svg"
+            height="18px"
+            alt=""
+          />
+        </div>
+
+        <div
+          :class="{ disabled: submitting }"
+          class="chat-body"
+          v-for="(field, i) in formFields"
+          :key="i"
+        >
+          <ChatFormField
+            :placeholder="chatData.data[field.apiName]"
+            :field="field"
+            :resourceId="chatData.resourceId"
+            :integrationId="chatData.integrationId"
+            :chatData="chatData.data"
+            @set-value="setUpdateValues"
+            :stageFields="stageFields"
+            :stagesWithForms="stagesWithForms"
+          />
+        </div>
+
+        <div class="chat-modal-footer">
+          <button :disabled="submitting" @click="toggleChatModal">Close</button>
+          <button :disabled="submitting" @click="onSubmitChat">Submit</button>
+        </div>
+      </div>
+    </Modal>
+    <Modal
       v-if="profileModalOpen"
       dimmed
       @close-modal="
@@ -133,10 +187,10 @@
       />
     </aside>
     <main id="main">
-      <ChatBox />
+      <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
     <aside id="right-sidebar">
-      <RightBar />
+      <RightBar ref="rightSideBar" @set-fields="setFormFields" @set-stages="setStageFields" />
     </aside>
   </div>
 </template>
@@ -147,9 +201,10 @@ import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 import ConfigureModal from '../components/Chat/Configure/ConfigureModal.vue'
 import Modal from '@/components/InviteModal'
-
+import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
+import { CRMObjects } from '@/services/crm'
 
 export default {
   name: 'Home',
@@ -159,14 +214,21 @@ export default {
     LeftSideBar,
     ConfigureModal,
     Modal,
+    ChatFormField,
   },
   data() {
     return {
       showBackground: false,
       profileModalOpen: false,
       configureModalOpen: false,
+      submitting: false,
       profileOrTeam: 'profile',
       team: CollectionManager.create({ ModelClass: User }),
+      chatModalOpen: false,
+      chatData: null,
+      formFields: [],
+      stageFields: [],
+      barOpen: true,
     }
   },
   created() {
@@ -174,6 +236,59 @@ export default {
   },
   watch: {},
   methods: {
+    toggleLeftbarOn() {
+      this.barOpen = true
+    },
+    toggleLeftbarOff() {
+      this.barOpen = false
+    },
+    setUpdateValues(key, val, multi) {
+      if (multi) {
+        this.chatData.data[key] = this.chatData.data[key]
+          ? this.chatData.data[key] + ';' + val
+          : val.split(/&#39;/g)[0]
+      } else {
+        this.chatData.data[key] = val
+      }
+    },
+    removeEmptyValues(obj) {
+      for (let key in obj) {
+        console.log(!!obj.hasOwnProperty(key))
+        if (obj.hasOwnProperty(key)) {
+          if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
+            delete obj[key]
+          }
+        }
+      }
+      return obj
+    },
+
+    async onSubmitChat() {
+      this.submitting = true
+      let data = this.removeEmptyValues(this.chatData.data)
+      try {
+        const res = await CRMObjects.api.updateResource({
+          form_data: data,
+          resource_type: this.chatData.resourceType,
+          form_type: this.chatData.formType,
+          resource_id: this.chatData.resourceId,
+          integration_ids: [this.chatData.integrationId],
+          chat_form_id: [this.chatData.formId],
+          from_workflow: false,
+          workflow_title: 'None',
+          stage_name: null,
+        })
+        this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$refs.rightSideBar.reloadOpps()
+        setTimeout(() => {
+          this.toggleChatModal()
+          this.submitting = false
+        }, 1000)
+      }
+    },
     test(log) {
       console.log('log', log)
     },
@@ -199,8 +314,22 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
-      localStorage.isLoggedOut = true
+      // localStorage.isLoggedOut = true
     },
+    toggleChatModal(data) {
+      this.chatModalOpen = !this.chatModalOpen
+      if (data) {
+        this.chatData = data
+      }
+    },
+    setFormFields(fields) {
+      this.formFields = fields
+    },
+    setStageFields(fields, stagesWithForms) {
+      this.stageFields = fields
+      this.stagesWithForms = stagesWithForms
+    },
+
     handleInvite() {
       console.log('handled')
     },
@@ -243,7 +372,6 @@ body {
 .chat-display {
   display: flex;
 }
-
 #chat {
   height: 100vh;
   width: 100vw;
@@ -266,20 +394,25 @@ body {
 
 #left-sidebar {
   width: 260px;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
 }
+
 #main {
   flex: 1;
   width: 54vw;
-  background-color: $off-white;
+  background-color: white;
   z-index: 5;
 }
 
+.elipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 450px;
+}
+
 #right-sidebar {
-  width: 400px;
+  width: 450px;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
 }
 
 @media (max-width: 1000px) {
@@ -363,6 +496,61 @@ body {
   overflow-y: scroll;
   overflow-x: hidden;
   position: relative;
+}
+
+.chat-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 525px;
+  height: 90vh;
+  padding: 0 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow-y: scroll;
+  position: relative;
+}
+
+.chat-modal-header {
+  position: sticky;
+  background-color: white;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+
+.chat-modal-footer {
+  position: sticky;
+  padding: 1rem 0;
+  background-color: white;
+  bottom: 0;
+  z-index: 1000;
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  // border-top: 1px solid $soft-gray;
+  margin-top: 1rem;
+
+  button {
+    @include chat-button();
+    padding: 0.5rem 1rem;
+    margin-left: 1rem;
+    font-size: 12px;
+  }
+
+  button:last-of-type {
+    background-color: $dark-green;
+    color: white;
+    border: none;
+  }
+}
+
+.gray-text {
+  color: $light-gray-blue;
+}
+.smaller {
+  font-size: 12px;
 }
 
 .modal-header {
@@ -541,5 +729,23 @@ body {
     color: $base-gray;
   }
   font-size: 14px;
+}
+.disabled {
+  opacity: 0.5;
+}
+.spinning-load {
+  animation: rotation 3s infinite linear;
+  opacity: 0.3;
+  cursor: not-allowed;
+  margin-top: 1rem;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }
 </style>

@@ -8,7 +8,13 @@ from datetime import datetime
 from managr.api.decorators import slack_api_exceptions, log_all_exceptions
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.core.models import User
-from managr.core.background import emit_process_send_summary_to_dm
+from managr.core.background import (
+    emit_process_send_summary_to_dm,
+    emit_process_send_call_analysis_to_dm,
+    emit_process_send_call_summary_to_dm,
+    emit_process_send_ask_managr_to_dm,
+)
+from managr.core.exceptions import _handle_response
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
@@ -908,7 +914,6 @@ def _process_alert_send_deal_review(payload, context):
         deal_review_data, alert.template.resource_type, datetime.now().date(), user.crm
     )
     body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, top_p=0.9, temperature=0.7)
-    print(f"DEAL REVIEW BODY: {body}")
     blocks = payload["message"]["blocks"]
     has_error = False
     while True:
@@ -916,8 +921,7 @@ def _process_alert_send_deal_review(payload, context):
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 response_text = r.get("choices")[0].get("text")
                 break
         except Exception as e:
@@ -993,20 +997,21 @@ def _process_send_deal_review(payload, context):
     prompt = core_consts.OPEN_AI_DEAL_REVIEW(
         deal_review_data, resource_type, datetime.now().date(), user.crm
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, top_p=0.9, temperature=0.7)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+        user.email, prompt, 1000, top_p=0.9, temperature=0.7
+    )
     has_error = False
     while True:
         try:
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 response_text = r.get("choices")[0].get("text")
                 break
         except Exception as e:
             has_error = True
-            text = "There was an error generating your review"
+            response_text = f"There was an error generating your review: {str(e)}"
             break
     try:
         chat_blocks = [
@@ -1036,8 +1041,11 @@ def _process_send_deal_review(payload, context):
 
 
 ACTION_TEMPLATE_FUNCTIONS = {
+    "call summary": emit_process_send_call_summary_to_dm,
     "review": emit_process_send_deal_review,
     "summary": emit_process_send_summary_to_dm,
+    "analysis": emit_process_send_call_analysis_to_dm,
+    "ask managr": emit_process_send_ask_managr_to_dm,
 }
 
 
@@ -1045,6 +1053,7 @@ ACTION_TEMPLATE_FUNCTIONS = {
 @slack_api_exceptions(rethrow=0)
 def _process_chat_action(payload, context):
     from managr.crm.utils import CRM_SWITCHER
+    from managr.salesforce.models import MeetingWorkflow
 
     user = User.objects.get(id=context.get("u"))
     resource_list = (
@@ -1057,7 +1066,12 @@ def _process_chat_action(payload, context):
     resource_check = None
     blocks = []
     lowercase_prompt = prompt.lower()
+    action_key = None
     lowered_split_prompt = lowercase_prompt.split(" ")
+    for word in ACTION_TEMPLATE_FUNCTIONS.keys():
+        if word in lowercase_prompt:
+            action_key = word
+            break
     for resource in resource_list:
         lowered_resource = resource.lower()
         if lowered_resource in lowercase_prompt:
@@ -1078,9 +1092,21 @@ def _process_chat_action(payload, context):
             .objects.for_user(user)
             .get(name__icontains=resource_name, integration_source=user.crm)
         )
-        form = OrgCustomSlackFormInstance.objects.filter(resource_id=str(resource.id)).first()
-        form_id = str(form.id) if form else None
-        context.update(resource_id=str(resource.id), resource_type=resource_check, form_ids=form_id)
+        if action_key in ["summary", "review"]:
+            form = OrgCustomSlackFormInstance.objects.filter(resource_id=str(resource.id)).first()
+            form_id = str(form.id) if form else []
+            context.update(
+                resource_id=str(resource.id), resource_type=resource_check, form_ids=form_id
+            )
+        else:
+            workflow = MeetingWorkflow.objects.filter(
+                user=user, resource_id=str(resource.id)
+            ).first()
+            workflow_id = str(workflow.id) if workflow else None
+            context.update(
+                resource_id=str(resource.id), resource_type=resource_check, w=workflow_id
+            )
+        context.update(prompt=prompt)
     except CRM_SWITCHER[user.crm][resource_check]["model"].DoesNotExist:
         blocks.append(
             block_builders.simple_section(
@@ -1089,10 +1115,8 @@ def _process_chat_action(payload, context):
             )
         )
     action_func = None
-    for word in ACTION_TEMPLATE_FUNCTIONS.keys():
-        if word in lowercase_prompt:
-            action_func = ACTION_TEMPLATE_FUNCTIONS[word]
-            break
+    if action_key:
+        action_func = ACTION_TEMPLATE_FUNCTIONS[word]
     if action_func is None and not len(blocks):
         blocks.append(
             block_builders.simple_section(

@@ -202,6 +202,7 @@ class CRMObjectViewSet(
         resource_type = data.get("resource_type")
         resource_id = data.get("resource_id", None)
         stage_name = data.get("stage_name", None)
+        chat_form_id = data.get("chat_form_id", None)
         instance_data = {
             "user": user,
             "resource_type": resource_type,
@@ -211,21 +212,32 @@ class CRMObjectViewSet(
         }
         data = None
         for id in integration_ids:
-            form_ids = create_form_instance(**instance_data)
-            all_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
-            main_form = all_forms.filter(template__form_type="UPDATE").first()
-            stage_form_data_collector = {}
-            for form in all_forms:
-                form.save_form(form_data, False)
-                stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
-            all_form_data = {**stage_form_data_collector, **main_form.saved_data}
-            formatted_saved_data = process_text_field_format(
-                str(user.id), main_form.template.resource, all_form_data
-            )
+            if not chat_form_id:
+                form_ids = create_form_instance(**instance_data)
+                all_forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+                main_form = all_forms.filter(template__form_type="UPDATE").first()
+                stage_form_data_collector = {}
+                for form in all_forms:
+                    form.save_form(form_data, False)
+                    stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+                all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+                formatted_saved_data = process_text_field_format(
+                    str(user.id), main_form.template.resource, all_form_data
+                )
+            else:
+                all_forms = OrgCustomSlackFormInstance.objects.filter(id__in=chat_form_id)
+                main_form = all_forms.filter(template__form_type="UPDATE").first()
+                stage_form_data_collector = {}
+                for form in all_forms:
+                    form.save_form(form_data, False)
+                    stage_form_data_collector = {**stage_form_data_collector, **form.saved_data}
+                all_form_data = {**stage_form_data_collector, **main_form.saved_data}
+
             attempts = 1
             while True:
                 crm = user.crm_account
-                if "meeting_comments" in all_form_data.keys():
+
+                if "meeting_comments" in all_form_data.keys() and not chat_form_id:
                     if all_form_data.get("meeting_comments", None) is not None:
                         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                     data = {
@@ -472,7 +484,9 @@ class CRMObjectViewSet(
         sync_class = SFResourceSync if user.crm == "SALESFORCE" else HSResourceSync
         type = "SALESFORCE_RESOURCE_SYNC" if user.crm == "SALESFORCE" else "HUBSPOT_RESOURCE_SYNC"
         sync = sync_class.objects.create(
-            user=user, operations_list=operations, operation_type=type,
+            user=user,
+            operations_list=operations,
+            operation_type=type,
         )
         user_timezone = pytz.timezone(user.timezone)
 

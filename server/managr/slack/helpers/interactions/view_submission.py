@@ -21,6 +21,7 @@ from managr.core.background import (
     emit_process_send_email_draft,
     emit_process_send_next_steps,
     emit_process_send_summary_to_dm,
+    emit_process_send_ask_managr_to_dm,
 )
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.opportunity.models import Opportunity, Lead
@@ -239,35 +240,37 @@ def process_zoom_meeting_data(payload, context):
             main_operation,
         ]
         if workflow.resource_type not in user.crm_account.custom_objects:
-            ops.append(f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)},{task_type}")
+            call_log_string = f"{sf_consts.MEETING_REVIEW__SAVE_CALL_LOG}.{str(workflow.id)}"
+            if task_type is not None:
+                call_log_string = call_log_string + f",{task_type}"
+            ops.append(call_log_string)
         if len(workflow.operations_list):
             workflow.operations_list = [*workflow.operations_list, *ops]
         else:
             workflow.operations_list = ops
         workflow.operations_list = ops
-    if len(user.slack_integration.realtime_alert_configs):
-        _send_instant_alert(current_form_ids)
+    workflow.save()
+    workflow.begin_tasks()
+    # if len(user.slack_integration.realtime_alert_configs):
+    #     _send_instant_alert(current_form_ids)
     emit_process_calendar_meetings(
         str(user.id),
         f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
         workflow.slack_interaction,
         date=str(workflow.datetime_created.date()),
     )
-    workflow.save()
-    workflow.begin_tasks()
+
     emit_meeting_workflow_tracker(str(workflow.id))
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Meeting logged _{workflow.meeting.topic}_", "mrkdwn"
+                f":white_check_mark: Got it! Check your meeting channel - _{workflow.meeting.topic}_",
+                "mrkdwn",
             )
         ]
         try:
-            res = slack_requests.update_channel_message(
-                user.slack_integration.channel,
-                ts,
-                block_set=blocks,
-                access_token=slack_access_token,
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token,
             )
         except Exception as e:
             return logger.exception(
@@ -2635,13 +2638,15 @@ def process_submit_chat_prompt(payload, context):
             resource_check = resource
             break
     block_set = [
-        *get_block_set("loading", {"message": f"Processing your submission..."},),
+        *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
     ]
     try:
         if "w" in context.keys():
             workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-            workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
-            workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+                workflow.operations.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
+            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
+                workflow.operations_list.append(slack_const.MEETING__PROCESS_TRANSCRIPT_TASK)
             workflow.save()
             emit_process_calendar_meetings(
                 str(user.id),
@@ -2733,7 +2738,7 @@ def process_selected_generative_action(payload, context):
         "selected_option"
     ]["value"]
     action_func = GENERATIVE_ACTION_SWITCHER[action]
-    loading_block = [*get_block_set("loading", {"message": "Generating content..."})]
+    loading_block = [*get_block_set("loading", {"message": ":robot_face: Generating content..."})]
     try:
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -2753,12 +2758,49 @@ def process_chat_action_submit(payload, context):
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set("loading", {"message": "Processing your action submission..."}),
+            block_set=get_block_set(
+                "loading", {"message": ":robot_face: Processing your action submission..."}
+            ),
         )
     except Exception as e:
         logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
     context.update(ts=res["ts"])
     emit_process_chat_action(payload, context)
+    return {"response_action": "clear"}
+
+
+def process_submit_ask_managr(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    resource_list = (
+        ["Opportunity", "Account", "Contact", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Deal", "Company", "Contact"]
+    )
+    state = payload["view"]["state"]["values"]
+    prompt = state["CHAT_PROMPT"]["plain_input"]["value"]
+    resource_type = (
+        list(state["selected_object_type"].values())[0].get("selected_option").get("value")
+    )
+    resource_id = list(state["selected_object"].values())[0].get("selected_option").get("value")
+    resource_check = (
+        CRM_SWITCHER[user.crm][resource_type]["model"]
+        .objects.filter(integration_id=resource_id)
+        .first()
+    )
+    block_set = [
+        *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
+    ]
+
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+        context.update(resource_id=str(resource_check.id), prompt=prompt, ts=res["ts"])
+        emit_process_send_ask_managr_to_dm(payload, context)
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
     return {"response_action": "clear"}
 
 
@@ -2796,6 +2838,7 @@ def handle_view_submission(payload):
         slack_const.MEETING___SUBMIT_CHAT_PROMPT: process_submit_chat_prompt,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
+        slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])

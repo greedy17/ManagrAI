@@ -514,6 +514,7 @@ def handle_block_suggestion(payload):
         slack_const.GET_CRM_RESOURCE_OPTIONS: process_get_crm_resource_options,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_get_crm_resource_options,
         slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_get_crm_resource_options,
+        slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_get_crm_resource_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

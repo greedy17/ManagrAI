@@ -2,13 +2,9 @@
   <section class="right-container">
     <header>
       <section v-if="selectedOpp">
-        <div class="flexed-row-spread">
-          <div class="flexed-row">
-            <!-- <font-awesome-icon
-              @click="selectedOpp = null"
-              style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
-              icon="fa-solid fa-square-caret-left"
-            /> -->
+        <div class="flexed-row-s"></div>
+        <span style="margin-top: -4px" class="flexed-row-spread header-bg">
+          <div class="elipsis-text">
             <span class="icon-bg">
               <img
                 @click="selectedOpp = null"
@@ -17,10 +13,12 @@
                 alt=""
               />
             </span>
-
-            <p>Opportunity</p>
+            <p>
+              {{ selectedOpp.name }}
+            </p>
           </div>
-          <div class="flexed-row">
+
+          <div style="margin-left: -8px" class="flexed-row">
             <img
               :class="{ 'rotate opaque not-allowed': oppsLoading }"
               @click="reloadOpps"
@@ -35,15 +33,16 @@
               @click="openInCrm(selectedOpp.integration_id)"
             />
           </div>
-        </div>
-        <span class="selected-opp">
-          <h4>{{ selectedOpp.name }}</h4>
         </span>
       </section>
 
       <section v-else>
         <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem">All Open Opportunities ({{ displayedOpps.count }})</p>
+          <p style="margin-bottom: 0.25rem">
+            All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
+              displayedOpps.count
+            }})
+          </p>
 
           <div class="flexed-row">
             <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
@@ -60,20 +59,9 @@
 
         <div class="flexed-row-spread">
           <div class="input">
-            <img v-if="!searchText" src="@/assets/images/search.svg" height="16px" alt="" />
-            <img
-              v-else
-              @click="searchFilter"
-              src="@/assets/images/return.svg"
-              height="16px"
-              alt=""
-            />
-            <input
-              class="search-input"
-              @keydown.enter.exact.prevent="searchFilter"
-              v-model="searchText"
-              placeholder="Search Opportunity by name"
-            />
+            <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
+
+            <input class="search-input" v-model="searchText" :placeholder="`Search by name`" />
             <img
               v-show="searchText"
               @click="clearText"
@@ -158,6 +146,8 @@
                   selectLabel=""
                   track-by="value"
                   label="label"
+                  selectedLabel=""
+                  deselectLabel=""
                   :preselectFirst="true"
                 >
                   <template slot="noResult">
@@ -171,7 +161,7 @@
                     :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
                     :type="`${selectedFilter.dataType}`"
                     v-model="selectedFilter.value"
-                    autofocus="true"
+                    autofocus
                   />
 
                   <!-- <Multiselect
@@ -183,6 +173,8 @@
                   :multiple="dataType === 'MultiPicklist' ? true : false"
                   v-model="selectedOption"
                   :disabled="inlineLoader"
+                  selectedLabel=""
+                  deselectLabel=""
                   @select="
                     setUpdateValues(
                       apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
@@ -197,22 +189,28 @@
                 </Multiselect> -->
                 </div>
 
-                <div style="margin: 1rem 0 1rem 0.25rem" v-if="selectedFilter.value">
-                  <p>
+                <div
+                  style="margin: 1rem 0 1rem 0.25rem; position: relative"
+                  v-if="selectedFilter.value"
+                >
+                  <p class="wrap-text">
                     <span style="color: #9596b4">Filter : </span>
                     "{{ selectedFilter.name }} {{ selectedFilter.operatorLabel }}
                     {{ selectedFilter.value }}"
                   </p>
-                </div>
 
-                <button
-                  @click="addFilter()"
-                  v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
-                  class="chat-button shimmer"
-                  style="padding: 0.5rem 1rem"
-                >
-                  Add filter
-                </button>
+                  <div
+                    v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
+                    class="save-close"
+                  >
+                    <div @click="addFilter()" class="save">
+                      <span v-if="!inlineLoader">&#x2713;</span>
+                    </div>
+                    <div @click="clearFilter" class="close">
+                      <span>x</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -220,13 +218,43 @@
       </section>
     </header>
 
+    <div class="switcher" v-if="selectedOpp">
+      <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
+        <img src="@/assets/images/crmlist.svg" height="16px" alt="" />
+        Details
+      </div>
+      <div
+        @click="switchView('notes')"
+        :class="{ activeswitch: view === 'notes' }"
+        class="switch-item"
+      >
+        <img src="@/assets/images/note.svg" height="12px" alt="" />
+        Notes
+      </div>
+      <div style="cursor: not-allowed" class="switch-item">
+        <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
+        Summaries
+      </div>
+    </div>
+
+    <!-- <div v-if="selectedOpp && view === 'crm'" class="section-header">
+      <h4>
+        {{ user.crm === 'SALESFORCE' ? 'Salesforce Fields' : 'Hubspot properties' }}
+      </h4>
+
+      <img src="@/assets/images/settings.svg" height="18px" alt="" />
+    </div> -->
+
     <div class="selected-opp-container" v-if="selectedOpp">
-      <div class="selected-opp-section">
+      <div v-show="view === 'crm'" class="selected-opp-section bordered">
+        <div class="absolute-img">
+          <img src="@/assets/images/settings.svg" height="18px" alt="" />
+        </div>
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
-            <h5 class="gray-text">
+            <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
-            </h5>
+            </p>
 
             <div
               @click="toggleEdit(field.id)"
@@ -250,47 +278,53 @@
                 :field="field"
                 :showing="editing"
                 @close-inline="closeInline"
+                @setFields="reloadOpps"
               />
             </div>
           </div>
         </div>
-
-        <div v-if="!editing" class="edit-button">
-          <button>Edit View</button>
-        </div>
       </div>
-      <div style="padding-top: 0" class="selected-opp-section">
-        <h4 style="margin-top: 0; margin-left: -0.25rem" class="selected-opp sticky-top">
-          Notes & History
+      <div v-show="view === 'notes'" class="selected-opp-section">
+        <h4 style="margin-top: 0; background-color: white" class="selected-opp">
+          June 2023 <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
         </h4>
-        <div v-for="note in notes" :key="note.id">
-          <div class="row">
-            <p
-              :class="{ 'gray-text strike': !!note.saved_data__StageName }"
-              style="margin-right: 0.25rem"
-            >
-              {{ note.previous_data__StageName }}
-            </p>
+        <section v-if="notes.length">
+          <div v-for="note in notes" :key="note.id">
+            <div class="note-section">
+              <small class="gray-text left-margin right-absolute">{{
+                `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
+                  note.submission_date,
+                )}`
+              }}</small>
+              <div class="row text-ellipsis">
+                <p
+                  :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                  style="margin-right: 0.25rem"
+                >
+                  {{ note.previous_data__StageName }}
+                </p>
 
-            <img
-              v-if="note.saved_data__StageName"
-              src="@/assets/images/transition.svg"
-              height="12px"
-              alt=""
-            />
+                <img
+                  v-if="note.saved_data__StageName"
+                  src="@/assets/images/transition.svg"
+                  height="12px"
+                  alt=""
+                />
 
-            <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+                <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+              </div>
+              <div>
+                <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p style="margin: 0.25rem 0">{{ note.meeting_comments || '---' }}</p>
-          </div>
+        </section>
 
-          <small class="gray-text">{{
-            `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
-              note.submission_date,
-            )}`
-          }}</small>
-        </div>
+        <section v-else>
+          <div class="note-section">
+            <p class="gray-text">Nothing here yet...</p>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -303,12 +337,18 @@
       >
         <p style="margin: 0">{{ opp.name }}</p>
       </div>
-      <div class="space-between">
-        <p v-if="searchText">End of list</p>
-        <span v-else></span>
-        <button class="chat-button" v-if="displayedOpps.next" @click="loadMoreOpps">
+      <div style="margin-bottom: 0.25rem" class="space-between">
+        <button
+          :disabled="loadingMore"
+          class="chat-button no-border gray-scale"
+          v-if="displayedOpps.next"
+          @click="loadMoreOpps"
+        >
+          <img src="@/assets/images/load-more.svg" height="14px" alt="" />
           Load More
         </button>
+
+        <p v-else>End of list</p>
       </div>
     </div>
   </section>
@@ -330,8 +370,11 @@ export default {
   },
   data() {
     return {
+      view: 'crm',
+      stageValidationFields: {},
       updateFormData: {},
       loadingNotes: false,
+      loadingMore: false,
       notes: [],
       editing: false,
       activeField: null,
@@ -352,6 +395,7 @@ export default {
         // },
       }),
       page: 1,
+      loadMorePage: 0,
       selectedOperator: null,
       months: {
         0: 'January',
@@ -380,9 +424,9 @@ export default {
         Owner: [{ label: 'contains', value: 'CONTAINS' }],
         Stage: [{ label: 'contains', value: 'CONTAINS' }],
         Name: [
-          { label: 'is', value: 'EQUALS' },
           { label: 'contains', value: 'CONTAINS' },
           { label: 'does not equal', value: 'NOT_EQUALS' },
+          { label: 'is', value: 'EQUALS' },
         ],
         'Close date': [
           { label: 'is', value: 'EQUALS' },
@@ -478,12 +522,26 @@ export default {
         return
       }
     },
+    searchText(newVal, oldVal) {
+      if (newVal !== oldVal && newVal !== '') {
+        return
+      } else {
+        this.$store.dispatch('loadChatOpps')
+        this.page = 0
+        this.loadMorePage = 0
+      }
+    },
     // : 'selectOperator',
     selectedOpp: 'getNotes',
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    switchView(view) {
+      if (view !== this.view) {
+        this.view = view
+      }
     },
     async getNotes() {
       if (this.selectedOpp) {
@@ -541,29 +599,19 @@ export default {
     },
     async reloadOpps() {
       this.oppsLoading = true
+      let newOpp
       try {
-        let res = await this.$store.dispatch('loadChatOpps', 1)
+        let res = await this.$store.dispatch('loadChatOpps')
+        if (this.selectedOpp) {
+          newOpp = res.results.filter((opp) => opp.id === this.selectedOpp.id)
+          this.selectedOpp = newOpp[0]
+        }
       } catch (e) {
-        console.log('error loading opps')
+        console.log(e)
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
         }, 1000)
-      }
-    },
-    async searchFilter() {
-      if (this.searchText) {
-        try {
-          this.$store.dispatch('changeFilters', [
-            ...this.$store.state.filters,
-            ['CONTAINS', 'Name', this.searchText],
-          ])
-          await this.$store.dispatch('loadChatOpps', 1)
-        } catch (e) {
-          console.log(e)
-        }
-      } else {
-        return
       }
     },
     async addFilter() {
@@ -579,9 +627,7 @@ export default {
       } catch (e) {
         console.log('Error in addFilter', e)
       } finally {
-        setTimeout(() => {
-          this.toggleShowFilters()
-        }, 100)
+        this.toggleShowFilters()
       }
     },
     async removeFilter(targetList) {
@@ -629,11 +675,18 @@ export default {
       this.filtering = !this.filtering
     },
     async setOppForms() {
+      let stageGateForms
+      let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
 
       this.updateOppForm = formsRes.filter(
         (obj) =>
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
+      )
+
+      let allFields = this.updateOppForm[0].fieldsRef.filter(
+        (field) =>
+          field.apiName !== 'Name' && field.apiName !== 'dealname' && field.apiName !== 'name',
       )
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
@@ -650,6 +703,38 @@ export default {
             ? field.apiName !== 'Email'
             : true),
       )
+
+      stageGateForms = formsRes.filter(
+        (obj) =>
+          obj.formType === 'STAGE_GATING' &&
+          obj.resource === (this.userCRM === 'HUBSPOT' ? 'Deal' : 'Opportunity'),
+      )
+
+      if (stageGateForms.length) {
+        // this.stageGateCopy = stageGateForms[0].fieldsRef
+
+        let stages = stageGateForms.map((field) => field.stage)
+        let newStages = []
+        if (this.userCRM === 'HUBSPOT') {
+          for (let i = 0; i < stages.length; i++) {
+            newStages.push(stages[i].split(' ').join('').toLowerCase())
+          }
+        } else {
+          newStages = stages
+        }
+        stagesWithForms = newStages
+        for (const field of stageGateForms) {
+          if (this.userCRM === 'SALESFORCE') {
+            this.stageValidationFields[field.stage] = field.fieldsRef
+          } else {
+            this.stageValidationFields[field.stage.split(' ').join('').toLowerCase()] =
+              field.fieldsRef
+          }
+        }
+      }
+
+      this.$emit('set-fields', allFields)
+      this.$emit('set-stages', this.stageValidationFields, stagesWithForms)
     },
     getDate(input) {
       let newer = new Date(input)
@@ -687,21 +772,58 @@ export default {
       }
     },
     async loadMoreOpps() {
-      this.page += 1
-      await this.$store.dispatch('loadChatOpps', this.page)
+      if (this.searchText) {
+        this.loadMorePage += 1
+        this.loadingMore = true
+        try {
+          let res = await this.$store.dispatch('loadMoreChatOpps', {
+            page: this.loadMorePage,
+            text: this.searchText,
+          })
+          console.log(res)
+        } catch (e) {
+          console.log(e)
+          this.page = 0
+          this.loadMorePage = 0
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      } else {
+        this.page += 1
+        this.loadingMore = true
+        try {
+          await this.$store.dispatch('loadChatOpps', this.page)
+        } catch (e) {
+          console.log(e)
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      }
     },
   },
   computed: {
     opportunities() {
       if (this.displayedOpps.results) {
-        return this.displayedOpps.results
+        return this.displayedOpps.results.filter((opp) =>
+          opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        )
       } else return []
     },
     activeFilters() {
       return this.$store.state.filters
     },
-    displayedOpps() {
-      return this.$store.state.chatOpps
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
     },
     userCRM() {
       return this.$store.state.user.crm
@@ -741,24 +863,123 @@ export default {
   }
 }
 
+.switcher {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 6px;
+  padding: 2px 0;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $light-gray-blue;
+  white-space: nowrap;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-left: -0.25rem;
+  }
+}
+
+.activeswitch {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $base-gray;
+  img {
+    filter: none;
+  }
+}
+
+.absolute-img {
+  position: absolute;
+  top: 1rem;
+  right: 2px;
+  background-color: white;
+}
+
 .shimmer {
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
 .pop-transition {
   transition: transform 0.3s ease; /* Adjust the transition duration and easing as per your preference */
   transform: scale(1.25); /* Adjust the transform properties to create the desired effect */
-  animation: shimmer 1s infinite;
+  animation: shimmer 2s infinite;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
 }
 
 ::v-deep .multiselect__single {
   font-size: 14px;
 }
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
+  padding-left: 0.5rem;
+
+  h4,
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.elipsis-text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 300px;
+
+  p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    font-size: 14px !important;
+  }
+}
 
 .right-container {
   position: sticky;
+  background-color: white;
   // right: 0;
   // top: 0;
   overflow: hidden;
@@ -766,7 +987,7 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 1rem 1rem 0.25rem 1rem;
+  padding: 1rem 1.25rem 0 1.25rem;
   font-family: $base-font-family;
   font-size: 14px;
 }
@@ -811,13 +1032,10 @@ export default {
 }
 .opp-scroll-container {
   height: 100%;
-  overflow: hidden;
-  padding: 0.5rem 0;
-}
-
-.opp-scroll-container:hover {
-  overflow: auto;
+  width: 101%;
+  overflow-y: scroll;
   scroll-behavior: smooth;
+  padding: 0.5rem 0;
 }
 
 .opp-scroll-container::-webkit-scrollbar {
@@ -826,16 +1044,20 @@ export default {
   margin-left: 0.25rem;
 }
 .opp-scroll-container::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
-
+.opp-scroll-container:hover::-webkit-scrollbar-thumb {
+  overflow: auto;
+  scroll-behavior: smooth;
+  background-color: $base-gray;
+}
 header {
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  height: 100px;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  height: 80px;
 
   h4,
   p {
@@ -857,12 +1079,19 @@ header {
   cursor: pointer;
 }
 
+.flex-row-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .flexed-row-spread {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   position: relative;
 
   h4,
@@ -886,51 +1115,104 @@ header {
 }
 
 .selected-opp {
-  display: block;
-  width: 350px;
+  width: 100%;
   border-radius: 6px;
-  padding: 0.75rem;
   background-color: $soft-gray;
-  margin-bottom: 1rem;
+  color: $base-gray;
 
   h4 {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: normal;
+  }
+}
+
+.selected-opp:first-of-type {
+  padding: 0.75rem 0.5rem;
+}
+
+.gray-bg {
+  background: $off-white;
+  padding-left: 0.5rem;
+  padding-top: 1rem;
+  background-color: $off-white !important;
+  color: $base-gray;
+  // border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+}
+
+.right-absolute {
+  position: absolute;
+  right: 12px;
+  top: 16px;
+}
+
+.text-ellipsis {
+  width: 260px;
+
+  p {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
   }
 }
 
-.selected-opp-section {
-  height: 50%;
-  overflow: hidden;
+.note-section {
+  background-color: white;
+  width: 409px;
+  padding: 0 0.5rem 1rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin: 0.5rem 0;
+  position: relative;
+}
 
-  padding: 0.5rem 0.25rem;
+.bordered {
+  width: 100%;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 0 0 0.5rem 1rem !important;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+}
+
+.selected-opp-section {
+  height: 100%;
+  width: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
   position: relative;
   h5,
   h4 {
-    margin: 0.5rem 0rem;
+    margin: 0rem;
   }
 }
 
-.selected-opp-section:hover {
-  overflow-y: auto;
-  scroll-behavior: smooth;
+.selected-opp-section:last-of-type {
+  height: 98%;
+  width: 102%;
 }
 
 .selected-opp-section::-webkit-scrollbar {
   width: 6px;
   height: 0px;
-  margin-left: 0.25rem;
 }
 .selected-opp-section::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: transparent;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 6px;
+  border-radius: 6px !important;
+}
+.selected-opp-section:hover::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
 }
 
 .sticky-top {
   position: sticky;
   top: 0;
+  z-index: 10;
 }
 
 // .selected-opp-section:first-of-type {
@@ -939,6 +1221,9 @@ header {
 
 .selected-opp-container {
   height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 0 !important;
 }
 
 .input {
@@ -978,6 +1263,9 @@ header {
 .gray-text {
   color: $light-gray-blue;
 }
+.left-margin {
+  margin-left: 0.5rem;
+}
 
 .strike {
   text-decoration: line-through;
@@ -985,26 +1273,51 @@ header {
 
 .edit-button {
   position: absolute;
-  top: 1rem;
-  right: 4px;
+  top: -4px;
+  right: 8px;
 
-  button {
-    @include chat-button();
+  // button {
+  //   @include chat-button();
 
-    font-size: 14px;
-    font-family: $base-font-family;
-    color: $chat-font-color;
-    background-color: white;
-  }
+  //   font-size: 13px;
+  //   font-weight: normal;
+  //   font-family: $base-font-family;
+  //   color: $chat-font-color;
+  //   background-color: white;
+  //   padding: 0.75rem;
+  // }
 }
 
 .chat-button {
   @include chat-button();
-  width: 100px;
+  padding: 0.75rem;
   font-size: 14px;
   font-family: $base-font-family;
   color: $chat-font-color;
   background-color: white;
+  img {
+    margin-left: 0;
+  }
+}
+
+.no-border {
+  border: none !important;
+  background-color: transparent !important;
+
+  &:hover {
+    box-shadow: none !important;
+  }
+}
+
+.gray-scale {
+  color: $light-gray-blue !important;
+  img {
+    filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
+  }
+}
+
+.no-padding {
+  padding: 0 !important;
 }
 
 svg,
@@ -1136,6 +1449,10 @@ img {
   justify-content: center;
 }
 
+.bottom-border {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 .filter-container {
   position: absolute;
   height: auto;
@@ -1144,7 +1461,7 @@ img {
   width: 350px;
   background-color: white;
   z-index: 1000;
-  top: 3.5rem;
+  top: 3.25rem;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 0 11px #b8bdc2;
@@ -1165,7 +1482,7 @@ img {
 
     p:last-of-type {
       margin-top: -8px;
-      margin-right: 8px;
+      margin-right: 12px;
       padding: 0.25rem;
       color: $light-gray-blue;
       font-size: 18px;
@@ -1283,5 +1600,72 @@ img {
   font-size: 11px;
   border-radius: 4px;
   padding: 4px;
+}
+
+.wrap-text {
+  width: 90%;
+
+  overflow: hidden;
+}
+
+.save-close {
+  position: absolute;
+  right: 0;
+  top: -0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: red;
+  padding: 0.25rem;
+  background-color: white;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 13px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+}
+
+.save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-green;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+}
+
+.header-bg {
+  background-color: white;
+  padding: 0.75rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>
