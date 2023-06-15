@@ -87,23 +87,18 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript: f"""You are a VP of Sales reviewing a sales rep's call via transcript. These transcripts are typically between 20-60 minutes long. Below is just a 5 minute section of the call transcript. Follow these instructions carefully:
-1) Summarize this section in paragraph form. The summary needs to be 500 to 800 characters.
-2) The summary must include the following (if discussed): customer pain, observations, objections, objection handling, competitors mentioned, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
-3) Desired format:\n Summary: <summary>\n
-    Transcript: {transcript}
+    lambda transcript: f"""'input': {transcript},'prompt': 'AI, summarize this 5 minute portion of a sales call transcript between rep and prospect. 
+    Include key details such as products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
+    Keep in mind that this is just one of many portions of the call transcript. Output must be one paragraph and 500 (min) to 800 (max) characters in length. 
+    Output must also be in this format: Summary: <summary>'
     """
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda date, fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript from {date}. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
-1) You are VP of Sales. Create one summary, in paragraph of how this call went. Include relevant data regarding: customer pain, customer objections, objection handling by salesperson, competitors mentioned, timeline to close, decision process, the next steps and overall tone of the meeting.
-2) The summary must be no less than 1,500 characters and no greater than 2,000 characters.
-3) Write the summary using casual, engaging, conversational, and slightly witty tone.
-4) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary.\n
-5) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called 'summary'.\n
-6) Lastly, today's date is {date} \n
-CRM fields:{fields}\n Summaries: {summaries}"""
+    lambda input, crm_fields: f"""'input': {input}, 'prompt': 'Based on the transcript summaries provided above, you must follow the instructions below: 
+1) Create one comprehensive summary of the call. The summary should only include information that would be relevant to a salesperson. Highlight key details (if they were discussed) such as: products & features, customer pain points, competitors, timeline to close, decision-making process, next steps and budget. The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.\n
+2) Then, you must fill in the CRM fields below based on this call transcript. Identify and extract accurate data for each applicable CRM field. For any fields not applicable, leave them empty.\n
+3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.\nCRM fields: {crm_fields}'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (

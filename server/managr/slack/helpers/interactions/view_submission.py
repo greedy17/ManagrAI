@@ -2737,68 +2737,19 @@ def process_selected_generative_action(payload, context):
     action = generative_action_values.get(list(generative_action_values.keys())[0])[
         "selected_option"
     ]["value"]
-    if action == "ASK_MANAGR":
-        blocks = [
-            block_builders.input_block(
-                f"What would you like to ask?",
-                placeholder=f"Type or select an action template",
-                block_id="CHAT_PROMPT",
-                multiline=True,
-                optional=False,
-            ),
-            block_builders.context_block("Powered by ChatGPT © :robot_face:"),
-        ]
-        user = User.objects.get(id=pm.get("u"))
-        data = {
-            "view_id": payload["view"]["id"],
-            "view": {
-                "type": "modal",
-                "callback_id": slack_const.PROCESS_ASK_MANAGR,
-                "title": {"type": "plain_text", "text": "Generate Content"},
-                "blocks": blocks,
-                "submit": {"type": "plain_text", "text": "Submit"},
-                "private_metadata": json.dumps(context),
-            },
-        }
-        try:
-            slack_requests.generic_request(
-                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
-                data,
-                access_token=user.organization.slack_integration.access_token,
-            )
-        except InvalidBlocksException as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
-            )
-        except InvalidBlocksFormatException as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
-            )
-        except UnHandeledBlocksException as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
-            )
-        except InvalidAccessToken as e:
-            return logger.exception(
-                f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
-            )
-        return
-    else:
-        action_func = GENERATIVE_ACTION_SWITCHER[action]
-        loading_block = [
-            *get_block_set("loading", {"message": ":robot_face: Generating content..."})
-        ]
-        try:
-            res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=loading_block,
-            )
-            pm.update(ts=res["ts"])
-            action_res = action_func(payload, pm)
-        except Exception as e:
-            logger.exception(e)
-        return {"response_action": "clear"}
+    action_func = GENERATIVE_ACTION_SWITCHER[action]
+    loading_block = [*get_block_set("loading", {"message": ":robot_face: Generating content..."})]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=loading_block,
+        )
+        pm.update(ts=res["ts"])
+        action_res = action_func(payload, pm)
+    except Exception as e:
+        logger.exception(e)
+    return {"response_action": "clear"}
 
 
 def process_chat_action_submit(payload, context):
@@ -2853,6 +2804,36 @@ def process_submit_ask_managr(payload, context):
     return {"response_action": "clear"}
 
 
+def process_reset_selected_meeting_days(payload, context):
+    state = payload["view"]["state"]["values"]
+    user = User.objects.get(id=context.get("u"))
+    selected_meetings_object = state["selected_meetings"]
+    selected_meetings_list = list(selected_meetings_object.values())[0]["selected_options"]
+    selected_meetings = [option["value"] for option in selected_meetings_list]
+    meetings = MeetingWorkflow.objects.filter(id__in=selected_meetings)
+    slack_interaction = meetings.first().slack_interaction
+    date = str(meetings.first().datetime_created.date())
+    for meeting in meetings:
+        meeting.operations_list = []
+        meeting.operations = []
+        meeting.completed_operations = []
+        meeting.failed_operations = []
+        meeting.failed_task_description = []
+        meeting.transcript_summary = None
+        meeting.transcript_analysis = None
+        if len(meeting.forms.all()):
+            for form in meeting.forms.all():
+                form.delete()
+        meeting.save()
+    emit_process_calendar_meetings(
+        str(user.id),
+        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+        slack_interaction,
+        date=date,
+    )
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2888,6 +2869,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
         slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
+        slack_const.RESET_SELECTED_MEETING_DAYS: process_reset_selected_meeting_days,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])

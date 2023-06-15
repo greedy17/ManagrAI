@@ -530,6 +530,33 @@ def call_recording(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+def reset_meetings(context):
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(
+            slack_id=user.slack_integration.slack_id
+        ).first()
+        if not slack:
+            return
+    access_token = user.organization.slack_integration.access_token
+
+    view_id = context.get("view_id", None)
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    data = {
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Reset Meetings"},
+            "blocks": get_block_set("reset_meeting_block_set", {"u": str(user.id),},),
+            "external_id": f"reset_meeting_block_set.{str(uuid.uuid4())}",
+        },
+    }
+    if view_id:
+        data["view_id"] = view_id
+    else:
+        data["trigger_id"] = context.get("trigger_id")
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def get_action(action_name, context={}, *args, **kwargs):
 
     switcher = {
@@ -544,6 +571,7 @@ def get_action(action_name, context={}, *args, **kwargs):
         "ADD_SEQUENCE": add_to_sequence,
         "ADD_CADENCE": add_to_cadence,
         "CALL_RECORDING": call_recording,
+        "RESET_MEETINGS": reset_meetings,
     }
     return switcher.get(action_name)(context, *args, **kwargs)
 
