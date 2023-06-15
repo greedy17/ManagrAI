@@ -33,6 +33,7 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
+  currentView: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -107,7 +108,17 @@ const mutations = {
   UPDATE_MESSAGES: (state, payload) => {
     state.messages.push(payload)
   },
-  EDIT_MESSAGES: (state, { id, generated, generatedType, generatedId, value }) => {
+  SET_VIEW: (state, payload) => {
+    state.currentView = payload
+  },
+  EDIT_MESSAGES: (state, {
+    id,
+    value,
+    gtMsg,
+    generated,
+    generatedType,
+    generatedId,
+    note }) => {
 
     let newMsg
     newMsg = state.messages.filter((message) => message.id === id)
@@ -116,10 +127,10 @@ const mutations = {
       newMsg[0]['generatedType'] = generatedType
       newMsg[0]['generatedId'] = generatedId
       newMsg[0]['value'] = value
+      newMsg[0]['gtMsg'] = gtMsg
     } else {
       newMsg[0]['value'] = value
     }
-
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
         state.messages[i] = newMsg[0];
@@ -127,12 +138,14 @@ const mutations = {
       }
     }
   },
+  REMOVE_MESSAGE: (state, id) => {
+    state.messages = state.messages.filter(message => message.id !== id);
+  },
   MESSAGE_UPDATED: (state, payload) => {
-    console.log(payload)
     let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
     updatedMsg[0].data = payload.data
-    updatedMsg[0].value = `successfully updated ${updatedMsg[0].resource}!`
+    updatedMsg[0].value = `Successfully updated ${updatedMsg[0].resource}!`
 
     let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
 
@@ -174,8 +187,30 @@ const actions = {
       console.log(e)
     }
   },
-  editMessages({ commit }, { id, generated, generatedType, generatedId, value }) {
-    commit('EDIT_MESSAGES', { id, generated, generatedType, generatedId, value })
+  setCurrentView({ commit }, view) {
+    commit('SET_VIEW', view)
+  },
+  editMessages({ commit }, { user,
+    id,
+    value,
+    gtMsg,
+    generated,
+    generatedType,
+    generatedId,
+    note }) {
+    commit('EDIT_MESSAGES', {
+      user,
+      id,
+      value,
+      gtMsg,
+      generated,
+      generatedType,
+      generatedId,
+      note
+    })
+  },
+  removeMessage({ commit }, id) {
+    commit('REMOVE_MESSAGE', id)
   },
   updateMessages({ commit }, message) {
     commit('UPDATE_MESSAGES', message)
