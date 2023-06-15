@@ -1,5 +1,5 @@
 <template>
-  <PopularWorkflows :closeBuilder="closeBuilder" :noRenderHeader="noRenderHeader" :selectField="true" :config="userCRM === 'HUBSPOT' ? allConfigs.UPCOMING_NEXT_STEP_HUBSPOT : allConfigs.UPCOMING_NEXT_STEP" />
+  <PopularWorkflows :closePopularModal="closePopularModal" :canSave="canSave" :saveWorkflow="saveWorkflow" :closeBuilder="closeBuilder" :noRenderHeader="noRenderHeader" :selectField="true" :config="config" />
 </template>
 
 <script>
@@ -22,7 +22,19 @@ export default {
     },
     closeBuilder: {
       type: Function
-    }
+    },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
+    config: {
+      type: Object
+    },
+    closePopularModal: {
+      type: Function
+    },
   },
   data() {
     return {

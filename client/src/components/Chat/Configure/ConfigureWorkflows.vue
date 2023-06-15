@@ -185,6 +185,71 @@
       </div>
     </Modal>
 
+    <Modal
+      v-if="confirmDeleteModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), closeDeleteModal()
+        }
+      "
+    >
+    <!-- modal-form confirm-form -->
+      <form v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="height: 25vh;">
+        <div class="header-crm">
+          <div class="flex-row-wrapper inner-crm">
+            <div class="flex-row-modal" style="margin: 0;">
+              <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
+              <h3 class="invite-form__title">Are you sure?</h3>
+            </div>
+            <div class="flex-row-modal" style="margin: 0;">
+              <img
+                @click="closeDeleteModal"
+                src="@/assets/images/close.svg"
+                alt=""
+                style="
+                  filter: invert(30%);
+                  cursor: pointer;
+                  width: 20px;
+                  height: 20px;
+                  margin-right: 5px;
+                "
+              />
+            </div>
+          </div>
+        </div>
+        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%;">
+          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem;">
+            By clicking Delete, you will be removing 
+            {{ this.deleteAlert ? `${this.deleteAlert.title}` : 'this alert' }}.
+          </h4>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
+            <div class="img-border-modal cancel-button" @click="closeDeleteModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+              Cancel
+            </div>
+            <button class="img-border-modal red-button" @click="deleteWorkflow(deleteAlert.id)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%;">
+              Delete
+            </button>
+          </div>
+          <!-- <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="onRevoke(removeApp)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div> -->
+        </div>
+      </form>
+    </Modal>
+
     <template v-if="!templates.refreshing && (!isOnboarding || !user.isAdmin)">
       <!-- <transition name="fade">
       </transition> -->
@@ -265,13 +330,25 @@
                     alt=""
                   />
                 </button>
-                <button
+                <!-- <button
                   class="img-border"
                   @click="editWorkflow(alert)"
                   v-if="user.id === alert.user"
                 >
                   <img
                     src="@/assets/images/edit.svg"
+                    style="filter: invert(40%)"
+                    height="14px"
+                    alt=""
+                  />
+                </button> -->
+                <button
+                  class="img-border"
+                  @click="openDeleteWorkflow(alert)"
+                  v-if="user.id === alert.user"
+                >
+                  <img
+                    src="@/assets/images/trash.svg"
                     style="filter: invert(40%)"
                     height="14px"
                     alt=""
@@ -400,7 +477,7 @@
               <button @click="goToWorkflow('ZoomRecap')" class="white_button">Activate</button>
             </div>
         </div>
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header" style="">
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -414,18 +491,8 @@
             <div class="separator"></div>
             <div class="card__body__between">
               <p></p>
-              <!-- side-wrapper -->
               <button v-if="isPaid" :disabled="!isPaid" class="green_button right-margin" @click="switchBuildCustom">
                 Create Workflow
-                <!-- <label class="side-icon side-workflow">
-                  <span class="side-tooltip-single" style="top: -5px; right: 142px; width: 200px;">Upgrade your plan</span>
-                  <img
-                    style="filter: invert(40%)"
-                    src="@/assets/images/lock.svg"
-                    height="14px"
-                    alt=""
-                  />
-                </label> -->
               </button>
               <div v-else class="tooltip-left">
                 <img
@@ -437,9 +504,8 @@
                 />
                 <small class="tooltiptext-left">Upgrade your plan</small>
               </div>
-              <!-- <button @click="goToWorkflow('ZoomRecap')" class="white_button">Create Workflow</button> -->
             </div>
-        </div>
+        </div> -->
       </div>
 
       <div class="alert_cards" v-if="editing"></div>
@@ -515,9 +581,10 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
+      deleteAlert: null,
       templateTitles: [],
       workflowListOpen: false,
-      deleteId: '',
+      confirmDeleteModal: false,
       deleteTitle: '',
       editing: true,
       // userConfigForm: new UserConfigForm({}),
@@ -560,6 +627,41 @@ export default {
       setTimeout(() => {
         this.commandModalOpen = false
       }, 300)
+    },
+    openDeleteWorkflow(alert) {
+      this.deleteAlert = alert
+      this.confirmDeleteModal = true
+    },
+    closeDeleteModal() {
+      this.deleteAlert = null
+      this.confirmDeleteModal = false
+    },
+    async deleteWorkflow(id) {
+      if (!id) {
+        return
+      }
+      this.deletedTitle(id)
+      try {
+        await AlertTemplate.api.deleteAlertTemplate(id)
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error removing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        // this.editingWorkflow = false
+        // this.creatingTemplate = false
+        this.$router.go()
+      }
+    },
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
     },
     refreshWorkflows() {
       this.templates.refresh()
@@ -654,11 +756,6 @@ export default {
     async getZoomChannel() {
       const res = await SlackOAuth.api.channelDetails(this.zoomChannel)
       this.currentZoomChannel = res.channel.name
-    },
-    deletedTitle(id) {
-      let newList = []
-      newList = this.templates.list.filter((val) => val.id === id)
-      this.deleteTitle = newList[0].title
     },
     handleUpdate() {
       // this.loading = true
@@ -1513,5 +1610,113 @@ a {
 }
 .gray-logo {
   filter: invert(40%);
+}
+.invite-form {
+  @include small-modal();
+  min-width: 37vw;
+  // min-height: 64vh;
+  align-items: center;
+  justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.crm-form {
+  height: 60vh;
+  width: 32vw;
+}
+.form-margin-small {
+  margin-top: 10rem;
+}
+.header-crm {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  display: flex;
+  justify-content: center;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.flex-row-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.inner-crm {
+  border-bottom: 1px solid $soft-gray;
+  width: 90%;
+  padding-bottom: 0.4rem;
+  overflow-y: auto;
+}
+.flex-row-modal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%
+}
+.img-border-modal {
+  // @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+.cancel-button {
+  @include gray-button();
+}
+.red-button {
+  @include button-danger();
 }
 </style>

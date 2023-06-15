@@ -1,5 +1,236 @@
 <template>
   <div class="alerts">
+    <Modal
+      v-if="popularWorkflowModal"
+      @close-modal="
+        () => {
+          $emit('cancel'), closePopularModal()
+        }
+      "
+      dimmed
+    >
+      <div v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="justify-content: flex-start;">
+        <div class="header-crm">
+          <div class="flex-row-wrapper inner-crm">
+            <div class="flex-row-modal" style="margin: 0;">
+              <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
+              <h3 class="invite-form__title">
+                <!-- {{formatTemplateName(templateName)}} -->
+                Activate Workflow
+              </h3>
+            </div>
+            <div class="flex-row-modal" style="margin: 0;">
+              <img
+                @click="closePopularModal"
+                src="@/assets/images/close.svg"
+                alt=""
+                style="
+                  filter: invert(30%);
+                  cursor: pointer;
+                  width: 20px;
+                  height: 20px;
+                  margin-right: 5px;
+                "
+              />
+            </div>
+          </div>
+        </div>
+        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%; height: 45vh; overflow-y: auto; border: none;">
+          <div class="outer-height" v-if="templateName === 'CloseDatePassed'">
+            <CloseDatePassed 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_PASSED_HUBSPOT : allConfigs.CLOSE_DATE_PASSED
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'UpcomingNextStep'">
+            <NextStepDate 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.UPCOMING_NEXT_STEP_HUBSPOT : allConfigs.UPCOMING_NEXT_STEP
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'LargeOpportunities'">
+            <LargeOpps 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.LARGE_DEALS_HUBSPOT : allConfigs.LARGE_OPPORTUNITIES
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'EmptyField'">
+            <EmptyField 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.EMPTY_FIELD_HUBSPOT : allConfigs.EMPTY_FIELD
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'ClosingThisMonth'">
+            <ClosingThisMonth 
+              :config="
+                userCRM == 'HUBSPOT' ? allConfigs.CLOSING_THIS_MONTH_HUBSPOT : allConfigs.CLOSING_THIS_MONTH
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'ClosingNextMonth'">
+            <ClosingNextMonth 
+              :config="
+                userCRM == 'HUBSPOT' ? allConfigs.CLOSING_NEXT_MONTH_HUBSPOT : allConfigs.CLOSING_NEXT_MONTH
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'ClosingThisQuarter'">
+            <ClosingThisQuarter 
+              :config="
+                allConfigs.CLOSING_THIS_QUARTER
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'TeamPipeline'">
+            <TeamPipeline 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.TEAM_PIPELINE_HUBSPOT : allConfigs.TEAM_PIPELINE
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'CloseDateApproaching'">
+            <CloseDateApproaching 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT : allConfigs.CLOSE_DATE_APPROACHING
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'DealReview'">
+            <DealRotting 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.DEAL_REVIEW_HUBSPOT : allConfigs.DEAL_REVIEW
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === '30DayPipeline'">
+            <UpdateForecast 
+              :config="
+                userCRM === 'HUBSPOT' ? allConfigs.THIRTY_DAY_PIPELINE_HUBSPOT : allConfigs.THIRTY_DAY_PIPELINE
+              "
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'LogZoom'">
+            <LogZoom 
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+          <div class="outer-height" v-if="templateName === 'ZoomRecap'">
+            <ZoomRecap 
+              :canSave="canSaveWorkflow" 
+              :closePopularModal="closePopularModal"
+              :saveWorkflow="saveWorkflow" 
+              :noRenderHeader="true" 
+              :closeBuilder="closeBuilder" 
+            />
+          </div>
+        </div>
+        <!-- <div class="invite-form__actions"> -->
+      </div>
+      <!-- <div class="workflow__modal">
+        <div v-if="templateName === 'CloseDatePassed'">
+          <CloseDatePassed :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'UpcomingNextStep'">
+          <NextStepDate :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'LargeOpportunities'">
+          <LargeOpps :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'EmptyField'">
+          <EmptyField :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'ClosingThisMonth'">
+          <ClosingThisMonth :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'ClosingNextMonth'">
+          <ClosingNextMonth :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'ClosingThisQuarter'">
+          <ClosingThisQuarter :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'TeamPipeline'">
+          <TeamPipeline :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'CloseDateApproaching'">
+          <CloseDateApproaching :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'DealReview'">
+          <DealRotting :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === '30DayPipeline'">
+          <UpdateForecast :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'LogZoom'">
+          <LogZoom :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+        <div v-if="templateName === 'ZoomRecap'">
+          <ZoomRecap :noRenderHeader="true" :closeBuilder="closeBuilder" />
+        </div>
+      </div> -->
+    </Modal>
     <!-- <AlertsHeader
       v-if="!isOnboarding"
       page="workflows"
@@ -59,45 +290,57 @@
     </div>
 
     <div style="margin-top: 0rem" v-if="creatingTemplate && !editingWorkflow && !buildingCustom">
-      <div v-if="templateName === 'CloseDatePassed'">
-        <CloseDatePassed :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'UpcomingNextStep'">
-        <NextStepDate :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'LargeOpportunities'">
-        <LargeOpps :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'EmptyField'">
-        <EmptyField :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'ClosingThisMonth'">
-        <ClosingThisMonth :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'ClosingNextMonth'">
-        <ClosingNextMonth :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'ClosingThisQuarter'">
-        <ClosingThisQuarter :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'TeamPipeline'">
-        <TeamPipeline :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'CloseDateApproaching'">
-        <CloseDateApproaching :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'DealReview'">
-        <DealRotting :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === '30DayPipeline'">
-        <UpdateForecast :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'LogZoom'">
-        <LogZoom :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
-      <div v-if="templateName === 'ZoomRecap'">
-        <ZoomRecap :noRenderHeader="true" :closeBuilder="closeBuilder" />
-      </div>
+      <Modal
+        v-if="popularWorkflowModal"
+        @close-modal="
+          () => {
+            $emit('cancel'), closePopularModal()
+          }
+        "
+        dimmed
+      >
+        <div class="workflow__modal">
+          <div v-if="templateName === 'CloseDatePassed'">
+            <CloseDatePassed :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'UpcomingNextStep'">
+            <NextStepDate :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'LargeOpportunities'">
+            <LargeOpps :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'EmptyField'">
+            <EmptyField :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'ClosingThisMonth'">
+            <ClosingThisMonth :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'ClosingNextMonth'">
+            <ClosingNextMonth :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'ClosingThisQuarter'">
+            <ClosingThisQuarter :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'TeamPipeline'">
+            <TeamPipeline :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'CloseDateApproaching'">
+            <CloseDateApproaching :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'DealReview'">
+            <DealRotting :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === '30DayPipeline'">
+            <UpdateForecast :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'LogZoom'">
+            <LogZoom :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+          <div v-if="templateName === 'ZoomRecap'">
+            <ZoomRecap :noRenderHeader="true" :closeBuilder="closeBuilder" />
+          </div>
+        </div>
+      </Modal>
     </div>
 
     <ConfigureWorkflows
@@ -121,6 +364,7 @@ import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import User from '@/services/users'
 import AlertsHeader from '@/components/AlertsHeader'
 import ConfigureWorkflows from './ConfigureWorkflows.vue'
+import allConfigs from '@/views/settings/alerts/configs'
 import LargeOpps from '@/views/settings/alerts/create/templates/LargeOpps.vue'
 import CloseDatePassed from '@/views/settings/alerts/create/templates/CloseDatePassed.vue'
 import NextStepDate from '@/views/settings/alerts/create/templates/NextStepDate.vue'
@@ -156,6 +400,7 @@ export default {
     UpdateForecast,
     LogZoom,
     ZoomRecap,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   props: {
     config: {
@@ -164,12 +409,15 @@ export default {
   },
   data() {
     return {
+      allConfigs,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
       // userOnboardingForm: new UserOnboardingForm({}),
       buildingCustom: false,
       canSave: false,
       editingWorkflow: false,
       creatingTemplate: false,
+      popularWorkflowModal: false,
+      ableToSave: false,
       currentAlert: null,
       templateName: '',
     }
@@ -219,6 +467,82 @@ export default {
     switchBuildCustom() {
       this.buildingCustom = !this.buildingCustom
     },
+    canSaveWorkflow(bool) {
+      this.ableToSave = bool
+    },
+    formatTemplateName(templateName) {
+      let newTemplateName = templateName[0]
+      for (let i = 1; i < templateName.length; i++) {
+        const letter = templateName[i]
+        // if letter is uppercase
+        if (letter.toLowerCase() !== letter) {
+          newTemplateName += ` ${letter}`
+        } else {
+          newTemplateName += letter
+        }
+      }
+      return newTemplateName
+    },
+    // async saveWorkflow() {
+    //   this.savingTemplate = true
+    //   const newConfigs = this.config.newConfigs[0]
+    //   const operandIden = this.config.newGroups[0].newOperands[0].operandIdentifier
+    //   let largeOpsCheck = true
+    //   if (this.largeOpps) {
+    //     largeOpsCheck = false
+    //     if (this.largeOppsBool) {
+    //       largeOpsCheck = true
+    //     }
+    //   }
+    //   if (
+    //     (newConfigs.recurrenceDays.length || operandIden) &&
+    //     newConfigs.alertTargets.length &&
+    //     this.selectUsersBool &&
+    //     largeOpsCheck &&
+    //     (this.setDaysBool || this.selectFieldBool)
+    //   ) {
+    //     try {
+    //       const res = await AlertTemplate.api.createAlertTemplate({
+    //         ...this.config,
+    //         user: this.$store.state.user.id,
+    //         directToUsers: this.directToUsers,
+    //       })
+
+    //       if (res.status === 400 && res.data.message) {
+    //         this.$toast(res.data.message, {
+    //           timeout: 2000,
+    //           position: 'top-left',
+    //           type: 'error',
+    //           toastClassName: 'custom',
+    //           bodyClassName: ['custom'],
+    //         })
+    //         return
+    //       }
+
+    //       this.handleUpdate()
+
+    //       this.$toast('Workflow saved Successfully', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'success',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //       this.$router.push({ name: 'ListTemplates' })
+    //     } catch (e) {
+    //       console.log('e', e)
+    //       this.$toast(`${e}`, {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     } finally {
+    //       this.savingTemplate = false
+    //     }
+    //   }
+    // },
     deletedTitle(id) {
       let newList = []
       newList = this.templates.list.filter((val) => val.id === id)
@@ -275,8 +599,13 @@ export default {
       this.currentAlert = alert
     },
     openCreateTemplate(alert) {
-      this.creatingTemplate = true
+      // this.creatingTemplate = true
+      this.popularWorkflowModal = true
       this.templateName = alert
+    },
+    closePopularModal() {
+      this.popularWorkflowModal = false 
+      this.creatingTemplate = false
     },
     saveWorkflow() {
       this.$refs.workflowBuilder.onSave()
@@ -306,6 +635,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
   },
 }
 </script>
@@ -313,6 +645,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 .shimmer {
   display: inline-block;
@@ -529,5 +862,188 @@ a:hover span {
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+.workflow__modal {
+  @include base-modal();
+  color: $base-gray;
+  min-height: 25vh;
+  max-height: 70vh;
+  padding: 0 1rem;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    background-color: white;
+    z-index: 2;
+    top: 0;
+    p {
+      font-size: 16px;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+    width: 100%;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      h4 {
+        font-weight: 900;
+        font-size: 13px;
+        margin: 0;
+        padding: 0;
+        min-width: 32vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+
+        span {
+          // background-color: $off-white;
+          color: $light-gray-blue;
+          padding: 4px 8px;
+          border-radius: 4px;
+          margin-left: 12px;
+          font-size: 13px;
+          opacity: 0.9;
+        }
+      }
+
+      p {
+        font-weight: bold;
+        font-size: 13px;
+        color: $light-gray-blue;
+        padding: 0;
+        margin: 0;
+        margin-top: 4px;
+      }
+    }
+  }
+}
+.invite-form {
+  @include small-modal();
+  min-width: 37vw;
+  // min-height: 64vh;
+  align-items: center;
+  justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.crm-form {
+  height: 60vh;
+  width: 32vw;
+}
+.form-margin-small {
+  margin-top: 2rem;
+}
+.header-crm {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  display: flex;
+  justify-content: center;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.flex-row-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.inner-crm {
+  border-bottom: 1px solid $soft-gray;
+  width: 90%;
+  padding-bottom: 0.4rem;
+  overflow-y: auto;
+}
+.flex-row-modal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%
+}
+.img-border-modal {
+  // @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+.cancel-button {
+  @include gray-button();
+}
+.save {
+  // @include base-button();
+  // background-color: $dark-green;
+  // color: $white;
+  // font-size: 12px;
+  // transition: all 0.3s;
+  @include primary-button();
+  margin-right: 0.1rem;
+}
+.outer-height {
+  height: 42vh;
+  overflow-y: auto;
 }
 </style>

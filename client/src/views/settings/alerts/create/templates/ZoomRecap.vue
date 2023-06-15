@@ -189,6 +189,12 @@ export default {
     closeBuilder: {
       type: Function,
     },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
   },
   data() {
     return {

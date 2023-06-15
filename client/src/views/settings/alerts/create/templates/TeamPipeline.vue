@@ -1,9 +1,12 @@
 <template>
   <PopularWorkflows
+    :closePopularModal="closePopularModal"
     :selectField="true"
-    :config="userCRM === 'HUBSPOT' ? allConfigs.TEAM_PIPELINE_HUBSPOT : allConfigs.TEAM_PIPELINE"
+    :config="config"
     :noRenderHeader="noRenderHeader"
     :closeBuilder="closeBuilder"
+    :canSave="canSave" 
+    :saveWorkflow="saveWorkflow"
   />
 </template>
 
@@ -27,7 +30,19 @@ export default {
     },
     closeBuilder: {
       type: Function
-    }
+    },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
+    config: {
+      type: Object
+    },
+    closePopularModal: {
+      type: Function
+    },
   },
   data() {
     return {

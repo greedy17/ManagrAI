@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="centered">
-      <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
+      <!-- <div class="toggle__switch" v-if="form.field.groupOrder.value != 0">
         <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
         <ToggleCheckBox
           v-if="userCRM !== 'HUBSPOT'"
@@ -13,7 +13,7 @@
           onColor="#41b883"
         />
         <label :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</label>
-      </div>
+      </div> -->
 
       <!-- <small v-if="form.field.groupOrder.value != 0" @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
@@ -157,9 +157,9 @@ export default {
     },
   },
   mounted() {
-    if (this.userCRM === 'HUBSPOT') {
+    // if (this.userCRM === 'HUBSPOT') {
       this.selectedCondition = 'OR'
-    }
+    // }
   },
   computed: {
     userCRM() {

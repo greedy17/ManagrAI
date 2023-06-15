@@ -27,7 +27,7 @@
       </button>
     </div>
 
-    <div v-else class="alerts-header-inner">
+    <!-- <div v-else class="alerts-header-inner">
       <button @click="closeBuilder" class="back-button">
         <img src="@/assets/images/left.svg" height="14px" alt="" />
         Back
@@ -52,9 +52,9 @@
       >
         Activate Channel
       </button>
-    </div>
+    </div> -->
 
-    <div class="centered">
+    <div class="">
       <div class="section">
         <h4 class="section__header">Select a channel for your meetings</h4>
         <div v-if="!channelName" class="row">
@@ -135,6 +135,41 @@
           </FormField>
         </div>
       </div>
+      <div class="invite-form__actions">
+        <!-- <div style="width: 10vw;"></div> -->
+        <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
+          <div class="img-border-modal cancel-button" @click="closePopularModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;">
+            Cancel
+          </div>
+          <!-- <PulseLoadingSpinnerButton
+            :loading="savingTemplate"
+            :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
+            text="Save"
+            @click.stop="onSave"
+            :disabled="!verifySubmit() || savingTemplate"
+          /> -->
+          <button 
+            class="img-border-modal save" 
+            :disabled="!(channelCreated || zoomChannel)"
+            @click="handleZoomUpdate(zoomChannel)" 
+            style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;"
+          >
+            Activate
+          </button>
+        </div>
+        <!-- <div class="invite-form__inner_actions">
+          <template>
+            <PulseLoadingSpinnerButton
+              @click="onRevoke(removeApp)"
+              class="invite-button modal-button"
+              style="width: 5rem; margin-right: 5%; height: 2rem"
+              text="Confirm"
+              :loading="pulseLoading"
+              >Confirm</PulseLoadingSpinnerButton
+            >
+          </template>
+        </div> -->
+      </div>
     </div>
     <!-- <div style="margin-top: 1.5rem" v-if="channelCreated || zoomChannel">
             <div v-if="!create">
@@ -170,6 +205,15 @@ export default {
     },
     closeBuilder: {
       type: Function,
+    },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
+    closePopularModal: {
+      type: Function
     },
   },
   data() {
@@ -356,6 +400,7 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 @keyframes bounce {
   0% {
@@ -393,12 +438,13 @@ export default {
   }
 }
 .section {
-  background-color: white;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border: 1px solid $soft-gray;
+  background-color: $off-white;
+  width: 33vw;
+  // box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  // border: 1px solid $soft-gray;
   color: $base-gray;
   border-radius: 6px;
-  width: 50vw;
+  // width: 50vw;
   min-height: 25vh;
   letter-spacing: 0.75px;
   padding: 0px 0px 32px 12px;
@@ -508,7 +554,7 @@ img {
   font-size: 0.75rem;
 }
 .logZoomPage {
-  height: 100vh;
+  // height: 100vh;
   color: $base-gray;
   margin-top: 4rem;
   display: flex;
@@ -568,5 +614,69 @@ input {
     line-height: 1.2;
     color: $light-gray-blue;
   }
+}
+.invite-form {
+  // @include small-modal();
+  // min-width: 37vw;
+  // min-height: 64vh;
+  // align-items: center;
+  // justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    // justify-content: flex-end;
+    // width: 100%;
+    width: 36.5vw;
+    position: absolute;
+    bottom: 35%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%;
+  border-top: 1px solid $soft-gray;
+  background-color: $white;
+}
+.img-border-modal {
+  // @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+.cancel-button {
+  @include gray-button();
+}
+.save {
+  @include primary-button();
+  padding: 8px 24px;
 }
 </style>

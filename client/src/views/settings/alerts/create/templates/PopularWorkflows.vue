@@ -37,7 +37,7 @@
         </button>
       </div>
     </div>
-    <div v-else class="alerts-header-inner">
+    <!-- <div v-else class="alerts-header-inner">
       <button @click="closeBuilder" class="back-button">
         <img src="@/assets/images/left.svg" height="14px" alt="" />
         Back
@@ -73,8 +73,9 @@
           Activate without Slack
         </button>
       </div>
-    </div>
-    <div class="centered">
+    </div> -->
+    <div class="">
+      <h4 class="card-text" :style="largeOpps ? 'margin-bottom: 0.75rem;' : ''">{{ config.title }}</h4>
       <div
         class="forecast__collection"
         :key="i"
@@ -85,14 +86,14 @@
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <div style="padding-left: 12px" class="section" v-if="largeOpps">
-              <h4 class="section__header">Select your "Amount" Field</h4>
+            <div style="padding-left: 12px; margin-top: 0;" class="section" v-if="largeOpps">
+              <h4 class="section__header" style="margin-top: 0rem;">Select your "Amount" Field</h4>
 
-              <div>
+              <div style="padding-bottom: 0.5rem;">
                 <div :key="i" v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups">
                   <div :class="i > 0 ? 'visible' : ''">
                     <div>
-                      <div>
+                      <div style="margin-left: 0.5rem;">
                         <FormField>
                           <template v-slot:input>
                             <Multiselect
@@ -124,28 +125,12 @@
                           </template>
                         </FormField>
                       </div>
-
-                      <div>
-                        <h4 class="section__header">"Amount" is greater than:</h4>
-                        <template>
-                          <div>
-                            <FormField
-                              :errors="alertOperand.field.operandValue.errors"
-                              v-model="largeOppValue"
-                              :inputType="getInputType(alertOperand.field._operandIdentifier.value)"
-                              large
-                              bordered
-                              placeholder="Enter a value"
-                            />
-                          </div>
-                        </template>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div v-else style="padding-left: 12px" class="section">
+            <div v-else style="padding-left: 12px;" class="section">
               <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
@@ -172,6 +157,23 @@
                   </p>
                 </template>
               </Multiselect>
+            </div>
+            <div class="section" style="padding-left: 12px; margin-bottom: 0;">
+              <div :key="j" v-for="(alertOperand, j) in alertGroup.field.alertOperands.groups">
+                <h4 class="section__header" style="margin-top: 0rem;">"Amount" is greater than:</h4>
+                <template>
+                  <div style="margin-left: 0.5rem; padding-bottom: 0.5rem;">
+                    <FormField
+                      :errors="alertOperand.field.operandValue.errors"
+                      v-model="largeOppValue"
+                      :inputType="getInputType(alertOperand.field._operandIdentifier.value)"
+                      large
+                      bordered
+                      placeholder="Enter a value"
+                    />
+                  </div>
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -397,7 +399,37 @@
             </div>
           </div>
         </div>
-        <div style="margin-bottom: 8px; display: flex" class="section">
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
+            <div class="img-border-modal cancel-button" @click="closePopularModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;">
+              Cancel
+            </div>
+            <!-- <PulseLoadingSpinnerButton
+              :loading="savingTemplate"
+              :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
+              text="Save"
+              @click.stop="onSave"
+              :disabled="!verifySubmit() || savingTemplate"
+            /> -->
+            <button class="img-border-modal save" :disabled="!verifySubmit() || savingTemplate" @click="onSave" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;">
+              Save
+            </button>
+          </div>
+          <!-- <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="onRevoke(removeApp)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div> -->
+        </div>
+        <!-- <div style="margin-bottom: 8px; display: flex" class="section">
           <div style="">
             <h4 class="section__head">Slack Message</h4>
             <section class="section__body">
@@ -437,7 +469,6 @@
                             {{ message.title }}
                           </div>
                         </div>
-                        <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
                       </div>
                       <div @click="removeMessage(i, message)">
                         <img src="@/assets/images/remove.svg" style="height: 1.2rem" />
@@ -490,7 +521,7 @@
               </div>
             </section>
           </div>
-        </div>
+        </div> -->
       </div>
       <div v-if="!hasSlack && !selectField" class="overlay">
         <p class="text">
@@ -518,7 +549,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 export default {
   name: 'PopularWorkflows',
-  props: ['selectField', 'largeOpps', 'config', 'isEmpty', 'noRenderHeader', 'closeBuilder'],
+  props: ['selectField', 'largeOpps', 'config', 'isEmpty', 'noRenderHeader', 'closeBuilder', 'canSave', 'saveWorkflow', 'closePopularModal'],
   components: {
     ToggleCheckBox,
     FormField,
@@ -769,6 +800,16 @@ export default {
     },
     verifySubmit() {
       if (this.largeOpps) {
+        if (this.config.newGroups[0].newOperands[0].operandIdentifier &&
+          this.config.newGroups[0].newOperands[0].operandValue &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          this.selectFieldBool &&
+          this.largeOppsBool) {
+            this.canSave(true)
+          } else {
+            this.canSave(false)
+          }
         return (
           this.config.newGroups[0].newOperands[0].operandIdentifier &&
           this.config.newGroups[0].newOperands[0].operandValue &&
@@ -778,6 +819,18 @@ export default {
           this.largeOppsBool
         )
       } else {
+        if (
+          (this.config.newConfigs[0].recurrenceDays.length ||
+            this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+            this.config.newConfigs[0].alertTargets.length &&
+            this.selectUsersBool &&
+            (this.setDaysBool || this.selectFieldBool) &&
+            this.config.messageTemplate.body.length
+          ) {
+            this.canSave(true)
+          } else {
+            this.canSave(false)
+          }
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
@@ -1123,6 +1176,7 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 @import '@/styles/buttons';
+@import '@/styles/modals';
 
 ::v-deep .input-content {
   width: 20vw;
@@ -1147,7 +1201,7 @@ export default {
   align-items: center !important;
   width: 25vw;
   overflow-x: scroll;
-  margin-top: 16px;
+  // margin-top: 16px;
 
   span {
     transition: all 0.2s;
@@ -1198,7 +1252,8 @@ export default {
 .centered {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  // align-items: center;
+  margin-left: 1.5rem;
   justify-content: center;
   padding-bottom: 16px;
 }
@@ -1259,25 +1314,31 @@ export default {
   }
 }
 .section {
-  background-color: white;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border: 1px solid $soft-gray;
+  background-color: $off-white;
+  width: 33vw;
+  // box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  // border: 1px solid $soft-gray;
   color: $base-gray;
   border-radius: 6px;
-  width: 50vw;
-  min-height: 25vh;
+  // width: 50vw;
+  // min-height: 25vh;
   letter-spacing: 0.75px;
-  padding: 0px 0px 32px 0px;
+  // padding: 0px 0px 32px 0px;
   margin-top: 16px;
+  margin-bottom: 16px;
+  padding-top: 8px;
   &__head {
     padding: 8px 12px;
-    background-color: white;
+    background-color: $off-white;
     margin-bottom: 0;
+    margin-top: 0.25rem;
+    font-size: 14px;
     // color: $very-light-gray;
   }
   &__body {
     padding: 6px 12px;
-    background-color: white;
+    margin-left: 0.5rem;
+    background-color: $off-white;
     font-size: 11px;
     color: $light-gray-blue;
     p {
@@ -1474,7 +1535,7 @@ img {
   filter: invert(40%);
 }
 .alerts-page {
-  height: 100vh;
+  // height: 100vh;
   color: $base-gray;
   margin-top: 11vh;
 }
@@ -1604,5 +1665,74 @@ input[type='search']:focus {
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+.invite-form {
+  // @include small-modal();
+  // min-width: 37vw;
+  // min-height: 64vh;
+  // align-items: center;
+  // justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    // justify-content: flex-end;
+    // width: 100%;
+    width: 36.5vw;
+    position: absolute;
+    bottom: 35%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%;
+  border-top: 1px solid $soft-gray;
+  background-color: $white;
+}
+.img-border-modal {
+  // @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+.cancel-button {
+  @include gray-button();
+}
+.save {
+  @include primary-button();
+  padding: 8px 24px;
+}
+.card-text {
+  font-size: 11px;
+  color: $light-gray-blue;
+  margin: 0.25rem 0 0 0.75rem;
 }
 </style>

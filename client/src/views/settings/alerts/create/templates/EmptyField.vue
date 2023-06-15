@@ -1,10 +1,13 @@
 <template>
   <PopularWorkflows
-    :config="userCRM === 'HUBSPOT' ? allConfigs.EMPTY_FIELD_HUBSPOT : allConfigs.EMPTY_FIELD"
+    :closePopularModal="closePopularModal"
+    :config="config"
     :selectField="true"
     :isEmpty="true"
     :noRenderHeader="noRenderHeader"
     :closeBuilder="closeBuilder"
+    :canSave="canSave" 
+    :saveWorkflow="saveWorkflow"
   />
 </template>
 
@@ -28,7 +31,19 @@ export default {
     },
     closeBuilder: {
       type: Function
-    }
+    },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
+    config: {
+      type: Object
+    },
+    closePopularModal: {
+      type: Function
+    },
   },
   data() {
     return {

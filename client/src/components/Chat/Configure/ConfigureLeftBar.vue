@@ -15,9 +15,9 @@
         <div class="base-select" :class="configPage === 'workflows' ? 'left-active' : 'pointer'" @click="changeConfigPage('workflows')">
           <p><img src='@/assets/images/workflows-chat.svg' :class="configPage === 'workflows' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Workflows</p> <span class="config-number">{{ activeTemplatesLength }}</span>
         </div>
-        <div class="base-select" :class="configPage === 'notes' ? 'left-active' : 'pointer'" @click="changeConfigPage('notes')">
+        <!-- <div class="base-select" :class="configPage === 'notes' ? 'left-active' : 'pointer'" @click="changeConfigPage('notes')">
           <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Note Templates</p>
-        </div>
+        </div> -->
         <div class="base-select" :class="configPage === 'sync' ? 'left-active' : 'pointer'" @click="changeConfigPage('sync')">
           <p><img src='@/assets/images/cycle.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
         </div>
