@@ -16,7 +16,7 @@
           <p><img src='@/assets/images/workflows-chat.svg' :class="configPage === 'workflows' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Lists</p> <span class="config-number">{{ activeTemplatesLength }}</span>
         </div>
         <div class="base-select" :class="configPage === 'notes' ? 'left-active' : 'pointer'" @click="changeConfigPage('notes')">
-          <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Note Templates</p> <span class="config-number">{{ noteTemplates.length }}</span>
+          <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Templates</p> <span class="config-number">{{ noteTemplates.length }}</span>
         </div>
         <div class="base-select" :class="configPage === 'sync' ? 'left-active' : 'pointer'" @click="changeConfigPage('sync')">
           <p><img src='@/assets/images/cycle.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
@@ -130,7 +130,8 @@ export default {
   align-items: center;
   cursor: pointer;
   padding: 0.5rem;
-  font-size: 11px;
+  // font-size: 11px;
+  font-size: 14px;
   border-radius: 4px;
   margin: 0.2rem 0;
   transition: all 0.3s;
@@ -141,7 +142,7 @@ export default {
   }
 }
 .pointer {
-  color: $light-gray-blue;
+  // color: $light-gray-blue;
   img {
     filter: invert(45%);
   }
