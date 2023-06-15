@@ -41,6 +41,7 @@ from managr.core.background import (
     emit_process_send_email_draft,
     emit_process_send_next_steps,
     emit_process_send_call_analysis_to_dm,
+    emit_process_send_regenerate_email_message,
 )
 from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
@@ -3880,6 +3881,13 @@ def process_selected_generative_action(payload, context):
         return {"response_action": "clear"}
 
 
+REGENERATE_ACTION_SWITCHER = {
+    "DRAFT_EMAIL": emit_process_send_regenerate_email_message,
+    "SEND_SUMMARY": process_send_recap_modal,
+    "NEXT_STEPS": emit_process_send_next_steps,
+}
+
+
 def process_regenerate_action(payload, context):
     user = User.objects.get(id=context.get("u"))
     action = payload.get("actions")[0].get("value")
@@ -3893,7 +3901,7 @@ def process_regenerate_action(payload, context):
         res = slack_requests.update_channel_message(
             channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
         )
-        action_func = GENERATIVE_ACTION_SWITCHER[action]
+        action_func = REGENERATE_ACTION_SWITCHER[action]
         action_func(payload, context)
     except Exception as e:
         logger.exception(e)

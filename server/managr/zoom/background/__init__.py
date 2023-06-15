@@ -983,6 +983,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             "transcript_summaries": summary_parts,
                         },
                         fields_list,
+                        workflow.datetime_created.date(),
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
