@@ -57,7 +57,7 @@
     <div class="">
       <h4 class="card-text">Select a channel for your meetings</h4>
       <div class="section" style="padding-top: 1rem;">
-        <div v-if="!channelName" class="row">
+        <!-- <div v-if="!channelName" class="row">
           <label :class="!create ? 'green' : ''">Select channel</label>
           <ToggleCheckBox
             style="margin: 0.25rem"
@@ -67,14 +67,41 @@
             onColor="#41b883"
           />
           <label :class="create ? 'green' : ''">Create channel</label>
+        </div> -->
+        
+        <div class="switcher">
+          <div @click="switchChannelView('SELECT')" :class="!create ? 'activeSwitch' : ''" class="switch-item">
+            <!-- <img src="@/assets/images/crmlist.svg" height="16px" alt="" /> -->
+            Select channel
+          </div>
+          <div
+            @click="switchChannelView('CREATE')"
+            :class="create ? 'activeSwitch' : ''"
+            class="switch-item"
+          >
+            <!-- <img src="@/assets/images/note.svg" height="12px" alt="" /> -->
+            Create channel
+          </div>
+          <!-- <div style="cursor: not-allowed" class="switch-item">
+            <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
+            Summaries
+          </div> -->
         </div>
 
-        <label v-else for="channel" style="font-weight: bold"
+        <!-- <label v-else for="channel" style="font-weight: bold"
           >Alerts will send to
           <span style="color: #41b883; font-size: 1.2rem">{{ channelName }}</span>
           channel</label
+        > -->
+        <div 
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+          "
+          v-if="create"
         >
-        <div v-if="create">
           <input
             v-model="channelName"
             class="search__input"
@@ -96,7 +123,7 @@
           </div>
         </div>
 
-        <div v-else>
+        <div style="margin-top: 0.5rem; display: flex; flex-direction: column; align-items: center;" v-else>
           <FormField>
             <template v-slot:input>
               <Multiselect
@@ -273,6 +300,13 @@ export default {
       setTimeout(() => {
         this.dropdownLoading = false
       }, 500)
+    },
+    switchChannelView(view) {
+      if (view === 'SELECT') {
+        this.create = false
+      } else if (view === 'CREATE') {
+        this.create = true
+      }
     },
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
@@ -683,5 +717,42 @@ input {
   font-size: 11px;
   color: $light-gray-blue;
   margin: 0.25rem 0 0 0.75rem;
+}
+.switcher {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 6px;
+  padding: 2px 0;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $light-gray-blue;
+  white-space: nowrap;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-left: -0.25rem;
+  }
+}
+
+.activeSwitch {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $base-gray;
+  img {
+    filter: none;
+  }
 }
 </style>

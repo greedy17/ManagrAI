@@ -185,7 +185,7 @@
           <h4 class="section__head">Select Delivery Day</h4>
 
           <section class="section__body">
-            <div class="row__">
+            <!-- <div class="row__">
               <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'base' : ''"
                 >Weekly</label
               >
@@ -204,9 +204,28 @@
               <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'base' : ''"
                 >Monthly</label
               >
+            </div> -->
+
+            <div class="switcher">
+              <div @click="switchWeekMonthView('WEEKLY')" :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'activeSwitch' : ''" class="switch-item">
+                <!-- <img src="@/assets/images/crmlist.svg" height="16px" alt="" /> -->
+                Weekly
+              </div>
+              <div
+                @click="switchWeekMonthView('MONTHLY')"
+                :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'activeSwitch' : ''"
+                class="switch-item"
+              >
+                <!-- <img src="@/assets/images/note.svg" height="12px" alt="" /> -->
+                Monthly
+              </div>
+              <!-- <div style="cursor: not-allowed" class="switch-item">
+                <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
+                Summaries
+              </div> -->
             </div>
 
-            <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
+            <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'" style="display: flex; justify-content: center;">
               <div class="week-row">
                 <span v-for="(day, i) in weeklyOpts" :key="i">
                   <input
@@ -257,13 +276,15 @@
                 </template>
               </FormField>
             </div> -->
-            <FormField
-              id="delivery"
-              v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
-              placeholder="Day of month"
-              v-model="config.newConfigs[0].recurrenceDay"
-              small
-            />
+            <div v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'" style="display: flex; justify-content: center;">
+              <FormField
+                id="delivery"
+                placeholder="Day of month"
+                @input="monthlyDaysBool"
+                v-model="config.newConfigs[0].recurrenceDay"
+                small
+              />
+            </div>
           </section>
         </div>
         <div v-if="userLevel == 'MANAGER'" class="section">
@@ -305,7 +326,7 @@
           <h4 class="section__head">Select Delivery Method</h4>
 
           <div class="section__body">
-            <div v-if="!channelName" class="row__">
+            <!-- <div v-if="!channelName" class="row__">
               <label :class="!create ? 'base' : ''">Select #channel</label>
               <ToggleCheckBox
                 style="margin-left: 8px; margin-right: 8px"
@@ -315,17 +336,36 @@
                 onColor="#41b883"
               />
               <label :class="create ? 'base' : ''">Create #channel</label>
+            </div> -->
+
+            <div class="switcher">
+              <div @click="switchChannelView('SELECT')" :class="!create ? 'activeSwitch' : ''" class="switch-item">
+                <!-- <img src="@/assets/images/crmlist.svg" height="16px" alt="" /> -->
+                Select #channel
+              </div>
+              <div
+                @click="switchChannelView('CREATE')"
+                :class="create ? 'activeSwitch' : ''"
+                class="switch-item"
+              >
+                <!-- <img src="@/assets/images/note.svg" height="12px" alt="" /> -->
+                Create #channel
+              </div>
+              <!-- <div style="cursor: not-allowed" class="switch-item">
+                <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
+                Summaries
+              </div> -->
             </div>
 
-            <label v-else for="channel"
+            <!-- <label v-else for="channel"
               >Alert will send to
               <span>{{ channelName }}</span>
-            </label>
+            </label> -->
             <div
               style="
                 display: flex;
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center;
                 justify-content: flex-start;
               "
               v-if="create"
@@ -350,7 +390,7 @@
                 <button v-else class="disabled__button">Create Channel</button>
               </div>
             </div>
-            <div style="margin-top: 0.5rem" v-else>
+            <div style="margin-top: 0.5rem; display: flex; flex-direction: column; align-items: center;" v-else>
               <template>
                 <Multiselect
                   v-if="!directToUsers"
@@ -359,7 +399,7 @@
                   @input="setRecipient"
                   :options="userChannelOpts.channels"
                   openDirection="below"
-                  style="width: 20vw"
+                  style="width: 20vw; margin-top: 1rem;"
                   selectLabel="Enter"
                   track-by="id"
                   label="name"
@@ -729,6 +769,13 @@ export default {
     checkForChannel() {
       !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
     },
+    monthlyDaysBool() {
+      if (this.config.newConfigs[0].recurrenceDay && this.config.newConfigs[0].recurrenceDay != '0') {
+        this.setDaysBool = true
+      } else {
+        this.setDaysBool = false
+      }
+    },
     selectUsersCustomLabel(prop) {
       return prop.fullName.trim() ? prop.fullName : prop.email
     },
@@ -761,6 +808,23 @@ export default {
       this.config.messageTemplate.body = this.slackMessage.join('\n\n')
       this.config.messageTemplate.bindings = slackBindingsArr
       this.drag = false
+    },
+    switchWeekMonthView(view) {
+      // if (view !== this.view) {
+      //   this.view = view
+      // }
+      if (view === 'WEEKLY') {
+        this.config.newConfigs[0].recurrenceFrequency = 'WEEKLY'
+      } else if (view === 'MONTHLY') {
+        this.config.newConfigs[0].recurrenceFrequency = 'MONTHLY'
+      }
+    },
+    switchChannelView(view) {
+      if (view === 'SELECT') {
+        this.create = false
+      } else if (view === 'CREATE') {
+        this.create = true
+      }
     },
     bindText(val, title) {
       const addedStr = `<strong>${title}</strong> \n { ${val} }`
@@ -821,6 +885,7 @@ export default {
       } else {
         if (
           (this.config.newConfigs[0].recurrenceDays.length ||
+            this.config.newConfigs[0].recurrenceDay ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
             this.config.newConfigs[0].alertTargets.length &&
             this.selectUsersBool &&
@@ -833,6 +898,7 @@ export default {
           }
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
+            this.config.newConfigs[0].recurrenceDay ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
           this.config.newConfigs[0].alertTargets.length &&
           this.selectUsersBool &&
@@ -1198,6 +1264,7 @@ export default {
 .week-row {
   display: flex;
   flex-direction: row;
+  justify-content: center;
   align-items: center !important;
   width: 25vw;
   overflow-x: scroll;
@@ -1476,6 +1543,7 @@ export default {
   border: 1px solid $soft-gray;
   margin-top: 1rem;
   width: 20vw;
+  padding: 0.5rem
 }
 input[type='text']:focus {
   outline: none;
@@ -1738,5 +1806,42 @@ input[type='search']:focus {
 .section__header {
   font-size: 14px;
   margin-top: 0.25rem;
+}
+.switcher {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 6px;
+  padding: 2px 0;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $light-gray-blue;
+  white-space: nowrap;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-left: -0.25rem;
+  }
+}
+
+.activeSwitch {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $base-gray;
+  img {
+    filter: none;
+  }
 }
 </style>

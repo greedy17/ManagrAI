@@ -26,6 +26,9 @@
         :stageForms="formStages"
         />
       </div>
+      <div v-else-if="configPage === 'notes'">
+        <ConfigureSync />
+      </div>
       <div v-else-if="configPage === 'sync'">
         <ConfigureSync />
       </div>

@@ -181,7 +181,7 @@
                       $event.value,
                       dataType === 'MultiPicklist' ? true : false,
                     )
-                  "
+                  "x
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results.</p>
