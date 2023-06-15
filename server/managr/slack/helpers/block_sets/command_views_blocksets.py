@@ -709,7 +709,7 @@ def reset_meeting_block_set(context, *args, **kwargs):
         MeetingWorkflow.objects.filter(user=user)
         .order_by("datetime_created")
         .values_list("datetime_created", flat=True)
-    )
+    )[:50]
     meetings = list(set([datetime.datetime.strftime(date, "%Y-%m-%d") for date in meetings]))
     meeting_options = [block_builders.option(meeting, meeting) for meeting in meetings]
     blocks = []
