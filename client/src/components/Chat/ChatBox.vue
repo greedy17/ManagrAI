@@ -3,14 +3,16 @@
     <header class="title-header">
       <p style="margin-right: auto"><span>Latest: </span>{{ chatTitle }}</p>
       <!-- <div class="row pointer">
-        <img src="@/assets/images/cloud.svg" height="18px" alt="" />
+        <img style="margin-right:.5rem" src="@/assets/images/cloud.svg" height="18px" alt="" />
+        sync
       </div>
 
       <div class="row pointer" @click="clearMessages">
-        <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
+        <img style="margin-right:.5rem" class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
+        clear
       </div> -->
       <button class="small-button">
-        <img src="@/assets/images/cloud.svg" height="16px" alt="" />
+        <img class="dampen" src="@/assets/images/cloud.svg" height="16px" alt="" />
         sync
       </button>
       <button @click="clearMessages" class="small-button">
@@ -292,7 +294,6 @@ export default {
           gtMsg: 'AI Generated Email',
           generated: true,
           generatedType: 'email',
-          note: note,
         })
 
         // this.generativeRes['id']
@@ -312,18 +313,13 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('editMessages', {
+          user: 'bot',
           id: id,
+          value: this.generativeRes['res'],
+          gtMsg: 'AI Generated Next Steps',
           generated: true,
           generatedType: 'next',
-          generatedId: this.generativeRes['id'],
-          value: 'Suggested next steps.',
         })
-        this.setMessage({
-          user: 'bot',
-          id: this.generativeRes['id'],
-          value: this.generativeRes['res'],
-        })
-
         this.generating = false
       }
     },
@@ -416,7 +412,7 @@ export default {
   }
 }
 .dampen {
-  filter: invert(30%);
+  filter: invert(45%);
   margin-left: 1rem;
 }
 

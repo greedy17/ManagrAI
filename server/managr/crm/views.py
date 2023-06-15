@@ -227,7 +227,7 @@ class CRMObjectViewSet(
             while True:
                 crm = user.crm_account
 
-                if "meeting_comments" in all_form_data.keys():
+                if "meeting_comments" in all_form_data.keys() and not chat_form_id:
                     if all_form_data.get("meeting_comments", None) is not None:
                         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                     data = {

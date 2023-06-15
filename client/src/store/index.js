@@ -128,7 +128,6 @@ const mutations = {
       newMsg[0]['generatedId'] = generatedId
       newMsg[0]['value'] = value
       newMsg[0]['gtMsg'] = gtMsg
-      newMsg[0]['note'] = note
     } else {
       newMsg[0]['value'] = value
     }
@@ -146,7 +145,7 @@ const mutations = {
     let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
     updatedMsg[0].data = payload.data
-    updatedMsg[0].value = `successfully updated ${updatedMsg[0].resource}!`
+    updatedMsg[0].value = `Successfully updated ${updatedMsg[0].resource}!`
 
     let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
 
