@@ -550,15 +550,14 @@ export default {
           const res = await CRMObjects.api.getNotes({
             resourceId: this.selectedOpp.id,
           })
-          // if (res.length) {
-          //   this.notes = []
-          //   for (let i = 0; i < res.length; i++) {
-          //     this.notes.push(res[i])
-          //     this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
-          //     this.notesLength = this.notes.length
-          //   }
-          // }
-          this.notes = res
+          if (res.length) {
+            this.notes = []
+            for (let i = 0; i < res.length; i++) {
+              this.notes.push(res[i])
+              this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+              // this.notesLength = this.notes.length
+            }
+          }
         } catch (e) {
           console.log(e)
         } finally {
@@ -670,7 +669,14 @@ export default {
       if (opp) {
         this.selectedOpp = opp
       } else if (name) {
-        this.selectedOpp = this.opportunities.filter((opp) => opp.name === name)[0]
+        let opp
+        opp = this.opportunities.filter((opp) => opp.name === name)[0]
+        if (opp) {
+          this.selectedOpp = opp
+        } else {
+          this.selectedOpp = null
+          this.searchText = name
+        }
       }
     },
     async switchFiltering() {

@@ -258,10 +258,9 @@ export default {
 
     async onSubmitChat() {
       this.submitting = true
-      let data = this.removeEmptyValues(this.chatData.data)
       try {
         const res = await CRMObjects.api.updateResource({
-          form_data: data,
+          form_data: this.chatData.data,
           resource_type: this.chatData.resourceType,
           form_type: this.chatData.formType,
           resource_id: this.chatData.resourceId,

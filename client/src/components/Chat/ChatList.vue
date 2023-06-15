@@ -97,6 +97,8 @@ button {
   background-color: white;
   padding: 0.5rem 0;
   font-weight: 500;
+  color: $light-gray-blue;
+  font-size: 12px !important;
 }
 
 .gold-filter {
@@ -126,6 +128,7 @@ button {
   overflow: scroll;
   padding: 0 1.25rem;
   background-color: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .chat-table-section::-webkit-scrollbar {
