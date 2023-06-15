@@ -57,7 +57,7 @@
               class="menu-item"
               @click="changeView(alert.title, alert)"
             >
-              <img src="@/assets/images/listed.svg" height="14px" alt="" />
+              <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
               <p>{{ alert.title }}</p>
 
               <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">

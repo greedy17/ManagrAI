@@ -111,7 +111,14 @@ const mutations = {
   SET_VIEW: (state, payload) => {
     state.currentView = payload
   },
-  EDIT_MESSAGES: (state, { id, generated, generatedType, generatedId, value }) => {
+  EDIT_MESSAGES: (state, {
+    id,
+    value,
+    gtMsg,
+    generated,
+    generatedType,
+    generatedId,
+    note }) => {
 
     let newMsg
     newMsg = state.messages.filter((message) => message.id === id)
@@ -120,16 +127,20 @@ const mutations = {
       newMsg[0]['generatedType'] = generatedType
       newMsg[0]['generatedId'] = generatedId
       newMsg[0]['value'] = value
+      newMsg[0]['gtMsg'] = gtMsg
+      newMsg[0]['note'] = note
     } else {
       newMsg[0]['value'] = value
     }
-
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
         state.messages[i] = newMsg[0];
         break;
       }
     }
+  },
+  REMOVE_MESSAGE: (state, id) => {
+    state.messages = state.messages.filter(message => message.id !== id);
   },
   MESSAGE_UPDATED: (state, payload) => {
     let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
@@ -180,8 +191,27 @@ const actions = {
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
   },
-  editMessages({ commit }, { id, generated, generatedType, generatedId, value }) {
-    commit('EDIT_MESSAGES', { id, generated, generatedType, generatedId, value })
+  editMessages({ commit }, { user,
+    id,
+    value,
+    gtMsg,
+    generated,
+    generatedType,
+    generatedId,
+    note }) {
+    commit('EDIT_MESSAGES', {
+      user,
+      id,
+      value,
+      gtMsg,
+      generated,
+      generatedType,
+      generatedId,
+      note
+    })
+  },
+  removeMessage({ commit }, id) {
+    commit('REMOVE_MESSAGE', id)
   },
   updateMessages({ commit }, message) {
     commit('UPDATE_MESSAGES', message)

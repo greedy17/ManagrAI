@@ -36,15 +36,23 @@
           </div>
 
           <div class="text-container">
-            <pre v-html="message.value" class="message-text"></pre>
+            <div style="position: relative">
+              <div v-if="message.user === 'bot' && message.gtMsg" class="msgType">
+                <p>
+                  {{ message.gtMsg }}
+                </p>
+              </div>
+
+              <pre v-html="message.value" class="message-text"></pre>
+            </div>
 
             <div v-if="message.generated">
               <div
-                v-if="generating && generatingId === message.generatedId"
+                v-if="generating && generatingId === message.id"
                 style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
                 class="row"
               >
-                <p>Regenerating response</p>
+                <!-- <p class="gray-text">Regenerating response</p> -->
                 <div class="loading">
                   <div class="dot"></div>
                   <div class="dot"></div>
@@ -52,19 +60,16 @@
                 </div>
               </div>
 
-              <div v-else style="margin-top: 0.5rem" class="row">
+              <div v-else style="margin-top: 1.5rem" class="row">
                 <button
                   @click="
-                    regenerate(
-                      message.generatedType,
-                      message.data['meeting_comments'],
-                      message.generatedId,
-                    )
+                    regenerate(message.generatedType, message.data['meeting_comments'], message.id)
                   "
                   class="content-button padding-small"
                 >
                   <img
                     style="margin-right: 0.6rem"
+                    class="gold-filter"
                     src="@/assets/images/sparkle.svg"
                     height="14px"
                     alt=""
@@ -107,6 +112,8 @@
                   class="content-button"
                 >
                   <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
+
+                  {{ message.note }}
                 </button>
                 <button
                   @click="nextSteps(message.data['meeting_comments'], message.id)"
@@ -143,9 +150,9 @@
                 <span
                   style="
                     font-size: 20px;
-                    margin-right: 0.75rem;
+                    margin-right: 1rem;
                     padding-top: 0.5rem;
-
+                    margin-left: -3rem
                     margin-top: 0.5rem;
                   "
                   >🚀</span
@@ -279,17 +286,16 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('editMessages', {
+          user: 'bot',
           id: id,
+          value: this.generativeRes['res'],
+          gtMsg: 'AI Generated Email',
           generated: true,
           generatedType: 'email',
-          generatedId: this.generativeRes['id'],
-          value: 'Email generated',
+          note: note,
         })
-        this.setMessage({
-          user: 'bot',
-          id: this.generativeRes['id'],
-          value: this.generativeRes['res'],
-        })
+
+        // this.generativeRes['id']
 
         this.generating = false
       }
@@ -414,6 +420,21 @@ export default {
   margin-left: 1rem;
 }
 
+.gray-text {
+  color: $light-gray-blue;
+}
+
+.msgType {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: $grape;
+  color: white;
+  font-size: 12px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+}
+
 .message-text {
   font-family: $base-font-family;
   word-wrap: break-word;
@@ -509,6 +530,12 @@ export default {
   left: 0;
 }
 
+.bottom-right {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
 .avatar {
   background-color: $purple;
   color: white;
@@ -528,7 +555,7 @@ export default {
   left: 0;
   width: 100%;
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: flex-end;
