@@ -821,9 +821,9 @@ def process_transcript_to_summaries(transcript, user):
                 .replace("    ", "")
                 .replace(" --> ", "-")
             )
-            if not settings.IN_PROD:
-                token_check = max_token_calculator(transcript_body)
-                print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
+            # if not settings.IN_PROD:
+            #     token_check = max_token_calculator(transcript_body)
+            #     print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
             attempts = 1
             timeout = 60.0
             tokens = 500
@@ -986,7 +986,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, summary_body, tokens, top_p=0.9, temperature=0.7
+                        user.email, summary_body, tokens, top_p=0.9
                     )
                     try:
                         if not settings.IN_PROD:

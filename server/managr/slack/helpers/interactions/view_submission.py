@@ -2804,6 +2804,36 @@ def process_submit_ask_managr(payload, context):
     return {"response_action": "clear"}
 
 
+def process_reset_selected_meeting_days(payload, context):
+    state = payload["view"]["state"]["values"]
+    user = User.objects.get(id=context.get("u"))
+    selected_meetings_object = state["selected_meetings"]
+    selected_meetings_list = list(selected_meetings_object.values())[0]["selected_options"]
+    selected_meetings = [option["value"] for option in selected_meetings_list]
+    meetings = MeetingWorkflow.objects.filter(id__in=selected_meetings)
+    slack_interaction = meetings.first().slack_interaction
+    date = str(meetings.first().datetime_created.date())
+    for meeting in meetings:
+        meeting.operations_list = []
+        meeting.operations = []
+        meeting.completed_operations = []
+        meeting.failed_operations = []
+        meeting.failed_task_description = []
+        meeting.transcript_summary = None
+        meeting.transcript_analysis = None
+        if len(meeting.forms.all()):
+            for form in meeting.forms.all():
+                form.delete()
+        meeting.save()
+    emit_process_calendar_meetings(
+        str(user.id),
+        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+        slack_interaction,
+        date=date,
+    )
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2839,6 +2869,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
         slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
+        slack_const.RESET_SELECTED_MEETING_DAYS: process_reset_selected_meeting_days,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])

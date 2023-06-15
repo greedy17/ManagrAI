@@ -2363,6 +2363,40 @@ def process_meeting_details(payload, context):
         )
 
 
+@slack_api_exceptions(rethrow=True)
+@processor()
+def choose_reset_meeting_day(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(
+            slack_id=user.slack_integration.slack_id
+        ).first()
+        if not slack:
+            return
+    access_token = user.organization.slack_integration.access_token
+    state = payload["view"]["state"]["values"]
+    selected_day = state["selected_day"][
+        f"{slack_const.CHOOSE_RESET_MEETING_DAY}?u={context.get('u')}"
+    ]["selected_option"]["value"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Reset Meetings"},
+            "blocks": get_block_set(
+                "reset_meeting_block_set", {"u": str(user.id), "meeting_day": selected_day},
+            ),
+            "external_id": f"reset_meeting_block_set.{str(uuid.uuid4())}",
+            "callback_id": slack_const.RESET_SELECTED_MEETING_DAYS,
+            "submit": {"type": "plain_text", "text": "Submit",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return
+
+
 #########################################################
 # ALERT ACTIONS
 #########################################################
@@ -4230,6 +4264,7 @@ def handle_block_actions(payload):
         slack_const.OPEN_REVIEW_CHAT_UPDATE_MODAL: process_open_review_chat_update_modal,
         slack_const.SEND_CALL_ANALYSIS_TO_DM: process_send_call_analysis_to_dm,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
+        slack_const.CHOOSE_RESET_MEETING_DAY: choose_reset_meeting_day,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

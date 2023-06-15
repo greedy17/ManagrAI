@@ -96,12 +96,9 @@ OPEN_AI_TRANSCRIPT_PROMPT = (
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
     lambda input, crm_fields: f"""'input': {input}, 'prompt': 'Based on the transcript summaries provided above, you must follow the instructions below: 
-1) Create a comprehensive summary of how the call, in chronological order. Include key details that were discussed, such as: products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
-2) The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.
-3) Imagine you are a sales rep, fill in the CRM_fields below with relevant data from the call transcript.
-4) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called
- summary.\nCRM fields: {crm_fields}'
-    """
+1) Create one comprehensive summary of the call. The summary should only include information that would be relevant to a salesperson. Highlight key details (if they were discussed) such as: products & features, customer pain points, competitors, timeline to close, decision-making process, next steps and budget. The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.\n
+2) Then, you must fill in the CRM fields below based on this call transcript. Identify and extract accurate data for each applicable CRM field. For any fields not applicable, leave them empty.\n
+3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.\nCRM fields: {crm_fields}'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
