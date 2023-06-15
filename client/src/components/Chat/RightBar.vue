@@ -2,13 +2,9 @@
   <section class="right-container">
     <header>
       <section v-if="selectedOpp">
-        <div class="flexed-row-spread">
-          <div class="flexed-row">
-            <!-- <font-awesome-icon
-              @click="selectedOpp = null"
-              style="height: 20px; width: 20px; margin-left: 0; color: #27292c"
-              icon="fa-solid fa-square-caret-left"
-            /> -->
+        <div class="flexed-row-s"></div>
+        <span style="margin-top: -4px" class="flexed-row-spread header-bg">
+          <div class="elipsis-text">
             <span class="icon-bg">
               <img
                 @click="selectedOpp = null"
@@ -17,10 +13,12 @@
                 alt=""
               />
             </span>
-
-            <p>{{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }}</p>
+            <p>
+              {{ selectedOpp.name }}
+            </p>
           </div>
-          <div class="flexed-row">
+
+          <div style="margin-left: -8px" class="flexed-row">
             <img
               :class="{ 'rotate opaque not-allowed': oppsLoading }"
               @click="reloadOpps"
@@ -35,9 +33,6 @@
               @click="openInCrm(selectedOpp.integration_id)"
             />
           </div>
-        </div>
-        <span class="selected-opp">
-          <h4>{{ selectedOpp.name }}</h4>
         </span>
       </section>
 
@@ -223,13 +218,43 @@
       </section>
     </header>
 
+    <div class="switcher" v-if="selectedOpp">
+      <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
+        <img src="@/assets/images/crmlist.svg" height="16px" alt="" />
+        Details
+      </div>
+      <div
+        @click="switchView('notes')"
+        :class="{ activeswitch: view === 'notes' }"
+        class="switch-item"
+      >
+        <img src="@/assets/images/note.svg" height="12px" alt="" />
+        Notes
+      </div>
+      <div style="cursor: not-allowed" class="switch-item">
+        <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
+        Summaries
+      </div>
+    </div>
+
+    <!-- <div v-if="selectedOpp && view === 'crm'" class="section-header">
+      <h4>
+        {{ user.crm === 'SALESFORCE' ? 'Salesforce Fields' : 'Hubspot properties' }}
+      </h4>
+
+      <img src="@/assets/images/settings.svg" height="18px" alt="" />
+    </div> -->
+
     <div class="selected-opp-container" v-if="selectedOpp">
-      <div style="margin-bottom: 0.5rem; padding-left: 0.5rem" class="selected-opp-section">
+      <div v-show="view === 'crm'" class="selected-opp-section bordered">
+        <div class="absolute-img">
+          <img src="@/assets/images/settings.svg" height="18px" alt="" />
+        </div>
         <div>
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
-            <h5 class="gray-text">
+            <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
-            </h5>
+            </p>
 
             <div
               @click="toggleEdit(field.id)"
@@ -253,50 +278,53 @@
                 :field="field"
                 :showing="editing"
                 @close-inline="closeInline"
-                @setFields="setOppForms"
+                @setFields="reloadOpps"
               />
             </div>
           </div>
-        </div>
-
-        <div v-if="!editing" class="edit-button">
-          <button class="no-border gray-scale no-padding">
-            <img src="@/assets/images/edit.svg" height="14px" alt="" />
-            Edit view
-          </button>
         </div>
       </div>
-      <div style="padding-top: 0; margin-left: -0.25rem" class="selected-opp-section">
-        <h4 style="margin-top: 0" class="selected-opp sticky-top gray-bg">Notes & History</h4>
-        <div v-for="note in notes" :key="note.id">
-          <small class="gray-text left-margin">{{
-            `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
-              note.submission_date,
-            )}`
-          }}</small>
-          <div class="note-section">
-            <div class="row">
-              <p
-                :class="{ 'gray-text strike': !!note.saved_data__StageName }"
-                style="margin-right: 0.25rem"
-              >
-                {{ note.previous_data__StageName }}
-              </p>
+      <div v-show="view === 'notes'" class="selected-opp-section">
+        <h4 style="margin-top: 0; background-color: white" class="selected-opp">
+          June 2023 <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+        </h4>
+        <section v-if="notes.length">
+          <div v-for="note in notes" :key="note.id">
+            <div class="note-section">
+              <small class="gray-text left-margin right-absolute">{{
+                `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
+                  note.submission_date,
+                )}`
+              }}</small>
+              <div class="row text-ellipsis">
+                <p
+                  :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                  style="margin-right: 0.25rem"
+                >
+                  {{ note.previous_data__StageName }}
+                </p>
 
-              <img
-                v-if="note.saved_data__StageName"
-                src="@/assets/images/transition.svg"
-                height="12px"
-                alt=""
-              />
+                <img
+                  v-if="note.saved_data__StageName"
+                  src="@/assets/images/transition.svg"
+                  height="12px"
+                  alt=""
+                />
 
-              <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
-            </div>
-            <div>
-              <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
+                <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+              </div>
+              <div>
+                <p style="margin: 0.25rem 0">{{ note.saved_data__meeting_comments || '---' }}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        <section v-else>
+          <div class="note-section">
+            <p class="gray-text">Nothing here yet...</p>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -342,6 +370,7 @@ export default {
   },
   data() {
     return {
+      view: 'crm',
       stageValidationFields: {},
       updateFormData: {},
       loadingNotes: false,
@@ -509,6 +538,11 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    switchView(view) {
+      if (view !== this.view) {
+        this.view = view
+      }
+    },
     async getNotes() {
       if (this.selectedOpp) {
         this.loadingNotes = true
@@ -565,12 +599,15 @@ export default {
     },
     async reloadOpps() {
       this.oppsLoading = true
+      let newOpp
       try {
-        await this.$store.dispatch('loadChatOpps').then(() => {
-          this.setOppForms()
-        })
+        let res = await this.$store.dispatch('loadChatOpps')
+        if (this.selectedOpp) {
+          newOpp = res.results.filter((opp) => opp.id === this.selectedOpp.id)
+          this.selectedOpp = newOpp[0]
+        }
       } catch (e) {
-        console.log('error loading opps')
+        console.log(e)
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
@@ -826,6 +863,51 @@ export default {
   }
 }
 
+.switcher {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 6px;
+  padding: 2px 0;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $light-gray-blue;
+  white-space: nowrap;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-left: -0.25rem;
+  }
+}
+
+.activeswitch {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $base-gray;
+  img {
+    filter: none;
+  }
+}
+
+.absolute-img {
+  position: absolute;
+  top: 1rem;
+  right: 2px;
+  background-color: white;
+}
+
 .shimmer {
   animation: shimmer 2s;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
@@ -864,8 +946,40 @@ export default {
   color: $base-gray;
 }
 
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
+  padding-left: 0.5rem;
+
+  h4,
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.elipsis-text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 300px;
+
+  p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    font-size: 14px !important;
+  }
+}
+
 .right-container {
   position: sticky;
+  background-color: white;
   // right: 0;
   // top: 0;
   overflow: hidden;
@@ -873,7 +987,7 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 1rem 1rem 0.25rem 1rem;
+  padding: 1rem 1.25rem 0 1.25rem;
   font-family: $base-font-family;
   font-size: 14px;
 }
@@ -942,8 +1056,8 @@ export default {
 header {
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  height: 100px;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  height: 80px;
 
   h4,
   p {
@@ -965,12 +1079,19 @@ header {
   cursor: pointer;
 }
 
+.flex-row-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .flexed-row-spread {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   position: relative;
 
   h4,
@@ -994,65 +1115,90 @@ header {
 }
 
 .selected-opp {
-  display: block;
-  width: 350px;
+  width: 100%;
   border-radius: 6px;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  background: rgb(65, 184, 131);
-  background: linear-gradient(
-    90deg,
-    rgba(65, 184, 131, 1) 0%,
-    rgba(65, 184, 131, 0.6951374299719888) 100%
-  );
-  color: white;
+  background-color: $soft-gray;
+  color: $base-gray;
 
   h4 {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: normal;
+  }
+}
+
+.selected-opp:first-of-type {
+  padding: 0.75rem 0.5rem;
+}
+
+.gray-bg {
+  background: $off-white;
+  padding-left: 0.5rem;
+  padding-top: 1rem;
+  background-color: $off-white !important;
+  color: $base-gray;
+  // border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+}
+
+.right-absolute {
+  position: absolute;
+  right: 12px;
+  top: 16px;
+}
+
+.text-ellipsis {
+  width: 260px;
+
+  p {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
   }
 }
 
-.gray-bg {
-  background: $off-white;
-  padding-left: 0.5rem;
-  background-color: $off-white !important;
-  color: $base-gray;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0;
-}
-
 .note-section {
   background-color: white;
-  padding: 0 1rem 1rem 1.1rem;
+  width: 409px;
+  padding: 0 0.5rem 1rem 1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   margin: 0.5rem 0;
+  position: relative;
+}
+
+.bordered {
+  width: 100%;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 0 0 0.5rem 1rem !important;
+  border-radius: 5px;
+  margin-top: 0.5rem;
 }
 
 .selected-opp-section {
-  height: 40%;
-  width: 101%;
+  height: 100%;
+  width: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  padding: 0.5rem 0.25rem;
   position: relative;
   h5,
   h4 {
-    margin: 0.5rem 0rem;
+    margin: 0rem;
   }
 }
 
 .selected-opp-section:last-of-type {
-  height: 60%;
+  height: 98%;
+  width: 102%;
 }
 
 .selected-opp-section::-webkit-scrollbar {
   width: 6px;
   height: 0px;
-  margin-left: 0.25rem;
 }
 .selected-opp-section::-webkit-scrollbar-thumb {
   background-color: transparent;
@@ -1066,6 +1212,7 @@ header {
 .sticky-top {
   position: sticky;
   top: 0;
+  z-index: 10;
 }
 
 // .selected-opp-section:first-of-type {
@@ -1074,6 +1221,9 @@ header {
 
 .selected-opp-container {
   height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 0 !important;
 }
 
 .input {
@@ -1123,18 +1273,19 @@ header {
 
 .edit-button {
   position: absolute;
-  top: 1rem;
-  right: 4px;
+  top: -4px;
+  right: 8px;
 
-  button {
-    @include chat-button();
+  // button {
+  //   @include chat-button();
 
-    font-size: 13px;
-    font-family: $base-font-family;
-    color: $chat-font-color;
-    background-color: white;
-    padding: 0.75rem;
-  }
+  //   font-size: 13px;
+  //   font-weight: normal;
+  //   font-family: $base-font-family;
+  //   color: $chat-font-color;
+  //   background-color: white;
+  //   padding: 0.75rem;
+  // }
 }
 
 .chat-button {
@@ -1298,6 +1449,10 @@ img {
   justify-content: center;
 }
 
+.bottom-border {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 .filter-container {
   position: absolute;
   height: auto;
@@ -1306,7 +1461,7 @@ img {
   width: 350px;
   background-color: white;
   z-index: 1000;
-  top: 3.5rem;
+  top: 3.25rem;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 0 11px #b8bdc2;
@@ -1327,7 +1482,7 @@ img {
 
     p:last-of-type {
       margin-top: -8px;
-      margin-right: 8px;
+      margin-right: 12px;
       padding: 0.25rem;
       color: $light-gray-blue;
       font-size: 18px;
@@ -1505,5 +1660,12 @@ img {
     box-shadow: 0 3px 6px 0 $very-light-gray;
     scale: 1.025;
   }
+}
+
+.header-bg {
+  background-color: white;
+  padding: 0.75rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>
