@@ -666,8 +666,12 @@ export default {
     clearText() {
       this.searchText = ''
     },
-    changeSelectedOpp(opp) {
-      this.selectedOpp = opp
+    changeSelectedOpp(opp, name) {
+      if (opp) {
+        this.selectedOpp = opp
+      } else if (name) {
+        this.selectedOpp = this.opportunities.filter((opp) => opp.name === name)[0]
+      }
     },
     async switchFiltering() {
       // this.$store.dispatch('changeFilters', [['EQUALS', 'Name', 'Marriot']])

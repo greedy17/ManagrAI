@@ -55,9 +55,10 @@
               v-for="(alert, i) in templates.list"
               :key="i"
               class="menu-item"
+              @click="changeView(alert.title, alert)"
             >
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p @click="changeView(alert.title, alert)">{{ alert.title }}</p>
+              <p>{{ alert.title }}</p>
 
               <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">
                 <p>
@@ -134,7 +135,7 @@ export default {
   },
   mounted() {
     this.templates.refresh()
-    console.log(this.templates)
+    // console.log(this.templates)
   },
   methods: {
     changeView(view, alert) {
@@ -205,7 +206,6 @@ export default {
   width: 280px;
   overflow: auto;
   transition: all 0.3s ease;
-  letter-spacing: 0.4px;
   font-size: 14px;
 
   &.open {

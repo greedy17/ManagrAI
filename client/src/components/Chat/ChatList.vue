@@ -11,7 +11,7 @@
           <div class="table-cell">Close Date</div>
         </div>
         <div v-for="(opp, i) in currentView.sobjectInstances" :key="i" class="table-row">
-          <div class="table-cell ellipsis-text">
+          <div @click="setOpp(opp.Name)" class="table-cell ellipsis-text">
             <p class="gray-bg pointer">
               {{ opp.Name }}
             </p>
@@ -28,39 +28,6 @@
           </div>
         </div>
       </div>
-      <!-- <table class="chat-table">
-        <thead class="sticky-header">
-          <tr class="table-row">
-            <div style="padding-left: 1rem" class="th">
-              <p>Name</p>
-            </div>
-            <div class="th">
-              <p>Stage</p>
-            </div>
-            <div class="th">
-              <p>Close Date</p>
-            </div>
-          </tr>
-        </thead>
-
-        <tr class="table-row" v-for="(opp, i) in currentView.sobjectInstances" :key="i">
-          <div class="cell">
-            <p>
-              <span class="gray-bg"> {{ opp.Name }}</span>
-            </p>
-          </div>
-          <div class="cell">
-            <p>
-              {{ opp.StageName }}
-            </p>
-          </div>
-          <div class="cell">
-            <p>
-              {{ opp.CloseDate }}
-            </p>
-          </div>
-        </tr>
-      </table> -->
     </section>
 
     <div class="row">
@@ -89,7 +56,11 @@ export default {
       message: '',
     }
   },
-  methods: {},
+  methods: {
+    setOpp(name) {
+      this.$emit('set-opp', name)
+    },
+  },
   computed: {
     user() {
       return this.$store.state.user
@@ -110,6 +81,7 @@ export default {
 
 button {
   @include chat-button();
+  padding: 0.7rem 1rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -124,7 +96,7 @@ button {
   top: 0;
   background-color: white;
   padding: 0.5rem 0;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .gold-filter {

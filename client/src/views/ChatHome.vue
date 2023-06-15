@@ -177,7 +177,7 @@
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
     <main id="main" v-else>
-      <ChatList />
+      <ChatList @set-opp="setOpp" />
     </main>
 
     <aside id="right-sidebar">
@@ -226,6 +226,9 @@ export default {
   },
   watch: {},
   methods: {
+    setOpp(name) {
+      this.$refs.rightSideBar.changeSelectedOpp(null, name)
+    },
     toggleLeftbarOn() {
       this.barOpen = true
     },

@@ -110,7 +110,6 @@ const mutations = {
   },
   SET_VIEW: (state, payload) => {
     state.currentView = payload
-    console.log('STEP 3 COMPLETE', payload)
   },
   EDIT_MESSAGES: (state, { id, generated, generatedType, generatedId, value }) => {
 
@@ -180,7 +179,6 @@ const actions = {
     }
   },
   setCurrentView({ commit }, view) {
-    console.log('STEP 2 COMPLETE')
     commit('SET_VIEW', view)
   },
   editMessages({ commit }, { id, generated, generatedType, generatedId, value }) {
