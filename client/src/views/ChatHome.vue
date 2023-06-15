@@ -172,9 +172,14 @@
         :handleProfileOpen="handleProfileOpen"
       />
     </aside>
-    <main id="main">
+
+    <main v-if="currentView === 'home'" id="main">
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
+    <main id="main" v-else>
+      <ChatList />
+    </main>
+
     <aside id="right-sidebar">
       <RightBar ref="rightSideBar" @set-fields="setFormFields" @set-stages="setStageFields" />
     </aside>
@@ -188,6 +193,7 @@ import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 import Modal from '@/components/InviteModal'
 import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
+import ChatList from '../components/Chat/ChatList.vue'
 import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 
@@ -199,6 +205,7 @@ export default {
     LeftSideBar,
     Modal,
     ChatFormField,
+    ChatList,
   },
   data() {
     return {
@@ -329,6 +336,9 @@ export default {
     numberOfAllowedUsers() {
       return this.$store.state.user.organizationRef.numberOfAllowedUsers
     },
+    currentView() {
+      return this.$store.state.currentView
+    },
   },
 }
 </script>
@@ -372,7 +382,7 @@ body {
 }
 
 #left-sidebar {
-  width: 260px;
+  width: 280px;
 }
 
 #main {
