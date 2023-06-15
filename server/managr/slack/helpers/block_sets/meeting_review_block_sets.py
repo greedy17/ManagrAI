@@ -359,9 +359,6 @@ def edit_meeting_contacts_block_set(context):
         ]
 
     if not len(slack_form.template.custom_fields.all()):
-        logger.info(
-            f"instance id: {str(slack_form.id)},instance template id: {str(slack_form.template.id)}"
-        )
         return [
             block_builders.section_with_button_block(
                 "Forms",

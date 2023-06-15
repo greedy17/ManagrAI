@@ -527,6 +527,7 @@ def actions_block_set(context):
         block_builders.option("Deal Review", "DEAL_REVIEW"),
         block_builders.option("Call Summary", "CALL_SUMMARY"),
         block_builders.option("Call Analysis", "CALL_ANALYSIS"),
+        block_builders.option("Ask Managr", "ASK_MANAGR"),
     ]
     blocks = [
         block_builders.input_block(
