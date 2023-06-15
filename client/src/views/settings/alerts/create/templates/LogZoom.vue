@@ -55,8 +55,8 @@
     </div> -->
 
     <div class="">
-      <div class="section">
-        <h4 class="section__header">Select a channel for your meetings</h4>
+      <h4 class="card-text">Select a channel for your meetings</h4>
+      <div class="section" style="padding-top: 1rem;">
         <div v-if="!channelName" class="row">
           <label :class="!create ? 'green' : ''">Select channel</label>
           <ToggleCheckBox
@@ -678,5 +678,10 @@ input {
 .save {
   @include primary-button();
   padding: 8px 24px;
+}
+.card-text {
+  font-size: 11px;
+  color: $light-gray-blue;
+  margin: 0.25rem 0 0 0.75rem;
 }
 </style>

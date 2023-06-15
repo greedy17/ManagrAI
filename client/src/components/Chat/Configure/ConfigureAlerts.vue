@@ -16,7 +16,7 @@
               <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
               <h3 class="invite-form__title">
                 <!-- {{formatTemplateName(templateName)}} -->
-                Activate Workflow
+                {{templateName === 'LogZoom' ? formatTemplateName(templateName) : 'Build List'}}
               </h3>
             </div>
             <div class="flex-row-modal" style="margin: 0;">

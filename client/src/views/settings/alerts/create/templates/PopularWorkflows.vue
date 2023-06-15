@@ -87,7 +87,7 @@
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
             <div style="padding-left: 12px; margin-top: 0;" class="section" v-if="largeOpps">
-              <h4 class="section__header" style="margin-top: 0rem;">Select your "Amount" Field</h4>
+              <h4 class="section__header">Select your "Amount" Field</h4>
 
               <div style="padding-bottom: 0.5rem;">
                 <div :key="i" v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups">
@@ -137,7 +137,7 @@
                 v-model="identity"
                 :options="objectFields.list"
                 openDirection="below"
-                style="width: 20vw; margin-top: 0.75rem"
+                style="width: 20vw; margin-top: 0.75rem; padding-bottom: 1rem;"
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
@@ -158,9 +158,9 @@
                 </template>
               </Multiselect>
             </div>
-            <div class="section" style="padding-left: 12px; margin-bottom: 0;">
+            <div v-if="largeOpps" class="section" style="padding-left: 12px; margin-bottom: 0;">
               <div :key="j" v-for="(alertOperand, j) in alertGroup.field.alertOperands.groups">
-                <h4 class="section__header" style="margin-top: 0rem;">"Amount" is greater than:</h4>
+                <h4 class="section__header">"Amount" is greater than:</h4>
                 <template>
                   <div style="margin-left: 0.5rem; padding-bottom: 0.5rem;">
                     <FormField
@@ -394,7 +394,7 @@
 
               <div v-else class="sendAll custom-checkbox">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                <label for="allUsers">Send to primary channel</label>
+                <label for="allUsers" style="margin-bottom: 0.75rem;">Send to primary channel</label>
               </div>
             </div>
           </div>
@@ -1091,7 +1091,7 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          this.$router.push({ name: 'ListTemplates' })
+          this.$router.go()
         } catch (e) {
           console.log('e', e)
           this.$toast(`${e}`, {
@@ -1324,9 +1324,9 @@ export default {
   // min-height: 25vh;
   letter-spacing: 0.75px;
   // padding: 0px 0px 32px 0px;
-  margin-top: 16px;
-  margin-bottom: 16px;
-  padding-top: 8px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  padding-top: 10px;
   &__head {
     padding: 8px 12px;
     background-color: $off-white;
@@ -1734,5 +1734,9 @@ input[type='search']:focus {
   font-size: 11px;
   color: $light-gray-blue;
   margin: 0.25rem 0 0 0.75rem;
+}
+.section__header {
+  font-size: 14px;
+  margin-top: 0.25rem;
 }
 </style>
