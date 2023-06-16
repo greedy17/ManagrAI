@@ -64,6 +64,7 @@ urlpatterns = [
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("task-status/", core_views.get_task_status, name="get-task-status"),
+    path("sso-data/", core_views.get_sso_data, name="get-sso-data"),
     path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
         "nylas/callback/accounts",

@@ -163,7 +163,10 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
-    filter_fields = ("organization", "email",)
+    filter_fields = (
+        "organization",
+        "email",
+    )
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -536,55 +539,6 @@ class GetFileView(View):
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
-
-
-"""
-TODO 2021-01-15 William: Need to determine whether we still need this viewset.
-
-class NotificationSettingsViewSet(
-    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
-):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = NotificationOptionSerializer
-
-    def get_queryset(self):
-        return NotificationOption.objects.for_user(self.request.user)
-
-    def list(self, request, *args, **kwargs):
-        # qs = NotificationOption.objects.for_user(request.user)
-        qs = self.get_queryset()
-        resource_param = request.query_params.get("resource", None)
-        if resource_param:
-            qs = qs.filter(resource=resource_param)
-        page = self.paginate_queryset(qs)
-        if page is not None:
-            serializer = NotificationOptionSerializer(
-                qs, many=True, context={"request": request}
-            )
-            return self.get_paginated_response(serializer.data)
-        serializer = NotificationOptionSerializer(
-            qs, many=True, context={"request": request}
-        )
-        return Response()
-
-    @action(
-        methods=["PATCH"],
-        permission_classes=(permissions.IsAuthenticated,),
-        detail=False,
-        url_path="update-settings",
-    )
-    def update_settings(self, request, *args, **kwargs):
-        data = request.data
-        user = request.user
-        selections = data.get("selections", [])
-        for sel in selections:
-            selection, created = NotificationSelection.objects.get_or_create(
-                option=sel["option"], user=user
-            )
-            selection.value = sel["value"]
-            selection.save()
-        return Response()
- """
 
 
 class NylasAccountWebhook(APIView):
@@ -967,3 +921,14 @@ class NoteTemplateViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes(
+    [permissions.AllowAny,]
+)
+def get_sso_data(request):
+    data = {}
+    data["client_id"] = settings.GOOGLE_CLIENT_ID
+    data["login_uri"] = settings.GOOGLE_LOGIN_URI
+    return Response(data=data)
