@@ -1085,12 +1085,12 @@ def paginated_meeting_blockset(context):
                     params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
                 ),
             )
-        elif len(workflow.operations) and workflow.progress < 100:
-            if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
-                crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
-                block = block_builders.simple_section(
-                    f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
-                )
+        # elif len(workflow.operations) and workflow.progress < 100:
+        #     if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+        #         crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
+        #         block = block_builders.simple_section(
+        #             f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
+        #         )
         elif workflow.progress == 100:
             section_text = f":white_check_mark: *Meeting Logged*\n{title}"
             form_ids = [str(id) for id in list(workflow.forms.all().values_list("id", flat=True))]

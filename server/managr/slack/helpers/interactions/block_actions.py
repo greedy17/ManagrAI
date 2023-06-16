@@ -1008,6 +1008,7 @@ def process_pick_custom_object(payload, context):
 def process_sync_calendar(payload, context):
     user = User.objects.get(id=context.get("u"))
     date = context.get("date", None)
+    print(date)
     ts = payload["container"]["message_ts"]
     channel = payload["container"]["channel_id"]
     slack_interaction = f"{ts}|{channel}"

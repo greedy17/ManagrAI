@@ -591,21 +591,28 @@ def process_current_alert_list(user_id):
 
 @background()
 def _process_calendar_meetings(user_id, slack_int, date):
+    from managr.zoom.zoom_helper import exceptions as zoom_exceptions
+
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
-        try:
-            processed_data = _process_calendar_details(user_id, date)
-            if user.has_zoom_integration:
-                if date is None:
-                    user_timezone = pytz.timezone(user.timezone)
-                    todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
-                    date = str(todays_date.date())
-                meetings = user.zoom_account.helper_class.get_meetings_by_date(
-                    user.zoom_account.access_token, user.zoom_account.zoom_id, date
-                )["meetings"]
-        except Exception as e:
-            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
-            processed_data = None
+        while True:
+            try:
+                processed_data = _process_calendar_details(user_id, date)
+                if user.has_zoom_integration:
+                    if date is None:
+                        user_timezone = pytz.timezone(user.timezone)
+                        todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                        date = str(todays_date.date())
+                    meetings = user.zoom_account.helper_class.get_meetings_by_date(
+                        user.zoom_account.access_token, user.zoom_account.zoom_id, date
+                    )["meetings"]
+                    break
+            except zoom_exceptions.TokenExpired:
+                user.zoom_account.regenerate_token()
+            except Exception as e:
+                logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+                processed_data = None
+                break
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
             slack_interaction_check = set(

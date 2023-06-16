@@ -167,6 +167,10 @@ def process_stage_next_page(payload, context):
 def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations_list:
+        workflow.operations_list = []
+        workflow.operations = []
+        workflow.save()
     private_metadata = json.loads(payload["view"]["private_metadata"])
     ts = context.get("ts", None)
     user = workflow.user
