@@ -1621,7 +1621,6 @@ def _process_send_email_draft(payload, context):
 def _process_send_regenerated_email_draft(payload, context):
     from managr.slack.helpers.utils import block_finder
 
-    print("here")
     instructions_check = payload["state"]["values"]["REGENERATE_INSTRUCTIONS"]["plain_input"][
         "value"
     ]
@@ -1638,17 +1637,16 @@ def _process_send_regenerated_email_draft(payload, context):
         # did not find the block
         block = None
         pass
-    body = core_consts.OPEN_AI_EDIT_BODY(
-        user.email, block["text"]["text"], instructions_check, data_collector
+    prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
+        block["text"]["text"], instructions_check
     )
-    print(body)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
     attempts = 1
     while True:
         try:
             with Client as client:
-                url = core_consts.OPEN_AI_EDIT_URI
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-                print(r.json())
                 r = _handle_response(r)
                 text = r.get("choices")[0].get("text")
             break
