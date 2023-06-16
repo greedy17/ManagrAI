@@ -190,7 +190,7 @@ const actions = {
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
   },
-  editMessages({ commit }, { user,
+  editMessages({ commit }, {
     id,
     value,
     gtMsg,
@@ -199,7 +199,7 @@ const actions = {
     generatedId,
     note }) {
     commit('EDIT_MESSAGES', {
-      user,
+
       id,
       value,
       gtMsg,
