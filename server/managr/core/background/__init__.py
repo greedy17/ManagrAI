@@ -143,6 +143,14 @@ def emit_process_send_email_draft(payload, context):
     return _process_send_email_draft(payload, context)
 
 
+def emit_process_send_regenerate_email_message(payload, context):
+    return _process_send_regenerate_email_message(payload, context)
+
+
+def emit_process_send_regenerated_email_draft(payload, context):
+    return _process_send_regenerated_email_draft(payload, context)
+
+
 def emit_process_send_next_steps(payload, context):
     return _process_send_next_steps(payload, context)
 
@@ -1575,8 +1583,152 @@ def _process_send_email_draft(payload, context):
         block_builders.header_block("AI Generated Email"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
         block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Regenerate",
+                    "DRAFT_EMAIL",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_REGENERATE_ACTION,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"form_ids={context.get('form_ids')}",
+                            f"workflow_id={str(context.get('workflow_id'))}",
+                        ],
+                    ),
+                )
+            ]
+        ),
+        block_builders.context_block("This version will not be saved."),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_regenerated_email_draft(payload, context):
+    from managr.slack.helpers.utils import block_finder
+
+    instructions_check = payload["state"]["values"]["REGENERATE_INSTRUCTIONS"]["plain_input"][
+        "value"
+    ]
+    user = User.objects.get(id=context.get("u"))
+    form_ids = context.get("form_ids").split(",")
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    data_collector = {}
+    for form in forms:
+        data_collector = {**data_collector, **form.saved_data}
+    try:
+        previous_blocks = payload["message"]["blocks"]
+        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
+        block["text"]["text"], instructions_check
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+    attempts = 1
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = _handle_response(r)
+                text = r.get("choices")[0].get("text")
+            break
+        except Exception as e:
+            logger.exception(e)
+            text = "There was an error generating your draft"
+            break
+
+    blocks = [
+        block_builders.header_block("AI Generated Email"),
+        block_builders.context_block(f"{forms.first().resource_object.display_value}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Regenerate",
+                    "DRAFT_EMAIL",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_REGENERATE_ACTION,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"form_ids={context.get('form_ids')}",
+                            f"workflow_id={str(context.get('workflow_id'))}",
+                        ],
+                    ),
+                )
+            ]
+        ),
+        block_builders.context_block("This version will not be saved."),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_regenerate_email_message(payload, context):
+    from managr.slack.helpers.utils import block_finder
+
+    instructions_check = (
+        payload["state"]["values"]["REGENERATE_INSTRUCTIONS"]["plain_input"]["value"]
+        if "REGENERATE_INSTRUCTIONS" in payload["state"]["values"].keys()
+        else None
+    )
+    if instructions_check:
+        if len(instructions_check):
+            return _process_send_regenerated_email_draft(payload, context)
+        else:
+            return _process_send_email_draft(payload, context)
+    user = User.objects.get(id=context.get("u"))
+    form_ids = context.get("form_ids").split(",")
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    previous_blocks = payload["message"]["blocks"]
+
+    try:
+        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    blocks = [
+        block_builders.header_block("AI Generated Email"),
+        block_builders.context_block(f"{forms.first().resource_object.display_value}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(block["text"]["text"], "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.divider_block(),
+        block_builders.input_block(
+            "Provide additional instructions below:",
+            block_id="REGENERATE_INSTRUCTIONS",
+            multiline=True,
+        ),
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
@@ -1637,7 +1789,7 @@ def _process_send_next_steps(payload, context):
         block_builders.header_block("AI Generated Next Steps"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
         block_builders.divider_block(),
         block_builders.actions_block(
             [
