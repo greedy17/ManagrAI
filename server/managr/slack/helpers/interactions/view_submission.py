@@ -2819,6 +2819,8 @@ def process_reset_selected_meeting_days(payload, context):
         meeting.completed_operations = []
         meeting.failed_operations = []
         meeting.failed_task_description = []
+        meeting.resource_id = None
+        meeting.resource_type = None
         meeting.transcript_summary = None
         meeting.transcript_analysis = None
         if len(meeting.forms.all()):
