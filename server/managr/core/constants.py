@@ -119,6 +119,13 @@ OPEN_AI_CALL_ANALYSIS_PROMPT = (
     Summaries: {summaries}"""
 )
 
+OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS = (
+    lambda email, instructions: f"""
+Below is an AI generated email. Adjust and rewrite the email per instructions below:\n
+Email: {email}\n
+Instructions: {instructions}"""
+)
+
 
 def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
