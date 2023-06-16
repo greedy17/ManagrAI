@@ -202,6 +202,7 @@ class CRMObjectViewSet(
         resource_type = data.get("resource_type")
         resource_id = data.get("resource_id", None)
         stage_name = data.get("stage_name", None)
+        chat_form_id = data.get("chat_form_id", None)
         instance_data = {
             "user": user,
             "resource_type": resource_type,
@@ -225,7 +226,8 @@ class CRMObjectViewSet(
             attempts = 1
             while True:
                 crm = user.crm_account
-                if "meeting_comments" in all_form_data.keys():
+
+                if "meeting_comments" in all_form_data.keys() and not chat_form_id:
                     if all_form_data.get("meeting_comments", None) is not None:
                         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                     data = {
@@ -472,7 +474,9 @@ class CRMObjectViewSet(
         sync_class = SFResourceSync if user.crm == "SALESFORCE" else HSResourceSync
         type = "SALESFORCE_RESOURCE_SYNC" if user.crm == "SALESFORCE" else "HUBSPOT_RESOURCE_SYNC"
         sync = sync_class.objects.create(
-            user=user, operations_list=operations, operation_type=type,
+            user=user,
+            operations_list=operations,
+            operation_type=type,
         )
         user_timezone = pytz.timezone(user.timezone)
 

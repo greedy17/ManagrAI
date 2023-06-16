@@ -522,9 +522,7 @@ def submit_chat_prompt(request):
         res = {"value": f"There was an error processing chat submission {message}"}
         return Response(data=res)
     if not has_error:
-        res_text = (
-            f"{resource.display_value} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been filled, please review",
-        )
+        res_text = (f"{resource.display_value} has been updated, please review",)
 
     return Response(
         data={

@@ -12,6 +12,7 @@ from managr.core.background import (
     emit_process_send_summary_to_dm,
     emit_process_send_call_analysis_to_dm,
     emit_process_send_call_summary_to_dm,
+    emit_process_send_ask_managr_to_dm,
 )
 from managr.core.exceptions import _handle_response
 from managr.slack.helpers.block_sets import get_block_set
@@ -1044,6 +1045,7 @@ ACTION_TEMPLATE_FUNCTIONS = {
     "review": emit_process_send_deal_review,
     "summary": emit_process_send_summary_to_dm,
     "analysis": emit_process_send_call_analysis_to_dm,
+    "ask managr": emit_process_send_ask_managr_to_dm,
 }
 
 
@@ -1104,6 +1106,7 @@ def _process_chat_action(payload, context):
             context.update(
                 resource_id=str(resource.id), resource_type=resource_check, w=workflow_id
             )
+        context.update(prompt=prompt)
     except CRM_SWITCHER[user.crm][resource_check]["model"].DoesNotExist:
         blocks.append(
             block_builders.simple_section(

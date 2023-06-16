@@ -41,6 +41,7 @@ from managr.core.background import (
     emit_process_send_email_draft,
     emit_process_send_next_steps,
     emit_process_send_call_analysis_to_dm,
+    emit_process_send_regenerate_email_message,
 )
 from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
@@ -1117,6 +1118,7 @@ def GET_ACTION_TEMPLATE(user, template_value):
         "DEAL_REVIEW": f"Run a review for {object_type} Pied Piper",
         "CALL_SUMMARY": f"Get the call summary for {object_type} Pied Piper",
         "CALL_ANALYSIS": f"Get the call analysis for {object_type} Pied Piper",
+        "ASK_MANAGR": f"Ask Managr ... for {object_type} Pied Piper",
     }
     return action_switcher[template_value]
 
@@ -2360,6 +2362,40 @@ def process_meeting_details(payload, context):
         return logger.exception(
             f"Failed To Generate Slack Workflow Interaction for user {u.full_name} email {u.email} {e}"
         )
+
+
+@slack_api_exceptions(rethrow=True)
+@processor()
+def choose_reset_meeting_day(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(
+            slack_id=user.slack_integration.slack_id
+        ).first()
+        if not slack:
+            return
+    access_token = user.organization.slack_integration.access_token
+    state = payload["view"]["state"]["values"]
+    selected_day = state["selected_day"][
+        f"{slack_const.CHOOSE_RESET_MEETING_DAY}?u={context.get('u')}"
+    ]["selected_option"]["value"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Reset Meetings"},
+            "blocks": get_block_set(
+                "reset_meeting_block_set", {"u": str(user.id), "meeting_day": selected_day},
+            ),
+            "external_id": f"reset_meeting_block_set.{str(uuid.uuid4())}",
+            "callback_id": slack_const.RESET_SELECTED_MEETING_DAYS,
+            "submit": {"type": "plain_text", "text": "Submit",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return
 
 
 #########################################################
@@ -3756,11 +3792,100 @@ GENERATIVE_ACTION_SWITCHER = {
 
 
 def process_selected_generative_action(payload, context):
-    pm = payload.get("view").get("private_metadata")
-    action = payload["actions"][0]["selected_option"]["value"]
-    action_func = GENERATIVE_ACTION_SWITCHER[action]
-    action_res = action_func(payload, json.loads(pm))
-    return {"response_action": "clear"}
+    user = User.objects.get(id=context.get("u"))
+    pm = json.loads(payload.get("view").get("private_metadata"))
+    resource_type = context.get("resource_type", None)
+    resource_id = None
+    if resource_type:
+        action = "ASK_MANAGR"
+        if (
+            len(payload["actions"])
+            and slack_const.PROCESS_SELECTED_GENERATIVE_ACTION in payload["actions"][0]["action_id"]
+        ):
+            resource_id = payload["actions"][0]["selected_option"]["value"]
+    else:
+        generative_action_values = payload["view"]["state"]["values"]["GENERATIVE_ACTION"]
+        action = generative_action_values.get(list(generative_action_values.keys())[0])[
+            "selected_option"
+        ]["value"]
+    if action == "ASK_MANAGR":
+        resource_list = (
+            ["Opportunity", "Account", "Contact", "Lead"]
+            if user.crm == "SALESFORCE"
+            else ["Company", "Deal", "Contact"]
+        )
+        options = "%".join(resource_list)
+        blocks = [
+            *get_block_set(
+                "ask_managr_blockset",
+                {
+                    "u": str(user.id),
+                    "options": options,
+                    "action_id": slack_const.PROCESS_SELECTED_GENERATIVE_ACTION,
+                    "resource_type": resource_type,
+                    "resource_id": resource_id,
+                },
+            )
+        ]
+        user = User.objects.get(id=pm.get("u"))
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.PROCESS_ASK_MANAGR,
+                "title": {"type": "plain_text", "text": "Generate Content"},
+                "blocks": blocks,
+                "submit": {"type": "plain_text", "text": "Submit"},
+                "private_metadata": json.dumps(context),
+                "external_id": f"ask_managr_blockset.{str(uuid.uuid4())}",
+            },
+        }
+        try:
+            slack_requests.generic_request(
+                slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+                data,
+                access_token=user.organization.slack_integration.access_token,
+            )
+        except InvalidBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
+            )
+        except InvalidBlocksFormatException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
+            )
+        except UnHandeledBlocksException as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {context.get('opp_item_id')} email {user.email} {e}"
+            )
+        except InvalidAccessToken as e:
+            return logger.exception(
+                f"Failed To Generate Slack Product form with {str(user.id)} email {user.email} {e}"
+            )
+        return
+    else:
+        action_func = GENERATIVE_ACTION_SWITCHER[action]
+        loading_block = [
+            *get_block_set("loading", {"message": ":robot_face: Generating content..."})
+        ]
+        try:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=loading_block,
+            )
+            pm.update(ts=res["ts"])
+            action_res = action_func(payload, pm)
+        except Exception as e:
+            logger.exception(e)
+        return {"response_action": "clear"}
+
+
+REGENERATE_ACTION_SWITCHER = {
+    "DRAFT_EMAIL": emit_process_send_regenerate_email_message,
+    "SEND_SUMMARY": process_send_recap_modal,
+    "NEXT_STEPS": emit_process_send_next_steps,
+}
 
 
 def process_regenerate_action(payload, context):
@@ -3776,7 +3901,7 @@ def process_regenerate_action(payload, context):
         res = slack_requests.update_channel_message(
             channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
         )
-        action_func = GENERATIVE_ACTION_SWITCHER[action]
+        action_func = REGENERATE_ACTION_SWITCHER[action]
         action_func(payload, context)
     except Exception as e:
         logger.exception(e)
@@ -4146,6 +4271,8 @@ def handle_block_actions(payload):
         slack_const.CALL_LAUNCH_SUMMARY_REVIEW: process_launch_call_summary_review,
         slack_const.OPEN_REVIEW_CHAT_UPDATE_MODAL: process_open_review_chat_update_modal,
         slack_const.SEND_CALL_ANALYSIS_TO_DM: process_send_call_analysis_to_dm,
+        slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
+        slack_const.CHOOSE_RESET_MEETING_DAY: choose_reset_meeting_day,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
