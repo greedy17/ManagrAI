@@ -2634,7 +2634,7 @@ def process_submit_chat_prompt(payload, context):
     )
     context.update(task_type=task_type)
     prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
-    resource_check = None
+    resource_check = "Opportunity" if user.crm == "SALESFORCE" else "Deal"
     lowercase_prompt = prompt.lower()
     for resource in resource_list:
         lowered_resource = resource.lower()
