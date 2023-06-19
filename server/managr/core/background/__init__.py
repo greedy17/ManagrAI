@@ -2062,12 +2062,13 @@ def _process_send_ask_managr_to_dm(payload, context):
         context.get("resource_type"),
         context.get("resource_id"),
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    tokens = 500
     has_error = False
     attempts = 1
     timeout = 60.0
     while True:
         try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)

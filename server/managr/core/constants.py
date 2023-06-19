@@ -173,13 +173,6 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
         user=user_id, resource_id=resource_id
     ).first()
     today = datetime.today()
-    body = f"""Today's date is {today}. You are a slightly pushy, very direct and charismatic VP of sales. 
-    I am your sales rep and need your help. You must follow the instructions below:
-    1) Answer my request, speaking to me directly. Use the CRM data below for context
-    2) Output tone must be casual, direct, and persuasive.
-    3) Output length cannot exceed 800 characters.
-    My request:{prompt}\n"""
-
     if form_check and form_check.saved_data:
         data_from_resource = form_check.saved_data
     else:
@@ -198,7 +191,11 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
             data_from_resource["summary"] = workflow_check.transcript_summary
         if workflow_check.transcript_analysis:
             data_from_resource["analysis"] = workflow_check.transcript_analysis
-    body += f"CRM Data: {data_from_resource}\n"
+    body = f"""Today's date is {today}. Analyze this CRM data:\n
+    CRM data: {data_from_resource}\n
+    Based on your analysis of the CRM data, answer the following question / complete this requested task: {prompt}:\n
+The sales represetative asking this question or request is {user.first_name} and works for {user.organization.name}.\n
+"""
     return body
 
 
