@@ -2,6 +2,8 @@
   <section class="lists">
     <header class="list-header">
       <p><span>List: </span> {{ currentView.title }}</p>
+
+      <p>edit here</p>
     </header>
     <section class="chat-table-section">
       <div class="table">
@@ -38,10 +40,10 @@
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Run Deal
         Review
       </button>
-      <button>
+      <!-- <button>
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Call
         Summary
-      </button>
+      </button> -->
     </div>
   </section>
 </template>
@@ -159,7 +161,10 @@ button {
   background-color: white;
   top: 0;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   p {
     font-size: 12px;
     padding: 0;

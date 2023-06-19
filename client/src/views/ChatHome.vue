@@ -176,6 +176,9 @@
     <main v-if="currentView === 'home'" id="main">
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
+    <!-- <main v-else-if="currentView === 'meetings'">
+      <ChatMeetings />
+    </main> -->
     <main id="main" v-else>
       <ChatList @set-opp="setOpp" />
     </main>

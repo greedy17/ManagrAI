@@ -39,12 +39,8 @@
 
           <div class="text-container">
             <div style="position: relative">
-              <div
-                :class="{ negmar: message.gtMsg === 'AI Generated Summary' }"
-                v-if="message.user === 'bot' && message.gtMsg"
-                class="msgType"
-              >
-                <p>
+              <div class="type-header" v-if="message.user === 'bot' && message.gtMsg">
+                <p :class="{ negmar: message.gtMsg === 'AI Generated Summary' }" class="msgType">
                   {{ message.gtMsg }}
                 </p>
               </div>
@@ -448,8 +444,10 @@ export default {
 }
 
 .negmar {
-  top: -0.5rem !important;
+  top: -1rem !important;
 }
+
+// .type-header {}
 
 .msgType {
   position: absolute;
@@ -458,7 +456,7 @@ export default {
   background-color: $grape;
   color: white;
   font-size: 12px;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem !important;
   border-radius: 5px;
 }
 
