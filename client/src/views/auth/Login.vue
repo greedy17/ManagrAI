@@ -151,16 +151,13 @@ export default {
       }
     }
   },
-  mounted() {
-    const loginURI = 'http://localhost:8080/login'
-    console.log('this.onGoogleSignIn', this.onGoogleSignIn)
+  async mounted() {
+    const googleInitData = await User.api.googleInit()
     window.google.accounts.id.initialize({
-      client_id: '1053178983159-40pr5voodgitli9ap0v9uifj8d3p9mgq.apps.googleusercontent.com',
+      client_id: googleInitData.client_id,
       callback: this.onGoogleSignIn,
-      login_uri: loginURI
+      login_uri: googleInitData.login_uri,
     });
-
-    console.log('window.google', window.google.accounts)
 
     // Attach event listener to the custom button
     const customButton = document.getElementById('custom-google-signin-button');
@@ -339,11 +336,24 @@ export default {
           console.log('this.newToken 2', this.newToken)
 
           // Call get endpoint for user by email
-          const userEmail = await User.api.getUserByEmail(email)
+          // const userEmail = await User.api.getUserByEmail(email)
+          let userEmail
+          try {
+            const emailRes = await User.api.checkStatus(email)
+            console.log('emailRes', emailRes)
+            userEmail = true
+          } catch(e) {
+            console.log(e)
+            userEmail = false
+          }
           console.log('userEmail', userEmail)
-          // Log in with SSO endpoint if they have an account
-          // Else, send them to screen for them to get a password and org
-          this.$router.push({ name: 'GoogleRegister' })
+          if (userEmail) {
+            // Log in with SSO endpoint if they have an account
+
+          } else {
+            // Else, send them to screen for them to get a password and org
+            this.$router.push({ name: 'GoogleRegister' })
+          }
         } else {
           console.error('ID token not found in credential:', response.credential);
         }

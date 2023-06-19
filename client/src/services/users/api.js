@@ -21,6 +21,7 @@ const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
+const SSO_DATA_ENDPOINT = '/sso-data/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
@@ -388,6 +389,15 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Get Tasks error' })
+    }
+  }
+  async googleInit() {
+    const url = SSO_DATA_ENDPOINT
+    try {
+      const res = await this.client.get(url)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'googleInit error' })
     }
   }
 
