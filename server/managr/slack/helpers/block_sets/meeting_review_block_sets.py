@@ -1086,8 +1086,8 @@ def paginated_meeting_blockset(context):
                 ),
             )
         elif (
-            len(workflow.operations)
-            and slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations
+            slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations
+            and len(workflow.operations)
             and workflow.progress < 100
         ):
             crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
