@@ -493,7 +493,7 @@
               <div v-for="field in addedFields" :key="field.id">
                 <div v-if="!unshownIds.includes(field.id)">
                   <div class="drag-item">
-                    <div class="drag-item-left light-gray-blue">
+                    <div class="drag-item-left">
                       <img src="@/assets/images/drag.svg" height="16px" alt="" />
                       <p id="formField" :title="field.label">
                         {{ truncate(field.label, 38) }}
@@ -2131,23 +2131,6 @@ input[type='search']:focus {
   font-size: 14px;
   letter-spacing: 0.75px;
 }
-.tab-content {
-  width: 100%;
-  height: 86vh;
-  padding: 32px 24px 16px 24px;
-  background: #fff;
-  color: $base-gray;
-  overflow: scroll;
-  border-radius: 6px;
-  margin-top: 28px;
-
-  &__div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
 .space-between {
   display: flex;
   flex-direction: row;
@@ -2314,7 +2297,7 @@ input[type='search']:focus {
   margin-bottom: 8px;
   border-radius: 4px;
   background-color: $white;
-  color: $base-gray;
+  // color: $base-gray;
   outline: 1px solid $soft-gray;
   font-size: 13px;
   // width: fit-content;
@@ -2570,7 +2553,7 @@ img:hover {
   overflow: auto;
   // outline: 1px solid #eeeeee;
   // border-radius: 6px;
-  padding: 4px;
+  padding: 14px 4px 4px;
 }
 .border-bottom-top {
   border-bottom: 1px solid $soft-gray;
@@ -2767,7 +2750,8 @@ img:hover {
 .header-text {
   font-size: 11px;
   // filter: invert(45%);
-  color: #7b8580;
+  // color: #7b8580;
+  color: $light-gray-blue;
 }
 .refresh-button {
   height: 14px;

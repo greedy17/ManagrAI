@@ -144,7 +144,7 @@ export default {
 .pointer {
   // color: $light-gray-blue;
   img {
-    filter: invert(45%);
+    // filter: invert(45%);
   }
 }
 .pointer:hover {

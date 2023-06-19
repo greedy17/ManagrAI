@@ -419,6 +419,38 @@
         </div> -->
       </div>
 
+      <div class="card">
+        <div class="card__header " style="">
+          <img src="@/assets/images/gmail.svg" style="margin-right: 16px; height: 40px" />
+          <img src="@/assets/images/outlookMail.png" style="height: 40px" />
+          <!-- <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" /> -->
+        </div>
+        <div class="card__body">
+          <div style="display: flex;">
+            <h3 class="card__title">
+              <img v-if="hasEmailIntegration" src="@/assets/images/dot.svg" class="green-filter" />
+              Email
+            </h3>
+          </div>
+          <p v-if="hasEmailIntegration" class="card-text">Email Connected</p>
+          <p v-else class="card-text">Coming soon!</p>
+          <div class="sep-button-container">
+            <div class="separator"></div>
+            <button v-if="hasEmailIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('ZOOM')">
+              Disconnect
+            </button>
+            <button v-else :disabled="true" class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding: 0.5rem;" @click="isPaid ? connectApp('EMAIL') : showErrorSuccessModal('premium', 'This feature is available in the Business Plan')">
+              Coming soon... 
+              <!-- <img 
+                src="@/assets/images/angle-small-right.svg" 
+                class="green-filter"
+                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold;"
+              /> -->
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- <div class="card">
         <div class="card__header lg-bg">
           <img class="filter-loft" style="height: 18px" src="@/assets/images/salesloft.svg" />
@@ -849,6 +881,9 @@ export default {
     },
     hasZoomIntegration() {
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+    },
+    hasEmailIntegration() {
+      return false
     },
     hasGongIntegration() {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
