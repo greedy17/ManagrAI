@@ -342,9 +342,9 @@
           </h3>
           <small>{{ getUser.timezone }}</small>
           <div class="options__section">
-            <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
+            <!-- <button v-if="isAdmin" class="invite_button" type="submit" @click="showChangeAdmin">
               Change Admin
-            </button>
+            </button> -->
             <button v-if="isAdmin" class="invite_button" type="submit" @click="handleNewTeam">
               Create New Team
             </button>

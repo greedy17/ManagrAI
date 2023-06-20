@@ -255,6 +255,12 @@ class OrgCustomSlackForm(TimeStampModel):
         options = [block_builders.option(field.label, field.api_name) for field in filtered_fields]
         return options
 
+    def list_field_api_names(self):
+        filtered_fields = self.custom_fields.filter(is_public=False).values_list(
+            "api_name", flat=True
+        )
+        return list(filtered_fields)
+
 
 class OrgCustomSlackFormInstanceQuerySet(models.QuerySet):
     def for_user(self, user):

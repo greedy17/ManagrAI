@@ -359,9 +359,6 @@ def edit_meeting_contacts_block_set(context):
         ]
 
     if not len(slack_form.template.custom_fields.all()):
-        logger.info(
-            f"instance id: {str(slack_form.id)},instance template id: {str(slack_form.template.id)}"
-        )
         return [
             block_builders.section_with_button_block(
                 "Forms",
@@ -1071,23 +1068,28 @@ def paginated_meeting_blockset(context):
         section_text = f"*{title}*\n{formatted_start} - {formatted_end}"
         if len(workflow.failed_task_description):
             message = ""
+            f_index = 0 if u.crm == "SALESFORCE" else 1
             for i, m in enumerate(workflow.failed_task_description):
                 m_split = m.split(".")
                 if i == len(workflow.failed_task_description) - 1:
-                    message += f"{m_split[0]}"
+                    message += f"{m_split[f_index]}"
                 else:
-                    message += f"{m_split[0]},"
+                    message += f"{m_split[f_index]},"
             block = block_builders.section_with_button_block(
                 "Return to Form",
                 "RETURN_TO_FORM",
-                section_text=f":no_entry_sign: Uh-oh we hit a validation:\n{message}\n{title}",
+                section_text=f":no_entry_sign: Uh-oh we hit an error:\n{message}\n{title}",
                 block_id=str(workflow.id),
                 action_id=action_with_params(
                     slack_const.ZOOM_MEETING__INIT_REVIEW,
                     params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
                 ),
             )
-        elif len(workflow.operations) and workflow.progress < 100:
+        elif (
+            slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations
+            and len(workflow.operations)
+            and workflow.progress < 100
+        ):
             crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
             block = block_builders.simple_section(
                 f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"

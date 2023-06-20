@@ -143,6 +143,7 @@ export default {
       isLoading: false,
       organization: null,
       errorValidatingEmail: false,
+      errorMessages: [],
       timezones: moment.tz.names(),
       userTime: moment.tz.guess(),
       changeZone: false,

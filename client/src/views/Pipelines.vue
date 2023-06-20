@@ -5303,6 +5303,7 @@ export default {
         // updateOppForm and createOppForm should be updateForm and createForm
         // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
+          console.log('res', res)
           this.updateOppForm = res.filter(
             (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
           )
