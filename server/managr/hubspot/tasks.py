@@ -164,7 +164,6 @@ def _process_gen_next_hubspot_sync(user_id, operations_list):
 
 
 @background(schedule=0, queue=hs_consts.HUBSPOT_FIELD_SYNC_QUEUE)
-@log_all_exceptions
 def _process_hobject_fields_sync(user_id, sync_id, resource):
     user = User.objects.filter(id=user_id).select_related("hubspot_account").first()
     if not hasattr(user, "hubspot_account"):

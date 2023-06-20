@@ -20,7 +20,7 @@
           <div>
             <div
               @click="changeView('home')"
-              :class="{ 'active-view': view === 'home' }"
+              :class="{ 'active-view': currentView === 'home' }"
               class="menu-item"
             >
               <img src="@/assets/images/comment.svg" height="14px" alt="" />
@@ -51,13 +51,14 @@
 
           <div v-else-if="templates.list.length">
             <div
-              :class="{ 'active-view': view === alert.title }"
+              :class="{ 'active-view': currentView.title === alert.title }"
               v-for="(alert, i) in templates.list"
               :key="i"
               class="menu-item"
+              @click="changeView(alert.title, alert)"
             >
-              <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p @click="changeView(alert.title)">{{ alert.title }}</p>
+              <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
+              <p>{{ alert.title }}</p>
 
               <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">
                 <p>
@@ -135,11 +136,16 @@ export default {
   },
   mounted() {
     this.templates.refresh()
-    console.log(this.templates)
+    // console.log(this.templates)
   },
   methods: {
-    changeView(view) {
+    changeView(view, alert) {
       this.view = view
+      if (alert) {
+        this.$store.dispatch('setCurrentView', alert)
+      } else {
+        this.$store.dispatch('setCurrentView', 'home')
+      }
     },
     toggleSidebar() {
       this.isOpen = !this.isOpen
@@ -170,7 +176,11 @@ export default {
       this.threadButtonText = 'Start New Thread'
     },
   },
-  computed: {},
+  computed: {
+    currentView() {
+      return this.$store.state.currentView
+    },
+  },
   created() {},
 }
 </script>
@@ -183,7 +193,7 @@ export default {
 @import '@/styles/mixins/inputs';
 
 .leftbarClosed {
-  left: -260px;
+  left: -280px;
   position: absolute;
 }
 
@@ -194,10 +204,9 @@ export default {
   top: 0;
   left: 0;
   height: 100%;
-  width: 260px;
+  width: 280px;
   overflow: auto;
   transition: all 0.3s ease;
-  letter-spacing: 0.4px;
   font-size: 14px;
 
   &.open {
@@ -295,7 +304,7 @@ export default {
 
 @media (max-width: 1000px) {
   .sidebar {
-    left: -260px;
+    left: -280px;
 
     &.open {
       left: 0;
@@ -349,7 +358,7 @@ export default {
 footer {
   position: fixed;
   bottom: 0;
-  width: 260px;
+  width: 280px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -395,6 +404,10 @@ footer {
     overflow: hidden;
     margin: 0;
     width: 150px;
+  }
+
+  &:hover {
+    opacity: 0.65;
   }
 }
 

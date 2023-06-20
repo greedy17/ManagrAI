@@ -23,6 +23,7 @@ if settings.USE_OPEN_AI:
         "Authorization": f"Bearer {OPEN_AI_SECRET}",
     }
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
 OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"""Summarize the meeting notes below in the most concise way (no less than 1,500 characters and no greater than 2,000 characters) as if you are reporting back to a VP of Sales, tone is casual yet professional.
@@ -54,6 +55,7 @@ OPEN_AI_MEETING_EMAIL_DRAFT = (
     3) The email cannot be more than 1000 characters.\n
     Meeting Comments: {meeting_comments}"""
 )
+
 OPEN_AI_NEXT_STEPS = (
     lambda data: f"Provide up to 3 listed out suggested next steps to take in order to close the prospect or move the deal forward based on meeting notes below, ranging from aggressive (close this month) to passive (close in the coming months)\n Meeting Notes: {data}"
 )
@@ -95,13 +97,10 @@ OPEN_AI_TRANSCRIPT_PROMPT = (
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields: f"""'input': {input}, 'prompt': 'Based on the transcript summaries provided above, you must follow the instructions below: 
-1) Create a comprehensive summary of how the call, in chronological order. Include key details that were discussed, such as: products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
-2) The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.
-3) Imagine you are a sales rep, fill in the CRM_fields below with relevant data from the call transcript.
-4) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called
- summary.\nCRM fields: {crm_fields}'
-    """
+    lambda input, crm_fields, date: f"""'input': {input}, 'prompt': 'Today is {date}. Based on the transcript summaries provided above, you must follow the instructions below: 
+1) Create one comprehensive summary of the call. The summary should only include information that would be relevant to a salesperson. Highlight key details (if they were discussed) such as: products & features, customer pain points, competitors, timeline to close, decision-making process, next steps and budget. The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.\n
+2) Then, you must fill in the CRM fields below based on this call transcript. Identify and extract accurate data for each applicable CRM field. For any fields not applicable, leave them empty.\n
+3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.\nCRM fields: {crm_fields}'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
@@ -120,6 +119,13 @@ OPEN_AI_CALL_ANALYSIS_PROMPT = (
     Summaries: {summaries}"""
 )
 
+OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS = (
+    lambda email, instructions: f"""
+Below is an AI generated email. Adjust and rewrite the email per instructions below:\n
+Email: {email}\n
+Instructions: {instructions}"""
+)
+
 
 def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
@@ -129,6 +135,21 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
     }
     if token_amount:
         body["max_tokens"] = token_amount
+    if temperature:
+        body["temperature"] = temperature
+    if top_p:
+        body["top_p"] = top_p
+    return body
+
+
+def OPEN_AI_EDIT_BODY(user_name, input, instructions, data, temperature=False, top_p=False):
+    # instructions += f"use this data as context: {data}"
+    body = {
+        "model": "text-davinci-edit-001",
+        "input": input,
+        "instruction": instructions,
+        "user": user_name,
+    }
     if temperature:
         body["temperature"] = temperature
     if top_p:
@@ -152,13 +173,6 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
         user=user_id, resource_id=resource_id
     ).first()
     today = datetime.today()
-    body = f"""Today's date is {today}. You are a slightly pushy, very direct and charismatic VP of sales. 
-    I am your sales rep and need your help. You must follow the instructions below:
-    1) Answer my request, speaking to me directly. Use the CRM data below for context
-    2) Output tone must be casual, direct, and persuasive.
-    3) Output length cannot exceed 800 characters.
-    My request:{prompt}\n"""
-
     if form_check and form_check.saved_data:
         data_from_resource = form_check.saved_data
     else:
@@ -177,7 +191,11 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
             data_from_resource["summary"] = workflow_check.transcript_summary
         if workflow_check.transcript_analysis:
             data_from_resource["analysis"] = workflow_check.transcript_analysis
-    body += f"CRM Data: {data_from_resource}\n"
+    body = f"""Today's date is {today}. Analyze this CRM data:\n
+    CRM data: {data_from_resource}\n
+    Based on your analysis of the CRM data, answer the following question / complete this requested task: {prompt}:\n
+The sales represetative asking this question or request is {user.first_name} and works for {user.organization.name}.\n
+"""
     return body
 
 

@@ -492,6 +492,8 @@ def update_command_block_set(context):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
     if hasattr(user, "gong_account"):
         options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
+    if not settings.IN_PROD:
+        options.append(block_builders.option("Reset Meetings", "RESET_MEETINGS"))
     blocks = [
         block_builders.input_block(
             f"Update {crm} using conversational AI",
@@ -693,3 +695,44 @@ def initial_inline_blockset(context, *args, **kwargs):
         ),
     ]
     return block_builders.actions_block(action_blocks)
+
+
+@block_set(required_context=["u"])
+def reset_meeting_block_set(context, *args, **kwargs):
+    import datetime
+    from managr.salesforce.models import MeetingWorkflow
+
+    meeting_day = context.get("meeting_day", None)
+    user_id = context.get("u")
+    user = User.objects.get(id=user_id)
+    meetings = (
+        MeetingWorkflow.objects.filter(user=user)
+        .order_by("-datetime_created")
+        .values_list("datetime_created", flat=True)
+    )[:50]
+    meetings = list(set([datetime.datetime.strftime(date, "%Y-%m-%d") for date in meetings]))
+    meeting_options = [block_builders.option(meeting, meeting) for meeting in meetings]
+    blocks = []
+    blocks.append(
+        block_builders.static_select(
+            "Select which date you would like to reset from (date is in year-month-day format)",
+            meeting_options,
+            action_id=f"{slack_const.CHOOSE_RESET_MEETING_DAY}?u={user_id}",
+            block_id="selected_day",
+        )
+    )
+    if meeting_day:
+        meeting_for_date = list(MeetingWorkflow.objects.for_user(user, date=meeting_day))
+        meeting_options_for_date = [
+            block_builders.option(meeting.meeting.topic, str(meeting.id))
+            for meeting in meeting_for_date
+        ]
+        blocks.append(
+            block_builders.multi_static_select(
+                "Select which meeting to reset",
+                meeting_options_for_date,
+                block_id="selected_meetings",
+            ),
+        )
+    return blocks
+

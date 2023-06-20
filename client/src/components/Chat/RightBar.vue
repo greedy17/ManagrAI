@@ -1,5 +1,23 @@
 <template>
   <section class="right-container">
+    <div style="margin-top: -0.5rem" v-if="!selectedOpp" class="switcher">
+      <div
+        @click="switchMainView('pipeline')"
+        :class="{ activeswitch: mainView === 'pipeline' }"
+        class="switch-item"
+      >
+        <img src="@/assets/images/money.svg" height="14px" alt="" />
+        Pipeline
+      </div>
+      <div
+        @click="switchMainView('email')"
+        :class="{ activeswitch: mainView === 'email' }"
+        class="switch-item"
+      >
+        <font-awesome-icon icon="fa-regular fa-envelope" />
+        Email
+      </div>
+    </div>
     <header>
       <section v-if="selectedOpp">
         <div class="flexed-row-s"></div>
@@ -37,8 +55,8 @@
       </section>
 
       <section v-else>
-        <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem">
+        <!-- <div class="flexed-row-spread">
+          <p style="margin-bottom: 0.25rem; color: #9596b4">
             All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
               displayedOpps.count
             }})
@@ -55,9 +73,9 @@
               alt=""
             />
           </div>
-        </div>
+        </div> -->
 
-        <div class="flexed-row-spread">
+        <div style="margin-top: 0.5rem" class="flexed-row-spread">
           <div class="input">
             <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
 
@@ -217,7 +235,6 @@
         </div>
       </section>
     </header>
-
     <div class="switcher" v-if="selectedOpp">
       <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
         <img src="@/assets/images/crmlist.svg" height="16px" alt="" />
@@ -371,6 +388,7 @@ export default {
   data() {
     return {
       view: 'crm',
+      mainView: 'pipeline',
       stageValidationFields: {},
       updateFormData: {},
       loadingNotes: false,
@@ -543,6 +561,11 @@ export default {
         this.view = view
       }
     },
+    switchMainView(view) {
+      if (view !== this.mainView) {
+        this.mainView = view
+      }
+    },
     async getNotes() {
       if (this.selectedOpp) {
         this.loadingNotes = true
@@ -550,15 +573,14 @@ export default {
           const res = await CRMObjects.api.getNotes({
             resourceId: this.selectedOpp.id,
           })
-          // if (res.length) {
-          //   this.notes = []
-          //   for (let i = 0; i < res.length; i++) {
-          //     this.notes.push(res[i])
-          //     this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
-          //     this.notesLength = this.notes.length
-          //   }
-          // }
-          this.notes = res
+          if (res.length) {
+            this.notes = []
+            for (let i = 0; i < res.length; i++) {
+              this.notes.push(res[i])
+              this.notes = this.notes.filter((note) => note.saved_data__meeting_comments !== null)
+              // this.notesLength = this.notes.length
+            }
+          }
         } catch (e) {
           console.log(e)
         } finally {
@@ -666,8 +688,19 @@ export default {
     clearText() {
       this.searchText = ''
     },
-    changeSelectedOpp(opp) {
-      this.selectedOpp = opp
+    changeSelectedOpp(opp, name) {
+      if (opp) {
+        this.selectedOpp = opp
+      } else if (name) {
+        let opp
+        opp = this.opportunities.filter((opp) => opp.name === name)[0]
+        if (opp) {
+          this.selectedOpp = opp
+        } else {
+          this.selectedOpp = null
+          this.searchText = name
+        }
+      }
     },
     async switchFiltering() {
       // this.$store.dispatch('changeFilters', [['EQUALS', 'Name', 'Marriot']])
@@ -894,7 +927,7 @@ export default {
 
 .activeswitch {
   background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid $soft-gray;
   color: $base-gray;
   img {
     filter: none;
@@ -1035,7 +1068,8 @@ export default {
   width: 101%;
   overflow-y: scroll;
   scroll-behavior: smooth;
-  padding: 0.5rem 0;
+  padding: 0;
+  margin-top: -4px;
 }
 
 .opp-scroll-container::-webkit-scrollbar {

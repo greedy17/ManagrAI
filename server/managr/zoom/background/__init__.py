@@ -789,20 +789,28 @@ def process_transcript_to_summaries(transcript, user):
     from managr.core.exceptions import _handle_response
     from managr.core import constants as core_consts
     from managr.utils.client import Variable_Client
-    from managr.core.utils import max_token_calculator
 
     summary_parts = []
     current_minute = 5
     start_index = 0
+    current_hour = 0
     split_transcript = []
     while True:
+        if current_minute == 60:
+            current_minute = 0
+            current_hour += 1
         check_time = (
-            f"00:0{str(current_minute)}:" if current_minute == 5 else f"00:{str(current_minute)}:"
+            f"0{current_hour}:0{str(current_minute)}:"
+            if (current_minute == 5 or current_minute == 0)
+            else f"0{current_hour}:{str(current_minute)}:"
         )
         end_index = transcript.find(check_time)
-        if end_index == -1:
+        if end_index == -1 and len(split_transcript):
             split_transcript.append(transcript[start_index:])
             break
+        elif end_index == -1 and not len(split_transcript):
+            current_minute += 5
+            continue
         else:
             split_transcript.append(transcript[start_index:end_index])
             start_index = end_index
@@ -821,9 +829,9 @@ def process_transcript_to_summaries(transcript, user):
                 .replace("    ", "")
                 .replace(" --> ", "-")
             )
-            if not settings.IN_PROD:
-                token_check = max_token_calculator(transcript_body)
-                print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
+            # if not settings.IN_PROD:
+            #     token_check = max_token_calculator(transcript_body)
+            #     print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
             attempts = 1
             timeout = 60.0
             tokens = 500
@@ -868,6 +876,9 @@ def process_transcript_to_summaries(transcript, user):
                             break
                         else:
                             timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"PROCESS TRANSCRIPT SUMMARIES EXCEPTION {e}")
+                        break
     return summary_parts
 
 
@@ -880,7 +891,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    from managr.core.utils import max_token_calculator
 
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
@@ -983,10 +993,11 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             "transcript_summaries": summary_parts,
                         },
                         fields_list,
+                        workflow.datetime_created.date(),
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, summary_body, tokens, top_p=0.9, temperature=0.7
+                        user.email, summary_body, tokens, top_p=0.9
                     )
                     try:
                         if not settings.IN_PROD:
