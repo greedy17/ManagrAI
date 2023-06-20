@@ -167,6 +167,10 @@ def process_stage_next_page(payload, context):
 def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations_list:
+        workflow.operations_list = []
+        workflow.operations = []
+        workflow.save()
     private_metadata = json.loads(payload["view"]["private_metadata"])
     ts = context.get("ts", None)
     user = workflow.user
@@ -2630,7 +2634,7 @@ def process_submit_chat_prompt(payload, context):
     )
     context.update(task_type=task_type)
     prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
-    resource_check = None
+    resource_check = "Opportunity" if user.crm == "SALESFORCE" else "Deal"
     lowercase_prompt = prompt.lower()
     for resource in resource_list:
         lowered_resource = resource.lower()
@@ -2819,6 +2823,8 @@ def process_reset_selected_meeting_days(payload, context):
         meeting.completed_operations = []
         meeting.failed_operations = []
         meeting.failed_task_description = []
+        meeting.resource_id = None
+        meeting.resource_type = None
         meeting.transcript_summary = None
         meeting.transcript_analysis = None
         if len(meeting.forms.all()):
