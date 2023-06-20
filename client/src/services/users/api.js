@@ -4,6 +4,7 @@ import store from '@/store'
 
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
+const LOGIN_SSO_ENDPOINT = '/login-sso/'
 const REGISTRATION_ENDPOINT = '/register/'
 const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
 const USERS_ENDPOINT = '/users/'
@@ -119,6 +120,15 @@ export default class UserAPI {
       .post(LOGIN_ENDPOINT, data)
       .catch(
         apiErrorHandler({ apiName: 'UserAPI.login', enable400Alert: false, enable500Alert: false }),
+      )
+    return promise
+  }
+  loginSSO(d) {
+    const data = { ...d }
+    const promise = apiClient()
+      .post(LOGIN_SSO_ENDPOINT, data)
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.ssoLogin', enable400Alert: false, enable500Alert: false }),
       )
     return promise
   }

@@ -349,7 +349,22 @@ export default {
           console.log('userEmail', userEmail)
           if (userEmail) {
             // Log in with SSO endpoint if they have an account
-
+            const response = await User.api.loginSSO({ email })
+            console.log('google response', response)
+            let token = response.data.token
+            let userData = response.data
+            delete userData.token
+            this.$store.dispatch('updateUserToken', token)
+            this.$store.dispatch('updateUser', User.fromAPI(userData))
+            // localStorage.dateTime = Date.now()
+            // if (this.$route.query.redirect) {
+            //   this.$router.push(this.$route.query.redirect)
+            // }
+            if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+              this.$router.push({ name: 'Integrations' })
+            } else {
+              this.$router.push({ name: 'ListTemplates' })
+            }
           } else {
             // Else, send them to screen for them to get a password and org
             this.$router.push({ name: 'GoogleRegister' })
