@@ -36,6 +36,7 @@ urlpatterns = [
     path(r"password/reset/", rest_auth_views.PasswordResetView.as_view()),
     path(r"password/change/", rest_auth_views.PasswordChangeView.as_view()),
     path("login/", core_views.UserLoginView.as_view()),
+    path("login/sso", core_views.UserSSOLoginView.as_view()),
     path("register/", core_views.UserRegistrationView.as_view()),
     path(
         "users/activation_link/<email>/",

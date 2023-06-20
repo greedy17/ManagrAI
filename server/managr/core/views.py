@@ -40,6 +40,7 @@ from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
+    UserSSOLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
     NoteTemplateSerializer,
@@ -128,6 +129,41 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
         response_data["token"] = user.auth_token.key
+        return Response(response_data)
+
+
+class UserSSOLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
+    """
+    For admin login.
+    """
+
+    authentication_classes = ()
+    serializer_class = UserSSOLoginSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        """Validate user credentials.
+
+        Return serialized user and auth token.
+        """
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # If the serializer is valid, then the email/password combo is valid.
+        # Get the user entity, from which we can get (or create) the auth token
+        user = authenticate(**serializer.validated_data)
+        if user is None:
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        ("Incorrect email and password combination. " "Please try again")
+                    ],
+                }
+            )
+        serializer.login(request, user)
+        u = User.objects.get(pk=user.id)
+        serializer = UserSerializer(u, context={"request": request})
+        response_data = serializer.data
         return Response(response_data)
 
 

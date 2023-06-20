@@ -1,5 +1,7 @@
 import calendar
 import json
+
+
 from django.conf import settings
 from django.utils import timezone
 from managr.utils.client import Client
@@ -9,8 +11,6 @@ from managr.core.models import User
 from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.organization.models import Organization
-from managr.salesforce.models import MeetingWorkflow
-from collections import OrderedDict
 from managr.core import constants as core_const
 
 
@@ -312,3 +312,4 @@ def get_summary_completion(user, data):
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
         r = r.json()
     return r
+
