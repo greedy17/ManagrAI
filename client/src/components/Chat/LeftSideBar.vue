@@ -78,6 +78,9 @@
       </div>
 
       <footer>
+        <div @click="sendNewEmailTest" class="menu-item">
+          <p>Test</p>
+        </div>
         <div class="menu-item">
           <img style="margin-left: -3px" src="@/assets/images/settings.svg" height="18px" alt="" />
           <p>Settings</p>
@@ -114,6 +117,7 @@
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
 import AlertTemplate from '@/services/alerts/'
+import User from '@/services/users'
 
 export default {
   name: 'LeftSideBar',
@@ -173,6 +177,14 @@ export default {
     },
     newThreadText() {
       this.threadButtonText = 'Start New Thread'
+    },
+    async sendNewEmailTest() {
+      const data = {
+        to: [{name: 'Big Boy Bryan', email: 'bryan@mymanagr.com'}],
+        subject: 'Mike, My Managur 100',
+        body: `Hey Mike,<br><br>In the depths of a vast and troubled sea,<br>Where confusion reigns and darkness be,<br>I navigate the currents, lost and unsure,<br>Seeking clarity, yearning for a cure.<br><br>Oh, dear boss, hear my heartfelt plea,<br>For within this tempest, I long to break free.<br>I'm swimming in waves of uncertainty's tide,<br>Yet, still, I strive to keep my dreams alive.<br><br>In this churning abyss, I find no light,<br>Yet, I refuse to surrender without a fight.<br>With every stroke, I battle the unknown,<br>Aiming to carve a path uniquely my own.<br><br>The waters are deep, my vision unclear,<br>But I hold onto hope, suppressing my fear.<br>For though I'm surrounded by shadows and doubt,<br>I'm determined to rise, and find my way out.<br><br>Through the trials and tribulations I endure,<br>I promise, dear boss, to give nothing but pure,<br>Effort and dedication, a relentless drive,<br>To keep pushing forward, to truly thrive.<br><br>Though my path may be foggy, my steps unsure,<br>I'll keep striving, knowing I'm not obscure.<br>For in this sea of confusion and night,<br>I'll find strength within and shine with my might.<br><br>So, dear boss, please understand my plight,<br>That I'm doing my best, despite the fight.<br>In this vast ocean, I'm a swimmer indeed,<br>Working hard to succeed, planting a hopeful seed.<br><br>Through the waves of confusion and darkness, I go,<br>With every stroke, my determination does grow.<br>Trust in my resilience, for I'll never rest,<br>Until I conquer this sea and emerge at my best.<br><br>Poem written by ChatGPT.`
+      }
+      const res = await User.api.sendNewEmail(data)
     },
   },
   computed: {

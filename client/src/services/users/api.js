@@ -23,6 +23,8 @@ const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
+const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
+const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
@@ -207,6 +209,24 @@ export default class UserAPI {
         }),
       )
     return promise
+  }
+  async sendNewEmail(data) {
+    const url = NYLAS_SEND_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
+  }
+  async sendReplyEmail(data) {
+    const url = NYLAS_REPLY_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
   }
   retrieveEmail(uid, token) {
     /**

@@ -200,10 +200,13 @@ The sales represetative asking this question or request is {user.first_name} and
 
 
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_CALENDAR = "calendar"
+SCOPE_CALENDAR = "calendar"
+SCOPE_EMAIL = "email"
 
-
-ALL_SCOPES = [SCOPE_EMAIL_CALENDAR]
+ALL_SCOPES = [
+    SCOPE_CALENDAR,
+    SCOPE_EMAIL,
+]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
 

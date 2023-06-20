@@ -54,6 +54,7 @@ from managr.organization.models import Team
 from .permissions import IsStaff
 from managr.core.background import emit_process_calendar_meetings, emit_process_submit_chat_prompt
 
+from nylas import APIClient
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -319,7 +320,6 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     from managr.hubspot.routes import routes as hs_routes
     from managr.salesforce.routes import routes as sf_routes
 
-    print("DATA IS HERE,", data)
     cleaned_data = dict(data)
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
@@ -1269,6 +1269,66 @@ def revoke_access_token(request):
     else:
         raise ValidationError({"non_form_errors": {"no_token": "user has not authorized nylas"}})
 
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def send_new_email(request):
+    subject = request.data.get("subject")
+    body = request.data.get("body")
+    to = request.data.get("to")
+    # Do nothing if the user hasn't connected Nylas
+    try:
+        nylas = request.user.nylas
+    except NylasAuthAccount.DoesNotExist:
+        logger.warning(
+            "Attempted to send an email via Nylas "
+            "but the user does not have an active Nylas integration."
+        )
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Otherwise, init the Nylas Client
+    try:
+        nylas = APIClient(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
+        draft = nylas.drafts.create()
+        draft.subject = subject
+        draft.body = body
+        draft.to = to
+        draft.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.exception(f"Error sending new draft to Nylas <{e}>")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def reply_to_email(request):
+    body = request.data.get("body")
+    id = request.data.get("id")
+    # Do nothing if the user hasn't connected Nylas
+    try:
+        nylas = request.user.nylas
+    except NylasAuthAccount.DoesNotExist:
+        logger.warning(
+            "Attempted to send an email via Nylas "
+            "but the user does not have an active Nylas integration."
+        )
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Otherwise, init the Nylas Client
+    try:
+        nylas = APIClient(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
+        thread = nylas.threads.get(id)
+        draft = thread.create_reply()
+        draft.body = body
+        draft.to = thread.from_
+        draft.cc = thread.cc
+        draft.bcc = thread.bcc
+        draft.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.exception(f"Error sending reply email to Nylas <{e}>")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])

@@ -77,6 +77,16 @@ urlpatterns = [
         core_views.revoke_access_token,
         name="revoke_email_auth",
     ),
+    path(
+        "users/nylas/send-new-email/",
+        core_views.send_new_email,
+        name="send_new_email",
+    ),
+    path(
+        "users/nylas/reply-to-email/",
+        core_views.reply_to_email,
+        name="reply_to_email",
+    ),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
     path(
         "users/salesloft/re-direct",
