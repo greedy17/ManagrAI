@@ -21,7 +21,10 @@ const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
+const SSO_DATA_ENDPOINT = '/sso-data/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
+const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
+const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
@@ -31,6 +34,10 @@ const PULL_USAGE_DATA = '/users/pull-usage-data/'
 const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
+const CHAT_SUBMISSION = 'users/chat/submission/'
+const CHAT_EMAIL = 'users/chat/follow-up-email/'
+const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
+const CHAT_SUMMARY = 'users/chat/summary/'
 
 export default class UserAPI {
   get client() {
@@ -53,6 +60,34 @@ export default class UserAPI {
    **/
   static create(cls) {
     return new UserAPI(cls)
+  }
+
+  async chatUpdate(data) {
+    return this.client
+      .post(CHAT_SUBMISSION, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatUpdate' }))
+  }
+
+  async chatEmail(data) {
+    return this.client
+      .post(CHAT_EMAIL, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatEmail' }))
+  }
+
+  async chatNextSteps(data) {
+    return this.client
+      .post(CHAT_NEXT_STEPS, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatNextSteps' }))
+  }
+
+  async getSummary(data) {
+    return this.client
+      .post(CHAT_SUMMARY, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatSummary' }))
   }
 
   async list({ pagination, filters }) {
@@ -174,6 +209,24 @@ export default class UserAPI {
         }),
       )
     return promise
+  }
+  async sendNewEmail(data) {
+    const url = NYLAS_SEND_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
+  }
+  async sendReplyEmail(data) {
+    const url = NYLAS_REPLY_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
   }
   retrieveEmail(uid, token) {
     /**
@@ -388,6 +441,15 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Get Tasks error' })
+    }
+  }
+  async googleInit() {
+    const url = SSO_DATA_ENDPOINT
+    try {
+      const res = await this.client.get(url)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'googleInit error' })
     }
   }
 

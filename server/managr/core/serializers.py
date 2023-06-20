@@ -294,6 +294,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "salesloft_account",
             "nylas",
             "slack_integration",
+            "zoom_account",
         )
 
     def get_days_active(self, instance):

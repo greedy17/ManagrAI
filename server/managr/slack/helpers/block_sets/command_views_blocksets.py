@@ -492,6 +492,8 @@ def update_command_block_set(context):
         options.append(block_builders.option("Add To Cadence", "ADD_CADENCE"))
     if hasattr(user, "gong_account"):
         options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
+    if not settings.IN_PROD:
+        options.append(block_builders.option("Reset Meetings", "RESET_MEETINGS"))
     blocks = [
         block_builders.input_block(
             f"Update {crm} using conversational AI",
@@ -525,6 +527,9 @@ def actions_block_set(context):
     action_options = [
         block_builders.option("Get Summary", "GET_SUMMARY"),
         block_builders.option("Deal Review", "DEAL_REVIEW"),
+        block_builders.option("Call Summary", "CALL_SUMMARY"),
+        block_builders.option("Call Analysis", "CALL_ANALYSIS"),
+        block_builders.option("Ask Managr", "ASK_MANAGR"),
     ]
     blocks = [
         block_builders.input_block(
@@ -596,6 +601,56 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
 
 
 @block_set(required_context=["u"])
+def ask_managr_blockset(context, *args, **kwargs):
+    """Shows a modal to update a resource"""
+    resource_type = context.get("resource_type", None)
+    resource_id = context.get("resource_id", None)
+    user_id = context.get("u")
+    options = [
+        block_builders.option(resource, resource.capitalize())
+        for resource in context.get("options").split("%")
+    ]
+    blocks = []
+    blocks.append(
+        block_builders.static_select(
+            "Related to type",
+            options,
+            action_id=f"{slack_const.PROCESS_SELECT_RESOURCE}?u={user_id}&options={context.get('options')}&action_id={context.get('action_id')}",
+            block_id="selected_object_type",
+            initial_option=block_builders.option(resource_type, resource_type)
+            if resource_type
+            else None,
+        )
+    )
+    if (not resource_id and resource_type) or (resource_id and resource_type):
+        blocks.append(
+            block_builders.external_select(
+                f"*Search for an {context.get('resource_type')}*",
+                action_id=f"{context.get('action_id')}?u={user_id}&resource_type={resource_type}",
+                block_id="selected_object",
+                placeholder="Type to search",
+                initial_option=block_builders.option(resource_id, resource_id)
+                if resource_id
+                else None,
+            ),
+        )
+    if resource_id and resource_type:
+        blocks.extend(
+            [
+                block_builders.input_block(
+                    f"What would you like to ask?",
+                    placeholder=f"Type or select an action template",
+                    block_id="CHAT_PROMPT",
+                    multiline=True,
+                    optional=False,
+                ),
+                block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+            ]
+        )
+    return blocks
+
+
+@block_set(required_context=["u"])
 def initial_inline_blockset(context, *args, **kwargs):
     switch_to = context.get("switch_to")
     user = User.objects.get(id=context.get("u"))
@@ -640,3 +695,44 @@ def initial_inline_blockset(context, *args, **kwargs):
         ),
     ]
     return block_builders.actions_block(action_blocks)
+
+
+@block_set(required_context=["u"])
+def reset_meeting_block_set(context, *args, **kwargs):
+    import datetime
+    from managr.salesforce.models import MeetingWorkflow
+
+    meeting_day = context.get("meeting_day", None)
+    user_id = context.get("u")
+    user = User.objects.get(id=user_id)
+    meetings = (
+        MeetingWorkflow.objects.filter(user=user)
+        .order_by("-datetime_created")
+        .values_list("datetime_created", flat=True)
+    )[:50]
+    meetings = list(set([datetime.datetime.strftime(date, "%Y-%m-%d") for date in meetings]))
+    meeting_options = [block_builders.option(meeting, meeting) for meeting in meetings]
+    blocks = []
+    blocks.append(
+        block_builders.static_select(
+            "Select which date you would like to reset from (date is in year-month-day format)",
+            meeting_options,
+            action_id=f"{slack_const.CHOOSE_RESET_MEETING_DAY}?u={user_id}",
+            block_id="selected_day",
+        )
+    )
+    if meeting_day:
+        meeting_for_date = list(MeetingWorkflow.objects.for_user(user, date=meeting_day))
+        meeting_options_for_date = [
+            block_builders.option(meeting.meeting.topic, str(meeting.id))
+            for meeting in meeting_for_date
+        ]
+        blocks.append(
+            block_builders.multi_static_select(
+                "Select which meeting to reset",
+                meeting_options_for_date,
+                block_id="selected_meetings",
+            ),
+        )
+    return blocks
+

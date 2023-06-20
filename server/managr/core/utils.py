@@ -14,10 +14,30 @@ from managr.organization.models import Organization
 from managr.core import constants as core_const
 
 
-def max_token_calculator(character_count, add_tokens):
-    base_count = character_count / 4
-    token_count = base_count + add_tokens
-    return int(token_count)
+def count_character_tokens(text):
+    count = 0
+    in_token = False
+
+    for char in text:
+        if char.isspace() or char == "\n":
+            if in_token:
+                count += 1
+                in_token = False
+        else:
+            count += 1
+            in_token = True
+
+    if in_token:
+        count += 1
+
+    return count
+
+
+def max_token_calculator(text):
+    token_count = count_character_tokens(text)
+    use_tokens = 4000 - token_count
+    tokens = int(use_tokens) if int(use_tokens) > 0 else 0
+    return tokens
 
 
 def qsort(inlist, obj):
@@ -306,7 +326,8 @@ def pull_usage_data(month_only=False):
 
 def get_summary_completion(user, data):
     summary_prompt = core_const.OPEN_AI_SUMMARY_PROMPT(data)
-    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, top_p=0.1)
+    tokens = max_token_calculator(summary_prompt)
+    body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, tokens)
     url = core_const.OPEN_AI_COMPLETIONS_URI
     with Client as client:
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)

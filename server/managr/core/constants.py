@@ -23,9 +23,10 @@ if settings.USE_OPEN_AI:
         "Authorization": f"Bearer {OPEN_AI_SECRET}",
     }
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
 OPEN_AI_SUMMARY_PROMPT = (
-    lambda object: f"""Summarize the meetings notes below in the most concise way (300 characters max) as if you are reporting back to a VP of Sales, tone is casual yet professional.
+    lambda object: f"""Summarize the meeting notes below in the most concise way (no less than 1,500 characters and no greater than 2,000 characters) as if you are reporting back to a VP of Sales, tone is casual yet professional.
     Highlight the most important information first like, the deal stage, next step and close date. 
     Also mention what kind of interaction it was - a call, meeting, or just an update. 
     Deliver message in sentence format
@@ -44,18 +45,17 @@ OPEN_AI_UPDATE_PROMPT = (
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
-    lambda data: f"""You are a salesperson who just had a meeting with the prospect. 
-    Your job is to now follow up with the prospect via email to summarize the conversation and attempt to move the deal forward. The meeting notes are below.
-    Use this writing style when crafting the email:
-    A casual and friendly tone, using informal salutations and contractions. 
-    Concise and to-the-point sentences that focus on the value proposition. 
-    Use of a question and personal anecdotes to engage the recipient. 
-    Limit to one question, asked at the end of the email
+    lambda meeting_comments: f"""You are a salesperson who just had a meeting with a prospect or customer. Your job is to now send a follow-up email. You must follow these instructions:
+    1) Use the meeting comments below to craft the email.
+    2) writing style must be this (unless otherwise specified in the meeting comments):
+    A casual and friendly tone, using informal salutations and contractions.
+    Concise and to-the-point sentences that focus on the value proposition.
     Frequent paragraph breaks to enhance readability.
-    Clear call-to-action, suggesting specific dates or offering assistance.
-    Cap email at 1000 characters.
-    Meeting Notes: {data}"""
+    Use of a question. Limit to one question, at the end, a clear call-to-action (no P.S. at the end)
+    3) The email cannot be more than 1000 characters.\n
+    Meeting Comments: {meeting_comments}"""
 )
+
 OPEN_AI_NEXT_STEPS = (
     lambda data: f"Provide up to 3 listed out suggested next steps to take in order to close the prospect or move the deal forward based on meeting notes below, ranging from aggressive (close this month) to passive (close in the coming months)\n Meeting Notes: {data}"
 )
@@ -89,24 +89,45 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript: f"""You are a VP of Sales reviewing a sales rep's call via transcript. These transcripts are typically between 20-60 minutes long. Below is just a 5 minute section of the call transcript. Follow these instructions carefully:
-1) Summarize this section in paragraph form. The summary needs to be 500 to 800 characters.
-2) The summary must include the following (if discussed): customer pain, observations, objections, objection handling, competitors mentioned, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
-3) Desired format:\n Summary: <summary>\n
-    Transcript: {transcript}
+    lambda transcript: f"""'input': {transcript},'prompt': 'AI, summarize this 5 minute portion of a sales call transcript between rep and prospect. 
+    Include key details such as products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
+    Keep in mind that this is just one of many portions of the call transcript. Output must be one paragraph and 500 (min) to 800 (max) characters in length. 
+    Output must also be in this format: Summary: <summary>'
     """
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda fields, summaries: f"""You are a VP of Sales reviewing a sales rep's call. Below are summaries of the call transcript, in chronological order. Follow these instructions carefully:
-    1) Create one summary, in paragraph form. The summary needs to be 1,500 to 2,000 characters. The summary needs to outline relevant data around customer pain, observations, objections, objection handling, competitors, timeline, decision process and next steps. The tone of the summary needs to be casual, engaging, conversational, and slightly witty.
-    2) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary
-    3) The output must return in a python dictionary. The summary must be added to the dictionary using a key called 'summary'.
-    CRM fields:{fields}\nSummaries: {summaries}"""
+    lambda input, crm_fields, date: f"""'input': {input}, 'prompt': 'Today is {date}. Based on the transcript summaries provided above, you must follow the instructions below: 
+1) Create one comprehensive summary of the call. The summary should only include information that would be relevant to a salesperson. Highlight key details (if they were discussed) such as: products & features, customer pain points, competitors, timeline to close, decision-making process, next steps and budget. The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.\n
+2) Then, you must fill in the CRM fields below based on this call transcript. Identify and extract accurate data for each applicable CRM field. For any fields not applicable, leave them empty.\n
+3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.\nCRM fields: {crm_fields}'"""
+)
+
+OPEN_AI_CALL_ANALYSIS_PROMPT = (
+    lambda summaries, date: f"""
+    Below are short summaries, summarizing parts of a sales call transcript from {date}. 
+    These summaries are in chronological order. Your are an experienced VP of Sales, follow the instructions below:\n
+    1. During the call, identify specific moments where the prospect exhibits high engagement\n
+    2. During the call, identify specific moments where the prospect exhibits disinterest\n
+    3. During the call, identify specific moments where the prospect has questions or concerns\n
+    4. Provide a sentiment analysis overview using a score and keep the explanation under 150 characters.\n
+    Response needs to be in this format:\n
+    High Engagement:\n
+    Disinterest:\n
+    Questions or Concerns:\n
+    Sentiment:\n
+    Summaries: {summaries}"""
+)
+
+OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS = (
+    lambda email, instructions: f"""
+Below is an AI generated email. Adjust and rewrite the email per instructions below:\n
+Email: {email}\n
+Instructions: {instructions}"""
 )
 
 
-def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=False, temperature=False, top_p=False):
+def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,
@@ -121,11 +142,71 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=False, temperature=
     return body
 
 
+def OPEN_AI_EDIT_BODY(user_name, input, instructions, data, temperature=False, top_p=False):
+    # instructions += f"use this data as context: {data}"
+    body = {
+        "model": "text-davinci-edit-001",
+        "input": input,
+        "instruction": instructions,
+        "user": user_name,
+    }
+    if temperature:
+        body["temperature"] = temperature
+    if top_p:
+        body["top_p"] = top_p
+    return body
+
+
+def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
+    from datetime import datetime
+
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    user = User.objects.get(id=user_id)
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    workflow_check = MeetingWorkflow.objects.filter(user=user, resource_id=resource_id).first()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user_id, resource_id=resource_id
+    ).first()
+    today = datetime.today()
+    if form_check and form_check.saved_data:
+        data_from_resource = form_check.saved_data
+    else:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(resource=resource_type, form_type="UPDATE")
+            .first()
+        )
+        api_names = template.list_field_api_names()
+        data_from_resource = {}
+        for name in api_names:
+            data_from_resource[name] = resource.secondary_data[name]
+
+    if workflow_check:
+        if workflow_check.transcript_summary:
+            data_from_resource["summary"] = workflow_check.transcript_summary
+        if workflow_check.transcript_analysis:
+            data_from_resource["analysis"] = workflow_check.transcript_analysis
+    body = f"""Today's date is {today}. Analyze this CRM data:\n
+    CRM data: {data_from_resource}\n
+    Based on your analysis of the CRM data, answer the following question / complete this requested task: {prompt}:\n
+The sales represetative asking this question or request is {user.first_name} and works for {user.organization.name}.\n
+"""
+    return body
+
+
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_CALENDAR = "calendar"
+SCOPE_CALENDAR = "calendar"
+SCOPE_EMAIL = "email"
 
-
-ALL_SCOPES = [SCOPE_EMAIL_CALENDAR]
+ALL_SCOPES = [
+    SCOPE_CALENDAR,
+    SCOPE_EMAIL,
+]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
 
