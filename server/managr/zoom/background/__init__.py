@@ -856,7 +856,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    from managr.core.utils import max_token_calculator
     import httpx
 
     pm = json.loads(payload["view"]["private_metadata"])

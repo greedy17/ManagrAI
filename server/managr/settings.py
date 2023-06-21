@@ -27,8 +27,9 @@ SECRET_KEY = _env_get_required("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = _env_get_required("DEBUG") == "True"
-
+SESSION_COOKIE_SECURE = True
 if IN_DEV:
+    SESSION_COOKIE_SECURE = False
     SERVER_EMAIL = "Managr Support <support@mg.managr.ai>"
 elif IN_STAGING:
     SERVER_EMAIL = "Managr <no-reply-staging@managr.ai>"
@@ -73,7 +74,6 @@ if EC2_PRIVATE_IP:
 
 if CURRENT_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(CURRENT_DOMAIN)
-
 
 # Application definition
 

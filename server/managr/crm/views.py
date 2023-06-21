@@ -12,6 +12,7 @@ from rest_framework import (
     mixins,
     viewsets,
 )
+from managr.api.models import ExpiringTokenAuthentication
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework.response import Response
@@ -54,6 +55,7 @@ def ADD_UPDATE_TO_CRM_FUNCTION(crm):
 
 class ObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = ObjectFieldSerializer
+    authentication_classes = ExpiringTokenAuthentication
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -73,6 +75,8 @@ class CRMObjectViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    authentication_classes = ExpiringTokenAuthentication
+
     def get_serializer_class(self):
         routes = model_routes(self.request.user.crm)
         param_object = self.request.GET.get("crm_object")
