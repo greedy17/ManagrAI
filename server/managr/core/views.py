@@ -6,14 +6,16 @@ import httpx
 from django.utils import timezone
 import calendar
 from django.core import serializers
+from managr.utils.misc import get_site_url
 from dateutil.parser import parse
+from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
@@ -671,6 +673,19 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         response_data = serializer.data
         response_data["token"] = user.auth_token.key
         return Response(response_data)
+
+
+class UserLogoutView(generics.GenericAPIView):
+    authentication_classes = ()
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+
+        user = self.request.user
+        logout(request)
+        user.auth_token.revoke()
+        url = get_site_url()
+        return redirect(f"{url}/login")
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):

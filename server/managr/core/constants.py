@@ -1,8 +1,5 @@
 from django.conf import settings
 
-from managr.utils.misc import get_site_url
-
-
 USE_NYLAS = settings.USE_NYLAS
 NYLAS_CLIENT_ID = settings.NYLAS_CLIENT_ID if USE_NYLAS else None
 NYLAS_CLIENT_SECRET = settings.NYLAS_CLIENT_SECRET if USE_NYLAS else None
