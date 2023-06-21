@@ -10,10 +10,17 @@ class ManagrToken(Token):
     expiration = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=7))
     is_revoked = models.BooleanField(default=False)
 
-    def refresh(self):
-        self.expiration = timezone.now() + timezone.timedelta(days=7)
-        self.is_revoked = False
-        self.save()
+    def is_expired(self):
+        if self.expiration < timezone.now():
+            return True
+        return False
+
+    @classmethod
+    def refresh(cls, token):
+        user = token.user
+        token.delete()
+        new_token = cls.objects.create(user=user)
+        return new_token
 
     def revoke(self):
         self.is_revoked = True

@@ -5,31 +5,21 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 from managr.api.models import ExpiringTokenAuthentication
 from rest_framework import (
-    authentication,
     filters,
     permissions,
-    generics,
     mixins,
     status,
-    views,
     viewsets,
 )
 
 from managr.salesforce.background import emit_generate_form_template
 
-from rest_framework import viewsets, mixins, generics, status, filters, permissions
+from rest_framework import viewsets, mixins, status, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-
-
-from managr.opportunity.models import Opportunity
-
 from managr.core import constants as core_consts
 from managr.core.permissions import (
-    IsOrganizationManager,
-    IsSuperUser,
     IsSalesPerson,
     CanEditResourceOrReadOnly,
     SuperUserCreateOnly,
