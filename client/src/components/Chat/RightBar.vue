@@ -10,7 +10,7 @@
         Pipeline
       </div>
       <div
-        @click="switchMainView('email')"
+        style="cursor: not-allowed"
         :class="{ activeswitch: mainView === 'email' }"
         class="switch-item"
       >
@@ -689,6 +689,7 @@ export default {
       this.searchText = ''
     },
     changeSelectedOpp(opp, name) {
+      this.loadMorePage = 0
       if (opp) {
         this.selectedOpp = opp
       } else if (name) {
@@ -699,13 +700,15 @@ export default {
         } else {
           this.selectedOpp = null
           this.searchText = name
+          this.loadMoreOpps()
+
+          setTimeout(() => {
+            let opp
+            opp = this.opportunities.filter((opp) => opp.name === this.searchText)[0]
+            this.selectedOpp = opp
+          }, 300)
         }
       }
-    },
-    async switchFiltering() {
-      // this.$store.dispatch('changeFilters', [['EQUALS', 'Name', 'Marriot']])
-      // await this.$store.dispatch('loadChatOpps', this.page)
-      this.filtering = !this.filtering
     },
     async setOppForms() {
       let stageGateForms
@@ -868,12 +871,14 @@ export default {
       return this.$store.state.allPicklistOptions
     },
   },
-  async created() {
+  created() {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.$store.dispatch('changeFilters', [])
-    await this.$store.dispatch('loadChatOpps')
+    this.$store.dispatch('loadChatOpps')
+    this.$store.dispatch('loadAllAccounts')
+    this.$store.dispatch('loadAllContacts')
+    this.$store.dispatch('loadAllLeads')
     this.setOppForms()
   },
 }

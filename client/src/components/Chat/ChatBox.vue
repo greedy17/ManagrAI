@@ -39,10 +39,17 @@
 
           <div class="text-container">
             <div style="position: relative">
-              <div class="type-header" v-if="message.user === 'bot' && message.gtMsg">
-                <p :class="{ negmar: message.gtMsg === 'AI Generated Summary' }" class="msgType">
+              <div
+                class="type-header"
+                :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
+                v-if="message.user === 'bot' && message.gtMsg"
+              >
+                <p>
                   {{ message.gtMsg }}
                 </p>
+                <small>
+                  {{ message.data.Name }}
+                </small>
               </div>
 
               <pre v-html="message.value" class="message-text"></pre>
@@ -443,21 +450,22 @@ export default {
   color: $light-gray-blue;
 }
 
-.negmar {
-  top: -1rem !important;
+.marg {
+  margin-bottom: 0 !important;
 }
 
-// .type-header {}
-
-.msgType {
-  position: absolute;
+.type-header {
+  position: sticky;
   top: 0;
   left: 0;
-  background-color: $grape;
-  color: white;
-  font-size: 12px;
-  padding: 0.5rem 0.75rem !important;
-  border-radius: 5px;
+  margin-bottom: -2rem;
+
+  p {
+    font-size: 13px;
+  }
+  small {
+    color: $light-gray-blue;
+  }
 }
 
 .message-text {
@@ -526,10 +534,11 @@ export default {
 }
 
 .ai-text-container {
+  overflow: scroll;
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  padding: 0 0.75rem;
   line-height: 1.75;
   position: relative;
 
@@ -539,7 +548,8 @@ export default {
 }
 
 .text-container {
-  padding: 0.25rem 0.5rem;
+  overflow: scroll;
+  padding: 0 0.5rem;
   margin: 0;
   line-height: 1.75;
 }

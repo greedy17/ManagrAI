@@ -13,7 +13,7 @@
         <div class="chat-modal-header">
           <div>
             <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
-              Update {{ chatData.resource }}
+              {{ chatData.resource }}
             </h3>
             <span class="gray-text smaller"
               >Your CRM fields have been auto-filled. Pleae review and click submit.</span
@@ -176,11 +176,11 @@
     <main v-if="currentView === 'home'" id="main">
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
-    <!-- <main v-else-if="currentView === 'meetings'">
-      <ChatMeetings />
-    </main> -->
+    <main v-else-if="currentView === 'meetings'" id="main">
+      <ChatMeetings @set-opp="setOpp" />
+    </main>
     <main id="main" v-else>
-      <ChatList @set-opp="setOpp" />
+      <ChatList @set-opp="setOpp" :formFields="formFields" />
     </main>
 
     <aside id="right-sidebar">
@@ -197,6 +197,7 @@ import Modal from '@/components/InviteModal'
 import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
 import ChatList from '../components/Chat/ChatList.vue'
+import ChatMeetings from '../components/Chat/ChatMeetings.vue'
 import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 
@@ -209,6 +210,7 @@ export default {
     Modal,
     ChatFormField,
     ChatList,
+    ChatMeetings,
   },
   data() {
     return {
@@ -280,8 +282,11 @@ export default {
         this.$refs.rightSideBar.reloadOpps()
         setTimeout(() => {
           this.toggleChatModal()
-          this.submitting = false
         }, 1000)
+
+        setTimeout(() => {
+          this.submitting = false
+        }, 2000)
       }
     },
     test(log) {
@@ -387,7 +392,7 @@ body {
 }
 
 #left-sidebar {
-  width: 280px;
+  width: 280px !important;
 }
 
 #main {
@@ -624,7 +629,7 @@ body {
   }
 }
 .full-width {
-  width: 300px !important;
+  width: 280px !important;
 }
 .profile-level-p {
   width: 60px;

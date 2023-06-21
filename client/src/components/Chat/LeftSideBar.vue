@@ -1,6 +1,6 @@
 <template>
   <div ref="leftsidebar" class="sidebar" :class="{ open: isOpen }">
-    <section style="position: relative">
+    <section>
       <header class="right-bar-header">
         <!-- <button @mouseenter="soonThreadText" @mouseleave="newThreadText" class="primary-button">
           <span style="font-size: 14px; margin-right: 1rem">🚀</span>
@@ -10,7 +10,7 @@
           <img src="@/assets/images/logo.png" height="26px" alt="" />
         </div>
 
-        <img class="img-spacing pointer" src="@/assets/images/collapse.svg" height="16px" alt="" />
+        <!-- <img class="img-spacing pointer" src="@/assets/images/collapse.svg" height="16px" alt="" /> -->
       </header>
 
       <div class="body">
@@ -29,7 +29,11 @@
               <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
 
-            <div class="menu-item">
+            <div
+              @click="changeView('meetings')"
+              :class="{ 'active-view': currentView === 'meetings' }"
+              class="menu-item"
+            >
               <img src="@/assets/images/calendar.svg" height="14px" alt="" />
               <p>Meetings</p>
 
@@ -51,11 +55,14 @@
 
           <div v-else-if="templates.list.length">
             <div
-              :class="{ 'active-view': currentView.title === alert.title }"
+              :class="{
+                'active-view': currentView.title === alert.title,
+                inactive: !(alert.sobjectInstances && alert.sobjectInstances.length),
+              }"
               v-for="(alert, i) in templates.list"
               :key="i"
               class="menu-item"
-              @click="changeView(alert.title, alert)"
+              @click="changeView(alert.title, alert, alert.sobjectInstances.length)"
             >
               <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
               <p>{{ alert.title }}</p>
@@ -138,12 +145,17 @@ export default {
     // console.log(this.templates)
   },
   methods: {
-    changeView(view, alert) {
-      this.view = view
-      if (alert) {
-        this.$store.dispatch('setCurrentView', alert)
-      } else {
-        this.$store.dispatch('setCurrentView', 'home')
+    changeView(view, alert, length) {
+      if (length || view === 'home' || view === 'meetings') {
+        this.view = view
+        if (view === 'meetings') {
+          this.$store.dispatch('loadMeetings')
+        }
+        if (alert) {
+          this.$store.dispatch('setCurrentView', alert)
+        } else {
+          this.$store.dispatch('setCurrentView', view)
+        }
       }
     },
     toggleSidebar() {
@@ -197,13 +209,12 @@ export default {
 }
 
 .sidebar {
-  position: fixed;
   background-color: white;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   top: 0;
   left: 0;
   height: 100%;
-  width: 280px;
+  width: 100%;
   overflow: auto;
   transition: all 0.3s ease;
   font-size: 14px;
@@ -217,12 +228,14 @@ export default {
   }
 }
 
-// .inactive {
-//   color: $light-gray-blue;
-//   img {
-//     filter: invert(65%) sepia(3%) saturate(2244%) hue-rotate(200deg) brightness(93%) contrast(88%);
-//   }
-// }
+.inactive {
+  opacity: 0.3;
+  cursor: not-allowed !important;
+
+  &:hover {
+    opacity: 0.3 !important;
+  }
+}
 
 .absolute-img {
   position: absolute;
@@ -303,6 +316,7 @@ export default {
 
 @media (max-width: 1000px) {
   .sidebar {
+    position: absolute;
     left: -280px;
 
     &.open {
@@ -435,7 +449,7 @@ img {
 }
 
 .close {
-  position: inherit;
+  position: absolute;
   top: 0;
   left: 280px;
   top: 1.5rem;
@@ -445,10 +459,11 @@ img {
 
 .tooltip {
   display: block;
-  width: 228px;
+  width: 250px;
   height: auto;
   position: absolute;
   top: 0;
+  left: 1rem;
   font-size: 14px;
   background: $base-gray;
   color: white;

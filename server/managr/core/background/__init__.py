@@ -595,6 +595,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
     if user.has_nylas_integration:
         try:
             processed_data = _process_calendar_details(user_id, date)
+            print(processed_data)
             if user.has_zoom_integration:
                 if date is None:
                     user_timezone = pytz.timezone(user.timezone)
