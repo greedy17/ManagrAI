@@ -8,6 +8,8 @@ const REGISTRATION_ENDPOINT = '/register/'
 const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
 const USERS_ENDPOINT = '/users/'
 const USERS_UPDATE = '/users/update-user-info/'
+const REVOKE_TOKEN_ENDPOINT = '/users/revoke-token/'
+const REFRESH_TOKEN_ENDPOINT = '/users/refresh-token/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
@@ -284,6 +286,30 @@ export default class UserAPI {
     return promise
   }
 
+  async revokeToken(token, userId) {
+    const url = REVOKE_TOKEN_ENDPOINT
+    const data = {
+      token,
+      user_id: userId
+    }
+    try {
+      await this.client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
+    }
+  }
+  async refreshToken(token, userId) {
+    const url = REFRESH_TOKEN_ENDPOINT
+    const data = {
+      token,
+      user_id: userId,
+    }
+    try {
+      await this.client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
+    }
+  }
   async createMessagingAccount(phoneNumber) {
     const url = CREATE_MESSAGING_ACCOUNT_ENDPOINT
     const data = {
