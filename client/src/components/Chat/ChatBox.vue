@@ -71,6 +71,7 @@
 
               <div v-else style="margin-top: 1.5rem" class="row">
                 <button
+                  style="margin-bottom: 0.25rem"
                   @click="
                     regenerate(
                       message.generatedType,

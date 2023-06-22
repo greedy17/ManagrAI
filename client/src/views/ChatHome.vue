@@ -12,7 +12,7 @@
       <div class="chat-modal-container">
         <div class="chat-modal-header">
           <div>
-            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
+            <h3 @click="test" class="elipsis-text" style="margin-bottom: 0.25rem">
               {{ chatData.resource }}
             </h3>
             <span class="gray-text smaller"
@@ -177,14 +177,24 @@
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
     <main v-else-if="currentView === 'meetings'" id="main">
-      <ChatMeetings @set-opp="setOpp" />
+      <ChatMeetings
+        @set-opp="setOpp"
+        :formFields="formFields"
+        :stageFields="stageFields"
+        :stagesWithForms="stagesWithForms"
+      />
     </main>
     <main id="main" v-else>
-      <ChatList @set-opp="setOpp" :formFields="formFields" />
+      <ChatList @set-opp="setOpp" :formFields="formFields" @refresh-list="refreshLists" />
     </main>
 
     <aside id="right-sidebar">
-      <RightBar ref="rightSideBar" @set-fields="setFormFields" @set-stages="setStageFields" />
+      <RightBar
+        ref="rightSideBar"
+        @set-fields="setFormFields"
+        @set-stages="setStageFields"
+        @refresh-list="refreshLists"
+      />
     </aside>
   </div>
 </template>
@@ -224,6 +234,7 @@ export default {
       formFields: [],
       stageFields: [],
       barOpen: true,
+      stagesWithForms: null,
     }
   },
   created() {
@@ -231,6 +242,9 @@ export default {
   },
   watch: {},
   methods: {
+    refreshLists() {
+      this.$refs.sidebarRef.refreshList()
+    },
     setOpp(name) {
       this.$refs.rightSideBar.changeSelectedOpp(null, name)
     },
@@ -289,8 +303,8 @@ export default {
         }, 2000)
       }
     },
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.chatData.data)
     },
     toggleSidebar() {
       this.$refs.sidebarRef.toggleSidebar()

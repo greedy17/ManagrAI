@@ -237,7 +237,7 @@
     </header>
     <div class="switcher" v-if="selectedOpp">
       <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
-        <img src="@/assets/images/crmlist.svg" height="16px" alt="" />
+        <img src="@/assets/images/crmlist.svg" height="12px" alt="" />
         Details
       </div>
       <div
@@ -633,6 +633,7 @@ export default {
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
+          this.$emit('refresh-list')
         }, 1000)
       }
     },

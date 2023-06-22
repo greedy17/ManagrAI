@@ -78,7 +78,7 @@
           <div v-else>
             <div class="menu-item">
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p>Activate lists</p>
+              <p>No active lists</p>
             </div>
           </div>
         </section>
@@ -145,6 +145,9 @@ export default {
     // console.log(this.templates)
   },
   methods: {
+    refreshList() {
+      this.templates.refresh()
+    },
     changeView(view, alert, length) {
       if (length || view === 'home' || view === 'meetings') {
         this.view = view
@@ -255,6 +258,7 @@ export default {
 
 .active-view {
   background-color: $dark-green;
+  border-radius: 5px;
   color: white;
   img {
     filter: invert(90%);
@@ -333,6 +337,7 @@ export default {
 
 .body {
   min-height: 66vh;
+  padding: 0 1rem;
   overflow-y: scroll;
   overflow-x: hidden;
   text-overflow: ellipsis;
@@ -515,19 +520,34 @@ img {
 }
 
 .left-section {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
   padding-bottom: 0;
 }
 
 .left-section:last-of-type {
   border: none;
+  overflow-y: scroll;
+  overflow-x: none;
+  scroll-behavior: smooth;
+  padding-top: 0;
+}
+
+.left-section:last-of-type::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.left-section:last-of-type::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px !important;
+}
+.left-section:last-of-type:hover::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
 }
 
 .section-title {
   color: $light-gray-blue;
-
-  padding-left: 1.25rem;
+  // padding-left: 1.25rem;
 }
 
 .img-spacing {

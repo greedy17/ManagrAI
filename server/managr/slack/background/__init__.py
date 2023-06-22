@@ -1062,7 +1062,7 @@ def _process_chat_action(payload, context):
         else ["Company", "Deal", "Contact"]
     )
     state = payload["view"]["state"]
-    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
+    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"].strip()
     resource_check = None
     blocks = []
     lowercase_prompt = prompt.lower()
@@ -1108,6 +1108,9 @@ def _process_chat_action(payload, context):
             )
         context.update(prompt=prompt)
     except CRM_SWITCHER[user.crm][resource_check]["model"].DoesNotExist:
+        logger.exception(
+            f"COULD NOT FIND RESOURCE ERROR FOR MANAGR ACTION: {prompt} | {resource_check}"
+        )
         blocks.append(
             block_builders.simple_section(
                 f":no_entry_sign: We could not find a {resource_check} called {resource_name}",

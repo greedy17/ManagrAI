@@ -591,22 +591,28 @@ def process_current_alert_list(user_id):
 
 @background()
 def _process_calendar_meetings(user_id, slack_int, date):
+    from managr.zoom.zoom_helper import exceptions as zoom_exceptions
+
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
-        try:
-            processed_data = _process_calendar_details(user_id, date)
-            print(processed_data)
-            if user.has_zoom_integration:
-                if date is None:
-                    user_timezone = pytz.timezone(user.timezone)
-                    todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
-                    date = str(todays_date.date())
-                meetings = user.zoom_account.helper_class.get_meetings_by_date(
-                    user.zoom_account.access_token, user.zoom_account.zoom_id, date
-                )["meetings"]
-        except Exception as e:
-            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
-            processed_data = None
+        while True:
+            try:
+                processed_data = _process_calendar_details(user_id, date)
+                if user.has_zoom_integration:
+                    if date is None:
+                        user_timezone = pytz.timezone(user.timezone)
+                        todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                        date = str(todays_date.date())
+                    meetings = user.zoom_account.helper_class.get_meetings_by_date(
+                        user.zoom_account.access_token, user.zoom_account.zoom_id, date
+                    )["meetings"]
+                    break
+            except zoom_exceptions.TokenExpired:
+                user.zoom_account.regenerate_token()
+            except Exception as e:
+                logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+                processed_data = None
+                break
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
             slack_interaction_check = set(
@@ -2056,12 +2062,13 @@ def _process_send_ask_managr_to_dm(payload, context):
         context.get("resource_type"),
         context.get("resource_id"),
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    tokens = 500
     has_error = False
     attempts = 1
     timeout = 60.0
     while True:
         try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)

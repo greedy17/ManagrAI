@@ -1,4 +1,5 @@
 import logging
+from os import stat
 import httpx
 import json
 import time
@@ -789,20 +790,28 @@ def process_transcript_to_summaries(transcript, user):
     from managr.core.exceptions import _handle_response
     from managr.core import constants as core_consts
     from managr.utils.client import Variable_Client
-    from managr.core.utils import max_token_calculator
 
     summary_parts = []
     current_minute = 5
     start_index = 0
+    current_hour = 0
     split_transcript = []
     while True:
+        if current_minute == 60:
+            current_minute = 0
+            current_hour += 1
         check_time = (
-            f"00:0{str(current_minute)}:" if current_minute == 5 else f"00:{str(current_minute)}:"
+            f"0{current_hour}:0{str(current_minute)}:"
+            if (current_minute == 5 or current_minute == 0)
+            else f"0{current_hour}:{str(current_minute)}:"
         )
         end_index = transcript.find(check_time)
-        if end_index == -1:
+        if end_index == -1 and len(split_transcript):
             split_transcript.append(transcript[start_index:])
             break
+        elif end_index == -1 and not len(split_transcript):
+            current_minute += 5
+            continue
         else:
             split_transcript.append(transcript[start_index:end_index])
             start_index = end_index
@@ -868,6 +877,9 @@ def process_transcript_to_summaries(transcript, user):
                             break
                         else:
                             timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"PROCESS TRANSCRIPT SUMMARIES EXCEPTION {e}")
+                        break
     return summary_parts
 
 
@@ -880,11 +892,14 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    from managr.core.utils import max_token_calculator
+
+    
 
     pm = json.loads(payload["view"]["private_metadata"])
+    print('PM',pm)
     user = User.objects.get(id=pm.get("u"))
     state = payload["view"]["state"]["values"]
+    print('STATE',state)
     try:
         loading_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -904,11 +919,13 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     resource_list = [
         key for key in selected_options.keys() if "MEETING__PROCESS_TRANSCRIPT_TASK" in key
     ]
+    print('LIST',resource_list)
     value_key = "None"
     if len(resource_list):
         value_key = resource_list[0]
     selected_option = selected_options[value_key]["selected_option"]["value"]
     workflow = MeetingWorkflow.objects.get(id=pm.get("w"))
+    print('workflow',workflow )
     resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
         integration_id=selected_option
     )
@@ -984,6 +1001,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         },
                         fields_list,
                         workflow.datetime_created.date(),
+                        user,
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(

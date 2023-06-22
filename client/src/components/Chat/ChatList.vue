@@ -3,11 +3,22 @@
     <header class="list-header">
       <p><span>List: </span> {{ currentView.title }}</p>
 
-      <button @click="toggleAddField" class="small-button">
-        <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+      <div style="display: flex; align-items: center">
+        <button @click="reloadWorkflow" class="small-button">
+          <img
+            :class="{ 'rotate disabled': loading }"
+            src="@/assets/images/refresh.svg"
+            height="12px"
+            alt=""
+          />
+        </button>
 
-        Column
-      </button>
+        <button @click="toggleAddField" class="small-button">
+          <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+
+          Column
+        </button>
+      </div>
     </header>
     <div v-show="addingField" class="add-field">
       <header>
@@ -37,7 +48,7 @@
           label="referenceDisplayLabel"
           openDirection="below"
           track-by="id"
-          :options="formFields"
+          :options="formFields.list.filter((field) => !listNames.includes(field.label))"
           selectedLabel=""
           deselectLabel=""
           selectLabel=""
@@ -92,15 +103,16 @@
 
 <script>
 import { SObjects } from '@/services/salesforce'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { ObjectField } from '@/services/crm'
+import AlertTemplate from '@/services/alerts/'
 
 export default {
   name: 'ChatList',
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
-  props: {
-    formFields: {},
-  },
+
   data() {
     return {
       message: '',
@@ -109,9 +121,36 @@ export default {
       addingField: false,
       loading: false,
       baseResourceType: this.userCrm === 'HUBSPOT' ? 'deal' : 'Opportunity',
+      formFields: CollectionManager.create({
+        ModelClass: ObjectField,
+        pagination: { size: 1000 },
+        filters: {
+          crmObject: this.baseResourceType,
+          updateable: true,
+        },
+      }),
     }
   },
+  created() {
+    this.formFields.refresh()
+  },
   methods: {
+    async reloadWorkflow() {
+      this.loading = true
+      try {
+        let res = await AlertTemplate.api.runAlertTemplateNow(this.currentView.id, {
+          fromWorkflow: true,
+        })
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 1000)
+        this.$emit('refresh-list')
+      }
+    },
     setOpp(name) {
       this.$emit('set-opp', name)
     },
@@ -128,6 +167,7 @@ export default {
           resource_type: this.baseResourceType,
           field_ids: this.extraFields,
         })
+        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -162,8 +202,15 @@ export default {
     },
     extraPipelineFields() {
       let extras = []
-      extras = this.formFields.filter((field) => this.hasExtraFields.includes(field.id))
+      extras = this.formFields.list.filter((field) => this.hasExtraFields.includes(field.id))
       return extras
+    },
+    listNames() {
+      if (this.extraPipelineFields) {
+        return this.extraPipelineFields.map((field) => field.label)
+      } else {
+        return []
+      }
     },
   },
 }
