@@ -4,7 +4,7 @@ import json
 import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException, ApiRateLimitExceeded
+from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
@@ -260,10 +260,10 @@ class HubspotAuthAccountAdapter:
         url = hubspot_consts.HUBSPOT_SEARCH_URI(resource)
         data = hubspot_consts.HUBSPOT_SEARCH_SYNC_BODY(resource_fields, add_filters, limit)
         # logger.info(f"{url} was sent with data: {data}")
-        with Client as client:
-            attempts = 1
-            while True:
-                try:
+        attempts = 1
+        while True:
+            try:
+                with Client as client:
                     res = client.post(
                         url,
                         headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -271,18 +271,27 @@ class HubspotAuthAccountAdapter:
                     )
                     res = self._handle_response(res)
                     break
-                except ApiRateLimitExceeded:
-                    if attempts >= 3:
-                        break
-                    else:
-                        attempts += 1
-                        time.sleep(10)
-            saved_response = res
-            page = 1
-            while True:
-                has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
-                if has_next_page and page <= 5:
-                    data["after"] = has_next_page
+            except TokenExpired:
+                self.refresh()
+            except ApiRateLimitExceeded:
+                if attempts >= 3:
+                    break
+                else:
+                    attempts += 1
+                    time.sleep(10)
+            except Exception as e:
+                logger.exception(
+                    f"Exception calling hubspot api suring list resources call for {self.internal_user.email}: {e}"
+                )
+                res = {}
+                break
+        saved_response = res
+        page = 1
+        while True:
+            has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
+            if has_next_page and page <= 5:
+                data["after"] = has_next_page
+                try:
                     with Client as client:
                         res = client.post(
                             url,
@@ -290,15 +299,23 @@ class HubspotAuthAccountAdapter:
                             data=json.dumps(data),
                         )
                         res = self._handle_response(res)
-                        saved_response["results"] = [*saved_response["results"], *res["results"]]
+                        saved_response["results"] = [
+                            *saved_response["results"],
+                            *res["results"],
+                        ]
                         page += 1
-                else:
+                except Exception as e:
+                    logger.exception(
+                        f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
+                    )
                     break
-            logger.info(
-                f"Request a total of {len(res.get('results'))} results for {resource} after {page} page/s for {self.internal_user.email}"
-            )
-            res = self._format_resource_response(saved_response, resource)
-            return res
+            else:
+                break
+        logger.info(
+            f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
+        )
+        res = self._format_resource_response(saved_response, resource)
+        return res
 
     def list_relationship_data(self, relationship, fields, value, resource, *args, **kwargs):
         # build the filter query from the name fields and value
