@@ -4,7 +4,7 @@ import json
 import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException, ApiRateLimitExceeded
+from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
@@ -271,27 +271,44 @@ class HubspotAuthAccountAdapter:
                     )
                     res = self._handle_response(res)
                     break
+                except TokenExpired:
+                    self.refresh()
                 except ApiRateLimitExceeded:
                     if attempts >= 3:
                         break
                     else:
                         attempts += 1
                         time.sleep(10)
+                except Exception as e:
+                    logger.exception(
+                        f"Exception calling hubspot api suring list resources call for {self.internal_user.email}: {e}"
+                    )
+                    res = {}
+                    break
             saved_response = res
             page = 1
             while True:
                 has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
                 if has_next_page and page <= 5:
                     data["after"] = has_next_page
-                    with Client as client:
-                        res = client.post(
-                            url,
-                            headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
-                            data=json.dumps(data),
+                    try:
+                        with Client as client:
+                            res = client.post(
+                                url,
+                                headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                                data=json.dumps(data),
+                            )
+                            res = self._handle_response(res)
+                            saved_response["results"] = [
+                                *saved_response["results"],
+                                *res["results"],
+                            ]
+                            page += 1
+                    except Exception as e:
+                        logger.exception(
+                            f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
                         )
-                        res = self._handle_response(res)
-                        saved_response["results"] = [*saved_response["results"], *res["results"]]
-                        page += 1
+                        break
                 else:
                     break
             logger.info(
