@@ -271,6 +271,7 @@ class HubspotAuthAccountAdapter:
                     )
                     res = self._handle_response(res)
                     break
+<<<<<<< HEAD
             except TokenExpired:
                 self.refresh()
             except ApiRateLimitExceeded:
@@ -308,6 +309,47 @@ class HubspotAuthAccountAdapter:
                     logger.exception(
                         f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
                     )
+=======
+                except TokenExpired:
+                    self.refresh()
+                except ApiRateLimitExceeded:
+                    if attempts >= 3:
+                        break
+                    else:
+                        attempts += 1
+                        time.sleep(10)
+                except Exception as e:
+                    logger.exception(
+                        f"Exception calling hubspot api suring list resources call for {self.internal_user.email}: {e}"
+                    )
+                    res = {}
+                    break
+            saved_response = res
+            page = 1
+            while True:
+                has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
+                if has_next_page and page <= 5:
+                    data["after"] = has_next_page
+                    try:
+                        with Client as client:
+                            res = client.post(
+                                url,
+                                headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
+                                data=json.dumps(data),
+                            )
+                            res = self._handle_response(res)
+                            saved_response["results"] = [
+                                *saved_response["results"],
+                                *res["results"],
+                            ]
+                            page += 1
+                    except Exception as e:
+                        logger.exception(
+                            f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
+                        )
+                        break
+                else:
+>>>>>>> bfab73521629bddfb47687a542c459d868010968
                     break
             else:
                 break
