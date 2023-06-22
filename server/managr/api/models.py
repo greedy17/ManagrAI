@@ -7,12 +7,13 @@ from rest_framework.exceptions import AuthenticationFailed
 
 User = get_user_model()
 
+
 class ManagrToken(Token):
     expiration = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=7))
     is_revoked = models.BooleanField(default=False)
-    assigned_user = models.OneToOneField(User, related_name='access_token',
-            on_delete=models.CASCADE
-        )
+    assigned_user = models.OneToOneField(
+        User, related_name="access_token", on_delete=models.CASCADE
+    )
 
     def is_expired(self):
         if self.expiration < timezone.now():
@@ -32,14 +33,14 @@ class ManagrToken(Token):
 
 
 class ExpiringTokenAuthentication(TokenAuthentication):
-    keyword = 'Token'
+    keyword = "Token"
     model = None
 
     def get_model(self):
         if self.model is not None:
             return self.model
         return ManagrToken
-    
+
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
 
@@ -47,19 +48,19 @@ class ExpiringTokenAuthentication(TokenAuthentication):
             return None
 
         if len(auth) == 1:
-            msg = _('Invalid token header. No credentials provided.')
+            msg = _("Invalid token header. No credentials provided.")
             raise AuthenticationFailed(msg)
         elif len(auth) > 2:
-            msg = _('Invalid token header. Token string should not contain spaces.')
+            msg = _("Invalid token header. Token string should not contain spaces.")
             raise AuthenticationFailed(msg)
 
         try:
             token = auth[1].decode()
         except UnicodeError:
-            msg = _('Invalid token header. Token string should not contain invalid characters.')
+            msg = _("Invalid token header. Token string should not contain invalid characters.")
             raise AuthenticationFailed(msg)
         return self.authenticate_credentials(token)
-    
+
     def authenticate_credentials(self, key):
         try:
             token = ManagrToken.objects.get(key=key)

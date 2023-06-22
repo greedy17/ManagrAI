@@ -663,7 +663,6 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
                 }
             )
         login(request, user)
-        print(vars(request.session))
         # create token if one does not exist
         ManagrToken.objects.get_or_create(user=user, assigned_user=user)
         if user.access_token.is_expired:
