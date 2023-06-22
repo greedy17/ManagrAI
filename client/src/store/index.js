@@ -38,6 +38,7 @@ const state = {
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
+  meetingData: {},
   customObject: {
     task: null,
     verboseName: null,
@@ -110,6 +111,15 @@ const mutations = {
   },
   SET_VIEW: (state, payload) => {
     state.currentView = payload
+  },
+  SET_MEETING_DATA: (state, { id, data, success, retry }) => {
+    let newData = {}
+    newData['success'] = success
+    newData['retry'] = retry
+    newData['data'] = data
+    console.log('NEW DATA IS HERE', newData)
+    state.meetingData[id] = newData
+
   },
   EDIT_MESSAGES: (state, {
     id,
@@ -190,7 +200,7 @@ const actions = {
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
   },
-  editMessages({ commit }, { user,
+  editMessages({ commit }, {
     id,
     value,
     gtMsg,
@@ -199,7 +209,7 @@ const actions = {
     generatedId,
     note }) {
     commit('EDIT_MESSAGES', {
-      user,
+
       id,
       value,
       gtMsg,
@@ -208,6 +218,9 @@ const actions = {
       generatedId,
       note
     })
+  },
+  setMeetingData({ commit }, { id, data, success, retry }) {
+    commit('SET_MEETING_DATA', { id, data, success, retry })
   },
   removeMessage({ commit }, id) {
     commit('REMOVE_MESSAGE', id)
