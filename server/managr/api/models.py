@@ -58,9 +58,9 @@ class ExpiringTokenAuthentication(TokenAuthentication):
         except UnicodeError:
             msg = _('Invalid token header. Token string should not contain invalid characters.')
             raise AuthenticationFailed(msg)
+        return self.authenticate_credentials(token)
     
     def authenticate_credentials(self, key):
-        print(self, key)
         try:
             token = ManagrToken.objects.get(key=key)
         except ManagrToken.DoesNotExist:

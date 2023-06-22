@@ -58,7 +58,8 @@ export default {
 
   async created() {
     if (this.userIsLoggedIn) {
-      this.refreshCurrentUser()
+      // this.refreshCurrentUser()
+      
       // this.$store.dispatch('loadMeetings')
       // this.$store.dispatch('loadAllOpps')
       // this.$store.dispatch('loadAllAccounts')
