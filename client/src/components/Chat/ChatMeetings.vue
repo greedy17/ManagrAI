@@ -185,7 +185,7 @@
         <img
           v-if="!loading"
           class="dampen"
-          src="@/assets/images/calendar.svg"
+          src="@/assets/images/meeting.svg"
           height="12px"
           alt=""
         />
@@ -196,7 +196,6 @@
           height="14px"
           alt=""
         />
-        sync
       </button>
     </header>
     <section class="chat-meetings-section">
@@ -248,7 +247,7 @@
           </button>
 
           <div class="complete" v-else>
-            <p style="font-size: 12px">logged</p>
+            <p style="font-size: 12px">&#x2713; Meeting Logged</p>
           </div>
         </div>
       </div>
@@ -653,7 +652,7 @@ export default {
 
 .complete {
   background-color: $white-green;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem;
   border-radius: 5px;
   color: $dark-green;
 }
@@ -697,7 +696,6 @@ export default {
 
   img {
     margin: 0;
-    margin-right: 0.5rem;
   }
 
   &:disabled {
