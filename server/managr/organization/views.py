@@ -49,7 +49,7 @@ class OrganizationViewSet(
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
 ):
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
     permission_classes = (
         SuperUserCreateOnly,
         CanEditResourceOrReadOnly,
@@ -151,7 +151,7 @@ class AccountViewSet(
 ):
     """Accounts can only be created, updated or deleted by Managers of an Organization All users can list/retrieve"""
 
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = AccountSerializer
     # filter_class = AccountFilterSet
     permission_classes = (IsSalesPerson,)
@@ -239,7 +239,7 @@ class ContactViewSet(
 ):
     """All memebers of the organization can add, create and update contacts"""
 
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = ContactSerializer
     permissions_class = (IsSalesPerson,)
     # filter_class = ContactFilterSet
@@ -362,7 +362,7 @@ class StageViewSet(
 ):
     """endpoint to retrieve all stages for an org"""
 
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
     permission_classes = (IsSalesPerson,)
     serializer_class = StageSerializer
 
@@ -413,7 +413,7 @@ class ActionChoiceViewSet(
 ):
     """endpoint to create Action Choice"""
 
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = ActionChoiceSerializer
 
     def get_queryset(self):
@@ -428,7 +428,7 @@ class TeamViewSet(
     mixins.DestroyModelMixin,
 ):
     serializer_class = TeamSerializer
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
 
     def get_queryset(self):
         return Team.objects.for_user(self.request.user)

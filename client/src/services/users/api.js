@@ -108,6 +108,7 @@ export default class UserAPI {
         results: res.data.results.map(this.cls.fromAPI),
       }
     } catch (e) {
+      console.dir(e)
       apiErrorHandler({ apiName: 'UsersAPI.list' })
     }
   }
@@ -253,13 +254,24 @@ export default class UserAPI {
     return promise
   }
 
-  getUser(userId) {
+  async getUser(userId) {
     const url = GET_USER_ENDPOINT(userId)
-    return this.client
-      .get(url)
-      .then(response => this.cls.fromAPI(response.data))
-      .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+    try {
+      const response = await this.client.get(url)
+      this.cls.fromAPI(response.data)
+    } catch (e) {
+      console.log(e)
+      apiErrorHandler({ apiName: 'Get User Profile Data API error' })
+    }
   }
+
+  // getUser(userId) {
+  //   const url = GET_USER_ENDPOINT(userId)
+  //   return this.client
+  //     .get(url)
+  //     .then(response => this.cls.fromAPI(response.data))
+  //     .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+  // }
 
   getForecastValues() {
     const url = FORECAST_VALUES_ENDPOINT

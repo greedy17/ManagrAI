@@ -663,15 +663,16 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
                 }
             )
         login(request, user)
+        print(vars(request.session))
         # create token if one does not exist
-        token = ManagrToken.objects.get_or_create(user=user)
-        if token.is_expired:
-            token.refresh()
+        ManagrToken.objects.get_or_create(user=user, assigned_user=user)
+        if user.access_token.is_expired:
+            user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
         serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
-        response_data["token"] = user.auth_token.key
+        response_data["token"] = user.access_token.key
         return Response(response_data)
 
 
@@ -683,7 +684,7 @@ class UserLogoutView(generics.GenericAPIView):
 
         user = self.request.user
         logout(request)
-        user.auth_token.revoke()
+        user.access_token.revoke()
         url = get_site_url()
         return redirect(f"{url}/login")
 
@@ -855,7 +856,7 @@ class UserViewSet(
                 serializer = UserSerializer(user, context={"request": request})
 
                 response_data = serializer.data
-                response_data["token"] = user.auth_token.key
+                response_data["token"] = user.access_token.key
                 return Response(response_data)
 
             else:
@@ -1062,7 +1063,7 @@ class UserViewSet(
         detail=False,
         url_path="revoke-token",
     )
-    def revoke_roken(self, request, *args, **kwargs):
+    def revoke_token(self, request, *args, **kwargs):
         token = request.data.get("token", None)
         if not token:
             raise ValidationError(
@@ -1080,7 +1081,7 @@ class UserViewSet(
                 }
             )
         user = User.objects.filter(id=user_id)
-        token = user.auth_token.revoke()
+        token = user.access_token.revoke()
         return Response(status=status.HTTP_200_OK)
 
     @action(
@@ -1107,7 +1108,7 @@ class UserViewSet(
                 }
             )
         user = User.objects.filter(id=user_id)
-        token = user.auth_token.refresh()
+        token = user.access_token.refresh(user.access_token)
         return Response({"detail": "User token has been successfully refreshed"})
 
 

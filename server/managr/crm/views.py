@@ -55,7 +55,7 @@ def ADD_UPDATE_TO_CRM_FUNCTION(crm):
 
 class ObjectFieldViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = ObjectFieldSerializer
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -75,7 +75,7 @@ class CRMObjectViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
 ):
-    authentication_classes = ExpiringTokenAuthentication
+    authentication_classes = [ExpiringTokenAuthentication]
 
     def get_serializer_class(self):
         routes = model_routes(self.request.user.crm)
