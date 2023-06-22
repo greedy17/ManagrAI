@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
 import store from '../../store'
+import Router from '../../router'
 
 /**
  * This function accepts any type of value and reduces it to a single
@@ -69,6 +70,7 @@ export function apiErrorHandler({
     if (response && response.status === 401) {
       // Logs out a user if there is a 401 error
       store.commit('LOGOUT_USER')
+      Router.push('/login')
       Vue.prototype.$Alert.alert({
         type: 'error',
         message: '<div>Error...</div>' + '<div>Invalid Token Please Login Again.</div>',

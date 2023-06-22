@@ -346,7 +346,7 @@ const actions = {
     commit('UPDATE_USERTOKEN', payload)
   },
   async logoutUser({ state, commit }) {
-    // await User.api.revokeToke(state.token, state.user.id)
+    await User.api.logout()
     commit('LOGOUT_USER')
   },
   refreshCurrentUser({ state, commit }) {

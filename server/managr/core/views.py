@@ -682,10 +682,11 @@ class UserLogoutView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
 
         user = self.request.user
+        url = get_site_url()
+        redirect(f"{url}/login")
         logout(request)
         user.access_token.revoke()
-        url = get_site_url()
-        return redirect(f"{url}/login")
+        return 
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):

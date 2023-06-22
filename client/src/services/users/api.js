@@ -4,6 +4,7 @@ import store from '@/store'
 
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
+const LOGOUT_ENDPOINT = '/logout/'
 const REGISTRATION_ENDPOINT = '/register/'
 const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
 const USERS_ENDPOINT = '/users/'
@@ -123,10 +124,20 @@ export default class UserAPI {
     return promise
   }
 
-  /* Perform logout by clearing the Vuex store. */
-  logout() {
-    store.commit('LOGOUT_USER')
+  logout(d) {
+    // const data = { ...d }
+    const promise = apiClient()
+      .post(LOGOUT_ENDPOINT)
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.login', enable400Alert: false, enable500Alert: false }),
+      )
+    return promise
   }
+
+  /* Perform logout by clearing the Vuex store. */
+  // logout() {
+  //   store.commit('LOGOUT_USER')
+  // }
 
   /**
    * Register a new user
