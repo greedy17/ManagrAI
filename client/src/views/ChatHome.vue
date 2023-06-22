@@ -12,8 +12,8 @@
       <div class="chat-modal-container">
         <div class="chat-modal-header">
           <div>
-            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
-              Update {{ chatData.resource }}
+            <h3 @click="test" class="elipsis-text" style="margin-bottom: 0.25rem">
+              {{ chatData.resource }}
             </h3>
             <span class="gray-text smaller"
               >Your CRM fields have been auto-filled. Pleae review and click submit.</span
@@ -176,12 +176,25 @@
     <main v-if="currentView === 'home'" id="main">
       <ChatBox @toggle-chat-modal="toggleChatModal" />
     </main>
+    <main v-else-if="currentView === 'meetings'" id="main">
+      <ChatMeetings
+        @set-opp="setOpp"
+        :formFields="formFields"
+        :stageFields="stageFields"
+        :stagesWithForms="stagesWithForms"
+      />
+    </main>
     <main id="main" v-else>
-      <ChatList @set-opp="setOpp" />
+      <ChatList @set-opp="setOpp" :formFields="formFields" @refresh-list="refreshLists" />
     </main>
 
     <aside id="right-sidebar">
-      <RightBar ref="rightSideBar" @set-fields="setFormFields" @set-stages="setStageFields" />
+      <RightBar
+        ref="rightSideBar"
+        @set-fields="setFormFields"
+        @set-stages="setStageFields"
+        @refresh-list="refreshLists"
+      />
     </aside>
   </div>
 </template>
@@ -194,6 +207,7 @@ import Modal from '@/components/InviteModal'
 import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
 import ChatList from '../components/Chat/ChatList.vue'
+import ChatMeetings from '../components/Chat/ChatMeetings.vue'
 import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 
@@ -206,6 +220,7 @@ export default {
     Modal,
     ChatFormField,
     ChatList,
+    ChatMeetings,
   },
   data() {
     return {
@@ -219,6 +234,7 @@ export default {
       formFields: [],
       stageFields: [],
       barOpen: true,
+      stagesWithForms: null,
     }
   },
   created() {
@@ -226,6 +242,9 @@ export default {
   },
   watch: {},
   methods: {
+    refreshLists() {
+      this.$refs.sidebarRef.refreshList()
+    },
     setOpp(name) {
       this.$refs.rightSideBar.changeSelectedOpp(null, name)
     },
@@ -277,12 +296,15 @@ export default {
         this.$refs.rightSideBar.reloadOpps()
         setTimeout(() => {
           this.toggleChatModal()
-          this.submitting = false
         }, 1000)
+
+        setTimeout(() => {
+          this.submitting = false
+        }, 2000)
       }
     },
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.chatData.data)
     },
     toggleSidebar() {
       this.$refs.sidebarRef.toggleSidebar()
@@ -384,7 +406,7 @@ body {
 }
 
 #left-sidebar {
-  width: 280px;
+  width: 280px !important;
 }
 
 #main {
@@ -621,7 +643,7 @@ body {
   }
 }
 .full-width {
-  width: 300px !important;
+  width: 280px !important;
 }
 .profile-level-p {
   width: 60px;
