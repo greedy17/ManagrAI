@@ -21,6 +21,7 @@ from managr.core.background import (
     emit_process_send_email_draft,
     emit_process_send_next_steps,
     emit_process_send_summary_to_dm,
+    emit_process_send_ask_managr_to_dm,
 )
 from managr.outreach.tasks import emit_add_sequence_state
 from managr.opportunity.models import Opportunity, Lead
@@ -166,6 +167,10 @@ def process_stage_next_page(payload, context):
 def process_zoom_meeting_data(payload, context):
     # get context
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations_list:
+        workflow.operations_list = []
+        workflow.operations = []
+        workflow.save()
     private_metadata = json.loads(payload["view"]["private_metadata"])
     ts = context.get("ts", None)
     user = workflow.user
@@ -2629,7 +2634,7 @@ def process_submit_chat_prompt(payload, context):
     )
     context.update(task_type=task_type)
     prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
-    resource_check = None
+    resource_check = "Opportunity" if user.crm == "SALESFORCE" else "Deal"
     lowercase_prompt = prompt.lower()
     for resource in resource_list:
         lowered_resource = resource.lower()
@@ -2768,6 +2773,73 @@ def process_chat_action_submit(payload, context):
     return {"response_action": "clear"}
 
 
+def process_submit_ask_managr(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    resource_list = (
+        ["Opportunity", "Account", "Contact", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Deal", "Company", "Contact"]
+    )
+    state = payload["view"]["state"]["values"]
+    prompt = state["CHAT_PROMPT"]["plain_input"]["value"]
+    resource_type = (
+        list(state["selected_object_type"].values())[0].get("selected_option").get("value")
+    )
+    resource_id = list(state["selected_object"].values())[0].get("selected_option").get("value")
+    resource_check = (
+        CRM_SWITCHER[user.crm][resource_type]["model"]
+        .objects.filter(integration_id=resource_id)
+        .first()
+    )
+    block_set = [
+        *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
+    ]
+
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=block_set,
+        )
+        context.update(resource_id=str(resource_check.id), prompt=prompt, ts=res["ts"])
+        emit_process_send_ask_managr_to_dm(payload, context)
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+    return {"response_action": "clear"}
+
+
+def process_reset_selected_meeting_days(payload, context):
+    state = payload["view"]["state"]["values"]
+    user = User.objects.get(id=context.get("u"))
+    selected_meetings_object = state["selected_meetings"]
+    selected_meetings_list = list(selected_meetings_object.values())[0]["selected_options"]
+    selected_meetings = [option["value"] for option in selected_meetings_list]
+    meetings = MeetingWorkflow.objects.filter(id__in=selected_meetings)
+    slack_interaction = meetings.first().slack_interaction
+    date = str(meetings.first().datetime_created.date())
+    for meeting in meetings:
+        meeting.operations_list = []
+        meeting.operations = []
+        meeting.completed_operations = []
+        meeting.failed_operations = []
+        meeting.failed_task_description = []
+        meeting.resource_id = None
+        meeting.resource_type = None
+        meeting.transcript_summary = None
+        meeting.transcript_analysis = None
+        if len(meeting.forms.all()):
+            for form in meeting.forms.all():
+                form.delete()
+        meeting.save()
+    emit_process_calendar_meetings(
+        str(user.id),
+        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+        slack_interaction,
+        date=date,
+    )
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2802,6 +2874,8 @@ def handle_view_submission(payload):
         slack_const.MEETING___SUBMIT_CHAT_PROMPT: process_submit_chat_prompt,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
+        slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
+        slack_const.RESET_SELECTED_MEETING_DAYS: process_reset_selected_meeting_days,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])

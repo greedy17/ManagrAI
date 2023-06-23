@@ -38,6 +38,7 @@ const CHAT_SUBMISSION = 'users/chat/submission/'
 const CHAT_EMAIL = 'users/chat/follow-up-email/'
 const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
+const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
 
 export default class UserAPI {
   get client() {
@@ -88,6 +89,13 @@ export default class UserAPI {
       .post(CHAT_SUMMARY, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'User.chatSummary' }))
+  }
+
+  async submitChatMeeting(data) {
+    return this.client
+      .post(CHAT_MEETING, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
   }
 
   async list({ pagination, filters }) {

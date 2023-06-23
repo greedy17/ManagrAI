@@ -40,10 +40,10 @@
           ⚡️
         </span>
         <textarea
-          @keydown.enter.exact.prevent="testChat"
+          @keydown.enter.exact.prevent="sendMessage"
           class="area-input"
           rows="1"
-          placeholder="Send a message."
+          placeholder="What would you like to do?"
           v-model="message"
           v-autoresize
           ref="chatTextArea"
@@ -53,7 +53,7 @@
           class="gray"
           style="margin-bottom: 4px; height: 14px; cursor: pointer"
           icon="fa-regular fa-paper-plane"
-          @click="testChat"
+          @click="sendMessage"
         />
       </div>
     </div>
@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import Conversation from '@/services/conversations/models'
+// import Conversation from '@/services/conversations/models'
 import User from '@/services/users'
 
 export default {
@@ -81,81 +81,60 @@ export default {
       templatesOpen: false,
       chatRes: null,
       actions: [
-        { name: 'Update', value: 'Update Opportunity Pied Piper' },
-        { name: 'Run review', value: 'Run Review for Opportunity Pied Piper' },
-        { name: 'Get summary', value: 'Get Summary for Opportunity Pied Piper' },
-        { name: 'call summary', value: 'Get Summary for Opportunity Pied Piper' },
-        { name: 'call analysis', value: 'Get Summary for Opportunity Pied Piper' },
+        // { name: 'Update Record', value: 'Update Opportunity' },
+        // { name: 'Create Record', value: 'Create Opportunity' },
+        { name: 'Ask Managr', value: 'Ask managr' },
+        { name: 'Run Review', value: 'Run Review for Opportunity' },
+        // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
+        // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
+        // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
       ],
     }
   },
 
   methods: {
-    async testChat() {
-      let chatmsg = this.message
-      this.$emit('set-message', { user: 'user', value: chatmsg })
-      this.$emit('message-loading', true)
-      try {
-        setTimeout(() => {
-          this.message = ''
-          this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
-        }, 300)
-        let res = await User.api.chatUpdate({
-          user_id: this.user.id,
-          prompt: chatmsg,
-          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-        })
-        this.chatRes = res
-        console.log(res)
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.$emit('message-loading', false)
-        this.$emit('set-message', {
-          user: 'bot',
-          id: this.chatRes['id'],
-          value: this.chatRes['res'][0],
-          resource: this.chatRes['resource'][0],
-          formId: this.chatRes['form'],
-          data: this.chatRes['data'],
-          resourceId: this.chatRes['resourceId'],
-          formType: this.chatRes['formType'],
-          integrationId: this.chatRes['integrationId'],
-          resourceType: this.chatRes['resourceType'],
-          updated: false,
-        })
-        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
-      }
+    testBox() {
+      this.message = ''
+      setTimeout(() => {
+        this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+      }, 100)
     },
     async sendMessage() {
-      this.$refs.chatTextArea.style.height = 'auto'
-      this.$emit('message-loading', true)
-      try {
-        const newId = Math.ceil(Math.random() * 10000)
-        const newMessage = {
-          id: newId,
-          value: this.message,
-          user: 1,
-        }
-        this.messages.push(newMessage)
-        // call post to send message here
-        const id = 1
-        await Conversation.api.sendMessage(id, this.messages)
+      if (this.message.length > 3) {
+        let chatmsg = this.message
+        this.$emit('set-message', { user: 'user', value: chatmsg })
+        this.$emit('message-loading', true)
         this.message = ''
-        this.scrollToBottom()
-        setTimeout(() => {
-          const newBotMessage = {
-            id: newId + 1,
-            value: '✅ Successfully updated Opportunity Pied Piper!',
+        try {
+          setTimeout(() => {
+            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+          }, 100)
+          let res = await User.api.chatUpdate({
+            user_id: this.user.id,
+            prompt: chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+          })
+          this.chatRes = res
+          this.$emit('set-message', {
             user: 'bot',
-          }
-          this.messages.push(newBotMessage)
-          this.scrollToBottom()
+            id: this.chatRes['id'],
+            value: this.chatRes['res'][0],
+            resource: this.chatRes['resource'][0],
+            formId: this.chatRes['form'],
+            data: this.chatRes['data'],
+            resourceId: this.chatRes['resourceId'],
+            formType: this.chatRes['formType'],
+            integrationId: this.chatRes['integrationId'],
+            resourceType: this.chatRes['resourceType'],
+            updated: false,
+          })
+          this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+        } catch (e) {
+          console.log(e)
+        } finally {
           this.$emit('message-loading', false)
-        }, 2000)
-      } catch (e) {
-        console.log('Error in sendMessage: ', e)
-      } finally {
+          this.scrollToBottom()
+        }
       }
     },
     addNewLine() {
@@ -176,7 +155,6 @@ export default {
       return this.$store.state.user
     },
   },
-  created() {},
   directives: {
     autoresize: {
       inserted(el) {
@@ -213,9 +191,9 @@ export default {
 .input-section {
   display: flex;
   align-items: center;
-  padding-top: 1rem;
+  padding: 1rem 1rem 0 1rem;
   width: 100%;
-  background-color: $off-white;
+  background-color: white;
   margin-bottom: -0.25rem;
   position: relative;
 }

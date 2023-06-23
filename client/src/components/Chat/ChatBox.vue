@@ -1,7 +1,24 @@
 <template>
   <section class="chat-container">
     <header class="title-header">
-      <p @click="clearMessages">{{ chatTitle }}</p>
+      <p style="margin-right: auto"><span>Latest: </span>{{ chatTitle }}</p>
+      <!-- <div class="row pointer">
+        <img style="margin-right:.5rem" src="@/assets/images/cloud.svg" height="18px" alt="" />
+        sync
+      </div>
+
+      <div class="row pointer" @click="clearMessages">
+        <img style="margin-right:.5rem" class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
+        clear
+      </div> -->
+      <button class="small-button">
+        <img class="dampen" src="@/assets/images/cloud.svg" height="16px" alt="" />
+        sync
+      </button>
+      <button @click="clearMessages" class="small-button">
+        <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
+        clear
+      </button>
     </header>
     <div class="margin-top" ref="chatWindow">
       <div v-for="(message, i) in messages" :key="i" class="col-start">
@@ -20,50 +37,64 @@
             <div class="avatar" v-else>{{ userName[0] }}</div>
           </div>
 
-          <div :class="message.user === 'bot' ? 'ai-text-container' : 'text-container'">
-            <p>{{ message.value }}</p>
+          <div class="text-container">
+            <div style="position: relative">
+              <div
+                class="type-header"
+                :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
+                v-if="message.user === 'bot' && message.gtMsg"
+              >
+                <p>
+                  {{ message.gtMsg }}
+                </p>
+                <small>
+                  {{ message.data.Name }}
+                </small>
+              </div>
+
+              <pre v-html="message.value" class="message-text"></pre>
+            </div>
 
             <div v-if="message.generated">
-              <div style="margin-top: 0.5rem" v-if="!generating" class="row">
-                <button class="content-button padding-small">
+              <div
+                v-if="generating && generatingId === message.id"
+                style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
+                class="row"
+              >
+                <!-- <p class="gray-text">Regenerating response</p> -->
+                <div class="loading">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+
+              <div v-else style="margin-top: 1.5rem" class="row">
+                <button
+                  style="margin-bottom: 0.25rem"
+                  @click="
+                    regenerate(
+                      message.generatedType,
+                      message.data['meeting_comments'],
+                      message.id,
+                      {
+                        data: message.data,
+                        integration: message.integrationId,
+                        resource: message.resourceType,
+                      },
+                    )
+                  "
+                  class="content-button padding-small"
+                >
                   <img
                     style="margin-right: 0.6rem"
+                    class="gold-filter"
                     src="@/assets/images/sparkle.svg"
                     height="14px"
                     alt=""
                   />
                   Regenerate
                 </button>
-                <!-- 
-                <button
-                  @click="nextSteps(message.data['meeting_comments'], message.id)"
-                  class="content-button padding-small"
-                >
-                  <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
-                  Suggest next steps
-                </button>
-                <button
-                  @click="
-                    getSummary(
-                      message.data,
-                      message.integrationId,
-                      message.resourceType,
-                      message.id,
-                    )
-                  "
-                  class="content-button padding-small"
-                >
-                  <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
-                </button> -->
-              </div>
-
-              <div v-else style="border-radius: 6px; padding: 0.25rem 0" class="row">
-                <p>Regenerating response</p>
-                <div class="loading">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
               </div>
             </div>
           </div>
@@ -75,7 +106,7 @@
         >
           <button @click="toggleChatModal(message)" class="generate-button green">
             <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-            {{ `Review & update ${user.crm[0] + user.crm.slice(1).toLowerCase()}` }}
+            {{ `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}` }}
           </button>
         </div>
 
@@ -100,6 +131,8 @@
                   class="content-button"
                 >
                   <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
+
+                  {{ message.note }}
                 </button>
                 <button
                   @click="nextSteps(message.data['meeting_comments'], message.id)"
@@ -136,9 +169,9 @@
                 <span
                   style="
                     font-size: 20px;
-                    margin-right: 0.75rem;
+                    margin-right: 1rem;
                     padding-top: 0.5rem;
-                    margin-left: -2.25rem;
+                    margin-left: -3rem
                     margin-top: 0.5rem;
                   "
                   >🚀</span
@@ -158,7 +191,7 @@
         </div>
       </div>
 
-      <div v-show="messageLoading" class="loader-container">
+      <div style="margin-left: 1.5rem" v-show="messageLoading" class="loader-container">
         <span
           style="font-size: 20px; margin-right: 1.1rem; padding-top: 0.5rem; margin-left: 0.25rem"
           >🚀</span
@@ -204,21 +237,82 @@ export default {
       generating: false,
       selectedIndex: null,
       generativeRes: null,
+      generatingId: null,
     }
   },
+  watch: {
+    messages: 'scrollToBottom',
+  },
   methods: {
+    regenerate(type, data, editId, sumObj) {
+      this.generatingId = editId
+      if (type === 'email') {
+        this.regenerateEmail(data, editId)
+      } else if (type === 'next') {
+        this.regenerateNext(data, editId)
+      } else {
+        this.regenerateSummary(editId, sumObj)
+      }
+    },
     clearMessages() {
       this.$store.dispatch('clearMessages')
     },
-    // async getAllCustomSlackForms() {
-    //   try {
-    //     let res = await SlackOAuth.api.slackFormInstances()
-    //     console.log(res)
-    //   } catch (e) {
-    //     console.log(e)
-    //   } finally {
-    //   }
-    // },
+    async regenerateEmail(note, editId) {
+      this.generating = true
+      try {
+        let res = await User.api.chatEmail({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: editId,
+          value: this.generativeRes['res'],
+        })
+        this.generating = false
+      }
+    },
+    async regenerateNext(note, editId) {
+      this.generating = true
+      try {
+        let res = await User.api.chatNextSteps({
+          id: this.user.id,
+          notes: note,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: editId,
+          value: this.generativeRes['res'],
+        })
+        this.generating = false
+      }
+    },
+    async regenerateSummary(editId, sumObj) {
+      this.generating = true
+      try {
+        let res = await User.api.getSummary({
+          id: this.user.id,
+          data: sumObj.data,
+          integrationId: sumObj.integration,
+          resource: sumObj.resource,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: editId,
+          value: this.generativeRes['res'],
+        })
+        this.generating = false
+      }
+    },
     async generateEmail(note, id) {
       this.generating = true
       try {
@@ -231,20 +325,16 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('editMessages', {
-          id: id,
-          generated: true,
-          value: 'Email generated',
-        })
-        this.setMessage({
           user: 'bot',
-          id: this.generativeRes['id'],
+          id: id,
           value: this.generativeRes['res'],
+          gtMsg: 'AI Generated Email',
+          generated: true,
+          generatedType: 'email',
         })
-
         this.generating = false
       }
     },
-
     async nextSteps(note, id) {
       this.generating = true
       try {
@@ -257,21 +347,18 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('editMessages', {
-          id: id,
-          generated: true,
-          value: 'Suggested next steps.',
-        })
-        this.setMessage({
           user: 'bot',
-          id: this.generativeRes['id'],
+          id: id,
           value: this.generativeRes['res'],
+          gtMsg: 'AI Generated Next Steps',
+          generated: true,
+          generatedType: 'next',
         })
-
         this.generating = false
       }
     },
 
-    async getSummary(data, id, resource, mId) {
+    async getSummary(data, id, resource, msgId) {
       this.generating = true
       try {
         let res = await User.api.getSummary({
@@ -285,16 +372,13 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('editMessages', {
-          id: mId,
-          generated: true,
-          value: 'Summary generated',
-        })
-        this.setMessage({
           user: 'bot',
-          id: this.generativeRes['id'],
+          id: msgId,
           value: this.generativeRes['res'],
+          gtMsg: 'AI Generated Summary',
+          generated: true,
+          generatedType: 'summary',
         })
-
         this.generating = false
       }
     },
@@ -358,6 +442,41 @@ export default {
     -webkit-mask-position: left;
   }
 }
+.dampen {
+  filter: invert(45%);
+  margin-left: 1rem;
+}
+
+.gray-text {
+  color: $light-gray-blue;
+}
+
+.marg {
+  margin-bottom: 0 !important;
+}
+
+.type-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  margin-bottom: -2rem;
+
+  p {
+    font-size: 13px;
+  }
+  small {
+    color: $light-gray-blue;
+  }
+}
+
+.message-text {
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0;
+  margin: 0;
+}
+
 .gray-blue-scale {
   filter: invert(82%) sepia(2%) saturate(5238%) hue-rotate(201deg) brightness(78%) contrast(75%);
 }
@@ -378,25 +497,35 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  // height: 100vh;
-  padding: 1rem 1.5rem;
+  padding-bottom: 1rem;
+  // padding: 1rem 1.5rem;
   font-size: 14px;
   position: relative;
+}
+
+.offwhite-bg {
+  background-color: white !important;
 }
 
 .message-container {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  margin-bottom: 1.5rem;
+  margin: 0;
+  width: 100%;
+  padding: 1rem 1.5rem;
 
   p {
     padding: 0;
     margin: 0;
   }
+
+  &:hover {
+    background-color: $off-white !important;
+  }
 }
 .margin-top {
-  margin-top: 4rem;
+  margin-top: 3.25rem;
   height: 96%;
   overflow-y: scroll;
 }
@@ -406,14 +535,21 @@ export default {
 }
 
 .ai-text-container {
-  background-color: $soft-gray;
+  overflow: scroll;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  padding: 0 0.75rem;
   line-height: 1.75;
   position: relative;
+
+  &:hover {
+    background-color: $off-white !important;
+  }
 }
 
 .text-container {
+  overflow: scroll;
   padding: 0 0.5rem;
   margin: 0;
   line-height: 1.75;
@@ -430,11 +566,19 @@ export default {
   left: 0;
 }
 
+.bottom-right {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
 .avatar {
   background-color: $purple;
   color: white;
-  width: 30px;
-  height: 30px;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  margin-top: 6px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -446,13 +590,13 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  padding: 1rem 0rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 1rem;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   font-family: $base-font-family;
-  background-color: $off-white;
+  background-color: white;
 
   h4,
   p {
@@ -464,6 +608,10 @@ export default {
     // background-color: white;
     font-size: 12px;
     letter-spacing: 0.4px;
+
+    span {
+      color: $light-gray-blue;
+    }
   }
 }
 
@@ -533,23 +681,17 @@ export default {
 }
 
 .generate-container {
-  padding: 0.5rem 2.75rem;
-  margin-top: -1.25rem;
+  padding: 0 1rem 0.5rem 4.75rem;
+  background-color: white;
+  width: 100%;
 }
 
 .generate-button {
   @include chat-button();
   padding: 0.7rem 0.8rem;
-  // background-color: $dark-green;
-  // border: 1px solid $dark-green;
-  // color: $dark-green;
   margin-bottom: 0.5rem;
-
   img {
     margin-right: 0.5rem;
-    // filter: invert(87%) sepia(25%) saturate(6867%) hue-rotate(2deg) brightness(107%) contrast(103%);
-    // animation: shimmer 2s infinite;
-    // -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
   }
 }
 
@@ -562,11 +704,25 @@ export default {
   svg {
     margin-right: 0.5rem;
   }
-  // img {
-  //   margin-right: 0.5rem;
-  //   animation: shimmer 2s infinite;
-  //   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/200% 100%;
-  // }
+}
+
+.small-button {
+  @include chat-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 0.35rem;
+  margin-left: 1rem;
+  font-weight: normal;
+
+  img {
+    margin: 0;
+    margin-right: 0.5rem;
+  }
 }
 
 @keyframes bounce {
@@ -615,6 +771,10 @@ export default {
   img {
     transform: rotate(180deg);
   }
+}
+
+.pointer {
+  cursor: pointer;
 }
 // @keyframes typing {
 //   from {

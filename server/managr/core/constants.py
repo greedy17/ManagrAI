@@ -20,6 +20,7 @@ if settings.USE_OPEN_AI:
         "Authorization": f"Bearer {OPEN_AI_SECRET}",
     }
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
 OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"""Summarize the meeting notes below in the most concise way (no less than 1,500 characters and no greater than 2,000 characters) as if you are reporting back to a VP of Sales, tone is casual yet professional.
@@ -51,6 +52,7 @@ OPEN_AI_MEETING_EMAIL_DRAFT = (
     3) The email cannot be more than 1000 characters.\n
     Meeting Comments: {meeting_comments}"""
 )
+
 OPEN_AI_NEXT_STEPS = (
     lambda data: f"Provide up to 3 listed out suggested next steps to take in order to close the prospect or move the deal forward based on meeting notes below, ranging from aggressive (close this month) to passive (close in the coming months)\n Meeting Notes: {data}"
 )
@@ -84,23 +86,20 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript: f"""You are a VP of Sales reviewing a sales rep's call via transcript. These transcripts are typically between 20-60 minutes long. Below is just a 5 minute section of the call transcript. Follow these instructions carefully:
-1) Summarize this section in paragraph form. The summary needs to be 500 to 800 characters.
-2) The summary must include the following (if discussed): customer pain, observations, objections, objection handling, competitors mentioned, timeline, decision process and next steps. The tone of the summary needs to be casual, conversational, and slightly witty.
-3) Desired format:\n Summary: <summary>\n
-    Transcript: {transcript}
+    lambda transcript: f"""'input': {transcript},'prompt': 'AI, summarize this 5 minute portion of a sales call transcript between rep and prospect. 
+    Include key details such as products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
+    Keep in mind that this is just one of many portions of the call transcript. Output must be one paragraph and 500 (min) to 800 (max) characters in length. 
+    Output must also be in this format: Summary: <summary>'
     """
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda date, fields, summaries: f"""Below are short summaries, summarizing parts of a sales call transcript from {date}. These summaries are in chronological order. Put these summaries together, and follow the instructions below:
-1) You are VP of Sales. Create one summary, in paragraph of how this call went. Include relevant data regarding: customer pain, customer objections, objection handling by salesperson, competitors mentioned, timeline to close, decision process, the next steps and overall tone of the meeting.
-2) The summary must be no less than 1,500 characters and no greater than 2,000 characters.
-3) Write the summary using casual, engaging, conversational, and slightly witty tone.
-4) Based on the summary, update the CRM fields below. For field "meeting_comments" fill in a very short casual version of the summary. Fill in the remaining CRM fields based on information from the summary.\n
-5) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called 'summary'.\n
-6) Lastly, today's date is {date} \n
-CRM fields:{fields}\n Summaries: {summaries}"""
+    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'First, combine and then analyze the call transcript summaries above  for {user.first_name} who is a sales rep for {user.organization.name}. Then follow the instructions below.\n
+1) Update the CRM. Fill in all applicable CRM fields below with relevant data from the call transcript. Only fill in relevant CRM fields, leave the others empty. 
+CRM fields: {crm_fields}\n
+2) In addition to CRM data entry, you  will also provide a concise, conversational summary highlighting details such as: products & features discussed, customer pain points, competitors, decision-making process, next steps and budget. 
+3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.
+'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
@@ -119,6 +118,13 @@ OPEN_AI_CALL_ANALYSIS_PROMPT = (
     Summaries: {summaries}"""
 )
 
+OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS = (
+    lambda email, instructions: f"""
+Below is an AI generated email. Adjust and rewrite the email per instructions below:\n
+Email: {email}\n
+Instructions: {instructions}"""
+)
+
 
 def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
@@ -132,6 +138,63 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
         body["temperature"] = temperature
     if top_p:
         body["top_p"] = top_p
+    return body
+
+
+def OPEN_AI_EDIT_BODY(user_name, input, instructions, data, temperature=False, top_p=False):
+    # instructions += f"use this data as context: {data}"
+    body = {
+        "model": "text-davinci-edit-001",
+        "input": input,
+        "instruction": instructions,
+        "user": user_name,
+    }
+    if temperature:
+        body["temperature"] = temperature
+    if top_p:
+        body["top_p"] = top_p
+    return body
+
+
+def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
+    from datetime import datetime
+
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    user = User.objects.get(id=user_id)
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    workflow_check = MeetingWorkflow.objects.filter(user=user, resource_id=resource_id).first()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user_id, resource_id=resource_id
+    ).first()
+    today = datetime.today()
+    if form_check and form_check.saved_data:
+        data_from_resource = form_check.saved_data
+    else:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(resource=resource_type, form_type="UPDATE")
+            .first()
+        )
+        api_names = template.list_field_api_names()
+        data_from_resource = {}
+        for name in api_names:
+            data_from_resource[name] = resource.secondary_data[name]
+
+    if workflow_check:
+        if workflow_check.transcript_summary:
+            data_from_resource["summary"] = workflow_check.transcript_summary
+        if workflow_check.transcript_analysis:
+            data_from_resource["analysis"] = workflow_check.transcript_analysis
+    body = f"""Today's date is {today}. Analyze this CRM data:\n
+    CRM data: {data_from_resource}\n
+    Based on your analysis of the CRM data, answer the following question / complete this requested task: {prompt}:\n
+The sales represetative asking this question or request is {user.first_name} and works for {user.organization.name}.\n
+"""
     return body
 
 
@@ -320,3 +383,4 @@ def REMINDERS():
         REMINDER_MESSAGE_REP: True,
         REMINDER_MESSAGE_MANAGER: True,
     }
+

@@ -1139,8 +1139,6 @@ def slack_events(request):
     else:
         return Response()
 
-        # check if they exist in managr
-
 
 def redirect_from_slack(request):
     ## this is only for dev, since the redirect url to localhost will not work

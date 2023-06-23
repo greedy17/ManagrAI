@@ -1,4 +1,6 @@
 import logging
+from os import stat
+import httpx
 import json
 import time
 import re
@@ -792,15 +794,24 @@ def process_transcript_to_summaries(transcript, user):
     summary_parts = []
     current_minute = 5
     start_index = 0
+    current_hour = 0
     split_transcript = []
     while True:
+        if current_minute == 60:
+            current_minute = 0
+            current_hour += 1
         check_time = (
-            f"00:0{str(current_minute)}:" if current_minute == 5 else f"00:{str(current_minute)}:"
+            f"0{current_hour}:0{str(current_minute)}:"
+            if (current_minute == 5 or current_minute == 0)
+            else f"0{current_hour}:{str(current_minute)}:"
         )
         end_index = transcript.find(check_time)
-        if end_index == -1:
+        if end_index == -1 and len(split_transcript):
             split_transcript.append(transcript[start_index:])
             break
+        elif end_index == -1 and not len(split_transcript):
+            current_minute += 5
+            continue
         else:
             split_transcript.append(transcript[start_index:end_index])
             start_index = end_index
@@ -809,20 +820,28 @@ def process_transcript_to_summaries(transcript, user):
         for index, transcript_part in enumerate(split_transcript):
             if not settings.IN_PROD:
                 print(index)
-            transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(transcript_part)
+
+            transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
+                {"date": datetime.today(), "transcript": transcript_part,}
+            )
             transcript_body = (
                 transcript_body.replace("\r\n", "")
                 .replace("\n", "")
                 .replace("    ", "")
                 .replace(" --> ", "-")
             )
-            body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                user.email, transcript_body, 500, top_p=0.9, temperature=0.7
-            )
-            with Variable_Client() as client:
-                attempts = 1
-                while True:
-                    url = core_consts.OPEN_AI_COMPLETIONS_URI
+            # if not settings.IN_PROD:
+            #     token_check = max_token_calculator(transcript_body)
+            #     print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
+            attempts = 1
+            timeout = 60.0
+            tokens = 500
+            while True:
+                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                    user.email, transcript_body, tokens, top_p=0.9, temperature=0.7
+                )
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                with Variable_Client(timeout) as client:
                     try:
                         r = client.post(
                             url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
@@ -836,6 +855,12 @@ def process_transcript_to_summaries(transcript, user):
                         summary_split = summary.split("Summary:")
                         summary_parts.append(summary_split[1])
                         break
+                    except StopReasonLength:
+                        if tokens >= 2000:
+                            break
+                        else:
+                            tokens += 500
+                            continue
                     except IndexError:
                         continue
                     except ServerError:
@@ -844,6 +869,17 @@ def process_transcript_to_summaries(transcript, user):
                         else:
                             attempts += 1
                             time.sleep(10.0)
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"PROCESS TRANSCRIPT SUMMARIES EXCEPTION {e}")
+                        break
     return summary_parts
 
 
@@ -856,7 +892,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    import httpx
 
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
@@ -954,14 +989,21 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                 attempts = 1
                 while True:
                     summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
-                        workflow.datetime_created.date(), fields_list, summary_parts
+                        {
+                            "date": workflow.datetime_created.date(),
+                            "transcript_summaries": summary_parts,
+                        },
+                        fields_list,
+                        workflow.datetime_created.date(),
+                        user,
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, summary_body, tokens, top_p=0.9, temperature=0.7
+                        user.email, summary_body, tokens, top_p=0.9
                     )
                     try:
-                        logger.info("Combining Summary parts")
+                        if not settings.IN_PROD:
+                            logger.info("Combining Summary parts")
                         if not viable_data:
                             with Variable_Client(timeout) as client:
                                 url = core_consts.OPEN_AI_COMPLETIONS_URI
@@ -969,7 +1011,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
-                            logger.info(f"Summary response: {r}")
+                            if not settings.IN_PROD:
+                                logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
                             summary = clean_prompt_string(choice)
                             data = eval(summary)
@@ -987,6 +1030,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         cleaned_data = clean_prompt_return_data(
                             swapped_field_data, fields, user.crm, resource
                         )
+
                         workflow.transcript_summary = combined_summary
                         workflow.save()
                         break
@@ -1031,6 +1075,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             break
                         else:
                             timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"Exception combining summaries: <{e}>")
             else:
                 has_error = True
                 error_message = ":no_entry_sign: Unknown error"

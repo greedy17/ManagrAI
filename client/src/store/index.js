@@ -33,10 +33,12 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
+  currentView: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
+  meetingData: {},
   customObject: {
     task: null,
     verboseName: null,
@@ -107,15 +109,38 @@ const mutations = {
   UPDATE_MESSAGES: (state, payload) => {
     state.messages.push(payload)
   },
-  EDIT_MESSAGES: (state, { id, generated, value }) => {
+  SET_VIEW: (state, payload) => {
+    state.currentView = payload
+  },
+  SET_MEETING_DATA: (state, { id, data, success, retry }) => {
+    let newData = {}
+    newData['success'] = success
+    newData['retry'] = retry
+    newData['data'] = data
+    console.log('NEW DATA IS HERE', newData)
+    state.meetingData[id] = newData
+
+  },
+  EDIT_MESSAGES: (state, {
+    id,
+    value,
+    gtMsg,
+    generated,
+    generatedType,
+    generatedId,
+    note }) => {
 
     let newMsg
     newMsg = state.messages.filter((message) => message.id === id)
-    newMsg[0]['generated'] = generated
-    newMsg[0]['value'] = value
-
-    console.log(newMsg)
-
+    if (generated) {
+      newMsg[0]['generated'] = generated
+      newMsg[0]['generatedType'] = generatedType
+      newMsg[0]['generatedId'] = generatedId
+      newMsg[0]['value'] = value
+      newMsg[0]['gtMsg'] = gtMsg
+    } else {
+      newMsg[0]['value'] = value
+    }
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
         state.messages[i] = newMsg[0];
@@ -123,19 +148,20 @@ const mutations = {
       }
     }
   },
+  REMOVE_MESSAGE: (state, id) => {
+    state.messages = state.messages.filter(message => message.id !== id);
+  },
   MESSAGE_UPDATED: (state, payload) => {
-    let updatedMsg = state.messages.filter(msg => msg.id === payload)
+    let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
-    updatedMsg[0].value = `successfully updated ${updatedMsg[0].resource}! `
+    updatedMsg[0].data = payload.data
+    updatedMsg[0].value = `Successfully updated ${updatedMsg[0].resource}!`
 
-    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload);
+    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
 
     if (indexToUpdate !== -1) {
       state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
     }
-    console.log(updatedMsg, 'UPDATED MESSAGE')
-    console.log(state.messages, 'MESSAGES')
-
   },
   CLEAR_MESSAGES: (state) => {
     state.messages = []
@@ -171,14 +197,39 @@ const actions = {
       console.log(e)
     }
   },
-  editMessages({ commit }, { id, generated, value }) {
-    commit('EDIT_MESSAGES', { id, generated, value })
+  setCurrentView({ commit }, view) {
+    commit('SET_VIEW', view)
+  },
+  editMessages({ commit }, {
+    id,
+    value,
+    gtMsg,
+    generated,
+    generatedType,
+    generatedId,
+    note }) {
+    commit('EDIT_MESSAGES', {
+
+      id,
+      value,
+      gtMsg,
+      generated,
+      generatedType,
+      generatedId,
+      note
+    })
+  },
+  setMeetingData({ commit }, { id, data, success, retry }) {
+    commit('SET_MEETING_DATA', { id, data, success, retry })
+  },
+  removeMessage({ commit }, id) {
+    commit('REMOVE_MESSAGE', id)
   },
   updateMessages({ commit }, message) {
     commit('UPDATE_MESSAGES', message)
   },
-  messageUpdated({ commit }, id) {
-    commit('MESSAGE_UPDATED', id)
+  messageUpdated({ commit }, { id, data }) {
+    commit('MESSAGE_UPDATED', { id, data })
   },
   clearMessages({ commit }) {
     commit('CLEAR_MESSAGES',)

@@ -42,6 +42,7 @@ from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
 from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
+from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
 
 logger = logging.getLogger("managr")
 
@@ -142,6 +143,14 @@ def emit_process_send_email_draft(payload, context):
     return _process_send_email_draft(payload, context)
 
 
+def emit_process_send_regenerate_email_message(payload, context):
+    return _process_send_regenerate_email_message(payload, context)
+
+
+def emit_process_send_regenerated_email_draft(payload, context):
+    return _process_send_regenerated_email_draft(payload, context)
+
+
 def emit_process_send_next_steps(payload, context):
     return _process_send_next_steps(payload, context)
 
@@ -160,6 +169,10 @@ def emit_process_send_call_analysis_to_dm(payload, context):
 
 def emit_process_send_call_summary_to_dm(payload, context):
     return _process_send_call_summary_to_dm(payload, context)
+
+
+def emit_process_send_ask_managr_to_dm(payload, context):
+    return _process_send_ask_managr_to_dm(payload, context)
 
 
 #########################################################
@@ -578,21 +591,28 @@ def process_current_alert_list(user_id):
 
 @background()
 def _process_calendar_meetings(user_id, slack_int, date):
+    from managr.zoom.zoom_helper import exceptions as zoom_exceptions
+
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
-        try:
-            processed_data = _process_calendar_details(user_id, date)
-            if user.has_zoom_integration:
-                if date is None:
-                    user_timezone = pytz.timezone(user.timezone)
-                    todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
-                    date = str(todays_date.date())
-                meetings = user.zoom_account.helper_class.get_meetings_by_date(
-                    user.zoom_account.access_token, user.zoom_account.zoom_id, date
-                )["meetings"]
-        except Exception as e:
-            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
-            processed_data = None
+        while True:
+            try:
+                processed_data = _process_calendar_details(user_id, date)
+                if user.has_zoom_integration:
+                    if date is None:
+                        user_timezone = pytz.timezone(user.timezone)
+                        todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
+                        date = str(todays_date.date())
+                    meetings = user.zoom_account.helper_class.get_meetings_by_date(
+                        user.zoom_account.access_token, user.zoom_account.zoom_id, date
+                    )["meetings"]
+                    break
+            except zoom_exceptions.TokenExpired:
+                user.zoom_account.regenerate_token()
+            except Exception as e:
+                logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+                processed_data = None
+                break
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
             slack_interaction_check = set(
@@ -1301,37 +1321,10 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             Client = Variable_Client(timeout)
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
-
+                r = _handle_response(r)
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
-                stop_reason = choice["finish_reason"]
-                if stop_reason == "length":
-                    if token_amount <= 2000:
-                        if workflow_id is None:
-                            slack_res = slack_requests.update_channel_message(
-                                context.get("channel"),
-                                context.get("ts"),
-                                user.organization.slack_integration.access_token,
-                                block_set=[
-                                    block_builders.section_with_button_block(
-                                        "Reopen Chat",
-                                        "OPEN_CHAT",
-                                        "Look like your prompt message is too long to process. Try removing white spaces!",
-                                        action_id=action_with_params(
-                                            slack_consts.REOPEN_CHAT_MODAL,
-                                            [f"form_id={str(form.id)}"],
-                                        ),
-                                    )
-                                ],
-                            )
 
-                        return
-
-                    else:
-                        token_amount += 500
-                        continue
                 text = choice["text"]
                 cleaned_choice = clean_prompt_string(text)
                 data = eval(cleaned_choice)
@@ -1397,12 +1390,28 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 else:
                     has_error = True
                 break
+        except StopReasonLength:
+            if token_amount <= 2000:
+                if workflow_id is None:
+                    slack_res = slack_requests.update_channel_message(
+                        context.get("channel"),
+                        context.get("ts"),
+                        user.organization.slack_integration.access_token,
+                        block_set=[
+                            block_builders.section_with_button_block(
+                                "Reopen Chat",
+                                "OPEN_CHAT",
+                                "Look like your prompt message is too long to process. Try removing white spaces!",
+                                action_id=action_with_params(
+                                    slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"],
+                                ),
+                            )
+                        ],
+                    )
+                return
             else:
-                if attempts >= 5:
-                    break
-                else:
-                    attempts += 1
-                    continue
+                token_amount += 500
+                continue
         except httpx.ReadTimeout as e:
             timeout += 30.0
             if timeout >= 120.0:
@@ -1512,9 +1521,8 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
         try:
             with Client as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
+                r = _handle_response(r)
                 choice = r["choices"][0]["text"]
                 data = eval(
                     choice[choice.index("{") : choice.index("}") + 1]
@@ -1543,8 +1551,6 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
                 else:
                     has_error = True
                 break
-            else:
-                attempts += 1
         except Exception as e:
             logger.exception(e)
             return
@@ -1572,10 +1578,9 @@ def _process_send_email_draft(payload, context):
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 text = r.get("choices")[0].get("text")
-                break
+            break
         except Exception as e:
             logger.exception(e)
             text = "There was an error generating your draft"
@@ -1585,8 +1590,152 @@ def _process_send_email_draft(payload, context):
         block_builders.header_block("AI Generated Email"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
         block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Regenerate",
+                    "DRAFT_EMAIL",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_REGENERATE_ACTION,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"form_ids={context.get('form_ids')}",
+                            f"workflow_id={str(context.get('workflow_id'))}",
+                        ],
+                    ),
+                )
+            ]
+        ),
+        block_builders.context_block("This version will not be saved."),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_regenerated_email_draft(payload, context):
+    from managr.slack.helpers.utils import block_finder
+
+    instructions_check = payload["state"]["values"]["REGENERATE_INSTRUCTIONS"]["plain_input"][
+        "value"
+    ]
+    user = User.objects.get(id=context.get("u"))
+    form_ids = context.get("form_ids").split(",")
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    data_collector = {}
+    for form in forms:
+        data_collector = {**data_collector, **form.saved_data}
+    try:
+        previous_blocks = payload["message"]["blocks"]
+        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
+        block["text"]["text"], instructions_check
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+    attempts = 1
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = _handle_response(r)
+                text = r.get("choices")[0].get("text")
+            break
+        except Exception as e:
+            logger.exception(e)
+            text = "There was an error generating your draft"
+            break
+
+    blocks = [
+        block_builders.header_block("AI Generated Email"),
+        block_builders.context_block(f"{forms.first().resource_object.display_value}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Regenerate",
+                    "DRAFT_EMAIL",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_REGENERATE_ACTION,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"form_ids={context.get('form_ids')}",
+                            f"workflow_id={str(context.get('workflow_id'))}",
+                        ],
+                    ),
+                )
+            ]
+        ),
+        block_builders.context_block("This version will not be saved."),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_regenerate_email_message(payload, context):
+    from managr.slack.helpers.utils import block_finder
+
+    instructions_check = (
+        payload["state"]["values"]["REGENERATE_INSTRUCTIONS"]["plain_input"]["value"]
+        if "REGENERATE_INSTRUCTIONS" in payload["state"]["values"].keys()
+        else None
+    )
+    if instructions_check:
+        if len(instructions_check):
+            return _process_send_regenerated_email_draft(payload, context)
+        else:
+            return _process_send_email_draft(payload, context)
+    user = User.objects.get(id=context.get("u"))
+    form_ids = context.get("form_ids").split(",")
+    forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
+    previous_blocks = payload["message"]["blocks"]
+
+    try:
+        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    blocks = [
+        block_builders.header_block("AI Generated Email"),
+        block_builders.context_block(f"{forms.first().resource_object.display_value}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(block["text"]["text"], "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.divider_block(),
+        block_builders.input_block(
+            "Provide additional instructions below:",
+            block_id="REGENERATE_INSTRUCTIONS",
+            multiline=True,
+        ),
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
@@ -1635,8 +1784,7 @@ def _process_send_next_steps(payload, context):
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-            if r.status_code == 200:
-                r = r.json()
+                r = _handle_response(r)
                 text = r.get("choices")[0].get("text")
                 break
         except Exception as e:
@@ -1648,7 +1796,7 @@ def _process_send_next_steps(payload, context):
         block_builders.header_block("AI Generated Next Steps"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
         block_builders.divider_block(),
         block_builders.actions_block(
             [
@@ -1785,17 +1933,16 @@ def _process_send_summary_to_dm(payload, context):
 
 @background()
 def _process_add_call_analysis(workflow_id, summaries):
-    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
     from managr.core.utils import max_token_calculator
     import httpx
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    tokens = max_token_calculator(prompt)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, tokens)
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, token_amount=500)
     has_error = False
     attempts = 1
+    text = None
     while True:
         try:
             with Variable_Client(timeout) as client:
@@ -1805,8 +1952,11 @@ def _process_add_call_analysis(workflow_id, summaries):
             text = r.get("choices")[0].get("text")
             break
         except StopReasonLength:
-            tokens += 500
-            continue
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
         except ServerError:
             if attempts >= 5:
                 has_error = True
@@ -1833,8 +1983,10 @@ def _process_add_call_analysis(workflow_id, summaries):
                 break
             else:
                 timeout += 30.0
-    print(r)
+        except Exception as e:
+            logger.exception(f"Unknown error on call analysis for {str(workflow.id)} <{e}>")
     if has_error:
+        print("ERROR")
         return
     else:
         workflow.transcript_analysis = text
@@ -1899,3 +2051,80 @@ def _process_send_call_summary_to_dm(payload, context):
         )
     return
 
+
+@background
+def _process_send_ask_managr_to_dm(payload, context):
+    user = User.objects.get(id=context.get("u"))
+
+    prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
+        str(user.id),
+        context.get("prompt"),
+        context.get("resource_type"),
+        context.get("resource_id"),
+    )
+    tokens = 500
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = _handle_response(r)
+            text = r.get("choices")[0].get("text")
+            break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = ":no_entry_sign: There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = ":no_entry_sign: Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+        except Exception as e:
+            logger.exception(f"Unknown error on ask managr <{e}>")
+    if has_error:
+        return
+    blocks = [
+        block_builders.header_block("Ask Managr"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn"),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return

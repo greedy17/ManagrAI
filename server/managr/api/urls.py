@@ -48,6 +48,11 @@ urlpatterns = [
     path("users/chat/next-steps/", core_views.chat_next_steps, name="chat_next_steps",),
     path("users/chat/summary/", core_views.get_chat_summary, name="get_chat_summary",),
     path(
+        "users/chat/submit-chat-meeting/",
+        core_views.log_chat_meeting,
+        name="log_chat_meeting",
+    ),
+    path(
         "users/nylas/authorization/",
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
