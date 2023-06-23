@@ -271,20 +271,12 @@ class HubspotAuthAccountAdapter:
                     )
                     res = self._handle_response(res)
                     break
-            except TokenExpired:
-                self.refresh()
             except ApiRateLimitExceeded:
                 if attempts >= 3:
                     break
                 else:
                     attempts += 1
                     time.sleep(10)
-            except Exception as e:
-                logger.exception(
-                    f"Exception calling hubspot api suring list resources call for {self.internal_user.email}: {e}"
-                )
-                res = {}
-                break
         saved_response = res
         page = 1
         while True:
