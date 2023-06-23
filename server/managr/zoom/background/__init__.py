@@ -893,13 +893,9 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
 
-    
-
     pm = json.loads(payload["view"]["private_metadata"])
-    print('PM',pm)
     user = User.objects.get(id=pm.get("u"))
     state = payload["view"]["state"]["values"]
-    print('STATE',state)
     try:
         loading_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -919,13 +915,11 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     resource_list = [
         key for key in selected_options.keys() if "MEETING__PROCESS_TRANSCRIPT_TASK" in key
     ]
-    print('LIST',resource_list)
     value_key = "None"
     if len(resource_list):
         value_key = resource_list[0]
     selected_option = selected_options[value_key]["selected_option"]["value"]
     workflow = MeetingWorkflow.objects.get(id=pm.get("w"))
-    print('workflow',workflow )
     resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
         integration_id=selected_option
     )

@@ -319,7 +319,6 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     from managr.hubspot.routes import routes as hs_routes
     from managr.salesforce.routes import routes as sf_routes
 
-    print("DATA IS HERE,", data)
     cleaned_data = dict(data)
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
