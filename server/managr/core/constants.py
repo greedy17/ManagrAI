@@ -1,8 +1,5 @@
 from django.conf import settings
 
-from managr.utils.misc import get_site_url
-
-
 USE_NYLAS = settings.USE_NYLAS
 NYLAS_CLIENT_ID = settings.NYLAS_CLIENT_ID if USE_NYLAS else None
 NYLAS_CLIENT_SECRET = settings.NYLAS_CLIENT_SECRET if USE_NYLAS else None
@@ -97,11 +94,12 @@ OPEN_AI_TRANSCRIPT_PROMPT = (
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Today is {date}. 
-Based on the transcript summaries provided above, you must follow the instructions below: 
-1) Create one comprehensive summary of the call between {user.first_name} who is a sales rep at {user.organization.name} and the prospect. The summary should only include information that would be relevant to a salesperson, such as: products & features, customer pain points, competitors, timeline to close, decision process, decision maker, next steps and budget. The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.\n
-2) Then, you must fill in the CRM fields below based on this call transcript. Identify and extract accurate data for each applicable CRM field. For any fields not applicable, leave them empty.\n
-3) Output the results as a Python dictionary with the date format as: year-month-day. The summary must be added to the dictionary using a key called 'summary'. Please output the dictionary directly, not as a string.\nCRM fields: {crm_fields}'"""
+    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'First, combine and then analyze the call transcript summaries above  for {user.first_name} who is a sales rep for {user.organization.name}. Then follow the instructions below.\n
+1) Update the CRM. Fill in all applicable CRM fields below with relevant data from the call transcript. Only fill in relevant CRM fields, leave the others empty. 
+CRM fields: {crm_fields}\n
+2) In addition to CRM data entry, you  will also provide a concise, conversational summary highlighting details such as: products & features discussed, customer pain points, competitors, decision-making process, next steps and budget. 
+3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.
+'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
@@ -264,7 +262,6 @@ NOTIFICATION_CLASS_CHOICES = (
     (NOTIFICATION_CLASS_EMAIL, "EMAIL",),
     (NOTIFICATION_CLASS_SLACK, "SLACK",),
 )
-
 
 NOTIFICATION_RESOURCE_ACCOUNT = "ACCOUNT"
 NOTIFICATION_RESOURCE_ORGANIZATION = "ORGANIZATION"
