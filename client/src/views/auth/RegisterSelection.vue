@@ -66,6 +66,7 @@
   import Button from '@thinknimble/button'
   import FormField from '@/components/forms/FormField'
   import PipelineLoader from '@/components/PipelineLoader'
+  import User from '@/services/users'
 
   import { PublicClientApplication } from '@azure/msal-browser'
 
@@ -132,7 +133,6 @@
       },
       async onGoogleSignIn(response) {
         // Handle the Google Sign-In response
-        console.log('onGoogleSignIn')
         if (response.credential) {
           const idToken = response.credential
           const verifiedToken = await this.verifyIdToken(idToken)
@@ -140,13 +140,38 @@
           const { name, email } = verifiedToken;
 
           if (verifiedToken) {
+            // Use the token for authentication or further processing
+            this.newToken = true
             // When logging out, call this function again, but with verifiedToken being an empty object
             this.$store.dispatch('updateGoogleSignIn', verifiedToken)
 
             // Call get endpoint for user by email
-            // Log in with SSO endpoint if they have an account
-            // Else, send them to screen for them to get a password and org
-            this.$router.push({ name: 'GoogleRegister' })
+            // const userEmail = await User.api.getUserByEmail(email)
+            let userEmail
+            try {
+              const emailRes = await User.api.checkStatus(email)
+              userEmail = true
+            } catch(e) {
+              console.log(e)
+              userEmail = false
+            }
+            if (userEmail) {
+              // Log in with SSO endpoint if they have an account
+              const response = await User.api.loginSSO({ email })
+              let token = response.data.token
+              let userData = response.data
+              delete userData.token
+              this.$store.dispatch('updateUserToken', token)
+              this.$store.dispatch('updateUser', User.fromAPI(userData))
+              if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+                this.$router.push({ name: 'Integrations' })
+              } else {
+                this.$router.push({ name: 'ListTemplates' })
+              }
+            } else {
+              // Else, send them to screen for them to get a password and org
+              this.$router.push({ name: 'GoogleRegister' })
+            }
           } else {
             console.error('ID token not found in credential:', response.credential);
           }

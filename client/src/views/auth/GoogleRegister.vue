@@ -263,7 +263,7 @@ export default {
 
       let user
       try {
-        // user = await User.api.register(this.registrationForm)
+        user = await User.api.register(this.registrationForm)
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,
