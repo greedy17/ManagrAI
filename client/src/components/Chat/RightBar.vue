@@ -222,7 +222,7 @@
                     class="save-close"
                   >
                     <div @click="addFilter()" class="save">
-                      <span v-if="!inlineLoader">&#x2713;</span>
+                      <span>&#x2713;</span>
                     </div>
                     <div @click="clearFilter" class="close">
                       <span>x</span>
@@ -278,15 +278,32 @@
               v-if="!editing || activeField !== field.id"
               class="field"
             >
+              <!-- {{ field.dataType }} -->
               {{
-                selectedOpp['secondary_data'][field.apiName]
-                  ? selectedOpp['secondary_data'][field.apiName]
-                  : '-'
+                field.apiName === 'dealstage'
+                  ? field.options[0][selectedOpp['secondary_data'].pipeline].stages.filter(
+                      (stage) => stage.id === selectedOpp['secondary_data'][field.apiName],
+                    )[0].label
+                  : field.dataType === 'Datetime'
+                  ? formatDateTime(selectedOpp['secondary_data'][field.apiName])
+                  : field.dataType === 'Date'
+                  ? formatDate(selectedOpp['secondary_data'][field.apiName])
+                  : field.label === 'Owner' || field.label === 'Deal owner'
+                  ? selectedOpp.owner_ref.full_name
+                  : selectedOpp['secondary_data'][field.apiName] || '-'
               }}
             </div>
             <div style="padding-right: 0.5rem" v-else>
               <InlineFieldEditor
-                :inlinePlaceholder="selectedOpp['secondary_data'][field.apiName]"
+                :inlinePlaceholder="
+                  field.apiName === 'dealstage'
+                    ? field.options[0][selectedOpp['secondary_data'].pipeline].stages.filter(
+                        (stage) => stage.id === selectedOpp['secondary_data'][field.apiName],
+                      )[0].label
+                    : field.label === 'Owner' || field.label === 'Deal owner'
+                    ? selectedOpp.owner_ref.full_name
+                    : selectedOpp['secondary_data'][field.apiName]
+                "
                 :dataType="field.dataType"
                 :apiName="field.apiName"
                 :integrationId="selectedOpp.integrationId"
@@ -478,7 +495,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiName: 'Name',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'Name' : 'dealname'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -487,7 +504,7 @@ export default {
           name: 'Stage',
           dataType: 'text',
           icon: 'fa-stairs',
-          apiName: 'StageName',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -496,7 +513,7 @@ export default {
           name: 'Close date',
           dataType: 'date',
           icon: 'fa-calendar-plus',
-          apiName: 'CloseDate',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -505,7 +522,7 @@ export default {
           name: 'Amount',
           dataType: 'number',
           icon: 'fa-sack-dollar',
-          apiName: 'Amount',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'Amount' : 'amount'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -555,6 +572,24 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+      console.log(this.selectedOpp)
+    },
+    formatDate(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
+    },
+    formatDateTime(input) {
+      console.log('here')
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      let newDate = input.replace(pattern, '$2/$3/$1')
+      return newDate.split('T')[0]
     },
     switchView(view) {
       if (view !== this.view) {
@@ -639,6 +674,11 @@ export default {
     },
     async addFilter() {
       let filter = []
+      console.log(
+        this.selectedFilter.operator,
+        this.selectedFilter.apiName,
+        this.selectedFilter.value,
+      )
       filter = [
         this.selectedFilter.operator,
         this.selectedFilter.apiName,

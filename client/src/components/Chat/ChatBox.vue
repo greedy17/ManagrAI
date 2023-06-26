@@ -24,10 +24,7 @@
       <div v-for="(message, i) in messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
-            <span
-              v-if="message.user === 'bot' && !message.updated"
-              style="font-size: 24px; margin-right: 0.25rem; padding-top: 0.5rem"
-            >
+            <span v-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
               🤖
             </span>
             <span v-else-if="message.user === 'bot' && message.updated">
@@ -513,7 +510,7 @@ export default {
   justify-content: flex-start;
   margin: 0;
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
 
   p {
     padding: 0;
@@ -550,7 +547,7 @@ export default {
 
 .text-container {
   overflow: scroll;
-  padding: 0 0.5rem;
+  padding: 0.25rem 0.25rem 0 0.25rem;
   margin: 0;
   line-height: 1.75;
 }
@@ -577,7 +574,7 @@ export default {
   color: white;
   width: 22px;
   height: 22px;
-  margin-right: 8px;
+  margin-right: 0.2rem;
   margin-top: 6px;
   border-radius: 6px;
   display: flex;
@@ -681,14 +678,14 @@ export default {
 }
 
 .generate-container {
-  padding: 0 1rem 0.5rem 4.75rem;
+  padding: 0 1rem 0.5rem 4.5rem;
   background-color: white;
   width: 100%;
 }
 
 .generate-button {
   @include chat-button();
-  padding: 0.7rem 0.8rem;
+  padding: 0.6rem 0.8rem;
   margin-bottom: 0.5rem;
   img {
     margin-right: 0.5rem;

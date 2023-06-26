@@ -582,7 +582,7 @@ export default {
       return this.$store.state.allContacts
     },
     allLeads() {
-      return this.$store.state.allLeads
+      return this.user.crm === 'SALESFORCE' ? this.$store.state.allLeads : []
     },
     noteTemplates() {
       return this.$store.state.templates

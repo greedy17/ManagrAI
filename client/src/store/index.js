@@ -315,13 +315,16 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllLeads({ commit }, filters = []) {
-    try {
-      const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
-      commit('SAVE_ALL_LEADS', res.results)
-    } catch (e) {
-      console.log(e)
+  async loadAllLeads({ state, commit }, filters = []) {
+    if (state.user.crm === 'SALESFORCE') {
+      try {
+        const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
+        commit('SAVE_ALL_LEADS', res.results)
+      } catch (e) {
+        console.log(e)
+      }
     }
+
   },
   async loadPricebooks({ commit }) {
     try {
