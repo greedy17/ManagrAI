@@ -2,6 +2,7 @@ import logging
 import requests
 import textwrap
 import json
+import uuid
 import httpx
 from django.utils import timezone
 import calendar
@@ -602,6 +603,7 @@ def get_chat_summary(request):
     except Exception as e:
         return Response(data={"res": [e]})
 
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def log_chat_meeting(request):
@@ -711,12 +713,12 @@ def log_chat_meeting(request):
                 else:
                     has_error = True
                 break
-              
+
         except StopReasonLength:
             if token_amount <= 2000:
                 return Response(
-                    data={      
-                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",   
+                    data={
+                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",
                     }
                 )
             else:
@@ -750,14 +752,10 @@ def log_chat_meeting(request):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-        return Response(
-                data={
-                    "data": message, 
-                }
-            )
-        
+        return Response(data={"data": message,})
+
     if not has_error:
-        
+
         if workflow_id:
             if not has_error:
                 form.workflow = workflow
@@ -766,12 +764,8 @@ def log_chat_meeting(request):
                 workflow.resource_type = resource_type
                 workflow.resource_id = str(resource.id)
                 workflow.save()
-    return Response(
-                data={
-                    **r,
-                    "data": cleaned_data,   
-                }
-            )
+    return Response(data={**r, "data": cleaned_data,})
+
 
 def field_syncs():
     queue_users_sf_fields()
@@ -888,7 +882,7 @@ class UserLogoutView(generics.GenericAPIView):
         redirect(f"{url}/login")
         logout(request)
         user.access_token.revoke()
-        return 
+        return
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -1472,6 +1466,9 @@ def email_auth_token(request):
                 name=account["name"],
                 user=request.user,
                 event_calendar_id=calendar_id,
+            )
+            emit_process_calendar_meetings(
+                str(request.user.id), f"calendar-meetings-{request.user.email}-{str(uuid.uuid4())}"
             )
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:
