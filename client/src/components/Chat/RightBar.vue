@@ -31,7 +31,7 @@
                 alt=""
               />
             </span>
-            <p>
+            <p @click="test">
               {{ selectedOpp.name }}
             </p>
           </div>
@@ -46,6 +46,14 @@
             />
 
             <font-awesome-icon
+              v-if="userCRM === 'HUBSPOT'"
+              style="height: 20px; width: 20px; color: #ff7a59"
+              icon="fa-brands fa-hubspot"
+              @click="openInCrm(selectedOpp.integration_id)"
+            />
+
+            <font-awesome-icon
+              v-else
               style="height: 24px; width: 24px; color: #0d9dda"
               icon="fa-brands fa-salesforce"
               @click="openInCrm(selectedOpp.integration_id)"
@@ -308,6 +316,7 @@
                 :apiName="field.apiName"
                 :integrationId="selectedOpp.integrationId"
                 :resourceId="selectedOpp.id"
+                :resource="selectedOpp"
                 :resourceType="userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'"
                 :field="field"
                 :showing="editing"
@@ -570,9 +579,8 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test(log) {
-      console.log('log', log)
-      console.log(this.selectedOpp)
+    test() {
+      console.log('log', this.user)
     },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -720,10 +728,16 @@ export default {
     },
     openInCrm(id) {
       let url
-      url =
-        this.user.crm === 'SALESFORCE'
-          ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
-          : ''
+
+      if (this.user.crm === 'HUBSPOT') {
+        url = `https://app.hubspot.com/contacts/${this.user.hubspotAccountRef.hubspotAppId}/record/0-3/${id}`
+      } else {
+        url =
+          this.user.crm === 'SALESFORCE'
+            ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
+            : ''
+      }
+
       window.open(url, '_blank')
     },
     clearText() {

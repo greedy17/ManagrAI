@@ -83,12 +83,14 @@
       <Multiselect
         :options="
           apiName === 'dealstage'
-            ? field.options[0]['default']['stages']
+            ? field.options[0][resource.secondary_data.pipeline]
+              ? field.options[0][resource.secondary_data.pipeline].stages
+              : []
             : picklistOptions[field.id] || field.options
         "
         :placeholder="inlinePlaceholder || '-'"
         selectLabel=""
-        track-by="value"
+        :track-by="apiName === 'dealstage' ? 'id' : 'value'"
         label="label"
         :multiple="dataType === 'MultiPicklist' ? true : false"
         v-model="selectedOption"
@@ -98,7 +100,7 @@
         @select="
           setUpdateValues(
             apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-            $event.value,
+            apiName === 'dealstage' ? $event.id : $event.value,
             dataType === 'MultiPicklist' ? true : false,
           )
         "
@@ -239,6 +241,7 @@ export default {
     resourceType: {
       type: String,
     },
+    resource: {},
     field: {},
   },
   methods: {
