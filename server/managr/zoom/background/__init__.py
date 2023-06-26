@@ -1,4 +1,5 @@
 import logging
+from os import stat
 import httpx
 import json
 import time
@@ -994,6 +995,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         },
                         fields_list,
                         workflow.datetime_created.date(),
+                        user,
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
@@ -1073,6 +1075,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             break
                         else:
                             timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"Exception combining summaries: <{e}>")
             else:
                 has_error = True
                 error_message = ":no_entry_sign: Unknown error"

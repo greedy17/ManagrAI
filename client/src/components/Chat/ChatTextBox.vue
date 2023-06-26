@@ -81,13 +81,13 @@ export default {
       templatesOpen: false,
       chatRes: null,
       actions: [
-        { name: 'Update Record', value: 'Update Opportunity' },
-        { name: 'Create Record', value: 'Create Opportunity' },
+        // { name: 'Update Record', value: 'Update Opportunity' },
+        // { name: 'Create Record', value: 'Create Opportunity' },
         { name: 'Ask Managr', value: 'Ask managr' },
         { name: 'Run Review', value: 'Run Review for Opportunity' },
-        { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
-        { name: 'Call Summary', value: 'Get call summary for Opportunity' },
-        { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
+        // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
+        // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
+        // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
       ],
     }
   },

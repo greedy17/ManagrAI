@@ -39,10 +39,17 @@
 
           <div class="text-container">
             <div style="position: relative">
-              <div v-if="message.user === 'bot' && message.gtMsg" class="msgType">
+              <div
+                class="type-header"
+                :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
+                v-if="message.user === 'bot' && message.gtMsg"
+              >
                 <p>
                   {{ message.gtMsg }}
                 </p>
+                <small>
+                  {{ message.data.Name }}
+                </small>
               </div>
 
               <pre v-html="message.value" class="message-text"></pre>
@@ -64,8 +71,18 @@
 
               <div v-else style="margin-top: 1.5rem" class="row">
                 <button
+                  style="margin-bottom: 0.25rem"
                   @click="
-                    regenerate(message.generatedType, message.data['meeting_comments'], message.id)
+                    regenerate(
+                      message.generatedType,
+                      message.data['meeting_comments'],
+                      message.id,
+                      {
+                        data: message.data,
+                        integration: message.integrationId,
+                        resource: message.resourceType,
+                      },
+                    )
                   "
                   class="content-button padding-small"
                 >
@@ -227,14 +244,14 @@ export default {
     messages: 'scrollToBottom',
   },
   methods: {
-    regenerate(type, data, editId) {
+    regenerate(type, data, editId, sumObj) {
       this.generatingId = editId
       if (type === 'email') {
         this.regenerateEmail(data, editId)
       } else if (type === 'next') {
         this.regenerateNext(data, editId)
       } else {
-        console.log('summary')
+        this.regenerateSummary(editId, sumObj)
       }
     },
     clearMessages() {
@@ -276,6 +293,26 @@ export default {
         this.generating = false
       }
     },
+    async regenerateSummary(editId, sumObj) {
+      this.generating = true
+      try {
+        let res = await User.api.getSummary({
+          id: this.user.id,
+          data: sumObj.data,
+          integrationId: sumObj.integration,
+          resource: sumObj.resource,
+        })
+        this.generativeRes = res
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('editMessages', {
+          id: editId,
+          value: this.generativeRes['res'],
+        })
+        this.generating = false
+      }
+    },
     async generateEmail(note, id) {
       this.generating = true
       try {
@@ -295,9 +332,6 @@ export default {
           generated: true,
           generatedType: 'email',
         })
-
-        // this.generativeRes['id']
-
         this.generating = false
       }
     },
@@ -324,7 +358,7 @@ export default {
       }
     },
 
-    async getSummary(data, id, resource, mId) {
+    async getSummary(data, id, resource, msgId) {
       this.generating = true
       try {
         let res = await User.api.getSummary({
@@ -338,16 +372,13 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('editMessages', {
-          id: mId,
-          generated: true,
-          value: 'Summary generated',
-        })
-        this.setMessage({
           user: 'bot',
-          id: this.generativeRes['id'],
+          id: msgId,
           value: this.generativeRes['res'],
+          gtMsg: 'AI Generated Summary',
+          generated: true,
+          generatedType: 'summary',
         })
-
         this.generating = false
       }
     },
@@ -420,15 +451,22 @@ export default {
   color: $light-gray-blue;
 }
 
-.msgType {
-  position: absolute;
+.marg {
+  margin-bottom: 0 !important;
+}
+
+.type-header {
+  position: sticky;
   top: 0;
   left: 0;
-  background-color: $grape;
-  color: white;
-  font-size: 12px;
-  padding: 0.25rem 0.5rem;
-  border-radius: 5px;
+  margin-bottom: -2rem;
+
+  p {
+    font-size: 13px;
+  }
+  small {
+    color: $light-gray-blue;
+  }
 }
 
 .message-text {
@@ -497,10 +535,11 @@ export default {
 }
 
 .ai-text-container {
+  overflow: scroll;
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  padding: 0 0.75rem;
   line-height: 1.75;
   position: relative;
 
@@ -510,7 +549,8 @@ export default {
 }
 
 .text-container {
-  padding: 0.25rem 0.5rem;
+  overflow: scroll;
+  padding: 0 0.5rem;
   margin: 0;
   line-height: 1.75;
 }

@@ -1,6 +1,6 @@
 <template>
   <div ref="leftsidebar" class="sidebar" :class="{ open: isOpen }">
-    <section style="position: relative">
+    <section>
       <header class="right-bar-header">
         <!-- <button @mouseenter="soonThreadText" @mouseleave="newThreadText" class="primary-button">
           <span style="font-size: 14px; margin-right: 1rem">🚀</span>
@@ -10,7 +10,7 @@
           <img src="@/assets/images/logo.png" height="26px" alt="" />
         </div>
 
-        <img class="img-spacing pointer" src="@/assets/images/collapse.svg" height="16px" alt="" />
+        <!-- <img class="img-spacing pointer" src="@/assets/images/collapse.svg" height="16px" alt="" /> -->
       </header>
 
       <div class="body">
@@ -29,7 +29,11 @@
               <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
 
-            <div class="menu-item">
+            <div
+              @click="changeView('meetings')"
+              :class="{ 'active-view': currentView === 'meetings' }"
+              class="menu-item"
+            >
               <img src="@/assets/images/calendar.svg" height="14px" alt="" />
               <p>Meetings</p>
 
@@ -51,11 +55,14 @@
 
           <div v-else-if="templates.list.length">
             <div
-              :class="{ 'active-view': currentView.title === alert.title }"
+              :class="{
+                'active-view': currentView.title === alert.title,
+                inactive: !(alert.sobjectInstances && alert.sobjectInstances.length),
+              }"
               v-for="(alert, i) in templates.list"
               :key="i"
               class="menu-item"
-              @click="changeView(alert.title, alert)"
+              @click="changeView(alert.title, alert, alert.sobjectInstances.length)"
             >
               <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
               <p>{{ alert.title }}</p>
@@ -71,7 +78,7 @@
           <div v-else>
             <div class="menu-item">
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p>Activate lists</p>
+              <p>No active lists</p>
             </div>
           </div>
         </section>
@@ -142,12 +149,20 @@ export default {
     // console.log(this.templates)
   },
   methods: {
-    changeView(view, alert) {
-      this.view = view
-      if (alert) {
-        this.$store.dispatch('setCurrentView', alert)
-      } else {
-        this.$store.dispatch('setCurrentView', 'home')
+    refreshList() {
+      this.templates.refresh()
+    },
+    changeView(view, alert, length) {
+      if (length || view === 'home' || view === 'meetings') {
+        this.view = view
+        if (view === 'meetings') {
+          this.$store.dispatch('loadMeetings')
+        }
+        if (alert) {
+          this.$store.dispatch('setCurrentView', alert)
+        } else {
+          this.$store.dispatch('setCurrentView', view)
+        }
       }
     },
     toggleSidebar() {
@@ -209,13 +224,12 @@ export default {
 }
 
 .sidebar {
-  position: fixed;
   background-color: white;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   top: 0;
   left: 0;
   height: 100%;
-  width: 280px;
+  width: 100%;
   overflow: auto;
   transition: all 0.3s ease;
   font-size: 14px;
@@ -229,12 +243,14 @@ export default {
   }
 }
 
-// .inactive {
-//   color: $light-gray-blue;
-//   img {
-//     filter: invert(65%) sepia(3%) saturate(2244%) hue-rotate(200deg) brightness(93%) contrast(88%);
-//   }
-// }
+.inactive {
+  opacity: 0.3;
+  cursor: not-allowed !important;
+
+  &:hover {
+    opacity: 0.3 !important;
+  }
+}
 
 .absolute-img {
   position: absolute;
@@ -254,6 +270,7 @@ export default {
 
 .active-view {
   background-color: $dark-green;
+  border-radius: 5px;
   color: white;
   img {
     filter: invert(90%);
@@ -315,6 +332,7 @@ export default {
 
 @media (max-width: 1000px) {
   .sidebar {
+    position: absolute;
     left: -280px;
 
     &.open {
@@ -331,6 +349,7 @@ export default {
 
 .body {
   min-height: 66vh;
+  padding: 0 1rem;
   overflow-y: scroll;
   overflow-x: hidden;
   text-overflow: ellipsis;
@@ -447,7 +466,7 @@ img {
 }
 
 .close {
-  position: inherit;
+  position: absolute;
   top: 0;
   left: 280px;
   top: 1.5rem;
@@ -457,10 +476,11 @@ img {
 
 .tooltip {
   display: block;
-  width: 228px;
+  width: 250px;
   height: auto;
   position: absolute;
   top: 0;
+  left: 1rem;
   font-size: 14px;
   background: $base-gray;
   color: white;
@@ -512,19 +532,34 @@ img {
 }
 
 .left-section {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
   padding-bottom: 0;
 }
 
 .left-section:last-of-type {
   border: none;
+  overflow-y: scroll;
+  overflow-x: none;
+  scroll-behavior: smooth;
+  padding-top: 0;
+}
+
+.left-section:last-of-type::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.left-section:last-of-type::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px !important;
+}
+.left-section:last-of-type:hover::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
 }
 
 .section-title {
   color: $light-gray-blue;
-
-  padding-left: 1.25rem;
+  // padding-left: 1.25rem;
 }
 
 .img-spacing {

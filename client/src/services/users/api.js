@@ -5,10 +5,13 @@ import store from '@/store'
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
 const LOGIN_SSO_ENDPOINT = '/login-sso/'
+const LOGOUT_ENDPOINT = '/logout/'
 const REGISTRATION_ENDPOINT = '/register/'
 const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
 const USERS_ENDPOINT = '/users/'
 const USERS_UPDATE = '/users/update-user-info/'
+const REVOKE_TOKEN_ENDPOINT = '/users/revoke-token/'
+const REFRESH_TOKEN_ENDPOINT = '/users/refresh-token/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
@@ -39,6 +42,7 @@ const CHAT_SUBMISSION = 'users/chat/submission/'
 const CHAT_EMAIL = 'users/chat/follow-up-email/'
 const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
+const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
 
 export default class UserAPI {
   get client() {
@@ -91,6 +95,13 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'User.chatSummary' }))
   }
 
+  async submitChatMeeting(data) {
+    return this.client
+      .post(CHAT_MEETING, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+  }
+
   async list({ pagination, filters }) {
     const url = USERS_ENDPOINT
     const filtersMap = {
@@ -110,6 +121,7 @@ export default class UserAPI {
         results: res.data.results.map(this.cls.fromAPI),
       }
     } catch (e) {
+      console.dir(e)
       apiErrorHandler({ apiName: 'UsersAPI.list' })
     }
   }
@@ -133,10 +145,20 @@ export default class UserAPI {
     return promise
   }
 
-  /* Perform logout by clearing the Vuex store. */
-  logout() {
-    store.commit('LOGOUT_USER')
+  logout(d) {
+    // const data = { ...d }
+    const promise = apiClient()
+      .post(LOGOUT_ENDPOINT)
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.login', enable400Alert: false, enable500Alert: false }),
+      )
+    return promise
   }
+
+  /* Perform logout by clearing the Vuex store. */
+  // logout() {
+  //   store.commit('LOGOUT_USER')
+  // }
 
   /**
    * Register a new user
@@ -282,12 +304,15 @@ export default class UserAPI {
     return promise
   }
 
-  getUser(userId) {
+  async getUser(userId) {
     const url = GET_USER_ENDPOINT(userId)
-    return this.client
-      .get(url)
-      .then(response => this.cls.fromAPI(response.data))
-      .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+    try {
+      const response = await this.client.get(url)
+      this.cls.fromAPI(response.data)
+    } catch (e) {
+      console.log(e)
+      apiErrorHandler({ apiName: 'Get User Profile Data API error' })
+    }
   }
 
   getUserByEmail(email) {
@@ -297,6 +322,13 @@ export default class UserAPI {
       .then(response => this.cls.fromAPI(response.data))
       .catch(apiErrorHandler({ apiName: 'Get User by Email API error' }))
   }
+  // getUser(userId) {
+  //   const url = GET_USER_ENDPOINT(userId)
+  //   return this.client
+  //     .get(url)
+  //     .then(response => this.cls.fromAPI(response.data))
+  //     .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+  // }
 
   getForecastValues() {
     const url = FORECAST_VALUES_ENDPOINT
@@ -323,6 +355,30 @@ export default class UserAPI {
     return promise
   }
 
+  async revokeToken(token, userId) {
+    const url = REVOKE_TOKEN_ENDPOINT
+    const data = {
+      token,
+      user_id: userId
+    }
+    try {
+      await this.client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
+    }
+  }
+  async refreshToken(token, userId) {
+    const url = REFRESH_TOKEN_ENDPOINT
+    const data = {
+      token,
+      user_id: userId,
+    }
+    try {
+      await this.client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
+    }
+  }
   async createMessagingAccount(phoneNumber) {
     const url = CREATE_MESSAGING_ACCOUNT_ENDPOINT
     const data = {

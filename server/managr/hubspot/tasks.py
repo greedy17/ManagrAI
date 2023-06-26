@@ -212,8 +212,6 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
         except Exception as e:
             errors.append(f"{field.api_name} - {e}")
             continue
-    if len(errors):
-        logger.error(f"Error syncing fields for {user.email}: {errors}")
     return
 
 

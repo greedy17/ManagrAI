@@ -1062,7 +1062,7 @@ def _process_chat_action(payload, context):
         else ["Company", "Deal", "Contact"]
     )
     state = payload["view"]["state"]
-    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
+    prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"].strip()
     resource_check = None
     blocks = []
     lowercase_prompt = prompt.lower()
