@@ -68,10 +68,13 @@ export default class UserAPI {
   }
 
   async chatUpdate(data) {
-    return this.client
-      .post(CHAT_SUBMISSION, data)
-      .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'User.chatUpdate' }))
+    try {
+      const res = await this.client.post(CHAT_SUBMISSION, data)
+      return res.data
+    } catch(e) {
+      console.log('Error in chatUpdate: ', e)
+      apiErrorHandler({ apiName: 'User.chatUpdate' })
+    }
   }
 
   async chatEmail(data) {
