@@ -74,6 +74,7 @@ export default class UserAPI {
     } catch(e) {
       console.log('Error in chatUpdate: ', e)
       apiErrorHandler({ apiName: 'User.chatUpdate' })
+      return {value: e.response.data.value, status: e.response.status}
     }
   }
 
