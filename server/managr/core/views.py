@@ -472,7 +472,7 @@ def submit_chat_prompt(request):
                             form.save()
                         else:
                             has_error = True
-                            message = 'Invalid Submission'
+                            message = "Invalid Submission"
                             break
                     else:
                         if user.crm == "SALESFORCE":
@@ -491,7 +491,7 @@ def submit_chat_prompt(request):
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
-                    message = ''
+                    message = ""
                 break
             else:
                 if attempts >= 5:
@@ -535,7 +535,7 @@ def submit_chat_prompt(request):
             "formType": form_type,
             "resourceType": request.data["resource_type"],
         },
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
 
 
@@ -865,9 +865,14 @@ class UserSSOLoginView(generics.GenericAPIView):
                 }
             )
         serializer.login(user, request)
+        ManagrToken.objects.get_or_create(user=user, assigned_user=user)
+        if user.access_token.is_expired:
+            user.access_token.refresh(user.access_token)
+        # Build and send the response
         u = User.objects.get(pk=user.id)
         serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
+        response_data["token"] = user.access_token.key
         return Response(response_data)
 
 
