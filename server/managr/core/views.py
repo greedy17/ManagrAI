@@ -470,6 +470,7 @@ def submit_chat_prompt(request):
                             form.save()
                         else:
                             has_error = True
+                            message = 'Invalid Submission'
                             break
                     else:
                         if user.crm == "SALESFORCE":
@@ -488,6 +489,7 @@ def submit_chat_prompt(request):
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
+                    message = ''
                 break
             else:
                 if attempts >= 5:
