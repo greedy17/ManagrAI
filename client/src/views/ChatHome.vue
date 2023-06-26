@@ -174,7 +174,7 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @toggle-chat-modal="toggleChatModal" />
+      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" />
     </main>
     <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings

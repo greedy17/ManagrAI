@@ -464,7 +464,7 @@ img {
 
 .tooltip {
   display: block;
-  width: 250px;
+  width: 230px;
   height: auto;
   position: absolute;
   top: 0;

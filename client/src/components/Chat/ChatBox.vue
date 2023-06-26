@@ -401,6 +401,7 @@ export default {
       this.$store.dispatch('updateChatTitle', title)
     },
     toggleChatModal(data) {
+      this.$emit('set-opp', data.resource)
       this.$emit('toggle-chat-modal', data)
     },
   },
