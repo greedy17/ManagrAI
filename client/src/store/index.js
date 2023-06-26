@@ -404,8 +404,8 @@ const actions = {
     commit('UPDATE_USERTOKEN', payload)
   },
   async logoutUser({ state, commit }) {
-    await User.api.logout()
     commit('LOGOUT_USER')
+    await User.api.logout()
   },
   refreshCurrentUser({ state, commit }) {
     if (!state.token) {
