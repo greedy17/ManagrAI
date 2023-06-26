@@ -34,7 +34,7 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
-  currentView: null,
+  currentView: 'home',
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
