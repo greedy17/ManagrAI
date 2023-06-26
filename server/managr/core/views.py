@@ -816,7 +816,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         # If the serializer is valid, then the email/password combo is valid.
         # Get the user entity, from which we can get (or create) the auth token
-        user = authenticate(**serializer.validated_data)
+        user = authenticate(request, **serializer.data)
         if user is None:
             raise ValidationError(
                 {
@@ -838,7 +838,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(response_data)
 
 
-class UserSSOLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
+class UserSSOLoginView(generics.GenericAPIView):
     """
     For admin login.
     """
@@ -849,15 +849,13 @@ class UserSSOLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         """Validate user credentials.
-
         Return serialized user and auth token.
         """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         # If the serializer is valid, then the email/password combo is valid.
         # Get the user entity, from which we can get (or create) the auth token
-        user = authenticate(**serializer.validated_data)
+        user = authenticate(request, **serializer.data)
         if user is None:
             raise ValidationError(
                 {
@@ -866,23 +864,23 @@ class UserSSOLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
                     ],
                 }
             )
-        serializer.login(request, user)
+        serializer.login(user, request)
         u = User.objects.get(pk=user.id)
         serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
         return Response(response_data)
+
+
 class UserLogoutView(generics.GenericAPIView):
     authentication_classes = ()
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-
         user = self.request.user
         url = get_site_url()
-        redirect(f"{url}/login")
-        logout(request)
         user.access_token.revoke()
-        return
+        logout(request)
+        return redirect(f"{url}/login")
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -1530,7 +1528,9 @@ def send_new_email(request):
 
     # Otherwise, init the Nylas Client
     try:
-        nylas = APIClient(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
         draft = nylas.drafts.create()
         draft.subject = subject
         draft.body = body
@@ -1559,7 +1559,9 @@ def reply_to_email(request):
 
     # Otherwise, init the Nylas Client
     try:
-        nylas = APIClient(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
         thread = nylas.threads.get(id)
         draft = thread.create_reply()
         draft.body = body
@@ -1571,6 +1573,7 @@ def reply_to_email(request):
     except Exception as e:
         logger.exception(f"Error sending reply email to Nylas <{e}>")
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])

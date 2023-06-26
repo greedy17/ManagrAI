@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model, login
-from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth import backends
 
 
-class SSOBackend(BaseBackend):
+class SSOBackend(backends.ModelBackend):
     def authenticate(self, request, email=None):
         User = get_user_model()
 

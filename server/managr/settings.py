@@ -219,11 +219,15 @@ USE_TZ = True
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": ("managr.core.pagination.PageNumberPagination"),
-    "DEFAULT_AUTHENTICATION_CLASSES": ["managr.api.models.ExpiringTokenAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["managr.api.models.ExpiringTokenAuthentication",],
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
+AUTHENTICATION_BACKENDS = [
+    "managr.api.models.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 #
 # Static files (CSS, JavaScript, Images)
 #

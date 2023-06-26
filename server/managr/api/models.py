@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
@@ -75,3 +76,20 @@ class ExpiringTokenAuthentication(TokenAuthentication):
 
     def authenticate_header(self, request):
         return self.keyword
+
+
+class EmailBackend(ModelBackend):
+    def authenticate(self, request, **kwargs):
+        try:
+            email = request.data.get("email")
+        except Exception:
+            return None
+        return self.authenticate_credentials(email)
+
+    def authenticate_credentials(self, email):
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise AuthenticationFailed("User does not exist")
+
+        return user

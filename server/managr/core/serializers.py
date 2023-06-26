@@ -4,7 +4,6 @@ from django.utils import timezone
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
 import managr.core.constants as core_consts
 from managr.organization.serializers import OrganizationSerializer
 from managr.salesforce.serializers import SalesforceAuthSerializer
@@ -215,14 +214,17 @@ class UserSSOLoginSerializer(serializers.ModelSerializer):
         """Emails are always stored and compared in lowercase."""
         return value.lower()
 
+    def get_password(self, instance):
+        if instance:
+            return instance.password
+        return None
+
     @staticmethod
     def login(user, request):
         """
         Log-in user and append authentication token to serialized response.
         """
-        from managr.core.custom_backends import SSOBackend
-
-        login(request, user, backend=SSOBackend)
+        login(request, user, backend="managr.core.custom_backends.SSOBackend")
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         return response_data
