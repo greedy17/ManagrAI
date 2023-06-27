@@ -74,12 +74,26 @@
         </thead>
         <tbody>
           <tr v-for="(opp, i) in currentView.sobjectInstances" :key="i">
-            <td @click="setOpp(opp.Name)">
-              <span>{{ opp.Name }}</span>
+            <td @click="setOpp(user.crm === 'HUBSPOT' ? opp.dealname : opp.Name)">
+              <span>{{ user.crm === 'HUBSPOT' ? opp.dealname : opp.Name }}</span>
             </td>
-            <td>{{ opp.StageName }}</td>
             <td>
-              {{ opp.CloseDate }}
+              {{
+                user.crm === 'HUBSPOT'
+                  ? stageField &&
+                    stageField.options[0][opp.pipeline].stages.filter(
+                      (stage) => stage.id === opp['dealstage'],
+                    )[0].label
+                  : opp.StageName
+              }}
+            </td>
+
+            <td>
+              {{
+                user.crm === 'HUBSPOT'
+                  ? formatDateTime(opp.closedate)
+                  : formatDateTime(opp.CloseDate)
+              }}
             </td>
 
             <td v-for="(field, i) in extraPipelineFields" :key="i">
@@ -117,6 +131,7 @@ export default {
     return {
       message: '',
       extraFields: [],
+      hasExtraFields: [],
       extraFieldObjs: [],
       addingField: false,
       loading: false,
@@ -134,14 +149,45 @@ export default {
   created() {
     this.formFields.refresh()
   },
+  watch: {
+    'user.hubspotAccountRef': {
+      handler() {
+        this.updateExtraFields()
+      },
+      immediate: true,
+    },
+  },
   methods: {
+    formatDate(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
+    },
+    formatDateTime(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      let newDate = input.replace(pattern, '$2/$3/$1')
+      return newDate.split('T')[0]
+    },
+    updateExtraFields() {
+      let accountRef
+      if (this.user.crm) {
+        accountRef =
+          this.$store.state.user.salesforceAccountRef || this.$store.state.user.hubspotAccountRef
+        this.hasExtraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType] || []
+      }
+    },
     async reloadWorkflow() {
       this.loading = true
       try {
         let res = await AlertTemplate.api.runAlertTemplateNow(this.currentView.id, {
           fromWorkflow: true,
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -167,7 +213,6 @@ export default {
           resource_type: this.baseResourceType,
           field_ids: this.extraFields,
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -193,13 +238,14 @@ export default {
     currentView() {
       return this.$store.state.currentView
     },
-    hasExtraFields() {
-      const accountRef = this.$store.state.user.salesforceAccountRef
-        ? this.$store.state.user.salesforceAccountRef
-        : this.$store.state.user.hubspotAccountRef
-      const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
-      return extraFields && extraFields.length ? extraFields : []
-    },
+    // hasExtraFields() {
+    //   const accountRef = this.$store.state.user.salesforceAccountRef
+    //     ? this.$store.state.user.salesforceAccountRef
+    //     : this.$store.state.user.hubspotAccountRef
+    //   const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
+    //   return extraFields && extraFields.length ? extraFields : []
+
+    // },
     extraPipelineFields() {
       let extras = []
       extras = this.formFields.list.filter((field) => this.hasExtraFields.includes(field.id))
@@ -210,6 +256,11 @@ export default {
         return this.extraPipelineFields.map((field) => field.label)
       } else {
         return []
+      }
+    },
+    stageField() {
+      if (this.user.crm === 'HUBSPOT') {
+        return this.formFields.list.filter((field) => field.apiName === 'dealstage')[0]
       }
     },
   },

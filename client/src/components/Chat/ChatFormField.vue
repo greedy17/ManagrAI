@@ -27,13 +27,14 @@
         field.dataType === 'Date' ||
         field.dataType === 'Datetime' ||
         field.dataType === 'Double' ||
-        field.dataType === 'Currency'
+        field.dataType === 'Currency' ||
+        field.dataType === 'Int'
       "
     >
       <label for="">{{ field.label }}</label>
       <input
         class="inline-input"
-        v-if="field.dataType !== 'Double' || field.dataType !== 'Currency'"
+        v-if="field.dataType !== 'Double' || field.dataType !== 'Currency' || dataType !== 'Int'"
         :value="placeholder"
         :type="field.dataType"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -59,7 +60,7 @@
     >
       <label for="">{{ field.label }}</label>
       <Multiselect
-        :options="picklistOptions[field.id]"
+        :options="picklistOptions[field.id] || field.options"
         selectLabel=""
         track-by="value"
         label="label"
@@ -88,8 +89,13 @@
       v-else-if="field.apiName === 'StageName' || field.apiName === 'dealstage'"
     >
       <label for=""> {{ field.label }}</label>
+
       <Multiselect
-        :options="picklistOptions[field.id]"
+        :options="
+          picklistOptions[field.id] || field.options[0][currentOpp.secondary_data.pipeline]
+            ? field.options[0][currentOpp.secondary_data.pipeline].stages
+            : []
+        "
         selectLabel=""
         track-by="value"
         label="label"
@@ -102,7 +108,7 @@
         @select="
           setUpdateValues(
             field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-            $event.value,
+            field.apiName === 'dealstage' ? $event.id : $event.value,
             field.dataType === 'MultiPicklist' ? true : false,
           )
         "
@@ -337,6 +343,9 @@ export default {
     stagesWithForms: {},
   },
   methods: {
+    test(op) {
+      console.log(op)
+    },
     setUpdateValues(key, val, multi) {
       this.$emit('set-value', key, val, multi)
     },
@@ -374,6 +383,9 @@ export default {
   computed: {
     picklistOptions() {
       return this.$store.state.allPicklistOptions
+    },
+    currentOpp() {
+      return this.$store.state.currentOpp
     },
   },
   directives: {

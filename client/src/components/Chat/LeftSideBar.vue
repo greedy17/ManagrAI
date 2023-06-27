@@ -17,7 +17,7 @@
         <section class="left-section">
           <p class="section-title">Today</p>
 
-          <div>
+          <div style="padding: 0 0.5rem">
             <div
               @click="changeView('home')"
               :class="{ 'active-view': currentView === 'home' }"
@@ -53,7 +53,7 @@
             </div>
           </div>
 
-          <div v-else-if="templates.list.length">
+          <div style="padding: 0 0.5rem" v-else-if="templates.list.length">
             <div
               :class="{
                 'active-view': currentView.title === alert.title,
@@ -207,12 +207,12 @@ export default {
 @import '@/styles/mixins/inputs';
 
 .leftbarClosed {
-  left: -280px;
+  left: -260px;
   position: absolute;
 }
 
 .sidebar {
-  background-color: white;
+  background-color: $off-white;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   top: 0;
   left: 0;
@@ -321,7 +321,7 @@ export default {
 @media (max-width: 1000px) {
   .sidebar {
     position: absolute;
-    left: -280px;
+    left: -260px;
 
     &.open {
       left: 0;
@@ -337,7 +337,7 @@ export default {
 
 .body {
   min-height: 66vh;
-  padding: 0 1rem;
+  // padding: 0 1rem;
   overflow-y: scroll;
   overflow-x: hidden;
   text-overflow: ellipsis;
@@ -376,11 +376,11 @@ export default {
 footer {
   position: fixed;
   bottom: 0;
-  width: 280px;
+  width: 260px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 1rem 0 0.5rem 0;
+  padding: 1rem 0 0.5rem 0.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -411,8 +411,8 @@ footer {
   align-items: center;
   flex-direction: row;
   font-size: 14px;
-  padding: 0.75rem 0;
-  padding-left: 1.25rem;
+  padding: 0.625rem 0;
+  padding-left: 1rem;
   cursor: pointer;
   position: relative;
 
@@ -421,7 +421,7 @@ footer {
     text-overflow: ellipsis;
     overflow: hidden;
     margin: 0;
-    width: 150px;
+    width: 144px;
   }
 
   &:hover {
@@ -456,7 +456,7 @@ img {
 .close {
   position: absolute;
   top: 0;
-  left: 280px;
+  left: 260px;
   top: 1.5rem;
   display: none;
   cursor: pointer;
@@ -464,7 +464,7 @@ img {
 
 .tooltip {
   display: block;
-  width: 250px;
+  width: 230px;
   height: auto;
   position: absolute;
   top: 0;
@@ -529,7 +529,8 @@ img {
   overflow-y: scroll;
   overflow-x: none;
   scroll-behavior: smooth;
-  padding-top: 0;
+
+  height: 100%;
 }
 
 .left-section:last-of-type::-webkit-scrollbar {
@@ -547,7 +548,7 @@ img {
 
 .section-title {
   color: $light-gray-blue;
-  // padding-left: 1.25rem;
+  padding-left: 1.25rem;
 }
 
 .img-spacing {

@@ -38,12 +38,13 @@
         dataType === 'Date' ||
         dataType === 'Datetime' ||
         dataType === 'Double' ||
-        dataType === 'Currency'
+        dataType === 'Currency' ||
+        dataType === 'Int'
       "
     >
       <input
         class="inline-input"
-        v-if="dataType !== 'Double' || dataType !== 'Currency'"
+        v-if="dataType !== 'Double' || dataType !== 'Currency' || dataType !== 'Int'"
         :value="inlinePlaceholder"
         :type="dataType"
         @input=";(value = $event.target.value), setUpdateValues(apiName, value)"
@@ -80,10 +81,16 @@
       v-else-if="dataType === 'Picklist' || dataType === 'MultiPicklist'"
     >
       <Multiselect
-        :options="picklistOptions[field.id]"
+        :options="
+          apiName === 'dealstage'
+            ? field.options[0][resource.secondary_data.pipeline]
+              ? field.options[0][resource.secondary_data.pipeline].stages
+              : []
+            : picklistOptions[field.id] || field.options
+        "
         :placeholder="inlinePlaceholder || '-'"
         selectLabel=""
-        track-by="value"
+        :track-by="apiName === 'dealstage' ? 'id' : 'value'"
         label="label"
         :multiple="dataType === 'MultiPicklist' ? true : false"
         v-model="selectedOption"
@@ -93,7 +100,7 @@
         @select="
           setUpdateValues(
             apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-            $event.value,
+            apiName === 'dealstage' ? $event.id : $event.value,
             dataType === 'MultiPicklist' ? true : false,
           )
         "
@@ -192,7 +199,7 @@
       </div>
     </div>
 
-    <div class="field-container" v-else>Can't update {{ dataType }} fields... yet</div>
+    <div class="field-container" v-else>...</div>
   </div>
 </template>
 
@@ -234,10 +241,12 @@ export default {
     resourceType: {
       type: String,
     },
+    resource: {},
     field: {},
   },
   methods: {
     setUpdateValues(key, val, multi) {
+      console.log(key, val)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
