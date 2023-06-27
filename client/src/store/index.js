@@ -35,6 +35,7 @@ const state = {
   allLeads: [],
   messages: [],
   currentView: 'home',
+  currentOpp: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
@@ -115,6 +116,9 @@ const mutations = {
   },
   SET_VIEW: (state, payload) => {
     state.currentView = payload
+  },
+  SET_OPP: (state, payload) => {
+    state.currentOpp = payload
   },
   SET_MEETING_DATA: (state, { id, data, success, retry }) => {
     let newData = {}
@@ -203,6 +207,9 @@ const actions = {
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
+  },
+  setCurrentOpp({ commit }, opp) {
+    commit('SET_OPP', opp)
   },
   editMessages({ commit }, {
     id,
@@ -319,13 +326,16 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllLeads({ commit }, filters = []) {
-    try {
-      const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
-      commit('SAVE_ALL_LEADS', res.results)
-    } catch (e) {
-      console.log(e)
+  async loadAllLeads({ state, commit }, filters = []) {
+    if (state.user.crm === 'SALESFORCE') {
+      try {
+        const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
+        commit('SAVE_ALL_LEADS', res.results)
+      } catch (e) {
+        console.log(e)
+      }
     }
+
   },
   async loadPricebooks({ commit }) {
     try {

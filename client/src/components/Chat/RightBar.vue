@@ -46,6 +46,14 @@
             />
 
             <font-awesome-icon
+              v-if="userCRM === 'HUBSPOT'"
+              style="height: 20px; width: 20px; color: #ff7a59"
+              icon="fa-brands fa-hubspot"
+              @click="openInCrm(selectedOpp.integration_id)"
+            />
+
+            <font-awesome-icon
+              v-else
               style="height: 24px; width: 24px; color: #0d9dda"
               icon="fa-brands fa-salesforce"
               @click="openInCrm(selectedOpp.integration_id)"
@@ -222,7 +230,7 @@
                     class="save-close"
                   >
                     <div @click="addFilter()" class="save">
-                      <span v-if="!inlineLoader">&#x2713;</span>
+                      <span>&#x2713;</span>
                     </div>
                     <div @click="clearFilter" class="close">
                       <span>x</span>
@@ -278,19 +286,37 @@
               v-if="!editing || activeField !== field.id"
               class="field"
             >
+              <!-- {{ field.dataType }} -->
               {{
-                selectedOpp['secondary_data'][field.apiName]
-                  ? selectedOpp['secondary_data'][field.apiName]
-                  : '-'
+                field.apiName === 'dealstage'
+                  ? field.options[0][selectedOpp['secondary_data'].pipeline].stages.filter(
+                      (stage) => stage.id === selectedOpp['secondary_data'][field.apiName],
+                    )[0].label
+                  : field.dataType === 'Datetime'
+                  ? formatDateTime(selectedOpp['secondary_data'][field.apiName])
+                  : field.dataType === 'Date'
+                  ? formatDateTime(selectedOpp['secondary_data'][field.apiName])
+                  : field.label === 'Owner' || field.label === 'Deal owner'
+                  ? selectedOpp.owner_ref.full_name
+                  : selectedOpp['secondary_data'][field.apiName] || '-'
               }}
             </div>
             <div style="padding-right: 0.5rem" v-else>
               <InlineFieldEditor
-                :inlinePlaceholder="selectedOpp['secondary_data'][field.apiName]"
+                :inlinePlaceholder="
+                  field.apiName === 'dealstage'
+                    ? field.options[0][selectedOpp['secondary_data'].pipeline].stages.filter(
+                        (stage) => stage.id === selectedOpp['secondary_data'][field.apiName],
+                      )[0].label
+                    : field.label === 'Owner' || field.label === 'Deal owner'
+                    ? selectedOpp.owner_ref.full_name
+                    : selectedOpp['secondary_data'][field.apiName]
+                "
                 :dataType="field.dataType"
                 :apiName="field.apiName"
                 :integrationId="selectedOpp.integrationId"
                 :resourceId="selectedOpp.id"
+                :resource="selectedOpp"
                 :resourceType="userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'"
                 :field="field"
                 :showing="editing"
@@ -347,12 +373,19 @@
 
     <div class="opp-scroll-container" v-else>
       <div
+        @mouseenter.prevent="setTooltip(opp.id)"
+        @mouseleave.prevent="removeTooltip"
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
         :key="opp.id"
       >
-        <p style="margin: 0">{{ opp.name }}</p>
+        <p style="margin: 0">
+          {{ opp.name }}
+        </p>
+        <div :class="{ 'showing-tooltip': showTooltip && hoverId === opp.id }" class="tooltip">
+          {{ opp.name }}
+        </div>
       </div>
       <div style="margin-bottom: 0.25rem" class="space-between">
         <button
@@ -376,17 +409,17 @@ import SlackOAuth from '@/services/slack'
 import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
-import Tooltip from './Tooltip.vue'
 
 export default {
   name: 'RightBar',
   components: {
-    Tooltip,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     InlineFieldEditor,
   },
   data() {
     return {
+      hoverId: null,
+      showTooltip: false,
       view: 'crm',
       mainView: 'pipeline',
       stageValidationFields: {},
@@ -478,7 +511,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiName: 'Name',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'Name' : 'dealname'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -487,7 +520,7 @@ export default {
           name: 'Stage',
           dataType: 'text',
           icon: 'fa-stairs',
-          apiName: 'StageName',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -496,7 +529,7 @@ export default {
           name: 'Close date',
           dataType: 'date',
           icon: 'fa-calendar-plus',
-          apiName: 'CloseDate',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -505,7 +538,7 @@ export default {
           name: 'Amount',
           dataType: 'number',
           icon: 'fa-sack-dollar',
-          apiName: 'Amount',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'Amount' : 'amount'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -553,8 +586,35 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log('log', this.user)
+    },
+    setTooltip(id) {
+      this.hoverId = id
+
+      setTimeout(() => {
+        console.log(id)
+        this.showTooltip = true
+      }, 2000)
+    },
+    removeTooltip() {
+      this.showTooltip = false
+    },
+    formatDate(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
+    },
+    formatDateTime(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      let newDate = input.replace(pattern, '$2/$3/$1')
+      return newDate.split('T')[0]
     },
     switchView(view) {
       if (view !== this.view) {
@@ -639,6 +699,11 @@ export default {
     },
     async addFilter() {
       let filter = []
+      console.log(
+        this.selectedFilter.operator,
+        this.selectedFilter.apiName,
+        this.selectedFilter.value,
+      )
       filter = [
         this.selectedFilter.operator,
         this.selectedFilter.apiName,
@@ -680,10 +745,16 @@ export default {
     },
     openInCrm(id) {
       let url
-      url =
-        this.user.crm === 'SALESFORCE'
-          ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
-          : ''
+
+      if (this.user.crm === 'HUBSPOT') {
+        url = `https://app.hubspot.com/contacts/${this.user.hubspotAccountRef.hubspotAppId}/record/0-3/${id}`
+      } else {
+        url =
+          this.user.crm === 'SALESFORCE'
+            ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
+            : ''
+      }
+
       window.open(url, '_blank')
     },
     clearText() {
@@ -698,6 +769,7 @@ export default {
         opp = this.opportunities.filter((opp) => opp.name === name)[0]
         if (opp) {
           this.selectedOpp = opp
+          this.$store.dispatch('setCurrentOpp', opp)
         } else {
           this.selectedOpp = null
           this.searchText = name
@@ -707,6 +779,7 @@ export default {
             let opp
             opp = this.opportunities.filter((opp) => opp.name === this.searchText)[0]
             this.selectedOpp = opp
+            this.$store.dispatch('setCurrentOpp', opp)
           }, 300)
         }
       }
@@ -1380,54 +1453,6 @@ img {
   filter: invert(40%);
 }
 
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: $dark-green;
-  color: white;
-  text-align: center;
-  padding: 0.5rem 0.25rem;
-  border-radius: 4px;
-
-  /* Position the tooltip text - see examples below! */
-  position: absolute;
-  z-index: 1;
-  top: 100%;
-  left: 50%;
-  margin-left: -90px; /* Use half of the width to center the tooltip */
-  margin-top: 4px;
-
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  opacity: 1;
-}
-
-.tooltip:hover {
-  img {
-    filter: invert(54%) sepia(76%) saturate(330%) hue-rotate(101deg) brightness(98%) contrast(89%);
-  }
-}
-
-.tooltip .tooltiptext::after {
-  content: ' ';
-  position: absolute;
-  bottom: 100%; /* At the top of the tooltip */
-  left: 75%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent $dark-green transparent;
-}
-
 //  ALL THE FILTER STYLES BELOW , WILL BE MOING THESE TO THE COMPONENT WHEN IT'S READY
 .filter-count {
   color: $dark-green;
@@ -1707,5 +1732,63 @@ img {
   padding: 0.75rem 0.5rem;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tooltip {
+  display: block;
+  width: fit-content;
+  height: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 14px;
+  background: $base-gray;
+  color: white;
+  padding: 0.75rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 20;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    p {
+      margin: 0;
+      padding: 0;
+      margin-top: 0.25rem;
+    }
+
+    p:last-of-type {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+}
+
+.tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $base-gray;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.showing-tooltip {
+  top: -50px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
 }
 </style>
