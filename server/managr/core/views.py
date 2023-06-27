@@ -418,10 +418,9 @@ def submit_chat_prompt(request):
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
                     if token_amount <= 2000:
-                        res = {
-                            "res": "Look like your prompt message is too long to process. Try removing white spaces!",
+                        message = {
+                            "value": "Look like your prompt message is too long to process. Try removing white spaces!",
                         }
-                        return Response(data=res)
                     else:
                         token_amount += 500
                         continue
@@ -471,6 +470,7 @@ def submit_chat_prompt(request):
                             form.save()
                         else:
                             has_error = True
+                            message = 'Invalid Submission'
                             break
                     else:
                         if user.crm == "SALESFORCE":
@@ -489,6 +489,7 @@ def submit_chat_prompt(request):
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
+                    message = ''
                 break
             else:
                 if attempts >= 5:
@@ -502,7 +503,6 @@ def submit_chat_prompt(request):
                 has_error = True
                 message = "There was an error communicating with Open AI"
                 logger.exception(f"Read timeout from Open AI {e}")
-                return Response(data={'res': message})
             else:
                 attempts += 1
                 continue
@@ -514,11 +514,10 @@ def submit_chat_prompt(request):
                 if resource_check is None
                 else f" We could not find a {data['resource_type']} named {resource_check} because of {e}"
             )
-            return Response(data={"res": message})
 
     if has_error:
         res = {"value": f"There was an error processing chat submission {message}"}
-        return Response(data=res)
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
 
@@ -533,7 +532,8 @@ def submit_chat_prompt(request):
             "integrationId": resource.integration_id,
             "formType": form_type,
             "resourceType": request.data["resource_type"],
-        }
+        },
+        status=status.HTTP_200_OK
     )
 
 

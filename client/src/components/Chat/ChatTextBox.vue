@@ -121,19 +121,28 @@ export default {
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
           })
           this.chatRes = res
-          this.$emit('set-message', {
-            user: 'bot',
-            id: this.chatRes['id'],
-            value: this.chatRes['res'][0],
-            resource: this.chatRes['resource'][0],
-            formId: this.chatRes['form'],
-            data: this.chatRes['data'],
-            resourceId: this.chatRes['resourceId'],
-            formType: this.chatRes['formType'],
-            integrationId: this.chatRes['integrationId'],
-            resourceType: this.chatRes['resourceType'],
-            updated: false,
-          })
+          if (this.chatRes.status === 400) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: this.chatRes.value,
+            })
+          } else {
+            this.$emit('set-message', {
+              user: 'bot',
+              id: this.chatRes['id'],
+              value: this.chatRes['res'][0],
+              resource: this.chatRes['resource'][0],
+              formId: this.chatRes['form'],
+              data: this.chatRes['data'],
+              resourceId: this.chatRes['resourceId'],
+              formType: this.chatRes['formType'],
+              integrationId: this.chatRes['integrationId'],
+              resourceType: this.chatRes['resourceType'],
+              updated: false,
+            })
+          }
           this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
         } catch (e) {
           console.log(e)
