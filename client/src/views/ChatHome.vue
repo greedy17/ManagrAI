@@ -174,7 +174,7 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @toggle-chat-modal="toggleChatModal" />
+      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" />
     </main>
     <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings
@@ -406,7 +406,7 @@ body {
 }
 
 #left-sidebar {
-  width: 280px !important;
+  width: 260px;
 }
 
 #main {
@@ -643,7 +643,7 @@ body {
   }
 }
 .full-width {
-  width: 280px !important;
+  width: 260px !important;
 }
 .profile-level-p {
   width: 60px;
