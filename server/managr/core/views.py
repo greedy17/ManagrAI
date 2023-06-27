@@ -2,6 +2,7 @@ import logging
 import requests
 import textwrap
 import json
+import uuid
 import httpx
 from django.utils import timezone
 import calendar
@@ -417,10 +418,9 @@ def submit_chat_prompt(request):
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
                     if token_amount <= 2000:
-                        res = {
+                        message = {
                             "value": "Look like your prompt message is too long to process. Try removing white spaces!",
                         }
-                        return Response(data=res)
                     else:
                         token_amount += 500
                         continue
@@ -470,6 +470,7 @@ def submit_chat_prompt(request):
                             form.save()
                         else:
                             has_error = True
+                            message = 'Invalid Submission'
                             break
                     else:
                         if user.crm == "SALESFORCE":
@@ -488,6 +489,7 @@ def submit_chat_prompt(request):
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
+                    message = ''
                 break
             else:
                 if attempts >= 5:
@@ -501,7 +503,6 @@ def submit_chat_prompt(request):
                 has_error = True
                 message = "There was an error communicating with Open AI"
                 logger.exception(f"Read timeout from Open AI {e}")
-                return Response(data=message)
             else:
                 attempts += 1
                 continue
@@ -513,11 +514,10 @@ def submit_chat_prompt(request):
                 if resource_check is None
                 else f" We could not find a {data['resource_type']} named {resource_check} because of {e}"
             )
-            return Response(data={"res": [message]})
 
     if has_error:
         res = {"value": f"There was an error processing chat submission {message}"}
-        return Response(data=res)
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
 
@@ -532,7 +532,8 @@ def submit_chat_prompt(request):
             "integrationId": resource.integration_id,
             "formType": form_type,
             "resourceType": request.data["resource_type"],
-        }
+        },
+        status=status.HTTP_200_OK
     )
 
 
@@ -599,6 +600,7 @@ def get_chat_summary(request):
                 return Response(data={**r, "res": message_string_for_recap})
     except Exception as e:
         return Response(data={"res": [e]})
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -709,12 +711,12 @@ def log_chat_meeting(request):
                 else:
                     has_error = True
                 break
-              
+
         except StopReasonLength:
             if token_amount <= 2000:
                 return Response(
-                    data={      
-                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",   
+                    data={
+                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",
                     }
                 )
             else:
@@ -748,14 +750,10 @@ def log_chat_meeting(request):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-        return Response(
-                data={
-                    "data": message, 
-                }
-            )
-        
+        return Response(data={"data": message,})
+
     if not has_error:
-        
+
         if workflow_id:
             if not has_error:
                 form.workflow = workflow
@@ -764,12 +762,8 @@ def log_chat_meeting(request):
                 workflow.resource_type = resource_type
                 workflow.resource_id = str(resource.id)
                 workflow.save()
-    return Response(
-                data={
-                    **r,
-                    "data": cleaned_data,   
-                }
-            )
+    return Response(data={**r, "data": cleaned_data,})
+
 
 def field_syncs():
     queue_users_sf_fields()
@@ -853,7 +847,7 @@ class UserLogoutView(generics.GenericAPIView):
         redirect(f"{url}/login")
         logout(request)
         user.access_token.revoke()
-        return 
+        return
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -1483,6 +1477,9 @@ def email_auth_token(request):
                 name=account["name"],
                 user=request.user,
                 event_calendar_id=calendar_id,
+            )
+            emit_process_calendar_meetings(
+                str(request.user.id), f"calendar-meetings-{request.user.email}-{str(uuid.uuid4())}"
             )
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:
