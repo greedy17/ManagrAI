@@ -1,4 +1,3 @@
-from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -9,13 +8,14 @@ from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
 from .models import User, UserActivity, UserForecast, NoteTemplate
 from managr.organization.models import Team
+from managr.api.models import ManagrToken
 
 
 @receiver(post_save, sender=User)
 def create_auth_token(sender, instance, created, **kwargs):
     """When a new user is created, automatically generate an auth token for them."""
     if created:
-        Token.objects.create(user=instance)
+        ManagrToken.objects.create(user=instance, assigned_user=instance)
 
 
 @receiver(post_save, sender=CompletedTask)
