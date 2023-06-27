@@ -53,7 +53,7 @@
             </div>
           </div>
 
-          <div style="padding: 0 0.5rem" v-else-if="templates.list.length">
+          <div style="padding: 0 0.5rem; position: relative" v-else-if="templates.list.length">
             <div
               :class="{
                 'active-view': currentView.title === alert.title,

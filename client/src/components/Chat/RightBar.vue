@@ -373,8 +373,8 @@
 
     <div class="opp-scroll-container" v-else>
       <div
-        @mouseenter.prevent="setTooltip(opp.id)"
-        @mouseleave.prevent="removeTooltip"
+        @mouseenter="setTooltip(opp.id)"
+        @mouseleave="removeTooltip"
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
@@ -593,12 +593,12 @@ export default {
       this.hoverId = id
 
       setTimeout(() => {
-        console.log(id)
         this.showTooltip = true
       }, 2000)
     },
     removeTooltip() {
       this.showTooltip = false
+      this.hoverId = null
     },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -761,6 +761,7 @@ export default {
       this.searchText = ''
     },
     changeSelectedOpp(opp, name) {
+      this.hoverId = null
       this.loadMorePage = 0
       if (opp) {
         this.selectedOpp = opp
