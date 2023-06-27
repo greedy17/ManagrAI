@@ -1745,7 +1745,7 @@ img {
   font-size: 14px;
   background: $base-gray;
   color: white;
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem;
   border-radius: 5px;
   box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
   opacity: 0;
@@ -1786,7 +1786,7 @@ img {
 }
 
 .showing-tooltip {
-  top: -50px;
+  top: -40px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;

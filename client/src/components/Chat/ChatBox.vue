@@ -11,13 +11,13 @@
         <img style="margin-right:.5rem" class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
         clear
       </div> -->
-      <button class="small-button">
+      <!-- <button class="small-button">
         <img class="dampen" src="@/assets/images/cloud.svg" height="16px" alt="" />
         sync
-      </button>
+      </button> -->
       <button @click="clearMessages" class="small-button">
-        <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
-        clear
+        <img class="dampen" src="@/assets/images/cross-circle.svg" height="12px" alt="" />
+        Clear chat
       </button>
     </header>
     <div class="margin-top" ref="chatWindow">
@@ -166,7 +166,7 @@
                 <span
                   style="
                     font-size: 20px;
-                    margin-right: 1rem;
+                    margin-right: .5rem;
                     padding-top: 0.5rem;
                     margin-left: -3rem
                     margin-top: 0.5rem;
@@ -523,7 +523,7 @@ export default {
   }
 }
 .margin-top {
-  margin-top: 3.25rem;
+  margin-top: 4rem;
   height: 96%;
   overflow-y: scroll;
 }
@@ -555,7 +555,7 @@ export default {
 
 .images {
   padding: 0;
-  margin: 0 1rem 0 0;
+  margin: 0 0.5rem 0 0;
 }
 
 .bottom {
@@ -588,8 +588,8 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  padding: 0.5rem 1rem;
-  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: flex-end;
