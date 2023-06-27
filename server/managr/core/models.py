@@ -14,7 +14,6 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousU
 from django.db.models import Q
 from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField, ArrayField
-
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath, phrase_to_snake_case
 from managr.utils.client import HttpClient
@@ -236,9 +235,11 @@ class User(AbstractUser, TimeStampModel):
         return self.magic_token
 
     def login(self, request, serializer_type):
+        from managr.api.models import ManagrToken
+
         """Log in user and append authentication token to serialized response."""
         login(request, self, backend="django.contrib.auth.backends.ModelBackend")
-        auth_token, _ = Token.objects.get_or_create(user=self)
+        auth_token, _ = ManagrToken.objects.get_or_create(user=self)
 
         serializer = serializer_type(self, context={"request": request})
         response_data = serializer.data
