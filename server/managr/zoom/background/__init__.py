@@ -565,23 +565,44 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         logger.warning(f"Zoom schedule error: {e}")
 
 
+def quote_replacer(string):
+    import re
+
+    start_regex = '[a-zA-Z] "[a-zA-Z]'
+    end_regex = '[a-zA-Z]" [a-zA-Z]'
+    while True:
+        if re.search(start_regex, string):
+            start_index = re.search(start_regex, string)
+            string = string[: start_index.end() - 2] + "\\" + string[start_index.end() - 2 :]
+            end_index = re.search(end_regex, string)
+            string = string[: end_index.start() + 1] + "\\" + string[end_index.start() + 1 :]
+        else:
+            break
+    return string
+
+
 def clean_prompt_string(prompt_string):
+    random_bracket_insert_check = prompt_string[:5].find("}")
+    if random_bracket_insert_check == 0:
+        prompt_string = prompt_string[1:]
     cleaned_string = (
         prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
         .replace("\n\n", "")
         .replace("\n ", "")
         .replace("\n", "")
-        .replace("  ", "")
-        .replace("', '", '", "')
-        .replace("': '", '": "')
-        .replace("{'", '{"')
-        .replace("','", '","')
-        .replace("':", '":')
-        .replace(", '", ', "')
+        .replace("'s", "@s")
+        .replace(" @s", " 's")
+        .replace('"', '\\"')
+        # .replace("', '", '", "')
+        # .replace("': '", '": "')
+        .replace("@s", "'s")
     )
+    # clean_string = quote_replacer(prompt_string)
+    while "  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("  ", "")
     while "{  " in cleaned_string:
         cleaned_string = cleaned_string.replace("{  ", "{ ")
-    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
+    # cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
     return cleaned_string
 
 
@@ -1010,6 +1031,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
+                            print(r)
                             r = _handle_response(r)
                             if not settings.IN_PROD:
                                 logger.info(f"Summary response: {r}")
@@ -1019,6 +1041,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             viable_data = data
                         else:
                             data = viable_data
+                        if not settings.IN_PROD:
+                            print(f"DATA: {data}")
                         combined_summary = (
                             data.pop("summary", None)
                             if data.get("summary", None)
