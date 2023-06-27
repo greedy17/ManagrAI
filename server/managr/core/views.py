@@ -2,24 +2,26 @@ import logging
 import requests
 import textwrap
 import json
+import uuid
 import httpx
 from django.utils import timezone
 import calendar
 from django.core import serializers
+from managr.utils.misc import get_site_url
 from dateutil.parser import parse
+from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
 from datetime import datetime
 
-from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework import (
     filters,
@@ -38,6 +40,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
+from managr.api.models import ManagrToken
 from managr.utils import sites as site_utils
 from managr.core.utils import pull_usage_data, get_user_totals
 from managr.slack.helpers import requests as slack_requests, block_builders
@@ -406,11 +409,7 @@ def submit_chat_prompt(request):
             # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             Client = Variable_Client(timeout)
             with Client as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=OPEN_AI_HEADERS,
-                )
+                r = client.post(url, data=json.dumps(body), headers=OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
 
@@ -550,11 +549,7 @@ def draft_follow_up(request):
         try:
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
@@ -575,11 +570,7 @@ def chat_next_steps(request):
         try:
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
@@ -595,27 +586,21 @@ def get_chat_summary(request):
     user = User.objects.get(id=request.data["id"])
 
     cleaned_data = clean_data_for_summary(
-        str(user.id),
-        request.data["data"],
-        request.data["integrationId"],
-        request.data["resource"],
+        str(user.id), request.data["data"], request.data["integrationId"], request.data["resource"],
     )
     try:
         summary_prompt = core_consts.OPEN_AI_SUMMARY_PROMPT(cleaned_data)
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, 500, top_p=0.1)
         url = core_consts.OPEN_AI_COMPLETIONS_URI
         with Client as client:
-            r = client.post(
-                url,
-                data=json.dumps(body),
-                headers=core_consts.OPEN_AI_HEADERS,
-            )
+            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 message_string_for_recap = r["choices"][0]["text"]
                 return Response(data={**r, "res": message_string_for_recap})
     except Exception as e:
         return Response(data={"res": [e]})
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -726,12 +711,12 @@ def log_chat_meeting(request):
                 else:
                     has_error = True
                 break
-              
+
         except StopReasonLength:
             if token_amount <= 2000:
                 return Response(
-                    data={      
-                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",   
+                    data={
+                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",
                     }
                 )
             else:
@@ -765,14 +750,10 @@ def log_chat_meeting(request):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-        return Response(
-                data={
-                    "data": message, 
-                }
-            )
-        
+        return Response(data={"data": message,})
+
     if not has_error:
-        
+
         if workflow_id:
             if not has_error:
                 form.workflow = workflow
@@ -781,12 +762,8 @@ def log_chat_meeting(request):
                 workflow.resource_type = resource_type
                 workflow.resource_id = str(resource.id)
                 workflow.save()
-    return Response(
-                data={
-                    **r,
-                    "data": cleaned_data,   
-                }
-            )
+    return Response(data={**r, "data": cleaned_data,})
+
 
 def field_syncs():
     queue_users_sf_fields()
@@ -848,14 +825,29 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             )
         login(request, user)
         # create token if one does not exist
-        Token.objects.get_or_create(user=user)
-
+        ManagrToken.objects.get_or_create(user=user, assigned_user=user)
+        if user.access_token.is_expired:
+            user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
         serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
-        response_data["token"] = user.auth_token.key
+        response_data["token"] = user.access_token.key
         return Response(response_data)
+
+
+class UserLogoutView(generics.GenericAPIView):
+    authentication_classes = ()
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+
+        user = self.request.user
+        url = get_site_url()
+        redirect(f"{url}/login")
+        logout(request)
+        user.access_token.revoke()
+        return
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -1019,13 +1011,13 @@ class UserViewSet(
                 user.save()
                 login(request, user)
                 # create token if one does not exist
-                Token.objects.get_or_create(user=user)
+                ManagrToken.objects.get_or_create(user=user)
 
                 # Build and send the response
                 serializer = UserSerializer(user, context={"request": request})
 
                 response_data = serializer.data
-                response_data["token"] = user.auth_token.key
+                response_data["token"] = user.access_token.key
                 return Response(response_data)
 
             else:
@@ -1186,10 +1178,7 @@ class UserViewSet(
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-        methods=["GET"],
-        permission_classes=(IsStaff,),
-        detail=False,
-        url_path="admin-tasks",
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
     )
     def admin_tasks(self, request, *args, **kwargs):
         tasks = CompletedTask.objects.all()[:100]
@@ -1197,10 +1186,7 @@ class UserViewSet(
         return Response(data={"tasks": dict_tasks})
 
     @action(
-        methods=["GET"],
-        permission_classes=(IsStaff,),
-        detail=False,
-        url_path="admin-users",
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
     )
     def admin_users(self, request, *args, **kwargs):
         param = request.query_params.get("org_id", None)
@@ -1232,6 +1218,60 @@ class UserViewSet(
         serialized = UserTrialSerializer(users, many=True)
         return Response(data=serialized.data, status=status.HTTP_200_OK)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="revoke-token",
+    )
+    def revoke_token(self, request, *args, **kwargs):
+        token = request.data.get("token", None)
+        if not token:
+            raise ValidationError(
+                {"detail": {"key": "field_error", "message": "Token is required", "field": "token"}}
+            )
+        user_id = request.data.get("user_id", None)
+        if not user_id:
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "field_error",
+                        "message": "user id is required",
+                        "field": "user_id",
+                    }
+                }
+            )
+        user = User.objects.filter(id=user_id)
+        token = user.access_token.revoke()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="refresh-token",
+    )
+    def refresh_token(self, request, *args, **kwargs):
+        token = request.data.get("token", None)
+        if not token:
+            raise ValidationError(
+                {"detail": {"key": "field_error", "message": "Token is required", "field": "token"}}
+            )
+        user_id = request.data.get("user_id", None)
+        if not user_id:
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "field_error",
+                        "message": "user id is required",
+                        "field": "user_id",
+                    }
+                }
+            )
+        user = User.objects.filter(id=user_id)
+        token = user.access_token.refresh(user.access_token)
+        return Response({"detail": "User token has been successfully refreshed"})
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -1247,8 +1287,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1256,9 +1295,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -1373,9 +1410,7 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     u = request.user
@@ -1442,6 +1477,9 @@ def email_auth_token(request):
                 name=account["name"],
                 user=request.user,
                 event_calendar_id=calendar_id,
+            )
+            emit_process_calendar_meetings(
+                str(request.user.id), f"calendar-meetings-{request.user.email}-{str(uuid.uuid4())}"
             )
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:
@@ -1615,9 +1653,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -1651,9 +1687,7 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def get_task_status(request):
     data = {}

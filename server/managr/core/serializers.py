@@ -196,11 +196,13 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def login(user, request):
+        from managr.api.models import ManagrToken
+
         """
         Log-in user and append authentication token to serialized response.
         """
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        auth_token, _ = Token.objects.get_or_create(user=user)
+        auth_token, _ = ManagrToken.objects.get_or_create(assigned_user=user)
         serializer = UserSerializer(user, context={"request": request})
         response_data = serializer.data
         response_data["token"] = auth_token.key
