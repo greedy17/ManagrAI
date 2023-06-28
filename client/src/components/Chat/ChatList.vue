@@ -14,7 +14,8 @@
         </button>
 
         <button @click="toggleAddField" class="small-button">
-          <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+          <!-- <img src="@/assets/images/plusOne.svg" height="12px" alt="" /> -->
+          <span>+ / -</span>
 
           Column
         </button>
@@ -69,6 +70,8 @@
             <th>Close Date</th>
             <th v-for="(field, i) in extraPipelineFields" :key="i">
               {{ field.label }}
+
+              <!-- <img class="left-margin" src="@/assets/images/trash.svg" height="10px" alt="" /> -->
             </th>
           </tr>
         </thead>
@@ -249,6 +252,19 @@ export default {
         }, 1000)
       }
     },
+
+    async removeField(id) {
+      try {
+        const res = await SObjects.api.removeExtraField({
+          field_ids: [id],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        // this.cancelRemoveField()
+        // this.emitSetOpps()
+      }
+    },
   },
   computed: {
     user() {
@@ -319,6 +335,15 @@ export default {
   color: $base-gray;
 }
 
+::v-deep .multiselect__tag {
+  background-color: $soft-gray;
+  color: $base-gray;
+}
+
+.left-margin {
+  margin-left: 1rem;
+}
+
 .chat-button {
   @include chat-button();
   padding: 0.7rem 1rem;
@@ -347,6 +372,10 @@ export default {
   img {
     margin: 0;
     margin-right: 0.25rem;
+  }
+
+  span {
+    margin-right: 0.5rem;
   }
 
   &:disabled {
@@ -531,13 +560,16 @@ thead tr th {
 }
 th {
   text-align: left;
-  max-width: 100px;
+  max-width: 120px;
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 td {
   max-width: 300px;
+  min-width: 120px;
+  max-height: 90px;
+  overflow-y: scroll;
 }
 th,
 td {
@@ -554,12 +586,13 @@ td:first-of-type {
   z-index: 2;
   background-color: white;
   cursor: pointer;
-  min-width: 120px;
-  max-width: 220px;
+  min-width: 150px;
+
   span {
     background-color: $off-white;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem 0.75rem 1rem;
     border-radius: 5px;
+    max-width: 290px !important;
   }
 }
 

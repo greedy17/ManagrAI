@@ -94,7 +94,7 @@
           <div v-else>
             <div class="menu-item">
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p>No active lists</p>
+              <p style="color: #9596b4">No active lists</p>
             </div>
           </div>
         </section>

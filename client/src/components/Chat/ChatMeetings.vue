@@ -235,9 +235,10 @@
           :disabled="submitting"
           v-if="!meetingData[meeting.id]"
           @click="logMeeting(meeting)"
-          class="main-button"
+          class="main-button secondary"
         >
-          <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> Log meeting
+          <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
+          Log meeting
         </button>
 
         <div v-else>
@@ -742,6 +743,12 @@ button {
     filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(90%) contrast(87%);
   }
 }
+
+.secondary {
+  color: $dark-green;
+  border: 1px solid $dark-green;
+}
+
 .green-chat-button {
   @include chat-button();
   background-color: $dark-green;
