@@ -66,8 +66,25 @@
                 </div>
               </div>
 
-              <div v-else style="margin-top: 1.5rem" class="row">
+              <div v-else style="margin-top: 1.5rem">
+                <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
+                  <div class="space-between">
+                    <small>Provide any additional instructions below:</small>
+
+                    <p @click="closeInstructions">x</p>
+                  </div>
+
+                  <textarea
+                    v-model="instructionText"
+                    class="inline-input"
+                    v-autoresize
+                    autofocus="true"
+                    rows="1"
+                  />
+                </div>
+
                 <button
+                  v-if="!addingInstructions"
                   style="margin-bottom: 0.25rem"
                   @click="
                     regenerate(
@@ -92,6 +109,24 @@
                   />
                   Regenerate
                 </button>
+
+                <button
+                  v-else
+                  style="margin-bottom: 0.25rem"
+                  @click="
+                    regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
+                  "
+                  class="content-button padding-small"
+                >
+                  <img
+                    style="margin-right: 0.6rem"
+                    class="gold-filter"
+                    src="@/assets/images/sparkle.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Regenerate
+                </button>
               </div>
             </div>
           </div>
@@ -100,6 +135,7 @@
         <div
           v-if="message.user === 'bot' && message.formId && !message.updated"
           class="generate-container"
+          style="margin-left: -0.5rem"
         >
           <button @click="toggleChatModal(message)" class="generate-button green">
             <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
@@ -240,6 +276,8 @@ export default {
       selectedIndex: null,
       generativeRes: null,
       generatingId: null,
+      addingInstructions: false,
+      instructionText: null,
     }
   },
   watch: {
@@ -249,22 +287,27 @@ export default {
     regenerate(type, data, editId, sumObj) {
       this.generatingId = editId
       if (type === 'email') {
-        this.regenerateEmail(data, editId)
+        this.addingInstructions = true
       } else if (type === 'next') {
         this.regenerateNext(data, editId)
       } else {
         this.regenerateSummary(editId, sumObj)
       }
     },
+    closeInstructions() {
+      this.addingInstructions = false
+      this.instructionText = null
+    },
     clearMessages() {
       this.$store.dispatch('clearMessages')
     },
-    async regenerateEmail(note, editId) {
+    async regenerateEmail(instructions, note, editId) {
       this.generating = true
       try {
         let res = await User.api.chatEmail({
           id: this.user.id,
           notes: note,
+          instructions: instructions,
         })
         this.generativeRes = res
       } catch (e) {
@@ -274,7 +317,9 @@ export default {
           id: editId,
           value: this.generativeRes['res'],
         })
+        this.instructionText = null
         this.generating = false
+        this.addingInstructions = false
       }
     },
     async regenerateNext(note, editId) {
@@ -321,6 +366,7 @@ export default {
         let res = await User.api.chatEmail({
           id: this.user.id,
           notes: note,
+          instructions: null,
         })
         this.generativeRes = res
       } catch (e) {
@@ -428,6 +474,20 @@ export default {
   created() {
     this.scrollToBottom()
   },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
+        adjustTextareaHeight()
+      },
+    },
+  },
   // beforeRouteLeave() {
   //   this.$store.dispatch('updateChatTitle', 'All Open Opportunities')
   // },
@@ -491,9 +551,50 @@ export default {
 
 .row {
   display: flex;
-  justify-content: row;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 1rem;
+}
+
+.space-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  p {
+    margin-top: 0;
+    margin-right: 0.25rem !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0 6px !important;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+}
+
+.inline-input {
+  outline: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  color: $base-gray;
+  width: 100%;
+  font-family: $base-font-family;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  resize: none;
+  margin: 0.75rem 0;
 }
 
 .chat-container {
@@ -517,7 +618,7 @@ export default {
   justify-content: flex-start;
   margin: 0;
   width: 100%;
-  padding: 0.5rem 1.5rem;
+  padding: 0 1.5rem;
 
   p {
     padding: 0;
@@ -528,6 +629,11 @@ export default {
     background-color: $off-white !important;
   }
 }
+
+.message-container:first-of-type {
+  padding-top: 0.5rem;
+}
+
 .margin-top {
   margin-top: 4rem;
   height: 96%;

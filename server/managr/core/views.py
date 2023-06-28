@@ -542,9 +542,18 @@ def submit_chat_prompt(request):
 def draft_follow_up(request):
 
     user = User.objects.get(id=request.data["id"])
-    prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    instructions = request.data["instructions"]
+    if not instructions:
+        print('goooood, no INSTRUCTIONS')
+        prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    else:
+        print('goooood', instructions)
+        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(request.data["notes"], instructions)
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)    
+    
     attempts = 1
+
     while True:
         try:
             with Client as client:
@@ -555,7 +564,7 @@ def draft_follow_up(request):
                 text = r.get("choices")[0].get("text")
                 return Response(data={**r, "res": text})
         except Exception as e:
-            return Response(data={"res": [e]})
+            return Response({"data": e})        
 
 
 @api_view(["post"])
@@ -599,7 +608,7 @@ def get_chat_summary(request):
                 message_string_for_recap = r["choices"][0]["text"]
                 return Response(data={**r, "res": message_string_for_recap})
     except Exception as e:
-        return Response(data={"res": [e]})
+        return Response(data={"data": e})
 
 
 @api_view(["post"])
