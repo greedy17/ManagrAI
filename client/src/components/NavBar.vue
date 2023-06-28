@@ -293,6 +293,11 @@
             <span class="tooltiptext">Onboarding</span>
           </div>
         </router-link>
+        <router-link :to="{ name: 'Login' }" style="position: absolute; bottom: 3%; left: 3%;">
+          <div style="margin-left: 5px">
+            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
+          </div>
+        </router-link>
       </div>
     </nav>
   </div>
