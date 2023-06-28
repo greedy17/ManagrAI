@@ -86,18 +86,16 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript: f"""'input': {transcript},'prompt': 'Analyze and summarize a 5-minute sales call transcript section within 500-800 characters, 
-capturing key sales-related details such as: identified pain, value proposition, product specifics, decision maker, decision process and criteria, internal champion, competitors, 
-next steps, decision timeline, plus any budget and cost details.
-The summary must be in paragraph form. You must use this format: \nSummary: <summary>'"""
+    lambda transcript: f"""'input': {transcript},'prompt': 'Analyze and summarize this section of a sales call transcript. 
+Keep summary within 500-800 characters, capturing key sales-related details such as: identified pain, value proposition, 
+product specifics, decision maker, decision process and criteria, internal champion, competitors, next steps, decision timeline, 
+plus any budget and cost details. The summary must be in paragraph form. You must use this format: \nSummary: <summary>'"""
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. 
-The sales rep on this call  is {user.first_name} from {user.organization.name}. 
-Your tasks are as follows:
-1) Fill in all the appropriate data into the relevant CRM fields: {crm_fields}. Leave any non-applicable fields empty.
-2) Compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances.
+    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
+1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty. The output should be a python dictionary.
+2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
 3) Output your results as a Python dictionary. Ensure the date is formatted as 'year-month-day' and the summary is included under the 'summary' key.'"""
 )
 

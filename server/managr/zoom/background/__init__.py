@@ -1031,7 +1031,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
-                            print(r)
+                            # print(r.json())
                             r = _handle_response(r)
                             if not settings.IN_PROD:
                                 logger.info(f"Summary response: {r}")
@@ -1041,8 +1041,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             viable_data = data
                         else:
                             data = viable_data
-                        if not settings.IN_PROD:
-                            print(f"DATA: {data}")
+                        # if not settings.IN_PROD:
+                        #     print(f"DATA: {data}")
                         combined_summary = (
                             data.pop("summary", None)
                             if data.get("summary", None)
