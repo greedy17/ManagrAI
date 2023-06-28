@@ -14,7 +14,8 @@
         </button>
 
         <button @click="toggleAddField" class="small-button">
-          <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+          <!-- <img src="@/assets/images/plusOne.svg" height="12px" alt="" /> -->
+          <span>+ / -</span>
 
           Column
         </button>
@@ -69,6 +70,8 @@
             <th>Close Date</th>
             <th v-for="(field, i) in extraPipelineFields" :key="i">
               {{ field.label }}
+
+              <!-- <img class="left-margin" src="@/assets/images/trash.svg" height="10px" alt="" /> -->
             </th>
           </tr>
         </thead>
@@ -97,7 +100,7 @@
             </td>
 
             <td v-for="(field, i) in extraPipelineFields" :key="i">
-              {{ opp[field.apiName] || '---' }}
+              {{ fieldData(field.dataType, user.crm, field, opp) }}
             </td>
           </tr>
         </tbody>
@@ -131,7 +134,6 @@ export default {
     return {
       message: '',
       extraFields: [],
-      hasExtraFields: [],
       extraFieldObjs: [],
       addingField: false,
       loading: false,
@@ -149,15 +151,46 @@ export default {
   created() {
     this.formFields.refresh()
   },
-  watch: {
-    'user.hubspotAccountRef': {
-      handler() {
-        this.updateExtraFields()
-      },
-      immediate: true,
-    },
-  },
   methods: {
+    test() {
+      console.log(this.user)
+    },
+    fieldData(type, crm, field, opp, owner = null, account = null) {
+      if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
+        return owner || '---'
+      } else if (field.apiName === 'AccountId') {
+        return account || '---'
+      } else if (field.apiName === 'dealstage') {
+        if (field.options[0][opp['secondary_data'].pipeline]) {
+          return (
+            field.options[0][opp['secondary_data'].pipeline].stages.filter(
+              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            )[0].label || '---'
+          )
+        } else return '---'
+      } else if (type === 'Date') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatDate(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else if (type === 'DateTime') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatDateTime(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else if (type === 'Currency') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatCash(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else {
+        return this.fieldConditions(crm, field, opp) ? this.fieldConditions(crm, field, opp) : '---'
+      }
+    },
+    fieldConditions(crm, field, opp) {
+      return crm === 'SALESFORCE'
+        ? field.apiName.includes('__c') || field.apiName.includes('__r')
+          ? opp[field.apiName]
+          : opp[this.capitalizeFirstLetter(this.camelize(field.apiName))]
+        : opp[field.apiName]
+    },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -173,14 +206,6 @@ export default {
       }
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
-    },
-    updateExtraFields() {
-      let accountRef
-      if (this.user.crm) {
-        accountRef =
-          this.$store.state.user.salesforceAccountRef || this.$store.state.user.hubspotAccountRef
-        this.hasExtraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType] || []
-      }
     },
     async reloadWorkflow() {
       this.loading = true
@@ -227,29 +252,41 @@ export default {
         }, 1000)
       }
     },
+
+    async removeField(id) {
+      try {
+        const res = await SObjects.api.removeExtraField({
+          field_ids: [id],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        // this.cancelRemoveField()
+        // this.emitSetOpps()
+      }
+    },
   },
   computed: {
     user() {
       return this.$store.state.user
     },
-    userCrm() {
+    userCRM() {
       return this.$store.state.user.crm
     },
     currentView() {
       return this.$store.state.currentView
     },
-    // hasExtraFields() {
-    //   const accountRef = this.$store.state.user.salesforceAccountRef
-    //     ? this.$store.state.user.salesforceAccountRef
-    //     : this.$store.state.user.hubspotAccountRef
-    //   const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
-    //   return extraFields && extraFields.length ? extraFields : []
-
-    // },
     extraPipelineFields() {
       let extras = []
       extras = this.formFields.list.filter((field) => this.hasExtraFields.includes(field.id))
       return extras
+    },
+    hasExtraFields() {
+      let accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
+      let extraFields = accountRef.extraPipelineFieldsRef['Opportunity']
+      return extraFields && extraFields.length ? extraFields : []
     },
     listNames() {
       if (this.extraPipelineFields) {
@@ -298,6 +335,15 @@ export default {
   color: $base-gray;
 }
 
+::v-deep .multiselect__tag {
+  background-color: $soft-gray;
+  color: $base-gray;
+}
+
+.left-margin {
+  margin-left: 1rem;
+}
+
 .chat-button {
   @include chat-button();
   padding: 0.7rem 1rem;
@@ -326,6 +372,10 @@ export default {
   img {
     margin: 0;
     margin-right: 0.25rem;
+  }
+
+  span {
+    margin-right: 0.5rem;
   }
 
   &:disabled {
@@ -510,13 +560,16 @@ thead tr th {
 }
 th {
   text-align: left;
-  max-width: 100px;
+  max-width: 120px;
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 td {
-  max-width: 200px;
+  max-width: 300px;
+  min-width: 120px;
+  max-height: 90px;
+  overflow-y: scroll;
 }
 th,
 td {
@@ -533,11 +586,13 @@ td:first-of-type {
   z-index: 2;
   background-color: white;
   cursor: pointer;
-  min-width: 120px;
+  min-width: 150px;
+
   span {
     background-color: $off-white;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem 0.75rem 1rem;
     border-radius: 5px;
+    max-width: 290px !important;
   }
 }
 

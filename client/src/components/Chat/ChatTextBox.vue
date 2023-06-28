@@ -31,30 +31,36 @@
     </Transition>
 
     <div class="input-container">
-      <div class="main-text">
-        <span
-          :class="{ activeicon: templatesOpen }"
-          @click="toggleTemplates"
-          style="cursor: pointer; font-size: 14px; margin-bottom: 2px"
-        >
-          ⚡️
-        </span>
+      <div>
         <textarea
           @keydown.enter.exact.prevent="sendMessage"
           class="area-input"
           rows="1"
-          placeholder="What would you like to do?"
+          placeholder="What would you like to do..."
           v-model="message"
           v-autoresize
+          autofocus
           ref="chatTextArea"
         />
-        <font-awesome-icon
-          :class="{ invert: !message }"
-          class="gray"
-          style="margin-bottom: 4px; height: 14px; cursor: pointer"
-          icon="fa-regular fa-paper-plane"
-          @click="sendMessage"
-        />
+        <div class="main-text">
+          <span :class="{ activeicon: templatesOpen }" style="font-size: 14px;margin-left">
+            <img class="gold-filter" src="@/assets/images/bolt.svg" height="12px" alt="" />
+          </span>
+
+          <div>
+            <p @click="addTemplate(action.value)" v-for="(action, i) in actions" :key="i">
+              {{ action.name }}
+            </p>
+          </div>
+
+          <font-awesome-icon
+            :class="{ invert: !message }"
+            class="gray"
+            style="height: 14px; cursor: pointer"
+            icon="fa-regular fa-paper-plane"
+            @click="sendMessage"
+          />
+        </div>
       </div>
     </div>
   </section>
@@ -81,10 +87,10 @@ export default {
       templatesOpen: false,
       chatRes: null,
       actions: [
-        // { name: 'Update Record', value: 'Update Opportunity' },
+        { name: 'Update CRM', value: 'Update ...' },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr' },
-        { name: 'Run Review', value: 'Run Review for Opportunity' },
+        { name: 'Ask Managr', value: 'Ask managr ...  ' },
+        { name: 'Deal Inspection', value: 'Run Review for ...' },
         // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
         // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
@@ -152,7 +158,6 @@ export default {
     },
     addTemplate(val) {
       this.message = val
-      this.toggleTemplates()
     },
 
     toggleTemplates() {
@@ -202,32 +207,60 @@ export default {
   align-items: center;
   padding: 1rem 1rem 0 1rem;
   width: 100%;
-  background-color: white;
+  // background-color: white;
   margin-bottom: -0.25rem;
   position: relative;
 }
 
+.dampen {
+  filter: invert(40%);
+}
+
+.gold-filter {
+  filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(96%) contrast(87%);
+  margin-bottom: -2px;
+}
+
 .main-text {
   display: flex;
-  align-items: flex-end;
-  padding: 0;
+  align-items: center;
+  padding: 0.5rem 0 0.25rem 0;
   margin: 0;
+
+  div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    p {
+      padding: 0.25rem 0.5rem;
+      margin: 0 0.5rem;
+      color: $light-gray-blue;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 12px;
+      background-color: white;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+  }
 }
 
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.2rem 0.75rem 1.2rem;
   border-radius: 6px;
   width: 100%;
-  background-color: white;
+  background-color: $offer-white;
   color: $base-gray;
 }
 
 .area-input {
-  width: 96%;
+  width: 100%;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
   max-height: 250px;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
   line-height: 1.75;
   outline: none;
   border: none;
@@ -349,6 +382,9 @@ export default {
   background-color: #c5c4c4;
   font-size: 10px;
   padding: 4px 6px;
+  border-radius: 100%;
+  margin-left: -4px;
+  margin-right: 0.25rem;
 }
 
 /*
