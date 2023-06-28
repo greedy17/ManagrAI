@@ -27,7 +27,7 @@
             <span v-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
               🤖
             </span>
-            <span v-else-if="message.user === 'bot' && message.updated">
+            <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
               <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
             </span>
 
@@ -116,13 +116,18 @@
               @click="toggleSelectContentOption(i)"
               v-if="!selectingContent || selectedIndex !== i"
               class="generate-button"
+              style="margin-left: -0.75rem"
             >
               <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
               Generate content
             </button>
 
             <div v-else-if="selectingContent && selectedIndex === i">
-              <div style="position: relative; margin-bottom: 0.5rem" class="row" v-if="!generating">
+              <div
+                style="position: relative; margin-bottom: 2rem; margin-left: -0.75rem"
+                class="row"
+                v-if="!generating"
+              >
                 <button
                   @click="generateEmail(message.data['meeting_comments'], message.id)"
                   class="content-button"
@@ -166,15 +171,15 @@
                 <span
                   style="
                     font-size: 20px;
-                    margin-right: .5rem;
-                    padding-top: 0.5rem;
-                    margin-left: -3rem
+                    margin-right: .75rem;
+                    padding-top: 0.75rem;
+                    margin-left: -2.75rem
                     margin-top: 0.5rem;
                   "
                   >🚀</span
                 >
 
-                <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
+                <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
                   <p>Processing your submission</p>
                   <div class="loading">
                     <div class="dot"></div>
@@ -188,9 +193,9 @@
         </div>
       </div>
 
-      <div style="margin-left: 1.5rem" v-show="messageLoading" class="loader-container">
+      <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
         <span
-          style="font-size: 20px; margin-right: 1.1rem; padding-top: 0.5rem; margin-left: 0.25rem"
+          style="font-size: 20px; margin-right: 0.5rem; padding-top: 0.75rem; margin-left: 0.25rem"
           >🚀</span
         >
 
@@ -384,6 +389,7 @@ export default {
         this.selectedIndex = i
       }
       this.selectingContent = !this.selectingContent
+      this.scrollToBottom()
     },
     scrollToBottom() {
       setTimeout(() => {
@@ -548,7 +554,7 @@ export default {
 
 .text-container {
   overflow: scroll;
-  padding: 0.25rem 0.25rem 0 0.25rem;
+  padding: 0.25rem;
   margin: 0;
   line-height: 1.75;
 }

@@ -187,7 +187,7 @@
     </Modal>
 
     <header class="meetings-header">
-      <p @click="test"><span>📅 Today's Meetings: </span>{{ date }}</p>
+      <p @click="test">📅 <span> Today's Meetings: </span>{{ date }}</p>
 
       <button :disabled="loading" @click="refreshCalEvents" class="small-button">
         <img

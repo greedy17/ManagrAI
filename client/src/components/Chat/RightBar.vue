@@ -329,7 +329,8 @@
       </div>
       <div v-show="view === 'notes'" class="selected-opp-section">
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
-          June 2023 <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+          Year: 2023
+          <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
         <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">

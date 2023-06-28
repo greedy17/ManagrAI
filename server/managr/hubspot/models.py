@@ -215,7 +215,7 @@ class HubspotAuthAccount(TimeStampModel):
     hobjects = JSONField(
         default=getHobjectDefaults, help_text="All resources we are retrieving", max_length=500,
     )
-    extra_pipeline_fields = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+    extra_pipeline_fields = ArrayField(models.CharField(max_length=1000), default=list, blank=True)
     hubspot_app_id = models.CharField(max_length=255, blank=True)
 
     class Meta:

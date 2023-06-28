@@ -89,7 +89,7 @@ export default {
       actions: [
         { name: 'Update CRM', value: 'Update ...' },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr' },
+        { name: 'Ask Managr', value: 'Ask managr ...  ' },
         { name: 'Deal Inspection', value: 'Run Review for ...' },
         // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
@@ -224,7 +224,7 @@ export default {
 .main-text {
   display: flex;
   align-items: center;
-  padding: 1rem 0 0.25rem 0;
+  padding: 0.5rem 0 0.25rem 0;
   margin: 0;
 
   div {
@@ -248,7 +248,7 @@ export default {
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.75rem 1.2rem;
+  padding: 1rem 1.2rem 0.75rem 1.2rem;
   border-radius: 6px;
   width: 100%;
   background-color: $offer-white;
@@ -258,6 +258,7 @@ export default {
 .area-input {
   width: 100%;
   background-color: $offer-white;
+  margin-bottom: 0.25rem;
   max-height: 250px;
   padding: 0 1.25rem;
   line-height: 1.75;
