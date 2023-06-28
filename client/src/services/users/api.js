@@ -64,10 +64,14 @@ export default class UserAPI {
   }
 
   async chatUpdate(data) {
-    return this.client
-      .post(CHAT_SUBMISSION, data)
-      .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'User.chatUpdate' }))
+    try {
+      const res = await this.client.post(CHAT_SUBMISSION, data)
+      return res.data
+    } catch(e) {
+      console.log('Error in chatUpdate: ', e)
+      apiErrorHandler({ apiName: 'User.chatUpdate' })
+      return {value: e.response.data.value, status: e.response.status}
+    }
   }
 
   async chatEmail(data) {
@@ -277,7 +281,7 @@ export default class UserAPI {
     const url = GET_USER_ENDPOINT(userId)
     try {
       const response = await this.client.get(url)
-      this.cls.fromAPI(response.data)
+      return this.cls.fromAPI(response.data)
     } catch (e) {
       console.log(e)
       apiErrorHandler({ apiName: 'Get User Profile Data API error' })
