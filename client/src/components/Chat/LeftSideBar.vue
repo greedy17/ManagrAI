@@ -85,9 +85,9 @@
       </div>
 
       <footer>
-        <div @click="sendNewEmailTest" class="menu-item">
+        <!-- <div @click="sendNewEmailTest" class="menu-item">
           <p>Test</p>
-        </div>
+        </div> -->
         <div class="menu-item">
           <img style="margin-left: -3px" src="@/assets/images/settings.svg" height="18px" alt="" />
           <p>Settings</p>

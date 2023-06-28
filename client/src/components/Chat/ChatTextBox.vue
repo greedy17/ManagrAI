@@ -147,7 +147,6 @@ export default {
       }
     },
     addNewLine() {
-      console.log('here')
       this.message += '\n'
     },
     addTemplate(val) {

@@ -246,8 +246,6 @@ export default {
     async onSubmit() {
       this.registrationForm.validate()
 
-      console.log('this.registrationForm', this.registrationForm)
-
       if (!this.registrationForm.isValid) {
         this.$toast('Please complete all fields.', {
           timeout: 2000,

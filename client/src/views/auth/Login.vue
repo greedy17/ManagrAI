@@ -202,7 +202,6 @@ export default {
       let user
       try {
         let res = await Salesforce.api.connect(this.$route.query.code)
-        console.log('RESPONSE IS HERE: ', res)
         // key = res.key
         // user = res.user
         // delete user.token
@@ -301,9 +300,6 @@ export default {
       
       try {
         const res = await myMSALObj.loginPopup(authRequest)
-        // console.log('res.accessToken', res.accessToken)
-        // const res = await cca.acquireTokenByPopup(authRequest)
-        console.log('res.accessToken', res.accessToken)
       } catch (e){
         console.log('Error during sign-in:', e)
       }
@@ -314,43 +310,30 @@ export default {
     },
     async onGoogleSignIn(response) {
       // Handle the Google Sign-In response
-      console.log('response from google', response)
       if (response.credential) {
         const idToken = response.credential
-        console.log('idToken', idToken)
         const verifiedToken = await this.verifyIdToken(idToken)
 
-        console.log('verifiedToken', verifiedToken)
-
-        const { name, email } = verifiedToken;
-
-        console.log('User name:', name);
-        console.log('User email:', email);
+        const { email } = verifiedToken;
 
         if (verifiedToken) {
           // Use the token for authentication or further processing
-          console.log('Google ID token:', verifiedToken);
           this.newToken = true
           // When logging out, call this function again, but with verifiedToken being an empty object
           this.$store.dispatch('updateGoogleSignIn', verifiedToken)
-          console.log('this.newToken 2', this.newToken)
 
           // Call get endpoint for user by email
           // const userEmail = await User.api.getUserByEmail(email)
           let userEmail
           try {
             const emailRes = await User.api.checkStatus(email)
-            console.log('emailRes', emailRes)
             userEmail = true
           } catch(e) {
-            console.log(e)
             userEmail = false
           }
-          console.log('userEmail', userEmail)
           if (userEmail) {
             // Log in with SSO endpoint if they have an account
             const response = await User.api.loginSSO({ email })
-            console.log('google response', response)
             let token = response.data.token
             let userData = response.data
             delete userData.token
