@@ -129,8 +129,9 @@
                   Regenerate
                 </button>
 
-                <!-- if regenerate returns an error, it needs to go here
-                <p>testing error text area</p> -->
+                <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
+                  {{ message.error }}
+                </p>
               </div>
             </div>
           </div>
@@ -236,8 +237,7 @@
               </div>
             </div>
 
-            <!-- if generate returns an error it should go here
-            <p>testing text for generate errors</p> -->
+            <p class="red-text" v-if="message.error">{{ message.error }}</p>
           </div>
         </div>
       </div>
@@ -323,13 +323,14 @@ export default {
           instructions: instructions,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           id: editId,
           value: this.generativeRes['res'],
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
+      } finally {
         this.instructionText = null
         this.generating = false
         this.addingInstructions = false
@@ -343,13 +344,14 @@ export default {
           notes: note,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           id: editId,
           value: this.generativeRes['res'],
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -363,13 +365,14 @@ export default {
           resource: sumObj.resource,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           id: editId,
           value: this.generativeRes['res'],
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -382,9 +385,6 @@ export default {
           instructions: null,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           user: 'bot',
           id: id,
@@ -393,6 +393,10 @@ export default {
           generated: true,
           generatedType: 'email',
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -404,9 +408,6 @@ export default {
           notes: note,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           user: 'bot',
           id: id,
@@ -415,6 +416,10 @@ export default {
           generated: true,
           generatedType: 'next',
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -429,9 +434,6 @@ export default {
           resource: resource,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           user: 'bot',
           id: msgId,
@@ -440,6 +442,10 @@ export default {
           generated: true,
           generatedType: 'summary',
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
