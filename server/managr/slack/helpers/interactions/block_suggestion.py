@@ -450,7 +450,7 @@ def process_get_crm_resource_options(payload, context):
                 crm_account.crm_id if user.user_level == "REP" else list(crm_account.crm_user_ids)
             )
 
-            filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)] if value else None
+            filters = [CRM_RESOURCE_FILTER(user.crm, resource, value)] if value else []
             remove_owner = True if resource in ["Lead", "Contact"] else False
             res = crm_adapter.list_resource_data(
                 resource, filter=filters, owners=crm_id, limit=25, remove_owner=remove_owner
