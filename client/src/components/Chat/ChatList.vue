@@ -304,6 +304,7 @@ export default {
         this.extraFieldObjs = []
         this.addOrRemove = null
         setTimeout(() => {
+          this.refreshUser()
           this.loading = false
         }, 1500)
       }
@@ -325,17 +326,19 @@ export default {
       let list = this.removeExtraFieldObjs.map((field) => field.id)
       try {
         const res = await SObjects.api.removeExtraField({
+          resource_type: this.baseResourceType,
           field_ids: list,
         })
       } catch (e) {
         console.log(e)
       } finally {
-        setTimeout(() => {
-          this.loading = false
-        }, 1500)
         this.toggleAddField()
         this.removeExtraFieldObjs = []
         this.addOrRemove = null
+        setTimeout(() => {
+          this.refreshUser()
+          this.loading = false
+        }, 1500)
       }
     },
   },

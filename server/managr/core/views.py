@@ -272,15 +272,21 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
 
 
 def clean_prompt_string(prompt_string):
+    random_bracket_insert_check = prompt_string[:5].find("}")
+    if random_bracket_insert_check == 0:
+        prompt_string = prompt_string[1:]
     cleaned_string = (
         prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
         .replace("\n\n", "")
         .replace("\n ", "")
         .replace("\n", "")
-        .replace("  ", "")
+        .replace("'s", "@s")
+        .replace(" @s", " 's")
         .replace("', '", '", "')
         .replace("': '", '": "')
     )
+    while "  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("  ", "")
     while "{  " in cleaned_string:
         cleaned_string = cleaned_string.replace("{  ", "{ ")
     cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')

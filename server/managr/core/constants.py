@@ -86,36 +86,32 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript: f"""'input': {transcript},'prompt': 'AI, summarize this 5 minute portion of a sales call transcript between rep and prospect. 
-    Include key details such as products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
-    Keep in mind that this is just one of many portions of the call transcript. Output must be one paragraph and 500 (min) to 800 (max) characters in length. 
-    Output must also be in this format: Summary: <summary>'
-    """
+    lambda transcript: f"""'input': {transcript},'prompt': 'Analyze and summarize this section of a sales call transcript. 
+Keep summary within 500-800 characters, capturing key sales-related details such as: identified pain, value proposition, 
+product specifics, decision maker, decision process and criteria, internal champion, competitors, next steps, decision timeline, 
+plus any budget and cost details. The summary must be in paragraph form. You must use this format: \nSummary: <summary>'"""
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'First, combine and then analyze the call transcript summaries above  for {user.first_name} who is a sales rep for {user.organization.name}. Then follow the instructions below.\n
-1) Update the CRM. Fill in all applicable CRM fields below with relevant data from the call transcript. Only fill in relevant CRM fields, leave the others empty. 
-CRM fields: {crm_fields}\n
-2) In addition to CRM data entry, you  will also provide a concise, conversational summary highlighting details such as: products & features discussed, customer pain points, competitors, decision-making process, next steps and budget. 
-3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.
-'"""
+    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
+1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty. The output should be a python dictionary.
+2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
+3) Output your results as a Python dictionary. Ensure the date is formatted as 'year-month-day' and the summary is included under the 'summary' key.'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
     lambda summaries, date: f"""
-    Below are short summaries, summarizing parts of a sales call transcript from {date}. 
-    These summaries are in chronological order. Your are an experienced VP of Sales, follow the instructions below:\n
-    1. During the call, identify specific moments where the prospect exhibits high engagement\n
-    2. During the call, identify specific moments where the prospect exhibits disinterest\n
-    3. During the call, identify specific moments where the prospect has questions or concerns\n
-    4. Provide a sentiment analysis overview using a score and keep the explanation under 150 characters.\n
-    Response needs to be in this format:\n
-    High Engagement:\n
-    Disinterest:\n
-    Questions or Concerns:\n
-    Sentiment:\n
-    Summaries: {summaries}"""
+As an experienced VP of Sales, analyze the call transcript summaries from {date} and provide insights. 
+Identify high engagement instances and moments of disinterest. Note any expressed concerns or questions. 
+Estimate deal closure probability using Salesforce CRM forecast categories and predict a closing date, if applicable. Output tone should be direct, concise, and conversational. 
+Structure your output as follows:\n
+High Engagement:\n
+Disinterest:\n
+Questions or Concerns:\n
+Sentiment:\n
+Likelihood to Close:\n
+Expected Closing Date:\n
+Summaries: {summaries}"""
 )
 
 OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS = (
@@ -190,10 +186,10 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
             data_from_resource["summary"] = workflow_check.transcript_summary
         if workflow_check.transcript_analysis:
             data_from_resource["analysis"] = workflow_check.transcript_analysis
-    body = f"""Today's date is {today}. Analyze this CRM data:\n
-    CRM data: {data_from_resource}\n
-    Based on your analysis of the CRM data, answer the following question / complete this requested task: {prompt}:\n
-The sales represetative asking this question or request is {user.first_name} and works for {user.organization.name}.\n
+    body = f"""Today's date is {today}. As a charismatic, straightforward VP of Sales, respond to the sales rep's request using the provided CRM data.\n
+CRM data: {data_from_resource}\n The request is: {prompt}\n. Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
+If email communication is needed, ensure a friendly tone, succinct sentences focused on value, and frequent paragraph breaks for readability. 
+Limit your response to under 1,000 characters.
 """
     return body
 
