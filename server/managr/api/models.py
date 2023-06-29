@@ -9,8 +9,12 @@ from rest_framework.exceptions import AuthenticationFailed
 User = get_user_model()
 
 
+def set_expiration():
+    return timezone.now() + timezone.timedelta(days=7)
+
+
 class ManagrToken(Token):
-    expiration = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=7))
+    expiration = models.DateTimeField(default=set_expiration)
     is_revoked = models.BooleanField(default=False)
     assigned_user = models.OneToOneField(
         User, related_name="access_token", on_delete=models.CASCADE

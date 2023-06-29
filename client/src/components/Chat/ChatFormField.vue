@@ -427,6 +427,7 @@ export default {
   margin: 0.5rem 0rem;
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: absolute !important;
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
@@ -492,7 +493,7 @@ label {
 }
 
 .field-container {
-  position: relative;
+  position: inherit;
   padding-top: 1rem;
   border-radius: 4px;
 }

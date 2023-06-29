@@ -892,7 +892,7 @@ class SalesforceAuthAccount(TimeStampModel):
     )
     is_busy = models.BooleanField(default=False)
     last_sync_time = models.DateTimeField(blank=True, null=True)
-    extra_pipeline_fields = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+    extra_pipeline_fields = ArrayField(models.CharField(max_length=1000), default=list, blank=True)
 
     class Meta:
         ordering = ["-datetime_created"]

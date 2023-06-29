@@ -1,5 +1,4 @@
 import logging
-from os import stat
 import httpx
 import json
 import time
@@ -12,6 +11,7 @@ from django.conf import settings
 
 from background_task import background
 from managr.core.calendars import calendar_participants_from_zoom_meeting
+from managr.core.utils import clean_prompt_string, swap_submitted_data_labels
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -540,13 +540,6 @@ def to_float(amount):
         return None
 
 
-@background(schedule=0)
-def _process_confirm_compliance(obj):
-    """Sends Compliance verification on app deauth to zoom"""
-    ZoomAcct.compliance_api(json.loads(obj))
-    return
-
-
 def _process_schedule_zoom_meeting(user, zoom_data):
     # get details of meeting
     hour = int(zoom_data["meeting_hour"])
@@ -563,26 +556,6 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         return res
     except Exception as e:
         logger.warning(f"Zoom schedule error: {e}")
-
-
-def clean_prompt_string(prompt_string):
-    cleaned_string = (
-        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
-        .replace("\n\n", "")
-        .replace("\n ", "")
-        .replace("\n", "")
-        .replace("  ", "")
-        .replace("', '", '", "')
-        .replace("': '", '": "')
-        .replace("{'", '{"')
-        .replace("','", '","')
-        .replace("':", '":')
-        .replace(", '", ', "')
-    )
-    while "{  " in cleaned_string:
-        cleaned_string = cleaned_string.replace("{  ", "{ ")
-    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
-    return cleaned_string
 
 
 WORD_TO_NUMBER = {
@@ -756,22 +729,6 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     return cleaned_data
-
-
-def swap_submitted_data_labels(data, fields):
-    api_key_data = {}
-    for label in data.keys():
-        try:
-            field_list = fields.filter(label__icontains=label)
-            field = None
-            for field_value in field_list:
-                if len(field_value.label) == len(label):
-                    field = field_value
-                    break
-            api_key_data[field.api_name] = data[label]
-        except Exception as e:
-            continue
-    return api_key_data
 
 
 def set_owner_field(resource, crm):
@@ -972,7 +929,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                 transcript = transcript.decode("utf-8")
                 summary_parts = process_transcript_to_summaries(transcript, user)
             if len(summary_parts):
-                timeout = 60.0
+                timeout = 90.0
                 tokens = 1500
                 try:
                     update_res = slack_requests.update_channel_message(
@@ -1001,6 +958,13 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                     body = core_consts.OPEN_AI_COMPLETIONS_BODY(
                         user.email, summary_body, tokens, top_p=0.9
                     )
+                    # body = {
+                    #     "model": "text-davinci-003",
+                    #     "prompt": "'input': {'date': datetime.date(2023, 6, 14), 'transcript_summaries': [\" In this sales call, Dustin Sears and Kate McQueen discussed their current challenges with onboarding, including reducing the load and capturing data efficiently. They are using Chorus which runs through Zoom and inputs into Salesforce, but it doesn't populate into fields or move stages. Michael Gorodisher mentioned Manager, which would be able to copy and paste notes and sink to fields. It is also integrated with Slack and Zoom, and eventually will be integrated with Microsoft Teams. The most important feature is the ability to copy and paste notes and sink to fields. Dustin and Kate are interested in learning more about Manager, and Michael will provide a demo to discuss if it makes sense for them or not.\", ' Michael Gorodisher pitched an integration between Salesforce and Slack or Teams which has become increasingly popular in the last 2 years. The integration would allow reps to quickly and easily update salesforce from Slack or Teams. To demonstrate the integration, Michael Gorodisher showed how the AI-driven summarization tool can auto-fill salesforce fields quickly and securely, as well as automatically log meetings. The tool also includes list building functionality, a calendar to track what needs to be updated, and the ability to move stages and pick list values. Kate McQueen asked about setting up fields like plan to win and favorite process. Michael Gorodisher assured that the setup is plug-and-play.', ' Michael Gorodisher demonstrated how their AI automation tool can be used to fill in fields in a call summary, automatically generate a follow-up email, and track meetings. With their AI, the team can read the call summary and accurately fill in fields with no extra training required. In addition, the tool can generate a follow-up email with instructions such as bullet points, highlighting the AI automation, and prompts for a fun fact. Finally, the tool can track meetings and log them, allowing reps to quickly review what happened at the end of the day.', ' In this section of the sales call, Michael Gorodisher of Manager explains how the platform works with Zoom to pull summaries from call recordings and update customer information in real-time. He also describes how Manager can be used to quickly update customer information with a few clicks. He then provides details about the product features, such as list building views and AI assistant-style capabilities, and explains how Manager can be used to track customer interactions. Lastly, Kate McQueen asked about the specific requirements for the Zoom integration, to which Michael responded that the business plan must have call recordings and the transcripts must stay in Zoom for the sync to work.', ' Michael Gorodisher discussed their new platform, onboarding new users in July, and gathering feedback from beta users. The platform will integrate with Google Meet and Microsoft Teams, as well as have features like playbooks and battle cards for SDRs. Gorodisher believes the most effective way to help SDRs with calls is with a \"prepare me for this call\" feature that looks at CRM data and recent calls to formulate a response. The AI model will take time to train, but the results should be world-class. Business starts at 10 users and they leverage Zoom for discovery calls and demos.', ' Michael Gorodisher, the sales rep from Manager, is proposing a proof-of-concept period of 30 days for a minimum of 10 users. He is offering incentives to commit to an order form before the end of the month. The goal is to get the reps to update Salesforce, and the tool will integrate with Slack, Salesforce, and other platforms. It will provide reps with features and data that will save time and get better results. To move forward, Dustin Sears and Kate McQueen need to set up a demo with their IT guy and Salesforce admin to make sure the tool is the right fit.']}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is Zachary from Managr. You must complete the following tasks:\n1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: ['Notes', 'Note Subject', 'Agreement Notes', 'Call Recording', 'Champion', 'Competition', 'Competitors', 'CRM', 'Decision Criteria', 'Decision Process', 'Economic Buyer', 'Deal probability', 'Forecast probability', 'Forecast category', 'Next step', 'Identified Pain', 'Meeting Date', 'Messanger', 'Next Step Date', 'Process Adoption', 'Deal Name', 'Amount', 'Deal Stage', 'Close Date', 'Deal owner']\n The key should be the crm field name, leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. \n2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.\n3) Output your results as a Python dictionary. Ensure the summary is included in the dictionary under the summary key.'",
+                    #     "user": "zach@mymanagr.com",
+                    #     "max_tokens": 1000,
+                    #     "top_p": 0.9,
+                    # }
                     try:
                         if not settings.IN_PROD:
                             logger.info("Combining Summary parts")
@@ -1014,11 +978,12 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             if not settings.IN_PROD:
                                 logger.info(f"Summary response: {r}")
                             choice = r["choices"][0]["text"]
-                            summary = clean_prompt_string(choice)
-                            data = eval(summary)
+                            data = clean_prompt_string(choice)
                             viable_data = data
                         else:
                             data = viable_data
+                        # if not settings.IN_PROD:
+                        #     print(f"DATA: {data}")
                         combined_summary = (
                             data.pop("summary", None)
                             if data.get("summary", None)
@@ -1035,12 +1000,16 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         workflow.save()
                         break
                     except StopReasonLength:
+                        logger.exception(
+                            f"Retrying for stop reason length, token amount at: {tokens}"
+                        )
                         if tokens >= 2000:
                             break
                         else:
                             tokens += 500
                             continue
-                    except ServerError:
+                    except ServerError as e:
+                        logger.exception(f"Server error from Open AI: {e}")
                         if attempts >= 5:
                             has_error = True
                             error_message = ":no_entry_sign: There was a server error with Open AI"
@@ -1134,6 +1103,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
             new_form = form_check
+            form_check.save_form(cleaned_data, False)
         else:
             new_form = OrgCustomSlackFormInstance.objects.create(
                 user=user,

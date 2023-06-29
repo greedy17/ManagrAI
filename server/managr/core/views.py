@@ -42,7 +42,12 @@ from rest_framework.response import Response
 from managr.api.emails import send_html_email
 from managr.api.models import ManagrToken
 from managr.utils import sites as site_utils
-from managr.core.utils import pull_usage_data, get_user_totals
+from managr.core.utils import (
+    pull_usage_data,
+    get_user_totals,
+    clean_prompt_string,
+    swap_submitted_data_labels,
+)
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
@@ -56,7 +61,7 @@ from .serializers import (
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
-from managr.core.background import emit_process_calendar_meetings, emit_process_submit_chat_prompt
+from managr.core.background import emit_process_calendar_meetings
 
 from nylas import APIClient
 from .nylas.emails import (
@@ -98,22 +103,6 @@ DAYS_TO_NUMBER = {
     "saturday": 5,
     "sunday": 6,
 }
-
-
-def swap_submitted_data_labels(data, fields):
-    api_key_data = {}
-    for label in data.keys():
-        try:
-            field_list = fields.filter(label__icontains=label)
-            field = None
-            for field_value in field_list:
-                if len(field_value.label) == len(label):
-                    field = field_value
-                    break
-            api_key_data[field.api_name] = data[label]
-        except Exception as e:
-            continue
-    return api_key_data
 
 
 def name_list_processor(resource_list, chat_response_name):
@@ -273,23 +262,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     return cleaned_data
 
 
-def clean_prompt_string(prompt_string):
-    cleaned_string = (
-        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
-        .replace("\n\n", "")
-        .replace("\n ", "")
-        .replace("\n", "")
-        .replace("  ", "")
-        .replace("', '", '", "')
-        .replace("': '", '": "')
-    )
-    while "{  " in cleaned_string:
-        cleaned_string = cleaned_string.replace("{  ", "{ ")
-    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
-    return cleaned_string
-
-
-def set_name_field(resource, crm):
+def set_name_field(resource):
     if resource in ["Opportunity", "Account"]:
         return "Name"
     elif resource == "Company":
@@ -544,9 +517,20 @@ def submit_chat_prompt(request):
 def draft_follow_up(request):
 
     user = User.objects.get(id=request.data["id"])
-    prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    instructions = request.data["instructions"]
+    if not instructions:
+        print("goooood, no INSTRUCTIONS")
+        prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    else:
+        print("goooood", instructions)
+        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
+            request.data["notes"], instructions
+        )
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+
     attempts = 1
+
     while True:
         try:
             with Client as client:
@@ -557,7 +541,7 @@ def draft_follow_up(request):
                 text = r.get("choices")[0].get("text")
                 return Response(data={**r, "res": text})
         except Exception as e:
-            return Response(data={"res": [e]})
+            return Response({"data": e})
 
 
 @api_view(["post"])
@@ -601,7 +585,7 @@ def get_chat_summary(request):
                 message_string_for_recap = r["choices"][0]["text"]
                 return Response(data={**r, "res": message_string_for_recap})
     except Exception as e:
-        return Response(data={"res": [e]})
+        return Response(data={"data": e})
 
 
 @api_view(["post"])

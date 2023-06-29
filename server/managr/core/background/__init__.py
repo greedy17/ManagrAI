@@ -21,7 +21,7 @@ from django.db.models import Q
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core import constants as core_consts
 from managr.core.models import User
-from managr.core.utils import get_summary_completion
+from managr.core.utils import get_summary_completion, swap_submitted_data_labels
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.hubspot.adapter.models import HubspotContactAdapter
@@ -1023,22 +1023,6 @@ def _process_change_team_lead(user_id):
     return
 
 
-def swap_submitted_data_labels(data, fields):
-    api_key_data = {}
-    for label in data.keys():
-        try:
-            field_list = fields.filter(label__icontains=label)
-            field = None
-            for field_value in field_list:
-                if len(field_value.label) == len(label):
-                    field = field_value
-                    break
-            api_key_data[field.api_name] = data[label]
-        except Exception as e:
-            continue
-    return api_key_data
-
-
 WORD_TO_NUMBER = {
     "a": 1,
     "one": 1,
@@ -1243,19 +1227,44 @@ def set_name_field(resource, crm):
     return None
 
 
+def quote_replacer(string):
+    import re
+
+    start_regex = '[a-zA-Z] "[a-zA-Z]'
+    end_regex = '[a-zA-Z]" [a-zA-Z]'
+    while True:
+        if re.search(start_regex, string):
+            start_index = re.search(start_regex, string)
+            string = string[: start_index.end() - 2] + "\\" + string[start_index.end() - 2 :]
+            end_index = re.search(end_regex, string)
+            string = string[: end_index.start() + 1] + "\\" + string[end_index.start() + 1 :]
+        else:
+            break
+    return string
+
+
 def clean_prompt_string(prompt_string):
+    random_bracket_insert_check = prompt_string[:5].find("}")
+    if random_bracket_insert_check == 0:
+        prompt_string = prompt_string[1:]
     cleaned_string = (
         prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
         .replace("\n\n", "")
         .replace("\n ", "")
         .replace("\n", "")
-        .replace("  ", "")
-        .replace("', '", '", "')
-        .replace("': '", '": "')
+        .replace("'s", "@s")
+        .replace(" @s", " 's")
+        .replace('"', '\\"')
+        # .replace("', '", '", "')
+        # .replace("': '", '": "')
+        .replace("@s", "'s")
     )
+    # clean_string = quote_replacer(prompt_string)
+    while "  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("  ", "")
     while "{  " in cleaned_string:
         cleaned_string = cleaned_string.replace("{  ", "{ ")
-    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
+    # cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
     return cleaned_string
 
 
@@ -1391,6 +1400,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     has_error = True
                 break
         except StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
             if token_amount <= 2000:
                 if workflow_id is None:
                     slack_res = slack_requests.update_channel_message(
