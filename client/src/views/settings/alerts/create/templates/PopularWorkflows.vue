@@ -786,7 +786,8 @@ export default {
       }
     },
     goToConnect() {
-      this.$router.push({ name: 'Integrations' })
+      // this.$router.push({ name: 'Integrations' })
+      this.$router.push({ name: 'Home' })
     },
     test(log) {
       console.log('log', log)

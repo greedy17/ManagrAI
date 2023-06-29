@@ -210,9 +210,9 @@ export default {
           //   this.$router.push(this.$route.query.redirect)
           // }
           if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
-            this.$router.push({ name: 'Integrations' })
+            this.$router.push({ name: 'Home' })
           } else {
-            this.$router.push({ name: 'ListTemplates' })
+            this.$router.push({ name: 'Home' })
           }
         } catch (error) {
           const e = error

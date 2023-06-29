@@ -69,7 +69,6 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
-      localStorage.isLoggedOut = true
     },
   },
   computed: {

@@ -733,12 +733,6 @@ export default {
     openMeetings() {
       this.meetingListOpen = true
     },
-    goToMeetings() {
-      this.$router.push({ name: 'Meetings' })
-    },
-    goToPipeline(id, title) {
-      this.$router.push({ name: 'Pipelines', params: { id: id, title: title } })
-    },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
       if (newName === 'LargeDeals') {
@@ -768,12 +762,6 @@ export default {
         .catch((e) => {
           console.log(e)
         })
-    },
-    goToLogZoom() {
-      this.$router.push({ name: 'LogZoom' })
-    },
-    goToRecap() {
-      this.$router.push({ name: 'ZoomRecap' })
     },
     async onToggleAlert(id, value) {
       try {
