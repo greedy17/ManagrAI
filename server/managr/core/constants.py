@@ -94,16 +94,16 @@ plus any budget and cost details. The summary must be in paragraph form. You mus
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
     lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
-1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty. The output should be a python dictionary.
+1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. 
 2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
-3) Output your results as a Python dictionary. Ensure the date is formatted as 'year-month-day' and the summary is included under the 'summary' key.'"""
+3) Output your results as a Python dictionary. Ensure the summary is included in the dictionary under the summary key.'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
     lambda summaries, date: f"""
 As an experienced VP of Sales, analyze the call transcript summaries from {date} and provide insights. 
 Identify high engagement instances and moments of disinterest. Note any expressed concerns or questions. 
-Estimate deal closure probability using Salesforce CRM forecast categories and predict a closing date, if applicable. Output tone should be direct, concise, and conversational. 
+Estimate deal closure probability and predict a closing date, if applicable. Output tone should be direct, concise, and conversational. 
 Structure your output as follows:\n
 High Engagement:\n
 Disinterest:\n
@@ -186,9 +186,11 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
             data_from_resource["summary"] = workflow_check.transcript_summary
         if workflow_check.transcript_analysis:
             data_from_resource["analysis"] = workflow_check.transcript_analysis
-    body = f"""Today's date is {today}. As a charismatic, straightforward VP of Sales, respond to the sales rep's request using the provided CRM data.\n
-CRM data: {data_from_resource}\n The request is: {prompt}\n. Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
-If email communication is needed, ensure a friendly tone, succinct sentences focused on value, and frequent paragraph breaks for readability. 
+    body = f"""Today's date is {today}. Respond to {user.first_name}’s request using relevant CRM data provided.
+\nCRM_data: {data_from_resource}
+\nRequest: {prompt}\n
+Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
+If the request is to draft an email, the tone should be friendly, no formalities, succinct sentences focused on value, and frequent paragraph breaks for readability. 
 Limit your response to under 1,000 characters.
 """
     return body

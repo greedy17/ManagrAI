@@ -333,3 +333,59 @@ def get_summary_completion(user, data):
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
         r = r.json()
     return r
+
+
+def clean_prompt_string(prompt_string):
+    random_bracket_insert_check = prompt_string[:5].find("}")
+    if random_bracket_insert_check == 0:
+        prompt_string = prompt_string[1:]
+    prompt_string = prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
+    cleaned_string = (
+        prompt_string.replace("\n", "")
+        .replace("'s", "@s")
+        .replace(" @s", " 's")
+        .replace("'t", "@t")
+        .replace(" @t", " 't")
+        .replace('"', "'")
+    )
+    while "  " in cleaned_string:
+        cleaned_string = cleaned_string.replace("  ", "")
+    if "'}" not in cleaned_string and '"}' not in cleaned_string:
+        cleaned_string = cleaned_string.replace("}", "'}")
+    try:
+        res_obj = eval(cleaned_string)
+        for key in res_obj.keys():
+            if "@s" in res_obj[key] or "@t" in res_obj[key]:
+                res_obj[key] = res_obj[key].replace("@s", "'s").replace("@t", "'t")
+        return res_obj
+    except Exception as e:
+        raise Exception(e)
+
+
+def remove_underscores(object):
+    fixed_key_object = {}
+    for key in object.keys():
+        new_key = key.replace("_", " ")
+        fixed_key_object[new_key] = object[key]
+    return fixed_key_object
+
+
+def swap_submitted_data_labels(data, fields):
+    data = remove_underscores(data)
+    api_key_data = {}
+    for label in data.keys():
+        api_name_check = fields.filter(api_name=label).first()
+        if api_name_check:
+            api_key_data[api_name_check.api_name] = data[label]
+        else:
+            try:
+                field_list = fields.filter(label__icontains=label)
+                field = None
+                for field_value in field_list:
+                    if len(field_value.label) == len(label):
+                        field = field_value
+                        break
+                api_key_data[field.api_name] = data[label]
+            except Exception as e:
+                continue
+    return api_key_data
