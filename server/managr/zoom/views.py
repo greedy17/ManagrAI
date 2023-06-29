@@ -1,6 +1,5 @@
 import logging
 import json
-import re
 from urllib.parse import urlencode
 from managr.core.background import emit_create_calendar_event
 from managr.zoom.background import emit_process_schedule_zoom_meeting
@@ -13,52 +12,21 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
-
-
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError, PermissionDenied
-
+from rest_framework.exceptions import ValidationError
 from background_task.models import Task
-from managr.core.permissions import (
-    IsOrganizationManager,
-    IsSuperUser,
-    IsSalesPerson,
-    CanEditResourceOrReadOnly,
-)
-
 from managr.zoom.zoom_helper import auth as zoom_auth
 from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers.exceptions import (
-    UnHandeledBlocksException,
-    InvalidBlocksFormatException,
-    InvalidBlocksException,
-    InvalidAccessToken,
-)
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack import constants as slack_consts
 from managr.zoom.zoom_helper import constants as zoom_model_consts
-from managr.zoom.zoom_helper.models import ZoomAcct, ZoomMtg
+from managr.zoom.zoom_helper.models import ZoomAcct
 from managr.zoom.zoom_helper.exceptions import InvalidRequest
 from managr.slack.models import UserSlackIntegration
-from managr.salesforce.models import MeetingWorkflow
-from managr.salesforce.serializers import MeetingWorkflowSerializer
 from managr.core.models import User
-from managr.slack.helpers.utils import action_with_params
-from managr.slack.helpers import block_builders
-from .models import ZoomAuthAccount, ZoomMeeting
-from .serializers import (
-    ZoomAuthRefSerializer,
-    ZoomAuthSerializer,
-    ZoomMeetingWebhookSerializer,
-    ZoomMeetingSerializer,
-)
+from .models import ZoomAuthAccount
+from .serializers import ZoomAuthSerializer
 from . import constants as zoom_consts
-from .background import (
-    _get_past_zoom_meeting_details,
-    _kick_off_slack_interaction,
-    _process_confirm_compliance,
-)
 
 # Create your views here.
 logger = logging.getLogger("managr")
