@@ -14,10 +14,10 @@
               <img src="@/assets/images/google.svg" />
               <span>Continue with Google</span>
             </button>
-            <button class="google-signin-button" @click="signInWithMicrosoft">
+            <!-- <button class="google-signin-button" @click="signInWithMicrosoft">
               <img src="@/assets/images/microsoft.svg" />
               <span>Continue with Microsoft</span>
-            </button>
+            </button> -->
             <div class="seperator">
               <span> OR </span>
             </div>
