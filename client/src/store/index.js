@@ -136,6 +136,7 @@ const mutations = {
     generated,
     generatedType,
     generatedId,
+    emailSent,
     note }) => {
 
     let newMsg
@@ -145,9 +146,11 @@ const mutations = {
       newMsg[0]['generatedType'] = generatedType
       newMsg[0]['generatedId'] = generatedId
       newMsg[0]['value'] = value
+      newMsg[0]['emailSent'] = emailSent
       newMsg[0]['gtMsg'] = gtMsg
     } else {
       newMsg[0]['value'] = value
+      newMsg[0]['emailSent'] = emailSent
     }
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
@@ -218,6 +221,7 @@ const actions = {
     generated,
     generatedType,
     generatedId,
+    emailSent,
     note }) {
     commit('EDIT_MESSAGES', {
 
@@ -227,6 +231,7 @@ const actions = {
       generated,
       generatedType,
       generatedId,
+      emailSent,
       note
     })
   },
