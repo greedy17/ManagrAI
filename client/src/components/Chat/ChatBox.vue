@@ -24,7 +24,8 @@
       <div v-for="(message, i) in messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
-            <span v-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
+            <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
+            <span v-else-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
               🤖
             </span>
             <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
@@ -127,6 +128,9 @@
                   />
                   Regenerate
                 </button>
+
+                <!-- if regenerate returns an error, it needs to go here
+                <p>testing error text area</p> -->
               </div>
             </div>
           </div>
@@ -139,8 +143,14 @@
         >
           <button @click="toggleChatModal(message)" class="generate-button green">
             <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-            {{ `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}` }}
+            {{
+              message.error
+                ? 'Retry'
+                : `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}`
+            }}
           </button>
+
+          <p v-if="message.error" class="red-text">{{ message.error }}</p>
         </div>
 
         <div
@@ -225,6 +235,9 @@
                 </div>
               </div>
             </div>
+
+            <!-- if generate returns an error it should go here
+            <p>testing text for generate errors</p> -->
           </div>
         </div>
       </div>
@@ -509,6 +522,10 @@ export default {
 .dampen {
   filter: invert(45%);
   margin-left: 1rem;
+}
+
+.red-text {
+  color: $coral;
 }
 
 .gray-text {

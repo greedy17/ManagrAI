@@ -25,33 +25,14 @@
       <header>
         <p>{{ addRemoveText }}</p>
 
-        <div :class="{ disabled: loading }" class="save-close">
-          <div v-if="addOrRemove === 'Add'" @click="addExtraFields" class="save">
-            <span v-if="!loading">&#x2713;</span>
-            <img
-              class="rotate disabled"
-              v-else
-              src="@/assets/images/refresh.svg"
-              height="11px"
-              alt=""
-            />
-          </div>
-
-          <div v-else @click="removeExtraFields" class="save">
-            <span v-if="!loading">&#x2713;</span>
-            <img
-              class="rotate disabled"
-              v-else
-              src="@/assets/images/refresh.svg"
-              height="11px"
-              alt=""
-            />
-          </div>
-
-          <div @click="toggleAddField" :class="{ disabled: loading }" class="close">
-            <span>x</span>
-          </div>
-        </div>
+        <p v-if="!loading" style="cursor: pointer" @click="toggleAddField">x</p>
+        <img
+          class="rotate disabled"
+          v-else
+          src="@/assets/images/refresh.svg"
+          height="11px"
+          alt=""
+        />
       </header>
 
       <div class="centered" v-if="!addOrRemove">
@@ -114,6 +95,15 @@
           </template>
         </Multiselect>
       </main>
+      <footer v-if="addOrRemove" class="list-footer" :class="{ disabled: loading }">
+        <button @click="toggleAddField">Close</button>
+
+        <button :disabled="loading" @click="addExtraFields" v-if="addOrRemove === 'Add'">
+          Save
+        </button>
+
+        <button :disabled="loading" @click="removeExtraFields" v-else>Save</button>
+      </footer>
     </div>
     <section class="chat-table-section">
       <table class="table">
@@ -162,12 +152,12 @@
     </section>
 
     <div class="row">
-      <button class="chat-button">
+      <!-- <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Ask Managr
       </button>
       <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Run Review
-      </button>
+      </button> -->
     </div>
   </section>
 </template>
@@ -435,6 +425,31 @@ export default {
   }
 }
 
+.list-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  bottom: 0;
+  padding: 0;
+  margin-right: -6px;
+
+  button {
+    @include chat-button();
+    padding: 0.35rem 0.5rem;
+    font-size: 12px;
+  }
+
+  button:first-of-type {
+    margin-right: 0.5rem;
+  }
+  button:last-of-type {
+    background-color: $dark-green;
+    color: white;
+    border: none;
+  }
+}
+
 .small-button {
   @include chat-button();
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -552,9 +567,8 @@ export default {
   background-color: white;
   padding: 1rem 0;
   padding-left: 1.25rem;
-  margin-top: 1rem;
   width: 100%;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  // border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .lists {
@@ -598,13 +612,43 @@ export default {
 
 .chat-table-section {
   position: relative;
-  height: 50vh;
+  height: 85vh;
   overflow: scroll;
   padding: 0 1rem 1rem 0;
   margin: 0 1rem;
   background-color: white;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
+
+// @media (max-height: 600px) {
+//   .chat-table-section {
+//     min-height: 56vh;
+//   }
+// }
+
+// @media (max-height: 750px) {
+//   .chat-table-section {
+//     min-height: 66vh;
+//   }
+// }
+
+// @media (min-height: 875px) {
+//   .chat-table-section {
+//     min-height: 70vh;
+//   }
+// }
+
+// @media (min-height: 1025px) {
+//   .chat-table-section {
+//     min-height: 75vh;
+//   }
+// }
+
+// @media (min-height: 1200px) {
+//   .chat-table-section {
+//     min-height: 78vh;
+//   }
+// }
 
 .chat-table-section::-webkit-scrollbar {
   width: 6px;

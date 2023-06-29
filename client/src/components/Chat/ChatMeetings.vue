@@ -229,6 +229,9 @@
           >
             <img src="@/assets/images/ban.svg" height="12px" alt="" />
           </div>
+          <div class="row" v-if="meetingData[meeting.id].success">
+            <p><img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged</p>
+          </div>
         </div>
 
         <button
@@ -237,8 +240,8 @@
           @click="logMeeting(meeting)"
           class="main-button secondary"
         >
-          <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
-          Log meeting
+          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+          Log Meeting
         </button>
 
         <div v-else>
@@ -260,9 +263,9 @@
             Review & Submit
           </button>
 
-          <div class="complete" v-else>
-            <p style="font-size: 12px">&#x2713; Meeting Logged</p>
-          </div>
+          <button disabled style="margin-right: -2px; cursor: not-allowed" class="main-button">
+            <img src="@/assets/images/wand.svg" height="12px" alt="" /> Generate Content
+          </button>
         </div>
       </div>
     </section>
@@ -356,8 +359,9 @@ export default {
       return newObj
     },
     async onSubmitChat() {
-      this.chatModalOpen = false
       this.submitting = true
+      this.chatModalOpen = false
+
       try {
         const res = await CRMObjects.api.updateResource({
           form_data: this.updateData,
@@ -378,7 +382,6 @@ export default {
             retry: false,
           })
         } else {
-          console.log('failed')
           this.$store.dispatch('setMeetingData', {
             id: this.currentMeetingId,
             data: res.data,
@@ -499,6 +502,18 @@ export default {
       this.selectedResourceType = null
       this.noteValue = null
     },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
     async refreshCalEvents() {
       this.loading = true
       try {
@@ -508,9 +523,12 @@ export default {
         console.log('Error in refreshCalEvents: ', e)
       } finally {
         setTimeout(() => {
+          this.refreshUser()
+        }, 1000)
+        setTimeout(() => {
           this.loading = false
           this.$store.dispatch('loadMeetings')
-        }, 1000)
+        }, 1500)
       }
     },
     async getMeetingList() {
@@ -845,6 +863,26 @@ button {
   cursor: not-allowed;
   // opacity: 0.3;
 }
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  padding: 4px;
+  border-radius: 4px;
+  margin: 4px 0 0 -4px;
+
+  p {
+    font-size: 12px !important;
+    color: $dark-green;
+  }
+
+  img {
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
 
 .meeting-modal-container {
   display: flex;
@@ -907,7 +945,7 @@ button {
   flex-direction: column;
   width: 525px;
   height: 90vh;
-  padding: 0 1.5rem;
+  padding: 0 1.25rem;
   background-color: white;
   border-radius: 8px;
   overflow-y: scroll;

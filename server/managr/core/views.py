@@ -522,7 +522,7 @@ def submit_chat_prompt(request):
             )
 
     if has_error:
-        res = {"value": f"There was an error processing chat submission {message}"}
+        res = {"value": f"There was an error processing chat submission: {message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
