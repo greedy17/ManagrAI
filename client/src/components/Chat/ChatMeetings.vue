@@ -746,7 +746,7 @@ button {
 
 .secondary {
   color: $dark-green;
-  border: 1px solid $dark-green;
+  border: 0.5px solid $dark-green;
 }
 
 .green-chat-button {
@@ -798,7 +798,7 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 1rem 0 1.25rem 0;
+  padding: 1rem 0 0 0;
 
   div {
     p {
