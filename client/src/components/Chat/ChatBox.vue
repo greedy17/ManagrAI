@@ -11,23 +11,24 @@
         <img style="margin-right:.5rem" class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
         clear
       </div> -->
-      <button class="small-button">
+      <!-- <button class="small-button">
         <img class="dampen" src="@/assets/images/cloud.svg" height="16px" alt="" />
         sync
-      </button>
+      </button> -->
       <button @click="clearMessages" class="small-button">
-        <img class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
-        clear
+        <img class="dampen" src="@/assets/images/cross-circle.svg" height="12px" alt="" />
+        Clear chat
       </button>
     </header>
     <div class="margin-top" ref="chatWindow">
       <div v-for="(message, i) in messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
-            <span v-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
+            <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
+            <span v-else-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
               🤖
             </span>
-            <span v-else-if="message.user === 'bot' && message.updated">
+            <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
               <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
             </span>
 
@@ -66,8 +67,25 @@
                 </div>
               </div>
 
-              <div v-else style="margin-top: 1.5rem" class="row">
+              <div v-else style="margin-top: 1.5rem">
+                <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
+                  <div class="space-between">
+                    <small>Provide any additional instructions below:</small>
+
+                    <p @click="closeInstructions">x</p>
+                  </div>
+
+                  <textarea
+                    v-model="instructionText"
+                    class="inline-input"
+                    v-autoresize
+                    autofocus="true"
+                    rows="1"
+                  />
+                </div>
+
                 <button
+                  v-if="!addingInstructions"
                   style="margin-bottom: 0.25rem"
                   @click="
                     regenerate(
@@ -92,6 +110,28 @@
                   />
                   Regenerate
                 </button>
+
+                <button
+                  v-else
+                  style="margin-bottom: 0.25rem"
+                  @click="
+                    regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
+                  "
+                  class="content-button padding-small"
+                >
+                  <img
+                    style="margin-right: 0.6rem"
+                    class="gold-filter"
+                    src="@/assets/images/sparkle.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Regenerate
+                </button>
+
+                <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
+                  {{ message.error }}
+                </p>
               </div>
             </div>
           </div>
@@ -100,11 +140,18 @@
         <div
           v-if="message.user === 'bot' && message.formId && !message.updated"
           class="generate-container"
+          style="margin-left: -0.5rem"
         >
           <button @click="toggleChatModal(message)" class="generate-button green">
             <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-            {{ `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}` }}
+            {{
+              message.error
+                ? 'Retry'
+                : `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}`
+            }}
           </button>
+
+          <p v-if="message.error" class="red-text">{{ message.error }}</p>
         </div>
 
         <div
@@ -116,13 +163,18 @@
               @click="toggleSelectContentOption(i)"
               v-if="!selectingContent || selectedIndex !== i"
               class="generate-button"
+              style="margin-left: -0.75rem"
             >
               <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
               Generate content
             </button>
 
             <div v-else-if="selectingContent && selectedIndex === i">
-              <div style="position: relative; margin-bottom: 0.5rem" class="row" v-if="!generating">
+              <div
+                style="position: relative; margin-bottom: 2rem; margin-left: -0.75rem"
+                class="row"
+                v-if="!generating"
+              >
                 <button
                   @click="generateEmail(message.data['meeting_comments'], message.id)"
                   class="content-button"
@@ -166,15 +218,15 @@
                 <span
                   style="
                     font-size: 20px;
-                    margin-right: 1rem;
-                    padding-top: 0.5rem;
-                    margin-left: -3rem
+                    margin-right: .75rem;
+                    padding-top: 0.75rem;
+                    margin-left: -2.75rem
                     margin-top: 0.5rem;
                   "
                   >🚀</span
                 >
 
-                <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
+                <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
                   <p>Processing your submission</p>
                   <div class="loading">
                     <div class="dot"></div>
@@ -184,13 +236,15 @@
                 </div>
               </div>
             </div>
+
+            <p class="red-text" v-if="message.error">{{ message.error }}</p>
           </div>
         </div>
       </div>
 
-      <div style="margin-left: 1.5rem" v-show="messageLoading" class="loader-container">
+      <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
         <span
-          style="font-size: 20px; margin-right: 1.1rem; padding-top: 0.5rem; margin-left: 0.25rem"
+          style="font-size: 20px; margin-right: 0.5rem; padding-top: 0.75rem; margin-left: 0.25rem"
           >🚀</span
         >
 
@@ -235,6 +289,8 @@ export default {
       selectedIndex: null,
       generativeRes: null,
       generatingId: null,
+      addingInstructions: false,
+      instructionText: null,
     }
   },
   watch: {
@@ -244,32 +300,40 @@ export default {
     regenerate(type, data, editId, sumObj) {
       this.generatingId = editId
       if (type === 'email') {
-        this.regenerateEmail(data, editId)
+        this.addingInstructions = true
       } else if (type === 'next') {
         this.regenerateNext(data, editId)
       } else {
         this.regenerateSummary(editId, sumObj)
       }
     },
+    closeInstructions() {
+      this.addingInstructions = false
+      this.instructionText = null
+    },
     clearMessages() {
       this.$store.dispatch('clearMessages')
     },
-    async regenerateEmail(note, editId) {
+    async regenerateEmail(instructions, note, editId) {
       this.generating = true
       try {
         let res = await User.api.chatEmail({
           id: this.user.id,
           notes: note,
+          instructions: instructions,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           id: editId,
           value: this.generativeRes['res'],
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
+      } finally {
+        this.instructionText = null
         this.generating = false
+        this.addingInstructions = false
       }
     },
     async regenerateNext(note, editId) {
@@ -280,13 +344,14 @@ export default {
           notes: note,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           id: editId,
           value: this.generativeRes['res'],
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -300,13 +365,14 @@ export default {
           resource: sumObj.resource,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           id: editId,
           value: this.generativeRes['res'],
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -316,11 +382,9 @@ export default {
         let res = await User.api.chatEmail({
           id: this.user.id,
           notes: note,
+          instructions: null,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           user: 'bot',
           id: id,
@@ -329,6 +393,10 @@ export default {
           generated: true,
           generatedType: 'email',
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -340,9 +408,6 @@ export default {
           notes: note,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           user: 'bot',
           id: id,
@@ -351,6 +416,10 @@ export default {
           generated: true,
           generatedType: 'next',
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -365,9 +434,6 @@ export default {
           resource: resource,
         })
         this.generativeRes = res
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$store.dispatch('editMessages', {
           user: 'bot',
           id: msgId,
@@ -376,6 +442,10 @@ export default {
           generated: true,
           generatedType: 'summary',
         })
+      } catch (e) {
+        console.log(e)
+        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
+      } finally {
         this.generating = false
       }
     },
@@ -384,6 +454,7 @@ export default {
         this.selectedIndex = i
       }
       this.selectingContent = !this.selectingContent
+      this.scrollToBottom()
     },
     scrollToBottom() {
       setTimeout(() => {
@@ -422,6 +493,20 @@ export default {
   created() {
     this.scrollToBottom()
   },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
+        adjustTextareaHeight()
+      },
+    },
+  },
   // beforeRouteLeave() {
   //   this.$store.dispatch('updateChatTitle', 'All Open Opportunities')
   // },
@@ -443,6 +528,10 @@ export default {
 .dampen {
   filter: invert(45%);
   margin-left: 1rem;
+}
+
+.red-text {
+  color: $coral;
 }
 
 .gray-text {
@@ -485,9 +574,50 @@ export default {
 
 .row {
   display: flex;
-  justify-content: row;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 1rem;
+}
+
+.space-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  p {
+    margin-top: 0;
+    margin-right: 0.25rem !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0 6px !important;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+}
+
+.inline-input {
+  outline: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  color: $base-gray;
+  width: 100%;
+  font-family: $base-font-family;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  resize: none;
+  margin: 0.75rem 0;
 }
 
 .chat-container {
@@ -511,7 +641,7 @@ export default {
   justify-content: flex-start;
   margin: 0;
   width: 100%;
-  padding: 0.5rem 1.5rem;
+  padding: 0 1.5rem;
 
   p {
     padding: 0;
@@ -522,8 +652,13 @@ export default {
     background-color: $off-white !important;
   }
 }
+
+.message-container:first-of-type {
+  padding-top: 0.5rem;
+}
+
 .margin-top {
-  margin-top: 3.25rem;
+  margin-top: 4rem;
   height: 96%;
   overflow-y: scroll;
 }
@@ -548,14 +683,14 @@ export default {
 
 .text-container {
   overflow: scroll;
-  padding: 0.25rem 0.25rem 0 0.25rem;
+  padding: 0.25rem;
   margin: 0;
   line-height: 1.75;
 }
 
 .images {
   padding: 0;
-  margin: 0 1rem 0 0;
+  margin: 0 0.5rem 0 0;
 }
 
 .bottom {
@@ -588,8 +723,8 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  padding: 0.5rem 1rem;
-  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: flex-end;

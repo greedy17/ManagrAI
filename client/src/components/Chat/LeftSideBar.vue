@@ -6,25 +6,33 @@
           <span style="font-size: 14px; margin-right: 1rem">🚀</span>
           <span> {{ threadButtonText }}</span>
         </button> -->
-        <div class="logo-header">
+        <div v-if="!leftbarClosed" class="logo-header">
           <img src="@/assets/images/logo.png" height="26px" alt="" />
         </div>
 
-        <!-- <img class="img-spacing pointer" src="@/assets/images/collapse.svg" height="16px" alt="" /> -->
+        <img
+          :class="{ collapsed: leftbarClosed }"
+          @click="toggleLeftbar"
+          class="img-spacing pointer"
+          src="@/assets/images/collapse.svg"
+          height="16px"
+          alt=""
+        />
       </header>
 
       <div class="body">
         <section class="left-section">
-          <p class="section-title">Today</p>
+          <p v-if="!leftbarClosed" class="section-title">Today</p>
+          <div v-else style="height: 40px"></div>
 
-          <div style="padding: 0 0.5rem">
+          <div :class="{ 'pad-l': leftbarClosed }" class="pad-l-r">
             <div
               @click="changeView('home')"
               :class="{ 'active-view': currentView === 'home' }"
               class="menu-item"
             >
               <img src="@/assets/images/comment.svg" height="14px" alt="" />
-              <p>Home</p>
+              <p v-if="!leftbarClosed">Home</p>
 
               <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
@@ -35,7 +43,7 @@
               class="menu-item"
             >
               <img src="@/assets/images/calendar.svg" height="14px" alt="" />
-              <p>Meetings</p>
+              <p v-if="!leftbarClosed">Meetings</p>
 
               <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
@@ -43,7 +51,7 @@
         </section>
 
         <section class="left-section">
-          <p class="section-title">List views</p>
+          <p v-if="!leftbarClosed" class="section-title">List views</p>
 
           <div class="flexed-start" v-if="templates.refreshing">
             <div class="loading">
@@ -53,7 +61,12 @@
             </div>
           </div>
 
-          <div style="padding: 0 0.5rem" v-else-if="templates.list.length">
+          <div
+            class="pad-l-r"
+            :class="{ 'pad-l': leftbarClosed }"
+            style="position: relative"
+            v-else-if="templates.list.length"
+          >
             <div
               :class="{
                 'active-view': currentView.title === alert.title,
@@ -65,9 +78,12 @@
               @click="changeView(alert.title, alert, alert.sobjectInstances.length)"
             >
               <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
-              <p>{{ alert.title }}</p>
+              <p v-if="!leftbarClosed">{{ alert.title }}</p>
 
-              <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">
+              <div
+                v-if="alert.sobjectInstances && alert.sobjectInstances.length && !leftbarClosed"
+                class="counter"
+              >
                 <p>
                   {{ alert.sobjectInstances.length }}
                 </p>
@@ -78,7 +94,7 @@
           <div v-else>
             <div class="menu-item">
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p>No active lists</p>
+              <p style="color: #9596b4">No active lists</p>
             </div>
           </div>
         </section>
@@ -87,15 +103,15 @@
       <footer>
         <div class="menu-item">
           <img style="margin-left: -3px" src="@/assets/images/settings.svg" height="18px" alt="" />
-          <p>Settings</p>
+          <p v-if="!leftbarClosed">Settings</p>
         </div>
         <div @click="toggleTooltip" class="menu-item">
           <img src="@/assets/images/help.png" height="14px" alt="" />
-          <p>Support</p>
+          <p v-if="!leftbarClosed">Support</p>
         </div>
         <div class="menu-item" @click="handleProfileOpen">
           <img src="@/assets/images/profile.svg" height="14px" alt="" />
-          <p>Profile</p>
+          <p v-if="!leftbarClosed">Profile</p>
         </div>
 
         <div :class="{ 'showing-tooltip': showTooltip }" class="tooltip">
@@ -108,6 +124,18 @@
         </div>
       </footer>
     </section>
+
+    <!-- <section v-else>
+      <div>
+        <img
+          @click="toggleLeftbar"
+          class="img-spacing pointer collapsed"
+          src="@/assets/images/collapse.svg"
+          height="16px"
+          alt=""
+        />
+      </div>
+    </section> -->
 
     <div @click="toggleSidebar" v-if="isOpen" class="close">
       <font-awesome-icon
@@ -129,6 +157,7 @@ export default {
   },
   data() {
     return {
+      leftbarClosed: false,
       showTooltip: false,
       isOpen: false,
       threadButtonText: 'Start New Thread',
@@ -170,15 +199,9 @@ export default {
         this.$emit('hide-background')
       }
     },
-
     toggleLeftbar() {
-      this.barOpen = !this.barOpen
-
-      if (this.barOpen) {
-        console.log(this.barOpen)
-      } else {
-        console.log(this.barOpen)
-      }
+      this.leftbarClosed = !this.leftbarClosed
+      this.$emit('toggle-Left-bar')
     },
     toggleTooltip() {
       this.showTooltip = !this.showTooltip
@@ -206,11 +229,6 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
 
-.leftbarClosed {
-  left: -260px;
-  position: absolute;
-}
-
 .sidebar {
   background-color: $off-white;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
@@ -219,16 +237,28 @@ export default {
   height: 100%;
   width: 100%;
   overflow: auto;
-  transition: all 0.3s ease;
   font-size: 14px;
 
   &.open {
     left: 0;
   }
+}
 
-  section {
-    // padding: 1rem 1rem 0 1rem;
+.pad-l-r {
+  padding: 0 0.5rem;
+}
+
+.pad-l {
+  padding: 0 0.25rem;
+
+  div {
+    margin-bottom: 0.5rem;
   }
+}
+
+.collapsed {
+  margin-left: 1.25rem;
+  margin-top: 1.25rem !important;
 }
 
 .inactive {
@@ -460,6 +490,23 @@ img {
   top: 1.5rem;
   display: none;
   cursor: pointer;
+}
+
+.closedBar {
+  position: absolute;
+  left: 250px;
+  z-index: 100;
+  left: 100px;
+  z-index: 10;
+  left: 260px;
+  top: 2px;
+  padding-top: 0.5rem;
+
+  img {
+    z-index: 200;
+    position: fixed;
+    left: 0.25rem;
+  }
 }
 
 .tooltip {

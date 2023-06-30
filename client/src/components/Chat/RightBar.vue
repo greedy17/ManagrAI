@@ -275,7 +275,17 @@
         <div class="absolute-img">
           <img src="@/assets/images/settings.svg" height="18px" alt="" />
         </div>
-        <div>
+        <div
+          style="
+            border: 1px solid #eeeeee;
+            background-color: white;
+            padding-left: 1rem;
+            width: 100.5%;
+            margin-left: 0.5px;
+            border-radius: 5px;
+            height: 100%;
+          "
+        >
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
@@ -329,7 +339,8 @@
       </div>
       <div v-show="view === 'notes'" class="selected-opp-section">
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
-          June 2023 <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+          Year: 2023
+          <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
         <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
@@ -373,8 +384,8 @@
 
     <div class="opp-scroll-container" v-else>
       <div
-        @mouseenter.prevent="setTooltip(opp.id)"
-        @mouseleave.prevent="removeTooltip"
+        @mouseenter="setTooltip(opp.id)"
+        @mouseleave="removeTooltip"
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
@@ -593,12 +604,12 @@ export default {
       this.hoverId = id
 
       setTimeout(() => {
-        console.log(id)
         this.showTooltip = true
       }, 2000)
     },
     removeTooltip() {
       this.showTooltip = false
+      this.hoverId = null
     },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -761,6 +772,7 @@ export default {
       this.searchText = ''
     },
     changeSelectedOpp(opp, name) {
+      this.hoverId = null
       this.loadMorePage = 0
       if (opp) {
         this.selectedOpp = opp
@@ -1284,9 +1296,9 @@ header {
 
 .bordered {
   width: 100%;
-  background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  padding: 0 0 0.5rem 1rem !important;
+  background-color: $off-white;
+  // border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 2px !important;
   border-radius: 5px;
   margin-top: 0.5rem;
 }
@@ -1302,6 +1314,11 @@ header {
   h4 {
     margin: 0rem;
   }
+}
+
+.selected-opp-section:first-of-type {
+  height: 98.5%;
+  width: 101%;
 }
 
 .selected-opp-section:last-of-type {
@@ -1744,7 +1761,7 @@ img {
   font-size: 14px;
   background: $base-gray;
   color: white;
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem;
   border-radius: 5px;
   box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
   opacity: 0;
@@ -1785,7 +1802,7 @@ img {
 }
 
 .showing-tooltip {
-  top: -50px;
+  top: -40px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;

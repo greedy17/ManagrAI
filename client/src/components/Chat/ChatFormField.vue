@@ -58,7 +58,7 @@
         field.apiName !== 'dealstage'
       "
     >
-      <label for="">{{ field.label }}</label>
+      <label style="" for="">{{ field.label }}</label>
       <Multiselect
         :options="picklistOptions[field.id] || field.options"
         selectLabel=""
@@ -427,7 +427,13 @@ export default {
   margin: 0.5rem 0rem;
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: absolute !important;
 }
+
+::v-deep .multiselect__tags {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
 }
@@ -467,15 +473,17 @@ export default {
 }
 
 label {
-  font-size: 12px;
+  font-size: 12.5px;
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 900;
   font-family: $base-font-family;
-  margin-bottom: 8px;
 }
 
 .inline-input {
   outline: none;
   padding: 0.5rem 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 6px;
   color: $base-gray;
   width: 100%;
@@ -492,7 +500,7 @@ label {
 }
 
 .field-container {
-  position: relative;
+  position: inherit;
   padding-top: 1rem;
   border-radius: 4px;
 }

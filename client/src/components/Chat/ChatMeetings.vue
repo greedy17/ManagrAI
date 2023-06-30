@@ -30,7 +30,12 @@
           /> -->
         </div>
 
-        <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+        <div
+          style="position: relative"
+          :class="{ disabled: submitting }"
+          v-for="(field, i) in formFields"
+          :key="i"
+        >
           <!-- field.apiName === 'meeting_comments'
                 ? updateData['Notes']
                 : field.apiName === 'meeting_type'
@@ -64,7 +69,10 @@
         }
       "
     >
-      <div class="meeting-modal-container">
+      <div
+        :class="{ 'large-height': usingAi && usingAi.value === 'false' }"
+        class="meeting-modal-container"
+      >
         <div class="meeting-modal-header">
           <div>
             <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
@@ -179,7 +187,7 @@
     </Modal>
 
     <header class="meetings-header">
-      <p @click="test"><span>Today's Meetings: </span>{{ date }}</p>
+      <p @click="test">📅 <span> Today's Meetings: </span>{{ date }}</p>
 
       <button :disabled="loading" @click="refreshCalEvents" class="small-button">
         <img
@@ -221,10 +229,19 @@
           >
             <img src="@/assets/images/ban.svg" height="12px" alt="" />
           </div>
+          <div class="row" v-if="meetingData[meeting.id].success">
+            <p><img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged</p>
+          </div>
         </div>
 
-        <button v-if="!meetingData[meeting.id]" @click="logMeeting(meeting)" class="main-button">
-          <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> Log meeting
+        <button
+          :disabled="submitting"
+          v-if="!meetingData[meeting.id]"
+          @click="logMeeting(meeting)"
+          class="main-button secondary"
+        >
+          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+          Log Meeting
         </button>
 
         <div v-else>
@@ -233,7 +250,7 @@
             class="green-chat-button"
             @click="
               toggleChatModal(
-                meetingData[meeting.id],
+                meetingData[meeting.id].data,
                 meeting.resource_ref.name,
                 meeting.resource_ref.id,
                 meeting.resource_ref.integration_id,
@@ -246,9 +263,9 @@
             Review & Submit
           </button>
 
-          <div class="complete" v-else>
-            <p style="font-size: 12px">&#x2713; Meeting Logged</p>
-          </div>
+          <button disabled style="margin-right: -2px; cursor: not-allowed" class="main-button">
+            <img src="@/assets/images/wand.svg" height="12px" alt="" /> Generate Content
+          </button>
         </div>
       </div>
     </section>
@@ -344,6 +361,7 @@ export default {
     async onSubmitChat() {
       this.submitting = true
       this.chatModalOpen = false
+
       try {
         const res = await CRMObjects.api.updateResource({
           form_data: this.updateData,
@@ -392,10 +410,12 @@ export default {
     toggleChatModal(data, name, resourceId, intId, type, currentMeetingId) {
       this.chatModalOpen = !this.chatModalOpen
       if (data) {
+        console.log(data)
         this.updateData = data
       }
       if (name) {
         this.currentMeetingName = name
+        this.$emit('set-opp', name)
       }
       if (resourceId) {
         this.currentResourceId = resourceId
@@ -482,6 +502,18 @@ export default {
       this.selectedResourceType = null
       this.noteValue = null
     },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
     async refreshCalEvents() {
       this.loading = true
       try {
@@ -491,9 +523,12 @@ export default {
         console.log('Error in refreshCalEvents: ', e)
       } finally {
         setTimeout(() => {
+          this.refreshUser()
+        }, 1000)
+        setTimeout(() => {
           this.loading = false
           this.$store.dispatch('loadMeetings')
-        }, 1000)
+        }, 1500)
       }
     },
     async getMeetingList() {
@@ -620,9 +655,22 @@ export default {
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   max-height: 250px !important;
+  position: fixed;
+  z-index: 1000;
+  width: 400px;
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+
+.large-height {
+  height: 556px !important;
+}
+
+button {
+  &:disabled {
+    opacity: 0.5;
+  }
 }
 
 .opaque {
@@ -713,6 +761,12 @@ export default {
     filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(90%) contrast(87%);
   }
 }
+
+.secondary {
+  color: $dark-green;
+  border: 0.5px solid $dark-green;
+}
+
 .green-chat-button {
   @include chat-button();
   background-color: $dark-green;
@@ -737,12 +791,11 @@ export default {
 }
 
 .chat-meetings-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0 1rem 0 1.25rem;
   overflow-y: scroll;
   overflow-x: hidden;
   scroll-behavior: smooth;
-
-  // background-color: red;
 }
 
 .chat-meetings-section::-webkit-scrollbar {
@@ -763,7 +816,7 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 1rem 0 1.25rem 0;
+  padding: 1rem 0 0 0;
 
   div {
     p {
@@ -810,12 +863,32 @@ export default {
   cursor: not-allowed;
   // opacity: 0.3;
 }
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  padding: 4px;
+  border-radius: 4px;
+  margin: 4px 0 0 -4px;
+
+  p {
+    font-size: 12px !important;
+    color: $dark-green;
+  }
+
+  img {
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
 
 .meeting-modal-container {
   display: flex;
   flex-direction: column;
   width: 525px;
-  height: 600px;
+  height: 400px;
   padding: 0 1.5rem;
   background-color: white;
   border-radius: 8px;
@@ -849,11 +922,9 @@ export default {
 
 .meeting-modal-footer {
   position: absolute;
-  background-color: white;
   width: 100%;
   bottom: 0;
   right: 1rem;
-  z-index: 1000;
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
@@ -874,7 +945,7 @@ export default {
   flex-direction: column;
   width: 525px;
   height: 90vh;
-  padding: 0 1.5rem;
+  padding: 0 1.25rem;
   background-color: white;
   border-radius: 8px;
   overflow-y: scroll;

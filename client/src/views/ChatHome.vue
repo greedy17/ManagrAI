@@ -147,7 +147,7 @@
             Create New Team
           </button> -->
 
-          <button class="chat-button">
+          <!-- <button class="chat-button">
             <font-awesome-icon
               v-if="team.list.length >= numberOfAllowedUsers"
               icon="fa-solid fa-user-plus"
@@ -156,7 +156,7 @@
             <font-awesome-icon v-else class="white-icon" icon="fa-solid fa-user-plus" />
 
             Add user
-          </button>
+          </button> -->
         </div>
       </div>
     </Modal>
@@ -164,11 +164,12 @@
     <div @click="toggleSidebar" class="hamburger">
       <font-awesome-icon style="height: 22px; width: 22px" icon="fa-solid fa-bars" />
     </div>
-    <aside id="left-sidebar">
+    <aside :class="{ closed: leftBarClosed }" id="left-sidebar">
       <LeftSideBar
         ref="sidebarRef"
         @show-background="toggleBackgroundOn"
         @hide-background="toggleBackgroundOff"
+        @toggle-Left-bar="toggleLeftBar"
         :handleProfileOpen="handleProfileOpen"
       />
     </aside>
@@ -234,6 +235,7 @@ export default {
       formFields: [],
       stageFields: [],
       barOpen: true,
+      leftBarClosed: false,
       stagesWithForms: null,
     }
   },
@@ -242,6 +244,9 @@ export default {
   },
   watch: {},
   methods: {
+    toggleLeftBar() {
+      this.leftBarClosed = !this.leftBarClosed
+    },
     refreshLists() {
       this.$refs.sidebarRef.refreshList()
     },
@@ -290,14 +295,13 @@ export default {
           stage_name: null,
         })
         this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$refs.rightSideBar.reloadOpps()
+      } catch (e) {
+        this.$store.dispatch('messageUpdateFailed', { id: this.chatData.id, data: e.data.error })
+      } finally {
         setTimeout(() => {
           this.toggleChatModal()
         }, 1000)
-
         setTimeout(() => {
           this.submitting = false
         }, 2000)
@@ -381,6 +385,10 @@ body {
   width: 100vw;
   background-color: $off-white;
 }
+.closed {
+  width: 60px !important;
+  transform: all;
+}
 
 .chat-display {
   display: flex;
@@ -393,6 +401,7 @@ body {
   color: $chat-font-color;
   letter-spacing: 0.4px;
   line-height: 1.5;
+  position: relative;
 }
 
 .hamburger {
@@ -403,10 +412,12 @@ body {
   top: 1rem;
   left: 1.5rem;
   cursor: pointer;
+  z-index: 10;
 }
 
 #left-sidebar {
   width: 260px;
+  transition: transform 0.3s ease;
 }
 
 #main {

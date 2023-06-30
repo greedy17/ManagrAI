@@ -14,7 +14,8 @@
         </button>
 
         <button @click="toggleAddField" class="small-button">
-          <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+          <!-- <img src="@/assets/images/plusOne.svg" height="12px" alt="" /> -->
+          <span>+ / -</span>
 
           Column
         </button>
@@ -22,43 +23,87 @@
     </header>
     <div v-show="addingField" class="add-field">
       <header>
-        <p>Add Columns</p>
+        <p>{{ addRemoveText }}</p>
 
-        <div :class="{ disabled: loading }" class="save-close">
-          <div @click="addExtraFields" class="save">
-            <span v-if="!loading">&#x2713;</span>
-            <img
-              class="rotate disabled"
-              v-else
-              src="@/assets/images/refresh.svg"
-              height="11px"
-              alt=""
-            />
-          </div>
-          <div @click="toggleAddField" :class="{ disabled: loading }" class="close">
-            <span>x</span>
-          </div>
-        </div>
+        <p v-if="!loading" style="cursor: pointer" @click="toggleAddField">x</p>
+        <img
+          class="rotate disabled"
+          v-else
+          src="@/assets/images/refresh.svg"
+          height="11px"
+          alt=""
+        />
       </header>
-      <main class="centered">
+
+      <div class="centered" v-if="!addOrRemove">
+        <p style="font-size: 12px">Add or remove columns ?</p>
+
         <Multiselect
           style="width: 100%"
+          v-model="addOrRemove"
+          placeholder="add / remove"
+          :options="addRemoveChoices"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+        >
+        </Multiselect>
+      </div>
+
+      <main v-else class="centered">
+        <Multiselect
+          v-if="addOrRemove === 'Add'"
+          style="width: 100%"
           v-model="extraFieldObjs"
-          placeholder="Select fields"
+          placeholder="Select the fields you want as columns"
           label="referenceDisplayLabel"
           openDirection="below"
           track-by="id"
-          :options="formFields.list.filter((field) => !listNames.includes(field.label))"
+          :options="
+            formFields.list.filter(
+              (field) => !listNames.includes(field.label) && field.crmObject === baseResourceType,
+            )
+          "
           selectedLabel=""
           deselectLabel=""
           selectLabel=""
           :multiple="true"
+          :close-on-select="false"
+        >
+          <template v-slot:noResult>
+            <p class="multi-slot">No results.</p>
+          </template>
+        </Multiselect>
+
+        <Multiselect
+          v-else
+          style="width: 100%"
+          v-model="removeExtraFieldObjs"
+          placeholder="Select columns to remove"
+          label="referenceDisplayLabel"
+          openDirection="below"
+          track-by="id"
+          :options="extraPipelineFields"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+          :multiple="true"
+          :close-on-select="false"
         >
           <template v-slot:noResult>
             <p class="multi-slot">No results.</p>
           </template>
         </Multiselect>
       </main>
+      <footer v-if="addOrRemove" class="list-footer" :class="{ disabled: loading }">
+        <button @click="toggleAddField">Close</button>
+
+        <button :disabled="loading" @click="addExtraFields" v-if="addOrRemove === 'Add'">
+          Save
+        </button>
+
+        <button :disabled="loading" @click="removeExtraFields" v-else>Save</button>
+      </footer>
     </div>
     <section class="chat-table-section">
       <table class="table">
@@ -69,6 +114,8 @@
             <th>Close Date</th>
             <th v-for="(field, i) in extraPipelineFields" :key="i">
               {{ field.label }}
+
+              <!-- <img class="left-margin" src="@/assets/images/trash.svg" height="10px" alt="" /> -->
             </th>
           </tr>
         </thead>
@@ -97,7 +144,7 @@
             </td>
 
             <td v-for="(field, i) in extraPipelineFields" :key="i">
-              {{ opp[field.apiName] || '---' }}
+              {{ fieldData(field.dataType, user.crm, field, opp) }}
             </td>
           </tr>
         </tbody>
@@ -105,12 +152,12 @@
     </section>
 
     <div class="row">
-      <button class="chat-button">
+      <!-- <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Ask Managr
       </button>
       <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Run Review
-      </button>
+      </button> -->
     </div>
   </section>
 </template>
@@ -120,6 +167,7 @@ import { SObjects } from '@/services/salesforce'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
+import User from '@/services/users/'
 
 export default {
   name: 'ChatList',
@@ -130,17 +178,18 @@ export default {
   data() {
     return {
       message: '',
+      addOrRemove: null,
+      addRemoveText: 'List Columns',
       extraFields: [],
-      hasExtraFields: [],
       extraFieldObjs: [],
+      removeExtraFieldObjs: [],
+      addRemoveChoices: ['Add', 'Remove'],
       addingField: false,
       loading: false,
-      baseResourceType: this.userCrm === 'HUBSPOT' ? 'deal' : 'Opportunity',
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 1000 },
         filters: {
-          crmObject: this.baseResourceType,
           updateable: true,
         },
       }),
@@ -149,15 +198,46 @@ export default {
   created() {
     this.formFields.refresh()
   },
-  watch: {
-    'user.hubspotAccountRef': {
-      handler() {
-        this.updateExtraFields()
-      },
-      immediate: true,
-    },
-  },
   methods: {
+    test() {
+      console.log(this.user)
+    },
+    fieldData(type, crm, field, opp, owner = null, account = null) {
+      if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
+        return owner || '---'
+      } else if (field.apiName === 'AccountId') {
+        return account || '---'
+      } else if (field.apiName === 'dealstage') {
+        if (field.options[0][opp['secondary_data'].pipeline]) {
+          return (
+            field.options[0][opp['secondary_data'].pipeline].stages.filter(
+              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            )[0].label || '---'
+          )
+        } else return '---'
+      } else if (type === 'Date') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatDate(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else if (type === 'DateTime') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatDateTime(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else if (type === 'Currency') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatCash(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else {
+        return this.fieldConditions(crm, field, opp) ? this.fieldConditions(crm, field, opp) : '---'
+      }
+    },
+    fieldConditions(crm, field, opp) {
+      return crm === 'SALESFORCE'
+        ? field.apiName.includes('__c') || field.apiName.includes('__r')
+          ? opp[field.apiName]
+          : opp[this.capitalizeFirstLetter(this.camelize(field.apiName))]
+        : opp[field.apiName]
+    },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
       if (!input || !input.match(pattern)) {
@@ -173,14 +253,6 @@ export default {
       }
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
-    },
-    updateExtraFields() {
-      let accountRef
-      if (this.user.crm) {
-        accountRef =
-          this.$store.state.user.salesforceAccountRef || this.$store.state.user.hubspotAccountRef
-        this.hasExtraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType] || []
-      }
     },
     async reloadWorkflow() {
       this.loading = true
@@ -202,6 +274,7 @@ export default {
     },
     toggleAddField() {
       this.addingField = !this.addingField
+      this.addOrRemove = null
     },
     async addExtraFields() {
       this.loading = true
@@ -216,15 +289,46 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.toggleAddField()
+        this.extraFields = []
+        this.extraFieldObjs = []
+        this.addOrRemove = null
         setTimeout(() => {
+          this.refreshUser()
           this.loading = false
         }, 1500)
-
+      }
+    },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
+    async removeExtraFields() {
+      this.loading = true
+      let list = this.removeExtraFieldObjs.map((field) => field.id)
+      try {
+        const res = await SObjects.api.removeExtraField({
+          resource_type: this.baseResourceType,
+          field_ids: list,
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.toggleAddField()
+        this.removeExtraFieldObjs = []
+        this.addOrRemove = null
         setTimeout(() => {
-          this.toggleAddField()
-          this.extraFields = []
-          this.extraFieldObjs = []
-        }, 1000)
+          this.refreshUser()
+          this.loading = false
+        }, 1500)
       }
     },
   },
@@ -232,24 +336,26 @@ export default {
     user() {
       return this.$store.state.user
     },
-    userCrm() {
+    userCRM() {
       return this.$store.state.user.crm
+    },
+    baseResourceType() {
+      return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
     },
     currentView() {
       return this.$store.state.currentView
     },
-    // hasExtraFields() {
-    //   const accountRef = this.$store.state.user.salesforceAccountRef
-    //     ? this.$store.state.user.salesforceAccountRef
-    //     : this.$store.state.user.hubspotAccountRef
-    //   const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
-    //   return extraFields && extraFields.length ? extraFields : []
-
-    // },
     extraPipelineFields() {
       let extras = []
       extras = this.formFields.list.filter((field) => this.hasExtraFields.includes(field.id))
       return extras
+    },
+    hasExtraFields() {
+      let accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
+      let extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
+      return extraFields && extraFields.length ? extraFields : []
     },
     listNames() {
       if (this.extraPipelineFields) {
@@ -292,10 +398,19 @@ export default {
   margin: 0.5rem 0rem;
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  height: 175px;
+  width: 300px;
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+
+::v-deep .multiselect__tag {
+  background-color: $soft-gray;
+  color: $base-gray;
+}
+
+.left-margin {
+  margin-left: 1rem;
 }
 
 .chat-button {
@@ -307,6 +422,31 @@ export default {
   margin-right: 1rem;
   img {
     margin-right: 0.5rem;
+  }
+}
+
+.list-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  bottom: 0;
+  padding: 0;
+  margin-right: -6px;
+
+  button {
+    @include chat-button();
+    padding: 0.35rem 0.5rem;
+    font-size: 12px;
+  }
+
+  button:first-of-type {
+    margin-right: 0.5rem;
+  }
+  button:last-of-type {
+    background-color: $dark-green;
+    color: white;
+    border: none;
   }
 }
 
@@ -326,6 +466,10 @@ export default {
   img {
     margin: 0;
     margin-right: 0.25rem;
+  }
+
+  span {
+    margin-right: 0.5rem;
   }
 
   &:disabled {
@@ -423,9 +567,8 @@ export default {
   background-color: white;
   padding: 1rem 0;
   padding-left: 1.25rem;
-  margin-top: 1rem;
   width: 100%;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  // border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .lists {
@@ -441,7 +584,7 @@ export default {
   top: 4.25rem;
   right: 0.75rem;
   width: 320px;
-  height: 175px;
+  height: 200px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -469,13 +612,43 @@ export default {
 
 .chat-table-section {
   position: relative;
-  height: 50vh;
+  height: 85vh;
   overflow: scroll;
   padding: 0 1rem 1rem 0;
   margin: 0 1rem;
   background-color: white;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
+
+// @media (max-height: 600px) {
+//   .chat-table-section {
+//     min-height: 56vh;
+//   }
+// }
+
+// @media (max-height: 750px) {
+//   .chat-table-section {
+//     min-height: 66vh;
+//   }
+// }
+
+// @media (min-height: 875px) {
+//   .chat-table-section {
+//     min-height: 70vh;
+//   }
+// }
+
+// @media (min-height: 1025px) {
+//   .chat-table-section {
+//     min-height: 75vh;
+//   }
+// }
+
+// @media (min-height: 1200px) {
+//   .chat-table-section {
+//     min-height: 78vh;
+//   }
+// }
 
 .chat-table-section::-webkit-scrollbar {
   width: 6px;
@@ -510,13 +683,16 @@ thead tr th {
 }
 th {
   text-align: left;
-  max-width: 100px;
+  max-width: 120px;
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 td {
-  max-width: 200px;
+  max-width: 300px;
+  min-width: 120px;
+  max-height: 90px;
+  overflow-y: scroll;
 }
 th,
 td {
@@ -533,11 +709,13 @@ td:first-of-type {
   z-index: 2;
   background-color: white;
   cursor: pointer;
-  min-width: 120px;
+  min-width: 150px;
+
   span {
     background-color: $off-white;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem 0.75rem 1rem;
     border-radius: 5px;
+    max-width: 290px !important;
   }
 }
 
