@@ -229,7 +229,7 @@
           >
             <img src="@/assets/images/ban.svg" height="12px" alt="" />
           </div>
-          <div class="row" v-if="meetingData[meeting.id].success">
+          <div class="row" v-if="meetingData[meeting.id] && meetingData[meeting.id].success">
             <p><img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged</p>
           </div>
         </div>
@@ -246,7 +246,7 @@
 
         <div v-else>
           <button
-            v-if="!meetingData[meeting.id].success"
+            v-if="!(meetingData[meeting.id] && meetingData[meeting.id].success)"
             class="green-chat-button"
             @click="
               toggleChatModal(
