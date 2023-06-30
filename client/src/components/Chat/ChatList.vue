@@ -149,7 +149,7 @@
       </table>
     </section>
 
-    <div class="loading">
+    <div v-else class="loading">
       <div class="dot"></div>
       <div class="dot"></div>
       <div class="dot"></div>

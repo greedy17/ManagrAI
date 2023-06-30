@@ -354,7 +354,6 @@ def clean_prompt_string(prompt_string):
         cleaned_string = cleaned_string.replace("}", "'}")
     try:
         res_obj = eval(cleaned_string)
-        print(res_obj)
         for key in res_obj.keys():
             if isinstance(res_obj[key], str):
                 if "@s" in res_obj[key] or "@t" in res_obj[key]:
