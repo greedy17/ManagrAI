@@ -354,7 +354,8 @@ def submit_chat_prompt(request):
     user = User.objects.get(id=request.data["user_id"])
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
-    form_type = "CREATE" if "create" in request.data["prompt"].lower() else "UPDATE"
+    form_type = (
+        "CREATE" if ("create" in request.data["prompt"].lower() and "update" not in request.data["prompt"].lower()) else "UPDATE")
     form_template = user.team.team_forms.filter(
         form_type=form_type, resource=request.data["resource_type"]
     ).first()
@@ -372,7 +373,7 @@ def submit_chat_prompt(request):
     has_error = False
     resource_check = None
     token_amount = 500
-    timeout = 30.0
+    timeout = 60.0
     while True:
         message = None
         try:
@@ -398,9 +399,9 @@ def submit_chat_prompt(request):
                         token_amount += 500
                         continue
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
-                name_field = set_name_field(request.data["resource_type"], user.crm)
+                print('TEXT IS RIGHT HERE ---- ',text)
+                data = clean_prompt_string(text)
+                name_field = set_name_field(request.data["resource_type"])
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = request.data["resource_type"].lower()
@@ -485,7 +486,7 @@ def submit_chat_prompt(request):
             message = (
                 f" Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
                 if resource_check is None
-                else f" We could not find a {data['resource_type']} named {resource_check} because of {e}"
+                else f" We could not find a resource named {resource_check} because of {e}"
             )
 
     if has_error:
@@ -633,7 +634,7 @@ def log_chat_meeting(request):
                 text = choice["text"]
                 cleaned_choice = clean_prompt_string(text)
                 data = eval(cleaned_choice)
-                name_field = set_name_field(resource_type, user.crm)
+                name_field = set_name_field(resource_type, )
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = resource_type.lower()
