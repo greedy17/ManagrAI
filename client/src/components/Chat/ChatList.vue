@@ -105,7 +105,7 @@
         <button :disabled="loading" @click="removeExtraFields" v-else>Save</button>
       </footer>
     </div>
-    <section class="chat-table-section">
+    <section v-if="!formFields.refreshing" class="chat-table-section">
       <table class="table">
         <thead>
           <tr>
@@ -114,8 +114,6 @@
             <th>Close Date</th>
             <th v-for="(field, i) in extraPipelineFields" :key="i">
               {{ field.label }}
-
-              <!-- <img class="left-margin" src="@/assets/images/trash.svg" height="10px" alt="" /> -->
             </th>
           </tr>
         </thead>
@@ -150,6 +148,12 @@
         </tbody>
       </table>
     </section>
+
+    <div v-else class="loading">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
 
     <div class="row">
       <!-- <button class="chat-button">
@@ -407,6 +411,45 @@ export default {
 ::v-deep .multiselect__tag {
   background-color: $soft-gray;
   color: $base-gray;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // background-color: $soft-gray;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .left-margin {
