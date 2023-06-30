@@ -21,7 +21,11 @@ from django.db.models import Q
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core import constants as core_consts
 from managr.core.models import User
-from managr.core.utils import get_summary_completion, swap_submitted_data_labels
+from managr.core.utils import (
+    get_summary_completion,
+    swap_submitted_data_labels,
+    clean_prompt_string,
+)
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.hubspot.adapter.models import HubspotContactAdapter
@@ -1227,47 +1231,6 @@ def set_name_field(resource, crm):
     return None
 
 
-def quote_replacer(string):
-    import re
-
-    start_regex = '[a-zA-Z] "[a-zA-Z]'
-    end_regex = '[a-zA-Z]" [a-zA-Z]'
-    while True:
-        if re.search(start_regex, string):
-            start_index = re.search(start_regex, string)
-            string = string[: start_index.end() - 2] + "\\" + string[start_index.end() - 2 :]
-            end_index = re.search(end_regex, string)
-            string = string[: end_index.start() + 1] + "\\" + string[end_index.start() + 1 :]
-        else:
-            break
-    return string
-
-
-def clean_prompt_string(prompt_string):
-    random_bracket_insert_check = prompt_string[:5].find("}")
-    if random_bracket_insert_check == 0:
-        prompt_string = prompt_string[1:]
-    cleaned_string = (
-        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
-        .replace("\n\n", "")
-        .replace("\n ", "")
-        .replace("\n", "")
-        .replace("'s", "@s")
-        .replace(" @s", " 's")
-        .replace('"', '\\"')
-        # .replace("', '", '", "')
-        # .replace("': '", '": "')
-        .replace("@s", "'s")
-    )
-    # clean_string = quote_replacer(prompt_string)
-    while "  " in cleaned_string:
-        cleaned_string = cleaned_string.replace("  ", "")
-    while "{  " in cleaned_string:
-        cleaned_string = cleaned_string.replace("{  ", "{ ")
-    # cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
-    return cleaned_string
-
-
 def correct_data_keys(data):
     if "Company Name" in data.keys():
         data["Company name"] = data["Company Name"]
@@ -1335,8 +1298,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 choice = r["choices"][0]
 
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
+                data = clean_prompt_string(text)
                 name_field = set_name_field(resource_type, user.crm)
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
@@ -1945,7 +1907,6 @@ def _process_send_summary_to_dm(payload, context):
 
 @background()
 def _process_add_call_analysis(workflow_id, summaries):
-    from managr.core.utils import max_token_calculator
     import httpx
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
@@ -1986,19 +1947,27 @@ def _process_add_call_analysis(workflow_id, summaries):
                 error_message = ":no_entry_sign: Looks like we ran into an internal issue"
                 break
         except SyntaxError as e:
+            has_error = True
+            error_message = ":no_entry_sign: Looks like we ran into an internal issue"
             print(e)
             continue
         except httpx.ReadTimeout:
             logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            error_message = (
+                ":no_entry_sign: Looks like we ran into an issue communicating with Open AI"
+            )
             if timeout >= 120.0:
                 has_error = True
                 break
             else:
                 timeout += 30.0
         except Exception as e:
+            has_error = True
             logger.exception(f"Unknown error on call analysis for {str(workflow.id)} <{e}>")
+            error_message = f"Unknown error on call analysis: {e}"
     if has_error:
-        print("ERROR")
+        workflow.transcript_analysis = error_message
+        workflow.save()
         return
     else:
         workflow.transcript_analysis = text
