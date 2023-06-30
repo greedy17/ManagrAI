@@ -275,7 +275,17 @@
         <div class="absolute-img">
           <img src="@/assets/images/settings.svg" height="18px" alt="" />
         </div>
-        <div>
+        <div
+          style="
+            border: 1px solid #eeeeee;
+            background-color: white;
+            padding-left: 1rem;
+            width: 100.5%;
+            margin-left: 0.5px;
+            border-radius: 5px;
+            height: 100%;
+          "
+        >
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
@@ -1286,9 +1296,9 @@ header {
 
 .bordered {
   width: 100%;
-  background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  padding: 0 0 0.5rem 1rem !important;
+  background-color: $off-white;
+  // border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 2px !important;
   border-radius: 5px;
   margin-top: 0.5rem;
 }
@@ -1304,6 +1314,11 @@ header {
   h4 {
     margin: 0rem;
   }
+}
+
+.selected-opp-section:first-of-type {
+  height: 98.5%;
+  width: 101%;
 }
 
 .selected-opp-section:last-of-type {

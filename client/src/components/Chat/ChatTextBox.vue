@@ -127,6 +127,7 @@ export default {
               user: 'bot',
               id: id,
               value: this.chatRes.value,
+              failed: true,
             })
           } else {
             this.$emit('set-message', {

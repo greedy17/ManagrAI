@@ -23,43 +23,87 @@
     </header>
     <div v-show="addingField" class="add-field">
       <header>
-        <p>Add Columns</p>
+        <p>{{ addRemoveText }}</p>
 
-        <div :class="{ disabled: loading }" class="save-close">
-          <div @click="addExtraFields" class="save">
-            <span v-if="!loading">&#x2713;</span>
-            <img
-              class="rotate disabled"
-              v-else
-              src="@/assets/images/refresh.svg"
-              height="11px"
-              alt=""
-            />
-          </div>
-          <div @click="toggleAddField" :class="{ disabled: loading }" class="close">
-            <span>x</span>
-          </div>
-        </div>
+        <p v-if="!loading" style="cursor: pointer" @click="toggleAddField">x</p>
+        <img
+          class="rotate disabled"
+          v-else
+          src="@/assets/images/refresh.svg"
+          height="11px"
+          alt=""
+        />
       </header>
-      <main class="centered">
+
+      <div class="centered" v-if="!addOrRemove">
+        <p style="font-size: 12px">Add or remove columns ?</p>
+
         <Multiselect
           style="width: 100%"
+          v-model="addOrRemove"
+          placeholder="add / remove"
+          :options="addRemoveChoices"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+        >
+        </Multiselect>
+      </div>
+
+      <main v-else class="centered">
+        <Multiselect
+          v-if="addOrRemove === 'Add'"
+          style="width: 100%"
           v-model="extraFieldObjs"
-          placeholder="Select fields"
+          placeholder="Select the fields you want as columns"
           label="referenceDisplayLabel"
           openDirection="below"
           track-by="id"
-          :options="formFields.list.filter((field) => !listNames.includes(field.label))"
+          :options="
+            formFields.list.filter(
+              (field) => !listNames.includes(field.label) && field.crmObject === baseResourceType,
+            )
+          "
           selectedLabel=""
           deselectLabel=""
           selectLabel=""
           :multiple="true"
+          :close-on-select="false"
+        >
+          <template v-slot:noResult>
+            <p class="multi-slot">No results.</p>
+          </template>
+        </Multiselect>
+
+        <Multiselect
+          v-else
+          style="width: 100%"
+          v-model="removeExtraFieldObjs"
+          placeholder="Select columns to remove"
+          label="referenceDisplayLabel"
+          openDirection="below"
+          track-by="id"
+          :options="extraPipelineFields"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+          :multiple="true"
+          :close-on-select="false"
         >
           <template v-slot:noResult>
             <p class="multi-slot">No results.</p>
           </template>
         </Multiselect>
       </main>
+      <footer v-if="addOrRemove" class="list-footer" :class="{ disabled: loading }">
+        <button @click="toggleAddField">Close</button>
+
+        <button :disabled="loading" @click="addExtraFields" v-if="addOrRemove === 'Add'">
+          Save
+        </button>
+
+        <button :disabled="loading" @click="removeExtraFields" v-else>Save</button>
+      </footer>
     </div>
     <section class="chat-table-section">
       <table class="table">
@@ -108,12 +152,12 @@
     </section>
 
     <div class="row">
-      <button class="chat-button">
+      <!-- <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Ask Managr
       </button>
       <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Run Review
-      </button>
+      </button> -->
     </div>
   </section>
 </template>
@@ -123,6 +167,7 @@ import { SObjects } from '@/services/salesforce'
 import { CollectionManager } from '@thinknimble/tn-models'
 import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
+import User from '@/services/users/'
 
 export default {
   name: 'ChatList',
@@ -133,16 +178,18 @@ export default {
   data() {
     return {
       message: '',
+      addOrRemove: null,
+      addRemoveText: 'List Columns',
       extraFields: [],
       extraFieldObjs: [],
+      removeExtraFieldObjs: [],
+      addRemoveChoices: ['Add', 'Remove'],
       addingField: false,
       loading: false,
-      baseResourceType: this.userCrm === 'HUBSPOT' ? 'deal' : 'Opportunity',
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 1000 },
         filters: {
-          crmObject: this.baseResourceType,
           updateable: true,
         },
       }),
@@ -227,6 +274,7 @@ export default {
     },
     toggleAddField() {
       this.addingField = !this.addingField
+      this.addOrRemove = null
     },
     async addExtraFields() {
       this.loading = true
@@ -241,28 +289,46 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.toggleAddField()
+        this.extraFields = []
+        this.extraFieldObjs = []
+        this.addOrRemove = null
         setTimeout(() => {
+          this.refreshUser()
           this.loading = false
         }, 1500)
-
-        setTimeout(() => {
-          this.toggleAddField()
-          this.extraFields = []
-          this.extraFieldObjs = []
-        }, 1000)
       }
     },
-
-    async removeField(id) {
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
+    async removeExtraFields() {
+      this.loading = true
+      let list = this.removeExtraFieldObjs.map((field) => field.id)
       try {
         const res = await SObjects.api.removeExtraField({
-          field_ids: [id],
+          resource_type: this.baseResourceType,
+          field_ids: list,
         })
       } catch (e) {
         console.log(e)
       } finally {
-        // this.cancelRemoveField()
-        // this.emitSetOpps()
+        this.toggleAddField()
+        this.removeExtraFieldObjs = []
+        this.addOrRemove = null
+        setTimeout(() => {
+          this.refreshUser()
+          this.loading = false
+        }, 1500)
       }
     },
   },
@@ -272,6 +338,9 @@ export default {
     },
     userCRM() {
       return this.$store.state.user.crm
+    },
+    baseResourceType() {
+      return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
     },
     currentView() {
       return this.$store.state.currentView
@@ -285,7 +354,7 @@ export default {
       let accountRef = this.$store.state.user.salesforceAccountRef
         ? this.$store.state.user.salesforceAccountRef
         : this.$store.state.user.hubspotAccountRef
-      let extraFields = accountRef.extraPipelineFieldsRef['Opportunity']
+      let extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },
     listNames() {
@@ -329,7 +398,7 @@ export default {
   margin: 0.5rem 0rem;
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  height: 175px;
+  width: 300px;
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
@@ -353,6 +422,31 @@ export default {
   margin-right: 1rem;
   img {
     margin-right: 0.5rem;
+  }
+}
+
+.list-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  bottom: 0;
+  padding: 0;
+  margin-right: -6px;
+
+  button {
+    @include chat-button();
+    padding: 0.35rem 0.5rem;
+    font-size: 12px;
+  }
+
+  button:first-of-type {
+    margin-right: 0.5rem;
+  }
+  button:last-of-type {
+    background-color: $dark-green;
+    color: white;
+    border: none;
   }
 }
 
@@ -473,9 +567,8 @@ export default {
   background-color: white;
   padding: 1rem 0;
   padding-left: 1.25rem;
-  margin-top: 1rem;
   width: 100%;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  // border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .lists {
@@ -491,7 +584,7 @@ export default {
   top: 4.25rem;
   right: 0.75rem;
   width: 320px;
-  height: 175px;
+  height: 200px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -519,13 +612,43 @@ export default {
 
 .chat-table-section {
   position: relative;
-  height: 50vh;
+  height: 85vh;
   overflow: scroll;
   padding: 0 1rem 1rem 0;
   margin: 0 1rem;
   background-color: white;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
+
+// @media (max-height: 600px) {
+//   .chat-table-section {
+//     min-height: 56vh;
+//   }
+// }
+
+// @media (max-height: 750px) {
+//   .chat-table-section {
+//     min-height: 66vh;
+//   }
+// }
+
+// @media (min-height: 875px) {
+//   .chat-table-section {
+//     min-height: 70vh;
+//   }
+// }
+
+// @media (min-height: 1025px) {
+//   .chat-table-section {
+//     min-height: 75vh;
+//   }
+// }
+
+// @media (min-height: 1200px) {
+//   .chat-table-section {
+//     min-height: 78vh;
+//   }
+// }
 
 .chat-table-section::-webkit-scrollbar {
   width: 6px;

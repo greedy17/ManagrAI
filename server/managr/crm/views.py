@@ -305,7 +305,7 @@ class CRMObjectViewSet(
                 # if from_workflow:
                 #     user.activity.increment_untouched_count("workflows")
                 #     user.activity.add_workflow_activity(str(main_form.id), title)
-                return Response(data=data)
+                return Response(data=data)   
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
 
     @action(
