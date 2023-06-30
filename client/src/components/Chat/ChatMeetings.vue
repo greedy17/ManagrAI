@@ -136,7 +136,7 @@
                       ? allOpps
                       : selectedList
                   "
-                  :loading="dropdownLoading"
+                  :loading="dropdownLoading || listLoading"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results. Try loading more</p>
@@ -291,6 +291,12 @@ export default {
     stagesWithForms: {},
   },
   watch: {
+    usingAi(val) {
+      if (val && val.value === 'false') {
+        console.log('here')
+        this.$store.dispatch('loadTemplates')
+      }
+    },
     selectedResourceType: 'changeList',
     searchValue(newVal, oldVal) {
       if (newVal !== oldVal && newVal !== '') {
@@ -305,6 +311,7 @@ export default {
   },
   data() {
     return {
+      listLoading: false,
       loading: false,
       chatModalOpen: false,
       meetingModalOpen: false,
@@ -435,11 +442,27 @@ export default {
     },
     changeList() {
       if (this.selectedResourceType === 'Account' || this.selectedResourceType === 'Company') {
-        this.selectedList = this.allAccounts
+        this.$store.dispatch('loadAllAccounts')
+        this.listLoading = true
+        setTimeout(() => {
+          this.selectedList = this.allAccounts
+          this.listLoading = false
+        }, 2000)
       } else if (this.selectedResourceType === 'Contact') {
-        this.selectedList = this.allContacts
+        this.$store.dispatch('loadAllContacts')
+
+        this.listLoading = true
+        setTimeout(() => {
+          this.selectedList = this.allContacts
+          this.listLoading = false
+        }, 2000)
       } else if (this.selectedResourceType === 'Lead') {
-        this.selectedList = this.allLeads
+        this.$store.dispatch('loadAllLeads')
+
+        setTimeout(() => {
+          this.selectedList = this.allLeads
+          this.listLoading = false
+        }, 2000)
       }
     },
     async submitChatMeeting() {
@@ -620,7 +643,7 @@ export default {
       return this.user.crm === 'SALESFORCE' ? this.$store.state.allLeads : []
     },
     noteTemplates() {
-      return this.$store.state.templates
+      return this.$store.state.templates || []
     },
     meetingData() {
       return this.$store.state.meetingData

@@ -447,7 +447,7 @@ const actions = {
 const plugins = [
   createPersistedState({
     key: STORAGE_KEY,
-    // storage: window.sessionStorage
+    storage: window.sessionStorage
   }),
 ]
 
@@ -462,5 +462,9 @@ export default new Vuex.Store({
   mutations,
   actions,
   getters,
-  plugins,
+  plugins: [
+    createPersistedState({
+      paths: ['user', 'token', 'messages', 'currentView',]
+    })
+  ],
 })

@@ -962,9 +962,9 @@ export default {
       this.resourceName = 'Deal'
     }
     this.$store.dispatch('loadChatOpps')
-    this.$store.dispatch('loadAllAccounts')
-    this.$store.dispatch('loadAllContacts')
-    this.$store.dispatch('loadAllLeads')
+    // this.$store.dispatch('loadAllAccounts')
+    // this.$store.dispatch('loadAllContacts')
+    // this.$store.dispatch('loadAllLeads')
     this.setOppForms()
   },
 }

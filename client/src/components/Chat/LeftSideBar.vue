@@ -187,6 +187,7 @@ export default {
           this.$store.dispatch('setCurrentView', alert)
         } else {
           this.$store.dispatch('setCurrentView', view)
+          // localStorage.clear()
         }
       }
     },

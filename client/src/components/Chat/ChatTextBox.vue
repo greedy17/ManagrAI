@@ -121,12 +121,20 @@ export default {
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
           })
           this.chatRes = res
-          if (this.chatRes.status === 400) {
+          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
             const id = Math.ceil(Math.random() * 100000)
             this.$emit('set-message', {
               user: 'bot',
               id: id,
               value: this.chatRes.value,
+              failed: true,
+            })
+          } else if (this.chatRes.status === 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: 'Timeout error, try again',
               failed: true,
             })
           } else {
