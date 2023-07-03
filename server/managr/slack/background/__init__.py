@@ -1063,7 +1063,7 @@ def _process_chat_action(payload, context):
     )
     state = payload["view"]["state"]
     prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"].strip()
-    resource_check = None
+    resource_check = "Opportunity" if user.crm == "SALESFORCE" else "Deal"
     blocks = []
     lowercase_prompt = prompt.lower()
     action_key = None

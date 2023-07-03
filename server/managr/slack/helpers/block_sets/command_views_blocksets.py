@@ -541,7 +541,7 @@ def actions_block_set(context):
         ),
         block_builders.context_block("Powered by ChatGPT © :robot_face:"),
         block_builders.static_select(
-            "Action Templates",
+            "Prompt Templates",
             action_options,
             f"{slack_const.PROCESS_INSERT_ACTION_TEMPLATE}?u={user_id}",
             block_id="SELECT_TEMPLATE",

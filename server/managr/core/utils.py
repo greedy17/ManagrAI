@@ -355,8 +355,9 @@ def clean_prompt_string(prompt_string):
     try:
         res_obj = eval(cleaned_string)
         for key in res_obj.keys():
-            if "@s" in res_obj[key] or "@t" in res_obj[key]:
-                res_obj[key] = res_obj[key].replace("@s", "'s").replace("@t", "'t")
+            if isinstance(res_obj[key], str):
+                if "@s" in res_obj[key] or "@t" in res_obj[key]:
+                    res_obj[key] = res_obj[key].replace("@s", "'s").replace("@t", "'t")
         return res_obj
     except Exception as e:
         raise Exception(e)
