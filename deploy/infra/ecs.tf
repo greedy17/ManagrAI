@@ -324,5 +324,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     hubspotRedirectUri   = each.value.hubspot_redirect_uri
 
     openAiSecret         = each.value.open_ai_secret
+
+    microsoftSecretKey   = each.value.microsoft_secret_key
+    googleClientId       = each.value.google_client_id
+    googleLoginUri       = each.value.google_login_uri
   })
 }

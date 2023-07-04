@@ -153,6 +153,10 @@ variable "environments" {
 
     use_open_ai            = bool
     open_ai_secret         = string
+
+    microsoft_secret_key   = string
+    google_client_id       = string
+    google_login_uri       = string
   }))
 }
 
