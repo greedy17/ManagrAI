@@ -263,6 +263,18 @@
       {
         "name": "OPEN_AI_SECRET",
         "valueFrom": "${config_secret_arn}:openAiSecret::"
+      },
+      {
+        "name": "MICROSOFT_SECRET_KEY",
+        "valueFrom": "${config_secret_arn}:microsoftSecretKey::"
+      },
+      {
+        "name": "GOOGLE_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:googleClientId::"
+      },
+      {
+        "name": "GOOGLE_LOGIN_URI",
+        "valueFrom": "${config_secret_arn}:googleLoginUri::"
       }
     ],
     "logConfiguration": {

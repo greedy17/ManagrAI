@@ -136,7 +136,7 @@
                       ? allOpps
                       : selectedList
                   "
-                  :loading="dropdownLoading"
+                  :loading="dropdownLoading || listLoading"
                 >
                   <template slot="noResult">
                     <p class="multi-slot">No results. Try loading more</p>
@@ -229,6 +229,9 @@
           >
             <img src="@/assets/images/ban.svg" height="12px" alt="" />
           </div>
+          <div class="row" v-if="meetingData[meeting.id] && meetingData[meeting.id].success">
+            <p><img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged</p>
+          </div>
         </div>
 
         <button
@@ -237,13 +240,13 @@
           @click="logMeeting(meeting)"
           class="main-button secondary"
         >
-          <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
-          Log meeting
+          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+          Log Meeting
         </button>
 
         <div v-else>
           <button
-            v-if="!meetingData[meeting.id].success"
+            v-if="!(meetingData[meeting.id] && meetingData[meeting.id].success)"
             class="green-chat-button"
             @click="
               toggleChatModal(
@@ -260,9 +263,9 @@
             Review & Submit
           </button>
 
-          <div class="complete" v-else>
-            <p style="font-size: 12px">&#x2713; Meeting Logged</p>
-          </div>
+          <button disabled style="margin-right: -2px; cursor: not-allowed" class="main-button">
+            <img src="@/assets/images/wand.svg" height="12px" alt="" /> Generate Content
+          </button>
         </div>
       </div>
     </section>
@@ -288,6 +291,12 @@ export default {
     stagesWithForms: {},
   },
   watch: {
+    usingAi(val) {
+      if (val && val.value === 'false') {
+        console.log('here')
+        this.$store.dispatch('loadTemplates')
+      }
+    },
     selectedResourceType: 'changeList',
     searchValue(newVal, oldVal) {
       if (newVal !== oldVal && newVal !== '') {
@@ -302,6 +311,7 @@ export default {
   },
   data() {
     return {
+      listLoading: false,
       loading: false,
       chatModalOpen: false,
       meetingModalOpen: false,
@@ -356,8 +366,9 @@ export default {
       return newObj
     },
     async onSubmitChat() {
-      this.chatModalOpen = false
       this.submitting = true
+      this.chatModalOpen = false
+
       try {
         const res = await CRMObjects.api.updateResource({
           form_data: this.updateData,
@@ -378,7 +389,6 @@ export default {
             retry: false,
           })
         } else {
-          console.log('failed')
           this.$store.dispatch('setMeetingData', {
             id: this.currentMeetingId,
             data: res.data,
@@ -432,11 +442,27 @@ export default {
     },
     changeList() {
       if (this.selectedResourceType === 'Account' || this.selectedResourceType === 'Company') {
-        this.selectedList = this.allAccounts
+        this.$store.dispatch('loadAllAccounts')
+        this.listLoading = true
+        setTimeout(() => {
+          this.selectedList = this.allAccounts
+          this.listLoading = false
+        }, 2000)
       } else if (this.selectedResourceType === 'Contact') {
-        this.selectedList = this.allContacts
+        this.$store.dispatch('loadAllContacts')
+
+        this.listLoading = true
+        setTimeout(() => {
+          this.selectedList = this.allContacts
+          this.listLoading = false
+        }, 2000)
       } else if (this.selectedResourceType === 'Lead') {
-        this.selectedList = this.allLeads
+        this.$store.dispatch('loadAllLeads')
+
+        setTimeout(() => {
+          this.selectedList = this.allLeads
+          this.listLoading = false
+        }, 2000)
       }
     },
     async submitChatMeeting() {
@@ -499,6 +525,18 @@ export default {
       this.selectedResourceType = null
       this.noteValue = null
     },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
     async refreshCalEvents() {
       this.loading = true
       try {
@@ -508,9 +546,12 @@ export default {
         console.log('Error in refreshCalEvents: ', e)
       } finally {
         setTimeout(() => {
+          this.refreshUser()
+        }, 1000)
+        setTimeout(() => {
           this.loading = false
           this.$store.dispatch('loadMeetings')
-        }, 1000)
+        }, 1500)
       }
     },
     async getMeetingList() {
@@ -602,7 +643,7 @@ export default {
       return this.user.crm === 'SALESFORCE' ? this.$store.state.allLeads : []
     },
     noteTemplates() {
-      return this.$store.state.templates
+      return this.$store.state.templates || []
     },
     meetingData() {
       return this.$store.state.meetingData
@@ -746,7 +787,7 @@ button {
 
 .secondary {
   color: $dark-green;
-  border: 1px solid $dark-green;
+  border: 0.5px solid $dark-green;
 }
 
 .green-chat-button {
@@ -798,7 +839,7 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 1rem 0 1.25rem 0;
+  padding: 1rem 0 0 0;
 
   div {
     p {
@@ -844,6 +885,26 @@ button {
   animation: rotation 3s infinite linear;
   cursor: not-allowed;
   // opacity: 0.3;
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  padding: 4px;
+  border-radius: 4px;
+  margin: 4px 0 0 -4px;
+
+  p {
+    font-size: 12px !important;
+    color: $dark-green;
+  }
+
+  img {
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
 }
 
 .meeting-modal-container {
@@ -907,7 +968,7 @@ button {
   flex-direction: column;
   width: 525px;
   height: 90vh;
-  padding: 0 1.5rem;
+  padding: 0 1.25rem;
   background-color: white;
   border-radius: 8px;
   overflow-y: scroll;

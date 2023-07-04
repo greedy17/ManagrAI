@@ -20,15 +20,16 @@ http {
     upstream managr-websockets {
         server 127.0.0.1:8001;
     }
-
+    add_header X-Content-Type-Options nosniff;
     server {
         listen   80 default_server;
         server_name ${dns_name};
         ssi      on;
+        ssl_protocols TLSv1.2 TLSv1.3;
 
         # Set up HTTP Strict Transport Security (HSTS) with a 1-day lifespan
-        # add_header Strict-Transport-Security "max-age=17280000; includeSubdomains";
-
+        add_header Strict-Transport-Security "max-age=17280000; includeSubdomains";
+        add_header Content-Security-Policy "default-src 'self';";
         location /health-check {
             access_log off;
             return 200 "healthy\n";
@@ -49,7 +50,7 @@ http {
 
         # This is NECESSARY to make sure application redirects
         # point to https and not http
-        # proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Proto https;
 
         # gzip settings
         gzip on;
@@ -157,7 +158,7 @@ http {
             proxy_set_header    Host $host;
             proxy_set_header    X-Real-IP $remote_addr;
             proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
-
+            proxy_cookie_flags  ~ secure httponly;
             error_page 404 502 413 = @cache_miss;
             error_page 503 /503.html;
         }

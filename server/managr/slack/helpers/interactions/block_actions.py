@@ -1114,11 +1114,11 @@ def process_insert_chat_template(payload, context):
 def GET_ACTION_TEMPLATE(user, template_value):
     object_type = "Deal" if user.crm == "HUBSPOT" else "Opportunity"
     action_switcher = {
-        "GET_SUMMARY": f"Get summary for {object_type} Pied Piper",
-        "DEAL_REVIEW": f"Run a review for {object_type} Pied Piper",
-        "CALL_SUMMARY": f"Get the call summary for {object_type} Pied Piper",
-        "CALL_ANALYSIS": f"Get the call analysis for {object_type} Pied Piper",
-        "ASK_MANAGR": f"Ask Managr ... for {object_type} Pied Piper",
+        "GET_SUMMARY": f"Get summary for {object_type} XXX",
+        "DEAL_REVIEW": f"Run a review for {object_type} XXX",
+        "CALL_SUMMARY": f"Get the call summary for {object_type} XXX",
+        "CALL_ANALYSIS": f"Get the call analysis for {object_type} XXX",
+        "ASK_MANAGR": f"Ask Managr ... for {object_type} XXX",
     }
     return action_switcher[template_value]
 

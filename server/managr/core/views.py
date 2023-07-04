@@ -356,7 +356,8 @@ def submit_chat_prompt(request):
     user = User.objects.get(id=request.data["user_id"])
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
-    form_type = "CREATE" if "create" in request.data["prompt"].lower() else "UPDATE"
+    form_type = (
+        "CREATE" if ("create" in request.data["prompt"].lower() and "update" not in request.data["prompt"].lower()) else "UPDATE")
     form_template = user.team.team_forms.filter(
         form_type=form_type, resource=request.data["resource_type"]
     ).first()
@@ -374,7 +375,7 @@ def submit_chat_prompt(request):
     has_error = False
     resource_check = None
     token_amount = 500
-    timeout = 30.0
+    timeout = 60.0
     while True:
         message = None
         try:
@@ -400,9 +401,9 @@ def submit_chat_prompt(request):
                         token_amount += 500
                         continue
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
-                name_field = set_name_field(request.data["resource_type"], user.crm)
+                print('TEXT IS RIGHT HERE ---- ',text)
+                data = clean_prompt_string(text)
+                name_field = set_name_field(request.data["resource_type"])
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = request.data["resource_type"].lower()
@@ -487,11 +488,11 @@ def submit_chat_prompt(request):
             message = (
                 f" Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
                 if resource_check is None
-                else f" We could not find a {data['resource_type']} named {resource_check} because of {e}"
+                else f" We could not find a resource named {resource_check} because of {e}"
             )
 
     if has_error:
-        res = {"value": f"There was an error processing chat submission {message}"}
+        res = {"value": f"There was an error processing chat submission: {message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
@@ -519,16 +520,12 @@ def draft_follow_up(request):
     user = User.objects.get(id=request.data["id"])
     instructions = request.data["instructions"]
     if not instructions:
-        print("goooood, no INSTRUCTIONS")
         prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     else:
-        print("goooood", instructions)
-        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
-            request.data["notes"], instructions
-        )
-        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
-
+        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(request.data["notes"], instructions)
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)    
+    
     attempts = 1
 
     while True:
@@ -541,7 +538,8 @@ def draft_follow_up(request):
                 text = r.get("choices")[0].get("text")
                 return Response(data={**r, "res": text})
         except Exception as e:
-            return Response({"data": e})
+            res = {"value": f"error drafting email: {e}"}
+            return Response(data=res)        
 
 
 @api_view(["post"])
@@ -562,7 +560,8 @@ def chat_next_steps(request):
                 text = r.get("choices")[0].get("text")
                 return Response(data={**r, "res": text})
         except Exception as e:
-            return Response(data={"res": [e]})
+            res = {"value": f"error getting next steps: {e}"}
+            return Response(data=res)
 
 
 @api_view(["post"])
@@ -585,7 +584,8 @@ def get_chat_summary(request):
                 message_string_for_recap = r["choices"][0]["text"]
                 return Response(data={**r, "res": message_string_for_recap})
     except Exception as e:
-        return Response(data={"data": e})
+        res = {"value": f"error getting summary: {e}"}
+        return Response(data=res)
 
 
 @api_view(["post"])
@@ -636,7 +636,7 @@ def log_chat_meeting(request):
                 text = choice["text"]
                 cleaned_choice = clean_prompt_string(text)
                 data = eval(cleaned_choice)
-                name_field = set_name_field(resource_type, user.crm)
+                name_field = set_name_field(resource_type, )
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = resource_type.lower()

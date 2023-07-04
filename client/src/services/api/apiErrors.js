@@ -65,9 +65,7 @@ export function apiErrorHandler({
       }
 
       return
-    }
-
-    if (response && response.status === 401) {
+    } else if (response && response.status === 401) {
       // Logs out a user if there is a 401 error
       store.commit('LOGOUT_USER')
       Router.push('/login')
@@ -76,6 +74,8 @@ export function apiErrorHandler({
         message: '<div>Error...</div>' + '<div>Invalid Token Please Login Again.</div>',
         timeout: 3000,
       })
+    } else {
+      throw response
     }
 
     // Optionally re-raise for further optional error handling

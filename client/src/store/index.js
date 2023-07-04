@@ -148,6 +148,7 @@ const mutations = {
       newMsg[0]['value'] = value
       newMsg[0]['emailSent'] = emailSent
       newMsg[0]['gtMsg'] = gtMsg
+      newMsg[0].error = null
     } else {
       newMsg[0]['value'] = value
       newMsg[0]['emailSent'] = emailSent
@@ -166,6 +167,7 @@ const mutations = {
     let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
     updatedMsg[0].data = payload.data
+    updatedMsg[0].error = null
     updatedMsg[0].value = `Successfully updated ${updatedMsg[0].resource}!`
 
     let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
@@ -174,6 +176,18 @@ const mutations = {
       state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
     }
   },
+  MESSAGE_UPDATE_FAILED: (state, payload) => {
+    let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
+    updatedMsg[0].updated = false
+    updatedMsg[0].error = payload.data
+
+    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
+
+    if (indexToUpdate !== -1) {
+      state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
+    }
+  },
+
   CLEAR_MESSAGES: (state) => {
     state.messages = []
     state.chatTitle = 'All Open Opportunities'
@@ -247,6 +261,9 @@ const actions = {
   messageUpdated({ commit }, { id, data }) {
     commit('MESSAGE_UPDATED', { id, data })
   },
+  messageUpdateFailed({ commit }, { id, data }) {
+    commit('MESSAGE_UPDATE_FAILED', { id, data })
+  },
   clearMessages({ commit }) {
     commit('CLEAR_MESSAGES',)
   },
@@ -264,7 +281,7 @@ const actions = {
     if (page > 1) {
       oldResults = state.chatOpps.results
     }
-    let res = await CRMObjects.api.getObjects(resourceName, page, true, [['CONTAINS', 'Name', text]])
+    let res = await CRMObjects.api.getObjects(resourceName, page, true, [['CONTAINS', state.user.crm === 'SALESFORCE' ? 'Name' : 'dealname', text]])
     res.results = [...oldResults, ...res.results]
     commit('SAVE_CHAT_OPPS', res)
     return res
@@ -442,7 +459,7 @@ const actions = {
 const plugins = [
   createPersistedState({
     key: STORAGE_KEY,
-    // storage: window.sessionStorage
+    storage: window.sessionStorage
   }),
 ]
 
@@ -457,5 +474,9 @@ export default new Vuex.Store({
   mutations,
   actions,
   getters,
-  plugins,
+  plugins: [
+    createPersistedState({
+      paths: ['user', 'token', 'messages', 'currentView',]
+    })
+  ],
 })

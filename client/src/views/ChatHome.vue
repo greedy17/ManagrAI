@@ -147,7 +147,7 @@
             Create New Team
           </button> -->
 
-          <button class="chat-button">
+          <!-- <button class="chat-button">
             <font-awesome-icon
               v-if="team.list.length >= numberOfAllowedUsers"
               icon="fa-solid fa-user-plus"
@@ -156,7 +156,7 @@
             <font-awesome-icon v-else class="white-icon" icon="fa-solid fa-user-plus" />
 
             Add user
-          </button>
+          </button> -->
         </div>
       </div>
     </Modal>
@@ -295,14 +295,13 @@ export default {
           stage_name: null,
         })
         this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$refs.rightSideBar.reloadOpps()
+      } catch (e) {
+        this.$store.dispatch('messageUpdateFailed', { id: this.chatData.id, data: e.data.error })
+      } finally {
         setTimeout(() => {
           this.toggleChatModal()
         }, 1000)
-
         setTimeout(() => {
           this.submitting = false
         }, 2000)
