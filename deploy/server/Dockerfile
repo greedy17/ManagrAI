@@ -116,7 +116,7 @@ ENV SECRET_KEY='secret123' \
   OPEN_AI_SECRET='' \
   MICROSOFT_SECRET_KEY='' \
   GOOGLE_CLIENT_ID='' \
-  GOOGLE_LOGIN_URI='' \
+  GOOGLE_LOGIN_URI='' 
 
 
 # Set the name of the working directory inside the docker container
