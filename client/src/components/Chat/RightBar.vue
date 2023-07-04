@@ -806,10 +806,7 @@ export default {
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
       )
 
-      let allFields = this.updateOppForm[0].fieldsRef.filter(
-        (field) =>
-          field.apiName !== 'Name' && field.apiName !== 'dealname' && field.apiName !== 'name',
-      )
+      let allFields = this.updateOppForm[0].fieldsRef
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>

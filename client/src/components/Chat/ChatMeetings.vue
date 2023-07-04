@@ -293,7 +293,6 @@ export default {
   watch: {
     usingAi(val) {
       if (val && val.value === 'false') {
-        console.log('here')
         this.$store.dispatch('loadTemplates')
       }
     },

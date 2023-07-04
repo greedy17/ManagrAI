@@ -32,14 +32,16 @@
       "
     >
       <label for="">{{ field.label }}</label>
+
       <input
         class="inline-input"
-        v-if="field.dataType !== 'Double' || field.dataType !== 'Currency' || dataType !== 'Int'"
-        :value="placeholder"
-        :type="field.dataType"
+        v-if="field.dataType === 'Date' || field.dataType === 'Datetime'"
+        :value="formatDate(placeholder)"
+        type="date"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
         :disabled="loader"
       />
+
       <input
         :value="placeholder"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -92,7 +94,9 @@
 
       <Multiselect
         :options="
-          picklistOptions[field.id] || field.options[0][currentOpp.secondary_data.pipeline]
+          userCRM === 'SALESFORCE'
+            ? picklistOptions[field.id]
+            : field.options[0][currentOpp.secondary_data.pipeline]
             ? field.options[0][currentOpp.secondary_data.pipeline].stages
             : []
         "
@@ -346,6 +350,15 @@ export default {
     test(op) {
       console.log(op)
     },
+    formatDate(val) {
+      if (this.userCRM === 'HUBSPOT') {
+        const datetime = new Date(val)
+        const date = datetime.toISOString().split('T')[0]
+        return date
+      } else {
+        return val
+      }
+    },
     setUpdateValues(key, val, multi) {
       this.$emit('set-value', key, val, multi)
     },
@@ -381,6 +394,9 @@ export default {
     },
   },
   computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
     picklistOptions() {
       return this.$store.state.allPicklistOptions
     },

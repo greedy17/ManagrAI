@@ -525,6 +525,7 @@ export default {
     -webkit-mask-position: left;
   }
 }
+
 .dampen {
   filter: invert(45%);
   margin-left: 1rem;

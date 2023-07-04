@@ -37,7 +37,7 @@
           :key="i"
         >
           <ChatFormField
-            :placeholder="chatData.data[field.apiName]"
+            :placeholder="toString(chatData.data[field.apiName])"
             :field="field"
             :resourceId="chatData.resourceId"
             :integrationId="chatData.integrationId"
@@ -244,6 +244,15 @@ export default {
   },
   watch: {},
   methods: {
+    toString(data) {
+      let type = typeof data
+      if (type === 'number') {
+        let newData = data.toString()
+        return newData
+      } else {
+        return data
+      }
+    },
     toggleLeftBar() {
       this.leftBarClosed = !this.leftBarClosed
     },
