@@ -16,6 +16,7 @@ export const STORAGE_KEY = `managr-${STORAGE_HASH}`
 const state = {
   user: null,
   token: null,
+  googleSignIn: {},
   stages: null,
   filters: [],
   meetings: [],
@@ -33,7 +34,7 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
-  currentView: null,
+  currentView: 'home',
   currentOpp: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
@@ -55,6 +56,9 @@ const mutations = {
   },
   UPDATE_USER: (state, payload) => {
     state.user = payload
+  },
+  UPDATE_GOOGLE_SIGN_IN: (state, payload) => {
+    state.googleSignIn = payload
   },
   UPDATE_FILTERS: (state, payload) => {
     state.filters = payload
@@ -132,6 +136,7 @@ const mutations = {
     generated,
     generatedType,
     generatedId,
+    emailSent,
     note }) => {
 
     let newMsg
@@ -141,10 +146,12 @@ const mutations = {
       newMsg[0]['generatedType'] = generatedType
       newMsg[0]['generatedId'] = generatedId
       newMsg[0]['value'] = value
+      newMsg[0]['emailSent'] = emailSent
       newMsg[0]['gtMsg'] = gtMsg
       newMsg[0].error = null
     } else {
       newMsg[0]['value'] = value
+      newMsg[0]['emailSent'] = emailSent
     }
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
@@ -228,6 +235,7 @@ const actions = {
     generated,
     generatedType,
     generatedId,
+    emailSent,
     note }) {
     commit('EDIT_MESSAGES', {
 
@@ -237,6 +245,7 @@ const actions = {
       generated,
       generatedType,
       generatedId,
+      emailSent,
       note
     })
   },
@@ -420,12 +429,15 @@ const actions = {
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)
   },
+  updateGoogleSignIn({ commit }, payload) {
+    commit('UPDATE_GOOGLE_SIGN_IN', payload)
+  },
   updateUserToken({ commit }, payload) {
     commit('UPDATE_USERTOKEN', payload)
   },
   async logoutUser({ state, commit }) {
-    await User.api.logout()
     commit('LOGOUT_USER')
+    await User.api.logout()
   },
   refreshCurrentUser({ state, commit }) {
     if (!state.token) {

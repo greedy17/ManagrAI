@@ -1,5 +1,108 @@
 <template>
   <section class="chat-container">
+    <Modal
+      v-if="emailModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), closeEmailModal()
+        }
+      "
+    >
+      <div class="invite-form crm-form form-margin-small" style="min-width: 0">
+        <div class="header-crm">
+          <div class="flex-row-wrapper inner-crm">
+            <div class="flex-row" style="margin: 0">
+              <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
+              <h3 class="invite-form__title" style="margin-bottom: 0.6rem">Edit Email</h3>
+            </div>
+            <div class="flex-row" style="margin: 0">
+              <img
+                @click="closeEmailModal"
+                src="@/assets/images/close.svg"
+                alt=""
+                style="
+                  filter: invert(30%);
+                  cursor: pointer;
+                  width: 20px;
+                  height: 20px;
+                  /* margin-right: 5px; */
+                "
+                class="crm-exit"
+              />
+            </div>
+          </div>
+        </div>
+        <p class="card-text" style="width: 90%; font-size: 11px">Edit your email below.</p>
+        <div
+          class="flex-row-modal inner-crm"
+          style="margin: 0; justify-content: flex-start; padding-bottom: 0"
+        >
+          <div class="update-container">
+            <input
+              v-model="editName"
+              class="template-input"
+              type="text"
+              name=""
+              id=""
+              :disabled="generating"
+              style="margin-bottom: 0"
+              placeholder="Recipient's Name"
+            />
+            <input
+              v-model="editEmail"
+              class="template-input"
+              type="text"
+              name=""
+              id=""
+              :disabled="generating"
+              style="margin-bottom: 0; border-radius: 0"
+              placeholder="Recipient's Email"
+            />
+            <input
+              v-model="editSubject"
+              class="template-input"
+              type="text"
+              name=""
+              id=""
+              :disabled="generating"
+              style="border-radius: 0"
+              placeholder="Email Subject"
+            />
+
+            <quill-editor
+              :disabled="generating"
+              ref="message-body"
+              :options="{
+                modules: {
+                  toolbar: null,
+                },
+                theme: 'snow',
+                placeholder: 'Email Body',
+              }"
+              v-model="editMessage"
+              class="message__box"
+            />
+          </div>
+        </div>
+        <div class="confirm-cancel-container" style="">
+          <div
+            class="img-border cancel-button"
+            @click="closeEmailModal"
+            style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+          >
+            Cancel
+          </div>
+          <button
+            class="img-border green-button"
+            @click="sendNewEmail(editName, editEmail, editSubject, editMessage, currentMessage.id)"
+            style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </Modal>
     <header class="title-header">
       <p style="margin-right: auto"><span>Latest: </span>{{ chatTitle }}</p>
       <!-- <div class="row pointer">
@@ -66,24 +169,25 @@
                   <div class="dot"></div>
                 </div>
               </div>
+              <div
+                class="column"
+                v-else-if="message.generatedType === 'email' && addingInstructions"
+              >
+                <div class="space-between">
+                  <small>Provide any additional instructions below:</small>
 
-              <div v-else style="margin-top: 1.5rem">
-                <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
-                  <div class="space-between">
-                    <small>Provide any additional instructions below:</small>
-
-                    <p @click="closeInstructions">x</p>
-                  </div>
-
-                  <textarea
-                    v-model="instructionText"
-                    class="inline-input"
-                    v-autoresize
-                    autofocus="true"
-                    rows="1"
-                  />
+                  <p @click="closeInstructions">x</p>
                 </div>
 
+                <textarea
+                  v-model="instructionText"
+                  class="inline-input"
+                  v-autoresize
+                  autofocus="true"
+                  rows="1"
+                />
+              </div>
+              <div v-else-if="!message.emailSent" style="margin-top: 1.5rem" class="row">
                 <button
                   v-if="!addingInstructions"
                   style="margin-bottom: 0.25rem"
@@ -110,13 +214,9 @@
                   />
                   Regenerate
                 </button>
-
-                <button
-                  v-else
+                <!-- <button
                   style="margin-bottom: 0.25rem"
-                  @click="
-                    regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
-                  "
+                  @click="openEmailModal(message)"
                   class="content-button padding-small"
                 >
                   <img
@@ -275,11 +375,18 @@
 <script>
 import ChatTextBox from './ChatTextBox.vue'
 import User from '@/services/users'
+import Modal from '@/components/InviteModal'
+import { quillEditor } from 'vue-quill-editor'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 
 export default {
   name: 'ChatBox',
   components: {
     ChatTextBox,
+    quillEditor,
+    Modal,
   },
   data() {
     return {
@@ -289,6 +396,12 @@ export default {
       selectedIndex: null,
       generativeRes: null,
       generatingId: null,
+      currentMessage: null,
+      emailModal: false,
+      editName: '',
+      editEmail: '',
+      editSubject: '',
+      editMessage: '',
       addingInstructions: false,
       instructionText: null,
     }
@@ -475,6 +588,57 @@ export default {
       this.$emit('set-opp', data.resource)
       this.$emit('toggle-chat-modal', data)
     },
+    openEmailModal(message) {
+      this.editMessage = message.value.trim().replace(/\n\n/g, '<br>')
+      this.currentMessage = message
+      this.emailModal = true
+    },
+    closeEmailModal() {
+      this.editMessage = ''
+      this.editSubject = ''
+      this.editEmail = ''
+      this.editName = ''
+      this.currentMessage = null
+      this.emailModal = false
+    },
+    async sendNewEmail(name, email, subject, body, editId) {
+      if (!name || !email || !subject || !body) {
+        this.$toast('Please submit all data', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      this.generating = true
+      const data = {
+        to: [{ name, email }],
+        subject,
+        body,
+      }
+      try {
+        const res = await User.api.sendNewEmail(data)
+        this.$store.dispatch('editMessages', {
+          id: editId,
+          value: '\n\nEmail successfully sent!',
+          emailSent: true,
+        })
+      } catch (e) {
+        console.log('Error in sendNewEmail:', e)
+        this.$toast('Error sending email. Please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.generating = false
+        this.closeEmailModal()
+      }
+    },
   },
   computed: {
     user() {
@@ -519,6 +683,7 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+@import '@/styles/modals';
 
 @keyframes shimmer {
   100% {
@@ -909,7 +1074,168 @@ export default {
 .pointer {
   cursor: pointer;
 }
-// @keyframes typing {
+.invite-form {
+  @include medium-modal();
+  min-width: 37vw;
+  // min-height: 64vh;
+  align-items: center;
+  justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.crm-form {
+  height: 70vh;
+  // width: 32vw;
+  width: 45vw;
+}
+.form-margin-small {
+  margin-top: 2rem;
+}
+.header-crm {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  display: flex;
+  justify-content: center;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.inner-crm {
+  border-bottom: 1px solid $soft-gray;
+  width: 90%;
+  padding-bottom: 0.4rem;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
+.flex-row-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.card-text {
+  font-size: 14px;
+  color: $light-gray-blue;
+  margin-top: 0.5rem;
+  // text-align: center;
+}
+.flex-row-modal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
+.update-container {
+  background-color: $white;
+  // outline: 1px solid $soft-gray;
+  // padding: 30px;
+  padding-bottom: 30px;
+  border-radius: 6px;
+  // height: 85vh;
+  color: $base-gray;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+
+  button {
+    margin-left: -1px;
+    margin-top: 16px;
+  }
+}
+.template-input {
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding-left: 1rem;
+  height: 44px;
+  width: 40vw;
+  font-family: inherit;
+  margin-bottom: 1rem;
+}
+.template-input:focus {
+  outline: none;
+}
+.message__box {
+  margin-top: -16px;
+  margin-bottom: 8px;
+  height: 30vh;
+  width: 40vw;
+  border-radius: 0.25rem;
+  background-color: transparent;
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%;
+}
+.green-button {
+  @include primary-button();
+}
+.cancel-button {
+  @include gray-text-button();
+}
+.img-border {
+  @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+// @keyfsrames typing {
 //   from {
 //     width: 0;
 //   }

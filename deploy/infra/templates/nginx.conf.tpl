@@ -29,7 +29,6 @@ http {
 
         # Set up HTTP Strict Transport Security (HSTS) with a 1-day lifespan
         add_header Strict-Transport-Security "max-age=17280000; includeSubdomains";
-        add_header Content-Security-Policy "default-src 'self';";
         location /health-check {
             access_log off;
             return 200 "healthy\n";

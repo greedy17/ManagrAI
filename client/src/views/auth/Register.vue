@@ -30,6 +30,7 @@
                   :errors="registrationForm.field.fullName.errors"
                   v-model="registrationForm.field.fullName.value"
                   id="fullname"
+                  placeholder="Enter Full Name"
                 />
               </span>
 
@@ -42,6 +43,7 @@
                   v-model="registrationForm.field.email.value"
                   type="email"
                   id="email"
+                  placeholder="Enter Email"
                 />
               </span>
 
@@ -54,6 +56,7 @@
                   v-model="registrationForm.field.password.value"
                   type="password"
                   id="password"
+                  placeholder="Must be 9 characters or longer"
                 />
                 <div class="column" v-for="(message, i) in errorMessages" :key="i">
                   <small class="error">{{ message }}</small>
@@ -68,6 +71,7 @@
                   v-model="registrationForm.field.confirmPassword.value"
                   type="password"
                   id="renterpassword"
+                  placeholder="Must be 9 characters or longer"
                 />
               </span>
 
@@ -217,6 +221,17 @@ export default {
         })
         return
       }
+      const splitEmail = this.registrationForm.field.email.value.split('@')
+      if (splitEmail[splitEmail.length-1] === 'gmail.com') {
+        this.$toast('Please use a company email.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       // Continue with user registration...
       this.submitting = true
       let user
@@ -252,9 +267,6 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
-input:focus {
-  outline: none;
-}
 a {
   color: $light-gray-blue;
   font-weight: bold;
@@ -304,9 +316,6 @@ a {
     box-shadow: none;
   }
 }
-input:focus {
-  outline: none;
-}
 
 .disabled {
   background-color: $soft-gray !important;
@@ -332,13 +341,18 @@ h1 {
   align-items: center;
 }
 input {
-  width: 27vw;
+  width: 26vw;
   border-radius: 4px;
   padding: 10px;
   border: 1px solid $soft-gray;
   color: $base-gray;
   letter-spacing: 0.5px;
   font-family: #{$base-font-family};
+  margin-top: 6px;
+}
+input::placeholder {
+  color: $very-light-gray;
+  font-size: 12px;
 }
 input:focus {
   outline: none;

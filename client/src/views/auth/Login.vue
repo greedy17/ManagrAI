@@ -4,7 +4,7 @@
       <div class="center">
         <img src="@/assets/images/logo.png" height="66px" alt="" />
         <h1>Welcome Back</h1>
-        <small class="gray-blue">Enter your email & password to login to Managr</small>
+        <small class="gray-blue">Login with your email</small>
       </div>
 
       <FormField
@@ -13,7 +13,7 @@
         @blur="loginForm.field.email.validate()"
         :disabled="showPassword"
         v-model="loginForm.field.email.value"
-        placeholder="enter email"
+        placeholder="Email address"
         :errors="loginForm.field.email.errors"
       />
       <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
@@ -31,17 +31,29 @@
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
-        style="font-size: 14px"
-        text="Log in"
+        style="font-size: 14px; width: 23vw;"
+        text="Continue"
         :loading="loggingIn"
       />
+      <div class="seperator">
+        <span> OR </span>
+      </div>
+      <!-- <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button> -->
+      <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
+        <img src="@/assets/images/google.svg" />
+        <span>Continue with Google</span>
+      </button>
+      <!-- <button class="google-signin-button" @click="signInWithMicrosoft">
+        <img src="@/assets/images/microsoft.svg" />
+        <span>Continue with Microsoft</span>
+      </button> -->
       <div class="row">
         <p class="pad-right">New to Managr?</p>
-        <router-link :to="{ name: 'Register' }">Sign Up! </router-link>
+        <router-link class="register-link" :to="{ name: 'RegisterSelection' }">Register </router-link>
       </div>
       <div class="row">
         <p class="pad-right">Forgot password?</p>
-        <router-link :to="{ name: 'ForgotPassword' }"> Reset it. </router-link>
+        <router-link :to="{ name: 'ForgotPassword' }"> Reset it </router-link>
       </div>
     </div>
     <div class="links">
@@ -66,6 +78,10 @@ import debounce from 'lodash.debounce'
 import FormField from '@/components/forms/FormField'
 import Salesforce from '@/services/salesforce'
 import Hubspot from '@/services/hubspot'
+
+import { PublicClientApplication, EventType } from '@azure/msal-browser'
+// import { ConfidentialClientApplication } from '@azure/msal-node';
+
 /**
  * External Components
  */
@@ -82,6 +98,7 @@ export default {
       loggingIn: false,
       selectedCrm: null,
       showPassword: false,
+      newToken: false,
       loginForm: new UserLoginForm(),
       execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
@@ -105,6 +122,7 @@ export default {
     },
   },
   async created() {
+    this.$store.dispatch('updateGoogleSignIn', {})
     if (this.$route.query.code) {
       this.selectedCrm = this.$route.query.state
       let modelClass = this.selectedCrmSwitcher
@@ -132,6 +150,18 @@ export default {
         this.$router.push({ name: 'ListTemplates' })
       }
     }
+  },
+  async mounted() {
+    const googleInitData = await User.api.googleInit()
+    window.google.accounts.id.initialize({
+      client_id: googleInitData.client_id,
+      callback: this.onGoogleSignIn,
+      login_uri: googleInitData.login_uri,
+    });
+
+    // Attach event listener to the custom button
+    const customButton = document.getElementById('custom-google-signin-button');
+    customButton.addEventListener('click', this.signInWithGoogle);
   },
   methods: {
     async checkAccountStatus() {
@@ -172,7 +202,6 @@ export default {
       let user
       try {
         let res = await Salesforce.api.connect(this.$route.query.code)
-        console.log('RESPONSE IS HERE: ', res)
         // key = res.key
         // user = res.user
         // delete user.token
@@ -238,6 +267,93 @@ export default {
           this.loggingIn = false
           // localStorage.isLoggedOut = false
         }
+      }
+    },
+    async verifyIdToken(idToken) {
+      const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + idToken);
+      const tokenInfo = await response.json();
+      return tokenInfo;
+    },
+    async signInWithMicrosoft() {
+      const config = {
+        auth: {
+          clientId: 'ead3f8ef-4a75-4620-b660-5d9c0999f8bc',
+          authority: 'https://login.microsoftonline.com/common',
+          redirectUri: 'http://localhost:8080/auth/callback',
+        },
+        cache: {
+          cacheLocation: 'localStorage',
+        },
+      }
+
+      const myMSALObj = new PublicClientApplication(config)
+      // const cca = new ConfidentialClientApplication(config)
+
+      const authRequest = {
+        scopes: ['user.read'],
+        prompt: 'select_account',
+      };
+
+      // myMSALObj.loginRedirect({
+      //   scopes: ['user.read'],
+      // })
+      
+      try {
+        const res = await myMSALObj.loginPopup(authRequest)
+      } catch (e){
+        console.log('Error during sign-in:', e)
+      }
+    },
+    signInWithGoogle() {
+      // Trigger the Google Sign-In flow
+      window.google.accounts.id.prompt();
+    },
+    async onGoogleSignIn(response) {
+      // Handle the Google Sign-In response
+      if (response.credential) {
+        const idToken = response.credential
+        const verifiedToken = await this.verifyIdToken(idToken)
+
+        const { email } = verifiedToken;
+
+        if (verifiedToken) {
+          // Use the token for authentication or further processing
+          this.newToken = true
+          // When logging out, call this function again, but with verifiedToken being an empty object
+          this.$store.dispatch('updateGoogleSignIn', verifiedToken)
+
+          // Call get endpoint for user by email
+          // const userEmail = await User.api.getUserByEmail(email)
+          let userEmail
+          try {
+            const emailRes = await User.api.checkStatus(email)
+            userEmail = true
+          } catch(e) {
+            userEmail = false
+          }
+          if (userEmail) {
+            // Log in with SSO endpoint if they have an account
+            const response = await User.api.loginSSO({ email })
+            let token = response.data.token
+            let userData = response.data
+            delete userData.token
+            this.$store.dispatch('updateUserToken', token)
+            this.$store.dispatch('updateUser', User.fromAPI(userData))
+            if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+              this.$router.push({ name: 'Integrations' })
+            } else {
+              this.$router.push({ name: 'ListTemplates' })
+            }
+          } else {
+            // Else, send them to screen for them to get a password and org
+            this.$router.push({ name: 'GoogleRegister' })
+          }
+        } else {
+          console.error('ID token not found in credential:', response.credential);
+        }
+      } else {
+        // Sign-In was unsuccessful
+        console.error('Google Sign-In failed:', response.error);
       }
     },
   },
@@ -315,12 +431,15 @@ input:focus {
   //   border: 0;
   // }
 }
-button {
+.login-button {
   @include primary-button();
   margin-bottom: 6px;
   width: 23vw;
   padding: 14px;
   box-shadow: none;
+}
+::v-deep .haAclf {
+  width: 23vw;
 }
 a {
   text-decoration: none;
@@ -359,6 +478,7 @@ label {
 }
 .links {
   font-size: 13px;
+  letter-spacing: 0.75px;
   margin: 3rem;
 }
 ::v-deep .input-content {
@@ -373,22 +493,22 @@ label {
   flex-direction: row;
   align-items: center;
 }
-.seperator {
-  border-bottom: 1px solid $soft-gray;
-  width: 100%;
-  position: relative;
-  margin: 16px 0px;
+// .seperator {
+//   border-bottom: 1px solid $soft-gray;
+//   width: 100%;
+//   position: relative;
+//   margin: 16px 0px;
 
-  span {
-    position: absolute;
-    left: 46%;
-    top: -8px;
-    background-color: white;
-    padding: 0 8px;
-    color: $light-gray-blue;
-    font-size: 13px;
-  }
-}
+//   span {
+//     position: absolute;
+//     left: 46%;
+//     top: -8px;
+//     background-color: white;
+//     padding: 0 8px;
+//     color: $light-gray-blue;
+//     font-size: 13px;
+//   }
+// }
 
 .gray-blue {
   color: $light-gray-blue;
@@ -432,4 +552,40 @@ label {
   opacity: 0.6;
   cursor: text !important;
 }
+
+.seperator {
+  border-bottom: 1px solid $soft-gray;
+  width: 100%;
+  position: relative;
+  margin: 8px 0px;
+  span {
+    position: absolute;
+    left: 10vw;
+    top: -8px;
+    background-color: white;
+    padding: 0 8px;
+    color: $light-gray-blue;
+    font-size: 13px;
+  }
+}
+
+.google-signin-button {
+  @include gray-text-button;
+  display: flex;
+  justify-content: start;
+  font-size: 15px;
+  padding: 0.65rem;
+  width: 23vw;
+  span {
+    margin-left: 0.5rem;
+  }
+  img {
+    height: 22px;
+  }
+}
+
+.register-link {
+    text-decoration: none;
+    color: $dark-green;
+  }
 </style>

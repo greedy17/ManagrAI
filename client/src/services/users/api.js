@@ -4,6 +4,7 @@ import store from '@/store'
 
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
+const LOGIN_SSO_ENDPOINT = '/login-sso/'
 const LOGOUT_ENDPOINT = '/logout/'
 const REGISTRATION_ENDPOINT = '/register/'
 const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
@@ -24,7 +25,10 @@ const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
+const SSO_DATA_ENDPOINT = '/sso-data/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
+const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
+const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
@@ -135,6 +139,15 @@ export default class UserAPI {
       )
     return promise
   }
+  loginSSO(d) {
+    const data = { ...d }
+    const promise = apiClient()
+      .post(LOGIN_SSO_ENDPOINT, data)
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.ssoLogin', enable400Alert: false, enable500Alert: false }),
+      )
+    return promise
+  }
 
   logout(d) {
     // const data = { ...d }
@@ -233,6 +246,24 @@ export default class UserAPI {
       )
     return promise
   }
+  async sendNewEmail(data) {
+    const url = NYLAS_SEND_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
+  }
+  async sendReplyEmail(data) {
+    const url = NYLAS_REPLY_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
+  }
   retrieveEmail(uid, token) {
     /**
      * Checks user email from id to add to form
@@ -288,6 +319,13 @@ export default class UserAPI {
     }
   }
 
+  getUserByEmail(email) {
+    const url = USERS_ENDPOINT
+    return this.client
+      .get(url, { params: { email } })
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'Get User by Email API error' }))
+  }
   // getUser(userId) {
   //   const url = GET_USER_ENDPOINT(userId)
   //   return this.client
@@ -473,6 +511,15 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Get Tasks error' })
+    }
+  }
+  async googleInit() {
+    const url = SSO_DATA_ENDPOINT
+    try {
+      const res = await this.client.get(url)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'googleInit error' })
     }
   }
 

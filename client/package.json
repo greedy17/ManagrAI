@@ -14,6 +14,7 @@
     "test:e2e": "vue-cli-service test:e2e"
   },
   "dependencies": {
+    "@azure/msal-browser": "^2.16.0",
     "@datadog/browser-rum": "^2.6.2",
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
     "@fortawesome/free-brands-svg-icons": "^6.4.0",
