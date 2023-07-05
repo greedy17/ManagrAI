@@ -473,6 +473,7 @@ USE_OPEN_AI = os.environ.get("USE_OPEN_AI") == "True"
 if USE_OPEN_AI:
     OPEN_AI_SECRET = _env_get_required("OPEN_AI_SECRET")
 
+MICROSOFT_SECRET_KEY = _env_get_required("MICROSOFT_SECRET_KEY")
 GOOGLE_CLIENT_ID = _env_get_required("GOOGLE_CLIENT_ID")
 GOOGLE_LOGIN_URI = _env_get_required("GOOGLE_LOGIN_URI")
 
