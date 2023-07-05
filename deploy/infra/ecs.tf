@@ -87,6 +87,7 @@ data "template_file" "managr_app" {
     use_outreach   = title(each.value.use_outreach)
     use_hubspot    = title(each.value.use_hubspot)
     use_open_ai    = title(each.value.use_open_ai)
+    use_sso        = title(each.value.use_sso)
   }
 }
 
@@ -137,6 +138,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_outreach   = title(each.value.env.use_outreach)
     use_hubspot    = title(each.value.env.use_hubspot)
     use_open_ai    = title(each.value.env.use_open_ai)
+    use_sso        = title(each.value.env.use_sso)
   }
 }
 
@@ -324,5 +326,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     hubspotRedirectUri   = each.value.hubspot_redirect_uri
 
     openAiSecret         = each.value.open_ai_secret
+
+    microsoftSecretKey   = each.value.microsoft_secret_key
+    googleClientId       = each.value.google_client_id
+    googleLoginUri       = each.value.google_login_uri
   })
 }

@@ -113,7 +113,11 @@ ENV SECRET_KEY='secret123' \
   HUBSPOT_SECRET='' \
   HUBSPOT_REDIRECT_URI='' \
   USE_OPEN_AI='' \
-  OPEN_AI_SECRET=''
+  OPEN_AI_SECRET='' \
+  USE_SSO=False\
+  MICROSOFT_SECRET_KEY='' \
+  GOOGLE_CLIENT_ID='' \
+  GOOGLE_LOGIN_URI='' 
 
 
 # Set the name of the working directory inside the docker container

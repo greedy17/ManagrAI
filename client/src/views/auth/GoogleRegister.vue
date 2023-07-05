@@ -6,11 +6,15 @@
         <div :class="{ disable: generatingToken }" class="form-card">
           <div class="center">
             <img src="@/assets/images/logo.png" height="60px" alt="" />
-            <h2 class="logo-title">Welcome to Managr</h2>
-            <small class="gray-blue" style="margin: 8px 0px 16px 8px"
-              >Fill out the form below to get started</small
+            <h2 class="logo-title">Welcome to Managr{{ this.$store.state.googleSignIn ? `, ${this.$store.state.googleSignIn.given_name}` : ''}}</h2>
+            <small v-if="this.$store.state.googleSignIn" class="gray-blue centered" style="margin: 8px 0px 8px 8px"
+              ><img class="google-signing-pic__small" :src="this.$store.state.googleSignIn.picture" /> Logged in as {{ this.$store.state.googleSignIn.email }}</small
             >
+            <div class="separator"></div>
           </div>
+          <!-- <small class="" style="margin: 8px 0px 8px 0px"
+            >Fill out the form below to get started</small
+          > -->
 
           <!-- <button v-if="!generatingToken">Fill out register form</button>
 
@@ -22,18 +26,18 @@
             <span> OR </span>
           </div> -->
 
-          <span>
+          <!-- <span>
             <label for="name">Full Name</label>
             <input
               @blur="registrationForm.field.fullName.validate()"
               :errors="registrationForm.field.fullName.errors"
               v-model="registrationForm.field.fullName.value"
-              placeholder="Enter Full Name"
+              placeholder=""
               id="name"
             />
-          </span>
+          </span> -->
 
-          <span>
+          <!-- <span>
             <label for="email">Email</label>
             <input
               @blur="registrationForm.field.email.validate()"
@@ -41,12 +45,22 @@
               v-model="registrationForm.field.email.value"
               type="email"
               id="email"
-              placeholder="Enter Email"
+            />
+          </span> -->
+
+          <span class="col">
+            <label class="" for="company">Company Name</label>
+            <input
+              @blur="registrationForm.field.organizationName.validate()"
+              :errors="registrationForm.field.organizationName.errors"
+              v-model="registrationForm.field.organizationName.value"
+              placeholder="Enter Company Name"
+              id="company"
             />
           </span>
 
           <span>
-            <label for="password">Set a Password</label>
+            <label class="" for="password">Create Password</label>
             <input
               id="password"
               @blur="showVals(registrationForm.field.password)"
@@ -62,7 +76,7 @@
           </span>
 
           <span>
-            <label for="confirm-password">Re-Enter Password</label>
+            <label class="" for="confirm-password">Re-Enter Password</label>
             <input
               id="confirm-password"
               label="Re-Enter Password"
@@ -74,18 +88,7 @@
             />
           </span>
 
-          <span class="col">
-            <label for="company">Company Name</label>
-            <input
-              @blur="registrationForm.field.organizationName.validate()"
-              :errors="registrationForm.field.organizationName.errors"
-              v-model="registrationForm.field.organizationName.value"
-              placeholder="Enter Company Name"
-              id="company"
-            />
-          </span>
-
-          <span class="col">
+          <!-- <span class="col">
             <label for="role">Role</label>
             <Multiselect
               placeholder="Select your role"
@@ -93,7 +96,7 @@
               v-model="userRole"
               :options="userRoles"
               openDirection="above"
-              style="width: 26vw; padding: 0; margin-top: 6px;"
+              style="width: 26vw; padding: 0"
               selectLabel="Enter"
               label="name"
               id="role"
@@ -102,7 +105,7 @@
                 <p>No results.</p>
               </template>
             </Multiselect>
-          </span>
+          </span> -->
 
           <div class="form-card__footer">
             <div>
@@ -129,26 +132,15 @@
 
 <script>
 import User, { UserRegistrationForm } from '@/services/users'
-import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
 
-import Button from '@thinknimble/button'
-import FormField from '@/components/forms/FormField'
 import moment from 'moment-timezone'
 
 import Salesforce from '@/services/salesforce'
 import Hubspot from '@/services/hubspot'
 
-import PipelineLoader from '@/components/PipelineLoader'
-
 export default {
-  name: 'Registration',
-  components: {
-    FormField,
-    Button,
-    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    PulseLoadingSpinner,
-    PipelineLoader,
-  },
+  name: 'GoogleRegistration',
+  components: {},
   data() {
     return {
       User,
@@ -188,14 +180,18 @@ export default {
   async created() {
     const validCode = this.$route.params.validCode
 
-    if (!validCode && !this.$route.query.code) {
-      this.$router.push({
-        name: 'Register',
-      })
-    }
+    // if (!validCode && !this.$route.query.code) {
+    //   this.$router.push({
+    //     name: 'Register',
+    //   })
+    // }
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
+
+    this.registrationForm.field.fullName.value = this.$store.state.googleSignIn.name
+    this.registrationForm.field.email.value = this.$store.state.googleSignIn.email
+    this.registrationForm.field.role.value = 'Management'
 
     if (this.$route.query.code) {
       this.generatingToken = true
@@ -252,17 +248,6 @@ export default {
 
       if (!this.registrationForm.isValid) {
         this.$toast('Please complete all fields.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        return
-      }
-      const splitEmail = this.registrationForm.field.email.value.split('@')
-      if (splitEmail[splitEmail.length-1] === 'gmail.com') {
-        this.$toast('Please use a company email.', {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -489,7 +474,7 @@ a {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-size: 28px;
+  font-size: 24px;
 }
 .seperator {
   border-bottom: 1px solid $soft-gray;
@@ -553,5 +538,19 @@ h2 {
   opacity: 0.7;
   background-color: white;
   cursor: text !important;
+}
+.google-signing-pic__small {
+  height: 16px;
+  border-radius: 1rem;
+  margin-right: 0.25rem;
+}
+.centered {
+  display: flex;
+  align-items: center;
+}
+.separator {
+  border-bottom: 1px solid $soft-gray;
+  width: 100%;
+  margin: 0.5rem 0;
 }
 </style>
