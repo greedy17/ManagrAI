@@ -1342,6 +1342,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             form.save()
                         else:
                             has_error = True
+                            message = "We could not find an record type in your submission"
                             break
                     else:
                         if user.crm == "SALESFORCE":
