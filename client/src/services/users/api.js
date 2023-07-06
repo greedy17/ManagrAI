@@ -35,6 +35,8 @@ const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 const CHAT_SUBMISSION = 'users/chat/submission/'
+const CHAT_ASK = 'users/chat/ask-managr/'
+const CHAT_DEAL_REVIEW = 'users/chat/deal-review/'
 const CHAT_EMAIL = 'users/chat/follow-up-email/'
 const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
@@ -67,10 +69,30 @@ export default class UserAPI {
     try {
       const res = await this.client.post(CHAT_SUBMISSION, data)
       return res.data
-    } catch(e) {
+    } catch (e) {
       console.log('Error in chatUpdate: ', e)
       apiErrorHandler({ apiName: 'User.chatUpdate' })
-      return {value: e.response.data.value, status: e.response.status}
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
+
+  async askManagr(data) {
+    try {
+      const res = await this.client.post(CHAT_ASK, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.askManagr' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
+
+  async dealReview(data) {
+    try {
+      const res = await this.client.post(CHAT_DEAL_REVIEW, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.dealReview' })
+      return { value: e.response.data.value, status: e.response.status }
     }
   }
 

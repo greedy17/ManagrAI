@@ -42,12 +42,20 @@
                 :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
                 v-if="message.user === 'bot' && message.gtMsg"
               >
-                <p>
+                <h4 style="margin: 0">
                   {{ message.gtMsg }}
-                </p>
+                </h4>
                 <small>
                   {{ message.data.Name }}
                 </small>
+              </div>
+
+              <div
+                :class="{ 'type-header': message.title === 'Deal Review' }"
+                style="font-weight: bold; font-size: 14px"
+                v-else-if="message.user === 'bot' && message.title"
+              >
+                {{ message.title }}
               </div>
 
               <pre v-html="message.value" class="message-text"></pre>

@@ -1,32 +1,13 @@
 <template>
   <section class="input-section">
     <Transition name="slide-fade">
-      <div v-if="templatesOpen" class="templates">
-        <section class="section">
-          <header style="border-top: none" class="template-header">
-            <span class="gray-bg"> 🦾 </span>
-            <p class="gray-title">Actions</p>
-            <small @click="toggleTemplates" class="automarginleft">x</small>
-          </header>
-          <div class="template-body">
-            <p @click="addTemplate(action.value)" v-for="(action, i) in actions" :key="i">
-              {{ action.name }}
-            </p>
-          </div>
-        </section>
-
-        <!-- <section class="section">
-          <header class="template-header">
-            <span class="blue-bg">
-              <img src="@/assets/images/article.svg" class="blue-filter" height="14px" alt="" />
-            </span>
-            <p class="gray-title">Note templates</p>
-          </header>
-          <div class="template-body">
-            <p>1st template</p>
-            <p>2nd template</p>
-          </div>
-        </section> -->
+      <div v-if="showMessage" class="templates">
+        <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
+      </div>
+    </Transition>
+    <Transition name="slide-fade">
+      <div v-if="showReviewMessage" class="deal-template">
+        <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
       </div>
     </Transition>
 
@@ -84,13 +65,15 @@ export default {
   data() {
     return {
       message: '',
+      showMessage: false,
       templatesOpen: false,
+      showReviewMessage: false,
       chatRes: null,
       actions: [
-        { name: 'Update CRM', value: 'Update ...' },
+        { name: 'Update CRM', value: 'Update...' },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr ...  ' },
-        { name: 'Deal Inspection', value: 'Run Review for ...' },
+        { name: 'Ask Managr', value: 'Ask managr. ' },
+        { name: 'Deal Inspection', value: 'Run Review' },
         // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
         // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
@@ -106,7 +89,117 @@ export default {
       }, 100)
     },
     async sendMessage() {
-      if (this.message.length > 3) {
+      if (this.message.toLowerCase().includes('ask managr')) {
+        let chatmsg = this.message
+        this.$emit('set-message', { user: 'user', value: chatmsg })
+        this.$emit('message-loading', true)
+        this.message = ''
+
+        try {
+          setTimeout(() => {
+            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+          }, 100)
+
+          let res = await User.api.askManagr({
+            user_id: this.user.id,
+            prompt: chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.$store.state.currentOpp.id,
+          })
+          console.log(res)
+          this.chatRes = res
+
+          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: this.chatRes.value,
+              failed: true,
+            })
+          } else if (this.chatRes.status === 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: 'Timeout error, try again',
+              failed: true,
+            })
+          } else {
+            this.$emit('set-message', {
+              user: 'bot',
+              id: this.chatRes['id'],
+              value: this.chatRes['res'],
+              // data: this.chatRes['data'],
+              resourceId: this.chatRes['resourceId'],
+              resourceType: this.chatRes['resourceType'],
+              updated: false,
+              title: 'Ask Managr',
+            })
+          }
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.$emit('message-loading', false)
+          this.scrollToBottom()
+        }
+      } else if (this.message.toLowerCase().includes('run review')) {
+        let chatmsg = this.message
+        this.$emit('set-message', { user: 'user', value: chatmsg })
+        this.$emit('message-loading', true)
+        this.message = ''
+
+        console.log('I MADE IT HERE')
+
+        try {
+          setTimeout(() => {
+            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+          }, 100)
+
+          let res = await User.api.dealReview({
+            user_id: this.user.id,
+            prompt: chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.$store.state.currentOpp.id,
+          })
+          console.log(res)
+          this.chatRes = res
+
+          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: this.chatRes.value,
+              failed: true,
+            })
+          } else if (this.chatRes.status === 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: 'Timeout error, try again',
+              failed: true,
+            })
+          } else {
+            this.$emit('set-message', {
+              user: 'bot',
+              id: this.chatRes['id'],
+              value: this.chatRes['res'],
+              // data: this.chatRes['data'],
+              resourceId: this.chatRes['resourceId'],
+              resourceType: this.chatRes['resourceType'],
+              updated: false,
+              title: 'Deal Review',
+            })
+          }
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.$emit('message-loading', false)
+          this.scrollToBottom()
+        }
+      } else if (this.message.length > 3) {
         let chatmsg = this.message
         this.$emit('set-message', { user: 'user', value: chatmsg })
         this.$emit('message-loading', true)
@@ -165,9 +258,37 @@ export default {
       this.message += '\n'
     },
     addTemplate(val) {
-      this.message = val
+      if (val.toLowerCase().includes('ask managr')) {
+        if (this.currentOpp) {
+          this.message = val
+          // this.message = `${val} ${this.currentOpp.name}`
+        } else {
+          this.toggleMessage()
+        }
+      } else if (val.toLowerCase().includes('run review')) {
+        if (this.currentOpp) {
+          this.message = val
+        } else {
+          this.toggleDealMessage()
+        }
+      } else {
+        this.message = val
+      }
     },
-
+    toggleMessage() {
+      this.showMessage = true
+      this.showReviewMessage = false
+      setTimeout(() => {
+        this.showMessage = false
+      }, 1200)
+    },
+    toggleDealMessage() {
+      this.showReviewMessage = true
+      this.showMessage = false
+      setTimeout(() => {
+        this.showReviewMessage = false
+      }, 1200)
+    },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
     },
@@ -175,6 +296,9 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    currentOpp() {
+      return this.$store.state.currentOpp
     },
   },
   directives: {
@@ -309,18 +433,6 @@ export default {
   font-size: 14px;
   color: $base-gray;
   letter-spacing: 0.5px;
-}
-
-.templates {
-  // border: 1px solid rgba(0, 0, 0, 0.1);
-  min-height: 60px;
-  width: 250px;
-  position: absolute;
-  padding-bottom: 0.5rem;
-  bottom: 3.5rem;
-  border-radius: 6px;
-  background-color: white;
-  box-shadow: 0 0 11px #b8bdc2;
 }
 
 .template-header {
@@ -474,5 +586,65 @@ export default {
   visibility: visible;
   pointer-events: auto;
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+
+.templates {
+  display: block;
+  width: fit-content;
+  height: 48px;
+  position: absolute;
+  top: 1rem;
+  left: 120px;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 20;
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.deal-template {
+  display: block;
+  width: fit-content;
+  height: 48px;
+  position: absolute;
+  top: 1rem;
+  left: 230px;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 20;
+}
+
+.deal-template::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 </style>

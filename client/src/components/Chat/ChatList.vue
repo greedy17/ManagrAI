@@ -119,10 +119,22 @@
         </thead>
         <tbody>
           <tr v-for="(opp, i) in currentView.sobjectInstances" :key="i">
-            <td @click="setOpp(user.crm === 'HUBSPOT' ? opp.dealname : opp.Name)">
+            <td
+              :title="user.crm === 'HUBSPOT' ? opp.dealname : opp.Name"
+              @click="setOpp(user.crm === 'HUBSPOT' ? opp.dealname : opp.Name)"
+            >
               <span>{{ user.crm === 'HUBSPOT' ? opp.dealname : opp.Name }}</span>
             </td>
-            <td>
+            <td
+              :title="
+                user.crm === 'HUBSPOT'
+                  ? stageField &&
+                    stageField.options[0][opp.pipeline].stages.filter(
+                      (stage) => stage.id === opp['dealstage'],
+                    )[0].label
+                  : opp.StageName
+              "
+            >
               {{
                 user.crm === 'HUBSPOT'
                   ? stageField &&
@@ -133,7 +145,13 @@
               }}
             </td>
 
-            <td>
+            <td
+              :title="
+                user.crm === 'HUBSPOT'
+                  ? formatDateTime(opp.closedate)
+                  : formatDateTime(opp.CloseDate)
+              "
+            >
               {{
                 user.crm === 'HUBSPOT'
                   ? formatDateTime(opp.closedate)
@@ -141,7 +159,11 @@
               }}
             </td>
 
-            <td v-for="(field, i) in extraPipelineFields" :key="i">
+            <td
+              :title="fieldData(field.dataType, user.crm, field, opp)"
+              v-for="(field, i) in extraPipelineFields"
+              :key="i"
+            >
               {{ fieldData(field.dataType, user.crm, field, opp) }}
             </td>
           </tr>
@@ -241,6 +263,15 @@ export default {
           ? opp[field.apiName]
           : opp[this.capitalizeFirstLetter(this.camelize(field.apiName))]
         : opp[field.apiName]
+    },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+        if (+match === 0) return ''
+        return index === 0 ? match.toLowerCase() : match.toUpperCase()
+      })
     },
     formatDate(input) {
       var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
@@ -404,9 +435,9 @@ export default {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   width: 300px;
 }
-::v-deep .multiselect__placeholder {
-  color: $base-gray;
-}
+// ::v-deep .multiselect__placeholder {
+//   color: $base-gray;
+// }
 
 ::v-deep .multiselect__tag {
   background-color: $soft-gray;
@@ -620,6 +651,7 @@ export default {
   overflow-y: scroll;
   overflow-x: hidden;
   position: relative;
+  // background: $soft-gray;
 }
 
 .add-field {
@@ -655,11 +687,12 @@ export default {
 
 .chat-table-section {
   position: relative;
-  height: 85vh;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  height: 96vh;
   overflow: scroll;
-  padding: 0 1rem 1rem 0;
-  margin: 0 1rem;
-  background-color: white;
+  margin: 0 0.25rem 0 0.5rem;
+  padding: 0 0 2px 0 !important;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -712,10 +745,13 @@ table {
   font-size: 14px;
   position: absolute;
 }
+tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 thead {
   position: sticky;
-  background-color: white;
-  color: $light-gray-blue;
+  color: $base-gray;
   font-size: 12px !important;
   top: 0;
   z-index: 3;
@@ -730,20 +766,26 @@ th {
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  border: none !important;
+  background: $off-white !important;
 }
 td {
   max-width: 300px;
   min-width: 120px;
   max-height: 90px;
   overflow-y: scroll;
+  background-color: white;
 }
 th,
 td {
-  padding: 1rem 1.25rem 1.25rem 0;
+  // position: relative;
+  padding: 1rem 1.25rem 1rem 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: normal;
+  // border-left: 1px solid rgba(0, 0, 0, 0.1);
+  // border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 td:first-of-type {
@@ -754,9 +796,11 @@ td:first-of-type {
   cursor: pointer;
   min-width: 150px;
 
+  // color: $dark-gray-blue;
+
   span {
     background-color: $off-white;
-    padding: 0.75rem 0.5rem 0.75rem 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem !important;
     border-radius: 5px;
     max-width: 290px !important;
   }
@@ -770,6 +814,7 @@ th:first-of-type {
 }
 
 .list-header {
+  z-index: 5;
   position: sticky;
   background-color: white;
   top: 0;

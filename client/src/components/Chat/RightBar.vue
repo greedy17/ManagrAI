@@ -25,7 +25,7 @@
           <div class="elipsis-text">
             <span class="icon-bg">
               <img
-                @click="selectedOpp = null"
+                @click="deselectOpp"
                 src="@/assets/images/back.svg"
                 height="16px;width:16px"
                 alt=""
@@ -87,7 +87,12 @@
           <div class="input">
             <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
 
-            <input class="search-input" v-model="searchText" :placeholder="`Search by name`" />
+            <input
+              @keydown.enter="loadFromEnter"
+              class="search-input"
+              v-model="searchText"
+              :placeholder="`Search by name`"
+            />
             <img
               v-show="searchText"
               @click="clearText"
@@ -280,10 +285,11 @@
             border: 1px solid #eeeeee;
             background-color: white;
             padding-left: 1rem;
-            width: 100.5%;
+            width: 99.75%;
             margin-left: 0.5px;
             border-radius: 5px;
             height: 100%;
+            overflow-y: scroll;
           "
         >
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
@@ -337,9 +343,14 @@
           </div>
         </div>
       </div>
-      <div v-show="view === 'notes'" class="selected-opp-section">
+      <div
+        v-for="(notes, month) in sortedNotes"
+        :key="month"
+        v-show="view === 'notes'"
+        class="selected-opp-section"
+      >
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
-          Year: 2023
+          {{ month }}
           <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
         <section v-if="notes.length">
@@ -438,6 +449,7 @@ export default {
       loadingNotes: false,
       loadingMore: false,
       notes: [],
+      sortedNotes: [],
       editing: false,
       activeField: null,
       oppsLoading: false,
@@ -600,6 +612,34 @@ export default {
     test() {
       console.log('log', this.user)
     },
+    deselectOpp() {
+      this.selectedOpp = null
+      this.$store.dispatch('setCurrentOpp', null)
+    },
+    setSortedNotes() {
+      const sortedObjects = this.notes.sort((a, b) => {
+        const dateA = new Date(a.submission_date)
+        const dateB = new Date(b.submission_date)
+        return dateB - dateA // Sort in descending order
+      })
+
+      const sections = {}
+
+      sortedObjects.forEach((obj) => {
+        const date = new Date(obj.submission_date)
+        const month = `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`
+
+        if (!sections[month]) {
+          sections[month] = []
+        }
+
+        sections[month].push(obj)
+      })
+
+      console.log('sections', sections)
+      this.sortedNotes = sections
+      // return sections;
+    },
     setTooltip(id) {
       this.hoverId = id
 
@@ -638,6 +678,8 @@ export default {
       }
     },
     async getNotes() {
+      this.sortedNotes = []
+      this.notes = []
       if (this.selectedOpp) {
         this.loadingNotes = true
         try {
@@ -655,6 +697,9 @@ export default {
         } catch (e) {
           console.log(e)
         } finally {
+          if (this.notes.length) {
+            this.setSortedNotes()
+          }
           setTimeout(() => {
             this.loadingNotes = false
           }, 300)
@@ -710,11 +755,7 @@ export default {
     },
     async addFilter() {
       let filter = []
-      console.log(
-        this.selectedFilter.operator,
-        this.selectedFilter.apiName,
-        this.selectedFilter.value,
-      )
+
       filter = [
         this.selectedFilter.operator,
         this.selectedFilter.apiName,
@@ -776,6 +817,7 @@ export default {
       this.loadMorePage = 0
       if (opp) {
         this.selectedOpp = opp
+        this.$store.dispatch('setCurrentOpp', opp)
       } else if (name) {
         let opp
         opp = this.opportunities.filter((opp) => opp.name === name)[0]
@@ -890,6 +932,26 @@ export default {
         return `${hours}:${minutes} AM`
       }
     },
+    async loadFromEnter() {
+      if (this.searchText) {
+        this.loadMorePage += 1
+        this.loadingMore = true
+        try {
+          let res = await this.$store.dispatch('loadMoreChatOpps', {
+            page: this.loadMorePage,
+            text: this.searchText,
+          })
+        } catch (e) {
+          console.log(e)
+          this.page = 0
+          this.loadMorePage = 0
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      }
+    },
     async loadMoreOpps() {
       if (this.searchText) {
         this.loadMorePage += 1
@@ -899,7 +961,6 @@ export default {
             page: this.loadMorePage,
             text: this.searchText,
           })
-          console.log(res)
         } catch (e) {
           console.log(e)
           this.page = 0
@@ -1026,7 +1087,7 @@ export default {
   position: absolute;
   top: 1rem;
   right: 2px;
-  background-color: white;
+  // background-color: white;
 }
 
 .shimmer {
