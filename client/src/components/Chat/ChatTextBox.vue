@@ -1,16 +1,5 @@
 <template>
   <section class="input-section">
-    <Transition name="slide-fade">
-      <div v-if="showMessage" class="templates">
-        <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
-      </div>
-    </Transition>
-    <Transition name="slide-fade">
-      <div v-if="showReviewMessage" class="deal-template">
-        <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
-      </div>
-    </Transition>
-
     <div class="input-container">
       <div>
         <textarea
@@ -28,20 +17,26 @@
             <img class="gold-filter" src="@/assets/images/bolt.svg" height="12px" alt="" />
           </span>
 
-          <div>
+          <div class="action">
             <p
-              :class="{ 'current-actions': currentOpp && action.name !== 'Update CRM' }"
+              class="action__p"
+              :class="{ 'current-actions': currentOpp }"
               @click="addTemplate(action.value)"
               v-for="(action, i) in actions"
               :key="i"
             >
               {{ action.name }}
             </p>
-            <p class="current" v-if="currentOpp">
+            <p class="action__p current" v-if="currentOpp">
               {{ currentOpp.name }}
+              <span class="remove" @click="clearMessage">x</span>
             </p>
+            <Transition name="slide-fade">
+              <div v-if="showMessage" class="templates">
+                <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
+              </div>
+            </Transition>
           </div>
-
           <font-awesome-icon
             :class="{ invert: !message }"
             class="gray"
@@ -78,9 +73,12 @@ export default {
       showReviewMessage: false,
       chatRes: null,
       actions: [
-        { name: 'Update CRM', value: 'Update...' },
+        {
+          name: 'Update CRM',
+          value: 'Update XXX',
+        },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr. ' },
+        { name: 'Ask Managr', value: 'Ask managr... ' },
         { name: 'Deal Inspection', value: 'Run Review' },
         // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
@@ -95,6 +93,9 @@ export default {
       setTimeout(() => {
         this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
       }, 100)
+    },
+    clearMessage() {
+      this.$emit('remove-opp')
     },
     async sendMessage() {
       if (this.message.toLowerCase().includes('ask managr')) {
@@ -266,21 +267,18 @@ export default {
       this.message += '\n'
     },
     addTemplate(val) {
-      if (val.toLowerCase().includes('ask managr')) {
-        if (this.currentOpp) {
-          this.message = val
-          // this.message = `${val} ${this.currentOpp.name}`
+      if (this.currentOpp) {
+        if (val.toLowerCase().includes('update')) {
+          if (this.currentOpp) {
+            this.message = `Update ${this.currentOpp.name} ...`
+          } else {
+            this.toggleMessage()
+          }
         } else {
-          this.toggleMessage()
-        }
-      } else if (val.toLowerCase().includes('run review')) {
-        if (this.currentOpp) {
           this.message = val
-        } else {
-          this.toggleDealMessage()
         }
       } else {
-        this.message = val
+        this.toggleMessage()
       }
     },
     toggleMessage() {
@@ -342,6 +340,24 @@ export default {
   }
 }
 
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(5px);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .current-actions {
   border: 1px solid $dark-green !important;
   color: $dark-green !important;
@@ -356,6 +372,7 @@ export default {
   color: white !important;
   border: 1px solid $dark-green !important;
   cursor: text !important;
+  padding-right: 2px !important;
 }
 
 .input-section {
@@ -377,27 +394,40 @@ export default {
   margin-bottom: -2px;
 }
 
+.remove {
+  background-color: rgba(0, 0, 0, 0.1);
+  z-index: 4;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+}
+
 .main-text {
   display: flex;
   align-items: center;
   padding: 0.5rem 0 0.25rem 0;
   margin: 0;
+}
 
-  div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    p {
-      padding: 0.25rem 0.5rem;
-      margin: 0 0.5rem;
-      color: $light-gray-blue;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 12px;
-      background-color: white;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-    }
+.action {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  &__p {
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.5rem;
+    color: $light-gray-blue;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -613,12 +643,13 @@ export default {
 }
 
 .templates {
+  // animation: shake 0.3s 1;
   display: block;
   width: fit-content;
-  height: 48px;
+  height: 40px;
   position: absolute;
-  top: 1rem;
-  left: 120px;
+  top: -3.25rem;
+  left: 0.5rem;
   font-size: 12px;
   background: $coral;
   color: white;
@@ -628,6 +659,11 @@ export default {
   pointer-events: none;
   line-height: 1.5;
   z-index: 20;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
 }
 
 .templates::before {
@@ -637,37 +673,7 @@ export default {
   width: 8px;
   background: $coral;
   bottom: -3px;
-  left: 50%;
-  transform: translate(-50%) rotate(45deg);
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.deal-template {
-  display: block;
-  width: fit-content;
-  height: 48px;
-  position: absolute;
-  top: 1rem;
-  left: 230px;
-  font-size: 12px;
-  background: $coral;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 5px;
-  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-  line-height: 1.5;
-  z-index: 20;
-}
-
-.deal-template::before {
-  position: absolute;
-  content: '';
-  height: 8px;
-  width: 8px;
-  background: $coral;
-  bottom: -3px;
-  left: 50%;
+  left: 10%;
   transform: translate(-50%) rotate(45deg);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }

@@ -175,7 +175,7 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" />
+      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" @remove-opp="removeOpp" />
     </main>
     <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings
@@ -355,6 +355,10 @@ export default {
 
     handleInvite() {
       console.log('handled')
+    },
+    removeOpp() {
+      console.log('hererererer')
+      this.$refs.rightSideBar.deselectOpp()
     },
   },
   computed: {

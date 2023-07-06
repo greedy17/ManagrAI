@@ -274,6 +274,7 @@
       @message-loading="setLoader"
       @set-message="setMessage"
       @set-title="setTitle"
+      @remove-opp="removeOpp"
       :messages="messages"
       :scrollToBottom="scrollToBottom"
     />
@@ -305,6 +306,9 @@ export default {
     messages: 'scrollToBottom',
   },
   methods: {
+    removeOpp() {
+      this.$emit('remove-opp')
+    },
     regenerate(type, data, editId, sumObj) {
       this.generatingId = editId
       if (type === 'email') {
