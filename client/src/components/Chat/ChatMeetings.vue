@@ -21,13 +21,6 @@
           </div>
 
           <h4 v-if="!submitting" @click="toggleChatModal" style="cursor: pointer">x</h4>
-          <!-- <img
-            v-else
-            class="rotate opaque"
-            src="@/assets/images/refresh.svg"
-            height="18px"
-            alt=""
-          /> -->
         </div>
 
         <div
@@ -42,7 +35,7 @@
                 ? updateData['NoteSubject']
                 : -->
           <ChatFormField
-            :placeholder="updateData[field.apiName]"
+            :placeholder="toString(updateData[field.apiName])"
             :field="field"
             :resourceId="currentResourceId"
             :integrationId="currentIntegrationId"
@@ -55,7 +48,7 @@
 
         <div class="chat-modal-footer">
           <button :disabled="submitting" @click="toggleChatModal">Close</button>
-          <button :disabled="submitting" @click="onSubmitChat">Submit</button>
+          <button :disabled="submitting" @click="submitChat">Submit</button>
         </div>
       </div>
     </Modal>
@@ -228,6 +221,8 @@
             class="failed"
           >
             <img src="@/assets/images/ban.svg" height="12px" alt="" />
+
+            {{ meetingData[meeting.id].data }}
           </div>
           <div class="row" v-if="meetingData[meeting.id] && meetingData[meeting.id].success">
             <p><img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged</p>
@@ -236,7 +231,7 @@
 
         <button
           :disabled="submitting"
-          v-if="!meetingData[meeting.id]"
+          v-if="!meetingData[meeting.id] || meetingData[meeting.id].retry"
           @click="logMeeting(meeting)"
           class="main-button secondary"
         >
@@ -263,7 +258,12 @@
             Review & Submit
           </button>
 
-          <button disabled style="margin-right: -2px; cursor: not-allowed" class="main-button">
+          <button
+            v-else
+            disabled
+            style="margin-right: -2px; cursor: not-allowed"
+            class="main-button"
+          >
             <img src="@/assets/images/wand.svg" height="12px" alt="" /> Generate Content
           </button>
         </div>
@@ -349,6 +349,15 @@ export default {
     test() {
       console.log(this.meetings)
     },
+    toString(data) {
+      let type = typeof data
+      if (type === 'number') {
+        let newData = data.toString()
+        return newData
+      } else {
+        return data
+      }
+    },
     removeSpacesFromKeys(obj) {
       const newObj = {}
 
@@ -364,10 +373,14 @@ export default {
 
       return newObj
     },
-    async onSubmitChat() {
+    submitChat() {
       this.submitting = true
       this.chatModalOpen = false
-
+      setTimeout(() => {
+        this.onSubmitChat()
+      }, 500)
+    },
+    async onSubmitChat() {
       try {
         const res = await CRMObjects.api.updateResource({
           form_data: this.updateData,
@@ -474,12 +487,21 @@ export default {
           workflow_id: this.currentMeeting.id,
           resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
         })
-        this.$store.dispatch('setMeetingData', {
-          id: this.currentMeeting.id,
-          data: res.data,
-          success: false,
-          retry: false,
-        })
+        if (res.failed) {
+          this.$store.dispatch('setMeetingData', {
+            id: this.currentMeeting.id,
+            data: res.data,
+            success: false,
+            retry: true,
+          })
+        } else {
+          this.$store.dispatch('setMeetingData', {
+            id: this.currentMeeting.id,
+            data: res.data,
+            success: false,
+            retry: false,
+          })
+        }
       } catch (e) {
         console.log(e)
       } finally {
@@ -700,9 +722,19 @@ button {
 }
 
 .failed {
-  // margin-top: 0.25rem;
+  display: flex;
+  align-items: flex-start;
+  color: $coral;
+  font-size: 11px;
+  margin-top: 0.25rem;
+  font-size: 11px !important;
+
+  width: 100%;
+
   img {
     filter: invert(50%) sepia(32%) saturate(1115%) hue-rotate(309deg) brightness(99%) contrast(97%);
+    margin-right: 0.5rem;
+    margin-top: 3px;
   }
 }
 

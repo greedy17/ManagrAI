@@ -464,7 +464,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'messages', 'currentView',]
+      paths: ['user', 'token', 'messages', 'currentView', 'meetingData']
     })
   ],
 })

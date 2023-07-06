@@ -432,7 +432,6 @@ def submit_chat_prompt(request):
                         token_amount += 500
                         continue
                 text = choice["text"]
-                print('TEXT IS RIGHT HERE ---- ',text)
                 data = clean_prompt_string(text)
                 name_field = set_name_field(request.data["resource_type"])
                 data = correct_data_keys(data)
@@ -800,8 +799,7 @@ def log_chat_meeting(request):
                 r = _handle_response(r)
                 choice = r["choices"][0]
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
+                data = clean_prompt_string(text)
                 name_field = set_name_field(resource_type, )
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
@@ -866,11 +864,8 @@ def log_chat_meeting(request):
 
         except StopReasonLength:
             if token_amount <= 2000:
-                return Response(
-                    data={
-                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",
-                    }
-                )
+                message = "Look like your prompt message is too long to process. Try removing white spaces!",
+                break
             else:
                 token_amount += 500
                 continue
@@ -902,7 +897,7 @@ def log_chat_meeting(request):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-        return Response(data={"data": message,})
+        return Response(data={"data": message, 'failed': True})
 
     if not has_error:
 
