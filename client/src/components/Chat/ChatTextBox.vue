@@ -355,6 +355,7 @@ export default {
   background-color: $dark-green !important;
   color: white !important;
   border: 1px solid $dark-green !important;
+  cursor: text !important;
 }
 
 .input-section {
