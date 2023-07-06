@@ -20,7 +20,7 @@
           <div class="action">
             <p
               class="action__p"
-              :class="{ 'current-actions': currentOpp }"
+              :class="{ 'current-actions': currentOpp && message.includes(action.value) }"
               @click="addTemplate(action.value)"
               v-for="(action, i) in actions"
               :key="i"
@@ -75,11 +75,11 @@ export default {
       actions: [
         {
           name: 'Update CRM',
-          value: 'Update XXX',
+          value: 'Update',
         },
         // { name: 'Create Record', value: 'Create Opportunity' },
         { name: 'Ask Managr', value: 'Ask managr... ' },
-        { name: 'Deal Inspection', value: 'Run Review' },
+        { name: 'Deal Review', value: 'Run Review' },
         // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
         // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },

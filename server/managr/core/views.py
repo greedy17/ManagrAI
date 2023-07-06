@@ -437,7 +437,7 @@ def submit_chat_prompt(request):
                 data = clean_prompt_string(text)
                 name_field = set_name_field(request.data["resource_type"])
                 data = correct_data_keys(data)
-                resource_check = data[name_field].lower().split(" ")
+                resource_check = data[name_field].lower().split(" ") if data[name_field] else []
                 lowered_type = request.data["resource_type"].lower()
                 resource = None
                 if lowered_type in resource_check:

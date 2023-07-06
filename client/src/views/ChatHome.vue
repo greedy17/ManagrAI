@@ -357,7 +357,6 @@ export default {
       console.log('handled')
     },
     removeOpp() {
-      console.log('hererererer')
       this.$refs.rightSideBar.deselectOpp()
     },
   },
