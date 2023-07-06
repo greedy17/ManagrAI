@@ -370,7 +370,8 @@ export default {
   color: white !important;
   border: 1px solid $dark-green !important;
   cursor: text !important;
-  padding-right: 2px !important;
+  padding-right: 1.2rem !important;
+  position: relative;
 }
 
 .input-section {
@@ -393,11 +394,14 @@ export default {
 }
 
 .remove {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.4);
   z-index: 4;
   cursor: pointer;
   padding: 4px;
   border-radius: 3px;
+  position: absolute;
+  right: 0;
+  bottom: 1px;
 }
 
 .main-text {
