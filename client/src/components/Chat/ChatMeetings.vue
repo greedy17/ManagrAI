@@ -546,11 +546,11 @@ export default {
       } finally {
         setTimeout(() => {
           this.refreshUser()
-        }, 1000)
+        }, 4000)
         setTimeout(() => {
           this.loading = false
           this.$store.dispatch('loadMeetings')
-        }, 1500)
+        }, 5000)
       }
     },
     async getMeetingList() {
