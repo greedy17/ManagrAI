@@ -29,8 +29,16 @@
           </span>
 
           <div>
-            <p @click="addTemplate(action.value)" v-for="(action, i) in actions" :key="i">
+            <p
+              :class="{ 'current-actions': currentOpp && action.name !== 'Update CRM' }"
+              @click="addTemplate(action.value)"
+              v-for="(action, i) in actions"
+              :key="i"
+            >
               {{ action.name }}
+            </p>
+            <p class="current" v-if="currentOpp">
+              {{ currentOpp.name }}
             </p>
           </div>
 
@@ -332,6 +340,21 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+
+.current-actions {
+  border: 1px solid $dark-green !important;
+  color: $dark-green !important;
+}
+
+.current {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: $dark-green !important;
+  color: white !important;
+  border: 1px solid $dark-green !important;
 }
 
 .input-section {
