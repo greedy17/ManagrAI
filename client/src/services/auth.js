@@ -83,7 +83,7 @@ function requireIsAdminAuth(to, from, next) {
 function homepageRedirect(to, from, next) {
   if (!store.getters.userIsLoggedIn) {
     next({
-      name: 'Login',
+      name: 'LoginOrSignup',
     })
   } else {
     next({

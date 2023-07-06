@@ -55,6 +55,7 @@ from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
+    UserSSOLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
     NoteTemplateSerializer,
@@ -63,6 +64,7 @@ from managr.organization.models import Team
 from .permissions import IsStaff
 from managr.core.background import emit_process_calendar_meetings
 
+from nylas import APIClient
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -961,7 +963,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         # If the serializer is valid, then the email/password combo is valid.
         # Get the user entity, from which we can get (or create) the auth token
-        user = authenticate(**serializer.validated_data)
+        user = authenticate(request, **serializer.data)
         if user is None:
             raise ValidationError(
                 {
@@ -983,18 +985,54 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(response_data)
 
 
+class UserSSOLoginView(generics.GenericAPIView):
+    """
+    For admin login.
+    """
+
+    authentication_classes = ()
+    serializer_class = UserSSOLoginSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        """Validate user credentials.
+        Return serialized user and auth token.
+        """
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # If the serializer is valid, then the email/password combo is valid.
+        # Get the user entity, from which we can get (or create) the auth token
+        user = authenticate(request, **serializer.data)
+        if user is None:
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        ("Incorrect email and password combination. " "Please try again")
+                    ],
+                }
+            )
+        serializer.login(user, request)
+        ManagrToken.objects.get_or_create(user=user, assigned_user=user)
+        if user.access_token.is_expired:
+            user.access_token.refresh(user.access_token)
+        # Build and send the response
+        u = User.objects.get(pk=user.id)
+        serializer = UserSerializer(u, context={"request": request})
+        response_data = serializer.data
+        response_data["token"] = user.access_token.key
+        return Response(response_data)
+
+
 class UserLogoutView(generics.GenericAPIView):
     authentication_classes = ()
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-
         user = self.request.user
         url = get_site_url()
-        redirect(f"{url}/login")
-        logout(request)
         user.access_token.revoke()
-        return
+        logout(request)
+        return redirect(f"{url}/login")
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -1029,7 +1067,10 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
-    filter_fields = ("organization",)
+    filter_fields = (
+        "organization",
+        "email",
+    )
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -1458,55 +1499,6 @@ class GetFileView(View):
         return response
 
 
-"""
-TODO 2021-01-15 William: Need to determine whether we still need this viewset.
-
-class NotificationSettingsViewSet(
-    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
-):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = NotificationOptionSerializer
-
-    def get_queryset(self):
-        return NotificationOption.objects.for_user(self.request.user)
-
-    def list(self, request, *args, **kwargs):
-        # qs = NotificationOption.objects.for_user(request.user)
-        qs = self.get_queryset()
-        resource_param = request.query_params.get("resource", None)
-        if resource_param:
-            qs = qs.filter(resource=resource_param)
-        page = self.paginate_queryset(qs)
-        if page is not None:
-            serializer = NotificationOptionSerializer(
-                qs, many=True, context={"request": request}
-            )
-            return self.get_paginated_response(serializer.data)
-        serializer = NotificationOptionSerializer(
-            qs, many=True, context={"request": request}
-        )
-        return Response()
-
-    @action(
-        methods=["PATCH"],
-        permission_classes=(permissions.IsAuthenticated,),
-        detail=False,
-        url_path="update-settings",
-    )
-    def update_settings(self, request, *args, **kwargs):
-        data = request.data
-        user = request.user
-        selections = data.get("selections", [])
-        for sel in selections:
-            selection, created = NotificationSelection.objects.get_or_create(
-                option=sel["option"], user=user
-            )
-            selection.value = sel["value"]
-            selection.save()
-        return Response()
- """
-
-
 class NylasAccountWebhook(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -1668,6 +1660,71 @@ def revoke_access_token(request):
             return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         raise ValidationError({"non_form_errors": {"no_token": "user has not authorized nylas"}})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def send_new_email(request):
+    subject = request.data.get("subject")
+    body = request.data.get("body")
+    to = request.data.get("to")
+    # Do nothing if the user hasn't connected Nylas
+    try:
+        nylas = request.user.nylas
+    except NylasAuthAccount.DoesNotExist:
+        logger.warning(
+            "Attempted to send an email via Nylas "
+            "but the user does not have an active Nylas integration."
+        )
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Otherwise, init the Nylas Client
+    try:
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
+        draft = nylas.drafts.create()
+        draft.subject = subject
+        draft.body = body
+        draft.to = to
+        draft.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.exception(f"Error sending new draft to Nylas <{e}>")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def reply_to_email(request):
+    body = request.data.get("body")
+    id = request.data.get("id")
+    # Do nothing if the user hasn't connected Nylas
+    try:
+        nylas = request.user.nylas
+    except NylasAuthAccount.DoesNotExist:
+        logger.warning(
+            "Attempted to send an email via Nylas "
+            "but the user does not have an active Nylas integration."
+        )
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Otherwise, init the Nylas Client
+    try:
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
+        thread = nylas.threads.get(id)
+        draft = thread.create_reply()
+        draft.body = body
+        draft.to = thread.from_
+        draft.cc = thread.cc
+        draft.bcc = thread.bcc
+        draft.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.exception(f"Error sending reply email to Nylas <{e}>")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
 
 
 @api_view(["POST"])
@@ -1890,3 +1947,14 @@ class NoteTemplateViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes(
+    [permissions.AllowAny,]
+)
+def get_sso_data(request):
+    data = {}
+    data["client_id"] = settings.GOOGLE_CLIENT_ID
+    data["login_uri"] = settings.GOOGLE_LOGIN_URI
+    return Response(data=data)

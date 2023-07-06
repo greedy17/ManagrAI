@@ -36,6 +36,7 @@ urlpatterns = [
     path(r"password/reset/", rest_auth_views.PasswordResetView.as_view()),
     path(r"password/change/", rest_auth_views.PasswordChangeView.as_view()),
     path("login/", core_views.UserLoginView.as_view()),
+    path("login-sso/", core_views.UserSSOLoginView.as_view()),
     path("logout/", core_views.UserLogoutView.as_view()),
     path("register/", core_views.UserRegistrationView.as_view()),
     path(
@@ -59,8 +60,26 @@ urlpatterns = [
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
     ),
-    path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
-    path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
+    path(
+        "users/nylas/authenticate/",
+        core_views.email_auth_token,
+        name="get_email_auth_token",
+    ),
+    path(
+        "users/nylas/revoke/",
+        core_views.revoke_access_token,
+        name="revoke_email_auth",
+    ),
+    path(
+        "users/nylas/send-new-email/",
+        core_views.send_new_email,
+        name="send_new_email",
+    ),
+    path(
+        "users/nylas/reply-to-email/",
+        core_views.reply_to_email,
+        name="reply_to_email",
+    ),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
     path(
         "users/salesloft/re-direct",
@@ -76,7 +95,12 @@ urlpatterns = [
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("task-status/", core_views.get_task_status, name="get-task-status"),
-    path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
+    path("sso-data/", core_views.get_sso_data, name="get-sso-data"),
+    path(
+        "get-file/<str:file_id>/",
+        core_views.GetFileView.as_view(),
+        name="get_file_from_nylas",
+    ),
     path(
         "nylas/callback/accounts",
         core_views.NylasAccountWebhook.as_view(),
