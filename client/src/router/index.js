@@ -22,6 +22,16 @@ export default new Router({
       component: () => import('@/views/ChatHome')
     },
     {
+      path: '/summaries',
+      name: 'PRSummaries',
+      component: () => import('@/views/PRSummaries')
+    },
+    {
+      path: '/clip-report',
+      name: 'PRClipReport',
+      component: () => import('@/views/PRClipReport')
+    },
+    {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/auth/Login')

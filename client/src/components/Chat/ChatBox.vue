@@ -227,7 +227,7 @@
                     alt=""
                   />
                   Regenerate
-                </button>
+                </button> -->
 
                 <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
                   {{ message.error }}

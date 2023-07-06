@@ -1792,6 +1792,7 @@ class NoteTemplateViewSet(
 )
 def get_sso_data(request):
     data = {}
+    print('settings: ', settings)
     data["client_id"] = settings.GOOGLE_CLIENT_ID
     data["login_uri"] = settings.GOOGLE_LOGIN_URI
     return Response(data=data)
