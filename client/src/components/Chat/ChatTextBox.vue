@@ -115,7 +115,7 @@ export default {
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
             resource_id: this.$store.state.currentOpp.id,
           })
-          console.log(res)
+
           this.chatRes = res
 
           if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
@@ -158,8 +158,6 @@ export default {
         this.$emit('message-loading', true)
         this.message = ''
 
-        console.log('I MADE IT HERE')
-
         try {
           setTimeout(() => {
             this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
@@ -171,7 +169,7 @@ export default {
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
             resource_id: this.$store.state.currentOpp.id,
           })
-          console.log(res)
+
           this.chatRes = res
 
           if (this.chatRes.status >= 400 && this.chatRes.status < 500) {

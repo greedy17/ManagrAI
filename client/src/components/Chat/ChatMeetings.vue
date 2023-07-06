@@ -180,7 +180,7 @@
     </Modal>
 
     <header class="meetings-header">
-      <p @click="test">📅 <span> Today's Meetings: </span>{{ date }}</p>
+      <p>📅 <span> Today's Meetings: </span>{{ date }}</p>
 
       <button :disabled="loading" @click="refreshCalEvents" class="small-button">
         <img
@@ -429,7 +429,6 @@ export default {
     toggleChatModal(data, name, resourceId, intId, type, currentMeetingId) {
       this.chatModalOpen = !this.chatModalOpen
       if (data) {
-        console.log(data)
         this.updateData = data
       }
       if (name) {
@@ -519,7 +518,6 @@ export default {
           page: this.loadMorePage,
           text: this.searchValue,
         })
-        console.log(res)
       } catch (e) {
         console.log(e)
         this.loadMorePage = 0
@@ -562,7 +560,6 @@ export default {
       this.loading = true
       try {
         let res = await User.api.refreshCalendarEvents()
-        console.log(res)
       } catch (e) {
         console.log('Error in refreshCalEvents: ', e)
       } finally {

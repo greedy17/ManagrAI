@@ -635,8 +635,6 @@ export default {
 
         sections[month].push(obj)
       })
-
-      console.log('sections', sections)
       this.sortedNotes = sections
       // return sections;
     },

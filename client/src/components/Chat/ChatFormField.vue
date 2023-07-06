@@ -369,8 +369,6 @@ export default {
       this.$refs.StageFormEnd
         ? this.$refs.StageFormEnd.scrollIntoView({ behavior: 'smooth' })
         : null
-
-      console.log('efevndefvujkn')
     },
     async getReferenceOptions(id) {
       this.loadingOptions = true
@@ -382,8 +380,6 @@ export default {
         })
 
         this.referenceOpts = res
-
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
