@@ -335,19 +335,20 @@ def get_summary_completion(user, data):
     return r
 
 
+def clean_apostrophes(string):
+    letters = ["s", "r", "t"]
+    for letter in letters:
+        string = string.replace(f"'{letter}", f"@{letter}").replace(f" @{letter}", f" '{letter}")
+    return string
+
+
 def clean_prompt_string(prompt_string):
     random_bracket_insert_check = prompt_string[:5].find("}")
     if random_bracket_insert_check == 0:
         prompt_string = prompt_string[1:]
     prompt_string = prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
-    cleaned_string = (
-        prompt_string.replace("\n", "")
-        .replace("'s", "@s")
-        .replace(" @s", " 's")
-        .replace("'t", "@t")
-        .replace(" @t", " 't")
-        .replace('"', "'")
-    )
+    prompt_string = clean_apostrophes(prompt_string)
+    cleaned_string = prompt_string.replace("\n", "").replace('"', "'")
     while "  " in cleaned_string:
         cleaned_string = cleaned_string.replace("  ", "")
     if "'}" not in cleaned_string and '"}' not in cleaned_string:
@@ -356,8 +357,10 @@ def clean_prompt_string(prompt_string):
         res_obj = eval(cleaned_string)
         for key in res_obj.keys():
             if isinstance(res_obj[key], str):
-                if "@s" in res_obj[key] or "@t" in res_obj[key]:
-                    res_obj[key] = res_obj[key].replace("@s", "'s").replace("@t", "'t")
+                if "@s" in res_obj[key] or "@t" in res_obj[key] or "@r" in res_obj[key]:
+                    res_obj[key] = (
+                        res_obj[key].replace("@s", "'s").replace("@t", "'t").replace("@r", "'r")
+                    )
         return res_obj
     except Exception as e:
         raise Exception(e)
