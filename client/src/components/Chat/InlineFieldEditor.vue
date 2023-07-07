@@ -246,7 +246,6 @@ export default {
   },
   methods: {
     setUpdateValues(key, val, multi) {
-      console.log(key, val)
       if (multi) {
         this.formData[key] = this.formData[key]
           ? this.formData[key] + ';' + val
@@ -290,8 +289,6 @@ export default {
         })
 
         this.referenceOpts = res
-
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
