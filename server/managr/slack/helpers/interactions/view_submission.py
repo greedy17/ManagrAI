@@ -2773,6 +2773,25 @@ def process_chat_action_submit(payload, context):
     return {"response_action": "clear"}
 
 
+def process_news_summary(payload, context):
+    from managr.comms.tasks import emit_process_news_summary
+
+    user = User.objects.get(id=context.get("u"))
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set(
+                "loading", {"message": ":robot_face: Processing your news summary..."}
+            ),
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+    context.update(ts=res["ts"])
+    emit_process_news_summary(payload, context)
+    return {"response_action": "clear"}
+
+
 def process_submit_ask_managr(payload, context):
     user = User.objects.get(id=context.get("u"))
     resource_list = (
@@ -2876,6 +2895,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
         slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
         slack_const.RESET_SELECTED_MEETING_DAYS: process_reset_selected_meeting_days,
+        slack_const.PROCESS_NEWS_SUMMARY: process_news_summary,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])
