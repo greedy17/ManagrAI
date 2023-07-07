@@ -1,9 +1,11 @@
 <template>
-  
+  <div class="main-content">
+    Summaires Main Content
+  </div>
 </template>
 <script>
 export default {
-  name: 'SearchMainContent',
+  name: 'SummariesMainContent',
   components: {
 
   },

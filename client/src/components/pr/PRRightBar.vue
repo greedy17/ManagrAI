@@ -1,5 +1,17 @@
 <template>
-  
+  <div class="right-bar">
+    <div>
+      <h3>Title</h3>
+    </div>
+    <div class="display-flex">
+      <div @click="changeResource('Source')">Source</div>
+      <div @click="changeResource('Data')">Data</div>
+      <div @click="changeResource('Chat')">Chat</div>
+    </div>
+    <div>
+      {{ selectedResource }} here
+    </div>
+  </div>
 </template>
 <script>
 export default {
@@ -9,7 +21,7 @@ export default {
   },
   data() {
     return {
-
+      selectedResource: 'Data',
     }
   },
   watch: {
@@ -19,7 +31,9 @@ export default {
 
   },
   methods: {
-
+    changeResource(resource) {
+      this.selectedResource = resource
+    }
   },
   computed: {
     
@@ -27,5 +41,10 @@ export default {
 }
 </script>
 <style scoped>
+  .right-bar {
 
+  }
+  .display-flex {
+    display: flex;
+  }
 </style>
