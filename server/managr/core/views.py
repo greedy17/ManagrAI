@@ -4,6 +4,7 @@ import textwrap
 import json
 import uuid
 import httpx
+import time
 from django.utils import timezone
 import calendar
 from django.core import serializers
@@ -339,6 +340,38 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
             cleaned_data[field.api_name] = reference_record
     return cleaned_data
 
+def deal_review_data_builder(resource_data, api_name_list, crm, form_data, fields):
+    value_dict = {}
+    try:
+        api_name_list.remove("meeting_type")
+        api_name_list.remove("meeting_comments")
+        owner_field = "hubspot_owner_id" if crm == "HUBSPOT" else "OwnerId"
+        api_name_list.remove(owner_field)
+    except ValueError:
+        owner_field = None
+    for api_name in api_name_list:
+        field = fields.filter(api_name=api_name).first()
+        label = field.label
+        if (
+            field.data_type in ["Date", "DateTime"]
+            and crm == "HUBSPOT"
+            and resource_data[api_name] is not None
+        ):
+            converted_string = resource_data[api_name].split("T")
+            value_dict[label] = converted_string[0]
+        else:
+            value_dict[label] = resource_data[api_name]
+    modified_field = "hs_lastmodifieddate" if crm == "HUBSPOT" else "LastModifiedDate"
+    try:
+        modified_date = resource_data[modified_field].split("T")[0]
+    except Exception:
+        modified_date = None
+    if modified_date:
+        value_dict["Last Activity"] = modified_date
+    if "meeting_comments" in form_data.keys():
+        value_dict["Meeting Comments"] = form_data["meeting_comments"]
+    return value_dict    
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -401,11 +434,10 @@ def submit_chat_prompt(request):
                         token_amount += 500
                         continue
                 text = choice["text"]
-                print('TEXT IS RIGHT HERE ---- ',text)
                 data = clean_prompt_string(text)
                 name_field = set_name_field(request.data["resource_type"])
                 data = correct_data_keys(data)
-                resource_check = data[name_field].lower().split(" ")
+                resource_check = data[name_field].lower().split(" ") if data[name_field] else []
                 lowered_type = request.data["resource_type"].lower()
                 resource = None
                 if lowered_type in resource_check:
@@ -512,6 +544,141 @@ def submit_chat_prompt(request):
         status=status.HTTP_200_OK,
     )
 
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def ask_managr(request):
+    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+
+    user = User.objects.get(id=request.data["user_id"])
+
+    prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
+        str(user.id),
+        request.data["prompt"],
+        request.data["resource_type"],
+        request.data["resource_id"]
+    )
+
+    tokens = 500
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = _handle_response(r)
+            text = r.get("choices")[0].get("text")
+            break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = "There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = "Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+        except Exception as e:
+            logger.exception(f"Unknown error on ask managr <{e}>")
+    if has_error:
+        res = {"value": f"{error_message}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response(
+        data={
+            **r,
+            "res": text,
+            "resourceId": request.data["resource_id"],
+            "resourceType": request.data["resource_type"],
+        },
+        status=status.HTTP_200_OK,
+    )
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def deal_review(request):
+    from managr.core import constants as core_consts
+    from managr.utils.client import Client
+    from managr.crm.utils import CRM_SWITCHER
+    from ..slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
+    from managr.core.exceptions import _handle_response
+
+    user = User.objects.get(id=request.data["user_id"])
+    prompt = request.data["prompt"],
+    resource_type = request.data["resource_type"],
+    resource_id = request.data["resource_id"]
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(id=request.data["resource_id"])
+    form_template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(resource=request.data["resource_type"], form_type="UPDATE")
+        .first()
+    )
+    fields = form_template.custom_fields.all()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user, resource_id=request.data["resource_id"]
+    ).first()
+    form_data = form_check.saved_data if form_check else {}
+    api_names = list(fields.values_list("api_name", flat=True))
+    deal_review_data = deal_review_data_builder(
+        resource.secondary_data, api_names, user.crm, form_data, fields
+    )
+    prompt = core_consts.OPEN_AI_DEAL_REVIEW(
+        deal_review_data, resource_type, datetime.now().date(), user.crm
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+        user.email, prompt, 1000, top_p=0.9, temperature=0.7
+    )
+    has_error = False
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = _handle_response(r)
+                response_text = r.get("choices")[0].get("text")
+                break
+        except Exception as e:
+            has_error = True
+            response_text = f"There was an error generating your review: {str(e)}"
+            break
+    if has_error:
+        res = {"value": f"{response_text}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
+        
+    return Response(
+        data={
+            **r,
+            "res": response_text,
+            "resourceId": resource_id,
+            "resourceType": resource_type,
+        },
+        status=status.HTTP_200_OK,
+    )    
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -634,8 +801,7 @@ def log_chat_meeting(request):
                 r = _handle_response(r)
                 choice = r["choices"][0]
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
+                data = clean_prompt_string(text)
                 name_field = set_name_field(resource_type, )
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
@@ -700,11 +866,8 @@ def log_chat_meeting(request):
 
         except StopReasonLength:
             if token_amount <= 2000:
-                return Response(
-                    data={
-                        "data": "Look like your prompt message is too long to process. Try removing white spaces!",
-                    }
-                )
+                message = "Look like your prompt message is too long to process. Try removing white spaces!",
+                break
             else:
                 token_amount += 500
                 continue
@@ -736,7 +899,7 @@ def log_chat_meeting(request):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-        return Response(data={"data": message,})
+        return Response(data={"data": message, 'failed': True})
 
     if not has_error:
 

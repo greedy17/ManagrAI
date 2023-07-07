@@ -3467,6 +3467,7 @@ export default {
     if (this.userCRM === 'SALESFORCE') {
       this.getRecords()
     }
+    this.$store.dispatch('loadAllPicklists')
     this.templates.refresh()
   },
   beforeMount() {
