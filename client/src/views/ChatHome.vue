@@ -37,7 +37,7 @@
           :key="i"
         >
           <ChatFormField
-            :placeholder="chatData.data[field.apiName]"
+            :placeholder="toString(chatData.data[field.apiName])"
             :field="field"
             :resourceId="chatData.resourceId"
             :integrationId="chatData.integrationId"
@@ -175,7 +175,7 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" />
+      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" @remove-opp="removeOpp" />
     </main>
     <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings
@@ -244,6 +244,15 @@ export default {
   },
   watch: {},
   methods: {
+    toString(data) {
+      let type = typeof data
+      if (type === 'number') {
+        let newData = data.toString()
+        return newData
+      } else {
+        return data
+      }
+    },
     toggleLeftBar() {
       this.leftBarClosed = !this.leftBarClosed
     },
@@ -346,6 +355,9 @@ export default {
 
     handleInvite() {
       console.log('handled')
+    },
+    removeOpp() {
+      this.$refs.rightSideBar.deselectOpp()
     },
   },
   computed: {
