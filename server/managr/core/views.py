@@ -1958,3 +1958,385 @@ def get_sso_data(request):
     data["client_id"] = settings.GOOGLE_CLIENT_ID
     data["login_uri"] = settings.GOOGLE_LOGIN_URI
     return Response(data=data)
+
+def process_transcript_to_summaries(transcript, user):
+    from managr.core.exceptions import _handle_response
+    from managr.core import constants as core_consts
+    from managr.utils.client import Variable_Client
+
+    summary_parts = []
+    current_minute = 5
+    start_index = 0
+    current_hour = 0
+    split_transcript = []
+    while True:
+        if current_minute == 60:
+            current_minute = 0
+            current_hour += 1
+        check_time = (
+            f"0{current_hour}:0{str(current_minute)}:"
+            if (current_minute == 5 or current_minute == 0)
+            else f"0{current_hour}:{str(current_minute)}:"
+        )
+        end_index = transcript.find(check_time)
+        if end_index == -1 and len(split_transcript):
+            split_transcript.append(transcript[start_index:])
+            break
+        elif end_index == -1 and not len(split_transcript):
+            current_minute += 5
+            continue
+        else:
+            split_transcript.append(transcript[start_index:end_index])
+            start_index = end_index
+            current_minute += 5
+    if not len(summary_parts):
+        for index, transcript_part in enumerate(split_transcript):
+            if not settings.IN_PROD:
+                print(index)
+
+            transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
+                {"date": datetime.today(), "transcript": transcript_part,}
+            )
+            transcript_body = (
+                transcript_body.replace("\r\n", "")
+                .replace("\n", "")
+                .replace("    ", "")
+                .replace(" --> ", "-")
+            )
+            # if not settings.IN_PROD:
+            #     token_check = max_token_calculator(transcript_body)
+            #     print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
+            attempts = 1
+            timeout = 60.0
+            tokens = 500
+            while True:
+                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                    user.email, transcript_body, tokens, top_p=0.9, temperature=0.7
+                )
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                with Variable_Client(timeout) as client:
+                    try:
+                        r = client.post(
+                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                        r = _handle_response(r)
+                        summary = r.get("choices")[0].get("text")
+
+                        summary = (
+                            summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
+                        )
+                        summary_split = summary.split("Summary:")
+                        summary_parts.append(summary_split[1])
+                        break
+                    except StopReasonLength:
+                        if tokens >= 2000:
+                            break
+                        else:
+                            tokens += 500
+                            continue
+                    except IndexError:
+                        continue
+                    except ServerError:
+                        if attempts >= 5:
+                            return []
+                        else:
+                            attempts += 1
+                            time.sleep(10.0)
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"PROCESS TRANSCRIPT SUMMARIES EXCEPTION {e}")
+                        break
+    return summary_parts
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def process_transcript(request):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.crm.utils import CRM_SWITCHER
+    from managr.utils.client import Variable_Client
+    from managr.core import constants as core_consts
+    from managr.core.exceptions import _handle_response
+    from managr.core.background import emit_process_add_call_analysis
+    from managr.slack import constants as slack_consts
+
+    user = User.objects.get(id=request.data["user_id"])
+    selected_options = request.data["selected_object"]
+    summary_parts = []
+    viable_data = []
+    resource_type = request.data["resource_type"]
+    resource_list = [
+        key for key in selected_options.keys() if "MEETING__PROCESS_TRANSCRIPT_TASK" in key
+    ]
+    value_key = "None"
+    if len(resource_list):
+        value_key = resource_list[0]
+    selected_option = selected_options[value_key]["selected_option"]["value"]
+    workflow = MeetingWorkflow.objects.get(id=request.data["meeting_id"])
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+        integration_id=selected_option
+    )
+    form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
+    fields = form_template.custom_fields.all()
+    fields_list = list(fields.values_list("label", flat=True))
+    workflow.resource_id = str(resource.id)
+    workflow.resource_type = resource_type
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+        workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
+        workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    workflow.save()
+    meeting = workflow.meeting
+    has_error = False
+    error_message = None
+    try:
+        if not settings.IN_PROD:
+            logger.info("Retreiving meeting data...")
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
+        # try:
+        #     update_res = slack_requests.update_channel_message(
+        #         user.slack_integration.channel,
+        #         ts,
+        #         user.organization.slack_integration.access_token,
+        #         block_set=get_block_set(
+        #             "loading",
+        #             {"message": f":telephone_receiver: Transcript found for {meeting.topic}"},
+        #         ),
+        #     )
+        # except Exception as e:
+        #     logger.exception(f"Could not update channel message because of {e} ts {ts}")
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        if len(filtered_recordings):
+            if not len(summary_parts):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = meeting.meeting_account.helper_class.get_transcript(
+                    download_url, meeting.meeting_account.access_token
+                )
+                transcript = transcript.decode("utf-8")
+                summary_parts = process_transcript_to_summaries(transcript, user)
+            if len(summary_parts):
+                timeout = 90.0
+                tokens = 1500
+                # try:
+                #     update_res = slack_requests.update_channel_message(
+                #         user.slack_integration.channel,
+                #         ts,
+                #         user.organization.slack_integration.access_token,
+                #         block_set=get_block_set(
+                #             "loading",
+                #             {"message": f":robot_face: Processing transcript for {meeting.topic}"},
+                #         ),
+                #     )
+                # except Exception as e:
+                #     logger.exception(f"Could not update channel message because of {e} ts {ts}")
+                attempts = 1
+                while True:
+                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
+                        {
+                            "date": workflow.datetime_created.date(),
+                            "transcript_summaries": summary_parts,
+                        },
+                        fields_list,
+                        workflow.datetime_created.date(),
+                        user,
+                    )
+                    tokens = 1000
+                    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                        user.email, summary_body, tokens, top_p=0.9
+                    )
+                    # body = {
+                    #     "model": "text-davinci-003",
+                    #     "prompt": "'input': {'date': datetime.date(2023, 6, 14), 'transcript_summaries': [\" In this sales call, Dustin Sears and Kate McQueen discussed their current challenges with onboarding, including reducing the load and capturing data efficiently. They are using Chorus which runs through Zoom and inputs into Salesforce, but it doesn't populate into fields or move stages. Michael Gorodisher mentioned Manager, which would be able to copy and paste notes and sink to fields. It is also integrated with Slack and Zoom, and eventually will be integrated with Microsoft Teams. The most important feature is the ability to copy and paste notes and sink to fields. Dustin and Kate are interested in learning more about Manager, and Michael will provide a demo to discuss if it makes sense for them or not.\", ' Michael Gorodisher pitched an integration between Salesforce and Slack or Teams which has become increasingly popular in the last 2 years. The integration would allow reps to quickly and easily update salesforce from Slack or Teams. To demonstrate the integration, Michael Gorodisher showed how the AI-driven summarization tool can auto-fill salesforce fields quickly and securely, as well as automatically log meetings. The tool also includes list building functionality, a calendar to track what needs to be updated, and the ability to move stages and pick list values. Kate McQueen asked about setting up fields like plan to win and favorite process. Michael Gorodisher assured that the setup is plug-and-play.', ' Michael Gorodisher demonstrated how their AI automation tool can be used to fill in fields in a call summary, automatically generate a follow-up email, and track meetings. With their AI, the team can read the call summary and accurately fill in fields with no extra training required. In addition, the tool can generate a follow-up email with instructions such as bullet points, highlighting the AI automation, and prompts for a fun fact. Finally, the tool can track meetings and log them, allowing reps to quickly review what happened at the end of the day.', ' In this section of the sales call, Michael Gorodisher of Manager explains how the platform works with Zoom to pull summaries from call recordings and update customer information in real-time. He also describes how Manager can be used to quickly update customer information with a few clicks. He then provides details about the product features, such as list building views and AI assistant-style capabilities, and explains how Manager can be used to track customer interactions. Lastly, Kate McQueen asked about the specific requirements for the Zoom integration, to which Michael responded that the business plan must have call recordings and the transcripts must stay in Zoom for the sync to work.', ' Michael Gorodisher discussed their new platform, onboarding new users in July, and gathering feedback from beta users. The platform will integrate with Google Meet and Microsoft Teams, as well as have features like playbooks and battle cards for SDRs. Gorodisher believes the most effective way to help SDRs with calls is with a \"prepare me for this call\" feature that looks at CRM data and recent calls to formulate a response. The AI model will take time to train, but the results should be world-class. Business starts at 10 users and they leverage Zoom for discovery calls and demos.', ' Michael Gorodisher, the sales rep from Manager, is proposing a proof-of-concept period of 30 days for a minimum of 10 users. He is offering incentives to commit to an order form before the end of the month. The goal is to get the reps to update Salesforce, and the tool will integrate with Slack, Salesforce, and other platforms. It will provide reps with features and data that will save time and get better results. To move forward, Dustin Sears and Kate McQueen need to set up a demo with their IT guy and Salesforce admin to make sure the tool is the right fit.']}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is Zachary from Managr. You must complete the following tasks:\n1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: ['Notes', 'Note Subject', 'Agreement Notes', 'Call Recording', 'Champion', 'Competition', 'Competitors', 'CRM', 'Decision Criteria', 'Decision Process', 'Economic Buyer', 'Deal probability', 'Forecast probability', 'Forecast category', 'Next step', 'Identified Pain', 'Meeting Date', 'Messanger', 'Next Step Date', 'Process Adoption', 'Deal Name', 'Amount', 'Deal Stage', 'Close Date', 'Deal owner']\n The key should be the crm field name, leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. \n2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.\n3) Output your results as a Python dictionary. Ensure the summary is included in the dictionary under the summary key.'",
+                    #     "user": "zach@mymanagr.com",
+                    #     "max_tokens": 1000,
+                    #     "top_p": 0.9,
+                    # }
+                    try:
+                        if not settings.IN_PROD:
+                            logger.info("Combining Summary parts")
+                        if not viable_data:
+                            with Variable_Client(timeout) as client:
+                                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                                r = client.post(
+                                    url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                                )
+                            r = _handle_response(r)
+                            if not settings.IN_PROD:
+                                logger.info(f"Summary response: {r}")
+                            choice = r["choices"][0]["text"]
+                            data = clean_prompt_string(choice)
+                            viable_data = data
+                        else:
+                            data = viable_data
+                        # if not settings.IN_PROD:
+                        #     print(f"DATA: {data}")
+                        combined_summary = (
+                            data.pop("summary", None)
+                            if data.get("summary", None)
+                            else data.pop("Summary", None)
+                        )
+                        owner_field = set_owner_field(resource_type, user.crm)
+                        data[owner_field] = user.crm_account.crm_id
+                        swapped_field_data = swap_submitted_data_labels(data, fields)
+                        cleaned_data = clean_prompt_return_data(
+                            swapped_field_data, fields, user.crm, resource
+                        )
+
+                        workflow.transcript_summary = combined_summary
+                        workflow.save()
+                        break
+                    except StopReasonLength:
+                        logger.exception(
+                            f"Retrying for stop reason length, token amount at: {tokens}"
+                        )
+                        if tokens >= 2000:
+                            break
+                        else:
+                            tokens += 500
+                            continue
+                    except ServerError as e:
+                        logger.exception(f"Server error from Open AI: {e}")
+                        if attempts >= 5:
+                            has_error = True
+                            error_message = ":no_entry_sign: There was a server error with Open AI"
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(10.0)
+                    except ValueError as e:
+                        print(e)
+                        if str(e) == "substring not found":
+                            continue
+                        else:
+                            has_error = True
+                            error_message = (
+                                ":no_entry_sign: Looks like we ran into an internal issue"
+                            )
+                            break
+                    except SyntaxError as e:
+                        print(e)
+                        continue
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            has_error = True
+                            error_message = ":rocket: OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
+                            schedule = datetime.now() + timezone.timedelta(minutes=5)
+                            process_transcript_to_summaries(
+                                payload, context, summary_parts, viable_data, schedule
+                            )
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"Exception combining summaries: <{e}>")
+            else:
+                has_error = True
+                error_message = ":no_entry_sign: Unknown error"
+        else:
+            has_error = True
+            error_message = ":no_entry_sign: We could not find a transcript for this meeting"
+    except RecordingNotFound:
+        has_error = True
+        retry = context.get("retry_attempts", 0) + 1
+        context.update(retry_attempts=retry)
+        error_message = (
+            f":rocket: Looks like you're transcript is not done processing, we'll try again in a bit!"
+            if retry <= 3
+            else "We could not find a recording for this meeting"
+        )
+        if retry < 3:
+            process_transcript_to_summaries(
+                payload, context, schedule=(datetime.now() + timezone.timedelta(minutes=30))
+            )
+    except Exception as e:
+        logger.exception(e)
+        has_error = True
+        error_message = (
+            f":no_entry_sign: We encountered an unknow error processing your transcript: {str(e)}"
+        )
+    
+    if not has_error:
+        form_check = workflow.forms.all().filter(template=form_template).first()
+        if form_check:
+            new_form = form_check
+            form_check.save_form(cleaned_data, False)
+        else:
+            new_form = OrgCustomSlackFormInstance.objects.create(
+                user=user,
+                template=form_template,
+                resource_id=str(resource.id),
+                update_source="transcript",
+                workflow=workflow,
+            )
+            new_form.save_form(cleaned_data, False)
+        emit_process_add_call_analysis(str(workflow.id), summary_parts)
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.divider_block(),
+            block_builders.simple_section(f"{resource_type}: {resource.display_value}"),
+            block_builders.simple_section(combined_summary, "mrkdwn"),
+            block_builders.divider_block(),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        f"Review & Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",
+                        "LAUNCH_REVIEW",
+                        action_id=action_with_params(
+                            slack_consts.CALL_LAUNCH_SUMMARY_REVIEW,
+                            [f"form_id={str(new_form.id)}&u={str(user.id)}&w={str(workflow.id)}"],
+                        ),
+                        style="primary",
+                    ),
+                    block_builders.simple_button_block(
+                        "Call Analysis",
+                        "CALL_ANALYSIS",
+                        action_id=action_with_params(
+                            slack_consts.SEND_CALL_ANALYSIS_TO_DM,
+                            [f"u={str(user.id)}&w={str(workflow.id)}"],
+                        ),
+                    ),
+                ]
+            ),
+            block_builders.context_block(
+                f"Your {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been updated, please review."
+            ),
+        ]
+    else:
+        blocks = [
+            block_builders.header_block("AI Generated Call Summary"),
+            block_builders.context_block(f"Meeting: {meeting.topic}"),
+            block_builders.simple_section(f"{error_message}", "mrkdwn"),
+        ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            loading_res["message"]["ts"],
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return    

@@ -206,8 +206,9 @@
 
       <div class="meeting-block" v-for="(meeting, i) in meetings" :key="i">
         <div>
-          <p>
+          <p @click="test">
             {{ meeting.meeting_ref.topic }}
+            {{ meeting.meeting_ref.meeting_id }}
           </p>
 
           <small>{{ formattedStartTimes[meeting.id] }} - {{ formattedEndTimes[meeting.id] }}</small>
