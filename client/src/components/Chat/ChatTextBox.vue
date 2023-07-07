@@ -1,35 +1,5 @@
 <template>
   <section class="input-section">
-    <Transition name="slide-fade">
-      <div v-if="templatesOpen" class="templates">
-        <section class="section">
-          <header style="border-top: none" class="template-header">
-            <span class="gray-bg"> 🦾 </span>
-            <p class="gray-title">Actions</p>
-            <small @click="toggleTemplates" class="automarginleft">x</small>
-          </header>
-          <div class="template-body">
-            <p @click="addTemplate(action.value)" v-for="(action, i) in actions" :key="i">
-              {{ action.name }}
-            </p>
-          </div>
-        </section>
-
-        <!-- <section class="section">
-          <header class="template-header">
-            <span class="blue-bg">
-              <img src="@/assets/images/article.svg" class="blue-filter" height="14px" alt="" />
-            </span>
-            <p class="gray-title">Note templates</p>
-          </header>
-          <div class="template-body">
-            <p>1st template</p>
-            <p>2nd template</p>
-          </div>
-        </section> -->
-      </div>
-    </Transition>
-
     <div class="input-container">
       <div>
         <textarea
@@ -47,12 +17,26 @@
             <img class="gold-filter" src="@/assets/images/bolt.svg" height="12px" alt="" />
           </span>
 
-          <div>
-            <p @click="addTemplate(action.value)" v-for="(action, i) in actions" :key="i">
+          <div class="action">
+            <p
+              class="action__p"
+              :class="{ 'current-actions': currentOpp && message.includes(action.value) }"
+              @click="addTemplate(action.value)"
+              v-for="(action, i) in actions"
+              :key="i"
+            >
               {{ action.name }}
             </p>
+            <p class="action__p current" v-if="currentOpp">
+              {{ currentOpp.name }}
+              <span class="remove" @click="clearMessage">x</span>
+            </p>
+            <Transition name="slide-fade">
+              <div v-if="showMessage" class="templates">
+                <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
+              </div>
+            </Transition>
           </div>
-
           <font-awesome-icon
             :class="{ invert: !message }"
             class="gray"
@@ -84,13 +68,18 @@ export default {
   data() {
     return {
       message: '',
+      showMessage: false,
       templatesOpen: false,
+      showReviewMessage: false,
       chatRes: null,
       actions: [
-        { name: 'Update CRM', value: 'Update ...' },
+        {
+          name: 'Update CRM',
+          value: 'Update',
+        },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr ...  ' },
-        { name: 'Deal Inspection', value: 'Run Review for ...' },
+        { name: 'Ask Managr', value: 'Ask managr... ' },
+        { name: 'Deal Review', value: 'Run Review' },
         // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
         // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
@@ -105,8 +94,119 @@ export default {
         this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
       }, 100)
     },
+    clearMessage() {
+      this.$emit('remove-opp')
+    },
     async sendMessage() {
-      if (this.message.length > 3) {
+      if (this.message.toLowerCase().includes('ask managr')) {
+        let chatmsg = this.message
+        this.$emit('set-message', { user: 'user', value: chatmsg })
+        this.$emit('message-loading', true)
+        this.message = ''
+
+        try {
+          setTimeout(() => {
+            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+          }, 100)
+
+          let res = await User.api.askManagr({
+            user_id: this.user.id,
+            prompt: chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.$store.state.currentOpp.id,
+          })
+
+          this.chatRes = res
+
+          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: this.chatRes.value,
+              failed: true,
+            })
+          } else if (this.chatRes.status === 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: 'Timeout error, try again',
+              failed: true,
+            })
+          } else {
+            this.$emit('set-message', {
+              user: 'bot',
+              id: this.chatRes['id'],
+              value: this.chatRes['res'],
+              // data: this.chatRes['data'],
+              resourceId: this.chatRes['resourceId'],
+              resourceType: this.chatRes['resourceType'],
+              updated: false,
+              title: 'Ask Managr',
+            })
+          }
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.$emit('message-loading', false)
+          this.scrollToBottom()
+        }
+      } else if (this.message.toLowerCase().includes('run review')) {
+        let chatmsg = this.message
+        this.$emit('set-message', { user: 'user', value: chatmsg })
+        this.$emit('message-loading', true)
+        this.message = ''
+
+        try {
+          setTimeout(() => {
+            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+          }, 100)
+
+          let res = await User.api.dealReview({
+            user_id: this.user.id,
+            prompt: chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.$store.state.currentOpp.id,
+          })
+
+          this.chatRes = res
+
+          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: this.chatRes.value,
+              failed: true,
+            })
+          } else if (this.chatRes.status === 500) {
+            const id = Math.ceil(Math.random() * 100000)
+            this.$emit('set-message', {
+              user: 'bot',
+              id: id,
+              value: 'Timeout error, try again',
+              failed: true,
+            })
+          } else {
+            this.$emit('set-message', {
+              user: 'bot',
+              id: this.chatRes['id'],
+              value: this.chatRes['res'],
+              // data: this.chatRes['data'],
+              resourceId: this.chatRes['resourceId'],
+              resourceType: this.chatRes['resourceType'],
+              updated: false,
+              title: 'Deal Review',
+            })
+          }
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.$emit('message-loading', false)
+          this.scrollToBottom()
+        }
+      } else if (this.message.length > 3) {
         let chatmsg = this.message
         this.$emit('set-message', { user: 'user', value: chatmsg })
         this.$emit('message-loading', true)
@@ -165,9 +265,34 @@ export default {
       this.message += '\n'
     },
     addTemplate(val) {
-      this.message = val
+      if (this.currentOpp) {
+        if (val.toLowerCase().includes('update')) {
+          if (this.currentOpp) {
+            this.message = `Update ${this.currentOpp.name} ...`
+          } else {
+            this.toggleMessage()
+          }
+        } else {
+          this.message = val
+        }
+      } else {
+        this.toggleMessage()
+      }
     },
-
+    toggleMessage() {
+      this.showMessage = true
+      this.showReviewMessage = false
+      setTimeout(() => {
+        this.showMessage = false
+      }, 1200)
+    },
+    toggleDealMessage() {
+      this.showReviewMessage = true
+      this.showMessage = false
+      setTimeout(() => {
+        this.showReviewMessage = false
+      }, 1200)
+    },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
     },
@@ -175,6 +300,9 @@ export default {
   computed: {
     user() {
       return this.$store.state.user
+    },
+    currentOpp() {
+      return this.$store.state.currentOpp
     },
   },
   directives: {
@@ -210,6 +338,42 @@ export default {
   }
 }
 
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(5px);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.current-actions {
+  border: 1px solid $dark-green !important;
+  color: $dark-green !important;
+}
+
+.current {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: $dark-green !important;
+  color: white !important;
+  border: 1px solid $dark-green !important;
+  cursor: text !important;
+  padding-right: 1.2rem !important;
+  position: relative;
+}
+
 .input-section {
   display: flex;
   align-items: center;
@@ -229,27 +393,43 @@ export default {
   margin-bottom: -2px;
 }
 
+.remove {
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 4;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+}
+
 .main-text {
   display: flex;
   align-items: center;
   padding: 0.5rem 0 0.25rem 0;
   margin: 0;
+}
 
-  div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    p {
-      padding: 0.25rem 0.5rem;
-      margin: 0 0.5rem;
-      color: $light-gray-blue;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 12px;
-      background-color: white;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-    }
+.action {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  &__p {
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.5rem;
+    color: $light-gray-blue;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -309,18 +489,6 @@ export default {
   font-size: 14px;
   color: $base-gray;
   letter-spacing: 0.5px;
-}
-
-.templates {
-  // border: 1px solid rgba(0, 0, 0, 0.1);
-  min-height: 60px;
-  width: 250px;
-  position: absolute;
-  padding-bottom: 0.5rem;
-  bottom: 3.5rem;
-  border-radius: 6px;
-  background-color: white;
-  box-shadow: 0 0 11px #b8bdc2;
 }
 
 .template-header {
@@ -474,5 +642,41 @@ export default {
   visibility: visible;
   pointer-events: auto;
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+
+.templates {
+  // animation: shake 0.3s 1;
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: -3.25rem;
+  left: 0.5rem;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 20;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 10%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 </style>
