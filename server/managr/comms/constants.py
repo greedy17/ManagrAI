@@ -9,7 +9,7 @@ NEWS_API_HEADERS = {
 NEW_API_URI = "https://newsapi.org/v2"
 
 NEW_API_EVERYTHING_URI = (
-    lambda query: f"everything?q={query}&language=en&sortBy=publishedAt&pageSize=15"
+    lambda query: f"everything?{query}&language=en&sortBy=publishedAt&pageSize=15"
 )
 
 OPEN_AI_NEWS_CLIPS_SUMMARY = (

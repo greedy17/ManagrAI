@@ -20,6 +20,7 @@ if settings.USE_OPEN_AI:
         "Authorization": f"Bearer {OPEN_AI_SECRET}",
     }
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+OPEN_AI_CHAT_COMPLETIONS_URI = "https://api.openai.com/v1/chat/completions"
 OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
 OPEN_AI_SUMMARY_PROMPT = (
@@ -126,6 +127,26 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
     body = {
         "model": "text-davinci-003",
         "prompt": prompt,
+        "user": user_name,
+    }
+    if token_amount:
+        body["max_tokens"] = token_amount
+    if temperature:
+        body["temperature"] = temperature
+    if top_p:
+        body["top_p"] = top_p
+    return body
+
+
+def OPEN_AI_CHAT_COMPLETIONS_BODY(
+    user_name, prompt, token_amount=2000, temperature=False, top_p=False
+):
+    body = {
+        "model": "gpt-4",
+        "messages": [
+            {"role": "system", "content": "You are a VP of Communications"},
+            {"role": "user", "content": prompt},
+        ],
         "user": user_name,
     }
     if token_amount:
