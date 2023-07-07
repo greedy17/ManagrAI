@@ -351,7 +351,7 @@ export default {
       console.log(op)
     },
     formatDate(val) {
-      if (this.userCRM === 'HUBSPOT') {
+      if (this.userCRM === 'HUBSPOT' && val) {
         const datetime = new Date(val)
         const date = datetime.toISOString().split('T')[0]
         return date
