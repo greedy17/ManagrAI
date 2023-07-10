@@ -630,10 +630,8 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
                 id = event.get("id", None)
-                meeting_data = {
-                    **event,
-                    "user": user,
-                }
+                original_id = id
+                meeting_data = {**event, "user": user, "original_id": id}
                 if user.has_zoom_integration:
                     meetings_by_topic = [
                         meeting for meeting in meetings if event["title"] == meeting["topic"]
@@ -642,7 +640,11 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         meeting = meetings_by_topic[0]
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
-                workflow_check = workflows.filter(meeting__meeting_id=id).first()
+                workflow_check = workflows.filter(
+                    Q(meeting__meeting_id=id)
+                    | Q(meeting__meeting_id=original_id)
+                    | Q(meeting__topic=event["title"])
+                ).first()
                 register_check = should_register_this_meetings(user_id, event)
                 if workflow_check is None and register_check:
                     meeting_serializer = MeetingSerializer(data=meeting_data)

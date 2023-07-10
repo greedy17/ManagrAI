@@ -853,16 +853,32 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
     state = payload["view"]["state"]["values"]
+    ts = context.get("ts", None)
     try:
-        loading_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=get_block_set(
-                "loading",
-                {"message": ":robot_face: Summarizing your call. This may take a few minutes..."},
-            ),
-        )
-        ts = loading_res["message"]["ts"]
+        if ts:
+            loading_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading",
+                    {
+                        "message": ":robot_face: Summarizing your call. This may take a few minutes..."
+                    },
+                ),
+            )
+        else:
+            loading_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading",
+                    {
+                        "message": ":robot_face: Summarizing your call. This may take a few minutes..."
+                    },
+                ),
+            )
+            ts = loading_res["message"]["ts"]
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -890,7 +906,9 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
         workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
-    meeting = workflow.meeting
+    meeting = workflow.meeting.meeting_account.helper_class.check_event_id(
+        user.zoom_account.zoom_id, str(workflow.datetime_created.date()), workflow.meeting.id
+    )
     has_error = False
     error_message = None
     try:
@@ -1055,7 +1073,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     except RecordingNotFound:
         has_error = True
         retry = context.get("retry_attempts", 0) + 1
-        context.update(retry_attempts=retry)
+        context.update(retry_attempts=retry, ts=ts)
         error_message = (
             f":rocket: Looks like you're transcript is not done processing, we'll try again in a bit!"
             if retry <= 3
