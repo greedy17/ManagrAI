@@ -911,9 +911,7 @@ TIMEZONE_TASK_FUNCTION = {
     core_consts.NON_ZOOM_MEETINGS: emit_process_calendar_meetings,
     core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
-    core_consts.MORNING_REFRESH: emit_morning_refresh_message,
     core_consts.MEETING_REMINDER: emit_process_send_meeting_reminder,
-    # core_consts.TRIAL_STATUS: emit_process_check_trial_status,
 }
 
 
