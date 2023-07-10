@@ -684,27 +684,28 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     "You don't have any meeting for today... If that changes, click 'Sync Calendar'"
                 ),
             ]
-        try:
-            if slack_int:
-                timestamp, channel = slack_int.split("|")
-                slack_res = slack_requests.update_channel_message(
-                    channel,
-                    timestamp,
-                    user.organization.slack_integration.access_token,
-                    block_set=blocks,
-                )
-                slack_interaction = slack_int
-            else:
-                slack_res = slack_requests.send_channel_message(
-                    user.slack_integration.zoom_channel,
-                    user.organization.slack_integration.access_token,
-                    block_set=blocks,
-                )
-                slack_interaction = f"{slack_res['ts']}|{slack_res['channel']}"
-            workflows = MeetingWorkflow.objects.for_user(user, date)
-            workflows.update(slack_interaction=slack_interaction)
-        except Exception as e:
-            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+        if user.has_slack_integration:
+            try:
+                if slack_int:
+                    timestamp, channel = slack_int.split("|")
+                    slack_res = slack_requests.update_channel_message(
+                        channel,
+                        timestamp,
+                        user.organization.slack_integration.access_token,
+                        block_set=blocks,
+                    )
+                    slack_interaction = slack_int
+                else:
+                    slack_res = slack_requests.send_channel_message(
+                        user.slack_integration.zoom_channel,
+                        user.organization.slack_integration.access_token,
+                        block_set=blocks,
+                    )
+                    slack_interaction = f"{slack_res['ts']}|{slack_res['channel']}"
+                workflows = MeetingWorkflow.objects.for_user(user, date)
+                workflows.update(slack_interaction=slack_interaction)
+            except Exception as e:
+                logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     return
 
 
