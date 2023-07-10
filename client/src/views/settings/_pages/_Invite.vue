@@ -561,14 +561,16 @@ export default {
       ],
       team: CollectionManager.create({ ModelClass: User }),
       loading: false,
-      userInviteForm: new UserInviteForm({
-        role: User.roleChoices[0].key,
-        userLevel: User.types.REP,
-        organization: this.user.organization,
-      }),
+      userInviteForm: null,
     }
   },
   async created() {
+    this.team = CollectionManager.create({ ModelClass: User })
+    this.userInviteForm = new UserInviteForm({
+      role: User.roleChoices[0].key,
+      userLevel: User.types.REP,
+      organization: this.user.organization,
+    })
     const allTeams = await Organization.api.listTeams(this.user.id)
     this.allTeams = allTeams.results
     if (this.user.isAdmin) {

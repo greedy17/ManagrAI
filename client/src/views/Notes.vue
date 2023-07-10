@@ -334,6 +334,7 @@ export default {
   },
   created() {
     this.getUsers()
+    this.$store.dispatch('loadTemplates')
   },
 }
 </script>
