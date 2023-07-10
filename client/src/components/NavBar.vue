@@ -305,6 +305,7 @@
 
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'NavBar',
@@ -348,25 +349,30 @@ export default {
   },
   computed: {
     isOnboarding() {
-      return this.$store.state.user.onboarding
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.onboarding
     },
     isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.organizationRef.isPaid
     },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     routeName() {
       return this.$route.name
     },
     isAdmin() {
-      return this.userIsLoggedIn && this.$store.state.user.isAdmin
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.userIsLoggedIn && decryptedUser.isAdmin
     },
     isTeamLead() {
-      return this.userIsLoggedIn && this.$store.state.user.isTeamLead
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.userIsLoggedIn && decryptedUser.isTeamLead
     },
   },
 }

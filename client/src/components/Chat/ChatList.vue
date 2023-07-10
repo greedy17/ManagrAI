@@ -194,6 +194,7 @@ import { CollectionManager } from '@thinknimble/tn-models'
 import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users/'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatList',
@@ -369,10 +370,12 @@ export default {
   },
   computed: {
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     baseResourceType() {
       return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
@@ -386,9 +389,10 @@ export default {
       return extras
     },
     hasExtraFields() {
-      let accountRef = this.$store.state.user.salesforceAccountRef
-        ? this.$store.state.user.salesforceAccountRef
-        : this.$store.state.user.hubspotAccountRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      let accountRef = decryptedUser.salesforceAccountRef
+        ? decryptedUser.salesforceAccountRef
+        : decryptedUser.hubspotAccountRef
       let extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },

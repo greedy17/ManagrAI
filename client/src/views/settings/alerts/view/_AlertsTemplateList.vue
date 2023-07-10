@@ -476,6 +476,7 @@ import { ObjectField } from '@/services/crm'
 
 import AlertTemplate from '@/services/alerts/'
 import allConfigs from '../configs'
+import { decryptData } from '../../../../encryption'
 
 export default {
   name: 'AlertsTemplateList',
@@ -712,22 +713,27 @@ export default {
   },
   computed: {
     isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.organizationRef.isPaid
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     hasSlackIntegration() {
-      return !!this.$store.state.user.slackRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.slackRef
     },
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.recapChannel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackAccount
+        ? decryptedUser.slackAccount.recapChannel
         : null
     },
     zoomChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.zoomChannel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackAccount
+        ? decryptedUser.slackAccount.zoomChannel
         : null
     },
     filteredConfigs() {
@@ -740,16 +746,19 @@ export default {
       return filtered
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     userLevel() {
-      return this.$store.state.user.userLevel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.userLevel
     },
     meetings() {
       return this.$store.state.meetings
     },
     isOnboarding() {
-      return this.$store.state.user.onboarding
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.onboarding
     },
     leaderTemplatesFirst() {
       const originalList = this.templates.list

@@ -647,6 +647,7 @@ import { UserOnboardingForm } from '@/services/users/forms'
 
 import { AlertTemplateForm } from '@/services/alerts/'
 import User from '@/services/users'
+import { decryptData } from '../../../../encryption'
 
 export default {
   name: 'AlertsPage',
@@ -702,35 +703,44 @@ export default {
   },
   computed: {
     isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.organizationRef.isPaid
     },
     hasSalesforceIntegration() {
-      return !!this.$store.state.user.salesforceAccount
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.salesforceAccount
     },
     hasSlackIntegration() {
-      return !!this.$store.state.user.slackRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.slackRef
     },
     recapChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.recapChannel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackAccount
+        ? decryptedUser.slackAccount.recapChannel
         : false
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     userLevel() {
-      return this.$store.state.user.userLevel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.userLevel
     },
     isAdmin() {
-      return this.$store.state.user.isAdmin
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.isAdmin
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.zoomChannel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackAccount
+        ? decryptedUser.slackAccount.zoomChannel
         : null
     },
     isOnboarding() {
-      return this.$store.state.user.onboarding
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.onboarding
     },
     selectedResourceType: {
       get() {

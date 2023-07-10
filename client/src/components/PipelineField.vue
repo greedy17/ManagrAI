@@ -76,6 +76,8 @@
 </template>
 
 <script>
+import { decryptData } from '../encryption'
+
 export default {
   name: 'PipelineField',
   data() {
@@ -140,7 +142,8 @@ export default {
     //   return date
     // },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
   },
   mounted() {

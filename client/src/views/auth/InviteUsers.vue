@@ -338,7 +338,7 @@
             </div>
           </div>
           <h3 style="color: #41b883; background-color: #dcf8e9; padding: 4px; border-radius: 6px">
-            {{ $store.state.user.organizationRef.name }}
+            {{ getUser.organizationRef.name }}
           </h3>
           <small>{{ getUser.timezone }}</small>
           <div class="options__section">
@@ -465,6 +465,7 @@ import Organization from '@/services/organizations'
 import { UserProfileForm } from '@/services/users/forms'
 import { quillEditor } from 'vue-quill-editor'
 import moment from 'moment-timezone'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'InviteUsers',
@@ -646,7 +647,7 @@ export default {
         try {
           const data = {
             name: this.teamName,
-            organization: this.$store.state.user.organizationRef.id,
+            organization: this.getUser.organizationRef.id,
             team_lead: this.teamLead.id,
           }
           const teamRes = await Organization.api.createNewTeam(data)
@@ -810,16 +811,20 @@ export default {
   },
   computed: {
     getUser() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     isAdmin() {
-      return this.$store.state.user.isAdmin
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.isAdmin
     },
     hasSlack() {
-      return !!this.$store.state.user.slackRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.slackRef
     },
     numberOfAllowedUsers() {
-      return this.$store.state.user.organizationRef.numberOfAllowedUsers
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.organizationRef.numberOfAllowedUsers
     },
   },
 }

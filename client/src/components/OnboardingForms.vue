@@ -100,6 +100,7 @@ import draggable from 'vuedraggable'
 import SlackOAuth from '@/services/slack'
 import { ObjectField } from '@/services/crm'
 import User from '@/services/users'
+import { decryptData, encryptData } from '../encryption'
 
 export default {
   name: 'OnboardingForms',
@@ -312,26 +313,33 @@ export default {
       ]
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     orgHasSlackIntegration() {
-      return !!this.$store.state.user.organizationRef.slackIntegration
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
-      return !!this.$store.state.user.slackRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.slackRef
     },
     hasNylasIntegration() {
-      return !!this.$store.state.user.nylas
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.nylas
     },
     userCanIntegrateSlack() {
-      return this.$store.state.user.isAdmin
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.isAdmin
     },
     hasZoomChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.zoomChannel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackAccount
+        ? decryptedUser.slackAccount.zoomChannel
         : null
     },
   },
@@ -469,7 +477,8 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
           User.api.getUser(this.user.id).then((response) => {
-            this.$store.commit('UPDATE_USER', response)
+            const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+            this.$store.commit('UPDATE_USER', encrypted)
           })
 
           // this.customForm = res
