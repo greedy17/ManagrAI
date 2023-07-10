@@ -249,11 +249,6 @@
       </div>
     </Modal>
     <div class="invite-list__container" :style="selectedTeamUsers ? 'width: 75vw;' : ''">
-      <!-- <div class="key">
-        <div class="left-key">
-          <h2>The {{ $store.state.user.organizationRef.name }} Team</h2>
-        </div>
-      </div> -->
 
       <div class="invite-list__section__container" style="margin-bottom: 2rem">
         <div
@@ -383,7 +378,7 @@
         <template
           v-if="
             (member.id !== user.id &&
-            member.team === $store.state.user.team &&
+            member.team === user.team &&
             !((member.firstName || member.first_name) && (!member.isActive && !member.is_active))) || selectedTeamUsers
           "
         >
@@ -517,6 +512,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
 import Organization from '@/services/organizations'
+import { decryptData } from '../../../encryption'
 
 export default {
   name: 'Invite',
@@ -568,7 +564,7 @@ export default {
       userInviteForm: new UserInviteForm({
         role: User.roleChoices[0].key,
         userLevel: User.types.REP,
-        organization: this.$store.state.user.organization,
+        organization: this.user.organization,
       }),
     }
   },
@@ -632,7 +628,7 @@ export default {
       if (!this.user.isAdmin && !this.user.userLevel === 'MANAGER') {
         this.$router.push({ name: 'ListTemplates' })
       }
-      this.organization = this.$store.state.user.organization
+      this.organization = this.user.organization
       this.team.refresh()
     },
     async handleCancel() {
@@ -784,7 +780,7 @@ export default {
       }
     },
     resetData() {
-      this.userInviteForm.field.organization.value = this.$store.state.user.organization
+      this.userInviteForm.field.organization.value = this.user.organization
       this.selectedMember = null
       this.selectedLevel = null
       this.selectedTeam = null
@@ -806,18 +802,22 @@ export default {
   },
   computed: {
     hasSlack() {
-      return !!this.$store.state.user.slackRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.slackRef
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     usersInTeam() {
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.team.list.filter(
         (member) =>
-          member.id !== this.$store.state.user.id && member.team === this.$store.state.user.team,
+          member.id !== decryptedUser.id && member.team === decryptedUser.team,
       )
     },
   },

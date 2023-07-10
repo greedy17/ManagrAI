@@ -696,6 +696,7 @@ import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users'
 import TimeLine from '@/components/Timeline'
 import Chart from '@/components/Chart'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'Reports',
@@ -844,7 +845,8 @@ export default {
   },
   computed: {
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     today() {
       let date = new Date()
@@ -857,10 +859,12 @@ export default {
       // return this.$store.state.allOpps
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.organizationRef.isPaid
     },
     notes() {
       return this.$store.state.templates

@@ -7,16 +7,20 @@
 </template>
 
 <script>
+import { decryptData } from '../../encryption'
+
 export default {
   name: 'Settings',
   created() {},
   computed: {
     isStaff() {
       // used to check superuser if is staff then they currently do not have an org
-      return this.$store.state.user.isStaff
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.isStaff
     },
     organization() {
-      return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.organizationRef && decryptedUser.organizationRef.name
     },
   },
 }

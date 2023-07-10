@@ -69,6 +69,7 @@
   import User from '@/services/users'
 
   import { PublicClientApplication } from '@azure/msal-browser'
+import { decryptData } from '../../encryption'
 
   export default {
     name: 'RegisterSelection',
@@ -183,7 +184,8 @@
     },
     computed: {
       user() {
-        return this.$store.state.user
+        const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+        return decryptedUser
       },
     },
   }
