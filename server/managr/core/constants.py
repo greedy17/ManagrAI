@@ -219,11 +219,11 @@ Limit your response to under 1,000 characters.
 
 # OAuth permission scopes to request from Nylas
 SCOPE_CALENDAR = "calendar"
-SCOPE_EMAIL = "email"
+# SCOPE_EMAIL = "email"
 
 ALL_SCOPES = [
     SCOPE_CALENDAR,
-    SCOPE_EMAIL,
+    # SCOPE_EMAIL,
 ]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
